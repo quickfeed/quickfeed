@@ -5,16 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		qf.InfoRepo, qf.AssignmentRepo, qf.TestsRepo)
+		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
 
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
@@ -24,7 +23,7 @@ var (
 	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
 	// and not because of some application error
-	ErrContextCanceled = "context canceled because the github interaction took too long. Please try again later"
+	ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
 	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
 	FreeOrgPlan = "free"
 )
@@ -36,7 +35,7 @@ func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
 		return err
 	}
 	for _, course := range courses {
-		_, err := q.getSCM(ctx, course.OrganizationPath)
+		_, err := q.getSCM(ctx, course.GetOrganizationName())
 		if err != nil {
 			return err
 		}
@@ -55,16 +54,30 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	if err != nil {
 		return nil, err
 	}
-	return q.getSCM(ctx, course.OrganizationPath)
+	return q.getSCM(ctx, course.OrganizationName)
 }
 
-// getSCMForUser returns an SCM client based on the user's personal access token.
-func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCM, error) {
-	accessToken, err := user.GetAccessToken(env.ScmProvider())
+// getCredsForUserSCM returns the given user's personal access token.
+func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
+	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return scm.NewSCMClient(q.logger, accessToken)
+	// Exchange a refresh token for an access token.
+	token, err := q.scmMgr.ExchangeToken(refreshToken)
+	if err != nil {
+		return "", err
+	}
+	// Save user's refresh token in the database.
+	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
+	// TODO(meling) rename UpdateAccessToken() database method to UpdateRefreshToken()
+	// TODO(meling) later: move RefreshToken and ScmRemoteID directly into User type (requires updating the User proto message)
+	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
+	remoteIdentity.AccessToken = token.RefreshToken
+	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
+		return "", err
+	}
+	return token.AccessToken, nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -73,16 +86,16 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCM, error) {
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	if course.GetOrganizationPath() == "" {
+	if course.GetOrganizationName() == "" {
 		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.GetOrganizationID()})
 		if err != nil {
 			return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
 		}
-		course.OrganizationPath = org.GetPath()
+		course.OrganizationName = org.GetName()
 	}
-	org := &qf.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
+	org := &qf.Organization{ID: course.GetOrganizationID(), Name: course.GetOrganizationName()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         group.GetName(),
 		Private:      true,
 	})
@@ -91,7 +104,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 	}
 
 	team, err := sc.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: org.Path,
+		Organization: org.Name,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
 	})
@@ -136,7 +149,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, pa
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         path,
 		Private:      true,
 	})
@@ -152,9 +165,9 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, pa
 }
 
 // add user to the organization's "students" team.
-func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, organizationPath string, userName string) error {
+func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, organizationName string, userName string) error {
 	opt := &scm.TeamMembershipOptions{
-		Organization: organizationPath,
+		Organization: organizationName,
 		TeamName:     scm.StudentsTeam,
 		Username:     userName,
 		Role:         scm.TeamMember,
@@ -166,9 +179,9 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, organizationPath str
 }
 
 // add user to the organization's "teachers" team, and remove user from "students" team.
-func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationPath string, userName string) error {
+func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationName string, userName string) error {
 	studentsTeam := &scm.TeamMembershipOptions{
-		Organization: organizationPath,
+		Organization: organizationName,
 		Username:     userName,
 		TeamName:     scm.StudentsTeam,
 	}
@@ -177,7 +190,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationPath
 	}
 
 	teachersTeam := &scm.TeamMembershipOptions{
-		Organization: organizationPath,
+		Organization: organizationName,
 		Username:     userName,
 		TeamName:     scm.TeachersTeam,
 		Role:         scm.TeamMaintainer,
@@ -197,12 +210,12 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 	switch state {
 	case qf.Enrollment_STUDENT:
 		// give access to the course's info and assignments repositories
-		if err := grantAccessToCourseRepos(ctx, sc, org.GetPath(), login); err != nil {
+		if err := grantAccessToCourseRepos(ctx, sc, org.GetName(), login); err != nil {
 			return nil, err
 		}
 
 		// add student to the organization's "students" team
-		if err = addUserToStudentsTeam(ctx, sc, org.GetPath(), login); err != nil {
+		if err = addUserToStudentsTeam(ctx, sc, org.GetName(), login); err != nil {
 			return nil, err
 		}
 
@@ -211,7 +224,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 	case qf.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
 		orgUpdate := &scm.OrgMembershipOptions{
-			Organization: org.Path,
+			Organization: org.Name,
 			Username:     login,
 			Role:         scm.OrgOwner,
 		}
@@ -219,13 +232,13 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
 			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
 		}
-		err = promoteUserToTeachersTeam(ctx, sc, org.GetPath(), login)
+		err = promoteUserToTeachersTeam(ctx, sc, org.GetName(), login)
 	}
 	return nil, err
 }
 
 func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
-	commonRepos := []string{qf.InfoRepo, qf.AssignmentRepo}
+	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 
 	for _, repoType := range commonRepos {
 		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {
@@ -254,7 +267,7 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *q
 	}
 
 	opt := &scm.OrgMembershipOptions{
-		Organization: org.Path,
+		Organization: org.Name,
 		Username:     login,
 	}
 	if err := sc.RemoveMember(ctx, opt); err != nil {
@@ -297,16 +310,19 @@ func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	return nil
 }
 
-// contextCanceled returns true if the context has been canceled.
-// It is a recurring cause of unexplainable method failures when
-// creating a course, approving, changing status of, or deleting
-// a course enrollment or group
-func contextCanceled(ctx context.Context) bool {
-	// debugging context related errors
-	if ctx.Err() != nil {
-		fmt.Println("Context error: ", ctx.Err().Error())
+// ctxErr returns a context error. There could be two reasons
+// for a context error: exceeded deadline or canceled context.
+// Canceled context is a recurring cause of unexplainable
+// method failures when creating a course, approving, changing
+// status of, or deleting a course enrollment or group.
+func ctxErr(ctx context.Context) error {
+	switch ctx.Err() {
+	case context.Canceled:
+		return connect.NewError(connect.CodeCanceled, ctx.Err())
+	case context.DeadlineExceeded:
+		return connect.NewError(connect.CodeDeadlineExceeded, ctx.Err())
 	}
-	return ctx.Err() == context.Canceled
+	return nil
 }
 
 // Returns true and formatted error if error type is SCM error
@@ -314,7 +330,7 @@ func contextCanceled(ctx context.Context) bool {
 func parseSCMError(err error) (bool, error) {
 	errStruct, ok := err.(scm.ErrFailedSCM)
 	if ok {
-		return ok, status.Errorf(codes.NotFound, errStruct.Message)
+		return ok, connect.NewError(connect.CodeNotFound, errors.New(errStruct.Message))
 	}
 	return ok, nil
 }

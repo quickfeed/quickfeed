@@ -1,17 +1,17 @@
 import React, { useEffect } from "react"
 import { Enrollment, SubmissionLink } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
-import DynamicTable, { CellElement, Row } from "./DynamicTable"
+import DynamicTable, { CellElement, Row, RowElement } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
-import Lab from "./Lab"
-import ManageSubmissionStatus from "./ManageSubmissionStatus"
+import LabResult from "./LabResult"
+import ReviewForm from "./manual-grading/ReviewForm"
 import Search from "./Search"
 
 
-const Results = (): JSX.Element => {
+const Results = ({ review }: { review: boolean }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -23,12 +23,41 @@ const Results = (): JSX.Element => {
         return () => {
             actions.setActiveSubmissionLink(undefined)
             actions.setGroupView(false)
+            actions.review.setAssignmentID(-1)
             actions.setActiveEnrollment(undefined)
         }
     }, [state.courseSubmissions])
 
     if (!state.courseSubmissions[courseID]) {
         return <h1>Fetching Submissions...</h1>
+    }
+
+
+    const generateReviewCell = (submissionLink: SubmissionLink.AsObject): RowElement => {
+        const submission = submissionLink.submission
+        const assignment = submissionLink.assignment
+        if (submission && assignment && isManuallyGraded(assignment)) {
+            const reviews = state.review.reviews[assignment.courseid][submission.id] ?? []
+            const isSelected = state.activeSubmission === submission.id
+            const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
+            const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
+            return ({
+                // TODO: Figure out a better way to visualize released submissions than '(r)'
+                value: `${reviews.length}/${assignment.reviewers} ${submission.released ? "(r)" : ""}`,
+                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
+                onClick: () => {
+                    actions.setActiveSubmissionLink(submissionLink)
+                    actions.review.setSelectedReview(-1)
+                }
+            })
+        } else {
+            return ({
+                value: "N/A",
+                onClick: () => {
+                    actions.setActiveSubmissionLink(submissionLink)
+                }
+            })
+        }
     }
 
     const getSubmissionCell = (submissionLink: SubmissionLink.AsObject, enrollment: Enrollment.AsObject): CellElement => {
@@ -54,28 +83,24 @@ const Results = (): JSX.Element => {
         }
     }
 
+
     const groupView = state.groupView
     const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
     const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.id === state.review.assignmentID)
+    const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isgrouplab : true).map(assignment => assignment.id)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const links = state.sortedAndFilteredSubmissions
-    const rows = generateSubmissionRows(links, getSubmissionCell, false)
+    const generator = review ? generateReviewCell : getSubmissionCell
+    const rows = generateSubmissionRows(links, review, generator, assignmentIDs, false)
 
-    const labView = state.currentSubmission ?
-        <div className="lab-resize">
-            <ManageSubmissionStatus />
-            <div className="reviewLabResult mt-2">
-                <Lab />
-            </div>
-        </div>
-        : null
 
     return (
         <div className="row">
             <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-xl-6"}>
-                <Search placeholder={"Search by name ..."} >
+                <Search placeholder={"Search by name ..."} className="mb-2" >
                     <Button type={ButtonType.BUTTON}
+                        classname="ml-2"
                         text={`View by ${groupView ? "student" : "group"}`}
                         onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
                         color={groupView ? Color.BLUE : Color.GREEN} />
@@ -84,7 +109,7 @@ const Results = (): JSX.Element => {
                 <DynamicTable header={header} data={rows} />
             </div>
             <div className="col reviewLab">
-                {labView}
+                {review ? <ReviewForm /> : <LabResult />}
             </div>
         </div>
     )

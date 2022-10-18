@@ -7,7 +7,6 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
@@ -21,12 +20,12 @@ func TestInitSCMs(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	ctx := context.Background()
-	logger := qlog.Logger(t).Desugar()
+	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Name:             "Test course",
-		OrganizationPath: scm.GetTestOrganization(t),
+		OrganizationName: scm.GetTestOrganization(t),
 		Provider:         "fake",
 	}
 	if err := db.CreateCourse(admin.ID, course); err != nil {
@@ -35,7 +34,7 @@ func TestInitSCMs(t *testing.T) {
 	if err := q.InitSCMs(ctx); err != nil {
 		t.Error(err)
 	}
-	if _, ok := mgr.GetSCM(course.OrganizationPath); !ok {
-		t.Errorf("Missing scm client for organization %s", course.OrganizationPath)
+	if _, ok := mgr.GetSCM(course.OrganizationName); !ok {
+		t.Errorf("Missing scm client for organization %s", course.OrganizationName)
 	}
 }

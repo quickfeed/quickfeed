@@ -25,7 +25,7 @@ The system has three **user** roles.
 
 The following concepts are important to understand.
 
-- **Assignments** are organized into folders in a git repository, as shown in [The Assignments Repository](#The-Assignments-Repository) section below.
+- **Assignments** are organized into folders in a git repository, as shown in [The Assignments Repository](#the-assignments-repository) section below.
   An assignment may be solved individually or by a group of students.
   For individual assignments, each student is given a separate git repository.
   For group assignments, the group of students is given a separate git repository for the group assignments.
@@ -86,7 +86,7 @@ These will be created automatically when a course is created.
 *In QuickFeed, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
 The `assignments` folder has a separate folder for each assignment.
-See section [The Assignments Repository](#The-Assignments-Repository) for more details.
+See section [The Assignments Repository](#the-assignments-repository) for more details.
 
 The `username` is actually the github user name. This repository will initially be empty, and the student will need to set up a remote label called `assignments` pointing to the `assignments` repository, and pull from it to get any template code provided by the teaching staff.
 
@@ -114,20 +114,14 @@ They will also be added to the `allteachers` team.
 
 ## Student Enrollments
 
-Students enroll into your course by logging in into QuickFeed with their GitHub accounts, following `Join course` link and choosing to enroll into your course. You can access the full list of students (both already enrolled into your course or waiting for enrollment approval) on the `Members` tab of your course page, and accept their enrollments.
+Students enroll in your course by logging in on QuickFeed with their GitHub accounts, find the course among the course cards and click the `Enroll` link.
+You can access the full list of students (both already enrolled and those waiting for approval) in the `Members` menu of your course page, and accept their enrollments.
 
-After a student's enrollment has been accepted, the student will receive three invitations to their registered GitHub email (corresponding with the account they have used to log in to QuickFeed). One to join the course organization, and another two to access the course's `assignments` repository and the student's personal repository.
-
-**Note: it can take GitHub some time to issue the invitation.**
-
-Students can also navigate to
-
-- <https://github.com/{organization_name}/assignments> and
-- <https://github.com/{organization_name}/{student_git_username}-labs>
-
-manually and accept the invitations from there. These links are also available from QuickFeed's frontend interface, in the course menu, under the User Repository heading.
-
+After a student's enrollment has been accepted into a course, the student will have access to the course's `assignment` repository and the student's personal repository, e.g., `student-labs`.
 All students in a course will be added to the `allstudents` team in the course's GitHub organization.
+
+Note that the student may receive three invitation emails from `quickfeed-uis[bot]`.
+These emails can be ignored.
 
 ## Student Groups
 
@@ -167,7 +161,7 @@ In addition, each assignment folder should also contain test code for the corres
 The `scripts` folder may contain a course-specific [test runner](#test-runners), named `run.sh`, for running the tests.
 If an assignment requires a different test runner, you can supply a custom `run.sh` script for that assignment.
 
-The `scripts` folder may also contain a [custom Dockerfile](#dockerfile) for the course.
+The `scripts` folder may also contain a custom Dockerfile for the course.
 Otherwise, the [test runner](#test-runners) for each assignment specifies which Docker image to use.
 
 **(Beta feature: Issues and Pull Requests)**
@@ -251,15 +245,17 @@ Similarly, QuickFeed will also clone the `tests` repository and make it availabl
 
 To simplify the test runner script QuickFeed makes the following environment variables available:
 
-- `$TESTS`: Path to the root of the course's `test` repository.
+- `$TESTS`: Path to the root of the course's `tests` repository.
 - `$ASSIGNMENTS`: Path to the root of the course's `assignments` repository.
-- `$CURRENT`: The current assignment folder; this folder should exist in both the `tests` and `assignments` repositories.
+- `$SUBMITTED`: Path to the root of the student's or group's clone  of the `assignments` repository, where submissions are received.
+- `$CURRENT`: The current assignment folder; this folder should exist in all three repositories.
 
-The `$TESTS` and `$ASSIGNMENTS` variables are always set to the following paths:
+The first three environment variables are always set to the following paths:
 
 ```bash
 TESTS=/quickfeed/tests
 ASSIGNMENTS=/quickfeed/assignments
+SUBMITTED=/quickfeed/submitted
 ```
 
 Whereas the `$CURRENT` variable is set to the current assignment folder, e.g.,:
@@ -285,16 +281,35 @@ Note that QuickFeed performs a lightweight sanity check of the cloned student re
 #image/qf101
 
 start=$SECONDS
-printf "*** Preparing for Test Execution ***\n"
+printf "*** Initializing Tests for %s ***\n" "$CURRENT"
 
-# Move to folder for the current assignment to test.
+# Move to folder with assignment handout code for the current assignment to test.
 cd "$ASSIGNMENTS/$CURRENT"
+# Remove assignment handout tests to avoid interference
+find . -name '*_test.go' -exec rm -rf {} \;
 
+# Copy tests into the base assignments folder for initializing test scores
+cp -r "$TESTS"/* "$ASSIGNMENTS"/
+
+# $TESTS does not contain go.mod and go.sum: make sure to get the kit/score package
+go get -t github.com/quickfeed/quickfeed/kit/score
+go mod tidy
+# Initialize test scores
+SCORE_INIT=1 go test -v ./... 2>&1 | grep TestName
+
+printf "*** Preparing Test Execution for %s ***\n" "$CURRENT"
+
+# Move to folder with submitted code for the current assignment to test.
+cd "$SUBMITTED/$CURRENT"
 # Remove student written tests to avoid interference
 find . -name '*_test.go' -exec rm -rf {} \;
 
 # Copy tests into student assignments folder for running tests
-cp -r "$TESTS"/* "$ASSIGNMENTS"/
+cp -r "$TESTS"/* "$SUBMITTED"/
+
+# $TESTS does not contain go.mod and go.sum: make sure to get the kit/score package
+go get -t github.com/quickfeed/quickfeed/kit/score
+go mod tidy
 
 printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS

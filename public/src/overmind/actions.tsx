@@ -262,7 +262,9 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
 /** approvePendingEnrollments approves all pending enrollments for the current course */
 export const approvePendingEnrollments = async ({ state, actions, effects }: Context): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
-        // Clone and set status to student for all pending enrollments
+        // Clone and set status to student for all pending enrollments.
+        // We need to clone the enrollments to avoid modifying the state directly.
+        // We do not want to update set the enrollment status before the update is successful.
         const enrollments = Object.assign({}, state.pendingEnrollments)
         enrollments.forEach(e => e.status = Enrollment_UserStatus.STUDENT)
 
@@ -284,6 +286,10 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get assignments for pending enrollments
+            continue
+        }
         const response = await effects.grpcMan.getAssignments(enrollment.courseID)
         if (response.data) {
             // Store assignments in state by course ID
@@ -308,6 +314,10 @@ export const getAssignmentsByCourse = async ({ state, effects }: Context, course
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get repositories for pending enrollments
+            continue
+        }
         const courseID = enrollment.courseID
         state.repositories[courseID.toString()] = {}
 
@@ -353,7 +363,7 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     const course = Object.assign({}, value.course)
     /* Fill in required fields */
     course.organizationID = value.org.ID
-    course.organizationPath = value.org.path
+    course.organizationName = value.org.name
     course.provider = "github"
     course.courseCreatorID = state.self.ID
     /* Send the course to the server */
@@ -437,8 +447,8 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     state.isLoading = true
 
     // None of these should fail independently.
-    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest_Type.ALL, true)
-    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest_Type.GROUP, true)
+    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest_Type.ALL)
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest_Type.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)
@@ -512,16 +522,39 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
+export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
+    const response = await effects.grpcMan.getSubmission(courseID, submissionID)
+    if (!response.data || !success(response)) {
+        return
+    }
+    const submissions = state.groupView ? state.courseGroupSubmissions[courseID.toString()] : state.courseSubmissions[courseID.toString()]
+    if (!submissions) {
+        return
+    }
+    submissions.forEach(link => {
+        const sub = link.submissions?.find(submission => submission.submission?.ID === submissionID)
+        if (sub?.submission && response.data) {
+            sub.submission = response.data
+            if (state.activeSubmissionLink) {
+                state.activeSubmissionLink.submission = response.data
+            }
+        }
+    })
+}
+
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
-    if (state.currentSubmission && state.selectedAssignment) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, BigInt(state.activeSubmission))
+export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
+    if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, BigInt(state.activeSubmission), state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+            await actions.getSubmission({ courseID: state.activeCourse, submissionID: BigInt(state.activeSubmission) })
             actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
+            return true
         }
     }
+    return false
 }
 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */
@@ -656,7 +689,18 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
     }
 }
 
-export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink): void => {
+export const refreshSubmission = async ({ effects }: Context, { link }: { link: SubmissionLink }): Promise<SubmissionLink> => {
+    if (link.submission && link.assignment) {
+        const response = await effects.grpcMan.getSubmission(link.assignment.CourseID, link.submission.ID)
+        if (success(response) && response.data) {
+            link.submission = response.data
+        }
+    }
+    return link
+}
+
+export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink): Promise<void> => {
+    link = await actions.refreshSubmission({ link })
     state.activeSubmissionLink = link ? link : null
 }
 
@@ -684,7 +728,9 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
                 await actions.getGroupSubmissions(courseID)
                 const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
                 success = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
-                await actions.getGroupByUserAndCourse(courseID)
+                if (enrollment.groupID > 0) {
+                    await actions.getGroupByUserAndCourse(courseID)
+                }
             }
             if (isTeacher(enrollment)) {
                 actions.getGroupsByCourse(courseID)

@@ -1,10 +1,8 @@
-package score_test
+package score
 
 import (
 	"strings"
 	"testing"
-
-	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 const theSecret = "my secret code"
@@ -18,9 +16,9 @@ var nonJSONLog = []string{
 
 func TestParseNonJSONStrings(t *testing.T) {
 	for _, s := range nonJSONLog {
-		sc, err := score.Parse(s, theSecret)
+		sc, err := parse(s, theSecret)
 		if err == nil {
-			t.Errorf("Expected '%v', got '<nil>'", score.ErrScoreNotFound.Error())
+			t.Errorf("Expected '%v', got '<nil>'", ErrScoreNotFound.Error())
 		}
 		if sc != nil {
 			t.Errorf("Got unexpected score object '%v', wanted '<nil>'", sc)
@@ -41,16 +39,16 @@ var jsonLog = []struct {
 	{
 		`{"Secret":"the wrong secret","TestName":"TestParseJSONStrings","Score":0,"MaxScore":10,"Weight":10}`,
 		-1, -1,
-		score.ErrScoreNotFound,
+		ErrScoreNotFound,
 	},
 }
 
 func TestParseJSONStrings(t *testing.T) {
 	for _, s := range jsonLog {
-		sc, err := score.Parse(s.in, theSecret)
-		var expectedScore *score.Score
+		sc, err := parse(s.in, theSecret)
+		var expectedScore *Score
 		if s.max > 0 {
-			expectedScore = &score.Score{
+			expectedScore = &Score{
 				TestName: t.Name(),
 				MaxScore: int32(s.max),
 				Weight:   int32(s.weight),
@@ -70,54 +68,54 @@ func TestParseJSONStrings(t *testing.T) {
 
 var scoreValidTests = []struct {
 	name string
-	in   []*score.Score
+	in   []*Score
 	want error
 }{
 	{
 		name: "EmptyTestName",
-		in: []*score.Score{
+		in: []*Score{
 			{TestName: "", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 0},
 		},
-		want: score.ErrEmptyTestName,
+		want: ErrEmptyTestName,
 	},
 	{
 		name: "BadWeights",
-		in: []*score.Score{
+		in: []*Score{
 			{TestName: "BadWeights", Secret: theSecret, Weight: 0, MaxScore: 100, Score: 0},
 			{TestName: "BadWeights", Secret: theSecret, Weight: -10, MaxScore: 100, Score: 0},
 			{TestName: "BadWeights", Secret: theSecret, Weight: -1, MaxScore: 100, Score: 0},
 		},
-		want: score.ErrWeight,
+		want: ErrWeight,
 	},
 	{
 		name: "BadMaxScore",
-		in: []*score.Score{
+		in: []*Score{
 			{TestName: "BadMaxScore", Secret: theSecret, Weight: 10, MaxScore: 0, Score: 0},
 			{TestName: "BadMaxScore", Secret: theSecret, Weight: 10, MaxScore: -100, Score: 0},
 			{TestName: "BadMaxScore", Secret: theSecret, Weight: 10, MaxScore: -1, Score: 0},
 		},
-		want: score.ErrMaxScore,
+		want: ErrMaxScore,
 	},
 	{
 		name: "BadScore",
-		in: []*score.Score{
+		in: []*Score{
 			{TestName: "BadScore", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			{TestName: "BadScore", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -20},
 			{TestName: "BadScore", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 101},
 			{TestName: "BadScore", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 1000},
 		},
-		want: score.ErrScoreInterval,
+		want: ErrScoreInterval,
 	},
 	{
 		name: "BadSecret",
-		in: []*score.Score{
+		in: []*Score{
 			{TestName: "BadSecret", Secret: "xyz", Weight: 10, MaxScore: 100, Score: 0},
 		},
-		want: score.ErrSecret,
+		want: ErrSecret,
 	},
 	{
 		name: "GoodScore",
-		in: []*score.Score{
+		in: []*Score{
 			{TestName: "GoodScoreW", Secret: theSecret, Weight: 1, MaxScore: 100, Score: 0},
 			{TestName: "GoodScoreW", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 0},
 			{TestName: "GoodScoreW", Secret: theSecret, Weight: 100, MaxScore: 100, Score: 0},
@@ -137,7 +135,7 @@ func TestScoreIsValid(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// clone the test.in scores to allow repeatable tests
 			for _, sc := range clone(test.in) {
-				err := sc.IsValid(theSecret)
+				err := sc.isValid(theSecret)
 				if err != nil {
 					if !strings.Contains(err.Error(), test.want.Error()) {
 						t.Errorf("IsValid(%q) = %v, expected = %v", sc, err, test.want)
@@ -153,13 +151,13 @@ func TestScoreIsValid(t *testing.T) {
 // clone returns a copy of the src slice pointing to different score objects.
 // This only necessary for testing purposes, when we want to run tests repeatedly
 // with the -count argument to check for non-deterministic behavior.
-func clone(src []*score.Score) []*score.Score {
-	dst := make([]*score.Score, len(src))
+func clone(src []*Score) []*Score {
+	dst := make([]*Score, len(src))
 	for i, sc := range src {
 		if sc == nil {
 			continue
 		}
-		dst[i] = &score.Score{
+		dst[i] = &Score{
 			Secret:   sc.Secret,
 			TestName: sc.TestName,
 			Score:    sc.Score,

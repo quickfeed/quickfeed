@@ -5,16 +5,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
+	"github.com/quickfeed/quickfeed/qf/qfconnect"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 const (
@@ -24,48 +25,18 @@ const (
 	fail      = "Ikke godkjent"
 )
 
-var ignoredStudents = map[string]bool{
-	"Hein Meling Student":      true,
-	"Meling Student":           true,
-	"Eivind Stavnes (student)": true,
-	"John Ingve Olsen Test":    true,
-	"Hein Meling Stud5":        true,
-	"Hans Erik Frøyland":       true,
-}
-
-type QuickFeed struct {
-	cc *grpc.ClientConn
-	qf.QuickFeedServiceClient
-	md metadata.MD
-}
-
-func (s *QuickFeed) Close() {
-	s.cc.Close()
-}
-
-func NewQuickFeed(authToken string) (*QuickFeed, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	cc, err := grpc.DialContext(ctx, "uis.itest.run:9090",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
-		grpc.WithDefaultCallOptions(
-			grpc.MaxCallRecvMsgSize(1024*1024*20),
-			grpc.MaxCallSendMsgSize(1024*1024*20),
-		),
+func NewQuickFeed(serverURL string) qfconnect.QuickFeedServiceClient {
+	return qfconnect.NewQuickFeedServiceClient(
+		http.DefaultClient,
+		serverURL,
+		connect.WithGRPC(),
+		// connect.WithGRPCWeb(),
 	)
-	if err != nil {
-		return nil, err
-	}
-	return &QuickFeed{
-		cc:                     cc,
-		QuickFeedServiceClient: qf.NewQuickFeedServiceClient(cc),
-		md:                     metadata.New(map[string]string{"cookie": authToken}),
-	}, nil
 }
 
 func main() {
 	var (
+		serverURL  = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
 		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
 		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
 		showAll    = flag.Bool("all", false, "show all students")
@@ -75,9 +46,15 @@ func main() {
 	)
 	flag.Parse()
 
-	studentRowMap, sheetName := loadApproveSheet(*courseCode)
+	studentRowMap, sheetName, err := loadApproveSheet(*courseCode)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	submissions := getSubmissions(*courseCode, *year, *userName)
+	submissions, err := getSubmissions(*serverURL, *userName, *courseCode, *year)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
 	fmt.Fprint(tw, "Student\tFS\tRow#\tQuickFeed\t#Approved\tApproved\n")
@@ -88,10 +65,12 @@ func main() {
 	approvedMap := make(map[string]string)
 	numPass, numIgnored := 0, 0
 	for _, el := range submissions.GetLinks() {
-		student := el.Enrollment.User.Name
-		if ignoredStudents[student] || el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
+		enroll := el.GetEnrollment()
+		// ignore course admins and teachers
+		if enroll.IsAdmin() || enroll.IsTeacher() {
 			continue
 		}
+		student := enroll.Name()
 		approved := make([]bool, len(el.Submissions))
 		for i, s := range el.Submissions {
 			approved[i] = s.GetSubmission().IsApproved()
@@ -133,63 +112,60 @@ func main() {
 	tw.Flush()
 	fmt.Println("----------")
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap)+numIgnored, numPass, len(approvedMap)+numIgnored-numPass)
-	saveApproveSheet(*courseCode, sheetName, approvedMap)
+	if err = saveApproveSheet(*courseCode, sheetName, approvedMap); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func getSubmissions(courseCode string, year int, userName string) *qf.CourseSubmissions {
-	authToken := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	if authToken == "" {
-		log.Fatalln("QUICKFEED_AUTH_TOKEN is not set")
-	}
+func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.CourseSubmissions, error) {
+	// TODO(meling) how to get the cookie
+	cookie := "secret"
 
-	client, err := NewQuickFeed(authToken)
-	if err != nil {
-		log.Fatalln("Failed to connect to quickfeed server:", err)
-	}
-	defer client.Close()
-
+	client := NewQuickFeed(serverURL)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	ctx = metadata.NewOutgoingContext(ctx, client.md)
 
-	request := &qf.CourseUserRequest{
+	// TODO(meling) Do we need all these RPCs just to get the submissions? See issue #724.
+	courseUserRequest := &qf.CourseUserRequest{
 		CourseCode: courseCode,
 		CourseYear: uint32(year),
 		UserLogin:  userName,
 	}
-	userInfo, err := client.GetUserByCourse(ctx, request)
+	userResp, err := client.GetUserByCourse(ctx, requestWithCookie(courseUserRequest, cookie))
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to get user %s in course %s: %w", userName, courseCode, err)
 	}
 
-	courses, err := client.GetCoursesByUser(ctx, &qf.EnrollmentStatusRequest{UserID: userInfo.GetID()})
+	enrollStatusRequest := &qf.EnrollmentStatusRequest{UserID: userResp.Msg.GetID()}
+	coursesResp, err := client.GetCoursesByUser(ctx, requestWithCookie(enrollStatusRequest, cookie))
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to get courses for user %s: %w", userName, err)
 	}
 	var courseID uint64
-	for _, c := range courses.GetCourses() {
+	for _, c := range coursesResp.Msg.GetCourses() {
 		if c.GetCode() == courseCode {
 			courseID = c.GetID()
 		}
 	}
 	if courseID == 0 {
-		log.Fatalf("Could not find course: %s", courseCode)
+		return nil, fmt.Errorf("course %s not found", courseCode)
 	}
 
-	// TODO(meling) Access control is currently limited for this method, resulting in a message like the one below
-	// Access control should be fixed on QuickFeed to avoid the hack currently used.
-	// ERROR   web/quickfeed_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
-	submissions, err := client.GetSubmissionsByCourse(
-		ctx,
-		&qf.SubmissionsForCourseRequest{
-			CourseID: courseID,
-			Type:     qf.SubmissionsForCourseRequest_ALL,
-		},
-	)
-	if err != nil {
-		log.Fatal(err)
+	submissionCourseRequest := &qf.SubmissionsForCourseRequest{
+		CourseID: courseID,
+		Type:     qf.SubmissionsForCourseRequest_ALL,
 	}
-	return submissions
+	submissions, err := client.GetSubmissionsByCourse(ctx, requestWithCookie(submissionCourseRequest, cookie))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get submissions for course %s: %w", courseCode, err)
+	}
+	return submissions.Msg, err
+}
+
+func requestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
+	request := connect.NewRequest(message)
+	request.Header().Set(auth.Cookie, cookie)
+	return request
 }
 
 func lookupRow(name string, studentMap map[string]int) (int, error) {
@@ -250,13 +226,13 @@ func fileName(courseCode, suffix string) string {
 	return strings.ToLower(courseCode) + suffix
 }
 
-func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName string) {
+func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName string, err error) {
 	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
-		log.Fatal(err)
+		return nil, "", err
 	}
 	if f.SheetCount != 1 {
-		log.Fatalf("Unexpected number of sheets: %d; only single-sheet files supported", f.SheetCount)
+		return nil, "", fmt.Errorf("expected a single sheet in %s, got %d", fileName(courseCode, srcSuffix), f.SheetCount)
 	}
 	// we expect only a single sheet; assume that is the active sheet
 	sheetName = f.GetSheetName(f.GetActiveSheetIndex())
@@ -266,18 +242,16 @@ func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName s
 			approveMap[row[0]] = i + 1
 		}
 	}
-	return approveMap, sheetName
+	return approveMap, sheetName, nil
 }
 
-func saveApproveSheet(courseCode, sheetName string, approveMap map[string]string) {
+func saveApproveSheet(courseCode, sheetName string, approveMap map[string]string) error {
 	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	for cell, approved := range approveMap {
 		f.SetCellValue(sheetName, cell, approved)
 	}
-	if err := f.SaveAs(fileName(courseCode, dstSuffix)); err != nil {
-		log.Fatal(err)
-	}
+	return f.SaveAs(fileName(courseCode, dstSuffix))
 }

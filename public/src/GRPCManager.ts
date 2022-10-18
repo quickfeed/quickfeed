@@ -225,7 +225,14 @@ export class GrpcManager {
             courseID: BigInt(courseID),
             userID: BigInt(userID),
         })
-        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
+        return this.grpcSend<Submissions>(this.agService.getSubmission, request)
+    }
+    public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
+        const request = new SubmissionReviewersRequest({
+            courseID: courseID,
+            submissionID: submissionID
+        })
+        return this.grpcSend<Submission>(this.agService.getSubmission, request)
     }
 
     public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
@@ -236,11 +243,10 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
-    public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest({
             courseID: courseID,
             type: type,
-            withBuildInfo: withBuildInfo,
         })
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request)
     }
@@ -267,13 +273,11 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmissions, request)
     }
 
-    public rebuildSubmission(assignmentID: bigint, submissionID: bigint): Promise<IGrpcResponse<Void>> {
+    public rebuildSubmission(assignmentID: bigint, submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
         const request = new RebuildRequest({
+            submissionID: submissionID,
             assignmentID: assignmentID,
-            rebuildType: {
-                case: "submissionID",
-                value: BigInt(submissionID),
-            }
+            courseID: courseID,  
         })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
@@ -281,10 +285,7 @@ export class GrpcManager {
     public rebuildSubmissions(assignmentID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
         const request = new RebuildRequest({
             assignmentID: BigInt(assignmentID),
-            rebuildType: {
-                case: "courseID",
-                value: BigInt(courseID),
-            }
+            courseID: courseID,
         })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }

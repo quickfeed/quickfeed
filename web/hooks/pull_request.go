@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -8,9 +9,92 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/assignments"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
+
+// handlePullRequestPush attempts to find a pull request associated with a non-default branch push event.
+// If successful, it then finds the relevant task, and uses it to retrieve the relevant task score.
+// If a passing score is reached, it assigns reviewers to the pull request.
+// It also uses the test results and task to generate a feedback comment for the pull request.
+func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm.SCM, payload *github.PushEvent, results *score.Results, rd *ci.RunData) {
+	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
+		payload.GetRef(), payload.GetRepo().GetFullName())
+
+	pullRequest, err := wh.getPullRequest(payload)
+	if err != nil {
+		wh.logger.Errorf("Failed to retrieve pull request data from push payload: %v", err)
+		return
+	}
+	task, err := wh.getTask(pullRequest.GetTaskID())
+	if err != nil {
+		wh.logger.Errorf("Failed to get task from the database: %v", err)
+		return
+	}
+	taskSum := results.TaskSum(task.GetName())
+
+	repoName := rd.Repo.Name()
+	prNumber := pullRequest.GetNumber()
+	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
+	// We do not assign reviewers if the pull request has already been assigned reviewers
+	scoreLimit := rd.Assignment.GetScoreLimit()
+	if taskSum >= scoreLimit && !pullRequest.HasReviewers() {
+		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", prNumber, repoName)
+		if err := assignments.AssignReviewers(ctx, scmClient, wh.db, rd.Course, rd.Repo, pullRequest); err != nil {
+			wh.logger.Errorf("Failed to assign reviewers to pull request: %v", err)
+			return
+		}
+	}
+
+	// Create a test results feedback comment on the pull request
+	opt := &scm.IssueCommentOptions{
+		Organization: rd.Course.GetOrganizationName(),
+		Repository:   repoName,
+		Body:         results.MarkdownComment(task.GetName(), scoreLimit),
+		Number:       int(prNumber),
+	}
+	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", prNumber, repoName)
+	if !pullRequest.HasFeedbackComment() {
+		commentID, err := scmClient.CreateIssueComment(ctx, opt)
+		if err != nil {
+			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", prNumber, repoName)
+			return
+		}
+		pullRequest.ScmCommentID = uint64(commentID)
+		if err := wh.db.UpdatePullRequest(pullRequest); err != nil {
+			wh.logger.Errorf("Failed to update pull request: %v", err)
+			return
+		}
+	} else {
+		opt.CommentID = int64(pullRequest.GetScmCommentID())
+		if err := scmClient.UpdateIssueComment(ctx, opt); err != nil {
+			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", prNumber, repoName)
+			return
+		}
+	}
+	wh.logger.Debugf("Successfully handled push to pull request #%d, in repository: %s", prNumber, repoName)
+}
+
+// getPullRequest retrieves the pull request from the database based on the push event payload.
+func (wh GitHubWebHook) getPullRequest(payload *github.PushEvent) (*qf.PullRequest, error) {
+	pullRequest, err := wh.db.GetPullRequest(&qf.PullRequest{
+		SourceBranch:    branchName(payload.GetRef()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// This can happen if someone pushes to a branch group assignment, without having a PR created for it
+			// If this happens, QF should not do anything
+			return nil, fmt.Errorf("no pull request found for ref: %s", payload.GetRef())
+		}
+		return nil, fmt.Errorf("failed to get pull request from database: %v", err)
+	}
+	return pullRequest, nil
+}
 
 func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestReviewEvent) {
 	wh.logger.Debugf("Received review event for pull request #%d: %q in %s",
@@ -59,7 +143,10 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	// review is from a course teacher, do we mark the pull request as approved for QuickFeed.
 	if reviewer.IsTeacher() {
 		pullRequest.SetApproved()
-		wh.db.UpdatePullRequest(pullRequest)
+		if err := wh.db.UpdatePullRequest(pullRequest); err != nil {
+			wh.logger.Errorf("Failed to update pull request in database: %v", err)
+			return
+		}
 		wh.logger.Debugf("Pull request successfully approved for repository: %s", payload.GetRepo().GetFullName())
 	}
 }
@@ -143,7 +230,6 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, asso
 		SourceBranch:    payload.GetPullRequest().GetHead().GetRef(),
 		Number:          uint64(payload.GetNumber()),
 	}
-
 	if err = wh.db.CreatePullRequest(pullRequest); err != nil {
 		wh.logger.Errorf("Failed to create pull request data-record for repository %s: %v", payload.GetRepo().GetFullName(), err)
 		return

@@ -17,11 +17,11 @@ const NavFavorites = (): JSX.Element => {
     return (
         <nav className="navigator">
             <ul key="list" className="sidebarList">
-                <li key="logo" className="logo" style={{ paddingLeft: "40px" }}>
+                <li key="logo" className="logo" style={{ paddingLeft: "40px", fontWeight: "bold" }}>
                     <Link to="/" >
                         QuickFeed
                     </Link>
-                    <a onClick={() => actions.toggleFavorites()} role="button" className="closeButton">✖</a>
+                    <a  onClick={() => actions.toggleFavorites()} role="button" style={{ textDecoration: "none"}} className="closeButton">✖</a>
                 </li>
                 {courses}
                 {state.isLoggedIn &&

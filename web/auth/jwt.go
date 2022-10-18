@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,9 +10,14 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 )
+
+type requestID interface {
+	IDFor(string) uint64
+}
 
 // Claims contain the bearer information.
 type Claims struct {
@@ -27,22 +33,13 @@ type TokenManager struct {
 	tokensToUpdate []uint64 // User IDs for user who need a token update.
 	db             database.Database
 	secret         string
-	domain         string
 }
 
 // NewTokenManager starts a new token manager. Will create a list with all tokens that need update.
-func NewTokenManager(db database.Database, domain string) (*TokenManager, error) {
-	if domain == "" {
-		return nil, errors.New("failed to create a new token manager: missing domain")
-	}
-	hostname, _, ok := strings.Cut(domain, ":")
-	if ok {
-		domain = hostname
-	}
+func NewTokenManager(db database.Database) (*TokenManager, error) {
 	manager := &TokenManager{
 		db:     db,
 		secret: rand.String(),
-		domain: domain,
 	}
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err
@@ -63,7 +60,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	return &http.Cookie{
 		Name:     CookieName,
 		Value:    signedToken,
-		Domain:   tm.domain,
+		Domain:   env.Domain(),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -73,7 +70,11 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 }
 
 // GetClaims returns validated user claims.
-func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
+func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
+	tokenString, err := extractToken(cookie)
+	if err != nil {
+		return nil, err
+	}
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
@@ -99,27 +100,36 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
+func (tm *TokenManager) Database() database.Database {
+	return tm.db
+}
+
 // newClaims creates new JWT claims for user ID.
 func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	usr, err := tm.db.GetUserWithEnrollments(userID)
 	if err != nil {
 		return nil, err
 	}
-	newClaims := &Claims{
+	userCourses := make(map[uint64]qf.Enrollment_UserStatus)
+	userGroups := make([]uint64, 0)
+	for _, enrol := range usr.Enrollments {
+		userCourses[enrol.GetCourseID()] = enrol.GetStatus()
+		if enrol.GroupID != 0 {
+			userGroups = append(userGroups, enrol.GroupID)
+		}
+	}
+
+	return &Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(tokenExpirationTime).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    "QuickFeed",
 		},
-		UserID: userID,
-		Admin:  usr.IsAdmin,
-	}
-	userCourses := make(map[uint64]qf.Enrollment_UserStatus)
-	for _, enrol := range usr.Enrollments {
-		userCourses[enrol.GetCourseID()] = enrol.GetStatus()
-	}
-	newClaims.Courses = userCourses
-	return newClaims, nil
+		UserID:  userID,
+		Admin:   usr.IsAdmin,
+		Courses: userCourses,
+		Groups:  userGroups,
+	}, nil
 }
 
 // tokenExpired returns true if the given JWT validation error is due to an expired token.
@@ -140,4 +150,65 @@ func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 		return err
 	}
 	return token.Method.Verify(signingString, token.Signature, []byte(tm.secret))
+}
+
+// extractToken returns a JWT authentication token extracted from the request header's cookie.
+func extractToken(cookieString string) (string, error) {
+	cookies := strings.Split(cookieString, ";")
+	for _, cookie := range cookies {
+		_, cookieValue, ok := strings.Cut(cookie, CookieName+"=")
+		if ok {
+			return strings.TrimSpace(cookieValue), nil
+		}
+	}
+	return "", errors.New("failed to extract authentication cookie from request header")
+}
+
+// Context returns the given context augmented with the claims' user ID.
+func (c Claims) Context(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ContextKeyUserID, c.UserID)
+}
+
+func (c *Claims) ClaimsContext(ctx context.Context) context.Context {
+	ctx = c.Context(ctx) // Can be removed if tests are rewritten to be performed as gRPC calls with claims cookie in the request header.
+	return context.WithValue(ctx, ContextKeyClaims, c)
+}
+
+func ClaimsFromContext(ctx context.Context) (*Claims, bool) {
+	claims, ok := ctx.Value(ContextKeyClaims).(*Claims)
+	return claims, ok
+}
+
+// HasCourseStatus returns true if user has enrollment with given status in the course.
+func (c *Claims) HasCourseStatus(req requestID, status qf.Enrollment_UserStatus) bool {
+	courseID := req.IDFor("course")
+	return c.Courses[courseID] == status
+}
+
+func (c *Claims) IsCourseTeacher(db database.Database, req *qf.CourseUserRequest) error {
+	for courseID, status := range c.Courses {
+		if status == qf.Enrollment_TEACHER {
+			course, err := db.GetCourse(courseID, false)
+			if err != nil {
+				return err
+			}
+			if course.GetCode() == req.GetCourseCode() && course.GetYear() == req.GetCourseYear() {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("user %d is not teacher of the %s course", c.UserID, req.GetCourseCode())
+}
+
+// SameUser returns true if user ID in request is the same as in claims.
+func (c *Claims) SameUser(req requestID) bool {
+	return req.IDFor("user") == c.UserID
+}
+
+func (c *Claims) String() string {
+	admin := ""
+	if c.Admin {
+		admin = " (admin)"
+	}
+	return fmt.Sprintf("UserID: %d%s: Courses: %v, Groups: %v", c.UserID, admin, c.Courses, c.Groups)
 }

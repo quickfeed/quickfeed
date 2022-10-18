@@ -7,7 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -16,15 +15,24 @@ import (
 
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
+	s, _ := scm.GetTestSCM(t)
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
 		Code:             "qf101",
-		OrganizationPath: qfTestOrg,
+		OrganizationName: qfTestOrg,
 	}
 
-	assignments, dockerfile, err := fetchAssignments(context.Background(), s, course)
+	clonedTestsRepo, err := s.Clone(context.Background(), &scm.CloneOptions{
+		Organization: course.GetOrganizationName(),
+		Repository:   qf.TestsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
+	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +43,7 @@ func TestFetchAssignments(t *testing.T) {
 	}
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
 	course.Dockerfile = dockerfile
-	if err := buildDockerImage(context.Background(), qlog.Logger(t), course); err != nil {
+	if err := buildDockerImage(context.Background(), qtest.Logger(t), course); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -204,7 +212,7 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// If assignment.GradingBenchmarks is empty beyond this point, it means that there were no added / removed benchmarks / criteria
-	updateGradingCriteria(qlog.Logger(t), db, assignment)
+	updateGradingCriteria(qtest.Logger(t), db, assignment)
 
 	// Assignment has no added or removed benchmarks, expect nil
 	if assignment.GradingBenchmarks != nil {
@@ -212,7 +220,10 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Update assignments. GradingBenchmarks should not be updated
-	db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
+	err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, wantReview := range []*qf.Review{review, review2} {
 		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.ID})
@@ -257,7 +268,7 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment.GradingBenchmarks = updatedBenchmarks
 
 	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
-	updateGradingCriteria(qlog.Logger(t), db, assignment)
+	updateGradingCriteria(qtest.Logger(t), db, assignment)
 
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {
@@ -274,7 +285,10 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Update assignments. GradingBenchmarks should be updated
-	db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
+	err = db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Benchmarks should have been updated to reflect the removal of a benchmark and a criterion
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})

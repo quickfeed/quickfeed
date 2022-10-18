@@ -9,10 +9,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -31,24 +32,32 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
-	qfTestOrg := scm.GetTestOrganization(t)
-	// Only used to fetch the user's GitHub login (user name)
-	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
+func loadDockerfile(t *testing.T) string {
+	t.Helper()
+	b, err := os.ReadFile("testdata/Dockerfile")
 	if err != nil {
 		t.Fatal(err)
 	}
+	return string(b)
+}
+
+func testRunData(t *testing.T) *ci.RunData {
+	runScriptContent := loadRunScript(t)
+	dockerfileContent := loadDockerfile(t)
+
+	qfTestOrg := scm.GetTestOrganization(t)
+	// Only used to fetch the user's GitHub login (user name)
+	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, scm.GetAccessToken(t))
 	runData := &ci.RunData{
 		Course: &qf.Course{
 			ID:               courseID,
 			Code:             "QF101",
 			Provider:         "github",
-			OrganizationPath: qfTestOrg,
+			OrganizationName: qfTestOrg,
+			Dockerfile:       dockerfileContent,
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
@@ -60,22 +69,21 @@ func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 			RepoType: qf.Repository_USER,
 		},
 		JobOwner: "muggles",
-		CommitID: "deadbeef",
+		CommitID: rand.String()[:7],
 	}
 	return runData
 }
 
 func TestRunTests(t *testing.T) {
-	runScriptContent := loadRunScript(t)
-	runData := testRunData(t, runScriptContent)
+	runData := testRunData(t)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
-	scm, _ := qtest.FakeProviderMap(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
+	scmClient, _ := scm.GetTestSCM(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,16 +94,15 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	runScriptContent := loadRunScript(t)
-	runData := testRunData(t, runScriptContent)
+	runData := testRunData(t)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	scm, _ := qtest.FakeProviderMap(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
+	scmClient, _ := scm.GetTestSCM(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}

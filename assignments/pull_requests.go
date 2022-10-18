@@ -38,7 +38,7 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 	}
 
 	opt := &scm.RequestReviewersOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   repo.Name(),
 		Number:       int(pullRequest.GetNumber()),
 		Reviewers: []string{

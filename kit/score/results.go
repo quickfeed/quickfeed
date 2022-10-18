@@ -64,7 +64,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	for _, line := range strings.Split(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
-			sc, err := Parse(line, secret)
+			sc, err := parse(line, secret)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
 				continue
@@ -114,7 +114,7 @@ func (r *Results) addScore(sc *Score) {
 // Otherwise, nil is returned.
 func (r *Results) Validate(secret string) error {
 	for _, sc := range r.Scores {
-		if err := sc.IsValid(secret); err != nil {
+		if err := sc.isValid(secret); err != nil {
 			return err
 		}
 	}

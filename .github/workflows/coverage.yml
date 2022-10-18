@@ -26,35 +26,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+          check-latest: true
+          cache: true
 
       - name: Generate coverage report
         run: DOCKER_TESTS=1 go test -v -coverprofile=profile.cov -covermode=atomic ./...
 
-      - name: Upload coverage report to Coveralls.io
-        uses: shogo82148/actions-goveralls@v1
-        with:
-          path-to-profile: profile.cov
-          flag-name: Go-${{ matrix.go-version }}
-          parallel: true
-
-      - name: Upload coverage report to codecov.io
-        uses: codecov/codecov-action@v2
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
           files: ./profile.cov
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)
-
-  # notifies that all test jobs are finished.
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
+          fail_ci_if_error: true
+          verbose: true

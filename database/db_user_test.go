@@ -92,7 +92,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	defer cleanup()
 	wantUser := qtest.CreateFakeUser(t, db, remoteID)
 
-	cachedAccessToken, err := wantUser.GetAccessToken(provider)
+	cachedAccessToken, err := wantUser.GetRefreshToken(provider)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	cachedAccessToken2, err := gotUser.GetAccessToken(provider)
+	cachedAccessToken2, err := gotUser.GetRefreshToken(provider)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,85 +142,12 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	cachedAccessToken3, err := gotUser.GetAccessToken(provider)
+	cachedAccessToken3, err := gotUser.GetRefreshToken(provider)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if cachedAccessToken2 == cachedAccessToken3 {
 		t.Errorf("cached access token before and after are the same: %s == %s", cachedAccessToken2, cachedAccessToken3)
-	}
-}
-
-func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
-	const (
-		stud           = "student1"
-		newAccessToken = "123"
-		anotherToken   = "456"
-		provider       = "fake"
-		remoteID       = 10
-		remoteID2      = 11
-	)
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	admin := qtest.CreateNamedUser(t, db, remoteID, "admin")
-	initialAdminToken, err := admin.GetAccessToken(provider)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	course := &qf.Course{
-		ID:              1,
-		CourseCreatorID: admin.ID,
-		Code:            "DAT320",
-		Name:            "Operating Systems and Systems Programming",
-		Provider:        provider,
-		Year:            2021,
-	}
-	qtest.CreateCourse(t, db, admin, course)
-
-	cr, err := db.GetCourse(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachedToken := cr.GetAccessToken()
-	if cachedToken != initialAdminToken {
-		t.Errorf("cached token different from expected initial token: %s != %s", cachedToken, initialAdminToken)
-	}
-
-	// Update the access token for the user.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: newAccessToken,
-	}); err != nil {
-		t.Error(err)
-	}
-
-	cr, err = db.GetCourse(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachedToken = cr.GetAccessToken()
-	if cachedToken != newAccessToken {
-		t.Errorf("cached token different from expected updated token: %s != %s", cachedToken, newAccessToken)
-	}
-
-	// Update the access token for the user again.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: anotherToken,
-	}); err != nil {
-		t.Error(err)
-	}
-
-	cr, err = db.GetCourse(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachedToken = cr.GetAccessToken()
-	if cachedToken != anotherToken {
-		t.Errorf("cached token different from expected updated token: %s != %s", cachedToken, anotherToken)
 	}
 }

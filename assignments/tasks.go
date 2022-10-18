@@ -103,7 +103,7 @@ func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 	createdIssues := []*qf.Issue{}
 	for _, task := range tasks {
 		issueOptions := &scm.IssueOptions{
-			Organization: course.GetOrganizationPath(),
+			Organization: course.GetOrganizationName(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
@@ -131,7 +131,7 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 			continue
 		}
 		issueOptions := &scm.IssueOptions{
-			Organization: course.GetOrganizationPath(),
+			Organization: course.GetOrganizationName(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,

@@ -1,26 +1,22 @@
 # Quickfeed Deployments
 
-## Table of Contents
-
-- [Technology Stack](#technology-stack)
-- [Preparing the Environment](#preparing-the-environment)
-  - [Configuring Docker](#configuring-docker)
-  - [Setup Environment Variables](#setup-environment-variables)
-  - [Generate Envoy Configuration File](#generate-envoy-configuration-file)
-  - [Configure GitHub OAuth Application for QuickFeed](#configure-github-oauth-application-for-quickfeed)
-- [Docker Deployment](#docker-deployment)
-- [Bare Metal Deployment](#bare-metal-deployment)
-  - [Deployment with Domain Name and Let's Encrypt Certificates](#deployment-with-domain-name-and-lets-encrypt-certificates)
-  - [Configure Fixed IP and Router](#configure-fixed-ip-and-router)
-  - [Install Tools for Deployment](#install-tools-for-deployment)
-  - [Install Tools for Development](#install-tools-for-development)
-  - [Generate Certbot Private Key and Certificate](#generate-certbot-private-key-and-certificate)
-  - [Run Envoy](#run-envoy)
-  - [Build and Run QuickFeed Server](#build-and-run-quickfeed-server)
-    - [Troubleshooting](#troubleshooting)
-  - [Running the QuickFeed Server Details](#running-the-quickfeed-server-details)
+- [Quickfeed Deployments](#quickfeed-deployments)
+  - [Technology Stack](#technology-stack)
+  - [Recommended VSCode Plugins](#recommended-vscode-plugins)
+  - [Setup](#setup)
+    - [Install Tools for Deployment](#install-tools-for-deployment)
+    - [Install Tools for Development](#install-tools-for-development)
+    - [Preparing the Environment for Production](#preparing-the-environment-for-production)
+    - [Preparing the Environment for Testing](#preparing-the-environment-for-testing)
+    - [First-time Installation](#first-time-installation)
+    - [Configuring Docker](#configuring-docker)
+    - [Configuring Fixed IP and Router](#configuring-fixed-ip-and-router)
+  - [Building QuickFeed Server](#building-quickfeed-server)
+  - [Running QuickFeed Server](#running-quickfeed-server)
     - [Flags](#flags)
-    - [Custom Docker Image for a Course](#custom-docker-image-for-a-course)
+    - [Running Server on a Privileged Port](#running-server-on-a-privileged-port)
+    - [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost)
+  - [Troubleshooting](#troubleshooting)
 
 ## Technology Stack
 
@@ -28,128 +24,24 @@ QuickFeed depends on these technologies.
 
 - [Go](https://golang.org/doc/code.html)
 - [TypeScript](https://www.typescriptlang.org/)
-- [gRPC](https://grpc.io/)
+- Buf's [connect-go](https://buf.build/blog/connect-a-better-grpc) for gRPC
+- Buf's [connect-web](https://buf.build/blog/connect-web-protobuf-grpc-in-the-browser) replaces gRPC-Web
 - [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/proto3)
-- [gRPC-Web](https://github.com/grpc/grpc-web)
-- [Envoy](https://www.envoyproxy.io/)
+- TODO remove when no longer used [gRPC-Web](https://github.com/grpc/grpc-web) (currently only used in the frontend)
 
-### Recommended VSCode Plugins
+## Recommended VSCode Plugins
 
 - Go
 - vscode-proto3
 - Code Spell Checker
-- TSLint
+- ESLint
 - markdownlint
 - Better Comments
 - GitLens
 - Git History Diff
 - SQLite
 
-## Preparing the Environment
-
-### Configuring Docker
-
-To ensure that Docker containers has access to networking, you may need to set up IPv4 port forwarding on your server machine:
-
-```sh
-sudo sysctl net.ipv4.ip_forward=1
-sudo sysctl -p
-sudo service docker restart
-```
-
-### Setup Environment Variables
-
-```sh
-% cd $QUICKFEED
-% cp .env-template .env
-# Edit .env according to your domain and quickfeed ports
-```
-
-The `$DOMAIN` should be set to your public landing page for QuickFeed, e.g., `www.my-quickfeed.com`.
-
-The `$SERVER_HOST` should be set to the ip, hostname or container name where the quickfeed service will run.
-
-The authorization callback URL is unique for each instance of QuickFeed, e.g., `https://www.my-quickfeed.com/auth/callback/github`.
-
-### Generate Envoy Configuration File
-
-Envoy is mainly used as a reverse proxy to facilitate gRPC invocations on the server-side.
-It also serves to mediate OAuth traffic from GitHub.
-
-The default envoy configuration for testing can be generated using the existent rules in the Makefile:
-
-```sh
-% make envoy-config
-```
-
-This configuration does not use TLS. To enable TLS but generate certificates for testing purposes, you can run:
-
-```sh
-% go run ./cmd/envoy/envoy_config_gen.go --tls
-```
-
-If you already have certificates that you would like to use you can specify them during the creation of the envoy configuration, running the command below.
-
-```sh
-% go run ./cmd/envoy/envoy_config_gen.go --tls --cert="fullchain.pem" --key="key.pem"
-```
-
-After run the script, the envoy configuration will be generate at `$QUICKFEED/ci/docker/envoy` and saved as `envoy-$DOMAIN.yaml`.
-It will overwrite the configuration file if it already exists.
-
-The certificates are generated under the directory `$QUICKFEED/ci/docker/envoy/certs`.
-If you want to use your own set of certificates to build the docker image, you need to move your certificates to that directory.
-
-The script sets the certificate and key at the following path: `/etc/letsencrypt/live/$DOMAIN/(CERTIFICATE | KEY).pem`.
-
-The generated configuration expose by defaults the ports 80 and 443 and redirect the traffic to the quickfeed service depending on the requests.
-
-_Note that, when running envoy in your host machine, you need to ensure that certificates and necessary keys are stored at the same location as specified in the envoy config._
-
-### Configure GitHub OAuth Application for QuickFeed
-
-To deploy QuickFeed, you need to configure a GitHub account for communicating with QuickFeed.
-See the instructions for configuring a [GitHub OAuth2 application](./github.md).
-
-## Docker Deployment
-
-Quickfeed and Envoy can be installed and run on containers using the [docker-compose](../docker-compose.yml) configuration.
-First, ensure that [docker-compose](https://docs.docker.com/compose/) is installed in your system.
-Then, to build and run the containers, run:
-
-```sh
-% docker-compose up --build
-```
-
-If you would like to run envoy in a container but quickfeed locally in the host machine, please run envoy as described in the section [Run Envoy](#run-envoy) sub-section 3. Then run quickfeed as described in section [Build Quickfeed](#build-and-run-quickfeed-server).
-
-Note that the `--build` forces the re-build of the docker images, if you don't want to rebuild unchanged images, just run the previous command without that option, e.g.: `docker-compose up`.
-
-## Bare Metal Deployment
-
-### Deployment with Domain Name and Let's Encrypt Certificates
-
-The following instructions assume a fixed IP and domain name for the server to be `$DOMAIN`.
-Replace the relevant IP address and domain name with your own.
-
-For this tutorial, we use the following domain:
-
-```text
-Homepage URL: https://www.my-quickfeed.com
-Authorization callback URL: https://www.my-quickfeed.com/auth/callback/github/
-```
-
-### Configure Fixed IP and Router
-
-In your domain name provider, configure your IP and domain name; for instance:
-
-```text
-Type         Host          Value                TTL
-A Record     cyclone       92.221.105.172       5 min
-```
-
-Set up port forwarding on your router.
-External ports 80/443 maps to internal ports 80/443 for TCP.
+## Setup
 
 ### Install Tools for Deployment
 
@@ -171,118 +63,195 @@ To install:
 
 The `devtools` make target will download and install various Protobuf compiler plugins and the grpcweb Protobuf compiler.
 
-### Generate Certbot Private Key and Certificate
+### Preparing the Environment for Production
 
-Generating certificates with certbot:
+QuickFeed expects the `.env` file to contain certain environment variables.
+For a first-time installation, the `.env` file is not present.
+However, the `.env-template` file contains a template that can be copied and modified.
+The following is an example production deployment on the `example.com` domain.
 
-```terminal
-% sudo certbot certonly --standalone
-Saving debug log to /var/log/letsencrypt/letsencrypt.log
-Plugins selected: Authenticator standalone, Installer None
-Please enter in your domain name(s) (comma and/or space separated)  (Enter 'c'
-to cancel): www.my-quickfeed.com
-Requesting a certificate for www.my-quickfeed.com
-Performing the following challenges:
-http-01 challenge for www.my-quickfeed.com
-Waiting for verification...
-Cleaning up challenges
+```shell
+# GitHub App IDs and secrets for deployment
+QUICKFEED_APP_ID=""
+QUICKFEED_APP_KEY=$QUICKFEED/internal/config/github/quickfeed.pem
+QUICKFEED_CLIENT_ID=""
+QUICKFEED_CLIENT_SECRET=""
+QUICKFEED_WEBHOOK_SECRET=""
 
-IMPORTANT NOTES:
- - Congratulations! Your certificate and chain have been saved at:
-   /etc/letsencrypt/live/www.my-quickfeed.com/fullchain.pem
-   Your key file has been saved at:
-   /etc/letsencrypt/live/www.my-quickfeed.com/privkey.pem
-   Your certificate will expire on 2021-09-11. To obtain a new or
-   tweaked version of this certificate in the future, simply run
-   certbot again. To non-interactively renew *all* of your
-   certificates, run "certbot renew"
+# QuickFeed server domain or ip
+DOMAIN="example.com"
+
+# Comma-separated list of domains to allow certificates for.
+# IP addresses and "localhost" are *not* valid.
+# The whitelist must also include the domain defined above.
+QUICKFEED_WHITELIST="example.com"
 ```
 
-Renewing certificates:
+You only need to edit the `$DOMAIN` environment variable to point to your public landing page for QuickFeed.
+The [QuickFeed App installation process](#first-time-installation) will guide you through the rest of the setup,
+setting the environment variables in your `.env` file and saving the `quickfeed.pem` file.
 
-```terminal
-% sudo certbot certonly --standalone
-Saving debug log to /var/log/letsencrypt/letsencrypt.log
-Please enter the domain name(s) you would like on your certificate (comma and/or
-space separated) (Enter 'c' to cancel): www.my-quickfeed.com
-Renewing an existing certificate for www.my-quickfeed.com
+### Preparing the Environment for Testing
 
-Successfully received certificate.
-Certificate is saved at: /etc/letsencrypt/live/www.my-quickfeed.com/fullchain.pem
-Key is saved at:         /etc/letsencrypt/live/www.my-quickfeed.com/privkey.pem
-This certificate expires on 2021-10-28.
-These files will be updated when the certificate renews.
-Certbot has set up a scheduled task to automatically renew this certificate in the background.
+For a localhost test deployment, you additionally need to specify the file names for the self-signed certificates.
+And the `QUICKFEED_WHITELIST` must be removed from your `.env` file.
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-If you like Certbot, please consider supporting our work by:
- * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
- * Donating to EFF:                    https://eff.org/donate-le
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+```shell
+# Certificate chain and private key file
+QUICKFEED_KEY_FILE=$QUICKFEED/internal/config/certs/privkey.pem
+QUICKFEED_CERT_FILE=$QUICKFEED/internal/config/certs/fullchain.pem
+
+# QuickFeed server domain or ip
+DOMAIN="127.0.0.1"
 ```
 
-### Run Envoy
+The [QuickFeed App installation process](#first-time-installation) will guide you through the rest of the setup,
+setting the environment variables in your `.env` file and saving the self-signed certificate files.
 
-Please choose one of the options below to run envoy in your system:
+### First-time Installation
 
-1. Running with locally installed Envoy (macOS homebrew)
+To start the server for first-time installation, use the `-new` flag.
 
-   ```sh
-   % sudo envoy -c $ENVOY_CONFIG &
-   ```
+```shell
+% make install
+% quickfeed -new
+2022/09/11 16:45:22 running: go list -m -f {{.Dir}}
+2022/09/11 16:45:22 Loading environment variables from /Users/meling/work/quickfeed/.env
+2022/09/11 16:45:22 Important: The GitHub user that installs the QuickFeed App will become the server's admin user.
+2022/09/11 16:45:22 Go to https://example.com/manifest to install the QuickFeed GitHub App.
+2022/09/11 16:46:00 Successfully installed the QuickFeed GitHub App.
+2022/09/11 16:46:00 Loading environment variables from /Users/meling/work/quickfeed/.env
+2022/09/11 16:46:00 Starting QuickFeed in production mode on example.com
+```
 
-   With additional logging:
+After starting the server you should see various configuration files saved to `internal/config`:
 
-   ```sh
-   % sudo envoy -c $ENVOY_CONFIG --log-path envoy.log --enable-fine-grain-logging -l debug &
-   ```
+```shell
+% tree internal/config/
+internal/config/
+├── certs
+│   ├── acme_account+key
+│   └── example.com
+└── github
+    └── quickfeed.pem
+```
 
-2. Running with func-e (Linux)
+In addition, your `.env` file should be populated with important secrets that should be kept away from prying eyes.
 
-   Install the `func-e` command in `/usr/local/bin` with:
+```shell
+% cat .env
+# GitHub App IDs and secrets for deployment
+QUICKFEED_APP_ID=<6 digit ID>
+QUICKFEED_APP_KEY=/Users/meling/work/quickfeed/internal/config/github/quickfeed.pem
+QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
+QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
+QUICKFEED_WEBHOOK_SECRET=<40 chars of secret data>
+```
 
-   ```sh
-   % curl https://func-e.io/install.sh | sudo bash -s -- -b /usr/local/bin
-   ```
+### Configuring Docker
 
-   Alternatively, install via linuxbrew instead:
+To ensure that Docker containers has access to networking, you may need to set up IPv4 port forwarding on your server machine:
 
-   ```sh
-   % brew install func-e
-   % sudo ln -s /home/linuxbrew/.linuxbrew/bin/func-e /usr/local/bin
-   ```
+```sh
+sudo sysctl net.ipv4.ip_forward=1
+sudo sysctl -p
+sudo service docker restart
+```
 
-   Run with:
+### Configuring Fixed IP and Router
 
-   ```sh
-   % sudo func-e run -c $ENVOY_CONFIG &
-   ```
+In your domain name provider, configure your IP and domain name; for instance:
 
-3. Running Envoy using docker-compose
+```text
+Type         Host          Value                TTL
+A Record     cyclone       92.221.105.172       5 min
+```
 
-   If you want to run envoy using the existing docker-compose configuration you need to copy your certificates to `$QUICKFEED/ci/docker/envoy/certs` and run:
+Set up port forwarding on your router.
+External ports 80/443 maps to internal ports 80/443 for TCP.
 
-   ```sh
-   % docker-compose up --build --remove-orphans envoy
-   ```
-
-### Build and Run QuickFeed Server
+## Building QuickFeed Server
 
 After editing files in the `public` folder, run the following command.
 This should also work while the application is running.
 
-```bash
+```sh
 % make ui
 ```
 
-Build and run the `quickfeed` server; here we use all default values:
+Build the `quickfeed` server.
 
-```bash
-% go install
-% quickfeed -service.url $DOMAIN  &> quickfeed.log &
+```sh
+% make install
 ```
 
-#### Troubleshooting
+After editing any of the `.proto` files you will need to recompile the protobuf files, run the following command.
+
+```sh
+% make proto
+```
+
+This may require you to run both `make install` and `make ui`.
+
+## Running QuickFeed Server
+
+To run in production mode on `$DOMAIN` using default values:
+
+```sh
+% quickfeed &> quickfeed.log &
+```
+
+To run in development mode on localhost:
+
+```sh
+% quickfeed -dev &> quickfeed.log &
+```
+
+To view the full usage details:
+
+```sh
+% quickfeed -help
+```
+
+### Flags
+
+| **Flag**        | **Description**                                      | **Example** |
+| --------------- | ---------------------------------------------------- | ----------- |
+| `database.file` | Path to QuickFeed database                           | `qf.db`     |
+| `http.addr`     | Listener address for HTTP service                    | `:8081`     |
+| `dev`           | Run development server with self-signed certificates |             |
+| `new`           | Create a new QuickFeed App                           |             |
+
+### Running Server on a Privileged Port
+
+It is possible to run server in development mode on different ports by setting the `http.addr` flag.
+However, by default the server will run on port `:443`.
+If the quickfeed binary cannot access port `:443` on your Linux system, you can enable it by running:
+
+```sh
+sudo setcap CAP_NET_BIND_SERVICE=+eip /path/to/binary/quickfeed
+```
+
+Note that you will need to repeat this step each time you recompile the server.
+
+### Using GitHub Webhooks When Running Server On Localhost
+
+GitHub webhooks cannot send events directly to your server if it runs on localhost.
+However, it is possible to setup a tunneling service that will be listening to the events coming from webhooks and redirecting them to the locally deployed server.
+
+One of the many options is [ngrok](https://ngrok.com/). To use ngrok you have to create a free account and download ngrok.
+After that it will be possible to receive webhook events on QuickFeed server running on localhost by performing a few steps.
+
+1. Start ngrok: `ngrok http 443` - assuming the server runs on port `:443`.
+2. ngrok will generate a new endpoint URL.
+   Copy the urls an update webhook callback information in your GitHub app to point to this URL.
+   E.g., `https://de08-2a01-799-4df-d900-b5af-5adc-a42a-bcf.eu.ngrok.io/hook/`.
+
+After that any webhook events your GitHub app is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
+
+Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
+
+## Troubleshooting
 
 If `go install` fails with the following (on Ubuntu):
 
@@ -292,65 +261,7 @@ cgo: exec gcc-5: exec: "gcc-5": executable file not found in $PATH
 
 Then run and retry `go install`:
 
-```bash
+```sh
 % brew install gcc@5
 % go install
-```
-
-If you already have NGINX configured it may conflict with the default envoy configuration.
-To disable NGINX run:
-
-```sh
-# Temporarily stop running NGINX
-% sudo systemctl stop nginx
-# Permanently disable NGINX
-% sudo systemctl disable nginx
-```
-
-### Running the QuickFeed Server Details
-
-The following provides additional details for running QuickFeed.
-Before running the QuickFeed server, you need to configure [GitHub](./github.md).
-
-The command line arguments for the QuickFeed server looks roughly like this:
-
-```sh
-quickfeed -service.url <DNS name of deployed service> -database.file <path to database> -http.addr <HTTP listener address>
-```
-
-To view the full usage details:
-
-```sh
-quickfeed -help
-```
-
-Here is an example with all default values:
-
-```sh
-quickfeed -service.url uis.itest.run &> quickfeed.log &
-```
-
-*As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system.*
-
-#### Flags
-
-| **Flag**        | **Description**                        | **Example**     |
-|-----------------|----------------------------------------|-----------------|
-| `service.url`   | Base DNS name for QuickFeed deployment | `uis.itest.run` |
-| `database.file` | Path to QuickFeed database             | `qf.db`         |
-| `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
-| `http.addr`     | Listener address for HTTP service      | `:8081`         |
-| `http.public`   | Path to service content                | `public`        |
-
-#### Custom Docker Image for a Course
-
-QuickFeed will pull publicly available docker images from Docker Hub on demand.
-However, you may create custom docker images locally on your QuickFeed server machine, and use these locally only.
-That is, you don't need to upload your custom image to Docker Hub or elsewhere.
-
-To prepare a new custom Docker image for a course, prepare the relevant `Dockerfile` and build it.
-The `quickfeed-go` make target gives an example:
-
-```sh
-make quickfeed-go
 ```

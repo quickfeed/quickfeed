@@ -26,13 +26,6 @@ func (g *Group) ContainsAll(group *Group) bool {
 	return reflect.DeepEqual(g.Users, group.Users)
 }
 
-// SetSlipDays sets number of remaining slip days for each enrollment
-func (g *Group) SetSlipDays(c *Course) {
-	for _, e := range g.Enrollments {
-		e.SetSlipDays(c)
-	}
-}
-
 // GetUsersExcept returns a list of all users in a group, except the one with the given userID.
 func (g *Group) GetUsersExcept(userID uint64) []*User {
 	subset := []*User{}
@@ -43,4 +36,19 @@ func (g *Group) GetUsersExcept(userID uint64) []*User {
 		subset = append(subset, user)
 	}
 	return subset
+}
+
+// UserIDs returns the user IDs of this group.
+func (g *Group) UserIDs() []uint64 {
+	userIDs := make([]uint64, 0, len(g.Users))
+	for _, user := range g.Users {
+		userIDs = append(userIDs, user.GetID())
+	}
+	return userIDs
+}
+
+// Dummy implementation of the interceptor.userIDs interface.
+// Marks this message type to be evaluated for token refresh.
+func (*GroupRequest) UserIDs() []uint64 {
+	return []uint64{}
 }

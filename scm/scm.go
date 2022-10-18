@@ -10,10 +10,8 @@ import (
 )
 
 // SCM is a common interface for different source code management solutions,
-// i.e., GitHub and GitLab.
+// i.e., GitHub.
 type SCM interface {
-	// Creates a new organization.
-	CreateOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Updates an organization
 	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
@@ -30,11 +28,6 @@ type SCM interface {
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// List the webhooks associated with the provided repository or organization.
-	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Creates a new webhook for organization if the name of organization
-	// is provided. Otherwise creates a hook for the given repo.
-	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
@@ -51,12 +44,6 @@ type SCM interface {
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
-	// GetUserName returns the currently logged in user's login name.
-	GetUserName(context.Context) (string, error)
-	// GetUserNameByID returns the login name of user with the given remoteID.
-	GetUserNameByID(context.Context, uint64) (string, error)
-	// Returns a provider specific clone path.
-	CreateCloneURL(*URLPathOptions) string
 	// Promote or demote organization member based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RemoveMember removes user from the organization.
@@ -88,8 +75,8 @@ type SCM interface {
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
-	// Accepts repository invite.
-	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
+	// AcceptInvitations accepts course invites.
+	AcceptInvitations(context.Context, *InvitationOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -98,10 +85,8 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil
-	case "gitlab":
-		return NewGitlabSCMClient(token), nil
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
@@ -112,7 +97,7 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	case "github":
 		return newGithubAppClient(ctx, logger, config, organization)
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
@@ -120,7 +105,6 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 // OrganizationOptions contains information on how an organization should be
 // created.
 type OrganizationOptions struct {
-	Path              string
 	Name              string
 	DefaultPermission string
 	// prohibit students from creating new repos
@@ -155,32 +139,13 @@ type RepositoryOptions struct {
 	Owner string
 }
 
-// Hook contains information about a webhook for a repository.
-type Hook struct {
-	ID     uint64
-	Name   string
-	URL    string
-	Events []string
-}
-
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization *qf.Organization
+	Organization string
 	Path         string
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.
 	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
-}
-
-// CreateHookOptions contains information on how to create a webhook.
-// If Organization string is provided, will create a new hook on
-// the organization's level. This hook will be triggered on push to any
-// of the organization's repositories.
-type CreateHookOptions struct {
-	URL          string
-	Secret       string
-	Organization string
-	Repository   *Repository
 }
 
 // TeamOptions contains information about the team and the organization it belongs to.
@@ -222,13 +187,6 @@ type OrgMembershipOptions struct {
 	Organization string
 	Username     string // GitHub username.
 	Role         string // Role can be "admin" (organization owner) or "member".
-}
-
-// URLPathOptions holds elements used when constructing a clone URL string.
-type URLPathOptions struct {
-	UserToken    string
-	Organization string
-	Repository   string
 }
 
 // AddTeamRepoOptions contains information about the repos to be added to a team.
@@ -292,10 +250,4 @@ type RequestReviewersOptions struct {
 	Repository   string
 	Number       int
 	Reviewers    []string // Reviewers is a slice of github usernames
-}
-
-// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
-type RepositoryInvitationOptions struct {
-	Login string // GitHub username.
-	Owner string // Name of the organization.
 }

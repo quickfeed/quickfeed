@@ -10,6 +10,11 @@ func GetEventsURL(baseURL string) string {
 	return getURL(baseURL, Hook)
 }
 
+// GetBaseURL returns the base URL.
+func GetBaseURL(baseURL string) string {
+	return getURL(baseURL, "")
+}
+
 // getURL constructs an URL endpoint for the given route.
 func getURL(baseURL, route string) string {
 	return "https://" + baseURL + route

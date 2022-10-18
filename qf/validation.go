@@ -14,7 +14,7 @@ func (grp *Group) IsValid() bool {
 func (c *Course) IsValid() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
-		(c.GetProvider() == "github" || c.GetProvider() == "gitlab" || c.GetProvider() == "fake") &&
+		(c.GetProvider() == "github" || c.GetProvider() == "fake") &&
 		c.GetOrganizationID() != 0 &&
 		c.GetYear() != 0 &&
 		c.GetTag() != ""
@@ -104,20 +104,20 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that course ID is provided
+// IsValid ensures that course ID is provided.
 func (req *SubmissionsForCourseRequest) IsValid() bool {
 	return req.GetCourseID() != 0
 }
 
-// IsValid ensures that both course and submission IDs are set
+// IsValid ensures that both course and assignment IDs are set.
 func (req *RebuildRequest) IsValid() bool {
-	aid, sid, cid := req.GetAssignmentID(), req.GetSubmissionID(), req.GetCourseID()
-	return aid > 0 && (sid > 0 || cid > 0)
+	aid, cid := req.GetAssignmentID(), req.GetCourseID()
+	return aid > 0 && cid > 0
 }
 
 // IsValid checks that either ID or path field is set
 func (org *Organization) IsValid() bool {
-	id, path := org.GetID(), org.GetPath()
+	id, path := org.GetID(), org.GetName()
 	return id > 0 || path != ""
 }
 

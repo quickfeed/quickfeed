@@ -1,0 +1,18 @@
+# buf.gen.yaml defines a local generation template.
+# For details, see https://docs.buf.build/configuration/v1/buf-gen-yaml
+version: v1
+plugins:
+  - remote: buf.build/bufbuild/plugins/es:v0.1.1-1
+    out: public/gen
+    opt: target=ts
+  - remote: buf.build/bufbuild/plugins/connect-web:v0.2.1-1
+    out: public/gen
+    opt: target=ts
+  - remote: buf.build/protocolbuffers/plugins/js:v3.20.1-1
+    out: public/proto
+    opt: import_style=commonjs,binary
+  - remote: buf.build/grpc/plugins/web:v1.4.1-1
+    out: public/proto
+    opt:
+      - import_style=typescript,
+      - mode=grpcweb

@@ -41,14 +41,6 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	}
 }
 
-// CreateOrganization implements the SCM interface.
-func (*GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
-	return nil, ErrNotSupported{
-		SCM:    "github",
-		Method: "CreateOrganization",
-	}
-}
-
 // UpdateOrganization implements the SCM interface.
 func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
 	if !opt.valid() {
@@ -58,7 +50,7 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOpt
 		}
 	}
 
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{
+	_, _, err := s.client.Organizations.Edit(ctx, opt.Name, &github.Organization{
 		DefaultRepoPermission: &opt.DefaultPermission,
 		MembersCanCreateRepos: &opt.RepoPermissions,
 	})
@@ -112,7 +104,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 
 	return &qf.Organization{
 		ID:          uint64(gitOrg.GetID()),
-		Path:        gitOrg.GetLogin(),
+		Name:        gitOrg.GetLogin(),
 		Avatar:      gitOrg.GetAvatarURL(),
 		PaymentPlan: gitOrg.GetPlan().GetName(),
 	}, nil
@@ -128,7 +120,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Path, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
 	if repo != nil {
 		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
 		return toRepository(repo), nil
@@ -138,7 +130,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 
 	// repo does not exist, create it
 	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})
@@ -187,8 +179,8 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 		}
 	}
 	var path string
-	if org.Path != "" {
-		path = org.Path
+	if org.Name != "" {
+		path = org.Name
 	} else {
 		opt := &GetOrgOptions{
 			ID: org.ID,
@@ -197,7 +189,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 		if err != nil {
 			return nil, err
 		}
-		path = org.Path
+		path = org.Name
 	}
 
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
@@ -282,77 +274,6 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 		}
 	}
 	return false
-}
-
-// ListHooks implements the SCM interface.
-func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) (hooks []*Hook, err error) {
-	var githubHooks []*github.Hook
-
-	// we prioritize organization hooks because repository hooks are no longer used.
-	switch {
-	case org != "":
-		orgName := slug.Make(org)
-		githubHooks, _, err = s.client.Organizations.ListHooks(ctx, orgName, nil)
-		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to get hooks for organization %q: %w", orgName, err)
-		}
-
-	case repo != nil && repo.valid():
-		githubHooks, _, err = s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to get hooks for repository %q: %w", repo, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("ListHooks: called with missing or incompatible arguments: %q %q", repo, org)
-	}
-
-	for _, hook := range githubHooks {
-		hooks = append(hooks, &Hook{
-			ID:     uint64(hook.GetID()),
-			URL:    hook.GetURL(),
-			Events: hook.Events,
-		})
-	}
-	return hooks, nil
-}
-
-// CreateHook implements the SCM interface.
-func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "CreateHook",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	hook := &github.Hook{
-		Config: map[string]interface{}{
-			"url":          opt.URL,
-			"secret":       opt.Secret,
-			"content_type": "json",
-			"insecure_ssl": "0",
-		},
-		Events: []string{"push", "pull_request", "pull_request_review"},
-	}
-	var err error
-	// prioritize creating an organization hook
-	if opt.Organization != "" {
-		_, _, err = s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
-		if err != nil {
-			return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization, err)
-		}
-	} else {
-		_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, hook)
-	}
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "CreateHook",
-			Message:  fmt.Sprintf("failed to create GitHub hook with query: %+v", opt),
-		}
-	}
-	return err
 }
 
 // CreateTeam implements the SCM interface.
@@ -469,7 +390,7 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *qf.Organization) ([]*Team
 			Message: fmt.Sprintf("%+v", org),
 		}
 	}
-	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Path, &github.ListOptions{})
+	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Name, &github.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("GetTeams: failed to list GitHub teams: %w", err)
 	}
@@ -589,15 +510,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (s *GithubSCM) CreateCloneURL(opt *URLPathOptions) string {
-	token := s.token
-	if len(opt.UserToken) > 0 {
-		token = opt.UserToken
-	}
-	return "https://" + token + "@github.com/" + opt.Organization + "/" + opt.Repository + ".git"
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
@@ -619,24 +531,6 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 		}
 	}
 	return nil
-}
-
-// GetUserName implements the SCM interface.
-func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
-	user, _, err := s.client.Users.Get(ctx, "")
-	if err != nil {
-		return "", fmt.Errorf("GetUserName: failed to get GitHub user: %w", err)
-	}
-	return user.GetLogin(), nil
-}
-
-// GetUserNameByID implements the SCM interface.
-func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
-	user, _, err := s.client.Users.GetByID(ctx, int64(remoteID))
-	if err != nil {
-		return "", fmt.Errorf("GetUserNameByID: failed to get GitHub user '%d': %w", remoteID, err)
-	}
-	return user.GetLogin(), nil
 }
 
 // UpdateOrgMembership implements the SCM interface
@@ -834,46 +728,6 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 			Method:   "UpdateIssueComment",
 			Message:  fmt.Sprintf("failed to edit comment in repository: %s, for organization: %s", opt.Repository, opt.Organization),
 			GitError: err,
-		}
-	}
-	return nil
-}
-
-// GetRepositoryInvites implements the SCM interface
-func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "GetRepositoryInvites",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
-			Method:   "GetRepositoryInvites",
-			Message:  "failed to fetch GitHub repository invitations",
-		}
-	}
-
-	for _, invite := range invites {
-		// The list of invitations contain all the invitations for the authenticated user.
-		// We only want to accept invitations from the owner specified in the options.
-		// For our courses, the owner is the organization.
-		// For invitations originating from an organization, the owner login is the organization path.
-		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
-			// Ignore unrelated invites
-			continue
-		}
-
-		_, err := s.client.Users.AcceptInvitation(ctx, invite.GetID())
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
-				Method:   "GetRepositoryInvites",
-				Message:  fmt.Sprintf("failed to accept invitation for user: %s, to repo: %s", opt.Login, invite.Repo.GetName()),
-			}
 		}
 	}
 	return nil

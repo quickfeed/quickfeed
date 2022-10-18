@@ -9,279 +9,17 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func TestSubmissionsAccess(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
-	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, 1)
-
-	teacher := qtest.CreateFakeUser(t, db, 2)
-	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var course qf.Course
-	course.Provider = "fake"
-	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-
-	student1 := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	student2 := qtest.CreateFakeUser(t, db, 4)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	student3 := qtest.CreateFakeUser(t, db, 5)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student3.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := qtest.WithUserContext(context.Background(), teacher)
-	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	users := []*qf.User{student1, student2}
-	group_req := connect.NewRequest(&qf.Group{Name: "TestGroup", CourseID: course.ID, Users: users})
-
-	_, err = ags.CreateGroup(ctx, group_req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// at this stage we have a course teacher, two students enrolled in the course in the same group,
-	// and one student and admin not affiliated with the course
-
-	if err = db.CreateAssignment(&qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab1",
-		RunScriptContent: "Script for lab1",
-		Deadline:         "11.11.2022",
-		AutoApprove:      false,
-		Order:            1,
-		IsGroupLab:       false,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = db.CreateAssignment(&qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab2",
-		RunScriptContent: "Script for lab2",
-		Deadline:         "11.11.2022",
-		AutoApprove:      false,
-		Order:            2,
-		IsGroupLab:       true,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = db.CreateSubmission(&qf.Submission{
-		AssignmentID: 1,
-		UserID:       student1.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = db.CreateSubmission(&qf.Submission{
-		AssignmentID: 2,
-		GroupID:      1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = db.CreateSubmission(&qf.Submission{
-		AssignmentID: 1,
-		UserID:       student3.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	// check that all three submissions have been successfully added to the database
-	submission1, err := db.GetSubmission(&qf.Submission{
-		AssignmentID: 1,
-		UserID:       student1.ID,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	submission2, err := db.GetSubmission(&qf.Submission{
-		AssignmentID: 1,
-		UserID:       student3.ID,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	submission3, err := db.GetSubmission(&qf.Submission{
-		AssignmentID: 2,
-		GroupID:      1,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	allSubmissions := []*qf.Submission{submission1, submission2, submission3}
-	wantLatestSubmissions := []*qf.Submission{submission2, submission3}
-
-	// there must be exactly three submissions for given course and assignment in the database
-	if len(allSubmissions) != 3 {
-		t.Errorf("Expected 3 submissions, got %d: %+v", len(allSubmissions), allSubmissions)
-	}
-
-	// teacher must be able to access all of the latest course submissions
-	submissions, err := ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-	}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	gotSubmissions := submissions.Msg.GetSubmissions()
-	if diff := cmp.Diff(wantLatestSubmissions, gotSubmissions, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetSubmissions() mismatch (-wantLatestSubmissions, +gotSubmissions):\n%s", diff)
-	}
-
-	// admin not enrolled in the course must not be able to access any course submissions
-	ctx = qtest.WithUserContext(context.Background(), admin)
-	submissions, err = ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-	}))
-	if err == nil {
-		t.Error("Expected error: user not enrolled")
-	}
-	if submissions != nil {
-		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", submissions.Msg.GetSubmissions())
-	}
-
-	// enroll admin as course student
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: admin.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   admin.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	submissions, err = ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-	}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	// enrolled as student, admin must be able to access all course submissions
-	gotSubmissions = submissions.Msg.GetSubmissions()
-	if diff := cmp.Diff(wantLatestSubmissions, gotSubmissions, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetSubmissions() mismatch (-wantLatestSubmissions, +gotSubmissions):\n%s", diff)
-	}
-
-	// the first student must be able to access own submissions as well as submissions made by group he has membership in
-	ctx = qtest.WithUserContext(context.Background(), student1)
-
-	personalSubmission, err := ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-		UserID:   student1.ID,
-	}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(personalSubmission.Msg.GetSubmissions()) != 1 {
-		t.Error("Expected one submission, got ", len(personalSubmission.Msg.GetSubmissions()))
-	}
-	groupSubmission, err := ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-		GroupID:  1,
-	}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(groupSubmission.Msg.GetSubmissions()) != 1 {
-		t.Error("Expected one submission, got ", len(groupSubmission.Msg.GetSubmissions()))
-	}
-
-	wantSubmissions := []*qf.Submission{submission1, submission3}
-	gotStudent1Submissions := []*qf.Submission{
-		personalSubmission.Msg.GetSubmissions()[0],
-		groupSubmission.Msg.GetSubmissions()[0],
-	}
-
-	if diff := cmp.Diff(wantSubmissions, gotStudent1Submissions, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetSubmissions() mismatch (-wantSubmissions, +gotStudent1Submissions):\n%s", diff)
-	}
-
-	// the second student should not be able to access the submission by student1
-	ctx = qtest.WithUserContext(context.Background(), student2)
-	personalSubmission, err = ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-		UserID:   student1.ID,
-	}))
-	if err == nil || personalSubmission != nil {
-		t.Error("Expected error: only owner and teachers can get submissions")
-	}
-
-	// the second student should no longer be able to access group submissions when removed from the group
-
-	if err = db.UpdateGroup(&qf.Group{
-		ID:       1,
-		CourseID: course.ID,
-		Users:    []*qf.User{student1},
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	groupSubmission, err = ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-		GroupID:  1,
-	}))
-	if err == nil || groupSubmission != nil {
-		t.Error("Expected error: only owner and teachers can get submissions")
-	}
-
-	// the third student (not enrolled in the course) should not be able to access submission even if it belongs to that student
-	ctx = qtest.WithUserContext(context.Background(), student3)
-	personalSubmission, err = ags.GetSubmissions(ctx, connect.NewRequest(&qf.SubmissionRequest{
-		CourseID: course.ID,
-		UserID:   student3.ID,
-	}))
-	if err == nil || personalSubmission != nil {
-		t.Error("Expected error: only owner and teachers can get submissions")
-	}
-}
-
 func TestApproveSubmission(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course := allCourses[0]
+	course := qtest.MockCourses[0]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)
@@ -318,11 +56,7 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	if _, err = ags.UpdateSubmission(ctx, connect.NewRequest(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
@@ -364,20 +98,18 @@ func TestApproveSubmission(t *testing.T) {
 }
 
 func TestGetSubmissionsByCourse(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := allCourses[2]
+	course := qtest.MockCourses[2]
 	qtest.CreateCourse(t, db, admin, course)
 	student1 := qtest.CreateFakeUser(t, db, 2)
 	student2 := qtest.CreateFakeUser(t, db, 3)
 	student3 := qtest.CreateFakeUser(t, db, 4)
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
-		t.Fatal(err)
-	}
+	ctx := auth.WithUserContext(context.Background(), admin)
+
 	qtest.EnrollStudent(t, db, student1, course)
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
@@ -546,13 +278,13 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 }
 
 func TestGetCourseLabSubmissions(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course1 := allCourses[2]
-	course2 := allCourses[3]
+	course1 := qtest.MockCourses[2]
+	course2 := qtest.MockCourses[3]
 	if err := db.CreateCourse(admin.ID, course1); err != nil {
 		t.Fatal(err)
 	}
@@ -646,11 +378,10 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	wantSubmission1.BuildInfo = nil
+	wantSubmission2.BuildInfo = nil
+
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	// check that all assignments were saved for the correct courses
 	wantAssignments1 := []*qf.Assignment{lab1c1, lab2c1}
@@ -680,9 +411,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that all submissions were saved for the correct labs
 	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course1.ID,
-		Type:          qf.SubmissionsForCourseRequest_ALL,
-		WithBuildInfo: true,
+		CourseID: course1.ID,
+		Type:     qf.SubmissionsForCourseRequest_ALL,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -702,8 +432,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course2.ID,
-		WithBuildInfo: true,
+		CourseID: course2.ID,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -723,23 +452,21 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that buildInformation is not included when not requested
 	labsForCourse3, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course1.ID,
-		WithBuildInfo: false,
+		CourseID: course1.ID,
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, labLink := range labsForCourse3.Msg.GetLinks() {
 		for _, submission := range labLink.GetSubmissions() {
-			if submission.Submission.GetBuildInfo().GetBuildLog() != "" {
-				t.Errorf("Expected build log: \"\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+			if submission.Submission.GetBuildInfo() != nil {
+				t.Errorf("Expected build info to be nil, got %+v", submission.GetSubmission().GetBuildInfo())
 			}
 		}
 	}
 
 	labsForCourse4, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course2.ID,
-		WithBuildInfo: true,
+		CourseID: course2.ID,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -747,8 +474,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	for _, labLink := range labsForCourse4.Msg.GetLinks() {
 		for _, submission := range labLink.GetSubmissions() {
 			if submission.GetSubmission() != nil {
-				if submission.GetSubmission().GetBuildInfo().GetBuildLog() != "runtime error" {
-					t.Errorf("Expected build log: \"runtime error\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+				if submission.GetSubmission().GetBuildInfo() != nil {
+					t.Errorf("Expected build info to be nil, got %+v", submission.GetSubmission().GetBuildInfo())
 				}
 			}
 		}
@@ -760,38 +487,15 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	})); err == nil {
 		t.Error("Expected 'no submissions found'")
 	}
-
-	// check that method fails with empty context
-	if _, err = ags.GetSubmissionsByCourse(context.Background(), connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID: course1.ID,
-	})); err == nil {
-		t.Error("Expected 'authorization failed. please try to logout and sign in again'")
-	}
-
-	// check that method fails for unenrolled student user
-	unenrolledStudent := qtest.CreateFakeUser(t, db, 3)
-	ctx = qtest.WithUserContext(ctx, unenrolledStudent)
-	if _, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID: course1.ID,
-	})); err == nil {
-		t.Error("Expected 'only teachers can get all lab submissions'")
-	}
-	// check that method fails for non-teacher user
-	ctx = qtest.WithUserContext(ctx, student)
-	if _, err = ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID: course1.ID,
-	})); err == nil {
-		t.Error("Expected 'only teachers can get all lab submissions'")
-	}
 }
 
 func TestCreateApproveList(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course := allCourses[2]
+	course := qtest.MockCourses[2]
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
@@ -896,11 +600,7 @@ func TestCreateApproveList(t *testing.T) {
 		}
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	testCases := []struct {
 		student          *qf.User
@@ -982,12 +682,12 @@ func TestCreateApproveList(t *testing.T) {
 }
 
 func TestReleaseApproveAll(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course := allCourses[2]
+	course := qtest.MockCourses[2]
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
@@ -998,11 +698,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	assignments := []*qf.Assignment{
 		{
@@ -1184,7 +880,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// We want to make sure that submissions received by the student do not leak data
-	studentCtx := qtest.WithUserContext(context.Background(), student1)
+	studentCtx := auth.WithUserContext(context.Background(), student1)
 	gotStudentSubmissions, err := ags.GetSubmissions(studentCtx, connect.NewRequest(&qf.SubmissionRequest{
 		CourseID: course.ID,
 		UserID:   student1.ID,

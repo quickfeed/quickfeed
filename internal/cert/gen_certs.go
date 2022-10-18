@@ -20,7 +20,8 @@ import (
 
 // Options for generating a self-signed certificate.
 type Options struct {
-	Path      string        // path to the certs directory
+	KeyFile   string        // path to the server private key file
+	CertFile  string        // path to the fullchain certificate file
 	Hosts     string        // comma-separated hostnames and IPs to generate a certificate for.
 	ValidFrom time.Time     // creation date (default duration is 1 year)
 	ValidFor  time.Duration // for how long the certificate is valid.
@@ -34,7 +35,8 @@ func GenerateSelfSignedCert(opts Options) error {
 	if opts.Hosts == "" {
 		return errors.New("at least one hostname must be specified")
 	}
-	if err := os.MkdirAll(opts.Path, 0o700); err != nil {
+	path := filepath.Dir(opts.KeyFile)
+	if err := os.MkdirAll(path, 0o700); err != nil {
 		return err
 	}
 	caKey, serverKey, err := generateKeys(opts)
@@ -70,14 +72,14 @@ func GenerateSelfSignedCert(opts Options) error {
 	}
 
 	// save server private key
-	if err = savePEM(opts.Path, "privkey.pem", []*pem.Block{
+	if err = savePEM(opts.KeyFile, []*pem.Block{
 		{Type: "PRIVATE KEY", Bytes: serverKeyBytes},
 	}); err != nil {
 		return err
 	}
 
 	// save fullchain (server certificate and CA certificate)
-	return savePEM(opts.Path, "fullchain.pem", []*pem.Block{
+	return savePEM(opts.CertFile, []*pem.Block{
 		{Type: "CERTIFICATE", Bytes: serverCertBytes},
 		{Type: "CERTIFICATE", Bytes: caCertBytes},
 	})
@@ -152,7 +154,7 @@ func caCertificateTemplate(hostList string, notBefore time.Time, notAfter time.T
 	caSubject := &pkix.Name{
 		Country:      []string{"NO"},
 		Organization: []string{"QuickFeed Corp."},
-		CommonName:   "QuickFeed CA",
+		CommonName:   "127.0.0.1",
 	}
 	template := &x509.Certificate{
 		SerialNumber:          serialNumber,
@@ -202,8 +204,8 @@ func makeCertificate(template, parent *x509.Certificate, publicKey any, privateK
 
 const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 
-func savePEM(certPath, filename string, block []*pem.Block) error {
-	out, err := os.OpenFile(filepath.Join(certPath, filename), defaultFileFlags, 0o600)
+func savePEM(filename string, block []*pem.Block) error {
+	out, err := os.OpenFile(filename, defaultFileFlags, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open %s for writing: %w", filename, err)
 	}
