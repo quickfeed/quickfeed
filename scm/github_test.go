@@ -64,11 +64,10 @@ func TestCreateIssue(t *testing.T) {
 
 func TestGetIssues(t *testing.T) {
 	s := scm.NewMockSCMClient()
-	course := qtest.MockCourses[0]
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
-		Owner: course.OrganizationName,
+		Owner: qtest.MockOrg,
 		Path:  "test-labs",
 	}
 

@@ -333,7 +333,7 @@ func TestAddRemoveMockTeamMembers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	teamMemberTests := []struct {
+	tests := []struct {
 		name    string
 		opt     *scm.TeamMembershipOptions
 		wantErr bool
@@ -397,7 +397,7 @@ func TestAddRemoveMockTeamMembers(t *testing.T) {
 		},
 	}
 
-	for _, tt := range teamMemberTests {
+	for _, tt := range tests {
 		if err := s.AddTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
@@ -418,7 +418,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	teamMemberTests := []struct {
+	tests := []struct {
 		name    string
 		opt     *scm.UpdateTeamOptions
 		wantErr bool
@@ -454,7 +454,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range teamMemberTests {
+	for _, tt := range tests {
 		if err := s.UpdateTeamMembers(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
@@ -473,7 +473,7 @@ func TestTeamRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teamRepoTests := []struct {
+	tests := []struct {
 		name    string
 		opt     *scm.AddTeamRepoOptions
 		wantErr bool
@@ -563,7 +563,7 @@ func TestTeamRepo(t *testing.T) {
 		},
 	}
 
-	for _, tt := range teamRepoTests {
+	for _, tt := range tests {
 		if err := s.AddTeamRepo(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v", tt.name, tt.wantErr, err)
 		}
@@ -573,7 +573,6 @@ func TestTeamRepo(t *testing.T) {
 func TestMockCreateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
 	issue := mockIssues[0]
 
 	tests := []struct {
@@ -585,7 +584,7 @@ func TestMockCreateIssue(t *testing.T) {
 		{
 			"correct options",
 			&scm.IssueOptions{
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Repository:   issue.Repository,
 				Title:        issue.Title,
 				Body:         issue.Body,
@@ -609,7 +608,7 @@ func TestMockCreateIssue(t *testing.T) {
 		{
 			"missing repository",
 			&scm.IssueOptions{
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Title:        issue.Title,
 				Body:         issue.Body,
 				Assignee:     &issue.Assignee,
@@ -620,7 +619,7 @@ func TestMockCreateIssue(t *testing.T) {
 		{
 			"missing title",
 			&scm.IssueOptions{
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Repository:   issue.Repository,
 				Body:         issue.Body,
 				Assignee:     &issue.Assignee,
@@ -631,7 +630,7 @@ func TestMockCreateIssue(t *testing.T) {
 		{
 			"missing body",
 			&scm.IssueOptions{
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Repository:   issue.Repository,
 				Title:        issue.Title,
 				Assignee:     &issue.Assignee,
@@ -657,10 +656,9 @@ func TestMockCreateIssue(t *testing.T) {
 func TestMockUpdateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
 	mockIssue := mockIssues[0]
 	issue, err := s.CreateIssue(ctx, &scm.IssueOptions{
-		Organization: course.OrganizationName,
+		Organization: qtest.MockOrg,
 		Repository:   mockIssue.Repository,
 		Title:        mockIssue.Title,
 		Body:         mockIssue.Body,
@@ -680,7 +678,7 @@ func TestMockUpdateIssue(t *testing.T) {
 			"correct issue, no updates",
 			&scm.IssueOptions{
 				Number:       issue.Number,
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Repository:   issue.Repository,
 				Title:        issue.Title,
 				Body:         issue.Body,
@@ -694,7 +692,7 @@ func TestMockUpdateIssue(t *testing.T) {
 			"correct issue, update title and body",
 			&scm.IssueOptions{
 				Number:       issue.Number,
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Repository:   issue.Repository,
 				Title:        "New Title",
 				Body:         "New Body",
@@ -730,7 +728,7 @@ func TestMockUpdateIssue(t *testing.T) {
 			"invalid opts",
 			&scm.IssueOptions{
 				Number:       issue.Number,
-				Organization: course.OrganizationName,
+				Organization: qtest.MockOrg,
 				Title:        issue.Title,
 				Body:         issue.Body,
 				State:        issue.Status,
@@ -755,10 +753,9 @@ func TestMockUpdateIssue(t *testing.T) {
 func TestMockGetIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
 	issue := mockIssues[0]
 	if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
-		Organization: course.OrganizationName,
+		Organization: qtest.MockOrg,
 		Repository:   issue.Repository,
 		Title:        issue.Title,
 		Body:         issue.Body,
@@ -778,7 +775,7 @@ func TestMockGetIssue(t *testing.T) {
 			"correct issue",
 			&scm.RepositoryOptions{
 				Path:  issue.Repository,
-				Owner: course.OrganizationName,
+				Owner: qtest.MockOrg,
 			},
 			issue.Number,
 			issue,
@@ -788,7 +785,7 @@ func TestMockGetIssue(t *testing.T) {
 			"incorrect issue number",
 			&scm.RepositoryOptions{
 				Path:  issue.Repository,
-				Owner: course.OrganizationName,
+				Owner: qtest.MockOrg,
 			},
 			13,
 			nil,
@@ -820,11 +817,10 @@ func TestMockGetIssue(t *testing.T) {
 func TestMockGetIssues(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
 
 	for _, issue := range mockIssues {
 		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
-			Organization: course.OrganizationName,
+			Organization: qtest.MockOrg,
 			Repository:   issue.Repository,
 			Title:        issue.Title,
 			Body:         issue.Body,
@@ -843,7 +839,7 @@ func TestMockGetIssues(t *testing.T) {
 		{
 			"issues for 'test-labs' repo",
 			&scm.RepositoryOptions{
-				Owner: course.OrganizationName,
+				Owner: qtest.MockOrg,
 				Path:  mockIssues[0].Repository,
 			},
 			[]*scm.Issue{mockIssues[0], mockIssues[1]},
@@ -852,7 +848,7 @@ func TestMockGetIssues(t *testing.T) {
 		{
 			"issues for 'user-labs' repo",
 			&scm.RepositoryOptions{
-				Owner: course.OrganizationName,
+				Owner: qtest.MockOrg,
 				Path:  mockIssues[2].Repository,
 			},
 			[]*scm.Issue{mockIssues[2]},
@@ -861,7 +857,7 @@ func TestMockGetIssues(t *testing.T) {
 		{
 			"incorrect repository",
 			&scm.RepositoryOptions{
-				Owner: course.OrganizationName,
+				Owner: qtest.MockOrg,
 				Path:  "unknown-labs",
 			},
 			nil,
@@ -894,11 +890,10 @@ func TestMockGetIssues(t *testing.T) {
 func TestMockDeleteIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
 
 	for _, issue := range mockIssues {
 		issueOptions := &scm.IssueOptions{
-			Organization: course.OrganizationName,
+			Organization: qtest.MockOrg,
 			Repository:   issue.Repository,
 			Title:        issue.Title,
 			Body:         issue.Body,
@@ -908,7 +903,7 @@ func TestMockDeleteIssue(t *testing.T) {
 			t.Fatal(err)
 		}
 		opt := &scm.RepositoryOptions{
-			Owner: course.OrganizationName,
+			Owner: qtest.MockOrg,
 			Path:  issue.Repository,
 		}
 		if err := s.DeleteIssue(ctx, opt, issue.Number); err != nil {
