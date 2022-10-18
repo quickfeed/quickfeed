@@ -153,6 +153,7 @@ scms
 scorelimit
 scriptfile
 sess
+setcap
 SGTM
 shogo
 shurcoo

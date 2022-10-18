@@ -17,8 +17,7 @@ func init() {
 
 func TestCloneAndCopyRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfUserName := scm.GetTestUser(t)
-	sc := scm.GetTestSCM(t)
+	sc, qfUserName := scm.GetTestSCM(t)
 
 	dstDir := t.TempDir()
 
