@@ -11,6 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// maxConcurrentTestRuns is the maximum number of concurrent test runs.
+const maxConcurrentTestRuns = 5
+
 // GitHubWebHook holds references and data for handling webhook events.
 type GitHubWebHook struct {
 	logger *zap.SugaredLogger
@@ -18,11 +21,14 @@ type GitHubWebHook struct {
 	scmMgr *scm.Manager
 	runner ci.Runner
 	secret string
+	sem    chan struct{}
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
 func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string) *GitHubWebHook {
-	return &GitHubWebHook{logger: logger, db: db, scmMgr: mgr, runner: runner, secret: secret}
+	// counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
+	sem := make(chan struct{}, maxConcurrentTestRuns)
+	return &GitHubWebHook{logger: logger, db: db, scmMgr: mgr, runner: runner, secret: secret, sem: sem}
 }
 
 // Handle take POST requests from GitHub, representing Push events
@@ -45,7 +51,13 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		wh.logger.Debug(qlog.IndentJson(event))
 		switch e := event.(type) {
 		case *github.PushEvent:
-			wh.handlePush(e)
+			// The counting semaphore limits concurrency to maxConcurrentTestRuns.
+			// This should also allow webhook events to return quickly to GitHub, avoiding timeouts.
+			go func() {
+				wh.sem <- struct{}{} // acquire semaphore
+				wh.handlePush(e)
+				<-wh.sem // release semaphore
+			}()
 		case *github.PullRequestEvent:
 			switch e.GetAction() {
 			case "opened":
