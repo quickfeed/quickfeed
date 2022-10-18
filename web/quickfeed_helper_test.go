@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
@@ -32,7 +33,8 @@ func MockQuickFeedClient(t *testing.T, db database.Database, opts connect.Option
 	}
 	shutdown := web.MockQuickFeedServer(t, logger, db, opts)
 
+	const serverURL = "http://127.0.0.1:8081"
 	return func(ctx context.Context) {
 		shutdown(ctx)
-	}, qtest.QuickFeedClient("")
+	}, qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverURL)
 }
