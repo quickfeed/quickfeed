@@ -464,11 +464,27 @@ func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptio
 }
 
 // UpdateIssueComment implements the SCM interface
-func (*MockSCM) UpdateIssueComment(_ context.Context, _ *IssueCommentOptions) error {
-	return ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "UpdateIssueComment",
+func (s *MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return errors.New("repository not found")
+	}
+	if _, ok := s.Issues[uint64(opt.Number)]; !ok {
+		return errors.New("issue not found")
+	}
+	if _, ok := s.IssueComments[uint64(opt.CommentID)]; !ok {
+		return errors.New("issue comment not found")
+	}
+	s.IssueComments[uint64(opt.CommentID)] = opt.Body
+	return nil
 }
 
 // RequestReviewers implements the SCM interface

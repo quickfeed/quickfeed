@@ -62,11 +62,19 @@ func TestCreateIssue(t *testing.T) {
 
 func TestGetIssues(t *testing.T) {
 	s := scm.NewMockSCMClient()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: {
+			ID:    1,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName("test"),
+		},
+	}
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qtest.MockOrg,
-		Path:  "test-labs",
+		Path:  qf.StudentRepoName("test"),
 	}
 
 	wantIssueIDs := []int{}
@@ -232,11 +240,20 @@ func TestCreateIssueComment(t *testing.T) {
 
 func TestUpdateIssueComment(t *testing.T) {
 	s := scm.NewMockSCMClient()
+	repo := &scm.Repository{
+		ID:    1,
+		OrgID: 1,
+		Owner: qtest.MockOrg,
+		Path:  qf.StudentRepoName("user"),
+	}
+	s.Repositories = map[uint64]*scm.Repository{
+		1: repo,
+	}
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
-		Organization: qtest.MockOrg,
-		Repository:   qf.StudentRepoName("user"),
+		Organization: repo.Owner,
+		Repository:   repo.Path,
 		Body:         body,
 	}
 

@@ -1132,3 +1132,69 @@ func TestMockCreateIssueComment(t *testing.T) {
 		}
 	}
 }
+
+func TestMockUpdateIssueComment(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+	}
+	s.Issues = map[uint64]*scm.Issue{
+		1: mockIssues[0],
+	}
+	s.IssueComments = map[uint64]string{
+		1: "Not updated",
+		2: "Not updated",
+	}
+	tests := []struct {
+		name        string
+		issueNimber int
+		commentID   int64
+		wantErr     bool
+	}{
+		{
+			"update issue 1",
+			1,
+			1,
+			false,
+		},
+		{
+			"update issue 2",
+			1,
+			2,
+			false,
+		},
+		{
+			"incorrect issue number",
+			5,
+			1,
+			true,
+		},
+		{
+			"incorrect issue comment ID",
+			1,
+			4,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		if err := s.UpdateIssueComment(ctx, &scm.IssueCommentOptions{
+			Organization: qtest.MockOrg,
+			Repository:   mockRepos[0].Path,
+			Number:       tt.issueNimber,
+			CommentID:    tt.commentID,
+			Body:         "Updated",
+		}); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if !tt.wantErr {
+			comment, ok := s.IssueComments[uint64(tt.commentID)]
+			if !ok {
+				t.Fatalf("%s: comment not found", tt.name)
+			}
+			if !ok || comment != "Updated" {
+				t.Errorf("%s: expected comment body 'Updated', got '%s'", tt.name, comment)
+			}
+		}
+	}
+}
