@@ -17,7 +17,7 @@ func GetTestOrganization(t *testing.T) string {
 	return qfTestOrg
 }
 
-func GetTestUserAndSCM(t *testing.T) (SCM, string) {
+func GetTestSCM(t *testing.T) (SCM, string) {
 	t.Helper()
 	accessToken := GetAccessToken(t)
 	scmClient := NewGithubSCMClient(qtest.Logger(t), accessToken)

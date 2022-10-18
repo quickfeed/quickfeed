@@ -12,7 +12,7 @@ import (
 
 func TestDeleteIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestUserAndSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	repo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
@@ -72,7 +72,7 @@ func TestDeleteAllIssues(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestUserAndSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{

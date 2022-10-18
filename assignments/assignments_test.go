@@ -15,7 +15,7 @@ import (
 
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, _ := scm.GetTestUserAndSCM(t)
+	s, _ := scm.GetTestSCM(t)
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",

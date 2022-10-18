@@ -16,7 +16,7 @@ import (
 
 func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, userName := scm.GetTestUserAndSCM(t)
+	s, userName := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()
@@ -83,7 +83,7 @@ func appendToFile(filename, text string) (err error) {
 // The third clone is actually a fast-forward pull.
 func TestCloneTwice(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, _ := scm.GetTestUserAndSCM(t)
+	s, _ := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()
@@ -150,7 +150,7 @@ func TestCloneTwice(t *testing.T) {
 
 func TestCloneBranch(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, userName := scm.GetTestUserAndSCM(t)
+	s, userName := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()
