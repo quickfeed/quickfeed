@@ -338,7 +338,9 @@ func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	issue.Title = opt.Title
 	issue.Body = opt.Body
 	issue.Status = opt.State
-	issue.Assignee = *opt.Assignee
+	if opt.Assignee != nil {
+		issue.Assignee = *opt.Assignee
+	}
 	return issue, nil
 }
 
