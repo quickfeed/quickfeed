@@ -110,6 +110,13 @@ var pushEvent = &github.PushEvent{
 	Sender: &github.User{
 		Login: github.String("meling"),
 	},
+	HeadCommit: &github.HeadCommit{
+		ID:       github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+		Message:  github.String("Add a README.md"),
+		Added:    []string{"lab1/README.md"},
+		Removed:  []string{},
+		Modified: []string{"lab2/README.md"},
+	},
 	Commits: []*github.HeadCommit{
 		{
 			ID:       github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
