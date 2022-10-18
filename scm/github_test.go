@@ -28,8 +28,7 @@ const (
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{
 		Name:     qfTestOrg,
 		Username: qfTestUser,
@@ -50,8 +49,7 @@ func TestGetOrganization(t *testing.T) {
 // Test case for Creating new Issue on a git Repository
 func TestCreateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
@@ -64,8 +62,7 @@ func TestCreateIssue(t *testing.T) {
 // NOTE: This test only works if the given repository has no previous issues
 func TestGetIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -97,8 +94,7 @@ func TestGetIssues(t *testing.T) {
 
 func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -122,8 +118,7 @@ func TestGetIssue(t *testing.T) {
 // Test case for Updating existing Issue in a git Repository
 func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 
@@ -162,8 +157,7 @@ func TestRequestReviewers(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 	repo := qf.StudentRepoName(qfTestUser)
 
 	testReqReviewersBranch := "test-request-reviewers"
@@ -218,8 +212,7 @@ func githubTestClient(t *testing.T) *github.Client {
 
 func TestCreateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	body := "Test"
 	opt := &scm.IssueCommentOptions{
@@ -240,8 +233,7 @@ func TestCreateIssueComment(t *testing.T) {
 
 func TestUpdateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
@@ -276,8 +268,7 @@ func TestFeedbackCommentFormat(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
