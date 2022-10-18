@@ -4,13 +4,11 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"net/http"
 	"os"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/qfconnect"
 )
 
 // TestDB returns a test database and close function.
@@ -195,12 +193,4 @@ func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 			},
 		},
 	}
-}
-
-func QuickFeedClient(url string) qfconnect.QuickFeedServiceClient {
-	serverUrl := url
-	if serverUrl == "" {
-		serverUrl = "http://127.0.0.1:8081"
-	}
-	return qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverUrl)
 }

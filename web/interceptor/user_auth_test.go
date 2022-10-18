@@ -23,11 +23,11 @@ func TestUserVerifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
-
-	client := qtest.QuickFeedClient("")
+	ctx := context.Background()
+	defer shutdown(ctx)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
@@ -52,7 +52,6 @@ func TestUserVerifier(t *testing.T) {
 		{code: 0, cookie: studentCookie.String(), wantUser: student},
 	}
 
-	ctx := context.Background()
 	for _, user := range userTest {
 		gotUser, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, user.cookie))
 		if err != nil {
@@ -77,5 +76,4 @@ func TestUserVerifier(t *testing.T) {
 			}
 		}
 	}
-	shutdown(ctx)
 }

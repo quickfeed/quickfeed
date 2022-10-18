@@ -18,8 +18,10 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	shutdown, client := MockQuickFeedClient(t, db, nil)
+	ctx := context.Background()
+	defer shutdown(ctx)
 
-	unexpectedUsers, err := client.GetUsers(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	unexpectedUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.Msg.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
@@ -27,7 +29,7 @@ func TestGetUsers(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
 
-	ctx := auth.WithUserContext(context.Background(), admin)
+	ctx = auth.WithUserContext(ctx, admin)
 	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
 		t.Fatal(err)
@@ -39,7 +41,6 @@ func TestGetUsers(t *testing.T) {
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
-	shutdown(ctx)
 }
 
 var allUsers = []struct {
@@ -62,6 +63,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	shutdown, client := MockQuickFeedClient(t, db, nil)
+	ctx := context.Background()
+	defer shutdown(ctx)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -78,7 +81,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	ctx := auth.WithUserContext(context.Background(), admin)
+	ctx = auth.WithUserContext(ctx, admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -136,13 +139,14 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
-	shutdown(ctx)
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	shutdown, client := MockQuickFeedClient(t, db, nil)
+	ctx := context.Background()
+	defer shutdown(ctx)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -151,7 +155,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	}
 	admin := users[0]
 
-	ctx := auth.WithUserContext(context.Background(), admin)
+	ctx = auth.WithUserContext(ctx, admin)
 
 	course := qtest.MockCourses[1]
 	err := db.CreateCourse(admin.ID, course)
@@ -221,7 +225,6 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	if diff := cmp.Diff(wantEnrollments, gotEnrollments, protocmp.Transform()); diff != "" {
 		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
 	}
-	shutdown(ctx)
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -237,6 +240,9 @@ func TestUpdateUser(t *testing.T) {
 	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
+	ctx := context.Background()
+	defer shutdown(ctx)
+
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
@@ -270,7 +276,6 @@ func TestUpdateUser(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	})
 
-	ctx := context.Background()
 	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie.String())
 	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
@@ -292,7 +297,6 @@ func TestUpdateUser(t *testing.T) {
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	shutdown(ctx)
 }
 
 func TestUpdateUserFailures(t *testing.T) {
@@ -300,6 +304,8 @@ func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	shutdown, client := MockQuickFeedClient(t, db, nil)
+	ctx := context.Background()
+	defer shutdown(ctx)
 
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
@@ -309,7 +315,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatalf("expected user %v to be non-admin", u)
 	}
 	// context with user u (non-admin user); can only change its own name etc
-	ctx := auth.WithUserContext(context.Background(), u)
+	ctx = auth.WithUserContext(ctx, u)
 	// trying to demote current adminUser by setting IsAdmin to false
 	nameChangeRequest := connect.NewRequest(&qf.User{
 		ID:        wantAdminUser.ID,
@@ -362,5 +368,4 @@ func TestUpdateUserFailures(t *testing.T) {
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	shutdown(ctx)
 }
