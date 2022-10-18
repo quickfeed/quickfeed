@@ -7,7 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -16,7 +15,7 @@ import (
 
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
+	s, _ := scm.GetTestSCM(t)
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
@@ -44,7 +43,7 @@ func TestFetchAssignments(t *testing.T) {
 	}
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
 	course.Dockerfile = dockerfile
-	if err := buildDockerImage(context.Background(), qlog.Logger(t), course); err != nil {
+	if err := buildDockerImage(context.Background(), qtest.Logger(t), course); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -213,7 +212,7 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// If assignment.GradingBenchmarks is empty beyond this point, it means that there were no added / removed benchmarks / criteria
-	updateGradingCriteria(qlog.Logger(t), db, assignment)
+	updateGradingCriteria(qtest.Logger(t), db, assignment)
 
 	// Assignment has no added or removed benchmarks, expect nil
 	if assignment.GradingBenchmarks != nil {
@@ -269,7 +268,7 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment.GradingBenchmarks = updatedBenchmarks
 
 	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
-	updateGradingCriteria(qlog.Logger(t), db, assignment)
+	updateGradingCriteria(qtest.Logger(t), db, assignment)
 
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {

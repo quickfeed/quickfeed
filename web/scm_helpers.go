@@ -13,7 +13,7 @@ import (
 
 var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		qf.InfoRepo, qf.AssignmentRepo, qf.TestsRepo)
+		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
 
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
@@ -57,16 +57,16 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.OrganizationName)
 }
 
-// getSCMForUser returns an SCM client based on the user's personal access token.
-func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
+// getCredsForUserSCM returns the given user's personal access token.
+func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Exchange a refresh token for an access token.
 	token, err := q.scmMgr.ExchangeToken(refreshToken)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Save user's refresh token in the database.
 	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
@@ -75,9 +75,9 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
 	remoteIdentity.AccessToken = token.RefreshToken
 	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
-		return nil, err
+		return "", err
 	}
-	return scm.NewInviteOnlySCMClient(token.AccessToken), nil
+	return token.AccessToken, nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -238,7 +238,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 }
 
 func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
-	commonRepos := []string{qf.InfoRepo, qf.AssignmentRepo}
+	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 
 	for _, repoType := range commonRepos {
 		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {

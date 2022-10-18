@@ -18,7 +18,6 @@ import (
 type MockSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization
-	Hooks         map[uint64]*Hook
 	Teams         map[uint64]*Team
 }
 
@@ -27,7 +26,6 @@ func NewMockSCMClient() *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
-		Hooks:         make(map[uint64]*Hook),
 		Teams:         make(map[uint64]*Team),
 	}
 	// initialize four test course organizations
@@ -173,28 +171,6 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 	return false
 }
 
-// ListHooks implements the SCM interface.
-func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
-	var hooks []*Hook
-	for _, v := range s.Hooks {
-		hooks = append(hooks, v)
-	}
-	return hooks, nil
-}
-
-// CreateHook implements the SCM interface.
-func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	hook := &Hook{
-		ID:   generateID(s.Hooks),
-		Name: opt.Organization,
-	}
-	s.Hooks[hook.ID] = hook
-	return nil
-}
-
 // CreateTeam implements the SCM interface.
 func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
 	if !opt.valid() {
@@ -282,11 +258,6 @@ func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) e
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
-	return ""
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
@@ -303,16 +274,6 @@ func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error 
 	}
 	s.Repositories[repo.ID] = repo
 	return nil
-}
-
-// GetUserName implements the SCM interface.
-func (*MockSCM) GetUserName(_ context.Context) (string, error) {
-	return "", nil
-}
-
-// GetUserNameByID implements the SCM interface.
-func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
-	return "", nil
 }
 
 // UpdateOrgMembership implements the SCM interface
@@ -401,11 +362,11 @@ func (*MockSCM) RequestReviewers(_ context.Context, _ *RequestReviewersOptions) 
 	}
 }
 
-// AcceptRepositoryInvite implements the SCMInvite interface
-func (*MockSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+// AcceptInvitations accepts course invites.
+func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error {
 	return ErrNotSupported{
 		SCM:    "MockSCM",
-		Method: "AcceptRepositoryInvites",
+		Method: "AcceptInvitations",
 	}
 }
 

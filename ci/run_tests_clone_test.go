@@ -17,8 +17,7 @@ func init() {
 
 func TestCloneAndCopyRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfUserName := scm.GetTestUser(t)
-	sc := scm.GetTestSCM(t)
+	sc, qfUserName := scm.GetTestSCM(t)
 
 	dstDir := t.TempDir()
 
@@ -44,7 +43,7 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	ctx := context.Background()
 	clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationName(),
-		Repository:   qf.AssignmentRepo,
+		Repository:   qf.AssignmentsRepo,
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
@@ -72,7 +71,7 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	for _, s := range []string{qf.TestsRepo, qf.AssignmentRepo, qf.StudentRepoName(qfUserName)} {
+	for _, s := range []string{qf.TestsRepo, qf.AssignmentsRepo, qf.StudentRepoName(qfUserName)} {
 		if !strings.Contains(out, s) {
 			t.Errorf("expected %q to contain %q", out, s)
 		}

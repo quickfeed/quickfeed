@@ -13,6 +13,7 @@ Autograder
 backports
 beatlabs
 bitlab
+Buf's
 bufbuild
 bufconn
 bufnet
@@ -135,6 +136,7 @@ proto
 protobuf
 protoc
 protocmp
+protocolbuffers
 protoimpl
 protopatch
 protoreflect
@@ -151,6 +153,7 @@ scms
 scorelimit
 scriptfile
 sess
+setcap
 SGTM
 shogo
 shurcoo

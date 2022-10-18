@@ -9,11 +9,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -47,11 +47,7 @@ func testRunData(t *testing.T) *ci.RunData {
 
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
-	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
@@ -86,7 +82,7 @@ func TestRunTests(t *testing.T) {
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
-	scmClient := scm.GetTestSCM(t)
+	scmClient, _ := scm.GetTestSCM(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
@@ -105,7 +101,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	scmClient := scm.GetTestSCM(t)
+	scmClient, _ := scm.GetTestSCM(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)

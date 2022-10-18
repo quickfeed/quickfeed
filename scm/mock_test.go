@@ -37,7 +37,7 @@ func TestMockClone(t *testing.T) {
 			name: "assignments repository",
 			opt: &scm.CloneOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.AssignmentRepo,
+				Repository:   qf.AssignmentsRepo,
 				DestDir:      dstDir,
 			},
 			wantPath: filepath.Join(dstDir, "assignments"),
@@ -223,26 +223,6 @@ func TestMockRepositories(t *testing.T) {
 	}
 	if diff := cmp.Diff(repos[3], courseRepos[0], cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
 		t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
-	}
-}
-
-func TestMockHooks(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	for _, course := range qtest.MockCourses {
-		if err := s.CreateHook(ctx, &scm.CreateHookOptions{
-			Organization: course.OrganizationName,
-			URL:          "/test/hook",
-		}); err != nil {
-			t.Error(err)
-		}
-	}
-	hooks, err := s.ListHooks(ctx, &scm.Repository{}, "")
-	if err != nil {
-		t.Error(err)
-	}
-	if len(hooks) != len(qtest.MockCourses) {
-		t.Errorf("expected %d hooks, got %d", len(qtest.MockCourses), len(hooks))
 	}
 }
 

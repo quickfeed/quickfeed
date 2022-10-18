@@ -397,10 +397,6 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
-	if !s.isValidSubmission(in.Msg.SubmissionID) {
-		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submission author has no course access"))
-	}
 	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetGrades(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
@@ -415,10 +411,6 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	if in.Msg.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
-		if !s.isValidSubmission(in.Msg.GetSubmissionID()) {
-			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
-			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submitter has no course access"))
-		}
 		if _, err := s.rebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
@@ -556,11 +548,11 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 
 	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationName(),
-		Repository:   qf.AssignmentRepo,
+		Repository:   qf.AssignmentsRepo,
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentsRepo, err)
 		return nil, err
 	}
 	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)

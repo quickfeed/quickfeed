@@ -96,6 +96,16 @@ func (m *Enrollment) IsTeacher() bool {
 	return m.GetStatus() == Enrollment_TEACHER
 }
 
+// IsAdmin returns true if the enrolled user is an admin.
+func (m *Enrollment) IsAdmin() bool {
+	return m.GetUser().GetIsAdmin()
+}
+
+// Name returns the name of the enrolled user.
+func (m *Enrollment) Name() string {
+	return m.GetUser().GetName()
+}
+
 // GetCourseID returns the course ID for a slice of enrollments
 func (m *Enrollments) GetCourseID() uint64 {
 	enrollments := m.GetEnrollments()

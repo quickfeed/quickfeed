@@ -87,10 +87,6 @@ func (opt CreateRepositoryOptions) valid() bool {
 	return opt.Organization != "" && opt.Path != ""
 }
 
-func (opt CreateHookOptions) valid() bool {
-	return opt.URL != "" && opt.Organization != ""
-}
-
 func (opt TeamOptions) valid() bool {
 	return opt.TeamName != "" && opt.Organization != "" ||
 		opt.TeamID > 0 && opt.OrganizationID > 0
@@ -127,8 +123,8 @@ func (opt IssueCommentOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
 }
 
-func (opt RepositoryInvitationOptions) valid() bool {
-	return opt.Login != "" && opt.Owner != ""
+func (opt InvitationOptions) valid() bool {
+	return opt.Login != "" && opt.Owner != "" && opt.Token != ""
 }
 
 // Errors //

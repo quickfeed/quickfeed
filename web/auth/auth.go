@@ -11,8 +11,8 @@ import (
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"

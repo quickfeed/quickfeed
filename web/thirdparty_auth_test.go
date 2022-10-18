@@ -9,22 +9,18 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc/metadata"
 )
 
 const (
-	token = "some-secret-string"
-	// same as quickfeed root user
-	// botUserID = 1
 	userName = "meling"
 )
 
 var user *qf.User
 
-func TestGrpcAuth(t *testing.T) {
+// TODO(meling): Fix this test when support for third-party applications is added
+func TestThirdPartyAuth(t *testing.T) {
 	if os.Getenv("HELPBOT_TEST") == "" {
 		t.Skip("Needs update for helpbot compatibility")
 	}
@@ -41,7 +37,7 @@ func TestGrpcAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
 		interceptor.NewMetricsInterceptor(),
 		interceptor.NewValidationInterceptor(logger),
 		interceptor.NewUserInterceptor(logger, tm),
@@ -49,18 +45,13 @@ func TestGrpcAuth(t *testing.T) {
 		interceptor.NewTokenInterceptor(tm),
 	))
 
-	client := qtest.QuickFeedClient("")
-
-	// create request context with the helpbot's secret token
-	ctx := metadata.NewOutgoingContext(context.Background(),
-		metadata.New(map[string]string{auth.Cookie: token}),
-	)
-
 	request := connect.NewRequest(&qf.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
 		UserLogin:  userName,
 	})
+	ctx := context.Background()
+	// request.Header().Set(auth.Cookie, firstAdminCookie.String())
 	userInfo, err := client.GetUserByCourse(ctx, request)
 	check(t, err)
 	if userInfo.Msg.ID != user.ID {
