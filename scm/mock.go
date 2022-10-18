@@ -20,6 +20,7 @@ type MockSCM struct {
 	Organizations map[uint64]*qf.Organization
 	Teams         map[uint64]*Team
 	Issues        map[uint64]*Issue
+	IssueComments map[uint64]string
 }
 
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
@@ -29,6 +30,7 @@ func NewMockSCMClient() *MockSCM {
 		Organizations: make(map[uint64]*qf.Organization),
 		Teams:         make(map[uint64]*Team),
 		Issues:        make(map[uint64]*Issue),
+		IssueComments: make(map[uint64]string),
 	}
 	// initialize four test course organizations
 	for _, course := range qtest.MockCourses {
@@ -404,11 +406,19 @@ func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) erro
 }
 
 // CreateIssueComment implements the SCM interface
-func (*MockSCM) CreateIssueComment(_ context.Context, _ *IssueCommentOptions) (int64, error) {
-	return 0, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "CreateIssueComment",
+func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
+	if !opt.valid() {
+		return 0, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return 0, errors.New("organization not found")
+	}
+	if _, ok := s.Issues[uint64(opt.Number)]; !ok {
+		return 0, errors.New("issue not found")
+	}
+	id := generateID(s.IssueComments)
+	s.IssueComments[id] = opt.Body
+	return int64(id), nil
 }
 
 // UpdateIssueComment implements the SCM interface

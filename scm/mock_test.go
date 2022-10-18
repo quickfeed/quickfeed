@@ -989,3 +989,145 @@ func TestMockDeleteIssues(t *testing.T) {
 		}
 	}
 }
+
+func TestMockCreateIssueComment(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: {
+			ID:    1,
+			Path:  qf.StudentRepoName("user"),
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+	}
+	s.Issues = map[uint64]*scm.Issue{
+		1: {
+			ID:         1,
+			Title:      "Task 1",
+			Body:       "Finish Task 1",
+			Repository: qf.StudentRepoName("user"),
+			Number:     1,
+		},
+		2: {
+			ID:         2,
+			Title:      "Task 2",
+			Body:       "Finish Task 2",
+			Repository: qf.StudentRepoName("user"),
+			Number:     1,
+		},
+	}
+
+	tests := []struct {
+		name       string
+		opt        *scm.IssueCommentOptions
+		wantNumber int64
+		wantErr    bool
+	}{
+		{
+			"comment 1 for issue 1",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.StudentRepoName("user"),
+				Body:         "Comment",
+				Number:       1,
+			},
+			1,
+			false,
+		},
+		{
+			"comment 2 for issue 1",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.StudentRepoName("user"),
+				Body:         "Comment",
+				Number:       1,
+			},
+			2,
+			false,
+		},
+		{
+			"comment 1 for issue 2",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.StudentRepoName("user"),
+				Body:         "Comment",
+				Number:       2,
+			},
+			3,
+			false,
+		},
+		{
+			"comment 2 for issue 2",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.StudentRepoName("user"),
+				Body:         "Comment",
+				Number:       2,
+			},
+			4,
+			false,
+		},
+		{
+			"invalid opts, missing organization",
+			&scm.IssueCommentOptions{
+				Repository: qf.StudentRepoName("user"),
+				Body:       "Comment",
+				Number:     1,
+			},
+			0,
+			true,
+		},
+		{
+			"invalid opts, missing repository",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Body:         "Comment",
+				Number:       1,
+			},
+			0,
+			true,
+		},
+		{
+			"invalid opts, missing comment body",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.StudentRepoName("user"),
+				Number:       1,
+			},
+			0,
+			true,
+		},
+		{
+			"incorrect organization name",
+			&scm.IssueCommentOptions{
+				Organization: "organization",
+				Repository:   qf.StudentRepoName("user"),
+				Body:         "Comment",
+				Number:       1,
+			},
+			0,
+			true,
+		},
+		{
+			"incorrect issue number",
+			&scm.IssueCommentOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.StudentRepoName("user"),
+				Body:         "Comment",
+				Number:       5,
+			},
+			0,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		commentNumber, err := s.CreateIssueComment(ctx, tt.opt)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(tt.wantNumber, commentNumber); diff != "" {
+			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+		}
+	}
+}
