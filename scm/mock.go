@@ -310,6 +310,12 @@ func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return nil, errors.New("organization not found")
 	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
 	id := generateID(s.Issues)
 	issue := &Issue{
 		ID:         id,
@@ -333,6 +339,12 @@ func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return nil, errors.New("organization not found")
 	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
 	issue, ok := s.Issues[uint64(opt.Number)]
 	if !ok {
 		return nil, errors.New("issue not found")
@@ -354,6 +366,12 @@ func (s *MockSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, issueNum
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return nil, errors.New("organization not found")
 	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
 	issue, ok := s.Issues[uint64(issueNumber)]
 	if !ok {
 		return nil, errors.New("issue not found")
@@ -368,6 +386,12 @@ func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Iss
 	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return nil, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return nil, errors.New("repository not found")
 	}
 	var issues []*Issue
 
@@ -386,6 +410,12 @@ func (s *MockSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issue
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return errors.New("organization not found")
 	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return errors.New("repository not found")
+	}
 	delete(s.Issues, uint64(issueNumber))
 	return nil
 }
@@ -396,6 +426,12 @@ func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) erro
 	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return errors.New("repository not found")
 	}
 	for _, issue := range s.Issues {
 		if issue.Repository == opt.Path {
@@ -412,6 +448,12 @@ func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptio
 	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return 0, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return 0, errors.New("repository not found")
 	}
 	if _, ok := s.Issues[uint64(opt.Number)]; !ok {
 		return 0, errors.New("issue not found")

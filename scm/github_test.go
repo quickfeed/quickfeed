@@ -231,13 +231,12 @@ func TestCreateIssueComment(t *testing.T) {
 }
 
 func TestUpdateIssueComment(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
+	s := scm.NewMockSCMClient()
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
+		Organization: qtest.MockOrg,
+		Repository:   qf.StudentRepoName("user"),
 		Body:         body,
 	}
 

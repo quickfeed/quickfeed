@@ -13,32 +13,48 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-var mockIssues = []*scm.Issue{
-	{
-		ID:         1,
-		Title:      "Test issue",
-		Body:       "This is a test issue.",
-		Repository: "test-labs",
-		Number:     1,
-		Assignee:   "test_user",
-	},
-	{
-		ID:         2,
-		Number:     2,
-		Title:      "Task 1",
-		Body:       "Finish Task 1",
-		Repository: "test-labs",
-		Assignee:   "",
-	},
-	{
-		ID:         3,
-		Number:     3,
-		Title:      "Task 1",
-		Body:       "Finish Task 1",
-		Repository: "user-labs",
-		Assignee:   "",
-	},
-}
+var (
+	mockIssues = []*scm.Issue{
+		{
+			ID:         1,
+			Title:      "Test issue",
+			Body:       "This is a test issue.",
+			Repository: qf.StudentRepoName("test"),
+			Number:     1,
+			Assignee:   user,
+		},
+		{
+			ID:         2,
+			Number:     2,
+			Title:      "Task 1",
+			Body:       "Finish Task 1",
+			Repository: qf.StudentRepoName("test"),
+			Assignee:   "",
+		},
+		{
+			ID:         3,
+			Number:     3,
+			Title:      "Task 1",
+			Body:       "Finish Task 1",
+			Repository: qf.StudentRepoName(user),
+			Assignee:   "",
+		},
+	}
+	mockRepos = []*scm.Repository{
+		{
+			ID:    1,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName("test"),
+		},
+		{
+			ID:    2,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName(user),
+		},
+	}
+)
 
 func TestMockClone(t *testing.T) {
 	dstDir := t.TempDir()
@@ -83,7 +99,7 @@ func TestMockClone(t *testing.T) {
 		{
 			name: "missing organization info",
 			opt: &scm.CloneOptions{
-				Repository: qf.StudentRepoName("user"),
+				Repository: qf.StudentRepoName(user),
 				DestDir:    dstDir,
 			},
 			wantPath: "",
@@ -461,7 +477,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 	}
 }
 
-func TestTeamRepo(t *testing.T) {
+func TestMockTeamRepo(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
@@ -573,6 +589,9 @@ func TestTeamRepo(t *testing.T) {
 func TestMockCreateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+	}
 	issue := mockIssues[0]
 
 	tests := []struct {
@@ -656,16 +675,12 @@ func TestMockCreateIssue(t *testing.T) {
 func TestMockUpdateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	mockIssue := mockIssues[0]
-	issue, err := s.CreateIssue(ctx, &scm.IssueOptions{
-		Organization: qtest.MockOrg,
-		Repository:   mockIssue.Repository,
-		Title:        mockIssue.Title,
-		Body:         mockIssue.Body,
-		Assignee:     &mockIssue.Assignee,
-	})
-	if err != nil {
-		t.Fatal(err)
+	issue := mockIssues[0]
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+	}
+	s.Issues = map[uint64]*scm.Issue{
+		1: issue,
 	}
 
 	tests := []struct {
@@ -754,14 +769,11 @@ func TestMockGetIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	issue := mockIssues[0]
-	if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
-		Organization: qtest.MockOrg,
-		Repository:   issue.Repository,
-		Title:        issue.Title,
-		Body:         issue.Body,
-		Assignee:     &issue.Assignee,
-	}); err != nil {
-		t.Fatal(err)
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+	}
+	s.Issues = map[uint64]*scm.Issue{
+		1: issue,
 	}
 
 	tests := []struct {
@@ -817,6 +829,10 @@ func TestMockGetIssue(t *testing.T) {
 func TestMockGetIssues(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+		2: mockRepos[1],
+	}
 
 	for _, issue := range mockIssues {
 		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
@@ -861,7 +877,7 @@ func TestMockGetIssues(t *testing.T) {
 				Path:  "unknown-labs",
 			},
 			nil,
-			false,
+			true,
 		},
 		{
 			"incorrect organization",
@@ -890,6 +906,10 @@ func TestMockGetIssues(t *testing.T) {
 func TestMockDeleteIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+		2: mockRepos[1],
+	}
 
 	for _, issue := range mockIssues {
 		issueOptions := &scm.IssueOptions{
@@ -918,10 +938,11 @@ func TestMockDeleteIssue(t *testing.T) {
 func TestMockDeleteIssues(t *testing.T) {
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	orgs := map[uint64]*qf.Organization{1: {
-		ID:   course.OrganizationID,
-		Name: course.OrganizationName,
-	}}
+	s := scm.NewMockSCMClient()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: mockRepos[0],
+		2: mockRepos[1],
+	}
 
 	tests := []struct {
 		name       string
@@ -932,7 +953,7 @@ func TestMockDeleteIssues(t *testing.T) {
 		{
 			"delete all issues for 'user-labs' repo (issue 3)",
 			&scm.RepositoryOptions{
-				Path:  "user-labs",
+				Path:  qf.StudentRepoName(user),
 				Owner: course.OrganizationName,
 			},
 			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1]},
@@ -948,13 +969,13 @@ func TestMockDeleteIssues(t *testing.T) {
 			false,
 		},
 		{
-			"missing repository, nothing deleted, no error expected",
+			"missing repository, nothing deleted",
 			&scm.RepositoryOptions{
 				Owner: course.OrganizationName,
 				Path:  "some-labs",
 			},
 			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
-			false,
+			true,
 		},
 		{
 			"incorrect organization name",
@@ -977,10 +998,7 @@ func TestMockDeleteIssues(t *testing.T) {
 		for _, issue := range mockIssues {
 			issues[issue.ID] = issue
 		}
-		s := &scm.MockSCM{
-			Organizations: orgs,
-			Issues:        issues,
-		}
+		s.Issues = issues
 		if err := s.DeleteIssues(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
@@ -994,28 +1012,11 @@ func TestMockCreateIssueComment(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	s.Repositories = map[uint64]*scm.Repository{
-		1: {
-			ID:    1,
-			Path:  qf.StudentRepoName("user"),
-			Owner: qtest.MockOrg,
-			OrgID: 1,
-		},
+		1: mockRepos[0],
 	}
 	s.Issues = map[uint64]*scm.Issue{
-		1: {
-			ID:         1,
-			Title:      "Task 1",
-			Body:       "Finish Task 1",
-			Repository: qf.StudentRepoName("user"),
-			Number:     1,
-		},
-		2: {
-			ID:         2,
-			Title:      "Task 2",
-			Body:       "Finish Task 2",
-			Repository: qf.StudentRepoName("user"),
-			Number:     1,
-		},
+		1: mockIssues[0],
+		2: mockIssues[2],
 	}
 
 	tests := []struct {
@@ -1028,7 +1029,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"comment 1 for issue 1",
 			&scm.IssueCommentOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName("test"),
 				Body:         "Comment",
 				Number:       1,
 			},
@@ -1039,7 +1040,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"comment 2 for issue 1",
 			&scm.IssueCommentOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName("test"),
 				Body:         "Comment",
 				Number:       1,
 			},
@@ -1050,7 +1051,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"comment 1 for issue 2",
 			&scm.IssueCommentOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName("test"),
 				Body:         "Comment",
 				Number:       2,
 			},
@@ -1061,7 +1062,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"comment 2 for issue 2",
 			&scm.IssueCommentOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName("test"),
 				Body:         "Comment",
 				Number:       2,
 			},
@@ -1071,7 +1072,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 		{
 			"invalid opts, missing organization",
 			&scm.IssueCommentOptions{
-				Repository: qf.StudentRepoName("user"),
+				Repository: qf.StudentRepoName("test"),
 				Body:       "Comment",
 				Number:     1,
 			},
@@ -1092,7 +1093,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"invalid opts, missing comment body",
 			&scm.IssueCommentOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName(user),
 				Number:       1,
 			},
 			0,
@@ -1102,7 +1103,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"incorrect organization name",
 			&scm.IssueCommentOptions{
 				Organization: "organization",
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName(user),
 				Body:         "Comment",
 				Number:       1,
 			},
@@ -1113,7 +1114,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			"incorrect issue number",
 			&scm.IssueCommentOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
+				Repository:   qf.StudentRepoName(user),
 				Body:         "Comment",
 				Number:       5,
 			},
