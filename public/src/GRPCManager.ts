@@ -201,11 +201,11 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.deleteGroup, request)
     }
 
-    public createGroup(courseID: bigint, name: string, users: number[]): Promise<IGrpcResponse<Group>> {
+    public createGroup(courseID: bigint, name: string, users: bigint[]): Promise<IGrpcResponse<Group>> {
         const request = new Group({
             courseID: BigInt(courseID),
             name: name,
-            users: users.map(userID => new User({ID: BigInt(userID)})),
+            users: users.map(userID => new User({ID: userID})),
         })
         return this.grpcSend<Group>(this.agService.createGroup, request)
     }

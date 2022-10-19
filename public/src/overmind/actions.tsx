@@ -338,7 +338,7 @@ export const getGroupByUserAndCourse = async ({ state, effects }: Context, cours
     }
 }
 
-export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: number[], name: string }): Promise<void> => {
+export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
     const response = await effects.grpcMan.createGroup(group.courseID, group.name, group.users)
     if (success(response) && response.data) {
         state.userGroup[group.courseID.toString()] = response.data

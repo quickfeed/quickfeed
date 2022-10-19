@@ -416,7 +416,7 @@ export class MockGrpcManager {
         return this.grpcSend<Void>(new Void())
     }
 
-    public createGroup(courseID: bigint, name: string, users: number[]): Promise<IGrpcResponse<Group>> {
+    public createGroup(courseID: bigint, name: string, users: bigint[]): Promise<IGrpcResponse<Group>> {
         // Check that the group doesn't exist
         const group = this.groups.groups.find(g => g.name === name && g.courseID === courseID)
         if (group) {
@@ -428,10 +428,10 @@ export class MockGrpcManager {
         request.ID = this.generateID(Generate.Group)
         const groupUsers: User[] = []
         users.forEach((ele) => {
-            const user = this.users.users.find(u => Number(u.ID) === ele)
+            const user = this.users.users.find(u => u.ID === ele)
             if (user) {
                 groupUsers.push(user)
-                const enrollment = this.enrollments.enrollments.find(e => Number(e.userID) === ele && e.courseID === courseID)
+                const enrollment = this.enrollments.enrollments.find(e => e.userID === ele && e.courseID === courseID)
                 if (enrollment) {
                     enrollment.groupID = BigInt(request.ID)
                 }
