@@ -1,4 +1,4 @@
-import { Enrollment, User } from "../../proto/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus, User } from "../../gen/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
@@ -13,21 +13,21 @@ import { render, screen } from "@testing-library/react"
 describe("UpdateEnrollment", () => {
     const mockedOvermind = initializeOvermind({})
 
-    const updateEnrollmentTests: { desc: string, courseID: number, userID: number, want: Enrollment.UserStatus }[] = [
+    const updateEnrollmentTests: { desc: string, courseID: bigint, userID: bigint, want: Enrollment_UserStatus }[] = [
         // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments
-        { desc: "Pending student gets accepted", courseID: 2, userID: 2, want: Enrollment.UserStatus.STUDENT },
-        { desc: "Demote teacher to student", courseID: 2, userID: 1, want: Enrollment.UserStatus.STUDENT },
-        { desc: "Promote student to teacher", courseID: 1, userID: 2, want: Enrollment.UserStatus.TEACHER },
+        { desc: "Pending student gets accepted", courseID: BigInt(2), userID: BigInt(2), want: Enrollment_UserStatus.STUDENT },
+        { desc: "Demote teacher to student", courseID: BigInt(2), userID: BigInt(1), want: Enrollment_UserStatus.STUDENT },
+        { desc: "Promote student to teacher", courseID: BigInt(1), userID: BigInt(2), want: Enrollment_UserStatus.TEACHER },
     ]
 
     beforeAll(async () => {
         // Load enrollments into state before running tests
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 1, statuses: [] })
+        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(2), statuses: [] })
+        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(1), statuses: [] })
     })
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
-        const enrollment = mockedOvermind.state.courseEnrollments[test.courseID].find(e => e.userid === test.userID)
+        const enrollment = mockedOvermind.state.courseEnrollments[test.courseID.toString()].find(e => e.userID === test.userID)
         if (enrollment === undefined) {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
@@ -40,14 +40,21 @@ describe("UpdateEnrollment", () => {
 
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
-        const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
-        const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(3).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
+        const user = new User({ID: BigInt(1), name: "Test User", studentID: "6583969706", email: "test@gmail.com"})
+        const enrollment = new Enrollment({
+            ID: BigInt(2), 
+            courseID: BigInt(1), 
+            status: 3, 
+            user: user, 
+            slipDaysRemaining: 3, 
+            lastActivityDate: "10 Mar", 
+            totalApproved: BigInt(0),
+        })
 
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = user.toObject()
-            state.activeCourse = 1
-            state.courseEnrollments = { [1]: [enrollment] }
+            state.self = user
+            state.activeCourse = BigInt(1)
+            state.courseEnrollments = { ["1"]: [enrollment] }
         })
         const history = createMemoryHistory()
         history.push("/course/1/members")
@@ -65,14 +72,25 @@ describe("UpdateEnrollment in webpage", () => {
     })
 
     it("If status is student, button should display promote", () => {
-        const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
-        const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(2).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
-
+        const user = new User({
+            ID: BigInt(1),
+            name: "Test User",
+            studentID: "6583969706",
+            email: "test@gmail.com"
+        })
+        const enrollment = new Enrollment({
+            ID: BigInt(2),
+            courseID: BigInt(1),
+            status: 2,
+            user: user,
+            slipDaysRemaining: 3,
+            lastActivityDate: "10 Mar",
+            totalApproved: BigInt(0),
+        })
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = user.toObject()
-            state.activeCourse = 1
-            state.courseEnrollments = { [1]: [enrollment] }
+            state.self = user
+            state.activeCourse = BigInt(1)
+            state.courseEnrollments = { ["1"]: [enrollment] }
         })
         const history = createMemoryHistory()
         history.push("/course/1/members")
