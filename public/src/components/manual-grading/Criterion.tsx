@@ -1,12 +1,12 @@
 import React, { useState } from "react"
-import { GradingCriterion } from "../../../proto/qf/types_pb"
+import { GradingCriterion, GradingCriterion_Grade } from "../../../gen/qf/types_pb"
 import { useAppState } from "../../overmind"
 import GradeComment from "./GradeComment"
 import CriteriaStatus from "./CriteriaStatus"
 
 
 /* Criteria component for the manual grading page */
-const Criteria = ({ criteria }: { criteria: GradingCriterion.AsObject }): JSX.Element => {
+const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => {
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
@@ -16,18 +16,18 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion.AsObject }): JSX.El
     // it adds a vertical line to the left of the row with color based on the grading criterion.
     let className: string
     switch (criteria.grade) {
-        case GradingCriterion.Grade.PASSED:
+        case GradingCriterion_Grade.PASSED:
             className = "passed"
             break
-        case GradingCriterion.Grade.FAILED:
+        case GradingCriterion_Grade.FAILED:
             className = "failed"
             break
-        case GradingCriterion.Grade.NONE:
+        case GradingCriterion_Grade.NONE:
             className = "not-graded"
             break
     }
 
-    const passed = criteria.grade == GradingCriterion.Grade.PASSED
+    const passed = criteria.grade == GradingCriterion_Grade.PASSED
     // manageOrShowPassed renders the ManageCriteriaStatus component if the user is a teacher, otherwise it renders a passed/failed icon
     const criteriaStatusOrPassFailIcon = isTeacher
         ? <CriteriaStatus criterion={criteria} />

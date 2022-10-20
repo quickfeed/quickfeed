@@ -1,10 +1,10 @@
 import React from "react"
 import { Dispatch, SetStateAction } from "react"
-import { GradingBenchmark, GradingCriterion } from "../../../proto/qf/types_pb"
+import { GradingBenchmark, GradingCriterion } from "../../../gen/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 
 type GradeCommentProps = {
-    grade: GradingBenchmark.AsObject | GradingCriterion.AsObject,
+    grade: GradingBenchmark | GradingCriterion,
     editing: boolean,
     setEditing: Dispatch<SetStateAction<boolean>>
 }

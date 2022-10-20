@@ -1,21 +1,21 @@
 import React from "react"
-import { Review } from "../../proto/qf/types_pb"
+import { Review } from "../../gen/qf/types_pb"
 import { hasBenchmarks } from "../Helpers"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
-const ReviewResult = ({ review }: { review?: Review.AsObject }): JSX.Element | null => {
+const ReviewResult = ({ review }: { review?: Review }): JSX.Element | null => {
 
     if (!review) {
         return null
     }
 
-    const result = hasBenchmarks(review) ? review.gradingbenchmarksList.map((benchmark, index) => {
+    const result = hasBenchmarks(review) ? review.gradingBenchmarks.map((benchmark, index) => {
         return (
             <Benchmark key={index} bm={benchmark}>
-                {benchmark.criteriaList.map((criteria, index) => <Criteria key={index} criteria={criteria} />)}
+                {benchmark.criteria.map((criteria, index) => <Criteria key={index} criteria={criteria} />)}
             </Benchmark>
         )
     }) : null

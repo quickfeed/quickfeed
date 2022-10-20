@@ -1,5 +1,5 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import { Review } from "../../../gen/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
@@ -7,7 +7,7 @@ import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 
 
-const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | null => {
+const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
     const state = useAppState()
     const actions = useActions()
 
