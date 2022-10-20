@@ -46,7 +46,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 value: `${reviews.length}/${assignment.reviewers} ${submission.released ? "(r)" : ""}`,
                 className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
                 onClick: () => {
-                    actions.setActiveSubmissionLink(submissionLink)
+                    actions.setActiveSubmissionLink(submissionLink.clone())
                     actions.review.setSelectedReview(-1)
                 }
             })
@@ -54,7 +54,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             return ({
                 value: "N/A",
                 onClick: () => {
-                    actions.setActiveSubmissionLink(submissionLink)
+                    actions.setActiveSubmissionLink(undefined)
                 }
             })
         }
@@ -68,8 +68,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 value: `${submission.score} %`,
                 className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
                 onClick: () => {
-                    actions.setActiveSubmissionLink(submissionLink)
-                    actions.setActiveEnrollment(enrollment)
+                    actions.setActiveSubmissionLink(submissionLink.clone())
+                    actions.setActiveEnrollment(enrollment.clone())
                 }
             })
         } else {
