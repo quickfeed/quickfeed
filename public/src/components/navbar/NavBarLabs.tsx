@@ -30,7 +30,7 @@ const NavBarLabs = (): JSX.Element | null => {
     }
 
     const labLinks = state.assignments[state.activeCourse.toString()]?.map((assignment, index) => {
-        const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/${assignment.ID}` }, jsx: submissionIcon(assignment) }
+        const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/lab/${assignment.ID}` }, jsx: submissionIcon(assignment) }
         return (
             <div className={getLinkClass(assignment)} style={{ position: "relative" }} key={assignment.ID.toString()} onClick={() => { history.push(link.link.to) }}>
                 <NavBarLink link={link.link} jsx={link.jsx} />

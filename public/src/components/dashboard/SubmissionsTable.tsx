@@ -49,7 +49,7 @@ const SubmissionsTable = (): JSX.Element => {
                 const course = state.courses.find(course => course.ID === courseID)
                 table.push(
                     <tr key={assignment.ID.toString()} className={"clickable-row " + deadline.className}
-                        onClick={() => history.push(`/course/${courseID}/${assignment.ID}`)}>
+                        onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
                         <th scope="row">{course?.code}</th>
                         <td>
                             {assignment.name}

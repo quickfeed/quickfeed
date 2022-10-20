@@ -12,7 +12,7 @@ interface MatchProps {
     lab: string
 }
 
-/** Lab displays a submission based on the /course/:id/:lab route if the user is a student.
+/** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
  *  If the user is a teacher, Lab displays a submission based on the submission in state.currentSubmission.
  */
 const Lab = (): JSX.Element => {

@@ -14,7 +14,7 @@ const CourseLabs = (): JSX.Element => {
     const labs: JSX.Element[] = []
 
     const redirectTo = (assignmentID: bigint) => {
-        history.push(`/course/${courseID}/${assignmentID.toString()}`)
+        history.push(`/course/${courseID}/lab/${assignmentID.toString()}`)
     }
 
     if (state.assignments[courseID] && state.submissions[courseID]) {
