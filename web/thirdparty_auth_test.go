@@ -44,13 +44,14 @@ func TestThirdPartyAuth(t *testing.T) {
 		interceptor.NewAccessControlInterceptor(tm),
 		interceptor.NewTokenInterceptor(tm),
 	))
+	ctx := context.Background()
+	defer shutdown(ctx)
 
 	request := connect.NewRequest(&qf.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
 		UserLogin:  userName,
 	})
-	ctx := context.Background()
 	// request.Header().Set(auth.Cookie, firstAdminCookie.String())
 	userInfo, err := client.GetUserByCourse(ctx, request)
 	check(t, err)
@@ -60,7 +61,6 @@ func TestThirdPartyAuth(t *testing.T) {
 	if userInfo.Msg.Login != user.Login {
 		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Msg.Login)
 	}
-	shutdown(ctx)
 }
 
 func fillDatabase(t *testing.T, db database.Database) {

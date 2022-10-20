@@ -211,7 +211,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 // DeleteRepository implements the SCM interface.
 func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("DeleteRepository got invalid RepositoryOptions: %+v", opt)
+		return fmt.Errorf("invalid argument: %+v", opt)
 	}
 
 	// if ID provided, get path and owner from github
