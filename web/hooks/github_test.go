@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -20,7 +21,17 @@ import (
 	"github.com/steinfletcher/apitest"
 )
 
+func loadRunScript(t *testing.T, runScriptPath string) string {
+	t.Helper()
+	b, err := os.ReadFile(runScriptPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
 func TestHandlePush(t *testing.T) {
+	runScript := loadRunScript(t, "../../testdata/courses/qf104-2022/tests/scripts/run.sh")
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -50,7 +61,7 @@ func TestHandlePush(t *testing.T) {
 	lab1 := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab1",
-		RunScriptContent: "Script for assignment 1",
+		RunScriptContent: runScript,
 		Deadline:         "12.12.2021",
 		AutoApprove:      false,
 		Order:            1,
@@ -60,7 +71,7 @@ func TestHandlePush(t *testing.T) {
 	lab2 := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab2",
-		RunScriptContent: "Script for assignment 1",
+		RunScriptContent: runScript,
 		Deadline:         "12.01.2022",
 		AutoApprove:      false,
 		Order:            2,
