@@ -33,7 +33,6 @@ tools: ${tool-cmds}
 
 version-check:
 	@go run cmd/vercheck/main.go
-endif
 
 
 install:
