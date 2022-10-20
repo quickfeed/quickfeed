@@ -1,14 +1,13 @@
 import React, { useCallback } from "react"
-import { Assignment, Submission } from "../../proto/qf/types_pb"
-import { Converter } from "../convert"
+import { Assignment, Submission, Submission_Status } from "../../gen/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
 import SubmissionScore from "./SubmissionScore"
 
 interface lab {
-    submission: Submission.AsObject
-    assignment: Assignment.AsObject
+    submission: Submission
+    assignment: Assignment
 }
 
 type ScoreSort = "name" | "score" | "weight"
@@ -21,15 +20,15 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
 
     const sortScores = () => {
         const sortBy = sortAscending ? 1 : -1
-        const scores = Converter.clone(submission.scoresList)
+        const scores = submission.clone().Scores
         return scores.sort((a, b) => {
             switch (sortKey) {
                 case "name":
-                    return sortBy * (a.testname.localeCompare(b.testname))
+                    return sortBy * (a.TestName.localeCompare(b.TestName))
                 case "score":
-                    return sortBy * (a.score - b.score)
+                    return sortBy * (a.Score - b.Score)
                 case "weight":
-                    return sortBy * (a.weight - b.weight)
+                    return sortBy * (a.Weight - b.Weight)
                 default:
                     return 0
             }
@@ -49,16 +48,16 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
 
     if (submission && assignment) {
-        const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.courseid]
-        const buildInfo = submission.buildinfo
-        const delivered = buildInfo ? getFormattedTime(buildInfo.builddate) : "N/A"
-        const executionTime = buildInfo ? `${buildInfo.exectime / 1000} seconds` : ""
+        const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.CourseID.toString()]
+        const buildInfo = submission.BuildInfo
+        const delivered = buildInfo ? getFormattedTime(buildInfo.BuildDate) : "N/A"
+        const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
 
-        const className = (submission.status === Submission.Status.APPROVED) ? "passed" : "failed"
+        const className = (submission.status === Submission_Status.APPROVED) ? "passed" : "failed"
         return (
             <div className="pb-2">
                 <div className="pb-2">
-                    <ProgressBar key={"progress-bar"} courseID={assignment.courseid} assignmentIndex={assignment.order - 1} submission={submission} type={Progress.LAB} />
+                    <ProgressBar key={"progress-bar"} courseID={assignment.CourseID.toString()} assignmentIndex={assignment.order - 1} submission={submission} type={Progress.LAB} />
                 </div>
                 <table className="table table-curved table-striped">
                     <thead className={"thead-dark"}>
@@ -77,10 +76,10 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             <td>{delivered}</td>
                         </tr>
                         { // Only render row if submission has an approved date
-                            submission.approveddate ?
+                            submission.approvedDate ?
                                 <tr>
                                     <td colSpan={2}>Approved</td>
-                                    <td>{getFormattedTime(submission.approveddate)}</td>
+                                    <td>{getFormattedTime(submission.approvedDate)}</td>
                                 </tr>
                                 : null
                         }
@@ -92,7 +91,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         {!isManuallyGraded(assignment) ?
                             <tr>
                                 <td colSpan={2}>Tests Passed</td>
-                                <td>{getPassedTestsCount(submission.scoresList)}</td>
+                                <td>{getPassedTestsCount(submission.Scores)}</td>
                             </tr>
                             : null
                         }
@@ -103,7 +102,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         <tr>
                             <td colSpan={2}>Slip days</td>
                             <td>{
-                                enrollment.slipdaysremaining
+                                enrollment.slipDaysRemaining
                             }</td>
                         </tr>
                         <tr className={"thead-dark"}>
@@ -113,7 +112,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
 
                         </tr>
                         {sortedScores.map(score =>
-                            <SubmissionScore key={score.id} score={score} />
+                            <SubmissionScore key={score.ID.toString()} score={score} />
                         )}
 
                     </tbody>
