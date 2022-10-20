@@ -1,11 +1,11 @@
 import React from "react"
-import { Enrollment } from "../../proto/qf/types_pb"
+import { Enrollment } from "../../gen/qf/types_pb"
 import { isVisible } from "../Helpers"
 import { useActions } from "../overmind"
 
 
 // CourseFavoriteButton is a component that displays a button to toggle the favorite status of a course.
-const CourseFavoriteButton = ({ enrollment, style }: { enrollment: Enrollment.AsObject, style: React.CSSProperties }) => {
+const CourseFavoriteButton = ({ enrollment, style }: { enrollment: Enrollment, style: React.CSSProperties }) => {
     const actions = useActions()
 
     return (

@@ -1,12 +1,11 @@
 import React, { useState } from "react"
 import { useActions } from "../../overmind"
-import { Course } from "../../../proto/qf/types_pb"
-import { Organization } from "../../../proto/qf/requests_pb"
+import { Course } from "../../../gen/qf/types_pb"
+import { Organization } from "../../../gen/qf/requests_pb"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 import { useHistory } from "react-router"
 import { defaultTag, defaultYear } from "../../Helpers"
-import { Converter } from "../../convert"
 
 
 // TODO: There are currently issues with navigating a new course without refreshing the page to trigger a state reload.
@@ -15,7 +14,7 @@ import { Converter } from "../../convert"
 /** CourseForm is used to create a new course or edit an existing course.
  *  If `editCourse` is provided, the existing course will be modified.
  *  If no course is provided, a new course will be created. */
-const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Element | null => {
+const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null => {
     const actions = useActions()
     const history = useHistory()
 
@@ -25,7 +24,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Eleme
     const [org, setOrg] = useState<Organization>()
 
     // Local state containing the course to be created or edited (if any)
-    const [course, setCourse] = useState(editCourse ? Converter.clone(editCourse) : Converter.create(Course))
+    const [course, setCourse] = useState(editCourse ? editCourse.clone() : new Course)
 
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
@@ -53,7 +52,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Eleme
                 course.year = Number(value)
                 break
             case "slipDays":
-                course.slipdays = Number(value)
+                course.slipDays = Number(value)
                 break
         }
         setCourse(course)
@@ -133,7 +132,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Eleme
                             prepend="Slip days"
                             name="slipDays"
                             placeholder={"(ex. 7)"}
-                            defaultValue={editCourse?.slipdays.toString()}
+                            defaultValue={editCourse?.slipDays.toString()}
                             onChange={handleChange}
                             type="number"
                         />
