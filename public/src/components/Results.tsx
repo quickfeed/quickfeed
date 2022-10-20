@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { Enrollment, SubmissionLink } from "../../proto/qf/types_pb"
+import { Enrollment, SubmissionLink } from "../../gen/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
@@ -17,28 +17,28 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const courseID = getCourseID()
 
     useEffect(() => {
-        if (!state.courseSubmissions[courseID]) {
+        if (!state.courseSubmissions[courseID.toString()]) {
             actions.getAllCourseSubmissions(courseID)
         }
         return () => {
             actions.setActiveSubmissionLink(undefined)
             actions.setGroupView(false)
-            actions.review.setAssignmentID(-1)
+            actions.review.setAssignmentID(BigInt(-1))
             actions.setActiveEnrollment(undefined)
         }
     }, [state.courseSubmissions])
 
-    if (!state.courseSubmissions[courseID]) {
+    if (!state.courseSubmissions[courseID.toString()]) {
         return <h1>Fetching Submissions...</h1>
     }
 
 
-    const generateReviewCell = (submissionLink: SubmissionLink.AsObject): RowElement => {
+    const generateReviewCell = (submissionLink: SubmissionLink): RowElement => {
         const submission = submissionLink.submission
         const assignment = submissionLink.assignment
         if (submission && assignment && isManuallyGraded(assignment)) {
-            const reviews = state.review.reviews[assignment.courseid][submission.id] ?? []
-            const isSelected = state.activeSubmission === submission.id
+            const reviews = state.review.reviews[assignment.CourseID.toString()][Number(submission.ID)] ?? []
+            const isSelected = state.activeSubmission === Number(submission.ID)
             const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
             const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
             return ({
@@ -60,10 +60,10 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         }
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink.AsObject, enrollment: Enrollment.AsObject): CellElement => {
+    const getSubmissionCell = (submissionLink: SubmissionLink, enrollment: Enrollment): CellElement => {
         const submission = submissionLink.submission
         if (submission) {
-            const isSelected = state.activeSubmission === submission.id
+            const isSelected = BigInt(state.activeSubmission) === submission.ID
             return ({
                 value: `${submission.score} %`,
                 className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
@@ -86,8 +86,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
     const groupView = state.groupView
     const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
-    const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.id === state.review.assignmentID)
-    const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isgrouplab : true).map(assignment => assignment.id)
+    const assignments = state.assignments[courseID.toString()].filter(assignment => (state.review.assignmentID < 0) || assignment.ID === state.review.assignmentID)
+    const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isGroupLab : true).map(assignment => assignment.ID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const links = state.sortedAndFilteredSubmissions
@@ -102,7 +102,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                     <Button type={ButtonType.BUTTON}
                         classname="ml-2"
                         text={`View by ${groupView ? "student" : "group"}`}
-                        onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
+                        onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
                         color={groupView ? Color.BLUE : Color.GREEN} />
                 </Search>
                 <TableSort />
