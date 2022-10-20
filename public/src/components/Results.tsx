@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo } from "react"
 import { Enrollment, SubmissionLink } from "../../gen/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -90,7 +90,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isGroupLab : true).map(assignment => assignment.ID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
-    const links = state.sortedAndFilteredSubmissions
+    const links = useMemo(() => { return state.sortedAndFilteredSubmissions }, [state.sortedAndFilteredSubmissions])
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(links, review, generator, assignmentIDs, false)
 
