@@ -4,110 +4,121 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
-	"os"
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/google/go-github/v45/github"
-	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/hooks"
 	"github.com/steinfletcher/apitest"
 )
 
-func loadRunScript(t *testing.T, runScriptPath string) string {
-	t.Helper()
-	b, err := os.ReadFile(runScriptPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(b)
-}
+const secret = "secret"
 
 func TestHandlePush(t *testing.T) {
-	runScript := loadRunScript(t, "../../testdata/courses/qf104-2022/tests/scripts/run.sh")
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	user := qtest.CreateFakeUser(t, db, 1)
-	repo := &qf.Repository{
-		ID:             1,
-		RepositoryID:   1,
-		OrganizationID: 1,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        "https://github.com/qf104-2022/meling-labs",
-	}
-	if err := db.CreateRepository(repo); err != nil {
-		t.Fatal(err)
-	}
-	course := &qf.Course{
-		Name:             "QuickFeed Course 4",
-		Code:             "QF104",
-		Year:             2022,
-		Tag:              "Spring",
-		Provider:         "github",
-		OrganizationID:   1,
-		OrganizationName: "qf104-2022",
-	}
-	qtest.CreateCourse(t, db, user, course)
-
-	lab1 := &qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab1",
-		RunScriptContent: runScript,
-		Deadline:         "12.12.2021",
-		AutoApprove:      false,
-		Order:            1,
-		IsGroupLab:       false,
-	}
-
-	lab2 := &qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab2",
-		RunScriptContent: runScript,
-		Deadline:         "12.01.2022",
-		AutoApprove:      false,
-		Order:            2,
-		IsGroupLab:       false,
-	}
-
-	for _, a := range []*qf.Assignment{lab1, lab2} {
-		if err := db.CreateAssignment(a); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	const secret = "secret"
-	env.SetFakeProvider(t)
-	wh := hooks.NewGitHubWebHook(qtest.Logger(t), db, scm.NewSCMManager(nil), &ci.Local{}, secret)
+	wh := NewMockWebHook(qtest.Logger(t), secret)
 
 	pushPayload := qlog.IndentJson(pushEvent)
 	signature := hMAC([]byte(pushPayload), []byte(secret))
 
-	apitest.New().
-		// Debug().
-		HandlerFunc(wh.Handle()).
-		Post(auth.Hook).
-		Headers(map[string]string{
-			"Content-Type":    "application/json",
-			"X-Github-Event":  "push",
-			"X-Hub-Signature": "sha256=" + signature,
-		}).
-		Body(pushPayload).
-		Expect(t).
-		Status(http.StatusOK).
-		End()
+	tests := []struct {
+		name       string
+		payload    string
+		signature  string
+		wantStatus int
+	}{
+		{
+			name:       "valid push event",
+			payload:    pushPayload,
+			signature:  signature,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "invalid signature",
+			payload:    pushPayload,
+			signature:  "invalid",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "invalid payload",
+			payload:    pushPayload + "invalid",
+			signature:  hMAC([]byte(pushPayload+"invalid"), []byte(secret)),
+			wantStatus: http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apitest.New().
+				HandlerFunc(wh.Handle()).
+				Post(auth.Hook).
+				Headers(map[string]string{
+					"Content-Type":    "application/json",
+					"X-Github-Event":  "push",
+					"X-Hub-Signature": "sha256=" + tt.signature,
+				}).
+				Body(tt.payload).
+				Expect(t).
+				Status(tt.wantStatus).
+				End()
+		})
+	}
+}
 
-	// Currently, we need to wait here for wh.handlePush() to finish, since it is running in a goroutine.
-	// TODO(meling) find a more robust way to wait for the goroutine to finish.
-	time.Sleep(2000 * time.Millisecond)
+func TestConcurrentHandlePush(t *testing.T) {
+	const concurrentPushEvents = 100
+	wh := NewMockWebHook(qtest.Logger(t), secret)
+	handlerFunc := wh.Handle()
+
+	var wg sync.WaitGroup
+	wg.Add(concurrentPushEvents)
+	for i := 0; i < concurrentPushEvents; i++ {
+		i := i
+		go func() {
+			myPushEvent := &github.PushEvent{
+				Repo: &github.PushEventRepository{
+					Name: github.String(fmt.Sprintf("repo-%02d", i)),
+				},
+			}
+			pushPayload := qlog.IndentJson(&myPushEvent)
+			signature := hMAC([]byte(pushPayload), []byte(secret))
+
+			apitest.New().
+				HandlerFunc(handlerFunc).
+				Post(auth.Hook).
+				Headers(map[string]string{
+					"Content-Type":    "application/json",
+					"X-Github-Event":  "push",
+					"X-Hub-Signature": "sha256=" + signature,
+				}).
+				Body(pushPayload).
+				Expect(t).
+				Status(http.StatusOK).
+				End()
+
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	wh.wg.Wait()
+	// All goroutines were executed
+	if wh.totalCnt != concurrentPushEvents {
+		t.Errorf("totalCnt = %d, want %d", wh.totalCnt, concurrentPushEvents)
+	}
+	// At most maxConcurrentTestRuns goroutines should have been executing at the same time.
+	if wh.highestConcurrencyCnt != maxConcurrentTestRuns {
+		t.Errorf("highestConcurrencyCnt = %d, want %d", wh.highestConcurrencyCnt, maxConcurrentTestRuns)
+	}
+	// All goroutines should have completed.
+	if wh.currentConcurrencyCnt != 0 {
+		t.Errorf("currentConcurrencyCnt = %d, want 0", wh.currentConcurrencyCnt)
+	}
+	// All goroutines should have completed.
+	if wh.lowestConcurrencyCnt != 0 {
+		t.Errorf("lowestConcurrencyCnt = %d, want 0", wh.lowestConcurrencyCnt)
+	}
 }
 
 var pushEvent = &github.PushEvent{
