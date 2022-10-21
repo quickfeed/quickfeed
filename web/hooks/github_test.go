@@ -107,17 +107,9 @@ func TestConcurrentHandlePush(t *testing.T) {
 	if wh.totalCnt != concurrentPushEvents {
 		t.Errorf("totalCnt = %d, want %d", wh.totalCnt, concurrentPushEvents)
 	}
-	// At most maxConcurrentTestRuns goroutines should have been executing at the same time.
-	if wh.highestConcurrencyCnt != maxConcurrentTestRuns {
-		t.Errorf("highestConcurrencyCnt = %d, want %d", wh.highestConcurrencyCnt, maxConcurrentTestRuns)
-	}
 	// All goroutines should have completed.
 	if wh.currentConcurrencyCnt != 0 {
 		t.Errorf("currentConcurrencyCnt = %d, want 0", wh.currentConcurrencyCnt)
-	}
-	// All goroutines should have completed.
-	if wh.lowestConcurrencyCnt != 0 {
-		t.Errorf("lowestConcurrencyCnt = %d, want 0", wh.lowestConcurrencyCnt)
 	}
 }
 

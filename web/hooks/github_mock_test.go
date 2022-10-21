@@ -19,8 +19,6 @@ type MockWebHook struct {
 	sem                   chan struct{}
 	totalCnt              int32
 	currentConcurrencyCnt int32
-	highestConcurrencyCnt int32
-	lowestConcurrencyCnt  int32
 	wg                    *sync.WaitGroup
 }
 
@@ -59,16 +57,8 @@ func (wh *MockWebHook) Handle() http.HandlerFunc {
 			wh.wg.Add(1)
 			go func() {
 				wh.sem <- struct{}{} // acquire semaphore
-				current := atomic.AddInt32(&wh.currentConcurrencyCnt, 1)
-				if atomic.LoadInt32(&wh.highestConcurrencyCnt) < current {
-					atomic.StoreInt32(&wh.highestConcurrencyCnt, current)
-				}
-				if atomic.LoadInt32(&wh.lowestConcurrencyCnt) > current {
-					atomic.StoreInt32(&wh.lowestConcurrencyCnt, current)
-				}
 				wh.handlePush(e)
 				<-wh.sem // release semaphore
-				atomic.AddInt32(&wh.currentConcurrencyCnt, -1)
 				wh.wg.Done()
 			}()
 		default:
