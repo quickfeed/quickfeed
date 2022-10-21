@@ -39,6 +39,7 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		payload, err := github.ValidatePayload(r, []byte(wh.secret))
 		if err != nil {
 			wh.logger.Errorf("Error in request body: %v", err)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		defer r.Body.Close()
@@ -46,6 +47,7 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		event, err := github.ParseWebHook(github.WebHookType(r), payload)
 		if err != nil {
 			wh.logger.Errorf("Could not parse github webhook: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		wh.logger.Debug(qlog.IndentJson(event))
