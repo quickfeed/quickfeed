@@ -32,8 +32,6 @@ type SCM interface {
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
-	// Get a single team by ID or name.
-	GetTeam(context.Context, *TeamOptions) (*Team, error)
 	// Fetch all teams for organization.
 	GetTeams(context.Context, *qf.Organization) ([]*Team, error)
 	// Add repo to team.
