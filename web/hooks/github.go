@@ -55,6 +55,9 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		case *github.PushEvent:
 			// The counting semaphore limits concurrency to maxConcurrentTestRuns.
 			// This should also allow webhook events to return quickly to GitHub, avoiding timeouts.
+			// Note however, if we receive a large number of push events, we may be creating
+			// a large number of goroutines. If this becomes a problem, we can add rate limiting
+			// on the number of goroutines created, by returning a http.StatusTooManyRequests.
 			go func() {
 				wh.sem <- struct{}{} // acquire semaphore
 				wh.handlePush(e)
