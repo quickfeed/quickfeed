@@ -68,7 +68,7 @@ func TestHandlePush(t *testing.T) {
 }
 
 func TestConcurrentHandlePush(t *testing.T) {
-	const concurrentPushEvents = 100
+	const concurrentPushEvents = 1000
 	wh := NewMockWebHook(qtest.Logger(t), secret)
 	handlerFunc := wh.Handle()
 
