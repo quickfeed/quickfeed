@@ -18,8 +18,6 @@ type SCM interface {
 	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
-	// Get repository by ID or name
-	GetRepository(context.Context, *RepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Delete repository.

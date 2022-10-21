@@ -113,26 +113,6 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 	return repo, nil
 }
 
-// GetRepository implements the SCM interface.
-func (s *MockSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Repository, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if opt.ID > 0 {
-		repo, ok := s.Repositories[opt.ID]
-		if !ok {
-			return nil, errors.New("repository not found")
-		}
-		return repo, nil
-	}
-	for _, repo := range s.Repositories {
-		if repo.Path == opt.Path && repo.Owner == opt.Owner {
-			return repo, nil
-		}
-	}
-	return nil, errors.New("repository not found")
-}
-
 // GetRepositories implements the SCM interface.
 func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
 	var repos []*Repository
@@ -157,11 +137,11 @@ func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 }
 
 // UpdateRepoAccess implements the SCM interface.
-func (s *MockSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, _, _ string) error {
+func (s *MockSCM) UpdateRepoAccess(_ context.Context, repo *Repository, _, _ string) error {
 	if !repo.valid() {
 		return fmt.Errorf("invalid argument: %+v", repo)
 	}
-	_, err := s.GetRepository(ctx, &RepositoryOptions{
+	_, err := s.getRepository(&RepositoryOptions{
 		ID:    repo.ID,
 		Path:  repo.Path,
 		Owner: repo.Owner,
@@ -309,7 +289,7 @@ func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return nil, errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
@@ -338,7 +318,7 @@ func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return nil, errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
@@ -365,7 +345,7 @@ func (s *MockSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, issueNum
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return nil, errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Path,
 		Owner: opt.Owner,
 	}); err != nil {
@@ -386,7 +366,7 @@ func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Iss
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return nil, errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Path,
 		Owner: opt.Owner,
 	}); err != nil {
@@ -409,7 +389,7 @@ func (s *MockSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issue
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Path,
 		Owner: opt.Owner,
 	}); err != nil {
@@ -426,7 +406,7 @@ func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) erro
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
 		return errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Path,
 		Owner: opt.Owner,
 	}); err != nil {
@@ -448,7 +428,7 @@ func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptio
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return 0, errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
@@ -470,7 +450,7 @@ func (s *MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptio
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return errors.New("organization not found")
 	}
-	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+	if _, err := s.getRepository(&RepositoryOptions{
 		Path:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
@@ -527,4 +507,25 @@ func generateID[T any](data map[uint64]T) uint64 {
 		_, ok = data[id]
 	}
 	return id
+}
+
+// getRepository imitates the check done by GitHub when performing API calls that depend on
+// existence of a certain repository.
+func (s *MockSCM) getRepository(opt *RepositoryOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %+v", opt)
+	}
+	if opt.ID > 0 {
+		repo, ok := s.Repositories[opt.ID]
+		if !ok {
+			return nil, errors.New("repository not found")
+		}
+		return repo, nil
+	}
+	for _, repo := range s.Repositories {
+		if repo.Path == opt.Path && repo.Owner == opt.Owner {
+			return repo, nil
+		}
+	}
+	return nil, errors.New("repository not found")
 }

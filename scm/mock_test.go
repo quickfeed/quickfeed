@@ -229,13 +229,9 @@ func TestMockRepositories(t *testing.T) {
 		if err := s.UpdateRepoAccess(ctx, repo, "", ""); err != nil {
 			t.Error(err)
 		}
-		gotRepo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
-			ID:    repo.ID,
-			Path:  repo.Path,
-			Owner: repo.Owner,
-		})
-		if err != nil {
-			t.Error(err)
+		gotRepo, ok := s.Repositories[repo.ID]
+		if !ok {
+			t.Errorf("expected repository %s to be found", repo.Path)
 		}
 		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
 			t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)

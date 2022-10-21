@@ -146,30 +146,6 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	return toRepository(repo), nil
 }
 
-// GetRepository implements the SCM interface.
-func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
-	if !opt.valid() {
-		return nil, ErrMissingFields{
-			Method:  "GetRepository",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-	var repo *github.Repository
-	var err error
-	// if ID is set, get by ID
-	if opt.ID > 0 {
-		repo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
-	} else {
-		// otherwise get by repo name and owner (usually owner = organization name)
-		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("GetRepository failed to fetch repository %d, and path %s: %w", opt.ID, opt.Path, err)
-	}
-
-	return toRepository(repo), nil
-}
-
 // GetRepositories implements the SCM interface.
 func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
 	if !org.IsValid() {
@@ -261,13 +237,13 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
-	repo, err := s.GetRepository(ctx, opt)
+	_, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	if err != nil {
 		return false
 	}
 
 	// test to check how repo commits look like
-	_, _, err = s.client.Repositories.ListCommits(ctx, repo.Owner, repo.Path, nil)
+	_, _, err = s.client.Repositories.ListCommits(ctx, opt.Owner, opt.Path, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Git Repository is empty") {
 			return true
