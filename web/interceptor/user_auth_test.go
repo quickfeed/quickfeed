@@ -53,7 +53,7 @@ func TestUserVerifier(t *testing.T) {
 	}
 
 	for _, user := range userTest {
-		gotUser, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, user.cookie))
+		gotUser, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, user.cookie))
 		if err != nil {
 			// zero codes won't actually reach this check, but that's okay, since zero is CodeOK
 			if gotCode := connect.CodeOf(err); gotCode != user.code {
