@@ -190,7 +190,7 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 // pullImage pulls an image from docker hub.
 // This can be slow and should be avoided if possible.
 func (d *Docker) pullImage(ctx context.Context, image string) error {
-	progress, err := d.client.ImagePull(ctx, "docker.io/library/"+image, types.ImagePullOptions{})
+	progress, err := d.client.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}

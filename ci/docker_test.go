@@ -363,6 +363,36 @@ func TestDockerPull(t *testing.T) {
 	}
 }
 
+func TestDockerPullFromNonDockerHubRepositories(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+	const (
+		script  = `echo "Hello, world!"`
+		wantOut = "Hello, world!\n"
+		image   = "mcr.microsoft.com/dotnet/sdk:6.0"
+	)
+	deleteDockerImages(t, image)
+
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// To pull an image, we need only a job with image name;
+	// no Dockerfile content should be provided when pulling.
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
 func TestDockerTimeout(t *testing.T) {
 	if !docker {
 		t.SkipNow()
