@@ -709,6 +709,11 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 	return nil
 }
 
+// Client returns GitHub client.
+func (s *GithubSCM) Client() *github.Client {
+	return s.client
+}
+
 func toRepository(repo *github.Repository) *Repository {
 	return &Repository{
 		ID:      uint64(repo.GetID()),

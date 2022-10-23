@@ -43,7 +43,7 @@ import (
 // % scm get user
 
 func main() {
-	var client scm.SCM
+	var client scm.GithubSCM
 
 	app := cli.NewApp()
 	app.Name = "scm"
@@ -173,7 +173,7 @@ func main() {
 	}
 }
 
-func before(client *scm.SCM) cli.BeforeFunc {
+func before(client *scm.GithubSCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
@@ -182,7 +182,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 			return err
 		}
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
+			*client = *scm.NewGithubSCMClient(logger.Sugar(), accessToken)
 			return
 		}
 
@@ -205,12 +205,12 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
+		*client = *scm.NewGithubSCMClient(logger.Sugar(), accessToken)
 		return
 	}
 }
 
-func deleteRepositories(client *scm.SCM) cli.ActionFunc {
+func deleteRepositories(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -257,7 +257,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 	}
 }
 
-func getRepositories(client *scm.SCM) cli.ActionFunc {
+func getRepositories(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -282,16 +282,16 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			fmt.Println(s)
 			return nil
 		}
-		repo, err := (*client).GetRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
+		repo, _, err := (*client).Client().Repositories.Get(ctx, c.String("namespace"), c.String("name"))
 		if err != nil {
 			return err
 		}
-		fmt.Println("Found repository ", repo.HTMLURL)
+		fmt.Println("Found repository ", *repo.HTMLURL)
 		return nil
 	}
 }
 
-func createTeam(client *scm.SCM) cli.ActionFunc {
+func createTeam(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -318,7 +318,7 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 	}
 }
 
-func deleteTeams(client *scm.SCM) cli.ActionFunc {
+func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
