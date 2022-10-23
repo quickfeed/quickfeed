@@ -38,11 +38,11 @@ var MockCourses = []*qf.Course{
 	{
 		Name:             "Hyped Systems",
 		CourseCreatorID:  1,
-		Code:             "DATx20",
-		Year:             2020,
+		Code:             "QF104",
+		Year:             2022,
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   4,
-		OrganizationName: "DATx20-2020",
+		OrganizationName: "qf104-2022",
 	},
 }
