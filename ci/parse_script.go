@@ -33,12 +33,11 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 		}
 	}
 	return &Job{
-		Name:       r.String(),
-		Image:      image,
-		Dockerfile: r.Course.Dockerfile,
-		BindDir:    destDir,
-		Env:        r.EnvVarsFn(secret, destDir),
-		Commands:   commands,
+		Name:     r.String(),
+		Image:    image,
+		BindDir:  destDir,
+		Env:      r.EnvVarsFn(secret, destDir),
+		Commands: commands,
 	}, nil
 }
 
