@@ -41,7 +41,7 @@ func loadDockerfile(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T) *ci.RunData {
+func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	runScriptContent := loadRunScript(t)
 	dockerfileContent := loadDockerfile(t)
 
@@ -71,14 +71,27 @@ func testRunData(t *testing.T) *ci.RunData {
 		JobOwner: "muggles",
 		CommitID: rand.String()[:7],
 	}
+	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
+	t.Logf("Building %s's Dockerfile:\n%v", runData.Course.GetCode(), runData.Course.GetDockerfile())
+	out, err := runner.Run(context.Background(), &ci.Job{
+		Name:       runData.Course.GetCode() + "-" + rand.String(),
+		Image:      strings.ToLower(runData.Course.GetCode()),
+		Dockerfile: runData.Course.GetDockerfile(),
+		Commands:   []string{`echo -n "Hello from Dockerfile"`},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(out)
+
 	return runData
 }
 
 func TestRunTests(t *testing.T) {
-	runData := testRunData(t)
-
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
+
+	runData := testRunData(t, runner)
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
@@ -94,13 +107,14 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	runData := testRunData(t)
-
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
+
+	runData := testRunData(t, runner)
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
+
 	scmClient, _ := scm.GetTestSCM(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
