@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -193,4 +194,10 @@ func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 			},
 		},
 	}
+}
+
+func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
+	request := connect.NewRequest(message)
+	request.Header().Set("cookie", cookie)
+	return request
 }
