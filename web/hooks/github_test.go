@@ -20,6 +20,7 @@ const secret = "secret"
 
 func TestHandlePush(t *testing.T) {
 	wh := NewMockWebHook(qtest.Logger(t), secret)
+	handlerFunc := wh.Handle()
 
 	pushPayload := qlog.IndentJson(pushEvent)
 	signature := hMAC([]byte(pushPayload), []byte(secret))
@@ -52,7 +53,7 @@ func TestHandlePush(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			apitest.New().
-				HandlerFunc(wh.Handle()).
+				HandlerFunc(handlerFunc).
 				Post(auth.Hook).
 				Headers(map[string]string{
 					"Content-Type":    "application/json",
@@ -80,6 +81,9 @@ func TestConcurrentHandlePush(t *testing.T) {
 			myPushEvent := &github.PushEvent{
 				Repo: &github.PushEventRepository{
 					Name: github.String(fmt.Sprintf("repo-%02d", i)),
+				},
+				HeadCommit: &github.HeadCommit{
+					ID: github.String(fmt.Sprintf("%04d", i)),
 				},
 			}
 			pushPayload := qlog.IndentJson(&myPushEvent)
@@ -110,6 +114,43 @@ func TestConcurrentHandlePush(t *testing.T) {
 	// All goroutines should have completed.
 	if wh.currentConcurrencyCnt != 0 {
 		t.Errorf("currentConcurrencyCnt = %d, want 0", wh.currentConcurrencyCnt)
+	}
+}
+
+// From server logs we discovered that GitHub may be sending duplicate push events
+// for the same head commit. See issue #868.
+func TestFilterDuplicatePushEvents(t *testing.T) {
+	wh := NewMockWebHook(qtest.Logger(t), secret)
+	handlerFunc := wh.Handle()
+
+	pushEventToSendTwice := &github.PushEvent{
+		Repo: &github.PushEventRepository{
+			Name: github.String("repo-1"),
+		},
+		HeadCommit: &github.HeadCommit{
+			ID: github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+		},
+	}
+	pushPayload := qlog.IndentJson(pushEventToSendTwice)
+	signature := hMAC([]byte(pushPayload), []byte(secret))
+
+	for i := 0; i < 2; i++ {
+		apitest.New().
+			HandlerFunc(handlerFunc).
+			Post(auth.Hook).
+			Headers(map[string]string{
+				"Content-Type":    "application/json",
+				"X-Github-Event":  "push",
+				"X-Hub-Signature": "sha256=" + signature,
+			}).
+			Body(pushPayload).
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	}
+	wh.wg.Wait()
+	if wh.dup.Duplicate(pushEventToSendTwice.GetHeadCommit().GetID()) {
+		t.Errorf("duplicate push event still in map: %v", pushEventToSendTwice)
 	}
 }
 

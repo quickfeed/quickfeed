@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
 )
 
@@ -16,7 +17,8 @@ const maxConcurrentTestRuns = 5
 type MockWebHook struct {
 	logger                *zap.SugaredLogger
 	secret                string
-	sem                   chan struct{}
+	sem                   chan struct{} // counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
+	dup                   *hooks.Duplicates
 	totalCnt              int32
 	currentConcurrencyCnt int32
 	wg                    *sync.WaitGroup
@@ -24,10 +26,13 @@ type MockWebHook struct {
 
 // NewMockWebHook creates a new webhook to handle POST requests to the QuickFeed server.
 func NewMockWebHook(logger *zap.SugaredLogger, secret string) *MockWebHook {
-	// counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
-	sem := make(chan struct{}, maxConcurrentTestRuns)
-	wg := &sync.WaitGroup{}
-	return &MockWebHook{logger: logger, secret: secret, sem: sem, wg: wg}
+	return &MockWebHook{
+		logger: logger,
+		secret: secret,
+		sem:    make(chan struct{}, maxConcurrentTestRuns),
+		dup:    hooks.NewDuplicateMap(),
+		wg:     &sync.WaitGroup{},
+	}
 }
 
 // Handle take POST requests from GitHub, representing Push events
@@ -52,14 +57,23 @@ func (wh *MockWebHook) Handle() http.HandlerFunc {
 
 		switch e := event.(type) {
 		case *github.PushEvent:
+			commitID := e.GetHeadCommit().GetID()
+			wh.logger.Debugf("Received push event: %s", commitID)
+			if wh.dup.Duplicate(commitID) {
+				wh.logger.Debugf("Ignoring duplicate push event: %s", commitID)
+				return
+			}
 			// The counting semaphore limits concurrency to maxConcurrentTestRuns.
 			// This should also allow webhook events to return quickly to GitHub, avoiding timeouts.
 			wh.wg.Add(1)
 			go func() {
 				wh.sem <- struct{}{} // acquire semaphore
+				atomic.AddInt32(&wh.currentConcurrencyCnt, 1)
 				wh.handlePush(e)
 				<-wh.sem // release semaphore
+				atomic.AddInt32(&wh.currentConcurrencyCnt, -1)
 				wh.wg.Done()
+				wh.dup.Remove(commitID)
 			}()
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))

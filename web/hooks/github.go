@@ -21,14 +21,21 @@ type GitHubWebHook struct {
 	scmMgr *scm.Manager
 	runner ci.Runner
 	secret string
-	sem    chan struct{}
+	sem    chan struct{} // counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
+	dup    *Duplicates
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
 func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string) *GitHubWebHook {
-	// counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
-	sem := make(chan struct{}, maxConcurrentTestRuns)
-	return &GitHubWebHook{logger: logger, db: db, scmMgr: mgr, runner: runner, secret: secret, sem: sem}
+	return &GitHubWebHook{
+		logger: logger,
+		db:     db,
+		scmMgr: mgr,
+		runner: runner,
+		secret: secret,
+		sem:    make(chan struct{}, maxConcurrentTestRuns),
+		dup:    NewDuplicateMap(),
+	}
 }
 
 // Handle take POST requests from GitHub, representing Push events
@@ -53,6 +60,13 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		wh.logger.Debug(qlog.IndentJson(event))
 		switch e := event.(type) {
 		case *github.PushEvent:
+			commitID := e.GetHeadCommit().GetID()
+			wh.logger.Debugf("Received push event: %s", commitID)
+			if wh.dup.Duplicate(commitID) {
+				wh.logger.Debugf("Ignoring duplicate push event: %s", commitID)
+				return
+			}
+
 			// The counting semaphore limits concurrency to maxConcurrentTestRuns.
 			// This should also allow webhook events to return quickly to GitHub, avoiding timeouts.
 			// Note however, if we receive a large number of push events, we may be creating
@@ -62,7 +76,10 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 				wh.sem <- struct{}{} // acquire semaphore
 				wh.handlePush(e)
 				<-wh.sem // release semaphore
+				// remove commitID from duplicate map (to avoid memory leak)
+				wh.dup.Remove(commitID)
 			}()
+
 		case *github.PullRequestEvent:
 			switch e.GetAction() {
 			case "opened":
@@ -70,8 +87,10 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			case "closed":
 				wh.handlePullRequestClosed(e)
 			}
+
 		case *github.PullRequestReviewEvent:
 			wh.handlePullRequestReview(e)
+
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 		}
