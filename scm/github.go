@@ -330,34 +330,6 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	return err
 }
 
-// GetTeam implements the SCM interface
-func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Team, err error) {
-	if !opt.valid() {
-		return nil, ErrMissingFields{
-			Method:  "GetTeam",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-	var team *github.Team
-	if opt.TeamID < 1 {
-		slug := slug.Make(opt.TeamName)
-		team, _, err = s.client.Teams.GetTeamBySlug(ctx, opt.Organization, slug)
-		if err != nil {
-			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by slug '%s': %w", slug, err)
-		}
-	} else {
-		team, _, err = s.client.Teams.GetTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
-		if err != nil {
-			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by ID '%d': %w", opt.TeamID, err)
-		}
-	}
-	return &Team{
-		ID:           uint64(team.GetID()),
-		Name:         team.GetName(),
-		Organization: team.Organization.GetLogin(),
-	}, nil
-}
-
 // GetTeams implements the scm interface
 func (s *GithubSCM) GetTeams(ctx context.Context, org *qf.Organization) ([]*Team, error) {
 	if !org.IsValid() {

@@ -63,7 +63,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 		updateGradingCriteria(logger, db, assignment)
 	}
 
-	if dockerfile != "" && dockerfile != course.Dockerfile {
+	if course.HasUpdatedDockerfile(dockerfile) {
 		// The course's Dockerfile was added or updated in the tests repository
 		course.Dockerfile = dockerfile
 		// Rebuild the Docker image for the course tagged with the course code
@@ -73,7 +73,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 		}
 		// Update the course's Dockerfile in the database
 		if err := db.UpdateCourse(course); err != nil {
-			logger.Debugf("Failed to update Dockerfile for course %s: %s", course.GetCode(), err)
+			logger.Errorf("Failed to update Dockerfile for course %s: %v", course.GetCode(), err)
 			return
 		}
 	}

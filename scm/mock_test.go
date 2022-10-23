@@ -265,72 +265,120 @@ func TestMockRepositories(t *testing.T) {
 	}
 }
 
-func TestMockTeams(t *testing.T) {
+var mockTeams = []*scm.Team{
+	{
+		ID:           1,
+		Organization: qtest.MockOrg,
+		Name:         "a_team",
+	},
+	{
+		ID:           2,
+		Organization: qtest.MockOrg,
+		Name:         "another_team",
+	},
+	{
+		ID:           3,
+		Organization: qtest.MockOrg,
+		Name:         "best_team",
+	},
+}
+
+func TestMockCreateTeams(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
-	teams := []*scm.Team{
-		{
-			Organization: course.OrganizationName,
-			Name:         "a_team",
-		},
-		{
-			Organization: course.OrganizationName,
-			Name:         "another_team",
-		},
-		{
-			Organization: course.OrganizationName,
-			Name:         "best_team",
-		},
-	}
-	for _, team := range teams {
-		wantTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+	for _, team := range mockTeams {
+		newTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
 			Organization: team.Organization,
 			TeamName:     team.Name,
 		})
 		if err != nil {
 			t.Error(err)
 		}
-		team.ID = wantTeam.ID
-		opts := []*scm.TeamOptions{
-			{
-				TeamID:         team.ID,
-				OrganizationID: course.OrganizationID,
-			},
-			{
-				TeamName:     team.Name,
-				Organization: team.Organization,
-			},
+		if _, ok := s.Teams[newTeam.ID]; !ok {
+			t.Errorf("expected new team %d", newTeam.ID)
 		}
-		for _, opt := range opts {
-			gotTeam, err := s.GetTeam(ctx, opt)
-			if err != nil {
-				t.Error(err)
-			}
-			if diff := cmp.Diff(wantTeam, gotTeam); diff != "" {
-				t.Errorf("Expected same team, got (-sub +want):\n%s", diff)
+	}
+	if len(s.Teams) != len(mockTeams) {
+		t.Fatalf("expected %d teams created, got %d", len(mockTeams), len(s.Teams))
+	}
+}
+
+func TestMockDeleteTeams(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	for _, team := range mockTeams {
+		s.Teams[team.ID] = team
+	}
+	tests := []struct {
+		name      string
+		opt       *scm.TeamOptions
+		wantTeams []uint64
+		wantErr   bool
+	}{
+		{
+			"delete team 2",
+			&scm.TeamOptions{
+				TeamID:         2,
+				OrganizationID: 1,
+			},
+			[]uint64{1, 3},
+			false,
+		},
+		{
+			"delete team 1",
+			&scm.TeamOptions{
+				TeamID:         1,
+				OrganizationID: 1,
+			},
+			[]uint64{3},
+			false,
+		},
+		{
+			"invalid opt, missing organization info",
+			&scm.TeamOptions{
+				TeamID:   3,
+				TeamName: mockTeams[2].Name,
+			},
+			[]uint64{3},
+			true,
+		},
+		{
+			"invalid opt, missing team info",
+			&scm.TeamOptions{
+				Organization:   qtest.MockOrg,
+				OrganizationID: 1,
+			},
+			[]uint64{3},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		if err := s.DeleteTeam(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+		}
+		for _, teamID := range tt.wantTeams {
+			if _, ok := s.Teams[teamID]; !ok {
+				t.Errorf("%s: expected team %d in remaining teams", tt.name, teamID)
 			}
 		}
 	}
-	if err := s.DeleteTeam(ctx, &scm.TeamOptions{
-		TeamID:         2,
-		OrganizationID: course.OrganizationID,
-	}); err != nil {
-		t.Error(err)
+}
+
+func TestMockGetTeams(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	for _, team := range mockTeams {
+		s.Teams[team.ID] = team
 	}
-	wantTeams := []*scm.Team{teams[0], teams[2]}
-	courseTeams, err := s.GetTeams(ctx, &qf.Organization{
-		ID:   course.OrganizationID,
-		Name: course.OrganizationName,
+	gotTeams, err := s.GetTeams(ctx, &qf.Organization{
+		ID:   1,
+		Name: qtest.MockOrg,
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("expected teams in mock organization")
 	}
-	sort.Slice(courseTeams, func(i, j int) bool {
-		return courseTeams[i].ID < courseTeams[j].ID
-	})
-	if diff := cmp.Diff(wantTeams, courseTeams); diff != "" {
-		t.Errorf("Expected same teams, got (-sub +want):\n%s", diff)
+	if len(gotTeams) != len(mockTeams) {
+		t.Fatalf("expected %d teams, got %d", len(mockTeams), len(gotTeams))
 	}
 }
 

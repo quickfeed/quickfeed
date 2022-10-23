@@ -177,26 +177,6 @@ func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 	return nil
 }
 
-// GetTeam implements the SCM interface
-func (s *MockSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if opt.TeamID > 0 {
-		team, ok := s.Teams[opt.TeamID]
-		if !ok {
-			return nil, errors.New("team not found")
-		}
-		return team, nil
-	}
-	for _, team := range s.Teams {
-		if team.Name == opt.TeamName && team.Organization == opt.Organization {
-			return team, nil
-		}
-	}
-	return nil, errors.New("team not found")
-}
-
 // GetTeams implements the SCM interface
 func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
 	var teams []*Team
