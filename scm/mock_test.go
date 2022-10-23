@@ -364,24 +364,6 @@ func TestMockDeleteTeams(t *testing.T) {
 	}
 }
 
-func TestMockGetTeams(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	for _, team := range mockTeams {
-		s.Teams[team.ID] = team
-	}
-	gotTeams, err := s.GetTeams(ctx, &qf.Organization{
-		ID:   1,
-		Name: qtest.MockOrg,
-	})
-	if err != nil {
-		t.Fatal("expected teams in mock organization")
-	}
-	if len(gotTeams) != len(mockTeams) {
-		t.Fatalf("expected %d teams, got %d", len(mockTeams), len(gotTeams))
-	}
-}
-
 func TestAddRemoveMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()

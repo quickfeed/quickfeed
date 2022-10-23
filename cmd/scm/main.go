@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
@@ -335,14 +336,14 @@ func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 				return err
 			}
 
-			teams, err := (*client).GetTeams(ctx, &qf.Organization{Name: c.String("namespace")})
+			teams, _, err := (*client).Client().Teams.ListTeams(ctx, c.String("namespace"), &github.ListOptions{})
 			if err != nil {
 				return err
 			}
 
 			for _, team := range teams {
 				var errs []error
-				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: team.Name, Organization: c.String("namespace")}); err != nil {
+				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: *team.Name, Organization: c.String("namespace")}); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted team", team.Name)

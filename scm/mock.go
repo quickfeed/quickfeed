@@ -177,17 +177,6 @@ func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 	return nil
 }
 
-// GetTeams implements the SCM interface
-func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
-	var teams []*Team
-	for _, team := range s.Teams {
-		if team.Organization == org.Name {
-			teams = append(teams, team)
-		}
-	}
-	return teams, nil
-}
-
 // AddTeamMember implements the scm interface
 func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
 	if !opt.valid() {
