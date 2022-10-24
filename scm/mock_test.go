@@ -229,13 +229,9 @@ func TestMockRepositories(t *testing.T) {
 		if err := s.UpdateRepoAccess(ctx, repo, "", ""); err != nil {
 			t.Error(err)
 		}
-		gotRepo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
-			ID:    repo.ID,
-			Path:  repo.Path,
-			Owner: repo.Owner,
-		})
-		if err != nil {
-			t.Error(err)
+		gotRepo, ok := s.Repositories[repo.ID]
+		if !ok {
+			t.Errorf("expected repository %s to be found", repo.Path)
 		}
 		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
 			t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
@@ -365,24 +361,6 @@ func TestMockDeleteTeams(t *testing.T) {
 				t.Errorf("%s: expected team %d in remaining teams", tt.name, teamID)
 			}
 		}
-	}
-}
-
-func TestMockGetTeams(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	for _, team := range mockTeams {
-		s.Teams[team.ID] = team
-	}
-	gotTeams, err := s.GetTeams(ctx, &qf.Organization{
-		ID:   1,
-		Name: qtest.MockOrg,
-	})
-	if err != nil {
-		t.Fatal("expected teams in mock organization")
-	}
-	if len(gotTeams) != len(mockTeams) {
-		t.Fatalf("expected %d teams, got %d", len(mockTeams), len(gotTeams))
 	}
 }
 
