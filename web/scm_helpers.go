@@ -12,12 +12,6 @@ import (
 )
 
 var (
-	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
-
-	// ErrAlreadyExists indicates that one or more QuickFeed repositories
-	// already exists for the directory (or GitHub organization).
-	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 	// ErrFreePlan indicates that payment plan for given organization does not allow private
 	// repositories and must be upgraded
 	ErrFreePlan = errors.New("organization does not allow creation of private repositories")

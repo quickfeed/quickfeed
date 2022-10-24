@@ -671,7 +671,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	if err != nil {
 		return nil, err
 	}
-	if isDirty(repos) {
+	if IsDirty(repos) {
 		return nil, ErrAlreadyExists
 	}
 	// set default repository access level for all students to "none"

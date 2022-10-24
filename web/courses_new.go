@@ -9,19 +9,6 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-const (
-	private = true
-	public  = !private
-)
-
-// RepoPaths maps from QuickFeed repository path names to a boolean indicating
-// whether or not the repository should be create as public or private.
-var RepoPaths = map[string]bool{
-	qf.InfoRepo:        public,
-	qf.AssignmentsRepo: private,
-	qf.TestsRepo:       private,
-}
-
 // createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
 // does not contain the QuickFeed repositories that will be created.
@@ -60,18 +47,4 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		return nil, err
 	}
 	return request, nil
-}
-
-// isDirty returns true if the list of provided repositories contains
-// any of the repositories that QuickFeed wants to create.
-func isDirty(repos []*scm.Repository) bool {
-	if len(repos) == 0 {
-		return false
-	}
-	for _, repo := range repos {
-		if _, exists := RepoPaths[repo.Path]; exists {
-			return true
-		}
-	}
-	return false
 }

@@ -21,8 +21,8 @@ func (s *QuickFeedService) getOrganization(ctx context.Context, sc scm.SCM, org 
 	if err != nil {
 		return nil, err
 	}
-	if isDirty(repos) {
-		return nil, ErrAlreadyExists
+	if scm.IsDirty(repos) {
+		return nil, scm.ErrAlreadyExists
 	}
 	return gitOrg, nil
 }

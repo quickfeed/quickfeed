@@ -14,7 +14,6 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestGetCourses(t *testing.T) {
@@ -81,7 +80,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for path, private := range web.RepoPaths {
+	for path, private := range scm.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization.Name, Private: private}
 		_, err := mockSCM.CreateRepository(ctx, repoOptions)
 		if err != nil {
