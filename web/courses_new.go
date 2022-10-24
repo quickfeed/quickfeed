@@ -26,93 +26,35 @@ var RepoPaths = map[string]bool{
 // and creates the repositories for the course. Requires that the directory
 // does not contain the QuickFeed repositories that will be created.
 func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request *qf.Course) (*qf.Course, error) {
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
-	if err != nil {
-		return nil, err
-	}
-	if org.GetPaymentPlan() == FreeOrgPlan {
-		return nil, ErrFreePlan
-	}
-	repos, err := sc.GetRepositories(ctx, org)
-	if err != nil {
-		return nil, err
-	}
-	if isDirty(repos) {
-		return nil, ErrAlreadyExists
-	}
-	// set default repository access level for all students to "none"
-	// will not affect organization owners (teachers)
-	orgOptions := &scm.OrganizationOptions{
-		Name:              org.GetName(),
-		DefaultPermission: scm.OrgNone,
-		RepoPermissions:   false,
-	}
-	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
-		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Name, err)
-	}
-	// create course repos and webhooks for each repo
-	for path, private := range RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{
-			Path:         path,
-			Organization: org.Name,
-			Private:      private,
-		}
-		repo, err := sc.CreateRepository(ctx, repoOptions)
-		if err != nil {
-			return nil, err
-		}
-
-		dbRepo := qf.Repository{
-			OrganizationID: org.ID,
-			RepositoryID:   repo.ID,
-			HTMLURL:        repo.HTMLURL,
-			RepoType:       qf.RepoType(path),
-		}
-		if err := s.db.CreateRepository(&dbRepo); err != nil {
-			s.logger.Debugf("createCourse: failed to create database record for repository %s: %s", path, err)
-			return nil, err
-		}
-	}
-
-	// add course creator to teacher team
 	courseCreator, err := s.db.GetUser(request.GetCourseCreatorID())
 	if err != nil {
 		return nil, fmt.Errorf("createCourse: failed to get course creator record from database: %w", err)
 	}
-	// create teacher team with course creator
-	opt := &scm.NewTeamOptions{
-		Organization: org.Name,
-		TeamName:     scm.TeachersTeam,
-		Users:        []string{courseCreator.GetLogin()},
-	}
-	if _, err = sc.CreateTeam(ctx, opt); err != nil {
-		s.logger.Debugf("createCourse: failed to create teachers team: %s", err)
-		return nil, err
-	}
-	// create student team without any members
-	studOpt := &scm.NewTeamOptions{Organization: org.Name, TeamName: scm.StudentsTeam}
-	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
-		s.logger.Debugf("createCourse: failed to create students team: %s", err)
-		return nil, err
-	}
-
-	// add student repo for the course creator
-	scmRepo, err := createStudentRepo(ctx, sc, org, qf.StudentRepoName(courseCreator.GetLogin()), courseCreator.GetLogin())
+	repos, err := sc.CreateCourse(ctx, &scm.NewCourseOptions{
+		CourseCreator:  courseCreator.Login,
+		OrganizationID: request.OrganizationID,
+	})
 	if err != nil {
-		return nil, err
-	}
-	repoQuery := &qf.Repository{
-		OrganizationID: org.GetID(),
-		RepositoryID:   scmRepo.ID,
-		UserID:         courseCreator.ID,
-		HTMLURL:        scmRepo.HTMLURL,
-		RepoType:       qf.Repository_USER,
-	}
-	if err := s.db.CreateRepository(repoQuery); err != nil {
+		s.logger.Debugf("createCourse: failed to create course repositories or teams: %w", err)
 		return nil, err
 	}
 
-	request.OrganizationName = org.GetName()
+	for _, repo := range repos {
+		dbRepo := qf.Repository{
+			OrganizationID: request.OrganizationID,
+			RepositoryID:   repo.ID,
+			HTMLURL:        repo.HTMLURL,
+			RepoType:       qf.RepoType(repo.Path),
+		}
+		if dbRepo.IsUserRepo() {
+			dbRepo.UserID = courseCreator.ID
+		}
+		if err := s.db.CreateRepository(&dbRepo); err != nil {
+			s.logger.Debugf("createCourse: failed to create database record for repository %s: %s", repo.Path, err)
+			return nil, err
+		}
+	}
+
 	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		s.logger.Debugf("createCourse: failed to create database record for course %s: %s", request.Name, err)
 		return nil, err
