@@ -451,6 +451,14 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 	}
 }
 
+// CreateCourse creates repositories and teams for a new course.
+func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
+	return nil, ErrNotSupported{
+		SCM:    "MockSCM",
+		Method: "CreateCourse",
+	}
+}
+
 // teamExists checks teams by ID, or by team and organization name.
 func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 	if id > 0 {

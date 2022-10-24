@@ -71,6 +71,9 @@ type SCM interface {
 
 	// AcceptInvitations accepts course invites.
 	AcceptInvitations(context.Context, *InvitationOptions) error
+
+	//CreateCourse creates repositories and teams for a new course.
+	CreateCourse(context.Context, *NewCourseOptions) ([]*Repository, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -94,6 +97,12 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
+}
+
+// NewCourseOptions contain information about new course.
+type NewCourseOptions struct {
+	OrganizationID uint64
+	CourseCreator  string
 }
 
 // OrganizationOptions contains information on how an organization should be
