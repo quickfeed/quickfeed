@@ -453,10 +453,56 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "CreateCourse",
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID})
+	if err != nil {
+		return nil, errors.New("organization not found")
 	}
+	repos, err := s.GetRepositories(ctx, org)
+	if err != nil {
+		return nil, err
+	}
+	if IsDirty(repos) {
+		return nil, ErrAlreadyExists
+	}
+	var repositories []*Repository
+	for path, private := range RepoPaths {
+		repoOptions := &CreateRepositoryOptions{
+			Path:         path,
+			Organization: org.Name,
+			Private:      private,
+		}
+		repo, err := s.CreateRepository(ctx, repoOptions)
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, repo)
+	}
+	labRepo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
+		Path:         qf.StudentRepoName(opt.CourseCreator),
+		Organization: org.Name,
+		Private:      true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	repositories = append(repositories, labRepo)
+	teams := []*NewTeamOptions{
+		{
+			Organization: org.Name,
+			TeamName:     TeachersTeam,
+			Users:        []string{opt.CourseCreator},
+		},
+		{
+			Organization: org.Name,
+			TeamName:     StudentsTeam,
+		},
+	}
+	for _, team := range teams {
+		if _, err := s.CreateTeam(ctx, team); err != nil {
+			return nil, err
+		}
+	}
+	return repositories, nil
 }
 
 // teamExists checks teams by ID, or by team and organization name.

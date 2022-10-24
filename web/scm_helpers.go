@@ -138,6 +138,8 @@ func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID, teamI
 	return nil
 }
 
+// TODO(vera): there is currently a duplicate of this method in the scm package. This one will be
+// removed when the restructuring is complete.
 // creates {username}-labs repository and provides pull/push access to it for the given student
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, path string, student string) (*scm.Repository, error) {
 	// create repo, or return existing repo if it already exists
