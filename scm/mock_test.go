@@ -1223,3 +1223,51 @@ func TestMockUpdateIssueComment(t *testing.T) {
 		}
 	}
 }
+
+func TestMockCreateCourse(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(user)}
+
+	opt := &scm.NewCourseOptions{
+		OrganizationID: 1,
+		CourseCreator:  user,
+	}
+	repos, err := s.CreateCourse(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repos) != len(wantRepos) {
+		t.Errorf("expected %d repositories, got %d", len(wantRepos), len(repos))
+	}
+
+	found := func(wantRepo string, repos []*scm.Repository) bool {
+		for _, repo := range repos {
+			if repo.Path == wantRepo {
+				return true
+			}
+		}
+		return false
+	}
+	for _, r := range wantRepos {
+		if !found(r, repos) {
+			t.Errorf("expected repository %s to be found", r)
+		}
+	}
+
+	wantTeams := map[uint64]*scm.Team{
+		1: {
+			ID:           1,
+			Name:         scm.TeachersTeam,
+			Organization: qtest.MockOrg,
+		},
+		2: {
+			ID:           2,
+			Name:         scm.StudentsTeam,
+			Organization: qtest.MockOrg,
+		},
+	}
+	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
+		t.Errorf("mismatch (-want teams +got):\n%s", diff)
+	}
+}
