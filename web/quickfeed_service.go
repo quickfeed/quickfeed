@@ -649,7 +649,7 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 }
 
 func (s *QuickFeedService) SubmissionStream(ctx context.Context, req *connect.Request[qf.Void], st *connect.ServerStream[qf.Submission]) error {
-	stream := stream.NewStream(ctx, st, userID(ctx))
-	s.streams.Submission.Add(stream)
+	stream := stream.NewStream(ctx, st)
+	s.streams.Submission.Add(stream, userID(ctx))
 	return stream.Run()
 }
