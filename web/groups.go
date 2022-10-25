@@ -15,10 +15,10 @@ import (
 const maxGroupNameLength = 20
 
 var (
-	errGroupNameDuplicate = connect.NewError(connect.CodeAlreadyExists, errors.New("group name already in use"))
-	errGroupNameTooLong   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is too long"))
-	errGroupNameInvalid   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name contains invalid characters"))
-	errUserNotInGroup     = connect.NewError(connect.CodeNotFound, errors.New("user is not in group"))
+	ErrGroupNameDuplicate = connect.NewError(connect.CodeAlreadyExists, errors.New("group name already in use"))
+	ErrGroupNameTooLong   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is too long"))
+	ErrGroupNameInvalid   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name contains invalid characters"))
+	ErrUserNotInGroup     = connect.NewError(connect.CodeNotFound, errors.New("user is not in group"))
 )
 
 // getGroupByUserAndCourse returns the group of the given user and course.
@@ -29,7 +29,7 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 	}
 	grp, err := s.db.GetGroup(enrollment.GroupID)
 	if err != nil && err == gorm.ErrRecordNotFound {
-		err = errUserNotInGroup
+		err = ErrUserNotInGroup
 	}
 	return grp, err
 }
@@ -205,10 +205,10 @@ var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
 // checkGroupName returns an error if the group name is invalid; otherwise nil is returned.
 func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) error {
 	if len(groupName) > maxGroupNameLength {
-		return errGroupNameTooLong
+		return ErrGroupNameTooLong
 	}
 	if regexpNonAuthorizedChars.MatchString(groupName) {
-		return errGroupNameInvalid
+		return ErrGroupNameInvalid
 	}
 	courseGroups, err := s.db.GetGroupsByCourse(courseID)
 	if err != nil {
@@ -216,7 +216,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 	}
 	for _, group := range courseGroups {
 		if group.GetName() == groupName {
-			return errGroupNameDuplicate
+			return ErrGroupNameDuplicate
 		}
 	}
 	return nil
