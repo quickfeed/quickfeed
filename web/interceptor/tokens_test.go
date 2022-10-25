@@ -23,12 +23,11 @@ func TestRefreshTokens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewTokenInterceptor(tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	f := func(t *testing.T, id uint64) string {
 		cookie, err := tm.NewAuthCookie(id)

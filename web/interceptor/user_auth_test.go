@@ -23,11 +23,10 @@ func TestUserVerifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
