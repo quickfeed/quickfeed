@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Enrollment } from "../../proto/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus } from "../../gen/qf/types_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"
@@ -23,7 +23,7 @@ const Courses = (overview: overview): JSX.Element => {
         return (
             <div className="container centered">
                 <h3>There are currently no available courses.</h3>
-                {state.self.isadmin ?
+                {state.self.isAdmin ?
                     <div>
                         <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
                         <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} />
@@ -41,27 +41,27 @@ const Courses = (overview: overview): JSX.Element => {
         const pending: JSX.Element[] = []
         const availableCourses: JSX.Element[] = []
         state.courses.map(course => {
-            const enrol = state.enrollmentsByCourseID[course.id]
+            const enrol = state.enrollmentsByCourseID[course.ID.toString()]
             if (enrol) {
-                const courseCard = <CourseCard key={course.id} course={course} enrollment={enrol} />
+                const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
                 if (isVisible(enrol)) {
                     favorite.push(courseCard)
                 } else {
                     switch (enrol.status) {
-                        case Enrollment.UserStatus.PENDING:
+                        case Enrollment_UserStatus.PENDING:
                             pending.push(courseCard)
                             break
-                        case Enrollment.UserStatus.STUDENT:
+                        case Enrollment_UserStatus.STUDENT:
                             student.push(courseCard)
                             break
-                        case Enrollment.UserStatus.TEACHER:
+                        case Enrollment_UserStatus.TEACHER:
                             teacher.push(courseCard)
                             break
                     }
                 }
             } else {
                 availableCourses.push(
-                    <CourseCard key={course.id} course={course} enrollment={(new Enrollment).toObject()} />
+                    <CourseCard key={course.ID.toString()} course={course} enrollment={new Enrollment} />
                 )
             }
         })

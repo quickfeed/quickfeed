@@ -1,10 +1,9 @@
 import React, { useState } from "react"
-import { Assignment, GradingBenchmark } from "../../../proto/qf/types_pb"
-import { Converter } from "../../convert"
+import { Assignment, GradingBenchmark } from "../../../gen/qf/types_pb"
 import { useActions } from "../../overmind"
 
 
-const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark.AsObject, assignment: Assignment.AsObject }): JSX.Element => {
+const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }): JSX.Element => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)
@@ -12,15 +11,15 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
 
     // Clone the criterion, or create a new one if none was passed in
     const bm = benchmark
-        ? Converter.clone(benchmark)
-        : Converter.create<GradingBenchmark.AsObject>(GradingBenchmark)
+        ? benchmark.clone()
+        : new GradingBenchmark()
 
     const handleBenchmark = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
         if (event.key === "Enter") {
             // Set the criterion's benchmark ID
             // This could already be set if a benchmark was passed in
-            bm.assignmentid = assignment.id
+            bm.AssignmentID = assignment.ID
             actions.createOrUpdateBenchmark({ benchmark: bm, assignment: assignment })
             setEditing(false)
         } else {

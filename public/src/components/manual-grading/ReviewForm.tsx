@@ -1,5 +1,5 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import { Review } from "../../../gen/qf/types_pb"
 import { getCourseID, isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
@@ -22,19 +22,19 @@ const ReviewForm = (): JSX.Element => {
         return <div>No Submission</div>
     }
 
-    const isAuthor = (review: Review.AsObject) => {
-        return review?.reviewerid === state.self.id
+    const isAuthor = (review: Review) => {
+        return review?.ID === state.self.ID
     }
 
     const reviewers = assignment.reviewers ?? 0
-    const reviews = state.review.reviews[courseID][state.activeSubmission] ?? []
+    const reviews = state.review.reviews[courseID.toString()][state.activeSubmission] ?? []
     const selectReviewButton: JSX.Element[] = []
 
     reviews.forEach((review, index) => {
         if (state.isCourseCreator || isAuthor(review)) {
             // Teaching assistants can only select their own reviews, and course creators can select any review
             selectReviewButton.push(
-                <Button key={review.id} onclick={() => { actions.review.setSelectedReview(index) }}
+                <Button key={review.ID.toString()} onclick={() => { actions.review.setSelectedReview(index) }}
                     classname={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
                     text={review.ready ? "Ready" : "In Progress"}
                     color={review.ready ? Color.GREEN : Color.YELLOW}

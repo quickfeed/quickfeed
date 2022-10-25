@@ -7,12 +7,12 @@ const GroupComponent = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
 
-    const group = state.userGroup[courseID]
+    const group = state.userGroup[courseID.toString()]
 
     const pendingIcon = isPendingGroup(group) ? <span className="badge badge-warning ml-2">Pending</span> : null
-    const members = group.usersList.map(user =>
-        <li key={user.id} className="list-group-item">
-            <img src={user.avatarurl} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} alt="" />
+    const members = group.users.map(user =>
+        <li key={user.ID.toString()} className="list-group-item">
+            <img src={user.avatarURL} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} alt="" />
             {user.name}
         </li>
     )

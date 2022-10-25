@@ -1,4 +1,4 @@
-import { User } from "../../proto/qf/types_pb"
+import { User } from "../../gen/qf/types_pb"
 import { Provider } from "overmind-react"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
@@ -12,7 +12,10 @@ import { render, screen } from "@testing-library/react"
 describe("Profile", () => {
     it("Renders with logged in user", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = new User().setId(1).setName("Test User").toObject()
+            state.self = new User({
+                ID: BigInt(1),
+                name: "Test User",
+            })
         })
         const history = createMemoryHistory()
         render(
@@ -29,7 +32,9 @@ describe("Profile", () => {
 
     it("Logged in is false if the user is invalid", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = new User().setId(0).toObject()
+            state.self = new User({
+                ID: BigInt(0),
+            })
         })
         const loggedIn = mockedOvermind.state.isLoggedIn
         expect(loggedIn).toBe(false)

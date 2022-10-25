@@ -8,7 +8,7 @@ const NavBarTeacher = (): JSX.Element => {
     const state = useAppState()
     const pending = state.pendingEnrollments.length > 0 ? { text: state.pendingEnrollments.length.toString(), classname: "badge badge-danger" } : null
     const enrolled = { text: state.numEnrolled.toString(), classname: "badge badge-primary" }
-    const courseHasManualGrading = state.assignments[state.activeCourse]?.some(assignment => isManuallyGraded(assignment))
+    const courseHasManualGrading = state.assignments[state.activeCourse.toString()]?.some(assignment => isManuallyGraded(assignment))
 
     const links: NavLink[] = [
         { link: { text: "Results", to: `/course/${state.activeCourse}/results` } },

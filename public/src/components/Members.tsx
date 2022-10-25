@@ -1,12 +1,11 @@
 import React, { useState } from "react"
 import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
-import { Enrollment } from "../../proto/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus } from "../../gen/qf/types_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import { ButtonType } from "./admin/Button"
-import { Converter } from "../convert"
 
 const Members = (): JSX.Element => {
     const state = useAppState()
@@ -25,10 +24,10 @@ const Members = (): JSX.Element => {
         setSortBy(sort)
     }
 
-    let enrollments: Enrollment.AsObject[] = []
-    if (state.courseEnrollments[courseID]) {
+    let enrollments: Enrollment[] = []
+    if (state.courseEnrollments[courseID.toString()]) {
         // Clone the enrollments so we can sort them
-        enrollments = Converter.clone(state.courseEnrollments[courseID])
+        enrollments = state.courseEnrollments[courseID.toString()].slice()
     }
 
     const pending = state.pendingEnrollments
@@ -46,20 +45,20 @@ const Members = (): JSX.Element => {
         const data: Row = []
         data.push(enrollment.user ? enrollment.user.name : "")
         data.push(enrollment.user ? enrollment.user.email : "")
-        data.push(enrollment.user ? enrollment.user.studentid : "")
-        data.push(enrollment.lastactivitydate)
-        data.push(enrollment.totalapproved.toString())
-        data.push(enrollment.slipdaysremaining.toString())
+        data.push(enrollment.user ? enrollment.user.studentID : "")
+        data.push(enrollment.lastActivityDate)
+        data.push(enrollment.totalApproved.toString())
+        data.push(enrollment.slipDaysRemaining.toString())
 
         if (isPending(enrollment)) {
             data.push(
                 <div>
                     <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT }) }}>
+                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment_UserStatus.STUDENT }) }}>
                         Accept
                     </i>
                     <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.NONE })}>
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment_UserStatus.NONE })}>
                         Reject
                     </i>
                 </div>)
@@ -67,11 +66,11 @@ const Members = (): JSX.Element => {
             data.push(edit ? (
                 <div>
                     <i className={`badge badge-${isTeacher(enrollment) ? "warning" : "primary"} clickable`}
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER })}>
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}>
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
                     </i>
                     <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.NONE })}>
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment_UserStatus.NONE })}>
                         Reject
                     </i>
                 </div>) :

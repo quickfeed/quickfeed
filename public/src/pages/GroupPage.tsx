@@ -14,7 +14,7 @@ const GroupPage = (): JSX.Element => {
         return <Groups />
     }
 
-    if (!state.hasGroup(courseID)) {
+    if (!state.hasGroup(Number(courseID))) {
         return <GroupForm />
     }
     return <GroupComponent />

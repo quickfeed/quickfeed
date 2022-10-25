@@ -16,7 +16,7 @@ export const DevelopmentMode = () => {
     }
 
     const setUser = async (id: string) => {
-        (effects.grpcMan as MockGrpcManager).setCurrentUser(Number(id))
+        (effects.grpcMan as unknown as MockGrpcManager).setCurrentUser(Number(id))
         actions.resetState()
         await actions.fetchUserData()
     }
@@ -32,8 +32,8 @@ export const DevelopmentMode = () => {
                 Development Mode
             </span>
             <select className="form-control" onChange={(e) => setUser(e.target.value)}>
-                {effects.grpcMan.getMockedUsers().getUsersList().map((user) => (
-                    <option key={user.getId()} value={user.getId()}>{user.getName()}</option>
+                {effects.grpcMan.getMockedUsers().users.map((user) => (
+                    <option key={user.ID.toString()} value={user.ID.toString()}>{user.name}</option>
                 ))}
             </select>
         </div>

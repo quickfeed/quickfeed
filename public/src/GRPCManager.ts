@@ -1,21 +1,22 @@
-import grpcWeb from "grpc-web"
 import {
     Assignments,
     Course,
     Courses,
     Enrollment,
     Enrollments,
+    Enrollment_UserStatus,
     GradingBenchmark,
     GradingCriterion,
     Group,
     Groups,
-    Repository,
+    Group_GroupStatus,
+    Repository_Type,
     Review,
     Submission,
     Submissions,
     User,
     Users,
-} from "../proto/qf/types_pb"
+} from "../gen/qf/types_pb"
 import {
     CourseRequest,
     CourseSubmissions,
@@ -38,8 +39,10 @@ import {
     URLRequest,
     Void,
     Reviewers,
-} from "../proto/qf/requests_pb"
-import { QuickFeedServiceClient } from "../proto/qf/QuickfeedServiceClientPb"
+    SubmissionsForCourseRequest_Type,
+} from "../gen/qf/requests_pb"
+import { QuickFeedService } from "../gen/qf/quickfeed_connectweb"
+import { createConnectTransport, ConnectError, createCallbackClient, CallbackClient } from "@bufbuild/connect-web"
 
 export interface IGrpcResponse<T> {
     status: Status
@@ -48,10 +51,13 @@ export interface IGrpcResponse<T> {
 
 export class GrpcManager {
 
-    private agService: QuickFeedServiceClient
+    private agService: CallbackClient<typeof QuickFeedService>
 
     constructor() {
-        this.agService = new QuickFeedServiceClient("https://" + window.location.host, null, null)
+        const transport = createConnectTransport({
+            baseUrl: "https://" + window.location.host,
+        })
+        this.agService = createCallbackClient(QuickFeedService, transport)
     }
 
 
@@ -78,9 +84,8 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateCourse, course)
     }
 
-    public getCourse(courseID: number): Promise<IGrpcResponse<Course>> {
-        const request = new CourseRequest()
-        request.setCourseid(courseID)
+    public getCourse(courseID: bigint): Promise<IGrpcResponse<Course>> {
+        const request = new CourseRequest({courseID: BigInt(courseID)})
         return this.grpcSend<Course>(this.agService.getCourse, request)
     }
 
@@ -88,10 +93,11 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCourses, new Void())
     }
 
-    public getCoursesByUser(userID: number, statuses: Enrollment.UserStatus[]): Promise<IGrpcResponse<Courses>> {
-        const request = new EnrollmentStatusRequest()
-        request.setUserid(userID)
-        request.setStatusesList(statuses)
+    public getCoursesByUser(userID: bigint, statuses: Enrollment_UserStatus[]): Promise<IGrpcResponse<Courses>> {
+        const request = new EnrollmentStatusRequest({
+            statuses: statuses, 
+            userID: BigInt(userID)
+        })
         return this.grpcSend<Courses>(this.agService.getCoursesByUser, request)
     }
 
@@ -101,75 +107,85 @@ export class GrpcManager {
 
     // /* ASSIGNMENTS */ //
 
-    public getAssignments(courseID: number): Promise<IGrpcResponse<Assignments>> {
-        const request = new CourseRequest()
-        request.setCourseid(courseID)
+    public getAssignments(courseID: bigint): Promise<IGrpcResponse<Assignments>> {
+        const request = new CourseRequest({
+            courseID: courseID,
+        })
         return this.grpcSend<Assignments>(this.agService.getAssignments, request)
     }
 
-    public updateAssignments(courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new CourseRequest()
-        request.setCourseid(courseID)
+    public updateAssignments(courseID: bigint): Promise<IGrpcResponse<Void>> {
+        const request = new CourseRequest({
+            courseID: courseID
+        })
         return this.grpcSend<Void>(this.agService.updateAssignments, request)
     }
 
     // /* ENROLLMENTS */ //
 
-    public getEnrollmentsByUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<IGrpcResponse<Enrollments>> {
-        const request = new EnrollmentStatusRequest()
-        request.setUserid(userID)
-        request.setStatusesList(statuses ?? [])
+    public getEnrollmentsByUser(userID: bigint, statuses?: Enrollment_UserStatus[]): Promise<IGrpcResponse<Enrollments>> {
+        const request = new EnrollmentStatusRequest({
+            userID: userID,
+            statuses: statuses,
+        })
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request)
     }
 
-    public getEnrollmentsByCourse(courseID: number, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment.UserStatus[]):
+    public getEnrollmentsByCourse(courseID: bigint, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment_UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
-        const request = new EnrollmentRequest()
-        request.setCourseid(courseID)
-        request.setIgnoregroupmembers(withoutGroupMembers ?? false)
-        request.setWithactivity(withActivity ?? false)
-        request.setStatusesList(statuses ?? [])
+        const request = new EnrollmentRequest({
+            courseID: courseID,
+            ignoreGroupMembers: withoutGroupMembers ?? false,
+            withActivity: withActivity ?? false,
+            statuses: statuses,
+        })
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request)
     }
 
-    public createEnrollment(courseID: number, userID: number): Promise<IGrpcResponse<Void>> {
-        const request = new Enrollment()
-        request.setUserid(userID)
-        request.setCourseid(courseID)
+    public createEnrollment(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Void>> {
+        const request = new Enrollment({
+            courseID: BigInt(courseID),
+            userID: BigInt(userID),
+        })
         return this.grpcSend<Void>(this.agService.createEnrollment, request)
     }
 
     public updateEnrollments(enrollments: Enrollment[]): Promise<IGrpcResponse<Void>> {
-        const request = new Enrollments()
-        request.setEnrollmentsList(enrollments)
+        const request = new Enrollments({
+            enrollments: enrollments,
+        })
         return this.grpcSend<Void>(this.agService.updateEnrollments, request)
     }
 
     // /* GROUPS */ //
 
-    public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
-        const request = new GetGroupRequest()
-        request.setGroupid(groupID)
+    public getGroup(groupID: bigint): Promise<IGrpcResponse<Group>> {
+        const request = new GetGroupRequest({
+            groupID: BigInt(groupID),
+        })
         return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
-    public getGroupByUserAndCourse(courseID: number, userID: number): Promise<IGrpcResponse<Group>> {
-        const request = new GroupRequest()
-        request.setUserid(userID)
-        request.setCourseid(courseID)
+    public getGroupByUserAndCourse(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Group>> {
+        const request = new GroupRequest({
+            courseID: courseID,
+            userID: userID,
+        })
         return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request)
     }
 
-    public getGroupsByCourse(courseID: number): Promise<IGrpcResponse<Groups>> {
-        const request = new CourseRequest()
-        request.setCourseid(courseID)
+    public getGroupsByCourse(courseID: bigint): Promise<IGrpcResponse<Groups>> {
+        const request = new CourseRequest({
+            courseID: courseID,
+        })
         return this.grpcSend<Groups>(this.agService.getGroupsByCourse, request)
     }
 
-    public updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<IGrpcResponse<Void>> {
-        const request = new Group()
-        request.setId(groupID)
-        request.setStatus(status)
+    public updateGroupStatus(groupID: bigint, status: Group_GroupStatus): Promise<IGrpcResponse<Void>> {
+        const request = new Group({
+            ID: BigInt(groupID),
+            status: status,
+        })
         return this.grpcSend<Void>(this.agService.updateGroup, request)
     }
 
@@ -177,96 +193,100 @@ export class GrpcManager {
         return this.grpcSend<Group>(this.agService.updateGroup, group)
     }
 
-    public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
-        const request = new GroupRequest()
-        request.setGroupid(groupID)
-        request.setCourseid(courseID)
+    public deleteGroup(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Void>> {
+        const request = new GroupRequest({
+            groupID: BigInt(groupID),
+            courseID: BigInt(courseID),
+        })
         return this.grpcSend<Void>(this.agService.deleteGroup, request)
     }
 
-    public createGroup(courseID: number, name: string, users: number[]): Promise<IGrpcResponse<Group>> {
-        const request = new Group()
-        request.setName(name)
-        request.setCourseid(courseID)
-        const groupUsers: User[] = []
-        users.forEach((ele) => {
-            const usr = new User()
-            usr.setId(ele)
-            groupUsers.push(usr)
+    public createGroup(courseID: bigint, name: string, users: bigint[]): Promise<IGrpcResponse<Group>> {
+        const request = new Group({
+            courseID: BigInt(courseID),
+            name: name,
+            users: users.map(userID => new User({ID: userID})),
         })
-        request.setUsersList(groupUsers)
         return this.grpcSend<Group>(this.agService.createGroup, request)
     }
 
     // /* SUBMISSIONS */ //
-    public getAllSubmissions(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest()
-        request.setCourseid(courseID)
-        request.setUserid(userID)
-        request.setGroupid(groupID)
+    public getAllSubmissions(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
+        const request = new SubmissionRequest({
+            courseID: BigInt(courseID),
+            userID: BigInt(userID),
+            groupID: BigInt(groupID),
+        })
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
-    public getSubmission(courseID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
-        const request = new SubmissionReviewersRequest()
-        request.setCourseid(courseID)
-        request.setSubmissionid(submissionID)
+    public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
+        const request = new SubmissionRequest({
+            courseID: BigInt(courseID),
+            userID: BigInt(userID),
+        })
+        return this.grpcSend<Submissions>(this.agService.getSubmission, request)
+    }
+    public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
+        const request = new SubmissionReviewersRequest({
+            courseID: courseID,
+            submissionID: submissionID
+        })
         return this.grpcSend<Submission>(this.agService.getSubmission, request)
     }
 
-    public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest()
-        request.setCourseid(courseID)
-        request.setUserid(userID)
+    public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
+        const request = new SubmissionRequest({
+            courseID: courseID,
+            groupID: groupID,
+        })
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
-    public getGroupSubmissions(courseID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest()
-        request.setCourseid(courseID)
-        request.setGroupid(groupID)
-        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
-    }
-
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
-        const request = new SubmissionsForCourseRequest()
-        request.setCourseid(courseID)
-        request.setType(type)
+    public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
+        const request = new SubmissionsForCourseRequest({
+            courseID: courseID,
+            type: type,
+        })
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request)
     }
 
-    public updateSubmission(courseID: number, s: Submission): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateSubmissionRequest()
-        request.setSubmissionid(s.getId())
-        request.setCourseid(courseID)
-        request.setStatus(s.getStatus())
-        request.setReleased(s.getReleased())
-        request.setScore(s.getScore())
+    public updateSubmission(courseID: bigint, s: Submission): Promise<IGrpcResponse<Void>> {
+        const request = new UpdateSubmissionRequest({
+            submissionID: BigInt(s.ID),
+            courseID: BigInt(courseID),
+            status: s.status,
+            released: s.released,
+            score: s.score,
+        })
         return this.grpcSend<Void>(this.agService.updateSubmission, request)
     }
 
-    public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateSubmissionsRequest()
-        request.setAssignmentid(assignmentID)
-        request.setCourseid(courseID)
-        request.setScorelimit(score)
-        request.setRelease(release)
-        request.setApprove(approve)
+    public updateSubmissions(assignmentID: bigint, courseID: bigint, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
+        const request = new UpdateSubmissionsRequest({
+            assignmentID: assignmentID,
+            courseID: courseID,
+            scoreLimit: score,
+            release: release,
+            approve: approve,
+        })
         return this.grpcSend<Void>(this.agService.updateSubmissions, request)
     }
 
-    public rebuildSubmission(assignmentID: number, submissionID: number, courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new RebuildRequest()
-        request.setAssignmentid(assignmentID)
-        request.setSubmissionid(submissionID)
-        request.setCourseid(courseID)
+    public rebuildSubmission(assignmentID: bigint, submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
+        const request = new RebuildRequest({
+            submissionID: submissionID,
+            assignmentID: assignmentID,
+            courseID: courseID,  
+        })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
 
-    public rebuildSubmissions(assignmentID: number, courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new RebuildRequest()
-        request.setAssignmentid(assignmentID)
-        request.setCourseid(courseID)
+    public rebuildSubmissions(assignmentID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
+        const request = new RebuildRequest({
+            assignmentID: BigInt(assignmentID),
+            courseID: courseID,
+        })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
 
@@ -296,61 +316,68 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.deleteCriterion, c)
     }
 
-    public createReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
-        const request = new ReviewRequest()
-        request.setReview(r)
-        request.setCourseid(courseID)
+    public createReview(r: Review, courseID: bigint): Promise<IGrpcResponse<Review>> {
+        const request = new ReviewRequest({
+            courseID: courseID,
+            review: r,
+        })
         return this.grpcSend<Review>(this.agService.createReview, request)
     }
 
-    public updateReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
-        const request = new ReviewRequest()
-        request.setReview(r)
-        request.setCourseid(courseID)
+    public updateReview(r: Review, courseID: bigint): Promise<IGrpcResponse<Review>> {
+        const request = new ReviewRequest({
+            courseID: courseID,
+            review: r,
+        })
         return this.grpcSend<Review>(this.agService.updateReview, request)
     }
 
-    public getReviewers(submissionID: number, courseID: number): Promise<IGrpcResponse<Reviewers>> {
-        const request = new SubmissionReviewersRequest()
-        request.setSubmissionid(submissionID)
-        request.setCourseid(courseID)
+    public getReviewers(submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Reviewers>> {
+        const request = new SubmissionReviewersRequest({
+            submissionID: BigInt(submissionID),
+            courseID: BigInt(courseID),
+        })
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request)
     }
 
     // /* REPOSITORY */ //
 
-    public getRepositories(courseID: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
-        const req = new URLRequest()
-        req.setCourseid(courseID)
-        req.setRepotypesList(types)
+    public getRepositories(courseID: bigint, types: Repository_Type[]): Promise<IGrpcResponse<Repositories>> {
+        const req = new URLRequest({
+            courseID: BigInt(courseID),
+            repoTypes: types,
+        })
         return this.grpcSend<Repositories>(this.agService.getRepositories, req)
     }
 
     // /* ORGANIZATIONS */ //
 
     public getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const request = new OrgRequest()
-        request.setOrgname(orgName)
+        const request = new OrgRequest({
+            orgName: orgName,
+        })
         return this.grpcSend<Organization>(this.agService.getOrganization, request)
     }
 
-    public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
-        const request = new RepositoryRequest()
-        request.setUserid(userID)
-        request.setGroupid(groupID)
-        request.setCourseid(courseID)
+    public isEmptyRepo(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Void>> {
+        const request = new RepositoryRequest({
+            courseID: courseID,
+            userID: userID,
+            groupID: groupID,
+        })
         return this.grpcSend<Void>(this.agService.isEmptyRepo, request)
     }
 
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
-            method.call(this.agService, request, {},
-                (err: grpcWeb.RpcError, response: T) => {
+            method.call(this.agService, request,
+                (err: ConnectError, response: T) => {
                     if (err) {
-                        if (err.code !== grpcWeb.StatusCode.OK) {
-                            const code = new Status()
-                            code.setCode(err.code)
-                            code.setError(err.message)
+                        if (err.code > 0) {
+                            const code = new Status({
+                                Code: BigInt(err.code),
+                                Error: err.message,
+                            })
                             const temp: IGrpcResponse<T> = {
                                 status: code,
                             }
@@ -358,9 +385,10 @@ export class GrpcManager {
                             resolve(temp)
                         }
                     } else {
-                        const code = new Status()
-                        code.setCode(0)
-                        code.setError("OK")
+                        const code = new Status({
+                            Code: BigInt(0),
+                            Error: "",
+                        })
                         const temp: IGrpcResponse<T> = {
                             data: response as T,
                             status: code,
@@ -374,9 +402,9 @@ export class GrpcManager {
 
     // logErr logs any gRPC error to the console.
     private logErr(resp: IGrpcResponse<any>, methodName: string): void {
-        if (resp.status.getCode() !== 0) {
+        if (resp.status.Code !== BigInt(0)) {
             console.log("GRPC " + methodName + " failed with code "
-                + resp.status.getCode() + ": " + resp.status.getError())
+                + resp.status.Code + ": " + resp.status.Error)
         }
     }
 }

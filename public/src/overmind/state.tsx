@@ -1,6 +1,6 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, SubmissionLink, User } from "../../gen/qf/types_pb"
 import { Color, getNumApproved, getSubmissionByAssignmentID, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
@@ -16,13 +16,13 @@ export interface Alert {
 }
 
 export interface UserCourseSubmissions {
-    group?: Group.AsObject
-    enrollment?: Enrollment.AsObject
-    user?: User.AsObject
-    submissions?: SubmissionLink.AsObject[]
+    group?: Group
+    enrollment?: Enrollment
+    user?: User
+    submissions?: SubmissionLink[]
 }
 
-type EnrollmentsByCourse = { [courseid: number]: Enrollment.AsObject }
+type EnrollmentsByCourse = { [CourseID: string]: Enrollment }
 
 export type State = {
 
@@ -31,7 +31,7 @@ export type State = {
     ***************************************************************************/
 
     /* This is the user that is currently logged in */
-    self: User.AsObject,
+    self: User,
 
     /* Indicates if the user has valid data */
     // derived from self
@@ -42,21 +42,21 @@ export type State = {
     isLoggedIn: boolean,
 
     /* Contains all the courses the user is enrolled in */
-    enrollments: Enrollment.AsObject[],
+    enrollments: Enrollment[],
 
     /* Contains all the courses the user is enrolled in, indexed by course ID */
     // derived from enrollments
-    enrollmentsByCourseID: { [courseID: number]: Enrollment.AsObject },
+    enrollmentsByCourseID: { [courseID: string]: Enrollment },
 
     /* Contains all the groups the user is a member of, indexed by course ID */
-    userGroup: { [courseID: number]: Group.AsObject },
+    userGroup: { [courseID: string]: Group },
 
     /* Contains all submissions for the user, indexed by course ID */
     // The individual submissions for a given course are indexed by assignment order - 1
-    submissions: { [courseID: number]: Submission.AsObject[] },
+    submissions: { [courseID: string]: Submission[] },
 
     /* Current enrollment status of the user for a given course */
-    status: { [courseID: number]: Enrollment.UserStatus }
+    status: { [courseID: string]: Enrollment_UserStatus }
 
     /* Indicates if the user is a teacher of the current course */
     // derived from enrollmentsByCourseID
@@ -68,7 +68,7 @@ export type State = {
 
     /* Contains links to all repositories for a given course */
     // Individual repository links are accessed by Repository.Type
-    repositories: { [courseid: number]: { [repo: string]: string } },
+    repositories: { [courseid: string]: { [repo: string]: string } },
 
     /***************************************************************************
     *                              Public data
@@ -76,13 +76,13 @@ export type State = {
 
     /* Contains all users of a given course */
     // Requires the user to be admin to get from backend
-    users: { [userID: number]: User.AsObject },
+    users: { [userID: string]: User },
 
     /* Contains all courses */
-    courses: Course.AsObject[],
+    courses: Course[],
 
     /* Contains all assignments for a given course */
-    assignments: { [courseID: number]: Assignment.AsObject[] },
+    assignments: { [courseID: string]: Assignment[] },
 
 
     /***************************************************************************
@@ -90,9 +90,9 @@ export type State = {
      ***************************************************************************/
 
     /* Contains all submissions for a given course */
-    courseSubmissions: { [courseID: number]: UserCourseSubmissions[] },
+    courseSubmissions: { [courseID: string]: UserCourseSubmissions[] },
 
-    courseGroupSubmissions: { [courseID: number]: UserCourseSubmissions[] },
+    courseGroupSubmissions: { [courseID: string]: UserCourseSubmissions[] },
 
     /** Contains all submissions for the current course.
      *  Derived from either courseSubmissions or courseGroupSubmissions based on groupView.
@@ -101,16 +101,16 @@ export type State = {
     sortedAndFilteredSubmissions: UserCourseSubmissions[]
 
     /* Contains all enrollments for a given course */
-    courseEnrollments: { [courseID: number]: Enrollment.AsObject[] },
+    courseEnrollments: { [courseID: string]: Enrollment[] },
 
     /* Contains all groups for a given course */
-    groups: { [courseID: number]: Group.AsObject[] },
+    groups: { [courseID: string]: Group[] },
 
     /* Currently selected submission ID */
     activeSubmission: number,
 
     /* Currently selected user */
-    activeUser: User.AsObject | null,
+    activeUser: User | null,
 
     /* Number of enrolled users */
     // derived from courseEnrollments
@@ -118,14 +118,14 @@ export type State = {
 
     /* Contains all enrollments where the enrollment status is pending */
     // derived from courseEnrollments
-    pendingEnrollments: Enrollment.AsObject[],
+    pendingEnrollments: Enrollment[],
 
     /* Contains all groups where the group status is pending */
     // derived from groups
-    pendingGroups: Group.AsObject[],
+    pendingGroups: Group[],
 
     /* Contains all users with admins sorted first */
-    allUsers: User.AsObject[],
+    allUsers: User[],
 
 
     /***************************************************************************
@@ -136,13 +136,13 @@ export type State = {
     isLoading: boolean,
 
     /* The current course ID */
-    activeCourse: number,
+    activeCourse: bigint,
 
     /* The current assignment ID */
     activeAssignment: number,
 
     /* The current assignment */
-    selectedAssignment: Assignment.AsObject | null,
+    selectedAssignment: Assignment | null,
 
     /* Contains a group in creation */
     courseGroup: CourseGroup,
@@ -154,13 +154,13 @@ export type State = {
     query: string,
 
     /* Current submission link */
-    activeSubmissionLink: SubmissionLink.AsObject | null,
+    activeSubmissionLink: SubmissionLink | null,
 
     /* Current enrollment */
-    activeEnrollment: Enrollment.AsObject | null,
+    activeEnrollment: Enrollment | null,
 
     /* Current submission */
-    currentSubmission: Submission.AsObject | null,
+    currentSubmission: Submission | null,
 
     /* The value to sort submissions by */
     sortSubmissionsBy: SubmissionSort,
@@ -178,7 +178,7 @@ export type State = {
 
     /* Currently selected group */
     /* Contains either an existing group to edit, or a new group to create */
-    activeGroup: Group.AsObject | null,
+    activeGroup: Group | null,
 
     hasGroup: (courseID: number) => boolean,
 
@@ -189,20 +189,20 @@ export type State = {
 /* Initial State */
 /* To add to state, extend the State type and initialize the variable below */
 export const state: State = {
-    self: User.toObject(false, new User()),
+    self: new User(),
     isLoggedIn: derived(({ self }: State) => {
-        return self.id !== 0
+        return Number(self.ID) !== 0
     }),
 
     isValid: derived(({ self }: State) => {
-        return self.name.length > 0 && self.studentid.length > 0 && self.email.length > 0
+        return self.name.length > 0 && self.studentID.length > 0 && self.email.length > 0
     }),
 
     enrollments: [],
     enrollmentsByCourseID: derived((state: State) => {
         const enrollmentsByCourseID: EnrollmentsByCourse = {}
         for (const enrollment of state.enrollments) {
-            enrollmentsByCourseID[enrollment.courseid] = enrollment
+            enrollmentsByCourseID[enrollment.courseID.toString()] = enrollment
         }
         return enrollmentsByCourseID
     }),
@@ -210,33 +210,33 @@ export const state: State = {
     userGroup: {},
 
     isTeacher: derived((state: State) => {
-        if (state.activeCourse > 0 && state.enrollmentsByCourseID[state.activeCourse]) {
-            return isTeacher(state.enrollmentsByCourseID[state.activeCourse])
+        if (state.activeCourse > 0 && state.enrollmentsByCourseID[state.activeCourse.toString()]) {
+            return isTeacher(state.enrollmentsByCourseID[state.activeCourse.toString()])
         }
         return false
     }),
     isCourseCreator: derived((state: State) => {
-        const course = state.courses.find(course => course.id === state.activeCourse)
-        if (course && course.coursecreatorid === state.self.id) {
+        const course = state.courses.find(course => course.ID === state.activeCourse)
+        if (course && course.courseCreatorID === state.self.ID) {
             return true
         }
         return false
     }),
-    status: [],
+    status: {},
 
     users: {},
     allUsers: [],
     courses: [],
-    courseSubmissions: [],
+    courseSubmissions: {},
     courseGroupSubmissions: {},
     sortedAndFilteredSubmissions: derived((state: State, rootState: Context["state"]) => {
         // Filter and sort submissions based on the current state
-        if (!state.activeCourse || !state.courseSubmissions[state.activeCourse]) {
+        if (!state.activeCourse || !state.courseSubmissions[state.activeCourse.toString()]) {
             return []
         }
         const submissions = state.groupView
-            ? state.courseGroupSubmissions[state.activeCourse]
-            : state.courseSubmissions[state.activeCourse]
+            ? state.courseGroupSubmissions[state.activeCourse.toString()]
+            : state.courseSubmissions[state.activeCourse.toString()]
 
         if (!submissions) {
             return []
@@ -245,7 +245,7 @@ export const state: State = {
         // If a specific assignment is selected, filter by that assignment
         const numAssignments = rootState.review.assignmentID > 0
             ? 1
-            : state.assignments[state.activeCourse].length ?? 0
+            : state.assignments[state.activeCourse.toString()].length ?? 0
 
         let filteredSubmissions = submissions
         for (const filter of state.submissionFilters) {
@@ -277,8 +277,8 @@ export const state: State = {
 
         const sortOrder = state.sortAscending ? -1 : 1
         const sortedSubmissions = Object.values(filteredSubmissions).sort((a, b) => {
-            let subA: Submission.AsObject | undefined
-            let subB: Submission.AsObject | undefined
+            let subA: Submission | undefined
+            let subB: Submission | undefined
             if (rootState.review.assignmentID > 0) {
                 // If a specific assignment is selected, sort by that assignment
                 subA = getSubmissionByAssignmentID(a.submissions, rootState.review.assignmentID)
@@ -324,7 +324,7 @@ export const state: State = {
     }),
     activeSubmission: derived((state: State) => {
         if (state.activeSubmissionLink) {
-            return state.activeSubmissionLink.submission ? (state.activeSubmissionLink.submission).id : -1
+            return state.activeSubmissionLink.submission ? Number(state.activeSubmissionLink.submission.ID) : -1
         }
         return -1
     }),
@@ -334,7 +334,7 @@ export const state: State = {
         return activeSubmissionLink?.submission ?? null
     }),
     selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
-        return assignments[activeCourse]?.find(a => a.id === currentSubmission?.assignmentid) ?? null
+        return assignments[activeCourse.toString()]?.find(a => a.ID === currentSubmission?.AssignmentID) ?? null
     }),
     activeUser: null,
     assignments: {},
@@ -343,25 +343,25 @@ export const state: State = {
     courseGroup: { courseID: 0, enrollments: [], users: [], groupName: "" },
     alerts: [],
     isLoading: true,
-    activeCourse: -1,
+    activeCourse: BigInt(-1),
     activeAssignment: -1,
     courseEnrollments: {},
     groups: {},
     pendingGroups: derived(({ activeCourse, groups }: State) => {
-        if (activeCourse > 0 && groups[activeCourse]) {
-            return groups[activeCourse]?.filter(group => isPendingGroup(group))
+        if (activeCourse > 0 && groups[activeCourse.toString()]) {
+            return groups[activeCourse.toString()]?.filter(group => isPendingGroup(group))
         }
         return []
     }),
     pendingEnrollments: derived(({ activeCourse, courseEnrollments }: State) => {
-        if (activeCourse > 0 && courseEnrollments[activeCourse]) {
-            return courseEnrollments[activeCourse].filter(enrollment => isPending(enrollment))
+        if (activeCourse > 0 && courseEnrollments[activeCourse.toString()]) {
+            return courseEnrollments[activeCourse.toString()].filter(enrollment => isPending(enrollment))
         }
         return []
     }),
     numEnrolled: derived(({ activeCourse, courseEnrollments }: State) => {
-        if (activeCourse > 0 && courseEnrollments[activeCourse]) {
-            return courseEnrollments[activeCourse]?.filter(enrollment => !isPending(enrollment)).length
+        if (activeCourse > 0 && courseEnrollments[activeCourse.toString()]) {
+            return courseEnrollments[activeCourse.toString()]?.filter(enrollment => !isPending(enrollment)).length
         }
         return 0
     }),

@@ -1,6 +1,6 @@
 import { derived } from "overmind"
 import { Context } from "../.."
-import { GradingCriterion, Review, User } from "../../../../proto/qf/types_pb"
+import { GradingCriterion_Grade, Review, User } from "../../../../gen/qf/types_pb"
 
 export type ReviewState = {
     /* The index of the selected review */
@@ -8,18 +8,18 @@ export type ReviewState = {
 
     /* Contains all reviews for the different courses, indexed by the course id and submission id */
     reviews: {
-        [courseID: number]: {
-            [submissionID: number]: Review.AsObject[]
+        [courseID: string]: {
+            [submissionID: number]: Review[]
         }
     }
 
     /* The current review */
     // derived from reviews and selectedReview
-    currentReview: Review.AsObject | null
+    currentReview: Review | null
 
     /* The reviewer for the current review */
     // derived from currentReview
-    reviewer: User.AsObject | null
+    reviewer: User | null
 
     /* Indicates if the current review can be updated */
     canUpdate: boolean
@@ -31,7 +31,7 @@ export type ReviewState = {
     graded: number
 
     /* The ID of the assignment selected. Used to determine which assignment to release */
-    assignmentID: number
+    assignmentID: bigint
 
     /* The minimum score submissions must have to be released or approved */
     /* Sent as argument to updateSubmissions */
@@ -47,7 +47,7 @@ export const state: ReviewState = {
         if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
             return null
         }
-        const check = reviews[rootState.activeCourse][rootState.activeSubmission]
+        const check = reviews[rootState.activeCourse.toString()][rootState.activeSubmission]
         return check ? check[selectedReview] : null
     }),
 
@@ -55,20 +55,20 @@ export const state: ReviewState = {
         if (!currentReview) {
             return null
         }
-        return rootState.users[currentReview.reviewerid]
+        return rootState.users[currentReview.ReviewerID.toString()]
     }),
 
     canUpdate: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
-        return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.id > 0
+        return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.ID > 0
     }),
 
     criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {
         let total = 0
         if (rootState.currentSubmission, rootState.activeCourse) {
-            const assignment = rootState.assignments[rootState.activeCourse]?.find(a => a.id === rootState.currentSubmission?.assignmentid)
+            const assignment = rootState.assignments[rootState.activeCourse.toString()]?.find(a => a.ID === rootState.currentSubmission?.AssignmentID)
             if (assignment) {
-                assignment.gradingbenchmarksList.forEach(bm => {
-                    bm.criteriaList.forEach(() => {
+                assignment.gradingBenchmarks.forEach(bm => {
+                    bm.criteria.forEach(() => {
                         total++
                     })
                 })
@@ -79,9 +79,9 @@ export const state: ReviewState = {
 
     graded: derived(({ currentReview }: ReviewState) => {
         let total = 0
-        currentReview?.gradingbenchmarksList?.forEach(bm => {
-            bm.criteriaList.forEach((c) => {
-                if (c.grade > GradingCriterion.Grade.NONE) {
+        currentReview?.gradingBenchmarks?.forEach(bm => {
+            bm.criteria.forEach((c) => {
+                if (c.grade > GradingCriterion_Grade.NONE) {
                     total++
                 }
             })
@@ -89,6 +89,6 @@ export const state: ReviewState = {
         return total
     }),
 
-    assignmentID: -1,
+    assignmentID: BigInt(-1),
     minimumScore: 0,
 }
