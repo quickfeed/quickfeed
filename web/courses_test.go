@@ -545,11 +545,9 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 }
 
 func TestUpdateCourseVisibility(t *testing.T) {
-	db, cleanup, _, _ := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-
 	logger := qtest.Logger(t)
-
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
@@ -562,13 +560,10 @@ func TestUpdateCourseVisibility(t *testing.T) {
 		interceptor.NewAccessControlInterceptor(tm),
 		interceptor.NewTokenInterceptor(tm),
 	)
-	shutdown, client := MockQuickFeedClient(t, db, interceptors)
-
+	client := MockClient(t, db, interceptors)
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	teacher := qtest.CreateAdminUser(t, db, "fake")
-
 	user := qtest.CreateFakeUser(t, db, 2)
 	userCookie, err := tm.NewAuthCookie(user.ID)
 	if err != nil {
