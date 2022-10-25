@@ -13,16 +13,6 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-// testQuickFeedService is a clone of the same function in quickfeed_helper_test.go.
-// It is replicated here to avoid import cycle.
-func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *QuickFeedService) {
-	t.Helper()
-	db, cleanup := qtest.TestDB(t)
-	sc, mgr := scm.MockSCMManager(t)
-	logger := qtest.Logger(t).Desugar()
-	return db, cleanup, sc, NewQuickFeedService(logger, db, mgr, BaseHookOptions{}, &ci.Local{})
-}
-
 // MockClient returns a QuickFeed client for invoking RPCs.
 func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconnect.QuickFeedServiceClient {
 	t.Helper()
