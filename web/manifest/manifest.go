@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -19,10 +20,11 @@ import (
 )
 
 const (
-	appID        = "QUICKFEED_APP_ID"
-	appKey       = "QUICKFEED_APP_KEY"
-	clientID     = "QUICKFEED_CLIENT_ID"
-	clientSecret = "QUICKFEED_CLIENT_SECRET"
+	appID         = "QUICKFEED_APP_ID"
+	appKey        = "QUICKFEED_APP_KEY"
+	clientID      = "QUICKFEED_CLIENT_ID"
+	clientSecret  = "QUICKFEED_CLIENT_SECRET"
+	webhookSecret = "QUICKFEED_WEBHOOK_SECRET"
 )
 
 type Manifest struct {
@@ -118,10 +120,11 @@ func (m *Manifest) conversion() http.HandlerFunc {
 
 		// Save the application configuration to the .env file
 		envToUpdate := map[string]string{
-			appID:        strconv.FormatInt(*config.ID, 10),
-			appKey:       appKeyFile,
-			clientID:     *config.ClientID,
-			clientSecret: *config.ClientSecret,
+			appID:         strconv.FormatInt(*config.ID, 10),
+			appKey:        appKeyFile,
+			clientID:      *config.ClientID,
+			clientSecret:  *config.ClientSecret,
+			webhookSecret: *config.WebhookSecret,
 		}
 		if err := env.Save(".env", envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -258,8 +261,8 @@ func form(w http.ResponseWriter, domain string) error {
 			"name": "{{.Name}}",
 			"url": "{{.URL}}",
 			"hook_attributes": {
-				"active": false,
-				"url": "",
+				"active": {{.WebhookActive}},
+				"url": "{{.WebhookURL}}",
 			},
 			"callback_urls": [
 				"{{.CallbackURL}}"
@@ -272,21 +275,36 @@ func form(w http.ResponseWriter, domain string) error {
 				"issues": "write",
 				"members": "write",
 				"organization_administration": "write",
-				"pull_requests": "write"
+				"pull_requests": "write",
 			},
+			"default_events": [
+				"push",
+				"pull_request",
+				"pull_request_review"
+			]
 		})
 		document.getElementById('create').submit()
 	</script>
 	`
 
 	data := struct {
-		URL         string
-		Name        string
-		CallbackURL string
+		URL           string
+		Name          string
+		CallbackURL   string
+		WebhookURL    string
+		WebhookActive bool
 	}{
-		URL:         auth.GetBaseURL(domain),
-		Name:        env.AppName(),
-		CallbackURL: auth.GetCallbackURL(domain),
+		URL:           auth.GetBaseURL(domain),
+		Name:          env.AppName(),
+		CallbackURL:   auth.GetCallbackURL(domain),
+		WebhookURL:    auth.GetEventsURL(domain),
+		WebhookActive: true,
+	}
+
+	if strings.Contains(data.WebhookURL, "127.0.0.1") {
+		// Disable webhook for localhost
+		data.WebhookURL = ""
+		data.WebhookActive = false
 	}
 	t := template.Must(template.New("form").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {

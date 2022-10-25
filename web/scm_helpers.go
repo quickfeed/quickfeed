@@ -5,16 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		qf.InfoRepo, qf.AssignmentRepo, qf.TestsRepo)
+		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
 
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
@@ -24,7 +23,7 @@ var (
 	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
 	// and not because of some application error
-	ErrContextCanceled = "context canceled because the github interaction took too long. Please try again later"
+	ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
 	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
 	FreeOrgPlan = "free"
 )
@@ -58,16 +57,16 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.OrganizationName)
 }
 
-// getSCMForUser returns an SCM client based on the user's personal access token.
-func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
+// getCredsForUserSCM returns the given user's personal access token.
+func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Exchange a refresh token for an access token.
 	token, err := q.scmMgr.ExchangeToken(refreshToken)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Save user's refresh token in the database.
 	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
@@ -76,9 +75,9 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
 	remoteIdentity.AccessToken = token.RefreshToken
 	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
-		return nil, err
+		return "", err
 	}
-	return scm.NewInviteOnlySCMClient(token.AccessToken), nil
+	return token.AccessToken, nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -96,7 +95,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 	}
 	org := &qf.Organization{ID: course.GetOrganizationID(), Name: course.GetOrganizationName()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         group.GetName(),
 		Private:      true,
 	})
@@ -150,7 +149,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, pa
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         path,
 		Private:      true,
 	})
@@ -239,7 +238,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 }
 
 func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
-	commonRepos := []string{qf.InfoRepo, qf.AssignmentRepo}
+	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 
 	for _, repoType := range commonRepos {
 		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {
@@ -311,16 +310,19 @@ func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	return nil
 }
 
-// contextCanceled returns true if the context has been canceled.
-// It is a recurring cause of unexplainable method failures when
-// creating a course, approving, changing status of, or deleting
-// a course enrollment or group
-func contextCanceled(ctx context.Context) bool {
-	// debugging context related errors
-	if ctx.Err() != nil {
-		fmt.Println("Context error: ", ctx.Err().Error())
+// ctxErr returns a context error. There could be two reasons
+// for a context error: exceeded deadline or canceled context.
+// Canceled context is a recurring cause of unexplainable
+// method failures when creating a course, approving, changing
+// status of, or deleting a course enrollment or group.
+func ctxErr(ctx context.Context) error {
+	switch ctx.Err() {
+	case context.Canceled:
+		return connect.NewError(connect.CodeCanceled, ctx.Err())
+	case context.DeadlineExceeded:
+		return connect.NewError(connect.CodeDeadlineExceeded, ctx.Err())
 	}
-	return ctx.Err() == context.Canceled
+	return nil
 }
 
 // Returns true and formatted error if error type is SCM error
@@ -328,7 +330,7 @@ func contextCanceled(ctx context.Context) bool {
 func parseSCMError(err error) (bool, error) {
 	errStruct, ok := err.(scm.ErrFailedSCM)
 	if ok {
-		return ok, status.Errorf(codes.NotFound, errStruct.Message)
+		return ok, connect.NewError(connect.CodeNotFound, errors.New(errStruct.Message))
 	}
 	return ok, nil
 }

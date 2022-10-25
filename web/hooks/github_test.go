@@ -1,69 +1,191 @@
-package hooks
+package hooks_test
 
 import (
-	"context"
-	"log"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"net/http"
+	"sync"
 	"testing"
 
-	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/database"
-	logq "github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/stream"
+	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/steinfletcher/apitest"
 )
 
-const (
-	secret = "the-secret-quickfeed-test"
-)
+const secret = "secret"
 
-// To run these tests, please see instructions in the developer guide (dev.md).
-// On macOS, get ngrok using `brew install ngrok`.
-// See steps to follow [here](https://groob.io/tutorial/go-github-webhook/).
+func TestHandlePush(t *testing.T) {
+	wh := NewMockWebHook(qtest.Logger(t), secret)
+	handlerFunc := wh.Handle()
 
-// To run these tests, use the following (replace the forwarding URL with your own):
-//
-// QF_WEBHOOK_SERVER=https://53c51fa9.ngrok.io go test -v -run <test name> -timeout 999999s
-// This will create a new webhook with URL `https://53c51fa9.ngrok.io/webhook`
-// The -timeout flag is not necessary, but stops the test from timing out after 10 minutes.
-//
-// These tests will then block waiting for an event from GitHub; meaning that you
-// will manually have to create these events.
+	pushPayload := qlog.IndentJson(pushEvent)
+	signature := hMAC([]byte(pushPayload), []byte(secret))
 
-// TODO(meling) add code to create a push event to the tests repository and trigger synchronizing tasks with issues on repositories.
-// TestGitHubWebHook tests listening to events from the tests repository.
-func TestGitHubWebHook(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	serverURL := scm.GetWebHookServer(t)
-	s := scm.GetTestSCM(t)
-
-	logger := logq.Logger(t)
-	defer func() { _ = logger.Sync() }()
-
-	ctx := context.Background()
-	opt := &scm.CreateHookOptions{
-		URL:          serverURL + "/webhook",
-		Secret:       secret,
-		Organization: qfTestOrg,
+	tests := []struct {
+		name       string
+		payload    string
+		signature  string
+		wantStatus int
+	}{
+		{
+			name:       "valid push event",
+			payload:    pushPayload,
+			signature:  signature,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "invalid signature",
+			payload:    pushPayload,
+			signature:  "invalid",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "invalid payload",
+			payload:    pushPayload + "invalid",
+			signature:  hMAC([]byte(pushPayload+"invalid"), []byte(secret)),
+			wantStatus: http.StatusBadRequest,
+		},
 	}
-	err := s.CreateHook(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apitest.New().
+				HandlerFunc(handlerFunc).
+				Post(auth.Hook).
+				Headers(map[string]string{
+					"Content-Type":    "application/json",
+					"X-Github-Event":  "push",
+					"X-Hub-Signature": "sha256=" + tt.signature,
+				}).
+				Body(tt.payload).
+				Expect(t).
+				Status(tt.wantStatus).
+				End()
+		})
 	}
+}
 
-	hooks, err := s.ListHooks(ctx, &scm.Repository{}, qfTestOrg)
-	if err != nil {
-		t.Fatal(err)
+func TestConcurrentHandlePush(t *testing.T) {
+	const concurrentPushEvents = 1000
+	wh := NewMockWebHook(qtest.Logger(t), secret)
+	handlerFunc := wh.Handle()
+
+	var wg sync.WaitGroup
+	wg.Add(concurrentPushEvents)
+	for i := 0; i < concurrentPushEvents; i++ {
+		i := i
+		go func() {
+			myPushEvent := &github.PushEvent{
+				Repo: &github.PushEventRepository{
+					Name: github.String(fmt.Sprintf("repo-%02d", i)),
+				},
+				HeadCommit: &github.HeadCommit{
+					ID: github.String(fmt.Sprintf("%04d", i)),
+				},
+			}
+			pushPayload := qlog.IndentJson(&myPushEvent)
+			signature := hMAC([]byte(pushPayload), []byte(secret))
+
+			apitest.New().
+				HandlerFunc(handlerFunc).
+				Post(auth.Hook).
+				Headers(map[string]string{
+					"Content-Type":    "application/json",
+					"X-Github-Event":  "push",
+					"X-Hub-Signature": "sha256=" + signature,
+				}).
+				Body(pushPayload).
+				Expect(t).
+				Status(http.StatusOK).
+				End()
+
+			wg.Done()
+		}()
 	}
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
+	wg.Wait()
+	wh.wg.Wait()
+	// All goroutines were executed
+	if wh.totalCnt != concurrentPushEvents {
+		t.Errorf("totalCnt = %d, want %d", wh.totalCnt, concurrentPushEvents)
 	}
+	// All goroutines should have completed.
+	if wh.currentConcurrencyCnt != 0 {
+		t.Errorf("currentConcurrencyCnt = %d, want 0", wh.currentConcurrencyCnt)
+	}
+}
 
-	var db database.Database
-	var runner ci.Runner
-	webhook := NewGitHubWebHook(logger, db, &scm.Manager{}, runner, stream.NewStreamServices(), secret)
+// From server logs we discovered that GitHub may be sending duplicate push events
+// for the same head commit. See issue #868.
+func TestFilterDuplicatePushEvents(t *testing.T) {
+	wh := NewMockWebHook(qtest.Logger(t), secret)
+	handlerFunc := wh.Handle()
 
-	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.Handle())
-	t.Fatal(http.ListenAndServe(":8080", nil))
+	pushEventToSendTwice := &github.PushEvent{
+		Repo: &github.PushEventRepository{
+			Name: github.String("repo-1"),
+		},
+		HeadCommit: &github.HeadCommit{
+			ID: github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+		},
+	}
+	pushPayload := qlog.IndentJson(pushEventToSendTwice)
+	signature := hMAC([]byte(pushPayload), []byte(secret))
+
+	for i := 0; i < 2; i++ {
+		apitest.New().
+			HandlerFunc(handlerFunc).
+			Post(auth.Hook).
+			Headers(map[string]string{
+				"Content-Type":    "application/json",
+				"X-Github-Event":  "push",
+				"X-Hub-Signature": "sha256=" + signature,
+			}).
+			Body(pushPayload).
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	}
+	wh.wg.Wait()
+	if wh.dup.Duplicate(pushEventToSendTwice.GetHeadCommit().GetID()) {
+		t.Errorf("duplicate push event still in map: %v", pushEventToSendTwice)
+	}
+}
+
+var pushEvent = &github.PushEvent{
+	Ref: github.String("refs/heads/master"),
+	Repo: &github.PushEventRepository{
+		ID:            github.Int64(1),
+		Name:          github.String("meling-labs"),
+		FullName:      github.String("qf104-2022/meling-labs"),
+		DefaultBranch: github.String("master"),
+	},
+	Sender: &github.User{
+		Login: github.String("meling"),
+	},
+	HeadCommit: &github.HeadCommit{
+		ID:       github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+		Message:  github.String("Add a README.md"),
+		Added:    []string{"lab1/README.md"},
+		Removed:  []string{},
+		Modified: []string{"lab2/README.md"},
+	},
+	Commits: []*github.HeadCommit{
+		{
+			ID:       github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+			Message:  github.String("Add a README.md"),
+			Added:    []string{"lab1/README.md"},
+			Removed:  []string{},
+			Modified: []string{"lab2/README.md"},
+		},
+	},
+}
+
+// hMAC returns the HMAC signature for a message provided the secret key and hashFunc.
+func hMAC(message, key []byte) string {
+	mac := hmac.New(sha256.New, key)
+	mac.Write(message)
+	return hex.EncodeToString(mac.Sum(nil))
 }

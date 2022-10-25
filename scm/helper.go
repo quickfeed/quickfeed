@@ -1,6 +1,8 @@
 package scm
 
-import "errors"
+import (
+	"errors"
+)
 
 const (
 	// Organization roles //
@@ -51,6 +53,8 @@ var (
 	ErrNotMember = errors.New("user is not a member of the organization")
 	// ErrNotOwner indicates that user has no admin rights in the requested organization.
 	ErrNotOwner = errors.New("user is not an owner of the organization")
+	// ErrMissingInstallation indicates that GitHub application is not installed on organization.
+	ErrMissingInstallation = errors.New("github application is not installed on the course organization")
 )
 
 // Validators //
@@ -80,11 +84,7 @@ func (opt UpdateTeamOptions) valid() bool {
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
-	return opt.Organization != nil && opt.Path != ""
-}
-
-func (opt CreateHookOptions) valid() bool {
-	return opt.URL != "" && opt.Organization != ""
+	return opt.Organization != "" && opt.Path != ""
 }
 
 func (opt TeamOptions) valid() bool {
@@ -123,8 +123,8 @@ func (opt IssueCommentOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
 }
 
-func (opt RepositoryInvitationOptions) valid() bool {
-	return opt.Login != "" && opt.Owner != ""
+func (opt InvitationOptions) valid() bool {
+	return opt.Login != "" && opt.Owner != "" && opt.Token != ""
 }
 
 // Errors //

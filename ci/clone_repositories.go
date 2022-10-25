@@ -10,60 +10,63 @@ import (
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
-func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, dstDir string) error {
-	defer timer(r.JobOwner, r.Course.Code, cloneTimeGauge)()
-
-	logger.Debugf("Cloning repositories for %s", r)
-	testsDir, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationName(),
-		Repository:   qf.TestsRepo,
-		DestDir:      dstDir,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", qf.TestsRepo, err)
+func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf.Course) error {
+	testsExists, _ := exists(filepath.Join(course.CloneDir(), qf.TestsRepo))
+	assignmentsExists, _ := exists(filepath.Join(course.CloneDir(), qf.AssignmentsRepo))
+	if testsExists && assignmentsExists {
+		return nil
 	}
 
-	assignmentsDir, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationName(),
-		Repository:   r.Repo.Name(),
-		DestDir:      dstDir,
-		Branch:       r.BranchName,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", qf.AssignmentRepo, err)
+	if !testsExists {
+		// Clone the tests repository
+		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationName(),
+			Repository:   qf.TestsRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to clone %q repository: %w", qf.TestsRepo, err)
+		}
 	}
-	return r.validate(testsDir, assignmentsDir)
+	if !assignmentsExists {
+		// Clone the assignments repository
+		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationName(),
+			Repository:   qf.AssignmentsRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to clone %q repository: %w", qf.AssignmentsRepo, err)
+		}
+	}
+	return nil
 }
 
-// validate performs various checks on the cloned repositories.
-func (r RunData) validate(testsDir, assignmentsDir string) error {
-	defer timer(r.JobOwner, r.Course.Code, validationTimeGauge)()
-
-	// Check that there are tests for the current assignment {{ .AssignmentName }}
-	if ok, err := exists(filepath.Join(testsDir, r.Assignment.GetName())); !ok {
-		return fmt.Errorf("tests directory does not contain %q: %w", r.Assignment.GetName(), err)
+// hasAssignment return nil if the assignment exists in the given clone dir.
+func hasAssignment(cloneDir, currentAssignment string) error {
+	// Check that there is code for the current assignment in clone dir
+	if ok, err := exists(filepath.Join(cloneDir, currentAssignment)); !ok {
+		return fmt.Errorf("directory %q does not contain %q: %w", cloneDir, currentAssignment, err)
 	}
-	// Check that there is student code directory for the current assignment {{ .AssignmentName }}
-	if ok, err := exists(filepath.Join(assignmentsDir, r.Assignment.GetName())); !ok {
-		return fmt.Errorf("assignments directory does not contain %q: %w", r.Assignment.GetName(), err)
-	}
+	return nil
+}
 
-	// Note: The following check may be costly if the student code is large.
-	// Hence, we may consider adding a flag to skip this check. A flag could
-	// be added to qf.Assignment or qf.Course, both accessible via RunData.
+// scanStudentRepo returns an error if the student's repository contains the session secret environment variable.
+// Note: This scan may be costly for large repositories.
+func scanStudentRepo(submittedDir, course, jobOwner string) error {
+	defer timer(jobOwner, course, validationTimeGauge)()
 
-	// Walk the student's assignments directory
-	files, err := walk(assignmentsDir)
+	// Walk the student's submitted code directory
+	files, err := walk(submittedDir)
 	if err != nil {
 		return err
 	}
 	// Ensure that the student code files does not contain the session secret environment variable.
 	for file, content := range files {
 		if strings.Contains(string(content), secretEnvName) {
-			return fmt.Errorf("file %q in %s contains %s environment variable", filepath.Base(file), r, secretEnvName)
+			return fmt.Errorf("file %q in (%s/%s) contains the %q environment variable", filepath.Base(file), course, jobOwner, secretEnvName)
 		}
 		// We could add more checks here.
 	}

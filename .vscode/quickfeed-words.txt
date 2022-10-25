@@ -1,5 +1,6 @@
 addstore
 agpath
+alecthomas
 allstudents
 allteachers
 apitest
@@ -12,6 +13,7 @@ Autograder
 backports
 beatlabs
 bitlab
+Buf's
 bufbuild
 bufconn
 bufnet
@@ -40,6 +42,7 @@ Errorf
 espeland
 excelize
 extendee
+fileop
 Frøyland
 fullchain
 Getwd
@@ -133,6 +136,7 @@ proto
 protobuf
 protoc
 protocmp
+protocolbuffers
 protoimpl
 protopatch
 protoreflect
@@ -149,6 +153,7 @@ scms
 scorelimit
 scriptfile
 sess
+setcap
 SGTM
 shogo
 shurcoo
@@ -185,6 +190,7 @@ verdana
 webpack's
 wojtekmaj
 WORKDIR
+Worktree
 xanzy
 xargs
 xini

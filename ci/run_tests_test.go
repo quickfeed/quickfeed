@@ -9,11 +9,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -42,17 +42,13 @@ func loadDockerfile(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T) *ci.RunData {
+func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	runScriptContent := loadRunScript(t)
 	dockerfileContent := loadDockerfile(t)
 
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
-	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
@@ -76,19 +72,32 @@ func testRunData(t *testing.T) *ci.RunData {
 		JobOwner: "muggles",
 		CommitID: rand.String()[:7],
 	}
+	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
+	t.Logf("Building %s's Dockerfile:\n%v", runData.Course.GetCode(), runData.Course.GetDockerfile())
+	out, err := runner.Run(context.Background(), &ci.Job{
+		Name:       runData.Course.GetCode() + "-" + rand.String(),
+		Image:      strings.ToLower(runData.Course.GetCode()),
+		Dockerfile: runData.Course.GetDockerfile(),
+		Commands:   []string{`echo -n "Hello from Dockerfile"`},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(out)
+
 	return runData
 }
 
 func TestRunTests(t *testing.T) {
-	runData := testRunData(t)
-
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
+
+	runData := testRunData(t, runner)
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
-	scm, _ := scm.MockSCMManager(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
+	scmClient, _ := scm.GetTestSCM(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,18 +108,16 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	if os.Getenv("TIMEOUT_TEST") == "" {
-		t.Skip("Skipping timeout test because it fails; don't have time debug.")
-	}
-	runData := testRunData(t)
-
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
+
+	runData := testRunData(t, runner)
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	scm, _ := scm.MockSCMManager(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
+
+	scmClient, _ := scm.GetTestSCM(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}

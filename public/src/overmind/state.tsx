@@ -234,7 +234,7 @@ export const state: State = {
         if (!state.activeCourse || !state.courseSubmissions[state.activeCourse]) {
             return []
         }
-        let submissions = state.groupView
+        const submissions = state.groupView
             ? state.courseGroupSubmissions[state.activeCourse]
             : state.courseSubmissions[state.activeCourse]
 
@@ -286,7 +286,7 @@ export const state: State = {
             }
 
             switch (state.sortSubmissionsBy) {
-                case SubmissionSort.Score:
+                case SubmissionSort.Score: {
                     if (rootState.review.assignmentID > 0) {
                         const sA = subA?.score
                         const sB = subB?.score
@@ -300,7 +300,8 @@ export const state: State = {
                     const aSubs = a.submissions ? getSubmissionsScore(a.submissions) : 0
                     const bSubs = b.submissions ? getSubmissionsScore(b.submissions) : 0
                     return sortOrder * (aSubs - bSubs)
-                case SubmissionSort.Approved:
+                }
+                case SubmissionSort.Approved: {
                     if (rootState.review.assignmentID > 0) {
                         const sA = subA && isApproved(subA) ? 1 : 0
                         const sB = subB && isApproved(subB) ? 1 : 0
@@ -309,10 +310,12 @@ export const state: State = {
                     const aApproved = a.submissions ? getNumApproved(a.submissions) : 0
                     const bApproved = b.submissions ? getNumApproved(b.submissions) : 0
                     return sortOrder * (aApproved - bApproved)
-                case SubmissionSort.Name:
+                }
+                case SubmissionSort.Name: {
                     const nameA = a.user?.name ?? ""
                     const nameB = b.user?.name ?? ""
                     return sortOrder * (nameA.localeCompare(nameB))
+                }
                 default:
                     return 0
             }

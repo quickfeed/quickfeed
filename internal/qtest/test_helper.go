@@ -4,14 +4,12 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"net/http"
 	"os"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/qlog"
 )
 
 // TestDB returns a test database and close function.
@@ -28,11 +26,7 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	logger, err := qlog.Zap()
-	if err != nil {
-		t.Fatal(err)
-	}
-	db, err := database.NewGormDB(f.Name(), logger)
+	db, err := database.NewGormDB(f.Name(), Logger(t).Desugar())
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -202,10 +196,8 @@ func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 	}
 }
 
-func QuickFeedClient(url string) qfconnect.QuickFeedServiceClient {
-	serverUrl := url
-	if serverUrl == "" {
-		serverUrl = "http://127.0.0.1:8081"
-	}
-	return qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverUrl)
+func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
+	request := connect.NewRequest(message)
+	request.Header().Set("cookie", cookie)
+	return request
 }

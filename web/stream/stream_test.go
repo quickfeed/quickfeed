@@ -28,7 +28,7 @@ var messages = []Data{
 }
 
 func TestStream(t *testing.T) {
-	service := stream.NewService[Data]()
+	service := stream.NewService[uint64, Data]()
 
 	counter := uint32(0)
 
@@ -38,8 +38,8 @@ func TestStream(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
-		stream := newMockStream[Data](ctx, uint64(1), &counter)
-		service.Add(stream)
+		stream := newMockStream[Data](ctx, &counter)
+		service.Add(stream, 1)
 		streams = append(streams, stream)
 		wg.Add(1)
 		go func() {
@@ -51,10 +51,6 @@ func TestStream(t *testing.T) {
 			data := data
 			service.SendTo(&data, 1)
 		}
-		// Alternative way of sending data. TODO: Pick one.
-		// for j := 0; j < len(messages); j++ {
-		// 	service.SendTo(&messages[j], 1)
-		// }
 	}
 
 	service.CloseBy(1)
@@ -84,14 +80,14 @@ func TestStream(t *testing.T) {
 // This test should be run with the -race flag, e.g.,:
 // % go test -v -race -run TestStreamClose -test.count 10
 func TestStreamClose(_ *testing.T) {
-	service := stream.NewService[Data]()
+	service := stream.NewService[uint64, Data]()
 
 	counter := uint32(0)
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
 	defer cancel()
-	stream := newMockStream[Data](ctx, uint64(1), &counter)
-	service.Add(stream)
+	stream := newMockStream[Data](ctx, &counter)
+	service.Add(stream, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {

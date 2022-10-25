@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
@@ -9,7 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
@@ -19,7 +19,7 @@ func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *we
 	t.Helper()
 	db, cleanup := qtest.TestDB(t)
 	sc, mgr := scm.MockSCMManager(t)
-	logger := qlog.Logger(t).Desugar()
+	logger := qtest.Logger(t).Desugar()
 	return db, cleanup, sc, web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 }
 
@@ -33,7 +33,8 @@ func MockQuickFeedClient(t *testing.T, db database.Database, opts connect.Option
 	}
 	shutdown := web.MockQuickFeedServer(t, logger, db, opts)
 
+	const serverURL = "http://127.0.0.1:8081"
 	return func(ctx context.Context) {
 		shutdown(ctx)
-	}, qtest.QuickFeedClient("")
+	}, qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverURL)
 }

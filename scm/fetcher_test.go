@@ -2,21 +2,21 @@ package scm_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/quickfeed/quickfeed/kit/sh"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	s, userName := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()
@@ -63,13 +63,94 @@ func TestClone(t *testing.T) {
 	}
 }
 
-func TestCloneBranch(t *testing.T) {
+func appendToFile(filename, text string) (err error) {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		closeErr := f.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
+	_, err = f.WriteString(text)
+	return
+}
+
+// Test that we can clone a repository, update it (commit and push) and clone it again twice.
+// The two last clones are in a different directory.
+// The third clone is actually a fast-forward pull.
+func TestCloneTwice(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
+	s, _ := scm.GetTestSCM(t)
+
+	ctx := context.Background()
+	dstDir := t.TempDir()
+
+	testsDir, err := s.Clone(ctx, &scm.CloneOptions{
+		Organization: qfTestOrg,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
+	if found, err := exists(testsDir); !found {
+		t.Fatalf("%s not found: %v", testsDir, err)
+	}
+	twiceMsg := fmt.Sprintf("Update tests repo %s\n", time.Now().Format(time.Kitchen))
+	if err := appendToFile(filepath.Join(testsDir, "README.md"), twiceMsg); err != nil {
+		t.Fatal(err)
+	}
+	commitMsg := fmt.Sprintf("Clone twice commit %s", time.Now().Format(time.Kitchen))
+	if err := sh.RunA("git", "-C", testsDir, "commit", "-a", "-m", commitMsg); err != nil {
+		t.Fatal(err)
+	}
+	if err := sh.RunA("git", "-C", testsDir, "push"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Clone to a new directory to ensure that we get a new clone with the change we just made.
+	dstDir = t.TempDir()
+
+	testsDir, err = s.Clone(ctx, &scm.CloneOptions{
+		Organization: qfTestOrg,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(testsDir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), twiceMsg[:len(twiceMsg)-2]) {
+		t.Fatalf("README.md does not contain %q", twiceMsg)
+	}
+
+	// Clone to the same directory to test that we get a fast-forward pull.
+	testsDir, err = s.Clone(ctx, &scm.CloneOptions{
+		Organization: qfTestOrg,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err = os.ReadFile(filepath.Join(testsDir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), twiceMsg[:len(twiceMsg)-2]) {
+		t.Fatalf("README.md does not contain %q", twiceMsg)
+	}
+}
+
+func TestCloneBranch(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	s, userName := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()

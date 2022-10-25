@@ -43,6 +43,7 @@ func TestParseTestRunnerScript(t *testing.T) {
 		runScriptContent = `#image/quickfeed:go
 echo $TESTS
 echo $ASSIGNMENTS
+echo $SUBMITTED
 echo $CURRENT
 echo $QUICKFEED_SESSION_SECRET
 `
@@ -63,7 +64,8 @@ echo $QUICKFEED_SESSION_SECRET
 	wantVars := []string{
 		"HOME=" + QuickFeedPath,
 		"TESTS=" + filepath.Join(QuickFeedPath, qf.TestsRepo),
-		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentRepo),
+		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
+		"SUBMITTED=" + filepath.Join(QuickFeedPath, qf.StudentRepoName(githubUserName)),
 		"CURRENT=" + runData.Assignment.GetName(),
 		"QUICKFEED_SESSION_SECRET=" + randomSecret,
 	}
@@ -102,7 +104,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	const runScriptContent = `#image/quickfeed:go`
 	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
 	_, err := runData.parseTestRunnerScript(randomSecret, "")
-	const wantMsg = "no run script for assignment lab1 in https://github.com/qf101/tests"
+	const wantMsg = "failed to parse run script for assignment lab1 in https://github.com/qf101/tests: empty run script"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
 	}
@@ -114,7 +116,7 @@ printf "*** Preparing for Test Execution ***\n"
 `
 	runData = testRunData(qfTestOrg, githubUserName, runScriptContent2)
 	_, err = runData.parseTestRunnerScript(randomSecret, "")
-	const wantMsg2 = "no docker image specified in run script for assignment lab1 in https://github.com/qf101/tests"
+	const wantMsg2 = "failed to parse run script for assignment lab1 in https://github.com/qf101/tests: no docker image specified in run script"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
 	}

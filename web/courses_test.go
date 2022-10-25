@@ -10,8 +10,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/quickfeed/quickfeed/scm"
@@ -83,7 +82,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 		t.Fatal(err)
 	}
 	for path, private := range web.RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization, Private: private}
+		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization.Name, Private: private}
 		_, err := mockSCM.CreateRepository(ctx, repoOptions)
 		if err != nil {
 			t.Fatal(err)
@@ -94,7 +93,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
-	if err != nil && status.Code(err) != codes.FailedPrecondition {
+	if err != nil && connect.CodeOf(err) != connect.CodeAlreadyExists {
 		t.Fatalf("expected CreateCourse to fail with AlreadyExists, but got: %v", err)
 	}
 }
@@ -372,10 +371,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	student1 := qtest.CreateFakeUser(t, db, 11)
-	student2 := qtest.CreateFakeUser(t, db, 12)
-	ta := qtest.CreateFakeUser(t, db, 13)
+	teacher := qtest.CreateAdminUser(t, db, "fake")
+	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
+	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
+	ta := qtest.CreateNamedUser(t, db, 13, "TA")
 
 	course := qtest.MockCourses[0]
 	err := db.CreateCourse(teacher.ID, course)
@@ -450,13 +449,13 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	ctx := auth.WithUserContext(context.Background(), teacher)
 	// Need course teams to update enrollments.
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: "qfTestOrg",
+		Organization: qtest.MockOrg,
 		TeamName:     "allstudents",
 	}); err != nil {
 		t.Error(err)
 	}
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: "qfTestOrg",
+		Organization: qtest.MockOrg,
 		TeamName:     "allteachers",
 	}); err != nil {
 		t.Error(err)
@@ -542,5 +541,93 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	ctx = auth.WithUserContext(context.Background(), ta)
 	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error 'ta cannot be demoted course creator'")
+	}
+}
+
+func TestUpdateCourseVisibility(t *testing.T) {
+	db, cleanup, _, _ := testQuickFeedService(t)
+	defer cleanup()
+
+	logger := qtest.Logger(t)
+
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	interceptors := connect.WithInterceptors(
+		interceptor.NewMetricsInterceptor(),
+		interceptor.NewValidationInterceptor(logger),
+		interceptor.NewUserInterceptor(logger, tm),
+		interceptor.NewAccessControlInterceptor(tm),
+		interceptor.NewTokenInterceptor(tm),
+	)
+	shutdown, client := MockQuickFeedClient(t, db, interceptors)
+
+	ctx := context.Background()
+	defer shutdown(ctx)
+
+	teacher := qtest.CreateAdminUser(t, db, "fake")
+
+	user := qtest.CreateFakeUser(t, db, 2)
+	userCookie, err := tm.NewAuthCookie(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cookie := userCookie.String()
+	course := qtest.MockCourses[0]
+
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.CreateEnrollment(&qf.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	req := &qf.EnrollmentStatusRequest{
+		UserID: user.ID,
+	}
+	enrollments, err := client.GetEnrollmentsByUser(auth.WithUserContext(ctx, user), qtest.RequestWithCookie(req, cookie))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(enrollments.Msg.GetEnrollments()) != 1 {
+		t.Errorf("expected 1 enrollment, got %d", len(enrollments.Msg.GetEnrollments()))
+	}
+
+	// pending enrollment should be allowed to change visibility, but not status
+	enrollment := enrollments.Msg.Enrollments[0]
+	enrollment.State = qf.Enrollment_FAVORITE
+	enrollment.Status = qf.Enrollment_TEACHER
+
+	if _, err := client.UpdateCourseVisibility(auth.WithUserContext(ctx, user), qtest.RequestWithCookie(enrollment, cookie)); err != nil {
+		t.Error(err)
+	}
+
+	gotEnrollments, err := client.GetEnrollmentsByUser(auth.WithUserContext(ctx, user), qtest.RequestWithCookie(req, cookie))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(gotEnrollments.Msg.GetEnrollments()) != 1 {
+		t.Errorf("expected 1 enrollment, got %d", len(gotEnrollments.Msg.GetEnrollments()))
+	}
+
+	gotEnrollment := gotEnrollments.Msg.Enrollments[0]
+
+	if gotEnrollment.State != qf.Enrollment_FAVORITE {
+		// State should have changed to favorite
+		t.Errorf("expected enrollment state %s, got %s", qf.Enrollment_FAVORITE, gotEnrollment.State)
+	}
+
+	if gotEnrollment.Status != qf.Enrollment_PENDING {
+		// Status should *not* have changed
+		t.Errorf("expected enrollment status %s, got %s", qf.Enrollment_NONE, gotEnrollment.Status)
 	}
 }

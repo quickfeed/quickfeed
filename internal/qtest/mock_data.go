@@ -2,6 +2,8 @@ package qtest
 
 import "github.com/quickfeed/quickfeed/qf"
 
+const MockOrg = "qf102-2022"
+
 var MockCourses = []*qf.Course{
 	{
 		Name:             "Distributed Systems",
@@ -11,7 +13,7 @@ var MockCourses = []*qf.Course{
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationName: "qfTestOrg",
+		OrganizationName: MockOrg,
 	},
 	{
 		Name:             "Operating Systems",
@@ -36,11 +38,11 @@ var MockCourses = []*qf.Course{
 	{
 		Name:             "Hyped Systems",
 		CourseCreatorID:  1,
-		Code:             "DATx20",
-		Year:             2020,
+		Code:             "QF104",
+		Year:             2022,
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   4,
-		OrganizationName: "DATx20-2020",
+		OrganizationName: "qf104-2022",
 	},
 }

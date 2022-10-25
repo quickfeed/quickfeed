@@ -12,7 +12,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
@@ -25,8 +24,24 @@ func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *Qu
 	t.Helper()
 	db, cleanup := qtest.TestDB(t)
 	sc, mgr := scm.MockSCMManager(t)
-	logger := qlog.Logger(t).Desugar()
+	logger := qtest.Logger(t).Desugar()
 	return db, cleanup, sc, NewQuickFeedService(logger, db, mgr, BaseHookOptions{}, &ci.Local{})
+}
+
+// MockQuickFeedClient returns a QuickFeed client for invoking RPCs.
+func MockQuickFeedClient(t *testing.T, db database.Database, opts connect.Option) (func(context.Context), qfconnect.QuickFeedServiceClient) {
+	t.Helper()
+	logger := qtest.Logger(t)
+
+	if opts == nil {
+		opts = connect.WithInterceptors()
+	}
+	shutdown := MockQuickFeedServer(t, logger, db, opts)
+
+	const serverURL = "http://127.0.0.1:8081"
+	return func(ctx context.Context) {
+		shutdown(ctx)
+	}, qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverURL)
 }
 
 // MockQuickFeedServer is a test helper that starts a QuickFeed server in a goroutine, with the given options, typically interceptors.

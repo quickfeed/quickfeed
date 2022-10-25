@@ -1,5 +1,21 @@
 package qf
 
+import (
+	"path/filepath"
+
+	"github.com/quickfeed/quickfeed/internal/env"
+)
+
+// HasUpdatedDockerfile returns true if the given dockerfile is different
+// from the course's previous Dockerfile.
+func (course *Course) HasUpdatedDockerfile(dockerfile string) bool {
+	return dockerfile != "" && dockerfile != course.Dockerfile
+}
+
+func (course *Course) CloneDir() string {
+	return filepath.Join(env.RepositoryPath(), course.GetOrganizationName())
+}
+
 func (course *Course) TeacherEnrollments() []*Enrollment {
 	enrolledTeachers := []*Enrollment{}
 	for _, enrollment := range course.Enrollments {

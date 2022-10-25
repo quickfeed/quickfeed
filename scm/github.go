@@ -120,7 +120,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Name, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
 	if repo != nil {
 		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
 		return toRepository(repo), nil
@@ -130,7 +130,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 
 	// repo does not exist, create it
 	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Name, &github.Repository{
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})
@@ -142,30 +142,6 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		}
 	}
 	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
-
-	return toRepository(repo), nil
-}
-
-// GetRepository implements the SCM interface.
-func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
-	if !opt.valid() {
-		return nil, ErrMissingFields{
-			Method:  "GetRepository",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-	var repo *github.Repository
-	var err error
-	// if ID is set, get by ID
-	if opt.ID > 0 {
-		repo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
-	} else {
-		// otherwise get by repo name and owner (usually owner = organization name)
-		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("GetRepository failed to fetch repository %d, and path %s: %w", opt.ID, opt.Path, err)
-	}
 
 	return toRepository(repo), nil
 }
@@ -211,7 +187,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 // DeleteRepository implements the SCM interface.
 func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("DeleteRepository got invalid RepositoryOptions: %+v", opt)
+		return fmt.Errorf("invalid argument: %+v", opt)
 	}
 
 	// if ID provided, get path and owner from github
@@ -261,81 +237,19 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
-	repo, err := s.GetRepository(ctx, opt)
+	_, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	if err != nil {
 		return false
 	}
 
 	// test to check how repo commits look like
-	_, _, err = s.client.Repositories.ListCommits(ctx, repo.Owner, repo.Path, nil)
+	_, _, err = s.client.Repositories.ListCommits(ctx, opt.Owner, opt.Path, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Git Repository is empty") {
 			return true
 		}
 	}
 	return false
-}
-
-// ListHooks implements the SCM interface.
-func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) (hooks []*Hook, err error) {
-	var githubHooks []*github.Hook
-
-	// we prioritize organization hooks because repository hooks are no longer used.
-	switch {
-	case org != "":
-		orgName := slug.Make(org)
-		githubHooks, _, err = s.client.Organizations.ListHooks(ctx, orgName, nil)
-		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to get hooks for organization %q: %w", orgName, err)
-		}
-
-	case repo != nil && repo.valid():
-		githubHooks, _, err = s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to get hooks for repository %q: %w", repo, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("ListHooks: called with missing or incompatible arguments: %q %q", repo, org)
-	}
-
-	for _, hook := range githubHooks {
-		hooks = append(hooks, &Hook{
-			ID:     uint64(hook.GetID()),
-			URL:    hook.GetURL(),
-			Events: hook.Events,
-		})
-	}
-	return hooks, nil
-}
-
-// CreateHook implements the SCM interface.
-func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() || opt.Organization == "" {
-		return ErrMissingFields{
-			Method:  "CreateHook",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	hook := &github.Hook{
-		Config: map[string]interface{}{
-			"url":          opt.URL,
-			"secret":       opt.Secret,
-			"content_type": "json",
-			"insecure_ssl": "0",
-		},
-		Events: []string{"push", "pull_request", "pull_request_review"},
-	}
-	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "CreateHook",
-			Message:  fmt.Sprintf("failed to create GitHub hook with query: %+v", opt),
-		}
-	}
-	return err
 }
 
 // CreateTeam implements the SCM interface.
@@ -414,54 +328,6 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 		}
 	}
 	return err
-}
-
-// GetTeam implements the SCM interface
-func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Team, err error) {
-	if !opt.valid() {
-		return nil, ErrMissingFields{
-			Method:  "GetTeam",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-	var team *github.Team
-	if opt.TeamID < 1 {
-		slug := slug.Make(opt.TeamName)
-		team, _, err = s.client.Teams.GetTeamBySlug(ctx, opt.Organization, slug)
-		if err != nil {
-			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by slug '%s': %w", slug, err)
-		}
-	} else {
-		team, _, err = s.client.Teams.GetTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
-		if err != nil {
-			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by ID '%d': %w", opt.TeamID, err)
-		}
-	}
-	return &Team{
-		ID:           uint64(team.GetID()),
-		Name:         team.GetName(),
-		Organization: team.Organization.GetLogin(),
-	}, nil
-}
-
-// GetTeams implements the scm interface
-func (s *GithubSCM) GetTeams(ctx context.Context, org *qf.Organization) ([]*Team, error) {
-	if !org.IsValid() {
-		return nil, ErrMissingFields{
-			Method:  "GetTeams",
-			Message: fmt.Sprintf("%+v", org),
-		}
-	}
-	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Name, &github.ListOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("GetTeams: failed to list GitHub teams: %w", err)
-	}
-	var teams []*Team
-	for _, gitTeam := range gitTeams {
-		newTeam := &Team{ID: uint64(gitTeam.GetID()), Name: gitTeam.GetName(), Organization: gitTeam.Organization.GetLogin()}
-		teams = append(teams, newTeam)
-	}
-	return teams, nil
 }
 
 // AddTeamMember implements the scm interface
@@ -572,15 +438,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (s *GithubSCM) CreateCloneURL(opt *URLPathOptions) string {
-	token := s.token
-	if len(opt.UserToken) > 0 {
-		token = opt.UserToken
-	}
-	return "https://" + token + "@github.com/" + opt.Organization + "/" + opt.Repository + ".git"
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
@@ -602,24 +459,6 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 		}
 	}
 	return nil
-}
-
-// GetUserName implements the SCM interface.
-func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
-	user, _, err := s.client.Users.Get(ctx, "")
-	if err != nil {
-		return "", fmt.Errorf("GetUserName: failed to get GitHub user: %w", err)
-	}
-	return user.GetLogin(), nil
-}
-
-// GetUserNameByID implements the SCM interface.
-func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
-	user, _, err := s.client.Users.GetByID(ctx, int64(remoteID))
-	if err != nil {
-		return "", fmt.Errorf("GetUserNameByID: failed to get GitHub user '%d': %w", remoteID, err)
-	}
-	return user.GetLogin(), nil
 }
 
 // UpdateOrgMembership implements the SCM interface
@@ -820,6 +659,11 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 		}
 	}
 	return nil
+}
+
+// Client returns GitHub client.
+func (s *GithubSCM) Client() *github.Client {
+	return s.client
 }
 
 func toRepository(repo *github.Repository) *Repository {

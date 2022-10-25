@@ -87,13 +87,25 @@ func (r *SubmissionsForCourseRequest) IDFor(_ string) uint64 {
 }
 
 // IDFor returns course ID.
-func (r *UpdateSubmissionRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
+func (r *UpdateSubmissionRequest) IDFor(role string) uint64 {
+	switch role {
+	case "course":
+		return r.GetCourseID()
+	case "submission":
+		return r.GetSubmissionID()
+	}
+	return 0
 }
 
 // IDFor returns course ID.
-func (r *RebuildRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
+func (r *RebuildRequest) IDFor(role string) uint64 {
+	switch role {
+	case "course":
+		return r.GetCourseID()
+	case "submission":
+		return r.GetSubmissionID()
+	}
+	return 0
 }
 
 // IDFor returns course ID.

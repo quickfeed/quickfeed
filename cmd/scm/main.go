@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 
 	"github.com/urfave/cli"
@@ -43,7 +44,7 @@ import (
 // % scm get user
 
 func main() {
-	var client scm.SCM
+	var client scm.GithubSCM
 
 	app := cli.NewApp()
 	app.Name = "scm"
@@ -139,74 +140,12 @@ func main() {
 					},
 					Action: getRepositories(&client),
 				},
-				{
-					Name:  "user",
-					Usage: "Get user information.",
-					Flags: []cli.Flag{
-						cli.Uint64Flag{
-							Name:  "id",
-							Usage: "Remote user id (0 is the logged in user)",
-							Value: 0,
-						},
-					},
-					Action: getUser(&client),
-				},
-				{
-					Name:  "hooks",
-					Usage: "Get repository hooks",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "repo",
-							Usage: "Repository ID",
-						},
-						cli.StringFlag{
-							Name:  "owner",
-							Usage: "Repository owner name",
-						},
-						cli.StringFlag{
-							Name:  "org",
-							Usage: "Name of organization",
-						},
-					},
-					Action: getHooks(&client),
-				},
 			},
 		},
 		{
 			Name:  "create",
 			Usage: "Create commands.",
 			Subcommands: cli.Commands{
-				{
-					Name:  "hook",
-					Usage: "Create webhook.",
-					Flags: []cli.Flag{
-						cli.Uint64Flag{
-							Name:  "id",
-							Usage: "Repository id. [required by GitLab]",
-						},
-						cli.StringFlag{
-							Name:  "owner",
-							Usage: "Repository owner [required by GitHub]",
-						},
-						cli.StringFlag{
-							Name:  "repo",
-							Usage: "Repository name. [required by GitHub]",
-						},
-						cli.StringFlag{
-							Name:  "org",
-							Usage: "Github organization [for organization level hooks]",
-						},
-						cli.StringFlag{
-							Name:  "secret",
-							Usage: "Webhook secret",
-						},
-						cli.StringFlag{
-							Name:  "url",
-							Usage: "Webhook endpoint URL [required]",
-						},
-					},
-					Action: createHook(&client),
-				},
 				{
 					Name:  "team",
 					Usage: "Create team.",
@@ -235,7 +174,7 @@ func main() {
 	}
 }
 
-func before(client *scm.SCM) cli.BeforeFunc {
+func before(client *scm.GithubSCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
@@ -244,7 +183,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 			return err
 		}
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
+			*client = *scm.NewGithubSCMClient(logger.Sugar(), accessToken)
 			return
 		}
 
@@ -267,12 +206,12 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
+		*client = *scm.NewGithubSCMClient(logger.Sugar(), accessToken)
 		return
 	}
 }
 
-func deleteRepositories(client *scm.SCM) cli.ActionFunc {
+func deleteRepositories(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -319,36 +258,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 	}
 }
 
-func getHooks(client *scm.SCM) cli.ActionFunc {
-	ctx := context.Background()
-	return func(c *cli.Context) error {
-		var hooks []*scm.Hook
-		// if organization name is set, list all hook associated with that organization
-		if c.IsSet("org") {
-			gitHooks, err := (*client).ListHooks(ctx, nil, c.String("org"))
-			if err != nil {
-				return err
-			}
-			hooks = gitHooks
-		}
-
-		// if repo and owner provided, list hooks for that repo
-		if c.IsSet("owner") && c.IsSet("repo") {
-			gitHooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: c.String("owner"), Path: c.String("repo")}, "")
-			if err != nil {
-				return err
-			}
-			hooks = gitHooks
-		}
-		for _, hook := range hooks {
-			log.Printf("Hook: %s, hook events: %s", hook.URL, hook.Events)
-		}
-
-		return nil
-	}
-}
-
-func getRepositories(client *scm.SCM) cli.ActionFunc {
+func getRepositories(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -373,51 +283,16 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			fmt.Println(s)
 			return nil
 		}
-		repo, err := (*client).GetRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
+		repo, _, err := (*client).Client().Repositories.Get(ctx, c.String("namespace"), c.String("name"))
 		if err != nil {
 			return err
 		}
-		fmt.Println("Found repository ", repo.HTMLURL)
+		fmt.Println("Found repository ", *repo.HTMLURL)
 		return nil
 	}
 }
 
-func getUser(client *scm.SCM) cli.ActionFunc {
-	ctx := context.Background()
-
-	return func(c *cli.Context) error {
-		var (
-			userName string
-			err      error
-		)
-		remoteID := c.Uint64("id")
-		if remoteID > 0 {
-			userName, err = (*client).GetUserNameByID(ctx, remoteID)
-		} else {
-			userName, err = (*client).GetUserName(ctx)
-		}
-		if err != nil {
-			return err
-		}
-		fmt.Println(userName)
-		return nil
-	}
-}
-
-// TODO: Validate input.
-func createHook(client *scm.SCM) cli.ActionFunc {
-	ctx := context.Background()
-
-	return func(c *cli.Context) error {
-		return (*client).CreateHook(ctx, &scm.CreateHookOptions{
-			URL:          c.String("url"),
-			Secret:       c.String("secret"),
-			Organization: c.String("org"),
-		})
-	}
-}
-
-func createTeam(client *scm.SCM) cli.ActionFunc {
+func createTeam(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -444,7 +319,7 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 	}
 }
 
-func deleteTeams(client *scm.SCM) cli.ActionFunc {
+func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 	ctx := context.Background()
 
 	return func(c *cli.Context) error {
@@ -461,14 +336,14 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 				return err
 			}
 
-			teams, err := (*client).GetTeams(ctx, &qf.Organization{Name: c.String("namespace")})
+			teams, _, err := (*client).Client().Teams.ListTeams(ctx, c.String("namespace"), &github.ListOptions{})
 			if err != nil {
 				return err
 			}
 
 			for _, team := range teams {
 				var errs []error
-				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: team.Name, Organization: c.String("namespace")}); err != nil {
+				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: *team.Name, Organization: c.String("namespace")}); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted team", team.Name)

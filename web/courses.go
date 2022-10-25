@@ -132,6 +132,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 	}
 
 	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetOrganizationName()); err != nil {
+		// log error, but continue with enrollment; we can manually accept invitations later
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
 
@@ -163,6 +164,7 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationName(), user.GetLogin())
 	if err != nil {
+		// log error, but continue to update enrollment; we can manually revoke teacher access later
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 	}
 	return s.db.UpdateEnrollment(&qf.Enrollment{
@@ -432,16 +434,16 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
-	userSCM, err := s.getSCMForUser(user)
+	userToken, err := s.getCredsForUserSCM(user)
 	if err != nil {
-		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
+		return fmt.Errorf("failed to get access token for user %d: %w", user.ID, err)
 	}
-	if err := scmApp.AcceptRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
-		Login:   user.GetLogin(),
-		Owner:   organizationName,
-		UserSCM: userSCM,
+	if err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
+		Login: user.GetLogin(),
+		Owner: organizationName,
+		Token: userToken,
 	}); err != nil {
-		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
+		return fmt.Errorf("failed to accept invites for %s: %w", user.Login, err)
 	}
 	return nil
 }

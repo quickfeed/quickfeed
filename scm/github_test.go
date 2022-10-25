@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -28,8 +29,7 @@ const (
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{
 		Name:     qfTestOrg,
 		Username: qfTestUser,
@@ -47,73 +47,10 @@ func TestGetOrganization(t *testing.T) {
 	}
 }
 
-func TestListHooks(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
-
-	ctx := context.Background()
-	hooks, err := s.ListHooks(ctx, nil, qfTestOrg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
-	}
-
-	hooks, err = s.ListHooks(ctx, &scm.Repository{Owner: qfTestOrg, Path: "tests"}, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
-	}
-
-	hooks, err = s.ListHooks(ctx, &scm.Repository{Path: "tests"}, "")
-	if err == nil {
-		t.Fatal("expected error 'ListHooks: called with missing or incompatible arguments: ...'")
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	t.Logf("%v %v", hooks, err)
-}
-
-func TestCreateHook(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	serverURL := scm.GetWebHookServer(t)
-	// Only enable this test to add a new webhook to your test course organization
-	if serverURL == "" {
-		t.Skip("Disabled pending support for deleting webhooks")
-	}
-
-	s := scm.GetTestSCM(t)
-
-	ctx := context.Background()
-	opt := &scm.CreateHookOptions{
-		URL:          serverURL,
-		Secret:       secret,
-		Organization: qfTestOrg,
-	}
-	err := s.CreateHook(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	hooks, err := s.ListHooks(ctx, &scm.Repository{}, qfTestOrg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
-	}
-}
-
 // Test case for Creating new Issue on a git Repository
 func TestCreateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
@@ -123,21 +60,26 @@ func TestCreateIssue(t *testing.T) {
 	}
 }
 
-// NOTE: This test only works if the given repository has no previous issues
 func TestGetIssues(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s := scm.NewMockSCMClient()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: {
+			ID:    1,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName("test"),
+		},
+	}
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
-		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Owner: qtest.MockOrg,
+		Path:  qf.StudentRepoName("test"),
 	}
 
 	wantIssueIDs := []int{}
 	for i := 1; i <= 5; i++ {
-		issue, cleanup := createIssue(t, s, qfTestOrg, opt.Path)
+		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 		defer cleanup()
 		wantIssueIDs = append(wantIssueIDs, issue.Number)
 	}
@@ -159,8 +101,7 @@ func TestGetIssues(t *testing.T) {
 
 func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -184,8 +125,7 @@ func TestGetIssue(t *testing.T) {
 // Test case for Updating existing Issue in a git Repository
 func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 
@@ -224,8 +164,7 @@ func TestRequestReviewers(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 	repo := qf.StudentRepoName(qfTestUser)
 
 	testReqReviewersBranch := "test-request-reviewers"
@@ -280,8 +219,7 @@ func githubTestClient(t *testing.T) *github.Client {
 
 func TestCreateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	body := "Test"
 	opt := &scm.IssueCommentOptions{
@@ -301,14 +239,21 @@ func TestCreateIssueComment(t *testing.T) {
 }
 
 func TestUpdateIssueComment(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s := scm.NewMockSCMClient()
+	repo := &scm.Repository{
+		ID:    1,
+		OrgID: 1,
+		Owner: qtest.MockOrg,
+		Path:  qf.StudentRepoName("user"),
+	}
+	s.Repositories = map[uint64]*scm.Repository{
+		1: repo,
+	}
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
+		Organization: repo.Owner,
+		Repository:   repo.Path,
 		Body:         body,
 	}
 
@@ -338,8 +283,7 @@ func TestFeedbackCommentFormat(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,

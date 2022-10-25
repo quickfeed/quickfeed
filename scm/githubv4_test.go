@@ -4,21 +4,19 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestDeleteIssue(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
-
+	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	repo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
-		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+
+	repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
+		Organization: qtest.MockOrg,
+		Path:         qf.StudentRepoName("user"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +25,7 @@ func TestDeleteIssue(t *testing.T) {
 	t.Logf("repo: %v", repo.Path)
 
 	opt := &scm.IssueOptions{
-		Organization: qfTestOrg,
+		Organization: qtest.MockOrg,
 		Repository:   repo.Path,
 		Title:        "Dummy Title",
 		Body:         "Dummy body of the issue",
@@ -38,7 +36,7 @@ func TestDeleteIssue(t *testing.T) {
 	}
 
 	repoOpt := &scm.RepositoryOptions{
-		Owner: qfTestOrg,
+		Owner: qtest.MockOrg,
 		Path:  repo.Path,
 	}
 	issues, err := s.GetIssues(ctx, repoOpt)
@@ -53,9 +51,6 @@ func TestDeleteIssue(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("---------")
-
-	time.Sleep(200 * time.Millisecond)
 
 	issues, err = s.GetIssues(ctx, repoOpt)
 	if err != nil {
@@ -73,8 +68,7 @@ func TestDeleteAllIssues(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s, qfTestUser := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{

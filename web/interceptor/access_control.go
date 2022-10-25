@@ -167,6 +167,12 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					}
 					return next(ctx, request)
 				}
+				if method == "RebuildSubmissions" || method == "UpdateSubmission" {
+					if !isValidSubmission(a.tokenManager.Database(), req) {
+						return nil, connect.NewError(connect.CodePermissionDenied,
+							fmt.Errorf("access denied for %s: %v", method, "invalid submission"))
+					}
+				}
 				if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
 					return next(ctx, request)
 				}
