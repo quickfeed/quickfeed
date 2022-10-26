@@ -2850,7 +2850,7 @@ proto.qf.UpdateSubmissionRequest.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     score: jspb.Message.getFieldWithDefault(msg, 3, 0),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
-    status: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    grades: (f = msg.getGrades()) && qf_types_pb.Grades.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -2904,8 +2904,9 @@ proto.qf.UpdateSubmissionRequest.deserializeBinaryFromReader = function(msg, rea
       msg.setReleased(value);
       break;
     case 5:
-      var value = /** @type {!proto.qf.Submission.Status} */ (reader.readEnum());
-      msg.setStatus(value);
+      var value = new qf_types_pb.Grades;
+      reader.readMessage(value,qf_types_pb.Grades.deserializeBinaryFromReader);
+      msg.setGrades(value);
       break;
     default:
       reader.skipField();
@@ -2964,11 +2965,12 @@ proto.qf.UpdateSubmissionRequest.serializeBinaryToWriter = function(message, wri
       f
     );
   }
-  f = message.getStatus();
-  if (f !== 0.0) {
-    writer.writeEnum(
+  f = message.getGrades();
+  if (f != null) {
+    writer.writeMessage(
       5,
-      f
+      f,
+      qf_types_pb.Grades.serializeBinaryToWriter
     );
   }
 };
@@ -3047,20 +3049,39 @@ proto.qf.UpdateSubmissionRequest.prototype.setReleased = function(value) {
 
 
 /**
- * optional Submission.Status status = 5;
- * @return {!proto.qf.Submission.Status}
+ * optional Grades grades = 5;
+ * @return {?proto.qf.Grades}
  */
-proto.qf.UpdateSubmissionRequest.prototype.getStatus = function() {
-  return /** @type {!proto.qf.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+proto.qf.UpdateSubmissionRequest.prototype.getGrades = function() {
+  return /** @type{?proto.qf.Grades} */ (
+    jspb.Message.getWrapperField(this, qf_types_pb.Grades, 5));
 };
 
 
 /**
- * @param {!proto.qf.Submission.Status} value
+ * @param {?proto.qf.Grades|undefined} value
+ * @return {!proto.qf.UpdateSubmissionRequest} returns this
+*/
+proto.qf.UpdateSubmissionRequest.prototype.setGrades = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.qf.UpdateSubmissionRequest} returns this
  */
-proto.qf.UpdateSubmissionRequest.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 5, value);
+proto.qf.UpdateSubmissionRequest.prototype.clearGrades = function() {
+  return this.setGrades(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.qf.UpdateSubmissionRequest.prototype.hasGrades = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 

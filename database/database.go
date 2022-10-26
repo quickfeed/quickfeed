@@ -112,7 +112,7 @@ type Database interface {
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score
-	UpdateSubmissions(uint64, *qf.Submission) error
+	UpdateSubmissions(uint64, *qf.Submission, bool) error
 	// GetReview returns a single review matching the given query.
 	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.

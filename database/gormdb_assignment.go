@@ -102,6 +102,7 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 	var assignments []*qf.Assignment
 	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
 	m := db.conn.Preload("Submissions").
+		Preload("Submissions.Grades").
 		Preload("Submissions.Reviews").
 		Preload("Submissions.Reviews.GradingBenchmarks").
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").

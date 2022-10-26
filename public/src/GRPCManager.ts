@@ -5,6 +5,7 @@ import {
     Courses,
     Enrollment,
     Enrollments,
+    Grades,
     GradingBenchmark,
     GradingCriterion,
     Group,
@@ -239,7 +240,7 @@ export class GrpcManager {
         const request = new UpdateSubmissionRequest()
         request.setSubmissionid(s.getId())
         request.setCourseid(courseID)
-        request.setStatus(s.getStatus())
+        request.setGrades(new Grades().setGradesList(s.getGradesList()))
         request.setReleased(s.getReleased())
         request.setScore(s.getScore())
         return this.grpcSend<Void>(this.agService.updateSubmission, request)

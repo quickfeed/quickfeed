@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Review, Submission, User } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Grade, GradingBenchmark, GradingCriterion, Group, Review, Submission, User } from "../proto/qf/types_pb"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 
 
@@ -123,7 +123,8 @@ export class Converter {
         submission.setScore(obj.score)
         submission.setCommithash(obj.commithash)
         submission.setReleased(obj.released)
-        submission.setStatus(obj.status)
+        const grades = obj.gradesList.map(g => this.toGrade(g))
+        submission.setGradesList(grades)
         submission.setApproveddate(obj.approveddate)
 
         const reviews = obj.reviewsList.map(r => this.toReview(r))
@@ -162,6 +163,14 @@ export class Converter {
         score.setTestdetails(obj.testdetails)
 
         return score
+    }
+
+    public static toGrade = (obj: Grade.AsObject): Grade => {
+        const grade = new Grade()
+        grade.setSubmissionid(obj.submissionid)
+        grade.setUserid(obj.userid)
+        grade.setStatus(obj.status)
+        return grade
     }
 
     public static toReview = (obj: Review.AsObject): Review => {

@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { assignmentStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getStatusByUser, SubmissionStatus, timeFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
@@ -38,7 +38,8 @@ const SubmissionsTable = (): JSX.Element => {
             }
             // Submissions are indexed by the assignment order - 1.
             const submission = submissions[assignment.order - 1] ?? (new Submission()).toObject()
-            if (submission.status !== Submission.Status.APPROVED) {
+            const status = getStatusByUser(submission, state.self.id)
+            if (status !== Submission.Status.APPROVED) {
                 const deadline = timeFormatter(assignment.deadline)
                 if (deadline.daysUntil > 3 && submission.score >= assignment.scorelimit) {
                     deadline.className = "table-success"
@@ -59,8 +60,8 @@ const SubmissionsTable = (): JSX.Element => {
                         <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.deadline)}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
-                        <td className={SubmissionStatus[submission.status]}>
-                            {assignmentStatusText(assignment, submission)}
+                        <td className={SubmissionStatus[status]}>
+                            {assignmentStatusText(assignment, submission, status)}
                         </td>
                     </tr>
                 )

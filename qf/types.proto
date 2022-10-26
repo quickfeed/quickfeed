@@ -220,11 +220,21 @@ message Submission {
     uint32 score                = 5;
     string commitHash           = 6;
     bool released               = 7;  // true => feedback is visible to the student or group members
-    Status status               = 8;
-    string approvedDate         = 9;
-    repeated Review reviews     = 10;  // reviews produced for this submission
-    score.BuildInfo BuildInfo   = 11;  // build info for tests
-    repeated score.Score Scores = 12;  // list of scores for different tests
+    repeated Grade Grades       = 8;  // Slice of submission statuses for each user related to this submission
+    string approvedDate         = 10;
+    repeated Review reviews     = 11; // reviews produced for this submission
+    score.BuildInfo BuildInfo   = 12; // build info for tests
+    repeated score.Score Scores = 13; // list of scores for different tests
+}
+
+message Grade {
+    uint64 SubmissionID = 1 [(go.field) = { tags: 'gorm:"primaryKey"' }];
+    uint64 userID = 2 [(go.field) = { tags: 'gorm:"primaryKey"' }];
+    qf.Submission.Status Status = 3;
+}
+
+message Grades {
+    repeated Grade grades = 1;
 }
 
 message Submissions {

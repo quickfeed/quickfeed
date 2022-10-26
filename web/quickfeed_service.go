@@ -384,7 +384,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 	}
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
 	if !s.isTeacher(userID(ctx), in.Msg.CourseID) {
-		submissions.Clean()
+		submissions.Clean(userID(ctx))
 	}
 	return connect.NewResponse(submissions), nil
 }
@@ -404,7 +404,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
-	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
+	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetGrades(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))

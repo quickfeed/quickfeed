@@ -173,14 +173,37 @@ export const isManuallyGraded = (assignment: Assignment.AsObject): boolean => {
     return assignment.reviewers > 0
 }
 
-export const isApproved = (submission: Submission.AsObject): boolean => { return submission.status === Submission.Status.APPROVED }
-export const isRevision = (submission: Submission.AsObject): boolean => { return submission.status === Submission.Status.REVISION }
-export const isRejected = (submission: Submission.AsObject): boolean => { return submission.status === Submission.Status.REJECTED }
+export const isApproved = (submission: Submission.AsObject): boolean => { return submission.gradesList.every(grade => grade.status === Submission.Status.APPROVED) }
+export const isRevision = (submission: Submission.AsObject): boolean => { return submission.gradesList.every(grade => grade.status === Submission.Status.REVISION) }
+export const isRejected = (submission: Submission.AsObject): boolean => { return submission.gradesList.every(grade => grade.status === Submission.Status.REJECTED) }
+export const hasAllStatus = (submission: Submission.AsObject, status: Submission.Status): boolean => {
+    return submission.gradesList.every(grade => grade.status === status)
+}
 
 export const hasReviews = (submission: Submission.AsObject): boolean => { return submission.reviewsList.length > 0 }
 export const hasBenchmarks = (obj: Review.AsObject | Assignment.AsObject): boolean => { return obj.gradingbenchmarksList.length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark.AsObject): boolean => { return benchmark.criteriaList.length > 0 }
 export const hasEnrollments = (obj: Group.AsObject): boolean => { return obj.enrollmentsList.length > 0 }
+
+export const getStatusByUser = (submission: Submission.AsObject | null , userID: number): Submission.Status => {
+    if (!submission) {
+        return Submission.Status.NONE
+    }
+    return submission.gradesList.find(grade => grade.userid === userID)?.status || Submission.Status.NONE
+}
+
+export const setStatusByUser = (submission: Submission.AsObject, userID: number, status: Submission.Status): Submission.AsObject => {
+    const grade = submission.gradesList.find(grade => grade.userid === userID)
+    if (grade) {
+        grade.status = status
+    }
+    return submission
+}
+
+export const setStatusAll = (submission: Submission.AsObject, status: Submission.Status): Submission.AsObject => {
+    submission.gradesList.forEach(grade => grade.status = status)
+    return submission
+}
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): number => {
@@ -239,9 +262,9 @@ export const SubmissionStatus = {
 
 // TODO: This could possibly be done on the server. Would need to add a field to the proto submission/score model.
 /** assignmentStatusText returns a string that is used to tell the user what the status of their submission is */
-export const assignmentStatusText = (assignment: Assignment.AsObject, submission: Submission.AsObject): string => {
+export const assignmentStatusText = (assignment: Assignment.AsObject, submission: Submission.AsObject, status: Submission.Status): string => {
     // If the submission is not graded, return a descriptive text
-    if (submission.status === Submission.Status.NONE) {
+    if (status === Submission.Status.NONE) {
         // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
         if (!assignment.autoapprove && submission.score >= assignment.scorelimit) {
             return "Awaiting approval"
@@ -251,7 +274,7 @@ export const assignmentStatusText = (assignment: Assignment.AsObject, submission
         }
     }
     // If the submission is graded, return the status
-    return SubmissionStatus[submission.status]
+    return SubmissionStatus[status]
 }
 
 // Helper functions for default values for new courses

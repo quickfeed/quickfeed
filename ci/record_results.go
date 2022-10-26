@@ -29,7 +29,7 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 	if err = db.CreateSubmission(newSubmission); err != nil {
 		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
 	}
-	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatus(), newSubmission.GetScore())
+	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatusByUser(previous.GetUserID()), newSubmission.GetScore())
 
 	if !r.Rebuild {
 		if err := r.updateSlipDays(db, newSubmission); err != nil {
@@ -64,7 +64,7 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
-		Status:       previous.GetStatus(),
+		Grades:       previous.GetGrades(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
 			BuildDate: time.Now().Format(qf.TimeLayout),
@@ -87,7 +87,7 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        score,
-		Status:       r.Assignment.IsApproved(previous, score),
+		Grades:       r.Assignment.IsApproved(previous, score),
 		BuildInfo:    results.BuildInfo,
 		Scores:       results.Scores,
 	}

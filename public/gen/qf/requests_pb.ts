@@ -5,7 +5,7 @@
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
 import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
-import {Course, Enrollment_UserStatus, EnrollmentLink, Repository_Type, Review, Submission_Status, User} from "./types_pb.js";
+import {Course, Enrollment_UserStatus, EnrollmentLink, Grades, Repository_Type, Review, User} from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -599,9 +599,9 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
   released = false;
 
   /**
-   * @generated from field: qf.Submission.Status status = 5;
+   * @generated from field: qf.Grades grades = 5;
    */
-  status = Submission_Status.NONE;
+  grades?: Grades;
 
   constructor(data?: PartialMessage<UpdateSubmissionRequest>) {
     super();
@@ -615,7 +615,7 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
     { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 4, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+    { no: 5, name: "grades", kind: "message", T: Grades },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateSubmissionRequest {

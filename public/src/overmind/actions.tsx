@@ -1,4 +1,4 @@
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { Color, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Repository, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink
 } from "../../proto/qf/types_pb"
@@ -8,7 +8,6 @@ import { IGrpcResponse } from "../GRPCManager"
 import { StatusCode } from "grpc-web"
 import { Context } from "."
 import { Converter } from "../convert"
-
 
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => response.status.getCode() === 0
@@ -167,37 +166,52 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 }
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
-export const updateSubmission = async ({ state, actions, effects }: Context, status: Submission.Status): Promise<void> => {
-    /* Do not update if the status is already the same or if there is no selected submission */
-    if (!state.currentSubmission || state.currentSubmission.status == status) {
+export const updateSubmission = async ({ state, actions, effects }: Context, data: { status: Submission.Status, userID?: number }): Promise<void> => {
+    /* Skip execution if no submission is selected */
+    if (!state.currentSubmission) {
         return
     }
 
-    /* Confirm that user really wants to change submission status */
-    if (!confirm(`Are you sure you want to set status ${SubmissionStatus[status]} on this submission?`)) {
+    // If the user already has the given status, do nothing
+    if (data.userID && getStatusByUser(state.currentSubmission, data.userID) === data.status) {
         return
     }
 
-    /* Store the previous submission status */
-    const previousStatus = state.currentSubmission.status
+    // If all grades have the given status, do nothing
+    if (!data.userID && hasAllStatus(state.currentSubmission, data.status)) {
+        return
+    }
+    
+    /* Confirm that user really wants /* Do not update if the status is already the same or if there is no selected submission */
+    if (!confirm(`Are you sure you want to set status ${SubmissionStatus[data.status]} on this submission?`)) {
+        return
+    }
 
+    let submissionCopy = Converter.clone(state.currentSubmission)
+    if (data.userID) {
+       submissionCopy = setStatusByUser(submissionCopy, data.userID, data.status) 
+    } else {
+        submissionCopy = setStatusAll(submissionCopy, data.status)
+    }
     /* Update the submission status */
-    state.currentSubmission.status = status
-    const result = await effects.grpcMan.updateSubmission(state.activeCourse, Converter.toSubmission(state.currentSubmission))
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, Converter.toSubmission(submissionCopy))
     if (!success(result)) {
-        /* If the update failed, revert the submission status */
-        state.currentSubmission.status = previousStatus
+        console.log("Failed: ", result)
         return
+    } else {
+        Object.assign(state.currentSubmission, submissionCopy)
     }
 
     if (state.activeSubmissionLink?.assignment?.isgrouplab) {
-        actions.updateCurrentSubmissionStatus({ links: state.courseGroupSubmissions[state.activeCourse], status: status })
+        actions.updateCurrentSubmissionStatus({ links: state.courseGroupSubmissions[state.activeCourse], status: data.status, userID: data.userID })
     }
-    actions.updateCurrentSubmissionStatus({ links: state.courseSubmissions[state.activeCourse], status: status })
+    console.log("Updating submission status: ", result)
+    actions.updateCurrentSubmissionStatus({ links: state.courseSubmissions[state.activeCourse], status: data.status, userID: data.userID })
 }
 
-export const updateCurrentSubmissionStatus = ({ state }: Context, { links, status }: { links: UserCourseSubmissions[], status: Submission.Status }): void => {
+export const updateCurrentSubmissionStatus = ({ state }: Context, { links, status, userID }: { links: UserCourseSubmissions[], status: Submission.Status, userID?: number }): void => {
     /* Loop through all submissions for the current course and update the status if it matches the current submission ID */
+    console.log("updateCurrentSubmissionStatus", links, status)
     for (const link of links) {
         if (!link.submissions) {
             continue
@@ -206,8 +220,20 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
             if (!submission.submission) {
                 continue
             }
+            console.log("Checking submission: ", submission.submission.id, " against ", state.currentSubmission)
             if (submission.submission.id == state.activeSubmission) {
-                submission.submission.status = status
+                if (userID) {
+                    const grade = submission.submission.gradesList.find(grade => grade.userid == userID)
+                    if (grade) {
+                        console.log("Updating grade: ", grade)
+                        grade.status = status
+                    }
+                } else {
+                    submission.submission.gradesList.forEach(grade => {
+                        console.log("Updating grade (all): ", grade)
+                        grade.status = status
+                    })
+                }
             }
         }
     }

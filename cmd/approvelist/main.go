@@ -73,7 +73,7 @@ func main() {
 		student := enroll.Name()
 		approved := make([]bool, len(el.Submissions))
 		for i, s := range el.Submissions {
-			approved[i] = s.GetSubmission().IsApproved()
+			approved[i] = s.GetSubmission().IsApproved(el.Enrollment.GetUserID())
 		}
 		quickfeedStudents[student] = 1
 

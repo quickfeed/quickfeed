@@ -14,7 +14,7 @@ func TestCreateUpdateReview(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := setupCourseAssignment(t, db, false)
 
 	if err := db.CreateSubmission(&qf.Submission{
 		AssignmentID: assignment.ID,

@@ -316,8 +316,10 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getReleased(): boolean;
   setReleased(value: boolean): UpdateSubmissionRequest;
 
-  getStatus(): qf_types_pb.Submission.Status;
-  setStatus(value: qf_types_pb.Submission.Status): UpdateSubmissionRequest;
+  getGrades(): qf_types_pb.Grades | undefined;
+  setGrades(value?: qf_types_pb.Grades): UpdateSubmissionRequest;
+  hasGrades(): boolean;
+  clearGrades(): UpdateSubmissionRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpdateSubmissionRequest.AsObject;
@@ -333,7 +335,7 @@ export namespace UpdateSubmissionRequest {
     courseid: number,
     score: number,
     released: boolean,
-    status: qf_types_pb.Submission.Status,
+    grades?: qf_types_pb.Grades.AsObject,
   }
 }
 

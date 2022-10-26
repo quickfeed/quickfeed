@@ -61,7 +61,7 @@ func TestApproveSubmission(t *testing.T) {
 	if _, err = ags.UpdateSubmission(ctx, connect.NewRequest(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Status:       qf.Submission_APPROVED,
+		Grades:       &qf.Grades{Grades: []*qf.Grade{{UserID: student.ID, Status: qf.Submission_APPROVED}}},
 	})); err != nil {
 		t.Fatal(err)
 	}
@@ -70,17 +70,20 @@ func TestApproveSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSubmission.Status = qf.Submission_APPROVED
+	wantSubmission.Grades = []*qf.Grade{{UserID: student.ID, Status: qf.Submission_APPROVED}}
 	wantSubmission.ApprovedDate = gotApprovedSubmission.ApprovedDate
 
-	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("ags.UpdateSubmission(approve) mismatch (-wantSubmission, +gotApprovedSubmission):\n%s", diff)
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, connect.NewRequest(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Status:       qf.Submission_REJECTED,
+		Grades:       &qf.Grades{Grades: []*qf.Grade{{UserID: student.ID, Status: qf.Submission_REJECTED}}},
 	})); err != nil {
 		t.Fatal(err)
 	}
@@ -89,10 +92,13 @@ func TestApproveSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSubmission.Status = qf.Submission_REJECTED
+	wantSubmission.Grades = []*qf.Grade{{UserID: student.ID, Status: qf.Submission_REJECTED}}
 	// Note that the approved date is not set when the submission is rejected
 
-	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("ags.UpdateSubmission(reject) mismatch (-wantSubmission, +gotRejectedSubmission):\n%s", diff)
 	}
 }
@@ -546,52 +552,52 @@ func TestCreateApproveList(t *testing.T) {
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[0].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[1].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[2].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[3].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student2.ID,
 			AssignmentID: assignments[0].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student2.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student2.ID,
 			AssignmentID: assignments[2].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student2.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student2.ID,
 			AssignmentID: assignments[3].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student2.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student3.ID,
 			AssignmentID: assignments[0].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student3.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student3.ID,
 			AssignmentID: assignments[1].ID,
-			Status:       qf.Submission_REJECTED,
+			Grades:       []*qf.Grade{{UserID: student3.ID, Status: qf.Submission_REJECTED}},
 		},
 		{
 			UserID:       student3.ID,
 			AssignmentID: assignments[2].ID,
-			Status:       qf.Submission_REVISION,
+			Grades:       []*qf.Grade{{UserID: student3.ID, Status: qf.Submission_REJECTED}},
 		},
 	}
 	for _, s := range submissions {
@@ -667,7 +673,9 @@ func TestCreateApproveList(t *testing.T) {
 		}
 		approved := make([]bool, len(el.Submissions))
 		for i, s := range el.Submissions {
-			approved[i] = s.GetSubmission().IsApproved()
+			if submission := s.GetSubmission(); submission != nil {
+				approved[i] = submission.IsApproved(el.Enrollment.GetUserID())
+			}
 		}
 		for _, test := range testCases {
 			if test.student.ID == el.Enrollment.UserID {
@@ -892,7 +900,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	for _, submission := range gotStudentSubmissions.Msg.Submissions {
 		// For submissions that have not been released
 		// the score should be 0, and any reviews should be nil
-		if submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != qf.Submission_NONE {
+		if submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.GetStatusByUser(submission.UserID) != qf.Submission_NONE {
 			t.Errorf("Expected submission to not be released, have score, and have no reviews")
 		}
 	}
@@ -940,8 +948,8 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	for _, submission := range gotSubmissions5 {
 		// Check that all submissions for assignment 1 have been approved
-		if submission.Status != qf.Submission_APPROVED {
-			t.Errorf("Expected submission to be approved")
+		if !submission.IsAllApproved() {
+			t.Errorf("Expected submission to be approved, got %s, %v", submission.GetStatusByUser(student1.ID), submission)
 		}
 	}
 
@@ -961,7 +969,7 @@ func TestReleaseApproveAll(t *testing.T) {
 		}
 
 		// Submissions for assignment 2 should be released, have score, and have reviews
-		if submission.ID == assignments[1].ID && !(submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != qf.Submission_NONE) {
+		if submission.ID == assignments[1].ID && !(submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.GetStatusByUser(student1.ID) != qf.Submission_NONE) {
 			t.Error("Expected submission to be released, have score, and have reviews", submission.Score, submission.Reviews, submission.Released)
 		}
 	}

@@ -1,6 +1,6 @@
-import React from "react"
+import React, { useEffect, useMemo } from "react"
 import { Submission } from "../../proto/qf/types_pb"
-import { isManuallyGraded } from "../Helpers"
+import { getStatusByUser, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 
 const ManageSubmissionStatus = (): JSX.Element => {
@@ -27,16 +27,22 @@ const ManageSubmissionStatus = (): JSX.Element => {
     if (assignment && !isManuallyGraded(assignment)) {
         buttons.push({ text: rebuilding ? "Rebuilding..." : "Rebuild", status: Submission.Status.NONE, style: rebuilding ? "secondary" : "primary", onClick: handleRebuild})
     }
+    let status = useMemo(() => getStatusByUser(state.currentSubmission, state.activeEnrollment?.userid ?? 0), [state.currentSubmission, state.activeEnrollment])
+    let userID = useMemo(() => state.activeEnrollment?.userid ?? 0, [state.activeEnrollment])
 
-    const StatusButtons = buttons.map((button, index) => {
-        const style = state.currentSubmission?.status === button.status ? `col btn btn-${button.style} mr-2` : `col btn btn-outline-${button.style} mr-2`
+    useEffect(() => {
+        console.log("ManageSubmissionStatus: useEffect")
+    }, [state.currentSubmission, state.activeEnrollment])
+
+    const StatusButtons = useMemo(() => buttons.map((button, index) => {
+        const style = status === button.status ? `col btn btn-${button.style} mr-2` : `col btn btn-outline-${button.style} mr-2`
         // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
-            <div key={index} className={style} onClick={() => button.onClick ? button.onClick() : actions.updateSubmission(button.status)}>
+            <div key={index} className={style} onClick={() => actions.updateSubmission({status: button.status, userID: userID})}>
                 {button.text}
             </div>
         )
-    })
+    }), [status, buttons, userID, actions])
     return (
         <div className="row m-auto">
             {StatusButtons}

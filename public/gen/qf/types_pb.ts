@@ -1359,33 +1359,35 @@ export class Submission extends Message<Submission> {
   released = false;
 
   /**
-   * @generated from field: qf.Submission.Status status = 8;
+   * Slice of submission statuses for each user related to this submission
+   *
+   * @generated from field: repeated qf.Grade Grades = 8;
    */
-  status = Submission_Status.NONE;
+  Grades: Grade[] = [];
 
   /**
-   * @generated from field: string approvedDate = 9;
+   * @generated from field: string approvedDate = 10;
    */
   approvedDate = "";
 
   /**
    * reviews produced for this submission
    *
-   * @generated from field: repeated qf.Review reviews = 10;
+   * @generated from field: repeated qf.Review reviews = 11;
    */
   reviews: Review[] = [];
 
   /**
    * build info for tests
    *
-   * @generated from field: score.BuildInfo BuildInfo = 11;
+   * @generated from field: score.BuildInfo BuildInfo = 12;
    */
   BuildInfo?: BuildInfo;
 
   /**
    * list of scores for different tests
    *
-   * @generated from field: repeated score.Score Scores = 12;
+   * @generated from field: repeated score.Score Scores = 13;
    */
   Scores: Score[] = [];
 
@@ -1404,11 +1406,11 @@ export class Submission extends Message<Submission> {
     { no: 5, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 6, name: "commitHash", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
-    { no: 9, name: "approvedDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 10, name: "reviews", kind: "message", T: Review, repeated: true },
-    { no: 11, name: "BuildInfo", kind: "message", T: BuildInfo },
-    { no: 12, name: "Scores", kind: "message", T: Score, repeated: true },
+    { no: 8, name: "Grades", kind: "message", T: Grade, repeated: true },
+    { no: 10, name: "approvedDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 11, name: "reviews", kind: "message", T: Review, repeated: true },
+    { no: 12, name: "BuildInfo", kind: "message", T: BuildInfo },
+    { no: 13, name: "Scores", kind: "message", T: Score, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Submission {
@@ -1459,6 +1461,92 @@ proto3.util.setEnumType(Submission_Status, "qf.Submission.Status", [
   { no: 2, name: "REJECTED" },
   { no: 3, name: "REVISION" },
 ]);
+
+/**
+ * @generated from message qf.Grade
+ */
+export class Grade extends Message<Grade> {
+  /**
+   * @generated from field: uint64 SubmissionID = 1;
+   */
+  SubmissionID = protoInt64.zero;
+
+  /**
+   * @generated from field: uint64 userID = 2;
+   */
+  userID = protoInt64.zero;
+
+  /**
+   * @generated from field: qf.Submission.Status Status = 3;
+   */
+  Status = Submission_Status.NONE;
+
+  constructor(data?: PartialMessage<Grade>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime = proto3;
+  static readonly typeName = "qf.Grade";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "Status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Grade {
+    return new Grade().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Grade {
+    return new Grade().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Grade {
+    return new Grade().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Grade | PlainMessage<Grade> | undefined, b: Grade | PlainMessage<Grade> | undefined): boolean {
+    return proto3.util.equals(Grade, a, b);
+  }
+}
+
+/**
+ * @generated from message qf.Grades
+ */
+export class Grades extends Message<Grades> {
+  /**
+   * @generated from field: repeated qf.Grade grades = 1;
+   */
+  grades: Grade[] = [];
+
+  constructor(data?: PartialMessage<Grades>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime = proto3;
+  static readonly typeName = "qf.Grades";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "grades", kind: "message", T: Grade, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Grades {
+    return new Grades().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Grades {
+    return new Grades().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Grades {
+    return new Grades().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Grades | PlainMessage<Grades> | undefined, b: Grades | PlainMessage<Grades> | undefined): boolean {
+    return proto3.util.equals(Grades, a, b);
+  }
+}
 
 /**
  * @generated from message qf.Submissions
