@@ -23,8 +23,13 @@ export const onInitializeOvermind = async ({ actions, effects }: Context): Promi
     // Event handlers for stream responses
     effects.streamService.submissionStream({
         onMessage: actions.receiveSubmission,
-        onError: (error) => console.error(error),
+        onError: actions.handleStreamError,
     })
+}
+
+export const handleStreamError = (context: Context, error: Error): void => {
+    console.error(error)
+    context.actions.alert({ text: "An error occurred while connecting to the server", color: Color.RED })
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
