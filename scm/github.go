@@ -708,7 +708,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 		return nil, fmt.Errorf("failed to create students team: %w", err)
 	}
 	// add student repo for the course creator
-	repo, err := s.createStudentRepo(ctx, org, qf.StudentRepoName(opt.CourseCreator))
+	repo, err := s.createStudentRepo(ctx, org, opt.CourseCreator)
 	if err != nil {
 		return nil, err
 	}
