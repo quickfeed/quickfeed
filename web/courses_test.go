@@ -18,8 +18,9 @@ import (
 )
 
 func TestGetCourses(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	client := MockClient(t, db, nil)
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 
@@ -32,7 +33,7 @@ func TestGetCourses(t *testing.T) {
 		wantCourses = append(wantCourses, course)
 	}
 
-	foundCourses, err := qfService.GetCourses(context.Background(), connect.NewRequest(&qf.Void{}))
+	foundCourses, err := client.GetCourses(context.Background(), connect.NewRequest(&qf.Void{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,14 +44,14 @@ func TestGetCourses(t *testing.T) {
 }
 
 func TestNewCourse(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := qtest.CreateAdminUser(t, db, "fake")
-	ctx := auth.WithUserContext(context.Background(), admin)
+	client, cookie := MockClientWithUser(t, db, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
-		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
+		gotCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
 		if err != nil {
 			t.Fatal(err)
 		}
