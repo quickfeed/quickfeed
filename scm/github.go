@@ -681,6 +681,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	}
 	repositories := make([]*Repository, len(RepoPaths)+1)
 	// create course repositories
+	i := 0
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Path:         path,
@@ -691,7 +692,8 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 		if err != nil {
 			return nil, err
 		}
-		repositories = append(repositories, repo)
+		repositories[i] = repo
+		i++
 	}
 	// create teacher team with course creator
 	teamOpt := &NewTeamOptions{
@@ -712,7 +714,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	if err != nil {
 		return nil, err
 	}
-	repositories = append(repositories, repo)
+	repositories[i] = repo
 	return repositories, nil
 }
 

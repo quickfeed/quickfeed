@@ -24,7 +24,6 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return nil, err
 	}
-
 	for _, repo := range repos {
 		dbRepo := qf.Repository{
 			OrganizationID: request.OrganizationID,
