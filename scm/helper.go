@@ -182,9 +182,9 @@ func (e ErrFailedSCM) Error() string {
 	return "github method " + e.Method + " failed: " + e.GitError.Error() + "\n" + e.Message
 }
 
-// IsDirty returns true if the list of provided repositories contains
+// isDirty returns true if the list of provided repositories contains
 // any of the repositories that QuickFeed wants to create.
-func IsDirty(repos []*Repository) bool {
+func isDirty(repos []*Repository) bool {
 	if len(repos) == 0 {
 		return false
 	}

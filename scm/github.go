@@ -69,6 +69,22 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 		}
 	}
 
+	org := &qf.Organization{
+		ID:          uint64(gitOrg.GetID()),
+		Name:        gitOrg.GetLogin(),
+		Avatar:      gitOrg.GetAvatarURL(),
+		PaymentPlan: gitOrg.GetPlan().GetName(),
+	}
+
+	// Organization shoud not have any course repositories.
+	repos, err := s.GetRepositories(ctx, org)
+	if err != nil {
+		return nil, err
+	}
+	if isDirty(repos) {
+		return nil, ErrAlreadyExists
+	}
+
 	// if user name is provided, return the found organization only if the user is one of its owners
 	if opt.Username != "" {
 		// fetch user membership in that organization, if exists
@@ -651,13 +667,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	if err != nil {
 		return nil, err
 	}
-	repos, err := s.GetRepositories(ctx, org)
-	if err != nil {
-		return nil, err
-	}
-	if IsDirty(repos) {
-		return nil, ErrAlreadyExists
-	}
+
 	// Restrict ability to create new repositories and default access to the organization repositories
 	// for students. This will not affect organization owners (teachers).
 	DefaultPermissions := OrgNone

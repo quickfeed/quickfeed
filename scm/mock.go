@@ -450,7 +450,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*R
 	if err != nil {
 		return nil, err
 	}
-	if IsDirty(repos) {
+	if isDirty(repos) {
 		return nil, ErrAlreadyExists
 	}
 	var repositories []*Repository
