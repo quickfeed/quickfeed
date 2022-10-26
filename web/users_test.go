@@ -17,9 +17,8 @@ import (
 func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	shutdown, client := MockQuickFeedClient(t, db, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	unexpectedUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.Msg.GetUsers()) > 0 {
@@ -62,9 +61,8 @@ var allUsers = []struct {
 func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	shutdown, client := MockQuickFeedClient(t, db, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -144,9 +142,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	shutdown, client := MockQuickFeedClient(t, db, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -236,12 +233,10 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
@@ -303,9 +298,8 @@ func TestUpdateUserFailures(t *testing.T) {
 	t.Skip("TODO: Needs to be rewritten as a client-server test to verify (with interceptors) that the server is actually enforcing the rules")
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	shutdown, client := MockQuickFeedClient(t, db, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)

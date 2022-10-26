@@ -37,7 +37,7 @@ func TestThirdPartyAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewMetricsInterceptor(),
 		interceptor.NewValidationInterceptor(logger),
 		interceptor.NewUserInterceptor(logger, tm),
@@ -45,7 +45,6 @@ func TestThirdPartyAuth(t *testing.T) {
 		interceptor.NewTokenInterceptor(tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	request := connect.NewRequest(&qf.CourseUserRequest{
 		CourseCode: "DAT320",

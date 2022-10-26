@@ -287,7 +287,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
 	group, err := s.getGroupByUserAndCourse(in.Msg)
 	if err != nil {
-		if err != errUserNotInGroup {
+		if err != ErrUserNotInGroup {
 			s.logger.Errorf("GetGroupByUserAndCourse failed: %v", err)
 		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group for given user and course"))
