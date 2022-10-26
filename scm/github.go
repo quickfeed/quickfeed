@@ -101,13 +101,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 			return nil, ErrNotOwner
 		}
 	}
-
-	return &qf.Organization{
-		ID:          uint64(gitOrg.GetID()),
-		Name:        gitOrg.GetLogin(),
-		Avatar:      gitOrg.GetAvatarURL(),
-		PaymentPlan: gitOrg.GetPlan().GetName(),
-	}, nil
+	return org, nil
 }
 
 // CreateRepository implements the SCM interface.
