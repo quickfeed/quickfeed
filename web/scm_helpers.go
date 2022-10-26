@@ -12,14 +12,9 @@ import (
 )
 
 var (
-	// ErrFreePlan indicates that payment plan for given organization does not allow private
-	// repositories and must be upgraded
-	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
 	// and not because of some application error
 	ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
-	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
-	FreeOrgPlan = "free"
 )
 
 // InitSCMs creates and saves SCM clients for each course without an active SCM client.

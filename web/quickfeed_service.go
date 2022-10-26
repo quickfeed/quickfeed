@@ -110,9 +110,6 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 		if err == scm.ErrAlreadyExists {
 			return nil, connect.NewError(connect.CodeAlreadyExists, err)
 		}
-		if err == ErrFreePlan {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
-		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
@@ -588,9 +585,6 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		}
 		if err == scm.ErrNotMember {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
-		}
-		if err == ErrFreePlan || err == scm.ErrAlreadyExists || err == scm.ErrNotOwner {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
