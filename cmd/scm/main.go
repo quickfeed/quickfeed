@@ -346,7 +346,7 @@ func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: *team.Name, Organization: c.String("namespace")}); err != nil {
 					errs = append(errs, err)
 				} else {
-					fmt.Println("Deleted team", team.Name)
+					fmt.Println("Deleted team", *team.Name)
 				}
 				if len(errs) > 0 {
 					return cli.NewMultiError(errs...)
