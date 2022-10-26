@@ -22,7 +22,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		OrganizationID: request.OrganizationID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create course repositories or teams: %w", err)
+		return nil, err
 	}
 
 	for _, repo := range repos {
