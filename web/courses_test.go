@@ -17,37 +17,40 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 )
 
-func TestGetCourses(t *testing.T) {
+func TestCreateAndGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := MockClient(t, db, nil)
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db, 1)
+	client, cookie := MockClientWithUser(t, db, admin)
 
-	var wantCourses []*qf.Course
-	for _, course := range qtest.MockCourses {
-		err := db.CreateCourse(admin.ID, course)
-		if err != nil {
-			t.Fatal(err)
-		}
-		wantCourses = append(wantCourses, course)
-	}
-
-	foundCourses, err := client.GetCourses(context.Background(), connect.NewRequest(&qf.Void{}))
+	wantCourse := qtest.MockCourses[0]
+	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotCourses := foundCourses.Msg.Courses
-	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
+
+	gotCourse, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
+		CourseID: createdCourse.Msg.ID,
+	}, cookie))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantCourse.ID = createdCourse.Msg.ID
+	if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
+	}
+	if diff := cmp.Diff(createdCourse.Msg, gotCourse.Msg, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-createdCourse +gotCourse):\n%s", diff)
 	}
 }
 
-func TestNewCourse(t *testing.T) {
+func TestCreateAndGetCourses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateAdminUser(t, db, "fake")
+	admin := qtest.CreateFakeUser(t, db, 1)
 	client, cookie := MockClientWithUser(t, db, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
@@ -55,19 +58,21 @@ func TestNewCourse(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		// copy the ID from the created course to the expected course
 		wantCourse.ID = gotCourse.Msg.ID
 		if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
-			t.Errorf("ags.CreateCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
+			t.Errorf("CreateCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 		}
+	}
 
-		// check that the database also has the course
-		gotCourse.Msg, err = db.GetCourse(wantCourse.ID, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
-			t.Errorf("db.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
-		}
+	wantCourses := qtest.MockCourses
+	foundCourses, err := client.GetCourses(context.Background(), qtest.RequestWithCookie(&qf.Void{}, cookie))
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotCourses := foundCourses.Msg.Courses
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
 }
 
@@ -342,29 +347,6 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	gotCourses := courses.Msg.Courses
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCoursesByUser() mismatch (-wantCourses +gotCourses):\n%s", diff)
-	}
-}
-
-func TestGetCourse(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
-	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, 1)
-	wantCourse := qtest.MockCourses[0]
-	err := db.CreateCourse(admin.ID, wantCourse)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	gotCourse, err := qfService.GetCourse(context.Background(), connect.NewRequest(&qf.CourseRequest{
-		CourseID: wantCourse.ID,
-	}))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 	}
 }
 
