@@ -22,7 +22,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	client, cookie := MockClientWithUser(t, db, admin)
+	client, cookie, _ := MockClientWithUser(t, db, admin)
 
 	wantCourse := qtest.MockCourses[0]
 	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
@@ -51,7 +51,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	client, cookie := MockClientWithUser(t, db, admin)
+	client, cookie, _ := MockClientWithUser(t, db, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
 		gotCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
@@ -77,12 +77,13 @@ func TestCreateAndGetCourses(t *testing.T) {
 }
 
 func TestNewCourseExistingRepos(t *testing.T) {
-	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := auth.WithUserContext(context.Background(), admin)
+	admin := qtest.CreateFakeUser(t, db, 1)
+	client, cookie, mockSCM := MockClientWithUser(t, db, admin)
 
+	ctx := context.Background()
 	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +96,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 		}
 	}
 
-	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
+	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], cookie))
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
