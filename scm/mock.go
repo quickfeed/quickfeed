@@ -57,17 +57,6 @@ func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	return cloneDir, nil
 }
 
-// UpdateOrganization implements the SCM interface.
-func (s *MockSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Name}); err != nil {
-		return errors.New("organization not found")
-	}
-	return nil
-}
-
 // GetOrganization implements the SCM interface.
 func (s *MockSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	if !opt.valid() {

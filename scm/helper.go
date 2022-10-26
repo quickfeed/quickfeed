@@ -80,10 +80,6 @@ var (
 
 // Validators //
 
-func (opt OrganizationOptions) valid() bool {
-	return opt.Name != "" && opt.DefaultPermission != ""
-}
-
 func (opt GetOrgOptions) valid() bool {
 	return opt.ID != 0 || opt.Name != ""
 }

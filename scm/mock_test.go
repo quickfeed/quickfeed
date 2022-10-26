@@ -129,12 +129,6 @@ func TestMockOrganizations(t *testing.T) {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName}); err != nil {
 			t.Error(err)
 		}
-		if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-			Name:              course.OrganizationName,
-			DefaultPermission: "read",
-		}); err != nil {
-			t.Error(err)
-		}
 		if err := s.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
 			Organization: course.OrganizationName,
 			Username:     user,
@@ -147,11 +141,6 @@ func TestMockOrganizations(t *testing.T) {
 		}); err != nil {
 			t.Error(err)
 		}
-	}
-	if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-		Name: qtest.MockCourses[0].OrganizationName,
-	}); err == nil {
-		t.Error("expected error 'invalid argument'")
 	}
 
 	invalidOrgs := []struct {
@@ -167,12 +156,6 @@ func TestMockOrganizations(t *testing.T) {
 
 	for _, org := range invalidOrgs {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: org.id, Name: org.name}); err == nil {
-			t.Errorf("expected error: %s", org.err)
-		}
-		if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-			Name:              org.name,
-			DefaultPermission: org.permission,
-		}); err == nil {
 			t.Errorf("expected error: %s", org.err)
 		}
 		opt := &scm.OrgMembershipOptions{

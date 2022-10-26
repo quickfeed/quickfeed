@@ -12,8 +12,6 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub.
 type SCM interface {
-	// Updates an organization
-	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
 	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
 	// Create a new repository.

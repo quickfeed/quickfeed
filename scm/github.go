@@ -41,22 +41,6 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	}
 }
 
-// UpdateOrganization implements the SCM interface.
-func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "UpdateOrganization",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Name, &github.Organization{
-		DefaultRepoPermission: &opt.DefaultPermission,
-		MembersCanCreateRepos: &opt.RepoPermissions,
-	})
-	return err
-}
-
 // GetOrganization implements the SCM interface.
 func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	if !opt.valid() {
@@ -674,15 +658,16 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	if IsDirty(repos) {
 		return nil, ErrAlreadyExists
 	}
-	// set default repository access level for all students to "none"
-	// will not affect organization owners (teachers)
-	orgOptions := &OrganizationOptions{
-		Name:              org.GetName(),
-		DefaultPermission: OrgNone,
-		RepoPermissions:   false,
-	}
-	if err = s.UpdateOrganization(ctx, orgOptions); err != nil {
-		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %s", orgOptions.Name, err)
+	// Restrict ability to create new repositories and default access to the organization repositories
+	// for students. This will not affect organization owners (teachers).
+	DefaultPermissions := OrgNone
+	CreateRepoPermissions := false
+
+	if _, _, err = s.client.Organizations.Edit(ctx, org.Name, &github.Organization{
+		DefaultRepoPermission: &DefaultPermissions,
+		MembersCanCreateRepos: &CreateRepoPermissions,
+	}); err != nil {
+		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %s", org.Name, err)
 	}
 	var repositories []*Repository
 	// create course repos and webhooks for each repo
