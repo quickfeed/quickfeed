@@ -667,10 +667,10 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 		DefaultRepoPermission: &DefaultPermissions,
 		MembersCanCreateRepos: &CreateRepoPermissions,
 	}); err != nil {
-		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %s", org.Name, err)
+		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.Name, err)
 	}
-	var repositories []*Repository
-	// create course repos and webhooks for each repo
+	repositories := make([]*Repository, len(RepoPaths)+1)
+	// create course repositories
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Path:         path,
@@ -690,17 +690,15 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 		Users:        []string{opt.CourseCreator},
 	}
 	if _, err = s.CreateTeam(ctx, teamOpt); err != nil {
-		s.logger.Debugf("failed to create teachers team: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create teachers team: %w", err)
 	}
 	// create student team without any members
 	studOpt := &NewTeamOptions{Organization: org.Name, TeamName: StudentsTeam}
 	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
-		s.logger.Debugf("failed to create students team: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create students team: %w", err)
 	}
 	// add student repo for the course creator
-	repo, err := s.createStudentRepo(ctx, org, qf.StudentRepoName(opt.CourseCreator), opt.CourseCreator)
+	repo, err := s.createStudentRepo(ctx, org, qf.StudentRepoName(opt.CourseCreator))
 	if err != nil {
 		return nil, err
 	}
@@ -709,21 +707,21 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 }
 
 // creates {username}-labs repository and provides pull/push access to it for the given student
-func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, path string, student string) (*Repository, error) {
+func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, student string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
 		Organization: org.Name,
-		Path:         path,
+		Path:         qf.StudentRepoName(student),
 		Private:      true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("createStudentRepo: failed to create repo: %w", err)
+		return nil, fmt.Errorf("failed to create repo: %w", err)
 	}
 
 	// add push access to student repo
 	if err = s.UpdateRepoAccess(ctx, repo, student, RepoPush); err != nil {
-		return nil, fmt.Errorf("createStudentRepo: failed to update repo push access: %w", err)
+		return nil, fmt.Errorf("failed to update repo push access: %w", err)
 	}
 	return repo, nil
 }

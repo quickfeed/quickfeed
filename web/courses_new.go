@@ -15,15 +15,14 @@ import (
 func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request *qf.Course) (*qf.Course, error) {
 	courseCreator, err := s.db.GetUser(request.GetCourseCreatorID())
 	if err != nil {
-		return nil, fmt.Errorf("createCourse: failed to get course creator record from database: %w", err)
+		return nil, fmt.Errorf("failed to get course creator record from database: %w", err)
 	}
 	repos, err := sc.CreateCourse(ctx, &scm.NewCourseOptions{
 		CourseCreator:  courseCreator.Login,
 		OrganizationID: request.OrganizationID,
 	})
 	if err != nil {
-		s.logger.Debugf("createCourse: failed to create course repositories or teams: %w", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create course repositories or teams: %w", err)
 	}
 
 	for _, repo := range repos {
@@ -37,14 +36,12 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 			dbRepo.UserID = courseCreator.ID
 		}
 		if err := s.db.CreateRepository(&dbRepo); err != nil {
-			s.logger.Debugf("createCourse: failed to create database record for repository %s: %s", repo.Path, err)
-			return nil, err
+			return nil, fmt.Errorf("failed to create database record for repository %s: %w", repo.Path, err)
 		}
 	}
 
 	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
-		s.logger.Debugf("createCourse: failed to create database record for course %s: %s", request.Name, err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create database record for course %s: %w", request.Name, err)
 	}
 	return request, nil
 }

@@ -70,7 +70,7 @@ type SCM interface {
 	// AcceptInvitations accepts course invites.
 	AcceptInvitations(context.Context, *InvitationOptions) error
 
-	//CreateCourse creates repositories and teams for a new course.
+	// CreateCourse creates repositories and teams for a new course.
 	CreateCourse(context.Context, *NewCourseOptions) ([]*Repository, error)
 }
 
