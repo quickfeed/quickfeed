@@ -84,6 +84,10 @@ func (opt GetOrgOptions) valid() bool {
 	return opt.ID != 0 || opt.Name != ""
 }
 
+func (opt UpdateEnrollmentOptions) valid() bool {
+	return opt.Course != nil && opt.User != ""
+}
+
 func (r *Repository) valid() bool {
 	return r.Path != "" && r.Owner != ""
 }

@@ -496,6 +496,10 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*R
 	return repositories, nil
 }
 
+func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
+	return nil, nil
+}
+
 // teamExists checks teams by ID, or by team and organization name.
 func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 	if id > 0 {
