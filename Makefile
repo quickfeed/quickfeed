@@ -16,8 +16,6 @@ tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(fore
 # necessary when target is not tied to a specific file
 .PHONY: devtools download tools install ui proto scm version-check
 
-devtools: tools
-
 download:
 	@echo "Download go.mod dependencies"
 	@go mod download
