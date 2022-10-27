@@ -1,6 +1,6 @@
 import React from "react"
 import { Dispatch, SetStateAction } from "react"
-import { GradingBenchmark, GradingCriterion } from "../../../gen/qf/types_pb"
+import { GradingBenchmark, GradingCriterion } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 
 type GradeCommentProps = {

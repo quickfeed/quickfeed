@@ -1,4 +1,4 @@
-import { Course, GradingBenchmark } from "../../gen/qf/types_pb"
+import { Course, GradingBenchmark } from "../../proto/qf/types_pb"
 import { MockGrpcManager } from "../MockGRPCManager"
 
 (BigInt.prototype as any).toJSON = function () {

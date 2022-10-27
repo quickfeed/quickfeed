@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Submission, Submission_Status } from "../../gen/qf/types_pb"
+import { Submission, Submission_Status } from "../../proto/qf/types_pb"
 
 export enum Progress {
     NAV,

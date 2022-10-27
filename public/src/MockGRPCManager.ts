@@ -23,7 +23,7 @@ import {
     GradingCriterion_Grade,
     Repository_Type,
     Enrollment_DisplayState,
-} from "../gen/qf/types_pb"
+} from "../proto/qf/types_pb"
 import {
     CourseSubmissions,
     Organization,
@@ -34,9 +34,9 @@ import {
     Reviewers,
     Organizations,
     SubmissionsForCourseRequest_Type,
-} from "../gen/qf/requests_pb"
+} from "../proto/qf/requests_pb"
 import { delay } from "./Helpers"
-import { BuildInfo, Score } from "../gen/kit/score/score_pb"
+import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { Code } from "@bufbuild/connect-web"
 
 export interface IGrpcResponse<T> {

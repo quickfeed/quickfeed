@@ -1,8 +1,8 @@
 import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
-} from "../../gen/qf/types_pb"
-import { CourseSubmissions, Organization, SubmissionsForCourseRequest_Type, } from "../../gen/qf/requests_pb"
+} from "../../proto/qf/types_pb"
+import { CourseSubmissions, Organization, SubmissionsForCourseRequest_Type, } from "../../proto/qf/requests_pb"
 import { Alert, UserCourseSubmissions } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."

@@ -1,5 +1,5 @@
 import React from "react"
-import { Review } from "../../gen/qf/types_pb"
+import { Review } from "../../proto/qf/types_pb"
 import { hasBenchmarks } from "../Helpers"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"

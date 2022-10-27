@@ -16,7 +16,7 @@ import {
     Submissions,
     User,
     Users,
-} from "../gen/qf/types_pb"
+} from "../proto/qf/types_pb"
 import {
     CourseRequest,
     CourseSubmissions,
@@ -40,8 +40,8 @@ import {
     Void,
     Reviewers,
     SubmissionsForCourseRequest_Type,
-} from "../gen/qf/requests_pb"
-import { QuickFeedService } from "../gen/qf/quickfeed_connectweb"
+} from "../proto/qf/requests_pb"
+import { QuickFeedService } from "../proto/qf/quickfeed_connectweb"
 import { createConnectTransport, ConnectError, createCallbackClient, CallbackClient } from "@bufbuild/connect-web"
 
 export interface IGrpcResponse<T> {

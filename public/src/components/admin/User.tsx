@@ -1,5 +1,5 @@
 import React from "react"
-import { User as pbUser } from "../../../gen/qf/types_pb"
+import { User as pbUser } from "../../../proto/qf/types_pb"
 
 
 const User = ({ user }: { user: pbUser, hidden: boolean }): JSX.Element => {
