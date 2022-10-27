@@ -76,13 +76,15 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 		PaymentPlan: gitOrg.GetPlan().GetName(),
 	}
 
-	// Organization shoud not have any course repositories.
-	repos, err := s.GetRepositories(ctx, org)
-	if err != nil {
-		return nil, err
-	}
-	if isDirty(repos) {
-		return nil, ErrAlreadyExists
+	// If getting organization for a new course, make sure id does not have any corse repositories.
+	if opt.NewCourse {
+		repos, err := s.GetRepositories(ctx, org)
+		if err != nil {
+			return nil, err
+		}
+		if isDirty(repos) {
+			return nil, ErrAlreadyExists
+		}
 	}
 
 	// if user name is provided, return the found organization only if the user is one of its owners
@@ -657,7 +659,7 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID})
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
 	}

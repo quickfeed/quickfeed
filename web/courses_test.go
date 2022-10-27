@@ -76,7 +76,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := auth.WithUserContext(context.Background(), admin)
 
-	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
+	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1, NewCourse: true})
 	if err != nil {
 		t.Fatal(err)
 	}

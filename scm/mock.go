@@ -58,7 +58,7 @@ func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 }
 
 // GetOrganization implements the SCM interface.
-func (s *MockSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
+func (s *MockSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
@@ -72,6 +72,15 @@ func (s *MockSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Or
 	org, ok := s.Organizations[opt.ID]
 	if !ok {
 		return nil, errors.New("organization not found")
+	}
+	if opt.NewCourse {
+		repos, err := s.GetRepositories(ctx, org)
+		if err != nil {
+			return nil, err
+		}
+		if isDirty(repos) {
+			return nil, ErrAlreadyExists
+		}
 	}
 	return org, nil
 }
@@ -442,16 +451,9 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID})
-	if err != nil {
-		return nil, errors.New("organization not found")
-	}
-	repos, err := s.GetRepositories(ctx, org)
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
-	}
-	if isDirty(repos) {
-		return nil, ErrAlreadyExists
 	}
 	var repositories []*Repository
 	for path, private := range RepoPaths {

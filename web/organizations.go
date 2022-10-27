@@ -8,5 +8,5 @@ import (
 )
 
 func (s *QuickFeedService) getOrganization(ctx context.Context, sc scm.SCM, org string, user string) (*qf.Organization, error) {
-	return sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org, Username: user})
+	return sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org, Username: user, NewCourse: true})
 }

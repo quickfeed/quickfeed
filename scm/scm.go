@@ -119,7 +119,8 @@ type GetOrgOptions struct {
 	Name string
 	// Username field is used to filter organizations
 	// where the given user has a certain role.
-	Username string
+	Username  string
+	NewCourse bool // Get organization for a new course
 }
 
 // Repository represents a git remote repository.
