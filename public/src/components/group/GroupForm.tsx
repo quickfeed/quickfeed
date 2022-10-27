@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Enrollment, Enrollment_UserStatus, Group } from "../../../gen/qf/types_pb"
-import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent, isTeacher } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -39,11 +39,16 @@ const GroupForm = (): JSX.Element | null => {
 
     const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => enrollment.clone())
 
-    const sortedAndFilteredEnrollments = enrollments
+    let sortedAndFilteredEnrollments: Enrollment[] = []
+    if (hasTeacher(state.status[courseID.toString()])) {
+        // If the current user has teacher status in the course, filter all enrollments where the user is not a teacher and is not in a group.
+        sortedAndFilteredEnrollments = enrollments.filter(enrollment => enrollment.status == Enrollment_UserStatus.TEACHER && enrollment.groupID == BigInt(0))
+    } else {
         // Filter out enrollments where the user is not a student, or the user is already in a group
-        .filter(enrollment => enrollment.status == Enrollment_UserStatus.STUDENT && enrollment.groupID == BigInt(0))
-        // Sort by name
-        .sort((a, b) => (a.user?.name ?? "").localeCompare((b.user?.name ?? "")))
+        sortedAndFilteredEnrollments = enrollments.filter(enrollment => enrollment.status == Enrollment_UserStatus.STUDENT && enrollment.groupID == BigInt(0))
+    }
+    // Sort by name
+    sortedAndFilteredEnrollments.sort((a, b) => (a.user?.name ?? "").localeCompare((b.user?.name ?? "")))
 
     const AvailableUser = ({ enrollment }: { enrollment: Enrollment }) => {
         const id = enrollment.userID
