@@ -1254,3 +1254,69 @@ func TestMockCreateCourse(t *testing.T) {
 		t.Errorf("mismatch (-want teams +got):\n%s", diff)
 	}
 }
+
+func TestMockUpdateEnrollment(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	tests := []struct {
+		name      string
+		opt       *scm.UpdateEnrollmentOptions
+		wantRepos map[uint64]*scm.Repository
+		wantErr   bool
+	}{
+		{
+			"invalid opt, missing course",
+			&scm.UpdateEnrollmentOptions{
+				User:   user,
+				Status: qf.Enrollment_STUDENT,
+			},
+			map[uint64]*scm.Repository{},
+			true,
+		},
+		{
+			"invalid opt, missing user name",
+			&scm.UpdateEnrollmentOptions{
+				Course: qtest.MockCourses[0],
+				Status: qf.Enrollment_STUDENT,
+			},
+			map[uint64]*scm.Repository{},
+			true,
+		},
+		{
+			"enroll teacher, no new repos",
+			&scm.UpdateEnrollmentOptions{
+				Course: qtest.MockCourses[0],
+				User:   user,
+				Status: qf.Enrollment_TEACHER,
+			},
+			map[uint64]*scm.Repository{},
+			false,
+		},
+		{
+			"enroll student, new repo added",
+			&scm.UpdateEnrollmentOptions{
+				Course: qtest.MockCourses[0],
+				User:   user,
+				Status: qf.Enrollment_STUDENT,
+			},
+			map[uint64]*scm.Repository{
+				1: {
+					ID:    1,
+					Path:  qf.StudentRepoName(user),
+					Owner: qtest.MockOrg,
+					OrgID: 1,
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		if _, err := s.UpdateEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+			t.Errorf("%s: mismatch (-want repos +got):\n%s", tt.name, diff)
+		}
+	}
+}

@@ -497,6 +497,24 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*R
 }
 
 func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
+	}
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID:   opt.Course.OrganizationID,
+		Name: opt.Course.OrganizationName,
+	})
+	if err != nil {
+		return nil, errors.New("organization not found")
+	}
+	if opt.Status == qf.Enrollment_STUDENT {
+		return s.CreateRepository(ctx, &CreateRepositoryOptions{
+			Organization: org.Name,
+			Path:         qf.StudentRepoName(opt.User),
+			Private:      true,
+			Owner:        org.Name,
+		})
+	}
 	return nil, nil
 }
 
