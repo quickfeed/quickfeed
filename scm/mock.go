@@ -506,8 +506,18 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 }
 
 // RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
-func (s *MockSCM) RejectEnrollment(_ context.Context, _ *RejectEnrollmentOptions) error {
-	return nil
+func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
+	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID: opt.OrganizationID,
+	}); err != nil {
+		return errors.New("organization not found")
+	}
+	return s.DeleteRepository(ctx, &RepositoryOptions{
+		ID: opt.RepositoryID,
+	})
 }
 
 // teamExists checks teams by ID, or by team and organization name.

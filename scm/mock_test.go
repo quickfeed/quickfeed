@@ -1317,3 +1317,73 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		}
 	}
 }
+
+func TestMockRejectEnrollment(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	repo := &scm.Repository{
+		ID:    1,
+		Owner: qtest.MockOrg,
+		Path:  "testgrp",
+		OrgID: 1,
+	}
+	s.Repositories = map[uint64]*scm.Repository{
+		1: repo,
+	}
+	tests := []struct {
+		name      string
+		opt       *scm.RejectEnrollmentOptions
+		wantRepos map[uint64]*scm.Repository
+		wantErr   bool
+	}{
+		{
+			"invalid options, missing repo ID",
+			&scm.RejectEnrollmentOptions{
+				OrganizationID: 1,
+				User:           user,
+			},
+			map[uint64]*scm.Repository{
+				1: repo,
+			},
+			true,
+		},
+		{
+			"invalid options, missing organization ID",
+			&scm.RejectEnrollmentOptions{
+				RepositoryID: 1,
+				User:         user,
+			},
+			map[uint64]*scm.Repository{
+				1: repo},
+			true,
+		},
+		{
+			"invalid options, missing user login",
+			&scm.RejectEnrollmentOptions{
+				RepositoryID:   1,
+				OrganizationID: 1,
+			},
+			map[uint64]*scm.Repository{
+				1: repo},
+			true,
+		},
+		{
+			"valid options, must remove repository",
+			&scm.RejectEnrollmentOptions{
+				OrganizationID: 1,
+				RepositoryID:   1,
+				User:           user,
+			},
+			map[uint64]*scm.Repository{},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		if err := s.RejectEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+			t.Errorf("%s: mismatch (-want repos +got):\n%s", tt.name, diff)
+		}
+	}
+}
