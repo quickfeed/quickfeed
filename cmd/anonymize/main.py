@@ -54,8 +54,8 @@ class DatabaseAnonymizer:
         self.updateCur.execute("UPDATE users SET is_admin=1 WHERE login=?", (login,))
         self.conn.commit()
 
-    def setRemoteIdentity(self, userId: int, remoteId: int):
-        self.updateCur.execute("UPDATE remote_identities SET remote_id=? WHERE user_id=?", (remoteId, userId))
+    def set_remote_identity(self, user_id: int, remote_id: int):
+        self.updateCur.execute("UPDATE remote_identities SET remote_id=? WHERE user_id=?", (remote_id, user_id))
         self.conn.commit()
 
     def exclude_user(self, login: str) -> bool:
@@ -110,8 +110,7 @@ def main():
         db.set_as_admin(args.admin)
     
     if args.remote is not None:
-        db.setRemoteIdentity(args.remote[0], args.remote[1])
-    
+        db.set_remote_identity(args.remote[0], args.remote[1])
 
     db.close()
 
