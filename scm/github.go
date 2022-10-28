@@ -76,7 +76,8 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 		PaymentPlan: gitOrg.GetPlan().GetName(),
 	}
 
-	// If getting organization for a new course, make sure id does not have any corse repositories.
+	// If getting organization for the purpose of creating a new course,
+	// ensure that the organization does not already contain any course repositories.
 	if opt.NewCourse {
 		repos, err := s.GetRepositories(ctx, org)
 		if err != nil {
@@ -87,7 +88,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 		}
 	}
 
-	// if user name is provided, return the found organization only if the user is one of its owners
+	// If user name is provided, return the organization only if the user is one of its owners.
 	if opt.Username != "" {
 		// fetch user membership in that organization, if exists
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
