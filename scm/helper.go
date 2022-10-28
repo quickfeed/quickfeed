@@ -85,7 +85,7 @@ func (opt GetOrgOptions) valid() bool {
 }
 
 func (opt UpdateEnrollmentOptions) valid() bool {
-	return opt.Course != nil && opt.User != ""
+	return opt.Organization != "" && opt.User != ""
 }
 
 func (opt *RejectEnrollmentOptions) valid() bool {

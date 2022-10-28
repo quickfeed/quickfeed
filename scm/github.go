@@ -702,8 +702,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		}
 	}
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{
-		Name: opt.Course.OrganizationName,
-		ID:   opt.Course.OrganizationID,
+		Name: opt.Organization,
 	})
 	if err != nil {
 		return nil, err

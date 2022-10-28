@@ -488,8 +488,7 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{
-		ID:   opt.Course.OrganizationID,
-		Name: opt.Course.OrganizationName,
+		Name: opt.Organization,
 	})
 	if err != nil {
 		return nil, errors.New("organization not found")

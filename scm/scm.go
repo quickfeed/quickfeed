@@ -107,9 +107,9 @@ type NewCourseOptions struct {
 
 // UpdateEnrollmentOptions contain information about enrollment.
 type UpdateEnrollmentOptions struct {
-	Course *qf.Course
-	User   string
-	Status qf.Enrollment_UserStatus
+	Organization string
+	User         string
+	Status       qf.Enrollment_UserStatus
 }
 
 type RejectEnrollmentOptions struct {

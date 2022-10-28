@@ -119,9 +119,9 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 	}
 	// create user scmRepo, user team, and add user to students team
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
-		Course: course,
-		User:   user.GetLogin(),
-		Status: qf.Enrollment_STUDENT,
+		Organization: course.OrganizationName,
+		User:         user.GetLogin(),
+		Status:       qf.Enrollment_STUDENT,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
@@ -159,9 +159,9 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 
 	// make owner, remove from students, add to teachers
 	if _, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
-		Course: course,
-		User:   user.GetLogin(),
-		Status: qf.Enrollment_TEACHER,
+		Organization: course.OrganizationName,
+		User:         user.GetLogin(),
+		Status:       qf.Enrollment_TEACHER,
 	}); err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}

@@ -1273,8 +1273,8 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{
 			"invalid opt, missing user name",
 			&scm.UpdateEnrollmentOptions{
-				Course: qtest.MockCourses[0],
-				Status: qf.Enrollment_STUDENT,
+				Organization: qtest.MockOrg,
+				Status:       qf.Enrollment_STUDENT,
 			},
 			map[uint64]*scm.Repository{},
 			true,
@@ -1282,9 +1282,9 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{
 			"enroll teacher, no new repos",
 			&scm.UpdateEnrollmentOptions{
-				Course: qtest.MockCourses[0],
-				User:   user,
-				Status: qf.Enrollment_TEACHER,
+				Organization: qtest.MockOrg,
+				User:         user,
+				Status:       qf.Enrollment_TEACHER,
 			},
 			map[uint64]*scm.Repository{},
 			false,
@@ -1292,9 +1292,9 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{
 			"enroll student, new repo added",
 			&scm.UpdateEnrollmentOptions{
-				Course: qtest.MockCourses[0],
-				User:   user,
-				Status: qf.Enrollment_STUDENT,
+				Organization: qtest.MockOrg,
+				User:         user,
+				Status:       qf.Enrollment_STUDENT,
 			},
 			map[uint64]*scm.Repository{
 				1: {
