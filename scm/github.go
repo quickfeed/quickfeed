@@ -755,6 +755,27 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	return s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
 }
 
+// RevokeTeacherStatus removes user from teachers team, revokes owner status in the organization.
+func (s *GithubSCM) RevokeTeacherStatus(ctx context.Context, opt *UpdateEnrollmentOptions) error {
+	teamOpts := &TeamMembershipOptions{
+		Organization: opt.Organization,
+		TeamName:     TeachersTeam,
+		Username:     opt.User,
+	}
+	if err := s.RemoveTeamMember(ctx, teamOpts); err != nil {
+		return err
+	}
+	teamOpts.TeamName = StudentsTeam
+	if err := s.AddTeamMember(ctx, teamOpts); err != nil {
+		return err
+	}
+	return s.UpdateOrgMembership(ctx, &OrgMembershipOptions{
+		Organization: opt.Organization,
+		Username:     opt.User,
+		Role:         OrgMember,
+	})
+}
+
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists

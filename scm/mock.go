@@ -519,6 +519,11 @@ func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOpt
 	})
 }
 
+// RevokeTeacherStatus implements the SCM interface.
+func (s *MockSCM) RevokeTeacherStatus(_ context.Context, _ *UpdateEnrollmentOptions) error {
+	return nil
+}
+
 // teamExists checks teams by ID, or by team and organization name.
 func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 	if id > 0 {

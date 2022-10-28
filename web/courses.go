@@ -175,7 +175,11 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationName(), user.GetLogin())
+	err := sc.RevokeTeacherStatus(ctx, &scm.UpdateEnrollmentOptions{
+		Organization: course.GetOrganizationName(),
+		User:         user.GetLogin(),
+		Status:       qf.Enrollment_STUDENT,
+	})
 	if err != nil {
 		// log error, but continue to update enrollment; we can manually revoke teacher access later
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)

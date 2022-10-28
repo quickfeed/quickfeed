@@ -74,6 +74,8 @@ type SCM interface {
 	UpdateEnrollment(context.Context, *UpdateEnrollmentOptions) (*Repository, error)
 	// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
+	// RevokeTeacherStatus removes user from teachers team, revokes owner status in the organization.
+	RevokeTeacherStatus(context.Context, *UpdateEnrollmentOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

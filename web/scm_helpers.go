@@ -142,30 +142,6 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uin
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
-// remove user from teachers team, set organization status from owner to regular member
-func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) error {
-	teamOpts := &scm.TeamMembershipOptions{
-		Organization: org,
-		TeamName:     scm.TeachersTeam,
-		Username:     userName,
-	}
-
-	if err := sc.RemoveTeamMember(ctx, teamOpts); err != nil {
-		return err
-	}
-
-	teamOpts.TeamName = scm.StudentsTeam
-	if err := sc.AddTeamMember(ctx, teamOpts); err != nil {
-		return err
-	}
-
-	return sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
-		Organization: org,
-		Username:     userName,
-		Role:         scm.OrgMember,
-	})
-}
-
 // isEmpty ensured that all of the provided repositories are empty
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
