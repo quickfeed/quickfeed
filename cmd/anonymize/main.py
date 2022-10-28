@@ -46,18 +46,39 @@ class DatabaseAnonymizer:
                 self.updateCur.execute(statement[1], tuple(func() for func in statement[2]) + (row[0],))
                 self.conn.commit()
 
+    def setAsAdmin(self, userId: int):
+        self.updateCur.execute("UPDATE users SET is_admin=1 WHERE id=?", (userId,))
+        self.conn.commit()
+
+    def setRemoteIdentity(self, userId: int, remoteId: int):
+        self.updateCur.execute("UPDATE remote_identities SET remote_id=? WHERE user_id=?", (remoteId, userId))
+        self.conn.commit()
+
 
 def main():
     parser = argparse.ArgumentParser(description='Database anonymizer')
-    parser.add_argument('--database', dest='database', type=str, help='Name of the database file to anonymize')
+    parser.add_argument('--database', dest='database', type=str, help='Name of the database file to anonymize', required=True)
+    parser.add_argument('--anonymize', dest='anonymize', type=bool, help='Anonymize the database')
+    parser.add_argument('--admin', dest='admin', type=int, metavar="USER_ID", help='Set the user with the given id as admin')
+    parser.add_argument('--remote', dest='remote', type=int, nargs=2, metavar=('USER_ID', 'REMOTE_ID'), help='Set the remote identity of the user with the given USER_ID to the given REMOTE_ID')
     args = parser.parse_args()
     
     if args.database is None:
         parser.print_help()
         return
-    
+
     db = DatabaseAnonymizer(args.database)
-    db.anonymize()
+
+    if args.anonymize:
+        db.anonymize()
+
+    if args.admin is not None:
+        db.setAsAdmin(args.admin)
+    
+    if args.remote is not None:
+        db.setRemoteIdentity(args.remote[0], args.remote[1])
+    
+
     db.close()
 
 if __name__ == "__main__":
