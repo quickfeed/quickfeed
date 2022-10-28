@@ -22,7 +22,8 @@ func TestCreateAndGetCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	client, cookie, _ := MockClientWithUser(t, db, admin)
+	client, tm, _ := MockClientWithUser(t, db)
+	cookie := Cookie(t, tm, admin)
 
 	wantCourse := qtest.MockCourses[0]
 	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
@@ -51,7 +52,8 @@ func TestCreateAndGetCourses(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	client, cookie, _ := MockClientWithUser(t, db, admin)
+	client, tm, _ := MockClientWithUser(t, db)
+	cookie := Cookie(t, tm, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
 		gotCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
@@ -81,7 +83,8 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	client, cookie, mockSCM := MockClientWithUser(t, db, admin)
+	client, tm, mockSCM := MockClientWithUser(t, db)
+	cookie := Cookie(t, tm, admin)
 
 	ctx := context.Background()
 	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
