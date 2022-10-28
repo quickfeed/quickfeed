@@ -142,25 +142,6 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uin
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
-// remove user from the organization, delete user repository
-func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *qf.Repository) error {
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
-		ID: repo.GetOrganizationID(),
-	})
-	if err != nil {
-		return err
-	}
-
-	opt := &scm.OrgMembershipOptions{
-		Organization: org.Name,
-		Username:     login,
-	}
-	if err := sc.RemoveMember(ctx, opt); err != nil {
-		return err
-	}
-	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
-}
-
 // remove user from teachers team, set organization status from owner to regular member
 func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) error {
 	teamOpts := &scm.TeamMembershipOptions{

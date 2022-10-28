@@ -88,6 +88,11 @@ func (opt UpdateEnrollmentOptions) valid() bool {
 	return opt.Course != nil && opt.User != ""
 }
 
+func (opt *RejectEnrollmentOptions) valid() bool {
+	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
+		opt.User != ""
+}
+
 func (opt AddTeamRepoOptions) valid() bool {
 	return opt.TeamID > 0 &&
 		opt.OrganizationID > 0 &&

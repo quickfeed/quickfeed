@@ -505,6 +505,11 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 	return nil, nil
 }
 
+// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+func (s *MockSCM) RejectEnrollment(_ context.Context, _ *RejectEnrollmentOptions) error {
+	return nil
+}
+
 // teamExists checks teams by ID, or by team and organization name.
 func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 	if id > 0 {

@@ -733,6 +733,29 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	return nil, err
 }
 
+// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "RejectEnrollment",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID: opt.OrganizationID,
+	})
+	if err != nil {
+		return err
+	}
+	if err := s.RemoveMember(ctx, &OrgMembershipOptions{
+		Organization: org.Name,
+		Username:     opt.User,
+	}); err != nil {
+		return err
+	}
+	return s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
+}
+
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists

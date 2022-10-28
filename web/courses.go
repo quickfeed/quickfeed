@@ -85,7 +85,12 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		// continue with other delete operations
 	}
 	// when deleting a user, remove github repository and organization membership as well
-	if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
+	opt := &scm.RejectEnrollmentOptions{
+		User:           user.GetLogin(),
+		OrganizationID: repo.OrganizationID,
+		RepositoryID:   repo.RepositoryID,
+	}
+	if err := sc.RejectEnrollment(ctx, opt); err != nil {
 		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
 	}
 	return nil

@@ -72,6 +72,8 @@ type SCM interface {
 	CreateCourse(context.Context, *NewCourseOptions) ([]*Repository, error)
 	// UpdateEnrollment updates team and organization membership and creates user repository.
 	UpdateEnrollment(context.Context, *UpdateEnrollmentOptions) (*Repository, error)
+	// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -108,6 +110,12 @@ type UpdateEnrollmentOptions struct {
 	Course *qf.Course
 	User   string
 	Status qf.Enrollment_UserStatus
+}
+
+type RejectEnrollmentOptions struct {
+	OrganizationID uint64
+	RepositoryID   uint64
+	User           string
 }
 
 // OrganizationOptions contains information on how an organization should be
