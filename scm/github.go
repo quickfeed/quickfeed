@@ -210,27 +210,6 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions
 	return nil
 }
 
-// UpdateRepoAccess implements the SCM interface.
-func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, permission string) error {
-	if repo == nil || !repo.valid() {
-		return ErrMissingFields{
-			Method:  "UpdateRepoAccess",
-			Message: fmt.Sprintf("%+v", repo),
-		}
-	}
-	opt := &github.RepositoryAddCollaboratorOptions{
-		Permission: permission,
-	}
-	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt); err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "UpdateRepoAccess",
-			Message:  fmt.Sprintf("failed to grant %s permission to user %s for repository %s", opt.Permission, user, repo.Path),
-		}
-	}
-	return nil
-}
-
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
 	_, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
@@ -768,7 +747,10 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization,
 	}
 
 	// add push access to student repo
-	if err = s.UpdateRepoAccess(ctx, repo, login, RepoPush); err != nil {
+	opt := &github.RepositoryAddCollaboratorOptions{
+		Permission: RepoPush,
+	}
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, opt); err != nil {
 		return nil, fmt.Errorf("failed to update repo push access: %w", err)
 	}
 	return repo, nil
@@ -778,7 +760,10 @@ func (s *GithubSCM) grantAccessToCourseRepos(ctx context.Context, org, login str
 	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 
 	for _, repoType := range commonRepos {
-		if err := s.UpdateRepoAccess(ctx, &Repository{Owner: org, Path: repoType}, login, RepoPull); err != nil {
+		opt := &github.RepositoryAddCollaboratorOptions{
+			Permission: RepoPull,
+		}
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, opt); err != nil {
 			return fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", repoType, login, err)
 		}
 	}

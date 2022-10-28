@@ -209,9 +209,6 @@ func TestMockRepositories(t *testing.T) {
 			t.Error(err)
 		}
 		repo.ID = r.ID
-		if err := s.UpdateRepoAccess(ctx, repo, "", ""); err != nil {
-			t.Error(err)
-		}
 		gotRepo, ok := s.Repositories[repo.ID]
 		if !ok {
 			t.Errorf("expected repository %s to be found", repo.Path)

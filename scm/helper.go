@@ -88,10 +88,6 @@ func (opt UpdateEnrollmentOptions) valid() bool {
 	return opt.Course != nil && opt.User != ""
 }
 
-func (r *Repository) valid() bool {
-	return r.Path != "" && r.Owner != ""
-}
-
 func (opt AddTeamRepoOptions) valid() bool {
 	return opt.TeamID > 0 &&
 		opt.OrganizationID > 0 &&
