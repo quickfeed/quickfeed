@@ -345,6 +345,7 @@ func TestMockDeleteTeams(t *testing.T) {
 }
 
 func TestAddRemoveMockTeamMembers(t *testing.T) {
+	t.Skip("About to be removed together with the RemoveTeamMember scm method")
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
@@ -420,9 +421,6 @@ func TestAddRemoveMockTeamMembers(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		if err := s.AddTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
-		}
 		if err := s.RemoveTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
