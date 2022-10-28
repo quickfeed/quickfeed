@@ -714,7 +714,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	return repositories, nil
 }
 
-// UpdateEnrollment updates organization and team membership and creates user repositories..
+// UpdateEnrollment updates organization and team membership and creates user repositories.
 func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
@@ -754,7 +754,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	return nil, err
 }
 
-// creates {username}-labs repository and provides pull/push access to it for the given student
+// createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
@@ -793,10 +793,7 @@ func (s *GithubSCM) addUserToStudentsTeam(ctx context.Context, org, login string
 		Username:     login,
 		Role:         TeamMember,
 	}
-	if err := s.AddTeamMember(ctx, opt); err != nil {
-		return err
-	}
-	return nil
+	return s.AddTeamMember(ctx, opt)
 }
 
 // add user to the organization's "teachers" team, and remove user from "students" team.
@@ -815,10 +812,7 @@ func (s *GithubSCM) promoteToTeachers(ctx context.Context, org, login string) er
 		TeamName:     TeachersTeam,
 		Role:         TeamMaintainer,
 	}
-	if err := s.AddTeamMember(ctx, teachersTeam); err != nil {
-		return err
-	}
-	return nil
+	return s.AddTeamMember(ctx, teachersTeam)
 }
 
 // Client returns GitHub client.
