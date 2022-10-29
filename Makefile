@@ -14,7 +14,7 @@ tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 
 # necessary when target is not tied to a specific file
-.PHONY: devtools download tools install ui proto scm version-check
+.PHONY: download tools brew version-check install ui proto scm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -29,9 +29,15 @@ ${tool-cmds}: go.mod
 
 tools: ${tool-cmds}
 
+brew:
+ifeq (, $(shell which brew))
+	$(error "No brew command in $(PATH)")
+endif
+	@echo "Installing homebrew packages needed for development and deployment"
+	@brew install gh go protobuf node docker clang-format golangci-lint bufbuild/buf/buf grpcurl
+
 version-check:
 	@go run cmd/vercheck/main.go
-
 
 install:
 	@echo go install
@@ -62,13 +68,6 @@ proto-swift:
 	--swift_out=:$(proto-swift-path) \
 	--grpc-swift_out=$(proto-swift-path) \
 	qf/quickfeed.proto
-
-brew:
-ifeq (, $(shell which brew))
-	$(error "No brew command in $(PATH)")
-endif
-	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install gh go protobuf node docker clang-format golangci-lint bufbuild/buf/buf grpcurl
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
