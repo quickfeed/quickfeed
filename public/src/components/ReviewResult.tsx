@@ -26,7 +26,7 @@ const ReviewResult = ({ review }: { review?: Review.AsObject }): JSX.Element | n
                 <tr className="table-primary">
                     <th>Score:</th>
                     <th>{review.score}</th>
-                    <th></th>
+                    <th />
                 </tr>
                 <tr>
                     <th scope="col">Criteria</th>
