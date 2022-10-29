@@ -68,9 +68,9 @@ export const resetState = ({ state }: Context) => {
 
 /** Fetches and stores an authenticated user in state */
 export const getSelf = async ({ state, effects }: Context): Promise<boolean> => {
-    console.log("getSelf")
+    
     const user = await effects.grpcMan.getUser()
-    console.log("getSelf", user)
+    
     if (user.data) {
         state.self = user.data
         return true
@@ -712,7 +712,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment):
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
 export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
-    console.log("Hello")
+    
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
 
