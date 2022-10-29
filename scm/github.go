@@ -660,25 +660,25 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
+	// Get and check the organization's suitability for the course
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
 	}
 
-	// Restrict ability to create new repositories and default access to the organization repositories
-	// for students. This will not affect organization owners (teachers).
-	DefaultPermissions := OrgNone
-	CreateRepoPermissions := false
-
+	// Set restrictions to prevent students from creating new repositories and prevent access
+	// to organization repositories. This will not affect organization owners (teachers).
+	defaultPermissions := OrgNone
+	createRepoPermissions := false
 	if _, _, err = s.client.Organizations.Edit(ctx, org.Name, &github.Organization{
-		DefaultRepoPermission: &DefaultPermissions,
-		MembersCanCreateRepos: &CreateRepoPermissions,
+		DefaultRepoPermission: &defaultPermissions,
+		MembersCanCreateRepos: &createRepoPermissions,
 	}); err != nil {
 		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.Name, err)
 	}
-	repositories := make([]*Repository, len(RepoPaths)+1)
-	// create course repositories
-	i := 0
+
+	// Create course repositories
+	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Path:         path,
@@ -689,10 +689,10 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 		if err != nil {
 			return nil, err
 		}
-		repositories[i] = repo
-		i++
+		repositories = append(repositories, repo)
 	}
-	// create teacher team with course creator
+
+	// Create teacher team with course creator
 	teamOpt := &NewTeamOptions{
 		Organization: org.Name,
 		TeamName:     TeachersTeam,
@@ -701,36 +701,38 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	if _, err = s.CreateTeam(ctx, teamOpt); err != nil {
 		return nil, fmt.Errorf("failed to create teachers team: %w", err)
 	}
-	// create student team without any members
+
+	// Create student team without any members
 	studOpt := &NewTeamOptions{Organization: org.Name, TeamName: StudentsTeam}
 	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
 		return nil, fmt.Errorf("failed to create students team: %w", err)
 	}
-	// add student repo for the course creator
+
+	// Create student repository for the course creator
 	repo, err := s.createStudentRepo(ctx, org, opt.CourseCreator)
 	if err != nil {
 		return nil, err
 	}
-	repositories[i] = repo
+	repositories = append(repositories, repo)
 	return repositories, nil
 }
 
-// creates {username}-labs repository and provides pull/push access to it for the given student
+// createStudentRepo creates {username}-labs repository and enables push/pull access for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, student string) (*Repository, error) {
-	// create repo, or return existing repo if it already exists
-	// if repo is found, it is safe to reuse it
+	// Create repo, or return existing repo if it already exists;
+	// if repo is found, it is safe to reuse it.
 	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
 		Organization: org.Name,
 		Path:         qf.StudentRepoName(student),
-		Private:      true,
+		Private:      private,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo: %w", err)
 	}
 
-	// add push access to student repo
+	// Enable push and pull access to student repo
 	if err = s.UpdateRepoAccess(ctx, repo, student, RepoPush); err != nil {
-		return nil, fmt.Errorf("failed to update repo push access: %w", err)
+		return nil, fmt.Errorf("failed to enable push/pull access for repo: %w", err)
 	}
 	return repo, nil
 }

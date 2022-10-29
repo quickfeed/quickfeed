@@ -455,7 +455,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*R
 	if err != nil {
 		return nil, err
 	}
-	var repositories []*Repository
+	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Path:         path,
@@ -471,7 +471,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*R
 	labRepo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
 		Path:         qf.StudentRepoName(opt.CourseCreator),
 		Organization: org.Name,
-		Private:      true,
+		Private:      private,
 	})
 	if err != nil {
 		return nil, err
