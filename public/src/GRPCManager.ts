@@ -85,7 +85,7 @@ export class GrpcManager {
     }
 
     public getCourse(courseID: bigint): Promise<IGrpcResponse<Course>> {
-        const request = new CourseRequest({courseID: BigInt(courseID)})
+        const request = new CourseRequest({ courseID: BigInt(courseID) })
         return this.grpcSend<Course>(this.agService.getCourse, request)
     }
 
@@ -95,7 +95,7 @@ export class GrpcManager {
 
     public getCoursesByUser(userID: bigint, statuses: Enrollment_UserStatus[]): Promise<IGrpcResponse<Courses>> {
         const request = new EnrollmentStatusRequest({
-            statuses: statuses, 
+            statuses: statuses,
             userID: BigInt(userID)
         })
         return this.grpcSend<Courses>(this.agService.getCoursesByUser, request)
@@ -205,7 +205,7 @@ export class GrpcManager {
         const request = new Group({
             courseID: BigInt(courseID),
             name: name,
-            users: users.map(userID => new User({ID: userID})),
+            users: users.map(userID => new User({ ID: userID })),
         })
         return this.grpcSend<Group>(this.agService.createGroup, request)
     }
@@ -277,7 +277,7 @@ export class GrpcManager {
         const request = new RebuildRequest({
             submissionID: submissionID,
             assignmentID: assignmentID,
-            courseID: courseID,  
+            courseID: courseID,
         })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }

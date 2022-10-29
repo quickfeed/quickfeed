@@ -14,7 +14,7 @@ tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 
 # necessary when target is not tied to a specific file
-.PHONY: download tools brew version-check install ui proto scm
+.PHONY: download tools brew version-check install ui proto test qcm scm
 
 download:
 	@echo "Download go.mod dependencies"
