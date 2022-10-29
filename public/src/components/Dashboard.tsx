@@ -23,7 +23,7 @@ const Dashboard = (): JSX.Element => {
                 <h1>Welcome, {state.self.name}!</h1>
             </div>
             <SubmissionsTable />
-            <Courses home={true} />
+            <Courses home />
         </div>
     )
 }
