@@ -382,7 +382,7 @@ export class GrpcManager {
                             Error: "",
                         })
                         const temp: IGrpcResponse<T> = {
-                            data: response as T,
+                            data: response,
                             status: code,
                         }
                         resolve(temp)
