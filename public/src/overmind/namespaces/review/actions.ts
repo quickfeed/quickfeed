@@ -52,7 +52,8 @@ export const updateFeedback = async ({ state, actions }: Context, { feedback }: 
     if (state.review.currentReview) {
         const oldFeedback = state.review.currentReview.feedback
         state.review.currentReview.feedback = feedback
-        if (!await actions.review.updateReview()) {
+        const success = await actions.review.updateReview()
+        if (!success) {
             state.review.currentReview.feedback = oldFeedback
         }
     }
@@ -61,7 +62,7 @@ export const updateFeedback = async ({ state, actions }: Context, { feedback }: 
 export const setGrade = async ({ actions }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion_Grade }): Promise<void> => {
     const oldGrade = criterion.grade
     criterion.grade = grade
-    const success = actions.review.updateReview()
+    const success = await actions.review.updateReview()
     if (!success) {
         criterion.grade = oldGrade
     }
