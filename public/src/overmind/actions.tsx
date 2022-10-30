@@ -68,9 +68,7 @@ export const resetState = ({ state }: Context) => {
 
 /** Fetches and stores an authenticated user in state */
 export const getSelf = async ({ state, effects }: Context): Promise<boolean> => {
-    
     const user = await effects.grpcMan.getUser()
-    
     if (user.data) {
         state.self = user.data
         return true
@@ -323,7 +321,7 @@ export const getRepositories = async ({ state, effects }: Context): Promise<bool
 
         const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(enrollment))
         if (response.data) {
-                state.repositories[courseID.toString()] = response.data.URLs
+            state.repositories[courseID.toString()] = response.data.URLs
         } else {
             success = false
         }
@@ -712,7 +710,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment):
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
 export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
-    
+
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
 
@@ -843,7 +841,7 @@ export const setGroupView = ({ state }: Context, groupView: boolean): void => {
 }
 
 export const setActiveGroup = ({ state }: Context, group: Group | null): void => {
-    state.activeGroup =  group?.clone() ?? null
+    state.activeGroup = group?.clone() ?? null
 }
 
 export const updateGroupUsers = ({ state }: Context, user: User): void => {
