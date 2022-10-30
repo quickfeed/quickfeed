@@ -31,7 +31,7 @@ export interface Deadline {
     daysUntil: number,
 }
 
-/** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
+/** Utility function for LandingPageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 // layoutTime = "2021-03-20T23:59:00"
 export const timeFormatter = (deadline: string): Deadline => {
     const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()

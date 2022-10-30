@@ -130,7 +130,7 @@ export class MockGrpcManager {
 
     public updateUser(user: User): Promise<IGrpcResponse<Void>> {
         if (!this.currentUser?.isAdmin) {
-            return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unauthenticated)}))
+            return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unauthenticated) }))
         }
         const usr = this.users.users?.findIndex(u => u.ID === user.ID)
         if (usr > -1) {
@@ -170,10 +170,10 @@ export class MockGrpcManager {
 
     public updateCourse(course: Course): Promise<IGrpcResponse<Void>> {
         const courseID = course.ID
-        const c = this.courses.courses.findIndex(c => c.ID === courseID)
-        if (c > -1) {
+        const courseIndex = this.courses.courses.findIndex(c => c.ID === courseID)
+        if (courseIndex > -1) {
             const courses = this.courses.courses
-            Object.assign(courses[c], course)
+            Object.assign(courses[courseIndex], course)
             this.courses.courses = courses
         }
         return this.grpcSend<Void>(new Void())
@@ -237,7 +237,7 @@ export class MockGrpcManager {
     public updateAssignments(courseID: bigint): Promise<IGrpcResponse<Void>> {
         const course = this.courses.courses.find(c => c.ID === courseID)
         if (!course) {
-            return this.grpcSend<Void>(null, new Status({Error: "Course not found", Code: BigInt(Code.Unknown)}))
+            return this.grpcSend<Void>(null, new Status({ Error: "Course not found", Code: BigInt(Code.Unknown) }))
         }
         return this.grpcSend<Void>(new Void())
     }
@@ -285,7 +285,7 @@ export class MockGrpcManager {
         if (withActivity) {
             // TODO
         }
-        const enrollments = new Enrollments({enrollments: enrollmentList})
+        const enrollments = new Enrollments({ enrollments: enrollmentList })
         return this.grpcSend<Enrollments>(enrollments)
     }
 
@@ -347,7 +347,7 @@ export class MockGrpcManager {
             })
             group.users = (users)
         })
-        return this.grpcSend<Groups>(new Groups({groups: groups}))
+        return this.grpcSend<Groups>(new Groups({ groups: groups }))
     }
 
     public updateGroupStatus(groupID: bigint, status: Group_GroupStatus): Promise<IGrpcResponse<Void>> {
@@ -362,7 +362,7 @@ export class MockGrpcManager {
         const groupID = group.ID
         const currentGroup = this.groups.groups.find(g => g.ID === groupID && g.courseID === group.courseID)
         if (currentGroup === undefined) {
-            return this.grpcSend<Group>(new Void(), new Status({Code: BigInt(Code.NotFound)}))
+            return this.grpcSend<Group>(new Void(), new Status({ Code: BigInt(Code.NotFound) }))
         }
         // Remove enrollments where the user is not in the group
         const updatedUsers = group.users.map(u => u.ID)
@@ -420,7 +420,7 @@ export class MockGrpcManager {
         // Check that the group doesn't exist
         const group = this.groups.groups.find(g => g.name === name && g.courseID === courseID)
         if (group) {
-            return this.grpcSend<Group>(null, new Status({Code: BigInt(Code.Unknown), Error: "Group already exists"}))
+            return this.grpcSend<Group>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Group already exists" }))
         }
         const request = new Group()
         request.name = name
@@ -436,7 +436,7 @@ export class MockGrpcManager {
                     enrollment.groupID = BigInt(request.ID)
                 }
             } else {
-                return this.grpcSend<Group>(null, new Status({Error: "User not found", Code: BigInt(Code.Unknown)}))
+                return this.grpcSend<Group>(null, new Status({ Error: "User not found", Code: BigInt(Code.Unknown) }))
             }
         })
         if (groupUsers.length > 0) {
@@ -463,13 +463,13 @@ export class MockGrpcManager {
     }
 
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
-        const enrollment = this.enrollments.enrollments.find(enrollment => 
-            enrollment.courseID === courseID && 
+        const enrollment = this.enrollments.enrollments.find(enrollment =>
+            enrollment.courseID === courseID &&
             enrollment.userID === this.currentUser?.ID
         )
         if (!enrollment) {
             // Current user is not enrolled in course, not allowed to fetch submissions
-            return this.grpcSend<Submission>(null, new Status({Error: "Not found", Code: BigInt(Code.NotFound)}))
+            return this.grpcSend<Submission>(null, new Status({ Error: "Not found", Code: BigInt(Code.NotFound) }))
         }
         const submission = this.submissions.submissions.find(s => s.ID === submissionID)
         return this.grpcSend<Submission>(submission)
@@ -480,9 +480,9 @@ export class MockGrpcManager {
         const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID && !a.isGroupLab).map(a => a.ID)
         const submissionList = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
         if (submissionList.length === 0) {
-            return this.grpcSend<Submissions>(null, new Status({Error: "No submissions found", Code: BigInt(Code.Unknown)}))
+            return this.grpcSend<Submissions>(null, new Status({ Error: "No submissions found", Code: BigInt(Code.Unknown) }))
         }
-        const submissions = new Submissions({submissions: submissionList})
+        const submissions = new Submissions({ submissions: submissionList })
         return this.grpcSend<Submissions>(submissions)
     }
 
@@ -490,9 +490,9 @@ export class MockGrpcManager {
         const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID && a.isGroupLab).map(a => a.ID)
         const submissions = this.submissions.submissions.filter(s => s.groupID === groupID && assignmentIDs.includes(s.AssignmentID))
         if (submissions.length === 0) {
-            return this.grpcSend<Submissions>(null, new Status({Code: BigInt(Code.Unknown), Error: "No submissions found"}))
+            return this.grpcSend<Submissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "No submissions found" }))
         }
-        return this.grpcSend<Submissions>(new Submissions({submissions: submissions}))
+        return this.grpcSend<Submissions>(new Submissions({ submissions: submissions }))
     }
 
     public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
@@ -503,7 +503,7 @@ export class MockGrpcManager {
         const enrollmentLinks: EnrollmentLink[] = []
         const course = this.courses.courses.find(c => c.ID === courseID)
         if (!course) {
-            return this.grpcSend<CourseSubmissions>(null, new Status({Code: BigInt(Code.Unknown), Error: "Course not found"}))
+            return this.grpcSend<CourseSubmissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
         submissions.course = course.clone()
 
@@ -554,7 +554,7 @@ export class MockGrpcManager {
 
     public updateSubmission(courseID: bigint, s: Submission): Promise<IGrpcResponse<Void>> {
         if (!this.courses.courses.find(c => c.ID === courseID)) {
-            return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unknown), Error: "Course not found"}))
+            return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
         const submission = this.submissions.submissions.find(s => s.ID === s.ID)
         if (submission) {
@@ -566,7 +566,7 @@ export class MockGrpcManager {
     public updateSubmissions(assignmentID: bigint, courseID: bigint, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
         const assignment = this.assignments.assignments.find(assignment => assignment.ID === assignmentID && assignment.CourseID === courseID)
         if (!assignment) {
-            return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unknown), Error: "Assignment not found"}))
+            return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Assignment not found" }))
         }
 
         for (const submission of this.submissions.submissions) {
@@ -590,14 +590,14 @@ export class MockGrpcManager {
         if (this.submissions.submissions.find(sub => sub.ID === submissionID && sub.AssignmentID === assignmentID)) {
             return this.grpcSend<Void>(new Void())
         }
-        return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unknown), Error: "Submission not found"}))
+        return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Submission not found" }))
     }
 
     public rebuildSubmissions(assignmentID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
         if (this.assignments.assignments.find(ass => ass.ID === assignmentID && ass.CourseID === courseID)) {
             return this.grpcSend<Void>(new Void())
         }
-        return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unknown), Error: "Assignment not found"}))
+        return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Assignment not found" }))
     }
 
     // /* MANUAL GRADING */ //
@@ -612,7 +612,7 @@ export class MockGrpcManager {
     public createCriterion(c: GradingCriterion): Promise<IGrpcResponse<GradingCriterion>> {
         const benchmarks = this.templateBenchmarks.find(bm => bm.ID === c.BenchmarkID)
         if (!benchmarks) {
-            return this.grpcSend<GradingCriterion>(null, new Status({Code: BigInt(Code.Unknown), Error: "Benchmark not found"}))
+            return this.grpcSend<GradingCriterion>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Benchmark not found" }))
         }
         c.ID = (this.generateID(Generate.TemplateCriterion))
         benchmarks.criteria.push(c)
@@ -622,7 +622,7 @@ export class MockGrpcManager {
     public updateBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
         const foundIdx = this.templateBenchmarks.findIndex(b => b.ID === bm.ID)
         if (foundIdx === -1) {
-            return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unknown), Error: "Benchmark not found"}))
+            return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Benchmark not found" }))
         }
         Object.assign(this.templateBenchmarks[foundIdx], bm)
         return this.grpcSend<Void>(bm)
@@ -652,11 +652,11 @@ export class MockGrpcManager {
 
     public createReview(r: Review, courseID: bigint): Promise<IGrpcResponse<Review>> {
         if (this.courses.courses.find(c => c.ID === courseID)) {
-            return this.grpcSend<Review>(null, new Status({Code: BigInt(Code.Unknown), Error: "Course not found"}))
+            return this.grpcSend<Review>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
         const submission = this.submissions.submissions.find(s => s.ID === r.SubmissionID)
         if (!submission) {
-            return this.grpcSend<Review>(null, new Status({Code: BigInt(Code.Unknown), Error: "Submission not found"}))
+            return this.grpcSend<Review>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Submission not found" }))
         }
         const review = new Review()
         review.ReviewerID = r.ReviewerID
@@ -674,11 +674,11 @@ export class MockGrpcManager {
 
     public updateReview(r: Review, courseID: bigint): Promise<IGrpcResponse<Review>> {
         if (!this.courses.courses.find(c => c.ID === courseID)) {
-            return this.grpcSend<Review>(null, new Status({Code: BigInt(Code.Unknown), Error: "Course not found"}))
+            return this.grpcSend<Review>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
         const submission = this.submissions.submissions.find(s => s.ID === r.SubmissionID)
         if (!submission) {
-            return this.grpcSend<Review>(null, new Status({Code: BigInt(Code.Unknown), Error: "Submission not found"}))
+            return this.grpcSend<Review>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Submission not found" }))
         }
         r.score = this.computeScore(r)
         r.edited = new Date().getTime().toString()
@@ -705,7 +705,7 @@ export class MockGrpcManager {
     public getRepositories(courseID: bigint, types: Repository_Type[]): Promise<IGrpcResponse<Repositories>> {
         // TODO
         if (!this.courses.courses.find(c => c.ID === courseID)) {
-            return this.grpcSend<Repositories>(null, new Status({Code: BigInt(Code.Unknown), Error: "Course not found"}))
+            return this.grpcSend<Repositories>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
         types.forEach(() => {
             // TODO
@@ -720,14 +720,14 @@ export class MockGrpcManager {
         const org = this.organizations.organizations.find(o => o.name === orgName)
         await delay(2000)
         if (!org) {
-            return this.grpcSend<Organization>(null, new Status({Code: BigInt(Code.Unknown), Error: "Organization not found"}))
+            return this.grpcSend<Organization>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Organization not found" }))
         }
         return this.grpcSend<Organization>(org)
     }
 
     public isEmptyRepo(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Void>> {
         if (courseID <= 0 || userID <= 0 || groupID <= 0) {
-            return this.grpcSend<Void>(null, new Status({Code: BigInt(Code.Unknown), Error: "Invalid arguments"}))
+            return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Invalid arguments" }))
         }
         return this.grpcSend<Void>(true)
     }
@@ -787,7 +787,7 @@ export class MockGrpcManager {
                 email: "bob@bobsen.no",
                 login: "Bob",
                 studentID: "1234",
-                isAdmin: true, 
+                isAdmin: true,
             })
         )
 
@@ -1100,7 +1100,7 @@ export class MockGrpcManager {
                 score: 75,
                 commitHash: "bcd",
             }),
-            
+
             new Submission({
                 ID: BigInt(3),
                 AssignmentID: BigInt(3),
@@ -1295,13 +1295,13 @@ export class MockGrpcManager {
     }
 
     public generateID(key: Generate): bigint {
-        const skey = key.toString()
-        const id = this.idMap.get(skey)
+        const sKey = key.toString()
+        const id = this.idMap.get(sKey)
         if (!id) {
-            this.idMap.set(skey, 1)
+            this.idMap.set(sKey, 1)
             return BigInt(1)
         }
-        this.idMap.set(skey, id + 1)
+        this.idMap.set(sKey, id + 1)
         return BigInt(id + 1)
     }
 }
