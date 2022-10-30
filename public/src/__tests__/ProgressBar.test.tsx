@@ -84,11 +84,11 @@ describe("ProgressBar", () => {
         }
     ]
 
-    test.each(progressBarTests)(`[Progress.LAB] $desc`, async (test) => {
+    test.each(progressBarTests)(`[Progress.LAB] $desc`, (test) => {
         labTest(test, true)
     })
 
-    test.each(progressBarTests)(`[Progress.LAB - Without Submission] $desc`, async (test) => {
+    test.each(progressBarTests)(`[Progress.LAB - Without Submission] $desc`, (test) => {
         labTest(test, false)
     })
 
