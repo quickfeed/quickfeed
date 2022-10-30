@@ -48,13 +48,13 @@ const SubmissionsTable = (): JSX.Element => {
                 }
                 const course = state.courses.find(course => course.ID === courseID)
                 table.push(
-                    <tr key={assignment.ID.toString()} className={"clickable-row " + deadline.className}
+                    <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
                         onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
                         <th scope="row">{course?.code}</th>
                         <td>
                             {assignment.name}
                             {assignment.isGroupLab ?
-                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment"  /></span> : null}
+                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment" /></span> : null}
                         </td>
                         <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.deadline)}</td>

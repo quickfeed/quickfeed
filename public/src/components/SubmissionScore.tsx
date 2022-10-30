@@ -6,7 +6,7 @@ const SubmissionScore = ({ score }: { score: Score }) => {
     const className = score.Score === score.MaxScore ? "passed" : "failed"
     return (
         <tr>
-            <td className={className + " pl-4"}>
+            <td className={`${className} pl-4`}>
                 {score.TestName}
             </td>
             <td>

@@ -21,7 +21,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
             actions.setActiveCourse(BigInt(0))
             history.push("/")
         } else {
-            history.push("/course/" + courseID)
+            history.push(`/course/${courseID}`)
             actions.setActiveCourse(courseID)
         }
     }
