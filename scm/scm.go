@@ -103,16 +103,6 @@ type NewCourseOptions struct {
 	CourseCreator  string
 }
 
-// OrganizationOptions contains information on how an organization should be
-// created.
-type OrganizationOptions struct {
-	Name              string
-	DefaultPermission string
-	// prohibit students from creating new repos
-	// on the course organization
-	RepoPermissions bool
-}
-
 // GetOrgOptions contains information on the organization to fetch
 type GetOrgOptions struct {
 	ID   uint64
