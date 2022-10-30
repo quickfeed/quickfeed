@@ -1,7 +1,21 @@
 import argparse
 import sqlite3
 from functools import partial
+from typing import List
 from faker import Faker
+
+
+class Statement:
+    def __init__(self, select, update, value_functions):
+        self.select = select
+        self.update = update
+        self.value_functions = value_functions
+
+    def values(self):
+        # Generate fake values for each column in the row
+        # The resulting tuple contains values returned by
+        # calling each function in statement[2]
+        return tuple(f() for f in self.value_functions)
 
 
 class DatabaseAnonymizer:
@@ -24,15 +38,15 @@ class DatabaseAnonymizer:
         # User to exclude from anonymization
         self.excludeUser = 0
 
-    def get_update_list(self):
+    def get_update_list(self) -> List[Statement]:
         # List of tuples (select statement, update statement, functions to generate fake data)
         return [
-            (
+            Statement(
                 "SELECT DISTINCT organization_id FROM repositories",
                 "UPDATE repositories SET organization_id=? WHERE organization_id=?",
                 (self.fake.random_number,),
             ),
-            (
+            Statement(
                 "SELECT * FROM repositories",
                 "UPDATE repositories SET html_url=?, repository_id=? WHERE id=?",
                 (
@@ -40,7 +54,7 @@ class DatabaseAnonymizer:
                     partial(self.fake.random_number, digits=8),
                 ),
             ),
-            (
+            Statement(
                 f"SELECT * FROM users WHERE id != {self.excludeUser}",
                 "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=? WHERE id=?",
                 (
@@ -51,7 +65,7 @@ class DatabaseAnonymizer:
                     self.fake.url,
                 ),
             ),
-            (
+            Statement(
                 f"SELECT * FROM remote_identities WHERE user_id != {self.excludeUser}",
                 "UPDATE remote_identities SET access_token=?, remote_id=? WHERE id=?",
                 (
@@ -59,7 +73,7 @@ class DatabaseAnonymizer:
                     partial(self.fake.random_number, digits=6),
                 ),
             ),
-            (
+            Statement(
                 "SELECT * FROM groups",
                 "UPDATE groups SET name=? WHERE id=?",
                 (self.fake.slug,),
@@ -76,11 +90,12 @@ class DatabaseAnonymizer:
 
     def anonymize(self):
         for statement in self.get_update_list():
-            rows = self.fetch(statement[0])
+            rows = self.fetch(statement.select)
             for row in rows:
-                # Generate fake data for each column in the row (row[0] is the value of the first column, passed to the WHERE clause)
+                # the first selected column is passed to the WHERE clause
+                where_clause = (row[0],)
                 self.updateCur.execute(
-                    statement[1], tuple(func() for func in statement[2]) + (row[0],)
+                    statement.update, statement.values() + where_clause
                 )
                 self.conn.commit()
 
