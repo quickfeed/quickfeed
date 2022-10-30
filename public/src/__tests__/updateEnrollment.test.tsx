@@ -40,21 +40,21 @@ describe("UpdateEnrollment", () => {
 
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
-        const user = new User({ID: BigInt(1), name: "Test User", studentID: "6583969706", email: "test@gmail.com"})
+        const user = new User({ ID: BigInt(1), name: "Test User", studentID: "6583969706", email: "test@gmail.com" })
         const enrollment = new Enrollment({
-            ID: BigInt(2), 
-            courseID: BigInt(1), 
-            status: 3, 
-            user: user, 
-            slipDaysRemaining: 3, 
-            lastActivityDate: "10 Mar", 
+            ID: BigInt(2),
+            courseID: BigInt(1),
+            status: 3,
+            user: user,
+            slipDaysRemaining: 3,
+            lastActivityDate: "10 Mar",
             totalApproved: BigInt(0),
         })
 
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user
             state.activeCourse = BigInt(1)
-            state.courseEnrollments = { ["1"]: [enrollment] }
+            state.courseEnrollments = { "1": [enrollment] }
         })
         const history = createMemoryHistory()
         history.push("/course/1/members")
@@ -90,7 +90,7 @@ describe("UpdateEnrollment in webpage", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user
             state.activeCourse = BigInt(1)
-            state.courseEnrollments = { ["1"]: [enrollment] }
+            state.courseEnrollments = { "1": [enrollment] }
         })
         const history = createMemoryHistory()
         history.push("/course/1/members")
