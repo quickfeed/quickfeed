@@ -40,7 +40,7 @@ const TeacherPage = (): JSX.Element => {
 
     return (
         <div>
-            <RedirectButton to={root}></RedirectButton>
+            <RedirectButton to={root} />
             <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
@@ -54,8 +54,8 @@ const TeacherPage = (): JSX.Element => {
             <Switch>
                 <Route path={`/course/:id/groups`} exact component={GroupPage} />
                 <Route path={"/course/:id/members"} component={Members} />
-                <Route path={"/course/:id/review"} component={() => Results({ review: true })}></Route>
-                <Route path={"/course/:id/results"} component={() => Results({ review: false })}></Route>
+                <Route path={"/course/:id/review"} component={() => Results({ review: true })} />
+                <Route path={"/course/:id/results"} component={() => Results({ review: false })} />
                 <Route path={"/course/:id/assignments"} component={Assignments} />
             </Switch>
         </div>

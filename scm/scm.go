@@ -18,8 +18,6 @@ type SCM interface {
 	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
-	// Get repository by ID or name
-	GetRepository(context.Context, *RepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Delete repository.
@@ -32,10 +30,6 @@ type SCM interface {
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
-	// Get a single team by ID or name.
-	GetTeam(context.Context, *TeamOptions) (*Team, error)
-	// Fetch all teams for organization.
-	GetTeams(context.Context, *qf.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember adds a member to a team.

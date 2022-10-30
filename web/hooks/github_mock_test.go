@@ -1,13 +1,12 @@
-package hooks
+package hooks_test
 
 import (
 	"net/http"
+	"sync"
+	"sync/atomic"
 
 	"github.com/google/go-github/v45/github"
-	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
 )
 
@@ -15,33 +14,31 @@ import (
 const maxConcurrentTestRuns = 5
 
 // GitHubWebHook holds references and data for handling webhook events.
-type GitHubWebHook struct {
-	logger *zap.SugaredLogger
-	db     database.Database
-	scmMgr *scm.Manager
-	runner ci.Runner
-	secret string
-	sem    chan struct{} // counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
-	dup    *Duplicates
+type MockWebHook struct {
+	logger                *zap.SugaredLogger
+	secret                string
+	sem                   chan struct{} // counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
+	dup                   *hooks.Duplicates
+	totalCnt              int32
+	currentConcurrencyCnt int32
+	wg                    *sync.WaitGroup
 }
 
-// NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string) *GitHubWebHook {
-	return &GitHubWebHook{
+// NewMockWebHook creates a new webhook to handle POST requests to the QuickFeed server.
+func NewMockWebHook(logger *zap.SugaredLogger, secret string) *MockWebHook {
+	return &MockWebHook{
 		logger: logger,
-		db:     db,
-		scmMgr: mgr,
-		runner: runner,
 		secret: secret,
 		sem:    make(chan struct{}, maxConcurrentTestRuns),
-		dup:    NewDuplicateMap(),
+		dup:    hooks.NewDuplicateMap(),
+		wg:     &sync.WaitGroup{},
 	}
 }
 
 // Handle take POST requests from GitHub, representing Push events
 // associated with course repositories, which then triggers various
 // actions on the QuickFeed backend.
-func (wh GitHubWebHook) Handle() http.HandlerFunc {
+func (wh *MockWebHook) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := github.ValidatePayload(r, []byte(wh.secret))
 		if err != nil {
@@ -57,7 +54,7 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		wh.logger.Debug(qlog.IndentJson(event))
+
 		switch e := event.(type) {
 		case *github.PushEvent:
 			commitID := e.GetHeadCommit().GetID()
@@ -66,33 +63,25 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 				wh.logger.Debugf("Ignoring duplicate push event: %s", commitID)
 				return
 			}
-
 			// The counting semaphore limits concurrency to maxConcurrentTestRuns.
 			// This should also allow webhook events to return quickly to GitHub, avoiding timeouts.
-			// Note however, if we receive a large number of push events, we may be creating
-			// a large number of goroutines. If this becomes a problem, we can add rate limiting
-			// on the number of goroutines created, by returning a http.StatusTooManyRequests.
+			wh.wg.Add(1)
 			go func() {
 				wh.sem <- struct{}{} // acquire semaphore
+				atomic.AddInt32(&wh.currentConcurrencyCnt, 1)
 				wh.handlePush(e)
 				<-wh.sem // release semaphore
-				// remove commitID from duplicate map (to avoid memory leak)
+				atomic.AddInt32(&wh.currentConcurrencyCnt, -1)
+				wh.wg.Done()
 				wh.dup.Remove(commitID)
 			}()
-
-		case *github.PullRequestEvent:
-			switch e.GetAction() {
-			case "opened":
-				wh.handlePullRequestOpened(e)
-			case "closed":
-				wh.handlePullRequestClosed(e)
-			}
-
-		case *github.PullRequestReviewEvent:
-			wh.handlePullRequestReview(e)
-
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 		}
 	}
+}
+
+func (wh *MockWebHook) handlePush(payload *github.PushEvent) {
+	curCnt := atomic.AddInt32(&wh.totalCnt, 1)
+	wh.logger.Debugf("Received push event on %s / %d", payload.GetRepo().GetName(), curCnt)
 }
