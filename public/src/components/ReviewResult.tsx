@@ -12,10 +12,10 @@ const ReviewResult = ({ review }: { review?: Review }): JSX.Element | null => {
         return null
     }
 
-    const result = hasBenchmarks(review) ? review.gradingBenchmarks.map((benchmark, index) => {
+    const result = hasBenchmarks(review) ? review.gradingBenchmarks.map(benchmark => {
         return (
-            <Benchmark key={index} bm={benchmark}>
-                {benchmark.criteria.map((criteria, index) => <Criteria key={index} criteria={criteria} />)}
+            <Benchmark key={benchmark.ID.toString()} bm={benchmark}>
+                {benchmark.criteria.map(criteria => <Criteria key={criteria.ID.toString()} criteria={criteria} />)}
             </Benchmark>
         )
     }) : null
