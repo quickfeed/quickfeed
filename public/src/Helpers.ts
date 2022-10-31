@@ -272,7 +272,7 @@ export const userRepoLink = (course: Course, user: User): string => {
 }
 
 export const groupRepoLink = (course: Course, group: Group): string => {
-    return `https://github.com/${course.organizationName}/${slugify(group.name)}`
+    return `https://github.com/${course.organizationName}/${group.name}`
 }
 
 export const getSubmissionCellColor = (submission: Submission): string => {
@@ -286,20 +286,6 @@ export const getSubmissionCellColor = (submission: Submission): string => {
         return "result-rejected"
     }
     return "clickable"
-}
-
-const slugify = (str: string): string => {
-    str = str.replace(/^\s+|\s+$/g, "").toLowerCase()
-
-    // Remove accents, swap ñ for n, etc
-    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆaæ·/,:;&"
-    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaa-cccdeeeeeeeeiiiinnooooo-orrstuuuuuyyzbBDdBAa-------"
-    for (let i = 0; i < from.length; i++) {
-        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i))
-    }
-
-    // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-")
 }
 
 /* Use this function to simulate a delay in the loading of data */
