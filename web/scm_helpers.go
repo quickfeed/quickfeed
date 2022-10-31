@@ -12,20 +12,9 @@ import (
 )
 
 var (
-	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
-
-	// ErrAlreadyExists indicates that one or more QuickFeed repositories
-	// already exists for the directory (or GitHub organization).
-	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
-	// ErrFreePlan indicates that payment plan for given organization does not allow private
-	// repositories and must be upgraded
-	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
 	// and not because of some application error
 	ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
-	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
-	FreeOrgPlan = "free"
 )
 
 // InitSCMs creates and saves SCM clients for each course without an active SCM client.
@@ -144,6 +133,8 @@ func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID, teamI
 	return nil
 }
 
+// TODO(vera): there is currently a duplicate of this method in the scm package. This one will be
+// removed when the restructuring is complete.
 // creates {username}-labs repository and provides pull/push access to it for the given student
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, path string, student string) (*scm.Repository, error) {
 	// create repo, or return existing repo if it already exists

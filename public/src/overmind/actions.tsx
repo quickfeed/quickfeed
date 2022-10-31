@@ -12,7 +12,7 @@ import { Code } from "@bufbuild/connect-web"
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => !(response.status.Code > 0)
 
-export const onInitializeOvermind = async ({ actions }: Context): Promise<void> => {
+export const onInitializeOvermind = ({ actions }: Context) => {
     // Currently this only alerts the user if they are not logged in after a page refresh
     const alert = localStorage.getItem("alert")
     if (alert) {
