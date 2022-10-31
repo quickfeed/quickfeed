@@ -162,17 +162,6 @@ func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 	return nil
 }
 
-// RemoveTeamMember implements the scm interface
-func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
-		return errors.New("team not found")
-	}
-	return nil
-}
-
 // UpdateTeamMembers implements the SCM interface.
 func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {

@@ -306,32 +306,6 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	return err
 }
 
-// RemoveTeamMember implements the scm interface
-func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "RemoveTeamMember",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	var err error
-	if opt.TeamID < 1 {
-		_, err = s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, opt.TeamName, opt.Username)
-	} else {
-		_, err = s.client.Teams.RemoveTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), opt.Username)
-	}
-
-	if err != nil {
-		err = ErrFailedSCM{
-			GitError: err,
-			Method:   "RemoveTeamMember",
-			Message:  fmt.Sprintf("failed to remove user %s from team ID %d", opt.Username, opt.TeamID),
-		}
-	}
-	return err
-}
-
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {
@@ -732,15 +706,9 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 
 // RevokeTeacherStatus removes user from teachers team, revokes owner status in the organization.
 func (s *GithubSCM) RevokeTeacherStatus(ctx context.Context, opt *UpdateEnrollmentOptions) error {
-	teamOpts := &TeamMembershipOptions{
-		Organization: opt.Organization,
-		TeamName:     TeachersTeam,
-		Username:     opt.User,
-	}
-	if err := s.RemoveTeamMember(ctx, teamOpts); err != nil {
+	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, TeachersTeam, opt.User); err != nil {
 		return err
 	}
-	teamOpts.TeamName = StudentsTeam
 	if _, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, StudentsTeam, opt.User,
 		&github.TeamAddTeamMembershipOptions{Role: TeamMember}); err != nil {
 		return err
@@ -798,12 +766,7 @@ func (s *GithubSCM) addUserToStudentsTeam(ctx context.Context, org, login string
 
 // add user to the organization's "teachers" team, and remove user from "students" team.
 func (s *GithubSCM) promoteToTeachers(ctx context.Context, org, login string) error {
-	studentsTeam := &TeamMembershipOptions{
-		Organization: org,
-		Username:     login,
-		TeamName:     StudentsTeam,
-	}
-	if err := s.RemoveTeamMember(ctx, studentsTeam); err != nil {
+	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, org, StudentsTeam, login); err != nil {
 		return err
 	}
 	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login,
