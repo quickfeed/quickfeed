@@ -552,13 +552,13 @@ export class MockGrpcManager {
         return this.grpcSend<CourseSubmissions>(submissions)
     }
 
-    public updateSubmission(courseID: bigint, s: Submission): Promise<IGrpcResponse<Void>> {
+    public updateSubmission(courseID: bigint, submission: Submission): Promise<IGrpcResponse<Void>> {
         if (!this.courses.courses.find(c => c.ID === courseID)) {
             return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
-        const submission = this.submissions.submissions.find(s => s.ID === s.ID)
-        if (submission) {
-            Object.assign(submission, s)
+        const sub = this.submissions.submissions.find(s => s.ID === submission.ID)
+        if (sub) {
+            Object.assign(sub, submission)
         }
         return this.grpcSend<Void>(new Void())
     }
