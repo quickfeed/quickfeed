@@ -118,12 +118,6 @@ func (opt NewTeamOptions) valid() bool {
 	return opt.TeamName != "" && opt.Organization != ""
 }
 
-func (opt *TeamMembershipOptions) valid() bool {
-	return (opt.TeamID > 0 && opt.OrganizationID > 0 ||
-		opt.TeamName != "" && opt.Organization != "") &&
-		opt.Username != ""
-}
-
 func (opt OrgMembershipOptions) valid() bool {
 	return opt.Organization != "" && opt.Username != ""
 }
