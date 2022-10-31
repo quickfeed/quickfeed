@@ -172,13 +172,6 @@ type UpdateTeamOptions struct {
 	Users          []string
 }
 
-// OrgMembershipOptions represent user's membership in organization
-type OrgMembershipOptions struct {
-	Organization string
-	Username     string // GitHub username.
-	Role         string // Role can be "admin" (organization owner) or "member".
-}
-
 // AddTeamRepoOptions contains information about the repos to be added to a team.
 // All fields must be provided.
 type AddTeamRepoOptions struct {

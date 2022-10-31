@@ -118,10 +118,6 @@ func (opt NewTeamOptions) valid() bool {
 	return opt.TeamName != "" && opt.Organization != ""
 }
 
-func (opt OrgMembershipOptions) valid() bool {
-	return opt.Organization != "" && opt.Username != ""
-}
-
 func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
