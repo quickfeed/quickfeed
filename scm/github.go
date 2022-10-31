@@ -662,8 +662,8 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, TeachersTeam, opt.User); err != nil {
 		return err
 	}
-	teamOptions := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
-	if _, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, StudentsTeam, opt.User, teamOptions); err != nil {
+	teamMember := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
+	if _, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, StudentsTeam, opt.User, teamMember); err != nil {
 		return err
 	}
 	role := OrgMember
@@ -710,8 +710,8 @@ func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login
 
 // addUserToStudentsTeam adds user to the organization's "students" team.
 func (s *GithubSCM) addUserToStudentsTeam(ctx context.Context, org, login string) error {
-	opt := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
-	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, StudentsTeam, login, opt)
+	teamMember := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
+	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, StudentsTeam, login, teamMember)
 	return err
 }
 
@@ -720,8 +720,8 @@ func (s *GithubSCM) promoteToTeacher(ctx context.Context, org, login string) err
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, org, StudentsTeam, login); err != nil {
 		return err
 	}
-	opt := &github.TeamAddTeamMembershipOptions{Role: TeamMaintainer}
-	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login, opt)
+	teamMaintainer := &github.TeamAddTeamMembershipOptions{Role: TeamMaintainer}
+	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login, teamMaintainer)
 	return err
 }
 
