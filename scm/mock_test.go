@@ -129,12 +129,6 @@ func TestMockOrganizations(t *testing.T) {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName}); err != nil {
 			t.Error(err)
 		}
-		if err := s.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
-			Organization: course.OrganizationName,
-			Username:     user,
-		}); err != nil {
-			t.Error(err)
-		}
 		if err := s.RemoveMember(ctx, &scm.OrgMembershipOptions{
 			Organization: course.OrganizationName,
 			Username:     user,
@@ -161,9 +155,6 @@ func TestMockOrganizations(t *testing.T) {
 		opt := &scm.OrgMembershipOptions{
 			Organization: org.name,
 			Username:     org.username,
-		}
-		if err := s.UpdateOrgMembership(ctx, opt); err == nil {
-			t.Errorf("expected error: %s", org.err)
 		}
 		if err := s.RemoveMember(ctx, opt); err == nil {
 			t.Errorf("expected error: %s", org.err)

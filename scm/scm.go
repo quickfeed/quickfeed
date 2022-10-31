@@ -30,8 +30,6 @@ type SCM interface {
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
-	// Promote or demote organization member based on Role field in OrgMembership.
-	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 

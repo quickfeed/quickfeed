@@ -383,26 +383,6 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
-// UpdateOrgMembership implements the SCM interface
-func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "UpdateOrgMembership",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.Organization, &github.Membership{Role: &opt.Role})
-	if err != nil || newMembership.GetRole() != opt.Role {
-		// Note: the error here is potentially nil
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to update membership for user %s in organization %s: %w", opt.Username, opt.Organization, err),
-			Method:   "UpdateOrgMembership",
-			Message:  fmt.Sprintf("failed to update membership for user %s", opt.Username),
-		}
-	}
-	return nil
-}
-
 // RemoveMember implements the SCM interface
 func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
 	if !opt.valid() {
@@ -669,11 +649,8 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		return s.createStudentRepo(ctx, org, opt.User)
 	case qf.Enrollment_TEACHER:
 		// promote to organization owners
-		if err := s.UpdateOrgMembership(ctx, &OrgMembershipOptions{
-			Organization: org.Name,
-			Username:     opt.User,
-			Role:         OrgOwner,
-		}); err != nil {
+		role := OrgOwner
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.Name, &github.Membership{Role: &role}); err != nil {
 			return nil, err
 		}
 		err = s.promoteToTeachers(ctx, org.Name, opt.User)
@@ -713,11 +690,9 @@ func (s *GithubSCM) RevokeTeacherStatus(ctx context.Context, opt *UpdateEnrollme
 		&github.TeamAddTeamMembershipOptions{Role: TeamMember}); err != nil {
 		return err
 	}
-	return s.UpdateOrgMembership(ctx, &OrgMembershipOptions{
-		Organization: opt.Organization,
-		Username:     opt.User,
-		Role:         OrgMember,
-	})
+	role := OrgMember
+	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: &role})
+	return err
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
