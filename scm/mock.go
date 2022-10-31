@@ -498,7 +498,7 @@ func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOpt
 }
 
 // RevokeTeacherStatus implements the SCM interface.
-func (_ *MockSCM) RevokeTeacherStatus(_ context.Context, _ *UpdateEnrollmentOptions) error {
+func (*MockSCM) RevokeTeacherStatus(_ context.Context, _ *UpdateEnrollmentOptions) error {
 	return nil
 }
 
