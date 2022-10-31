@@ -702,7 +702,7 @@ func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login
 			Permission: RepoPull,
 		}
 		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, opt); err != nil {
-			return fmt.Errorf("failed to update repo access to repo %s for user %s: %w ", repoType, login, err)
+			return fmt.Errorf("failed to update access to repo %s for user %s: %w", repoType, login, err)
 		}
 	}
 	return nil
