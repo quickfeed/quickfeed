@@ -393,7 +393,7 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 }
 
 // CreateCourse creates repositories and teams for a new course.
-func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
+func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
@@ -475,8 +475,8 @@ func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOpt
 	})
 }
 
-// RevokeTeacherStatus implements the SCM interface.
-func (*MockSCM) RevokeTeacherStatus(_ context.Context, _ *UpdateEnrollmentOptions) error {
+// DemoteTeacherToStudent implements the SCM interface.
+func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOptions) error {
 	return nil
 }
 

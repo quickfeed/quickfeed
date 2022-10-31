@@ -175,7 +175,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	err := sc.RevokeTeacherStatus(ctx, &scm.UpdateEnrollmentOptions{
+	err := sc.DemoteTeacherToStudent(ctx, &scm.UpdateEnrollmentOptions{
 		Organization: course.GetOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,

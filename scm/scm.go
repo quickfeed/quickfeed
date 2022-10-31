@@ -61,13 +61,13 @@ type SCM interface {
 	AcceptInvitations(context.Context, *InvitationOptions) error
 
 	// CreateCourse creates repositories and teams for a new course.
-	CreateCourse(context.Context, *NewCourseOptions) ([]*Repository, error)
+	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)
 	// UpdateEnrollment updates team and organization membership and creates user repository.
 	UpdateEnrollment(context.Context, *UpdateEnrollmentOptions) (*Repository, error)
-	// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+	// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
-	// RevokeTeacherStatus removes user from teachers team, revokes owner status in the organization.
-	RevokeTeacherStatus(context.Context, *UpdateEnrollmentOptions) error
+	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
+	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -93,8 +93,8 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// NewCourseOptions contain information about new course.
-type NewCourseOptions struct {
+// CourseOptions contain information about new course.
+type CourseOptions struct {
 	OrganizationID uint64
 	CourseCreator  string
 }

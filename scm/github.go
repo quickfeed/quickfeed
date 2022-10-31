@@ -543,7 +543,7 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 }
 
 // CreateCourse creates repositories and teams for a new course.
-func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
+func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
 	// Get and check the organization's suitability for the course
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
@@ -593,7 +593,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]
 	}
 
 	// Create student repository for the course creator
-	repo, err := s.createStudentRepo(ctx, org, opt.CourseCreator)
+	repo, err := s.createStudentRepo(ctx, org.Name, opt.CourseCreator)
 	if err != nil {
 		return nil, err
 	}
@@ -618,21 +618,21 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
 		// give access to the course's info and assignments repositories
-		if err := s.grantAccessToCourseRepos(ctx, org.Name, opt.User); err != nil {
+		if err := s.grantPullAccessToCourseRepos(ctx, org.Name, opt.User); err != nil {
 			return nil, err
 		}
 		// add student to the organization's "students" team
 		if err := s.addUserToStudentsTeam(ctx, org.Name, opt.User); err != nil {
 			return nil, err
 		}
-		return s.createStudentRepo(ctx, org, opt.User)
+		return s.createStudentRepo(ctx, org.Name, opt.User)
 	case qf.Enrollment_TEACHER:
 		// promote to organization owners
 		role := OrgOwner
 		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.Name, &github.Membership{Role: &role}); err != nil {
 			return nil, err
 		}
-		err = s.promoteToTeachers(ctx, org.Name, opt.User)
+		err = s.promoteToTeacher(ctx, org.Name, opt.User)
 	}
 	return nil, err
 }
@@ -657,13 +657,13 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	return s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
 }
 
-// RevokeTeacherStatus removes user from teachers team, revokes owner status in the organization.
-func (s *GithubSCM) RevokeTeacherStatus(ctx context.Context, opt *UpdateEnrollmentOptions) error {
+// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
+func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrollmentOptions) error {
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, TeachersTeam, opt.User); err != nil {
 		return err
 	}
-	if _, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, StudentsTeam, opt.User,
-		&github.TeamAddTeamMembershipOptions{Role: TeamMember}); err != nil {
+	teamOptions := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
+	if _, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, StudentsTeam, opt.User, teamOptions); err != nil {
 		return err
 	}
 	role := OrgMember
@@ -672,11 +672,11 @@ func (s *GithubSCM) RevokeTeacherStatus(ctx context.Context, opt *UpdateEnrollme
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
-func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, login string) (*Repository, error) {
+func (s *GithubSCM) createStudentRepo(ctx context.Context, organiation string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
-		Organization: org.Name,
+		Organization: organiation,
 		Path:         qf.StudentRepoName(login),
 		Private:      true,
 	})
@@ -694,7 +694,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization,
 	return repo, nil
 }
 
-func (s *GithubSCM) grantAccessToCourseRepos(ctx context.Context, org, login string) error {
+func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login string) error {
 	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 
 	for _, repoType := range commonRepos {
@@ -702,7 +702,7 @@ func (s *GithubSCM) grantAccessToCourseRepos(ctx context.Context, org, login str
 			Permission: RepoPull,
 		}
 		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, opt); err != nil {
-			return fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", repoType, login, err)
+			return fmt.Errorf("failed to update repo access to repo %s for user %s: %w ", repoType, login, err)
 		}
 	}
 	return nil
@@ -710,18 +710,18 @@ func (s *GithubSCM) grantAccessToCourseRepos(ctx context.Context, org, login str
 
 // addUserToStudentsTeam adds user to the organization's "students" team.
 func (s *GithubSCM) addUserToStudentsTeam(ctx context.Context, org, login string) error {
-	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, StudentsTeam, login,
-		&github.TeamAddTeamMembershipOptions{Role: TeamMember})
+	opt := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
+	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, StudentsTeam, login, opt)
 	return err
 }
 
 // add user to the organization's "teachers" team, and remove user from "students" team.
-func (s *GithubSCM) promoteToTeachers(ctx context.Context, org, login string) error {
+func (s *GithubSCM) promoteToTeacher(ctx context.Context, org, login string) error {
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, org, StudentsTeam, login); err != nil {
 		return err
 	}
-	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login,
-		&github.TeamAddTeamMembershipOptions{Role: TeamMaintainer})
+	opt := &github.TeamAddTeamMembershipOptions{Role: TeamMaintainer}
+	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login, opt)
 	return err
 }
 

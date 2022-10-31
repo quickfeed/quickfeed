@@ -192,7 +192,7 @@ func TestMockRepositories(t *testing.T) {
 			t.Errorf("expected repository %s to be found", repo.Path)
 		}
 		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-			t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
+			t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 		}
 	}
 
@@ -205,7 +205,7 @@ func TestMockRepositories(t *testing.T) {
 		return courseRepos[i].ID < courseRepos[j].ID
 	})
 	if diff := cmp.Diff(wantRepos, courseRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("Expected same repositories, got (-sub +want):\n%s", diff)
+		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 	}
 
 	if err := s.DeleteRepository(ctx, &scm.RepositoryOptions{ID: 3}); err != nil {
@@ -219,7 +219,7 @@ func TestMockRepositories(t *testing.T) {
 		t.Errorf("expected 1 repository, got %d", len(courseRepos))
 	}
 	if diff := cmp.Diff(repos[3], courseRepos[0], cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
+		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 	}
 }
 
@@ -564,7 +564,7 @@ func TestMockCreateIssue(t *testing.T) {
 				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 			}
 			if diff := cmp.Diff(tt.wantIssue, got); diff != "" {
-				t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+				t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 			}
 		})
 	}
@@ -658,7 +658,7 @@ func TestMockUpdateIssue(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -718,7 +718,7 @@ func TestMockGetIssue(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
 
 	}
@@ -796,7 +796,7 @@ func TestMockGetIssues(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -901,7 +901,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssues, s.Issues); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issues (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1026,7 +1026,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantNumber, commentNumber); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch comment number (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1102,7 +1102,7 @@ func TestMockCreateCourse(t *testing.T) {
 	ctx := context.Background()
 	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(user)}
 
-	opt := &scm.NewCourseOptions{
+	opt := &scm.CourseOptions{
 		OrganizationID: 1,
 		CourseCreator:  user,
 	}
@@ -1141,7 +1141,7 @@ func TestMockCreateCourse(t *testing.T) {
 		},
 	}
 	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
-		t.Errorf("mismatch (-want teams +got):\n%s", diff)
+		t.Errorf("mismatch teams (-want +got):\n%s", diff)
 	}
 }
 
@@ -1206,7 +1206,7 @@ func TestMockUpdateEnrollment(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-			t.Errorf("%s: mismatch (-want repos +got):\n%s", tt.name, diff)
+			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1235,9 +1235,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 				OrganizationID: 1,
 				User:           user,
 			},
-			map[uint64]*scm.Repository{
-				1: repo,
-			},
+			map[uint64]*scm.Repository{1: repo},
 			true,
 		},
 		{
@@ -1246,8 +1244,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 				RepositoryID: 1,
 				User:         user,
 			},
-			map[uint64]*scm.Repository{
-				1: repo},
+			map[uint64]*scm.Repository{1: repo},
 			true,
 		},
 		{
@@ -1256,8 +1253,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 				RepositoryID:   1,
 				OrganizationID: 1,
 			},
-			map[uint64]*scm.Repository{
-				1: repo},
+			map[uint64]*scm.Repository{1: repo},
 			true,
 		},
 		{
@@ -1276,7 +1272,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-			t.Errorf("%s: mismatch (-want repos +got):\n%s", tt.name, diff)
+			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
