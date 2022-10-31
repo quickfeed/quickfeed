@@ -14,8 +14,11 @@ class Statement:
     def values(self):
         # Generate fake values for each column in the row
         # The resulting tuple contains values returned by
-        # calling each function in statement[2]
-        return tuple(f() for f in self.value_functions)
+        # calling each function in the value_functions list
+        values = tuple()
+        for value_function in self.value_functions:
+            values += (value_function(),)
+        return values
 
 
 class DatabaseAnonymizer:
