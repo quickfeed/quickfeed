@@ -191,17 +191,6 @@ func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error 
 	return nil
 }
 
-// RemoveMember implements the SCM interface
-func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
-		return errors.New("organization not found")
-	}
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {

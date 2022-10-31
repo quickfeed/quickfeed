@@ -129,12 +129,6 @@ func TestMockOrganizations(t *testing.T) {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName}); err != nil {
 			t.Error(err)
 		}
-		if err := s.RemoveMember(ctx, &scm.OrgMembershipOptions{
-			Organization: course.OrganizationName,
-			Username:     user,
-		}); err != nil {
-			t.Error(err)
-		}
 	}
 
 	invalidOrgs := []struct {
@@ -150,13 +144,6 @@ func TestMockOrganizations(t *testing.T) {
 
 	for _, org := range invalidOrgs {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: org.id, Name: org.name}); err == nil {
-			t.Errorf("expected error: %s", org.err)
-		}
-		opt := &scm.OrgMembershipOptions{
-			Organization: org.name,
-			Username:     org.username,
-		}
-		if err := s.RemoveMember(ctx, opt); err == nil {
 			t.Errorf("expected error: %s", org.err)
 		}
 	}

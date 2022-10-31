@@ -30,8 +30,6 @@ type SCM interface {
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
-	// RemoveMember removes user from the organization.
-	RemoveMember(context.Context, *OrgMembershipOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the

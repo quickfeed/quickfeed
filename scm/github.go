@@ -383,27 +383,6 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
-// RemoveMember implements the SCM interface
-func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "RemoveMember",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	// remove user from the organization and all teams
-	_, err := s.client.Organizations.RemoveMember(ctx, opt.Organization, opt.Username)
-	if err != nil {
-		return ErrFailedSCM{
-			Method:   "RemoveMember",
-			GitError: fmt.Errorf("failed to remove user %s from organization %s: %w", opt.Username, opt.Organization, err),
-			Message:  fmt.Sprintf("failed to remove user %s from the organization", opt.Username),
-		}
-	}
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {
@@ -672,10 +651,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if err != nil {
 		return err
 	}
-	if err := s.RemoveMember(ctx, &OrgMembershipOptions{
-		Organization: org.Name,
-		Username:     opt.User,
-	}); err != nil {
+	if _, err := s.client.Organizations.RemoveMember(ctx, org.Name, opt.User); err != nil {
 		return err
 	}
 	return s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
