@@ -15,6 +15,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
+    const links = useMemo(() => { return state.sortedAndFilteredSubmissions }, [state.sortedAndFilteredSubmissions])
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID.toString()]) {
@@ -90,7 +91,6 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isGroupLab : true).map(assignment => assignment.ID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
-    const links = useMemo(() => { return state.sortedAndFilteredSubmissions }, [state.sortedAndFilteredSubmissions])
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(links, review, generator, assignmentIDs, false)
 
