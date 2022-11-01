@@ -671,6 +671,12 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 
 // CreateGroup creates team and repository for a new group.
 func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+	if !opt.valid() {
+		return nil, nil, ErrMissingFields{
+			Method:  "CreateGroup",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
 	orgOtions := &GetOrgOptions{Name: opt.Organization}
 	org, err := s.GetOrganization(ctx, orgOtions)
 	if err != nil {
