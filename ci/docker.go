@@ -112,6 +112,25 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
 	}
+	if job.Dockerfile != "" {
+		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
+		resp, err := d.client.ImageRemove(ctx, job.Image, types.ImageRemoveOptions{Force: true})
+		if err != nil {
+			d.logger.Debugf("Expected error (continuing): %v", err)
+			// continue because we may not have an image to remove
+		}
+		for _, r := range resp {
+			d.logger.Infof("Removed image '%s' for '%s'", r.Deleted, job.Name)
+		}
+
+		d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
+		// Log first line of Dockerfile
+		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, job.Dockerfile[:strings.Index(job.Dockerfile, "\n")+1])
+		if err := d.buildImage(ctx, job); err != nil {
+			return nil, err
+		}
+	}
+
 	var hostConfig *container.HostConfig
 	if job.BindDir != "" {
 		hostConfig = &container.HostConfig{
@@ -125,9 +144,6 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		}
 	}
 
-	// Log first line of Dockerfile
-	d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, job.Dockerfile[:strings.Index(job.Dockerfile, "\n")+1])
-
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
@@ -140,17 +156,9 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 	resp, err := create()
 	if err != nil {
 		d.logger.Infof("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
-
-		if job.Dockerfile != "" {
-			d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
-			if err := d.buildImage(ctx, job); err != nil {
-				return nil, err
-			}
-		} else {
-			d.logger.Infof("Trying to pull image: '%s' from docker.io", job.Image)
-			if err := d.pullImage(ctx, job.Image); err != nil {
-				return nil, err
-			}
+		d.logger.Infof("Trying to pull image: '%s' from remote repository", job.Image)
+		if err := d.pullImage(ctx, job.Image); err != nil {
+			return nil, err
 		}
 		// try to create the container again
 		resp, err = create()
@@ -190,7 +198,7 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 // pullImage pulls an image from docker hub.
 // This can be slow and should be avoided if possible.
 func (d *Docker) pullImage(ctx context.Context, image string) error {
-	progress, err := d.client.ImagePull(ctx, "docker.io/library/"+image, types.ImagePullOptions{})
+	progress, err := d.client.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}

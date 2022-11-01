@@ -13,7 +13,7 @@ const Dashboard = (): JSX.Element => {
 
     // Users that are not enrolled in any courses are redirected to the course list.
     if (!hasEnrollment(state.enrollments)) {
-        return <Redirect to={"/courses"}></Redirect>
+        return <Redirect to={"/courses"} />
     }
 
     return (
@@ -23,7 +23,7 @@ const Dashboard = (): JSX.Element => {
                 <h1>Welcome, {state.self.name}!</h1>
             </div>
             <SubmissionsTable />
-            <Courses home={true} />
+            <Courses home />
         </div>
     )
 }

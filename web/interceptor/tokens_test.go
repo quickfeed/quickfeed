@@ -23,12 +23,11 @@ func TestRefreshTokens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewTokenInterceptor(tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	f := func(t *testing.T, id uint64) string {
 		cookie, err := tm.NewAuthCookie(id)
@@ -58,19 +57,19 @@ func TestRefreshTokens(t *testing.T) {
 	if tm.UpdateRequired(adminClaims) || tm.UpdateRequired(userClaims) {
 		t.Error("No users should be in the token update list at the start")
 	}
-	if _, err := client.GetUsers(ctx, requestWithCookie(&qf.Void{}, adminCookie)); err != nil {
+	if _, err := client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, adminCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(adminClaims) || tm.UpdateRequired(userClaims) {
 		t.Error("No users should be in the token update list")
 	}
-	if _, err := client.UpdateUser(ctx, requestWithCookie(user, adminCookie)); err != nil {
+	if _, err := client.UpdateUser(ctx, qtest.RequestWithCookie(user, adminCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(userClaims) {
 		t.Error("User must be in the token update list after admin has updated the user's information")
 	}
-	if _, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, userCookie)); err != nil {
+	if _, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, userCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
@@ -90,32 +89,32 @@ func TestRefreshTokens(t *testing.T) {
 			user,
 		},
 	}
-	if _, err := client.CreateCourse(ctx, requestWithCookie(course, adminCookie)); err != nil {
+	if _, err := client.CreateCourse(ctx, qtest.RequestWithCookie(course, adminCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(adminClaims) {
 		t.Error("Admin must be in the token update list after creating a new course")
 	}
 	qtest.EnrollStudent(t, db, user, course)
-	if _, err := client.CreateGroup(ctx, requestWithCookie(group, adminCookie)); err != nil {
+	if _, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, adminCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
 		t.Error("User should not be in the token update list after methods that don't affect the user's information")
 	}
-	if _, err := client.UpdateGroup(ctx, requestWithCookie(group, adminCookie)); err != nil {
+	if _, err := client.UpdateGroup(ctx, qtest.RequestWithCookie(group, adminCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(userClaims) {
 		t.Error("User must be in the token update group after changes to the group")
 	}
-	if _, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, userCookie)); err != nil {
+	if _, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, userCookie)); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
 		t.Error("User should be removed from the token update list after the user's token has been updated")
 	}
-	if _, err := client.DeleteGroup(ctx, requestWithCookie(&qf.GroupRequest{
+	if _, err := client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		GroupID:  group.ID,
 		CourseID: course.ID,
 	}, adminCookie)); err != nil {

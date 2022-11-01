@@ -241,6 +241,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Year:           2017,
 		Tag:            "Spring",
 		Provider:       "github",
+		Dockerfile:     "Dockerfile1",
 		OrganizationID: 1234,
 	}
 	wantCourse := &qf.Course{
@@ -249,14 +250,14 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Year:           2018,
 		Tag:            "Autumn",
 		Provider:       "gitlab",
+		Dockerfile:     "Another Dockerfile1",
 		OrganizationID: 12345,
 	}
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateFakeUser(t, db, 10)
 	qtest.CreateCourse(t, db, admin, course)
 
 	wantCourse.ID = course.ID
@@ -304,7 +305,7 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	}
 }
 
-func TestGormDBCourseUniqueContraint(t *testing.T) {
+func TestGormDBCourseUniqueConstraint(t *testing.T) {
 	// Test that a course with the same organization ID or code and year cannot be created.
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

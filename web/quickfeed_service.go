@@ -107,11 +107,8 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if err == ErrAlreadyExists {
+		if err == scm.ErrAlreadyExists {
 			return nil, connect.NewError(connect.CodeAlreadyExists, err)
-		}
-		if err == ErrFreePlan {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
@@ -165,8 +162,15 @@ func (s *QuickFeedService) GetCourses(_ context.Context, _ *connect.Request[qf.V
 }
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
-func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateEnrollment(in.Msg); err != nil {
+func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(in.Msg.GetCourseID(), userID(ctx))
+	if err != nil {
+		s.logger.Errorf("UpdateCourseVisibility failed: %v", err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollment"))
+	}
+
+	enrollment.State = in.Msg.GetState()
+	if err := s.db.UpdateEnrollment(enrollment); err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course visibility"))
 	}
@@ -280,7 +284,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
 	group, err := s.getGroupByUserAndCourse(in.Msg)
 	if err != nil {
-		if err != errUserNotInGroup {
+		if err != ErrUserNotInGroup {
 			s.logger.Errorf("GetGroupByUserAndCourse failed: %v", err)
 		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group for given user and course"))
@@ -572,7 +576,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	org, err := s.getOrganization(ctx, scmClient, in.Msg.GetOrgName(), usr.GetLogin())
+	org, err := scmClient.GetOrganization(ctx, &scm.GetOrgOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
@@ -581,9 +585,6 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		}
 		if err == scm.ErrNotMember {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
-		}
-		if err == ErrFreePlan || err == ErrAlreadyExists || err == scm.ErrNotOwner {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr

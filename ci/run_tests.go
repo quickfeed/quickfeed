@@ -119,7 +119,7 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 		Branch:       r.BranchName,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", r.Repo.Name(), err)
+		return fmt.Errorf("failed to clone %s/%s repository: %w", r.Course.GetOrganizationName(), r.Repo.Name(), err)
 	}
 
 	// Clone the course's tests and assignments repositories if they are missing.

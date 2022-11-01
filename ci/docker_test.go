@@ -232,6 +232,58 @@ func TestDockerBuild(t *testing.T) {
 	}
 }
 
+func TestDockerBuildRebuild(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script     = `echo -n "hello world"`
+		script2    = `echo -n "hello quickfeed"`
+		wantOut    = "hello world"
+		wantOut2   = "hello quickfeed"
+		image      = "dat320:latest"
+		image2     = "golang:latest"
+		dockerfile = `FROM golang:latest
+RUN apt update && apt install -y git bash build-essential && rm -rf /var/lib/apt/lists/*
+RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1
+WORKDIR /quickfeed`
+		dockerfile2 = `FROM golang:latest
+RUN apt update && apt install -y git bash build-essential && rm -rf /var/lib/apt/lists/*
+RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.42.1
+WORKDIR /quickfeed`
+	)
+
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		Commands:   []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+
+	out2, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile2,
+		Commands:   []string{script2},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out2 != wantOut2 {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script2, out2, wantOut2)
+	}
+}
+
 func TestDockerRunAsNonRoot(t *testing.T) {
 	if !docker {
 		t.SkipNow()
@@ -269,7 +321,6 @@ go test -v
 WORKDIR /quickfeed
 `
 	)
-	deleteDockerImages(t, image)
 
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -341,6 +392,36 @@ func TestDockerPull(t *testing.T) {
 		script  = `python -c "print('Hello, world!')"`
 		wantOut = "Hello, world!\n"
 		image   = "python:latest"
+	)
+	deleteDockerImages(t, image)
+
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// To pull an image, we need only a job with image name;
+	// no Dockerfile content should be provided when pulling.
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+func TestDockerPullFromNonDockerHubRepositories(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+	const (
+		script  = `echo "Hello, world!"`
+		wantOut = "Hello, world!\n"
+		image   = "mcr.microsoft.com/dotnet/sdk:6.0"
 	)
 	deleteDockerImages(t, image)
 

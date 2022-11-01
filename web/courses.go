@@ -85,7 +85,12 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		// continue with other delete operations
 	}
 	// when deleting a user, remove github repository and organization membership as well
-	if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
+	opt := &scm.RejectEnrollmentOptions{
+		User:           user.GetLogin(),
+		OrganizationID: repo.OrganizationID,
+		RepositoryID:   repo.RepositoryID,
+	}
+	if err := sc.RejectEnrollment(ctx, opt); err != nil {
 		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
 	}
 	return nil
@@ -113,7 +118,11 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 		})
 	}
 	// create user scmRepo, user team, and add user to students team
-	scmRepo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), qf.Enrollment_STUDENT)
+	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
+		Organization: course.OrganizationName,
+		User:         user.GetLogin(),
+		Status:       qf.Enrollment_STUDENT,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
 	}
@@ -149,7 +158,11 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
 	// make owner, remove from students, add to teachers
-	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), qf.Enrollment_TEACHER); err != nil {
+	if _, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
+		Organization: course.OrganizationName,
+		User:         user.GetLogin(),
+		Status:       qf.Enrollment_TEACHER,
+	}); err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}
 	return s.db.UpdateEnrollment(&qf.Enrollment{
@@ -162,7 +175,11 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationName(), user.GetLogin())
+	err := sc.DemoteTeacherToStudent(ctx, &scm.UpdateEnrollmentOptions{
+		Organization: course.GetOrganizationName(),
+		User:         user.GetLogin(),
+		Status:       qf.Enrollment_STUDENT,
+	})
 	if err != nil {
 		// log error, but continue to update enrollment; we can manually revoke teacher access later
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)

@@ -1,8 +1,8 @@
 package web_test
 
 import (
-	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
@@ -23,18 +23,22 @@ func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *we
 	return db, cleanup, sc, web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 }
 
-// MockQuickFeedClient returns a QuickFeed client for invoking RPCs.
-func MockQuickFeedClient(t *testing.T, db database.Database, opts connect.Option) (func(context.Context), qfconnect.QuickFeedServiceClient) {
+// MockClient returns a QuickFeed client for invoking RPCs.
+func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconnect.QuickFeedServiceClient {
 	t.Helper()
+	_, mgr := scm.MockSCMManager(t)
 	logger := qtest.Logger(t)
+	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	if opts == nil {
 		opts = connect.WithInterceptors()
 	}
-	shutdown := web.MockQuickFeedServer(t, logger, db, opts)
+	router := http.NewServeMux()
+	router.Handle(qfconnect.NewQuickFeedServiceHandler(qfService, opts))
+	server := httptest.NewUnstartedServer(router)
+	server.EnableHTTP2 = true
+	server.StartTLS()
+	t.Cleanup(server.Close)
 
-	const serverURL = "http://127.0.0.1:8081"
-	return func(ctx context.Context) {
-		shutdown(ctx)
-	}, qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverURL)
+	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL)
 }

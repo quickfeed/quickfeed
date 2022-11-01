@@ -23,11 +23,10 @@ func TestUserVerifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
@@ -53,7 +52,7 @@ func TestUserVerifier(t *testing.T) {
 	}
 
 	for _, user := range userTest {
-		gotUser, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, user.cookie))
+		gotUser, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, user.cookie))
 		if err != nil {
 			// zero codes won't actually reach this check, but that's okay, since zero is CodeOK
 			if gotCode := connect.CodeOf(err); gotCode != user.code {

@@ -129,29 +129,6 @@ func TestMockOrganizations(t *testing.T) {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName}); err != nil {
 			t.Error(err)
 		}
-		if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-			Name:              course.OrganizationName,
-			DefaultPermission: "read",
-		}); err != nil {
-			t.Error(err)
-		}
-		if err := s.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
-			Organization: course.OrganizationName,
-			Username:     user,
-		}); err != nil {
-			t.Error(err)
-		}
-		if err := s.RemoveMember(ctx, &scm.OrgMembershipOptions{
-			Organization: course.OrganizationName,
-			Username:     user,
-		}); err != nil {
-			t.Error(err)
-		}
-	}
-	if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-		Name: qtest.MockCourses[0].OrganizationName,
-	}); err == nil {
-		t.Error("expected error 'invalid argument'")
 	}
 
 	invalidOrgs := []struct {
@@ -167,22 +144,6 @@ func TestMockOrganizations(t *testing.T) {
 
 	for _, org := range invalidOrgs {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: org.id, Name: org.name}); err == nil {
-			t.Errorf("expected error: %s", org.err)
-		}
-		if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-			Name:              org.name,
-			DefaultPermission: org.permission,
-		}); err == nil {
-			t.Errorf("expected error: %s", org.err)
-		}
-		opt := &scm.OrgMembershipOptions{
-			Organization: org.name,
-			Username:     org.username,
-		}
-		if err := s.UpdateOrgMembership(ctx, opt); err == nil {
-			t.Errorf("expected error: %s", org.err)
-		}
-		if err := s.RemoveMember(ctx, opt); err == nil {
 			t.Errorf("expected error: %s", org.err)
 		}
 	}
@@ -226,19 +187,12 @@ func TestMockRepositories(t *testing.T) {
 			t.Error(err)
 		}
 		repo.ID = r.ID
-		if err := s.UpdateRepoAccess(ctx, repo, "", ""); err != nil {
-			t.Error(err)
-		}
-		gotRepo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
-			ID:    repo.ID,
-			Path:  repo.Path,
-			Owner: repo.Owner,
-		})
-		if err != nil {
-			t.Error(err)
+		gotRepo, ok := s.Repositories[repo.ID]
+		if !ok {
+			t.Errorf("expected repository %s to be found", repo.Path)
 		}
 		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-			t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
+			t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 		}
 	}
 
@@ -251,7 +205,7 @@ func TestMockRepositories(t *testing.T) {
 		return courseRepos[i].ID < courseRepos[j].ID
 	})
 	if diff := cmp.Diff(wantRepos, courseRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("Expected same repositories, got (-sub +want):\n%s", diff)
+		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 	}
 
 	if err := s.DeleteRepository(ctx, &scm.RepositoryOptions{ID: 3}); err != nil {
@@ -265,160 +219,105 @@ func TestMockRepositories(t *testing.T) {
 		t.Errorf("expected 1 repository, got %d", len(courseRepos))
 	}
 	if diff := cmp.Diff(repos[3], courseRepos[0], cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
+		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 	}
 }
 
-func TestMockTeams(t *testing.T) {
+var mockTeams = []*scm.Team{
+	{
+		ID:           1,
+		Organization: qtest.MockOrg,
+		Name:         "a_team",
+	},
+	{
+		ID:           2,
+		Organization: qtest.MockOrg,
+		Name:         "another_team",
+	},
+	{
+		ID:           3,
+		Organization: qtest.MockOrg,
+		Name:         "best_team",
+	},
+}
+
+func TestMockCreateTeams(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
-	teams := []*scm.Team{
-		{
-			Organization: course.OrganizationName,
-			Name:         "a_team",
-		},
-		{
-			Organization: course.OrganizationName,
-			Name:         "another_team",
-		},
-		{
-			Organization: course.OrganizationName,
-			Name:         "best_team",
-		},
-	}
-	for _, team := range teams {
-		wantTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+	for _, team := range mockTeams {
+		newTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
 			Organization: team.Organization,
 			TeamName:     team.Name,
 		})
 		if err != nil {
 			t.Error(err)
 		}
-		team.ID = wantTeam.ID
-		opts := []*scm.TeamOptions{
-			{
-				TeamID:         team.ID,
-				OrganizationID: course.OrganizationID,
-			},
-			{
-				TeamName:     team.Name,
-				Organization: team.Organization,
-			},
-		}
-		for _, opt := range opts {
-			gotTeam, err := s.GetTeam(ctx, opt)
-			if err != nil {
-				t.Error(err)
-			}
-			if diff := cmp.Diff(wantTeam, gotTeam); diff != "" {
-				t.Errorf("Expected same team, got (-sub +want):\n%s", diff)
-			}
+		if _, ok := s.Teams[newTeam.ID]; !ok {
+			t.Errorf("expected new team %d", newTeam.ID)
 		}
 	}
-	if err := s.DeleteTeam(ctx, &scm.TeamOptions{
-		TeamID:         2,
-		OrganizationID: course.OrganizationID,
-	}); err != nil {
-		t.Error(err)
-	}
-	wantTeams := []*scm.Team{teams[0], teams[2]}
-	courseTeams, err := s.GetTeams(ctx, &qf.Organization{
-		ID:   course.OrganizationID,
-		Name: course.OrganizationName,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	sort.Slice(courseTeams, func(i, j int) bool {
-		return courseTeams[i].ID < courseTeams[j].ID
-	})
-	if diff := cmp.Diff(wantTeams, courseTeams); diff != "" {
-		t.Errorf("Expected same teams, got (-sub +want):\n%s", diff)
+	if len(s.Teams) != len(mockTeams) {
+		t.Fatalf("expected %d teams created, got %d", len(mockTeams), len(s.Teams))
 	}
 }
 
-func TestAddRemoveMockTeamMembers(t *testing.T) {
+func TestMockDeleteTeams(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	course := qtest.MockCourses[0]
-	team, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: course.OrganizationName,
-		TeamName:     "test_team",
-	})
-	if err != nil {
-		t.Fatal(err)
+	for _, team := range mockTeams {
+		s.Teams[team.ID] = team
 	}
 	tests := []struct {
-		name    string
-		opt     *scm.TeamMembershipOptions
-		wantErr bool
+		name      string
+		opt       *scm.TeamOptions
+		wantTeams []uint64
+		wantErr   bool
 	}{
 		{
-			name: "valid team, with team and organization ID",
-			opt: &scm.TeamMembershipOptions{
-				TeamID:         team.ID,
-				OrganizationID: course.OrganizationID,
-				Username:       user,
+			"delete team 2",
+			&scm.TeamOptions{
+				TeamID:         2,
+				OrganizationID: 1,
 			},
-			wantErr: false,
+			[]uint64{1, 3},
+			false,
 		},
 		{
-			name: "valid team, with team and organization name",
-			opt: &scm.TeamMembershipOptions{
-				TeamName:     team.Name,
-				Organization: team.Organization,
-				Username:     user,
+			"delete team 1",
+			&scm.TeamOptions{
+				TeamID:         1,
+				OrganizationID: 1,
 			},
-			wantErr: false,
+			[]uint64{3},
+			false,
 		},
 		{
-			name: "valid team, missing team info",
-			opt: &scm.TeamMembershipOptions{
-				Organization:   course.OrganizationName,
-				OrganizationID: course.OrganizationID,
-				Username:       user,
+			"invalid opt, missing organization info",
+			&scm.TeamOptions{
+				TeamID:   3,
+				TeamName: mockTeams[2].Name,
 			},
-			wantErr: true,
+			[]uint64{3},
+			true,
 		},
 		{
-			name: "valid team, missing organization info",
-			opt: &scm.TeamMembershipOptions{
-				TeamID:   team.ID,
-				TeamName: team.Name,
-				Username: user,
+			"invalid opt, missing team info",
+			&scm.TeamOptions{
+				Organization:   qtest.MockOrg,
+				OrganizationID: 1,
 			},
-			wantErr: true,
-		},
-		{
-			name: "valid team, missing username",
-			opt: &scm.TeamMembershipOptions{
-				TeamID:         team.ID,
-				TeamName:       team.Name,
-				Organization:   course.OrganizationName,
-				OrganizationID: course.OrganizationID,
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid team",
-			opt: &scm.TeamMembershipOptions{
-				TeamID:         123,
-				TeamName:       "not-a-team",
-				Organization:   course.OrganizationName,
-				OrganizationID: course.OrganizationID,
-				Username:       user,
-			},
-			wantErr: true,
+			[]uint64{3},
+			true,
 		},
 	}
-
 	for _, tt := range tests {
-		if err := s.AddTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
+		if err := s.DeleteTeam(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
-		if err := s.RemoveTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+		for _, teamID := range tt.wantTeams {
+			if _, ok := s.Teams[teamID]; !ok {
+				t.Errorf("%s: expected team %d in remaining teams", tt.name, teamID)
+			}
 		}
 	}
 }
@@ -665,7 +564,7 @@ func TestMockCreateIssue(t *testing.T) {
 				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 			}
 			if diff := cmp.Diff(tt.wantIssue, got); diff != "" {
-				t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+				t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 			}
 		})
 	}
@@ -759,7 +658,7 @@ func TestMockUpdateIssue(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -819,7 +718,7 @@ func TestMockGetIssue(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
 
 	}
@@ -897,7 +796,7 @@ func TestMockGetIssues(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1002,7 +901,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssues, s.Issues); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch issues (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1127,7 +1026,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantNumber, commentNumber); diff != "" {
-			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			t.Errorf("%s mismatch comment number (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1194,6 +1093,186 @@ func TestMockUpdateIssueComment(t *testing.T) {
 			if !ok || comment != "Updated" {
 				t.Errorf("%s: expected comment body 'Updated', got '%s'", tt.name, comment)
 			}
+		}
+	}
+}
+
+func TestMockCreateCourse(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(user)}
+
+	opt := &scm.CourseOptions{
+		OrganizationID: 1,
+		CourseCreator:  user,
+	}
+	repos, err := s.CreateCourse(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repos) != len(wantRepos) {
+		t.Errorf("expected %d repositories, got %d", len(wantRepos), len(repos))
+	}
+
+	found := func(wantRepo string, repos []*scm.Repository) bool {
+		for _, repo := range repos {
+			if repo.Path == wantRepo {
+				return true
+			}
+		}
+		return false
+	}
+	for _, r := range wantRepos {
+		if !found(r, repos) {
+			t.Errorf("expected repository %s to be found", r)
+		}
+	}
+
+	wantTeams := map[uint64]*scm.Team{
+		1: {
+			ID:           1,
+			Name:         scm.TeachersTeam,
+			Organization: qtest.MockOrg,
+		},
+		2: {
+			ID:           2,
+			Name:         scm.StudentsTeam,
+			Organization: qtest.MockOrg,
+		},
+	}
+	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
+		t.Errorf("mismatch teams (-want +got):\n%s", diff)
+	}
+}
+
+func TestMockUpdateEnrollment(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	tests := []struct {
+		name      string
+		opt       *scm.UpdateEnrollmentOptions
+		wantRepos map[uint64]*scm.Repository
+		wantErr   bool
+	}{
+		{
+			"invalid opt, missing course",
+			&scm.UpdateEnrollmentOptions{
+				User:   user,
+				Status: qf.Enrollment_STUDENT,
+			},
+			map[uint64]*scm.Repository{},
+			true,
+		},
+		{
+			"invalid opt, missing user name",
+			&scm.UpdateEnrollmentOptions{
+				Organization: qtest.MockOrg,
+				Status:       qf.Enrollment_STUDENT,
+			},
+			map[uint64]*scm.Repository{},
+			true,
+		},
+		{
+			"enroll teacher, no new repos",
+			&scm.UpdateEnrollmentOptions{
+				Organization: qtest.MockOrg,
+				User:         user,
+				Status:       qf.Enrollment_TEACHER,
+			},
+			map[uint64]*scm.Repository{},
+			false,
+		},
+		{
+			"enroll student, new repo added",
+			&scm.UpdateEnrollmentOptions{
+				Organization: qtest.MockOrg,
+				User:         user,
+				Status:       qf.Enrollment_STUDENT,
+			},
+			map[uint64]*scm.Repository{
+				1: {
+					ID:    1,
+					Path:  qf.StudentRepoName(user),
+					Owner: qtest.MockOrg,
+					OrgID: 1,
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		if _, err := s.UpdateEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
+		}
+	}
+}
+
+func TestMockRejectEnrollment(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	repo := &scm.Repository{
+		ID:    1,
+		Owner: qtest.MockOrg,
+		Path:  "testgrp",
+		OrgID: 1,
+	}
+	s.Repositories = map[uint64]*scm.Repository{
+		1: repo,
+	}
+	tests := []struct {
+		name      string
+		opt       *scm.RejectEnrollmentOptions
+		wantRepos map[uint64]*scm.Repository
+		wantErr   bool
+	}{
+		{
+			"invalid options, missing repo ID",
+			&scm.RejectEnrollmentOptions{
+				OrganizationID: 1,
+				User:           user,
+			},
+			map[uint64]*scm.Repository{1: repo},
+			true,
+		},
+		{
+			"invalid options, missing organization ID",
+			&scm.RejectEnrollmentOptions{
+				RepositoryID: 1,
+				User:         user,
+			},
+			map[uint64]*scm.Repository{1: repo},
+			true,
+		},
+		{
+			"invalid options, missing user login",
+			&scm.RejectEnrollmentOptions{
+				RepositoryID:   1,
+				OrganizationID: 1,
+			},
+			map[uint64]*scm.Repository{1: repo},
+			true,
+		},
+		{
+			"valid options, must remove repository",
+			&scm.RejectEnrollmentOptions{
+				OrganizationID: 1,
+				RepositoryID:   1,
+				User:           user,
+			},
+			map[uint64]*scm.Repository{},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		if err := s.RejectEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
