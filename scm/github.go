@@ -174,7 +174,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 		}
 	}
 
-	var repositories []*Repository
+	repositories := make([]*Repository, 0, len(repos))
 	for _, repo := range repos {
 		repositories = append(repositories, toRepository(repo))
 	}
@@ -335,7 +335,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 				Message:  fmt.Sprintf("failed to add user %s to team ID %d", member, opt.TeamID),
 			}
 		}
-
 	}
 
 	// check if all the team members are in the new group;
@@ -617,17 +616,18 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	}
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
-		// give access to the course's info and assignments repositories
+		// Give access to the course's info and assignments repositories
 		if err := s.grantPullAccessToCourseRepos(ctx, org.Name, opt.User); err != nil {
 			return nil, err
 		}
-		// add student to the organization's "students" team
+		// Add student to the organization's "students" team
 		if err := s.addUserToStudentsTeam(ctx, org.Name, opt.User); err != nil {
 			return nil, err
 		}
 		return s.createStudentRepo(ctx, org.Name, opt.User)
+
 	case qf.Enrollment_TEACHER:
-		// promote to organization owners
+		// Promote user to organization owner
 		role := OrgOwner
 		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.Name, &github.Membership{Role: &role}); err != nil {
 			return nil, err
@@ -637,7 +637,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	return nil, err
 }
 
-// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
 func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
@@ -645,9 +645,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{
-		ID: opt.OrganizationID,
-	})
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID})
 	if err != nil {
 		return err
 	}
@@ -672,11 +670,11 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
-func (s *GithubSCM) createStudentRepo(ctx context.Context, organiation string, login string) (*Repository, error) {
+func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
-		Organization: organiation,
+		Organization: organization,
 		Path:         qf.StudentRepoName(login),
 		Private:      true,
 	})
@@ -689,20 +687,20 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organiation string, l
 		Permission: RepoPush,
 	}
 	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, opt); err != nil {
-		return nil, fmt.Errorf("failed to update repo push access: %w", err)
+		return nil, fmt.Errorf("failed to grant push access to %s/%s for user %s: %w", repo.Owner, repo.Path, login, err)
 	}
 	return repo, nil
 }
 
+// grantPullAccessToCourseRepos gives pull access to the course's info and assignments repositories.
 func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login string) error {
 	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
-
 	for _, repoType := range commonRepos {
 		opt := &github.RepositoryAddCollaboratorOptions{
 			Permission: RepoPull,
 		}
 		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, opt); err != nil {
-			return fmt.Errorf("failed to update access to repo %s for user %s: %w", repoType, login, err)
+			return fmt.Errorf("failed to grant pull access to %s/%s for user %s: %w", org, repoType, login, err)
 		}
 	}
 	return nil
@@ -715,7 +713,7 @@ func (s *GithubSCM) addUserToStudentsTeam(ctx context.Context, org, login string
 	return err
 }
 
-// add user to the organization's "teachers" team, and remove user from "students" team.
+// promoteToTeacher adds user to the organization's "teachers" team, and removes the user from the "students" team.
 func (s *GithubSCM) promoteToTeacher(ctx context.Context, org, login string) error {
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, org, StudentsTeam, login); err != nil {
 		return err
