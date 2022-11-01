@@ -17,7 +17,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return nil, fmt.Errorf("failed to get course creator record from database: %w", err)
 	}
-	repos, err := sc.CreateCourse(ctx, &scm.NewCourseOptions{
+	repos, err := sc.CreateCourse(ctx, &scm.CourseOptions{
 		CourseCreator:  courseCreator.Login,
 		OrganizationID: request.OrganizationID,
 	})
