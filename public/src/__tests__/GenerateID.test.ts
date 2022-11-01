@@ -1,7 +1,7 @@
 import { Course, GradingBenchmark } from "../../proto/qf/types_pb"
 import { MockGrpcManager } from "../MockGRPCManager"
 
-(BigInt.prototype as any).toJSON = function () {
+(BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
     return this.toString();
 }
 
