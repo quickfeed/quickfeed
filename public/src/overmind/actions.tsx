@@ -214,6 +214,10 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
 
 /** updateEnrollment updates an enrollment status with the given status */
 export const updateEnrollment = async ({ state, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment_UserStatus }): Promise<void> => {
+    if (!enrollment.user) {
+        // user name is required
+        return
+    }
     // Confirm that user really wants to change enrollment status
     let confirmed = false
     switch (status) {
@@ -222,10 +226,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
             break
         case Enrollment_UserStatus.STUDENT:
             // If the enrollment is pending, don't ask for confirmation
-            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user?.name} is a teacher. Are sure you want to demote?`)
+            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user.name} is a teacher. Are sure you want to demote?`)
             break
         case Enrollment_UserStatus.TEACHER:
-            confirmed = confirm(`Are you sure you want to promote ${enrollment.user?.name} to teacher status?`)
+            confirmed = confirm(`Are you sure you want to promote ${enrollment.user.name} to teacher status?`)
             break
     }
 
