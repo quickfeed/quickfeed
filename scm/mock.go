@@ -134,19 +134,6 @@ func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 	return nil
 }
 
-// UpdateRepoAccess implements the SCM interface.
-func (s *MockSCM) UpdateRepoAccess(_ context.Context, repo *Repository, _, _ string) error {
-	if !repo.valid() {
-		return fmt.Errorf("invalid argument: %+v", repo)
-	}
-	_, err := s.getRepository(&RepositoryOptions{
-		ID:    repo.ID,
-		Path:  repo.Path,
-		Owner: repo.Owner,
-	})
-	return err
-}
-
 // RepositoryIsEmpty implements the SCM interface
 func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
 	return false
@@ -172,28 +159,6 @@ func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 		return fmt.Errorf("invalid argument: %+v", opt)
 	}
 	delete(s.Teams, opt.TeamID)
-	return nil
-}
-
-// AddTeamMember implements the scm interface
-func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
-		return errors.New("team not found")
-	}
-	return nil
-}
-
-// RemoveTeamMember implements the scm interface
-func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
-		return errors.New("team not found")
-	}
 	return nil
 }
 
@@ -223,28 +188,6 @@ func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error 
 		OrgID: opt.OrganizationID,
 	}
 	s.Repositories[repo.ID] = repo
-	return nil
-}
-
-// UpdateOrgMembership implements the SCM interface
-func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
-		return errors.New("organization not found")
-	}
-	return nil
-}
-
-// RemoveMember implements the SCM interface
-func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
-		return errors.New("organization not found")
-	}
 	return nil
 }
 
@@ -450,7 +393,7 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 }
 
 // CreateCourse creates repositories and teams for a new course.
-func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
+func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
@@ -494,6 +437,47 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*R
 		}
 	}
 	return repositories, nil
+}
+
+func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
+	}
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{
+		Name: opt.Organization,
+	})
+	if err != nil {
+		return nil, errors.New("organization not found")
+	}
+	if opt.Status == qf.Enrollment_STUDENT {
+		return s.CreateRepository(ctx, &CreateRepositoryOptions{
+			Organization: org.Name,
+			Path:         qf.StudentRepoName(opt.User),
+			Private:      true,
+			Owner:        org.Name,
+		})
+	}
+	return nil, nil
+}
+
+// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
+	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID: opt.OrganizationID,
+	}); err != nil {
+		return errors.New("organization not found")
+	}
+	return s.DeleteRepository(ctx, &RepositoryOptions{
+		ID: opt.RepositoryID,
+	})
+}
+
+// DemoteTeacherToStudent implements the SCM interface.
+func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOptions) error {
+	return nil
 }
 
 // teamExists checks teams by ID, or by team and organization name.

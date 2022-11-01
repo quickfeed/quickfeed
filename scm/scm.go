@@ -20,8 +20,6 @@ type SCM interface {
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Delete repository.
 	DeleteRepository(context.Context, *RepositoryOptions) error
-	// Add user as repository collaborator with provided permissions
-	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// Create team.
@@ -30,16 +28,8 @@ type SCM interface {
 	DeleteTeam(context.Context, *TeamOptions) error
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
-	// AddTeamMember adds a member to a team.
-	AddTeamMember(context.Context, *TeamMembershipOptions) error
-	// RemoveTeamMember removes team member.
-	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
-	// Promote or demote organization member based on Role field in OrgMembership.
-	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
-	// RemoveMember removes user from the organization.
-	RemoveMember(context.Context, *OrgMembershipOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
@@ -71,7 +61,13 @@ type SCM interface {
 	AcceptInvitations(context.Context, *InvitationOptions) error
 
 	// CreateCourse creates repositories and teams for a new course.
-	CreateCourse(context.Context, *NewCourseOptions) ([]*Repository, error)
+	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)
+	// UpdateEnrollment updates team and organization membership and creates user repository.
+	UpdateEnrollment(context.Context, *UpdateEnrollmentOptions) (*Repository, error)
+	// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
+	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
+	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
+	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -97,10 +93,23 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// NewCourseOptions contain information about new course.
-type NewCourseOptions struct {
+// CourseOptions contain information about new course.
+type CourseOptions struct {
 	OrganizationID uint64
 	CourseCreator  string
+}
+
+// UpdateEnrollmentOptions contain information about enrollment.
+type UpdateEnrollmentOptions struct {
+	Organization string
+	User         string
+	Status       qf.Enrollment_UserStatus
+}
+
+type RejectEnrollmentOptions struct {
+	OrganizationID uint64
+	RepositoryID   uint64
+	User           string
 }
 
 // GetOrgOptions contains information on the organization to fetch
@@ -161,24 +170,6 @@ type UpdateTeamOptions struct {
 	OrganizationID uint64
 	TeamID         uint64
 	Users          []string
-}
-
-// TeamMembershipOptions contain information on organization team and associated user.
-// Username and either team ID, or names of both the team and organization must be provided.
-type TeamMembershipOptions struct {
-	Organization   string
-	OrganizationID uint64
-	TeamID         uint64
-	TeamName       string
-	Username       string // GitHub username.
-	Role           string // "Member" or "maintainer". A maintainer can add, remove and promote team members.
-}
-
-// OrgMembershipOptions represent user's membership in organization
-type OrgMembershipOptions struct {
-	Organization string
-	Username     string // GitHub username.
-	Role         string // Role can be "admin" (organization owner) or "member".
 }
 
 // AddTeamRepoOptions contains information about the repos to be added to a team.

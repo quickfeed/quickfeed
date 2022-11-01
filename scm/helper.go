@@ -84,8 +84,13 @@ func (opt GetOrgOptions) valid() bool {
 	return opt.ID != 0 || opt.Name != ""
 }
 
-func (r *Repository) valid() bool {
-	return r.Path != "" && r.Owner != ""
+func (opt UpdateEnrollmentOptions) valid() bool {
+	return opt.Organization != "" && opt.User != ""
+}
+
+func (opt *RejectEnrollmentOptions) valid() bool {
+	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
+		opt.User != ""
 }
 
 func (opt AddTeamRepoOptions) valid() bool {
@@ -111,16 +116,6 @@ func (opt TeamOptions) valid() bool {
 
 func (opt NewTeamOptions) valid() bool {
 	return opt.TeamName != "" && opt.Organization != ""
-}
-
-func (opt *TeamMembershipOptions) valid() bool {
-	return (opt.TeamID > 0 && opt.OrganizationID > 0 ||
-		opt.TeamName != "" && opt.Organization != "") &&
-		opt.Username != ""
-}
-
-func (opt OrgMembershipOptions) valid() bool {
-	return opt.Organization != "" && opt.Username != ""
 }
 
 func (opt RepositoryOptions) valid() bool {
