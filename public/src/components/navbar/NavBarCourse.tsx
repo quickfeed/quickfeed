@@ -8,27 +8,27 @@ import NavBarLabs from "./NavBarLabs"
 import NavBarTeacher from "./NavBarTeacher"
 
 
-const NavBarCourse = ({ enrollment }: { enrollment: Enrollment.AsObject }): JSX.Element => {
+const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
     // Determines if a dropdown should be shown for the course
-    const active = state.activeCourse === enrollment.courseid
+    const active = state.activeCourse === enrollment.courseID
 
-    const navigateTo = (courseID: number) => {
+    const navigateTo = (courseID: bigint) => {
         if (active) {
             // Collapse active course dropdown
-            actions.setActiveCourse(0)
+            actions.setActiveCourse(BigInt(0))
             history.push("/")
         } else {
-            history.push("/course/" + courseID)
+            history.push(`/course/${courseID}`)
             actions.setActiveCourse(courseID)
         }
     }
 
     return (
         <>
-            <li role={"button"} onClick={() => navigateTo(enrollment.courseid)} className="activeClass">
+            <li role={"button"} onClick={() => navigateTo(enrollment.courseID)} className="activeClass">
                 <div className="col" id="title">
                     {enrollment.course?.code}
                 </div>

@@ -4,7 +4,7 @@ import { useAppState } from "../../overmind"
 
 const AdminButton = () => {
     const { self } = useAppState()
-    if (self.isadmin) {
+    if (self.isAdmin) {
         return (
             <li>
                 <Link to="/admin" className="sidebar-items-link dropdown-item bg-dark" style={{ color: "#d4d4d4" }}>

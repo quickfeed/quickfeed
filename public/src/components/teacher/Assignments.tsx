@@ -15,7 +15,7 @@ const Assignments = (): JSX.Element => {
     const actions = useActions()
     const state = useAppState()
 
-    const assignmentElement = (assignment: Assignment.AsObject): JSX.Element => {
+    const assignmentElement = (assignment: Assignment): JSX.Element => {
         const [hidden, setHidden] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
@@ -23,7 +23,7 @@ const Assignments = (): JSX.Element => {
         const rebuild = async () => {
             if (confirm(`Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`)) {
                 setButtonText("Rebuilding...")
-                const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.id, courseID: courseID })
+                const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.ID, courseID: courseID })
                 if (success) {
                     setButtonText("Finished rebuilding")
                 } else {
@@ -32,29 +32,29 @@ const Assignments = (): JSX.Element => {
             }
         }
 
-        const assignmentForm = hasBenchmarks(assignment) ? assignment.gradingbenchmarksList.map((bm) => (
-            <EditBenchmark key={bm.id}
+        const assignmentForm = hasBenchmarks(assignment) ? assignment.gradingBenchmarks.map((bm) => (
+            <EditBenchmark key={bm.ID.toString()}
                 benchmark={bm}
                 assignment={assignment}
             >
                 {/* Show all criteria for this benchmark */}
-                {hasCriteria(bm) && bm.criteriaList?.map((crit) => (
-                    <EditCriterion key={crit.id}
+                {hasCriteria(bm) && bm.criteria?.map((crit) => (
+                    <EditCriterion key={crit.ID.toString()}
                         originalCriterion={crit}
                         assignment={assignment}
-                        benchmarkID={bm.id}
+                        benchmarkID={bm.ID}
                     />
                 ))}
                 {/* Always show one criterion form in case of benchmarks without any */}
-                <EditCriterion key={bm.criteriaList.length}
+                <EditCriterion key={bm.criteria.length}
                     assignment={assignment}
-                    benchmarkID={bm.id}
+                    benchmarkID={bm.ID}
                 />
             </EditBenchmark>
         )) : null
 
         return (
-            <ul key={assignment.id} className="list-group">
+            <ul key={assignment.ID.toString()} className="list-group">
                 <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)}>
                     {assignment.name}
                 </li>
@@ -62,7 +62,7 @@ const Assignments = (): JSX.Element => {
                     <li key={"form"} className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
                         {isManuallyGraded(assignment)
-                            ? <> {assignmentForm} <EditBenchmark key={assignment.gradingbenchmarksList.length} assignment={assignment} /></>
+                            ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
                             : <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} />
                         }
                     </li>
@@ -71,7 +71,7 @@ const Assignments = (): JSX.Element => {
         )
     }
 
-    const list = state.assignments[courseID]?.map(assignment => assignmentElement(assignment))
+    const list = state.assignments[courseID.toString()]?.map(assignment => assignmentElement(assignment))
     return (
         <div className="column">
             {list}

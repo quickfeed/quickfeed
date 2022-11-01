@@ -10,21 +10,21 @@ import React from "react"
 const CourseLabs = (): JSX.Element => {
     const state = useAppState()
     const history = useHistory()
-    const courseID = getCourseID()
+    const courseID = getCourseID().toString()
     const labs: JSX.Element[] = []
 
-    const redirectTo = (assignmentID: number) => {
-        history.push(`/course/${courseID}/${assignmentID}`)
+    const redirectTo = (assignmentID: bigint) => {
+        history.push(`/course/${courseID}/lab/${assignmentID.toString()}`)
     }
 
     if (state.assignments[courseID] && state.submissions[courseID]) {
         state.assignments[courseID].forEach(assignment => {
             const assignmentIndex = assignment.order - 1
             // Submissions are indexed by the assignment order.
-            const submission = state.submissions[courseID][assignmentIndex] ?? (new Submission()).toObject()
+            const submission = state.submissions[courseID][assignmentIndex] ?? new Submission()
 
             labs.push(
-                <li key={assignment.id} className="list-group-item border clickable mb-2 labList" onClick={() => redirectTo(assignment.id)}>
+                <li key={assignment.ID.toString()} className="list-group-item border clickable mb-2 labList" onClick={() => redirectTo(assignment.ID)}>
                     <div className="row" >
                         <div className="col-8">
                             <strong>{assignment.name}</strong>

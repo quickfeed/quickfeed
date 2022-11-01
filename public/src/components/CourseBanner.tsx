@@ -9,7 +9,7 @@ import RoleSwitch from "./teacher/RoleSwitch"
 // TODO(jostein): This information could possibly be shown in the navbar.
 const CourseBanner = (): JSX.Element => {
     const state = useAppState()
-    const enrollment = state.enrollmentsByCourseID[getCourseID()]
+    const enrollment = state.enrollmentsByCourseID[getCourseID().toString()]
 
     return (
         <div className="jumbotron">
