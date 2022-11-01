@@ -7,11 +7,6 @@
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
-grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
-grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
-protoc-grpcweb		:= protoc-gen-grpc-web
-protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
-sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 protopatch			:= patch/go.proto
 protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
 toolsdir			:= bin
@@ -19,9 +14,7 @@ tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 
 # necessary when target is not tied to a specific file
-.PHONY: devtools download tools grpcweb install ui proto scm version-check
-
-devtools: grpcweb tools
+.PHONY: download tools brew version-check install ui proto test qcm scm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -36,18 +29,15 @@ ${tool-cmds}: go.mod
 
 tools: ${tool-cmds}
 
+brew:
+ifeq (, $(shell which brew))
+	$(error "No brew command in $(PATH)")
+endif
+	@echo "Installing homebrew packages needed for development and deployment"
+	@brew install gh go protobuf node docker clang-format golangci-lint bufbuild/buf/buf grpcurl
+
 version-check:
 	@go run cmd/vercheck/main.go
-ifneq ($(grpcweb-ver), $(grpcweb-latest))
-	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
-endif
-
-grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin"
-	@mkdir -p $(toolsdir)
-	@cd $(toolsdir); gh release download --repo grpc/grpc-web $(grpcweb-ver) --pattern \*$(OS)\*
-	@cd $(toolsdir); shasum -c *.sha256 && rm *.sha256
-	@cd $(toolsdir); mv $(protoc-grpcweb-long) $(protoc-grpcweb) && chmod +x $(protoc-grpcweb)
 
 install:
 	@echo go install
@@ -69,16 +59,6 @@ proto: $(protopatch)
 	buf generate --template buf.gen.ui.yaml --exclude-path patch
 	buf generate --template buf.gen.yaml
 
-	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))"
-	@$(sedi) '/patch_go_pb/d' \
-	public/proto/kit/score/score_pb.js \
-	public/proto/kit/score/score_pb.d.ts \
-	public/proto/qf/types_pb.js \
-	public/proto/qf/types_pb.d.ts
-
-	@echo "Compiling proto files for frontend"
-	@cd public && npm run tsc -- proto/qf/QuickfeedServiceClientPb.ts
-
 proto-swift:
 	@echo "Compiling QuickFeed's proto definitions for Swift"
 	@protoc \
@@ -88,13 +68,6 @@ proto-swift:
 	--swift_out=:$(proto-swift-path) \
 	--grpc-swift_out=$(proto-swift-path) \
 	qf/quickfeed.proto
-
-brew:
-ifeq (, $(shell which brew))
-	$(error "No brew command in $(PATH)")
-endif
-	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install gh go protobuf node docker clang-format golangci-lint bufbuild/buf/buf grpcurl
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:

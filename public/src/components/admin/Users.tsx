@@ -21,12 +21,12 @@ const Users = (): JSX.Element => {
         data.push(<User user={user} hidden={!isHidden(user.name, state.query)} />)
         data.push(<a href={userLink(user)}>{user.login}</a>)
         data.push(user.email)
-        data.push(user.studentid)
+        data.push(user.studentID)
         data.push(
             <Button
-                color={user.isadmin ? Color.RED : Color.BLUE}
+                color={user.isAdmin ? Color.RED : Color.BLUE}
                 type={ButtonType.BADGE}
-                text={user.isadmin ? "Demote" : "Promote"}
+                text={user.isAdmin ? "Demote" : "Promote"}
                 onclick={() => actions.updateAdmin(user)}
             />
         )

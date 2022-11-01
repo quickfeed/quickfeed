@@ -25,6 +25,7 @@ Chacon
 cmds
 cmpopts
 codecov
+connectweb
 containertimeout
 copytruncate
 covermode

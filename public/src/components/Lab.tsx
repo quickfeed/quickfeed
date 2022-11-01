@@ -12,7 +12,7 @@ interface MatchProps {
     lab: string
 }
 
-/** Lab displays a submission based on the /course/:id/:lab route if the user is a student.
+/** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
  *  If the user is a teacher, Lab displays a submission based on the submission in state.currentSubmission.
  */
 const Lab = (): JSX.Element => {
@@ -20,40 +20,40 @@ const Lab = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const { id, lab } = useParams<MatchProps>()
-    const courseID = Number(id)
-    const assignmentID = Number(lab)
+    const courseID = id
+    const assignmentID = lab ? BigInt(lab) : BigInt(-1)
 
     useEffect(() => {
         if (!state.isTeacher) {
-            actions.setActiveAssignment(assignmentID)
+            actions.setActiveAssignment(Number(lab))
         }
     }, [lab])
 
     const Lab = () => {
-        let submission: Submission.AsObject | null
-        let assignment: Assignment.AsObject | null
+        let submission: Submission | null
+        let assignment: Assignment | null
 
         if (state.isTeacher) {
             // If used for grading purposes, retrieve submission from state.currentSubmission
             submission = state.currentSubmission
-            assignment = state.assignments[courseID].find(a => a.id === submission?.assignmentid) ?? null
+            assignment = state.assignments[courseID].find(a => a.ID === submission?.AssignmentID) ?? null
         } else {
             // Retrieve the student's submission
-            submission = state.submissions[courseID]?.find(s => s.assignmentid === assignmentID) ?? null
-            assignment = state.assignments[courseID]?.find(a => a.id === assignmentID) ?? null
+            submission = state.submissions[courseID]?.find(s => s.AssignmentID === assignmentID) ?? null
+            assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
         }
 
         if (assignment && submission) {
             // Confirm both assignment and submission exists before attempting to render
-            const review = hasReviews(submission) ? submission.reviewsList : []
+            const review = hasReviews(submission) ? submission.reviews : []
             let buildLog: JSX.Element[] = []
-            const buildLogRaw = submission.buildinfo?.buildlog
+            const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
                 buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)
             }
 
             return (
-                <div key={submission.id}>
+                <div key={submission.ID.toString()}>
                     <LabResultTable submission={submission} assignment={assignment} />
 
                     {isManuallyGraded(assignment) && submission.released ? <ReviewResult review={review[0]} /> : null}

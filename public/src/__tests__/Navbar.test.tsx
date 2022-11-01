@@ -13,7 +13,11 @@ describe("Visibility when logged in", () => {
 
     const history = createMemoryHistory()
     const mockedOvermind = createOvermindMock(config, (state) => {
-        state.self = new User().setId(1).setName("Test User").setIsadmin(true).toObject()
+        state.self = new User({
+            ID: BigInt(1),
+            name: "Test User",
+            isAdmin: true,
+        })
     })
 
     beforeEach(() => {

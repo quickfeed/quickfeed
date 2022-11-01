@@ -8,6 +8,10 @@ import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import DevelopmentMode from './DevelopmentMode'
 
+(BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
+    return this.toString();
+}
+
 const overmind = createOvermind(config, {
     // Enable devtools by setting the below to ex. 'devtools: "localhost:3301"'
     // then run 'npx overmind-devtools@latest' to start the devtools

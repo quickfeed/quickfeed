@@ -1,5 +1,5 @@
 import React from "react"
-import { Submission } from "../../proto/qf/types_pb"
+import { Submission_Status } from "../../proto/qf/types_pb"
 import { isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 
@@ -10,10 +10,10 @@ const ManageSubmissionStatus = (): JSX.Element => {
 
     const [rebuilding, setRebuilding] = React.useState(false)
 
-    const buttons: { text: string, status: Submission.Status, style: string, onClick?: () => void }[] = [
-        { text: "Approve", status: Submission.Status.APPROVED, style: "primary" },
-        { text: "Revision", status: Submission.Status.REVISION, style: "warning" },
-        { text: "Reject", status: Submission.Status.REJECTED, style: "danger" },
+    const buttons: { text: string, status: Submission_Status, style: string, onClick?: () => void }[] = [
+        { text: "Approve", status: Submission_Status.APPROVED, style: "primary" },
+        { text: "Revision", status: Submission_Status.REVISION, style: "warning" },
+        { text: "Reject", status: Submission_Status.REJECTED, style: "danger" },
     ]
 
 
@@ -25,7 +25,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
 
 
     if (assignment && !isManuallyGraded(assignment)) {
-        buttons.push({ text: rebuilding ? "Rebuilding..." : "Rebuild", status: Submission.Status.NONE, style: rebuilding ? "secondary" : "primary", onClick: handleRebuild})
+        buttons.push({ text: rebuilding ? "Rebuilding..." : "Rebuild", status: Submission_Status.NONE, style: rebuilding ? "secondary" : "primary", onClick: handleRebuild})
     }
 
     const StatusButtons = buttons.map((button, index) => {

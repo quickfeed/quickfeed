@@ -12,7 +12,7 @@ const CoursePage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const enrollment = state.enrollmentsByCourseID[courseID]
+    const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 
     useEffect(() => {
         if (!state.showFavorites) {
@@ -21,7 +21,7 @@ const CoursePage = (): JSX.Element => {
         actions.setActiveCourse(courseID)
     }, [courseID])
 
-    if (state.enrollmentsByCourseID[courseID] && isEnrolled(enrollment)) {
+    if (state.enrollmentsByCourseID[courseID.toString()] && isEnrolled(enrollment)) {
         if (isTeacher(enrollment)) {
             return <TeacherPage />
         }

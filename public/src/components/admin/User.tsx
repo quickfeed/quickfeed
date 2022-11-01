@@ -1,12 +1,12 @@
 import React from "react"
-import { User as user } from "../../../proto/qf/types_pb"
+import { User as pbUser } from "../../../proto/qf/types_pb"
 
 
-const User = ({ user }: { user: user.AsObject, hidden: boolean }): JSX.Element => {
+const User = ({ user }: { user: pbUser, hidden: boolean }): JSX.Element => {
     return (
         <>
             {user.name}
-            {user.isadmin ?
+            {user.isAdmin ?
                 <span className={"badge badge-primary ml-2"}>
                     Admin
                 </span>
