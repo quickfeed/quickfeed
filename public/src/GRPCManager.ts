@@ -395,7 +395,7 @@ export class GrpcManager {
     // logErr logs any gRPC error to the console.
     private logErr(resp: IGrpcResponse<any>, methodName: string): void {
         if (resp.status.Code !== BigInt(0)) {
-            console.log(`GRPC ${methodName} failed with code ${resp.status.Code}: ${resp.status.Error}`)
+            console.log(`GRPC ${methodName} failed with code ${resp.status.Code}: ${resp.status.Error}`) // skipcq: JS-0002
         }
     }
 }
