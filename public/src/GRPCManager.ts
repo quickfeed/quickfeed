@@ -16,7 +16,7 @@ import {
     Submissions,
     User,
     Users,
-} from "../gen/qf/types_pb"
+} from "../proto/qf/types_pb"
 import {
     CourseRequest,
     CourseSubmissions,
@@ -40,8 +40,8 @@ import {
     Void,
     Reviewers,
     SubmissionsForCourseRequest_Type,
-} from "../gen/qf/requests_pb"
-import { QuickFeedService } from "../gen/qf/quickfeed_connectweb"
+} from "../proto/qf/requests_pb"
+import { QuickFeedService } from "../proto/qf/quickfeed_connectweb"
 import { createConnectTransport, ConnectError, createCallbackClient, CallbackClient } from "@bufbuild/connect-web"
 
 export interface IGrpcResponse<T> {
@@ -55,7 +55,7 @@ export class GrpcManager {
 
     constructor() {
         const transport = createConnectTransport({
-            baseUrl: "https://" + window.location.host,
+            baseUrl: `https://${window.location.host}`,
         })
         this.agService = createCallbackClient(QuickFeedService, transport)
     }
@@ -85,7 +85,7 @@ export class GrpcManager {
     }
 
     public getCourse(courseID: bigint): Promise<IGrpcResponse<Course>> {
-        const request = new CourseRequest({courseID: BigInt(courseID)})
+        const request = new CourseRequest({ courseID: courseID })
         return this.grpcSend<Course>(this.agService.getCourse, request)
     }
 
@@ -95,8 +95,8 @@ export class GrpcManager {
 
     public getCoursesByUser(userID: bigint, statuses: Enrollment_UserStatus[]): Promise<IGrpcResponse<Courses>> {
         const request = new EnrollmentStatusRequest({
-            statuses: statuses, 
-            userID: BigInt(userID)
+            userID: userID,
+            statuses: statuses,
         })
         return this.grpcSend<Courses>(this.agService.getCoursesByUser, request)
     }
@@ -108,16 +108,12 @@ export class GrpcManager {
     // /* ASSIGNMENTS */ //
 
     public getAssignments(courseID: bigint): Promise<IGrpcResponse<Assignments>> {
-        const request = new CourseRequest({
-            courseID: courseID,
-        })
+        const request = new CourseRequest({ courseID: courseID })
         return this.grpcSend<Assignments>(this.agService.getAssignments, request)
     }
 
     public updateAssignments(courseID: bigint): Promise<IGrpcResponse<Void>> {
-        const request = new CourseRequest({
-            courseID: courseID
-        })
+        const request = new CourseRequest({ courseID: courseID })
         return this.grpcSend<Void>(this.agService.updateAssignments, request)
     }
 
@@ -144,8 +140,8 @@ export class GrpcManager {
 
     public createEnrollment(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Void>> {
         const request = new Enrollment({
-            courseID: BigInt(courseID),
-            userID: BigInt(userID),
+            courseID: courseID,
+            userID: userID,
         })
         return this.grpcSend<Void>(this.agService.createEnrollment, request)
     }
@@ -160,9 +156,7 @@ export class GrpcManager {
     // /* GROUPS */ //
 
     public getGroup(groupID: bigint): Promise<IGrpcResponse<Group>> {
-        const request = new GetGroupRequest({
-            groupID: BigInt(groupID),
-        })
+        const request = new GetGroupRequest({ groupID: groupID })
         return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
@@ -175,15 +169,13 @@ export class GrpcManager {
     }
 
     public getGroupsByCourse(courseID: bigint): Promise<IGrpcResponse<Groups>> {
-        const request = new CourseRequest({
-            courseID: courseID,
-        })
+        const request = new CourseRequest({ courseID: courseID })
         return this.grpcSend<Groups>(this.agService.getGroupsByCourse, request)
     }
 
     public updateGroupStatus(groupID: bigint, status: Group_GroupStatus): Promise<IGrpcResponse<Void>> {
         const request = new Group({
-            ID: BigInt(groupID),
+            ID: groupID,
             status: status,
         })
         return this.grpcSend<Void>(this.agService.updateGroup, request)
@@ -195,17 +187,17 @@ export class GrpcManager {
 
     public deleteGroup(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Void>> {
         const request = new GroupRequest({
-            groupID: BigInt(groupID),
-            courseID: BigInt(courseID),
+            courseID: courseID,
+            groupID: groupID,
         })
         return this.grpcSend<Void>(this.agService.deleteGroup, request)
     }
 
     public createGroup(courseID: bigint, name: string, users: bigint[]): Promise<IGrpcResponse<Group>> {
         const request = new Group({
-            courseID: BigInt(courseID),
+            courseID: courseID,
             name: name,
-            users: users.map(userID => new User({ID: userID})),
+            users: users.map(userID => new User({ ID: userID })),
         })
         return this.grpcSend<Group>(this.agService.createGroup, request)
     }
@@ -213,17 +205,17 @@ export class GrpcManager {
     // /* SUBMISSIONS */ //
     public getAllSubmissions(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
         const request = new SubmissionRequest({
-            courseID: BigInt(courseID),
-            userID: BigInt(userID),
-            groupID: BigInt(groupID),
+            courseID: courseID,
+            userID: userID,
+            groupID: groupID,
         })
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
     public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
         const request = new SubmissionRequest({
-            courseID: BigInt(courseID),
-            userID: BigInt(userID),
+            courseID: courseID,
+            userID: userID,
         })
         return this.grpcSend<Submissions>(this.agService.getSubmission, request)
     }
@@ -253,8 +245,8 @@ export class GrpcManager {
 
     public updateSubmission(courseID: bigint, s: Submission): Promise<IGrpcResponse<Void>> {
         const request = new UpdateSubmissionRequest({
-            submissionID: BigInt(s.ID),
-            courseID: BigInt(courseID),
+            courseID: courseID,
+            submissionID: s.ID,
             status: s.status,
             released: s.released,
             score: s.score,
@@ -264,8 +256,8 @@ export class GrpcManager {
 
     public updateSubmissions(assignmentID: bigint, courseID: bigint, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
         const request = new UpdateSubmissionsRequest({
-            assignmentID: assignmentID,
             courseID: courseID,
+            assignmentID: assignmentID,
             scoreLimit: score,
             release: release,
             approve: approve,
@@ -275,17 +267,17 @@ export class GrpcManager {
 
     public rebuildSubmission(assignmentID: bigint, submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
         const request = new RebuildRequest({
-            submissionID: submissionID,
+            courseID: courseID,
             assignmentID: assignmentID,
-            courseID: courseID,  
+            submissionID: submissionID,
         })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
 
     public rebuildSubmissions(assignmentID: bigint, courseID: bigint): Promise<IGrpcResponse<Void>> {
         const request = new RebuildRequest({
-            assignmentID: BigInt(assignmentID),
             courseID: courseID,
+            assignmentID: assignmentID,
         })
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
@@ -334,8 +326,8 @@ export class GrpcManager {
 
     public getReviewers(submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Reviewers>> {
         const request = new SubmissionReviewersRequest({
-            submissionID: BigInt(submissionID),
-            courseID: BigInt(courseID),
+            courseID: courseID,
+            submissionID: submissionID,
         })
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request)
     }
@@ -344,7 +336,7 @@ export class GrpcManager {
 
     public getRepositories(courseID: bigint, types: Repository_Type[]): Promise<IGrpcResponse<Repositories>> {
         const req = new URLRequest({
-            courseID: BigInt(courseID),
+            courseID: courseID,
             repoTypes: types,
         })
         return this.grpcSend<Repositories>(this.agService.getRepositories, req)
@@ -390,7 +382,7 @@ export class GrpcManager {
                             Error: "",
                         })
                         const temp: IGrpcResponse<T> = {
-                            data: response as T,
+                            data: response,
                             status: code,
                         }
                         resolve(temp)
@@ -403,8 +395,7 @@ export class GrpcManager {
     // logErr logs any gRPC error to the console.
     private logErr(resp: IGrpcResponse<any>, methodName: string): void {
         if (resp.status.Code !== BigInt(0)) {
-            console.log("GRPC " + methodName + " failed with code "
-                + resp.status.Code + ": " + resp.status.Error)
+            console.log(`GRPC ${methodName} failed with code ${resp.status.Code}: ${resp.status.Error}`) // skipcq: JS-0002
         }
     }
 }

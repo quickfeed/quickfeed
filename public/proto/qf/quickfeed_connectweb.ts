@@ -392,5 +392,5 @@ export const QuickFeedService = {
       kind: MethodKind.ServerStreaming,
     },
   }
-};
+} as const;
 

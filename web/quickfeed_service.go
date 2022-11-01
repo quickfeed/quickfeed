@@ -107,11 +107,8 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if err == ErrAlreadyExists {
+		if err == scm.ErrAlreadyExists {
 			return nil, connect.NewError(connect.CodeAlreadyExists, err)
-		}
-		if err == ErrFreePlan {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
@@ -287,7 +284,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
 	group, err := s.getGroupByUserAndCourse(in.Msg)
 	if err != nil {
-		if err != errUserNotInGroup {
+		if err != ErrUserNotInGroup {
 			s.logger.Errorf("GetGroupByUserAndCourse failed: %v", err)
 		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group for given user and course"))
@@ -579,7 +576,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	org, err := s.getOrganization(ctx, scmClient, in.Msg.GetOrgName(), usr.GetLogin())
+	org, err := scmClient.GetOrganization(ctx, &scm.GetOrgOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
@@ -588,9 +585,6 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		}
 		if err == scm.ErrNotMember {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
-		}
-		if err == ErrFreePlan || err == ErrAlreadyExists || err == scm.ErrNotOwner {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr

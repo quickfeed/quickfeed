@@ -1,8 +1,8 @@
 import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
-} from "../../gen/qf/types_pb"
-import { CourseSubmissions, Organization, SubmissionsForCourseRequest_Type, } from "../../gen/qf/requests_pb"
+} from "../../proto/qf/types_pb"
+import { CourseSubmissions, Organization, SubmissionsForCourseRequest_Type, } from "../../proto/qf/requests_pb"
 import { Alert, UserCourseSubmissions } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
@@ -12,7 +12,7 @@ import { Code } from "@bufbuild/connect-web"
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => !(response.status.Code > 0)
 
-export const onInitializeOvermind = async ({ actions, effects }: Context): Promise<void> => {
+export const onInitializeOvermind = ({ actions, effects }: Context) => {
     // Currently this only alerts the user if they are not logged in after a page refresh
     const alert = localStorage.getItem("alert")
     if (alert) {
@@ -44,7 +44,7 @@ export const receiveSubmission = ({ state }: Context, submission: Submission): v
                 return
             }
         }
-        )
+    )
     if (courseID === 0n) {
         return
     }
@@ -98,9 +98,7 @@ export const resetState = ({ state }: Context) => {
 
 /** Fetches and stores an authenticated user in state */
 export const getSelf = async ({ state, effects }: Context): Promise<boolean> => {
-    console.log("getSelf")
     const user = await effects.grpcMan.getUser()
-    console.log("getSelf", user)
     if (user.data) {
         state.self = user.data
         return true
@@ -246,6 +244,10 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
 
 /** updateEnrollment updates an enrollment status with the given status */
 export const updateEnrollment = async ({ state, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment_UserStatus }): Promise<void> => {
+    if (!enrollment.user) {
+        // user name is required
+        return
+    }
     // Confirm that user really wants to change enrollment status
     let confirmed = false
     switch (status) {
@@ -254,10 +256,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
             break
         case Enrollment_UserStatus.STUDENT:
             // If the enrollment is pending, don't ask for confirmation
-            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user?.name} is a teacher. Are sure you want to demote?`)
+            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user.name} is a teacher. Are sure you want to demote?`)
             break
         case Enrollment_UserStatus.TEACHER:
-            confirmed = confirm(`Are you sure you want to promote ${enrollment.user?.name} to teacher status?`)
+            confirmed = confirm(`Are you sure you want to promote ${enrollment.user.name} to teacher status?`)
             break
     }
 
@@ -342,23 +344,25 @@ export const getAssignmentsByCourse = async ({ state, effects }: Context, course
 }
 
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
-    let success = true
-    for (const enrollment of state.enrollments) {
+    const results = await Promise.all(state.enrollments.map(async enrollment => {
         if (isPending(enrollment)) {
             // No need to get repositories for pending enrollments
-            continue
+            return true
         }
         const courseID = enrollment.courseID
         state.repositories[courseID.toString()] = {}
 
         const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(enrollment))
         if (response.data) {
-                state.repositories[courseID.toString()] = response.data.URLs
+            state.repositories[courseID.toString()] = response.data.URLs
         } else {
-            success = false
+            return false
         }
-    }
-    return success
+        return true
+    }))
+
+    // Return true if all requests were successful
+    return results.every(r => r)
 }
 
 export const getGroupByUserAndCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
@@ -639,20 +643,22 @@ export const updateGroup = async ({ state, actions, effects }: Context, group: G
 }
 
 export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    for (const bm of assignment.gradingBenchmarks) {
-        if (bm.ID === criterion.BenchmarkID) {
-            // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
-            if (criterion.ID && success(await effects.grpcMan.updateCriterion(criterion))) {
-                const index = bm.criteria.findIndex(c => c.ID === criterion.ID)
-                if (index > -1) {
-                    bm.criteria[index] = criterion
-                }
-            } else {
-                const response = await effects.grpcMan.createCriterion(criterion)
-                if (success(response) && response.data) {
-                    bm.criteria.push(response.data)
-                }
-            }
+    const benchmark = assignment.gradingBenchmarks.find(benchmark => benchmark.ID === criterion.ID)
+    if (!benchmark) {
+        // If a benchmark is not found, the criterion is invalid.
+        return
+    }
+
+    // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
+    if (criterion.ID && success(await effects.grpcMan.updateCriterion(criterion))) {
+        const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
+        if (index > -1) {
+            benchmark.criteria[index] = criterion
+        }
+    } else {
+        const response = await effects.grpcMan.createCriterion(criterion)
+        if (success(response) && response.data) {
+            benchmark.criteria.push(response.data)
         }
     }
 }
@@ -682,27 +688,35 @@ export const createBenchmark = async ({ effects }: Context, { benchmark, assignm
 }
 
 export const deleteCriterion = async ({ actions, effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    for (const benchmark of assignment.gradingBenchmarks) {
-        if (benchmark.ID !== criterion?.BenchmarkID) {
-            continue
-        }
-        if (!confirm("Do you really want to delete this criterion?")) {
-            // Do nothing if user cancels
-            return
-        }
-
-        // Delete criterion
-        const response = await effects.grpcMan.deleteCriterion(criterion)
-        if (success(response)) {
-            // Remove criterion from benchmark in state if successful
-            const index = assignment.gradingBenchmarks.indexOf(benchmark)
-            if (index > -1) {
-                assignment.gradingBenchmarks.splice(index, 1)
-            }
-        } else {
-            actions.alertHandler(response)
-        }
+    if (!criterion) {
+        // Criterion is invalid
+        return
     }
+
+    const benchmark = assignment.gradingBenchmarks.find(benchmark => benchmark.ID === criterion?.ID)
+    if (!benchmark) {
+        // Criterion has no parent benchmark
+        return
+    }
+
+    if (!confirm("Do you really want to delete this criterion?")) {
+        // Do nothing if user cancels
+        return
+    }
+
+    // Delete criterion
+    const response = await effects.grpcMan.deleteCriterion(criterion)
+    if (!success(response)) {
+        // Alert user if deletion failed
+        actions.alertHandler(response)
+    }
+
+    // Remove criterion from benchmark in state if request was successful
+    const index = assignment.gradingBenchmarks.indexOf(benchmark)
+    if (index > -1) {
+        assignment.gradingBenchmarks.splice(index, 1)
+    }
+
 }
 
 export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
@@ -742,7 +756,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment):
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
 export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
-    console.log("Hello")
+
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
 
@@ -771,7 +785,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         }
         success = await actions.getRepositories()
         success = await actions.getCourses()
-        
+
         // End loading screen.
         state.isLoading = false
     }
@@ -873,7 +887,7 @@ export const setGroupView = ({ state }: Context, groupView: boolean): void => {
 }
 
 export const setActiveGroup = ({ state }: Context, group: Group | null): void => {
-    state.activeGroup =  group?.clone() ?? null
+    state.activeGroup = group?.clone() ?? null
 }
 
 export const updateGroupUsers = ({ state }: Context, user: User): void => {

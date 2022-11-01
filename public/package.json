@@ -68,9 +68,9 @@
       "!**/__tests__/TestHelpers.ts"
     ],
     "moduleNameMapper": {
-      "./types_pb.js": "<rootDir>/gen/qf/types_pb.ts",
-      "./requests_pb.js": "<rootDir>/gen/qf/requests_pb.ts",
-      "../kit/score/score_pb.js": "<rootDir>/gen/kit/score/score_pb.ts"
+      "./types_pb.js": "<rootDir>/proto/qf/types_pb.ts",
+      "./requests_pb.js": "<rootDir>/proto/qf/requests_pb.ts",
+      "../kit/score/score_pb.js": "<rootDir>/proto/kit/score/score_pb.ts"
     }
   }
 }

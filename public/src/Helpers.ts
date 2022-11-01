@@ -1,6 +1,6 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../gen/qf/types_pb"
-import { Score } from "../gen/kit/score/score_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
+import { Score } from "../proto/kit/score/score_pb"
 
 export enum Color {
     RED = "danger",
@@ -18,11 +18,12 @@ export enum Sort {
     ID
 }
 
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
 /** Returns a string with a prettier format for a deadline */
 export const getFormattedTime = (deadline_string: string): string => {
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const deadline = new Date(deadline_string)
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" + deadline.getMinutes() : deadline.getMinutes()}`
+    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" : ""}${deadline.getMinutes()}`
 }
 
 export interface Deadline {
@@ -31,7 +32,7 @@ export interface Deadline {
     daysUntil: number,
 }
 
-/** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
+/** Utility function for LandingPageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 // layoutTime = "2021-03-20T23:59:00"
 export const timeFormatter = (deadline: string): Deadline => {
     const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()
@@ -40,7 +41,9 @@ export const timeFormatter = (deadline: string): Deadline => {
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
 
     if (timeToDeadline < 0) {
-        return { className: "table-danger", message: `Expired ${-days > 0 ? -days + " days ago" : -hours + " hours"}`, daysUntil: 0 }
+        const daysSince = -days
+        const hoursSince = -hours
+        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
     }
 
     if (days == 0) {
@@ -272,7 +275,7 @@ export const userRepoLink = (course: Course, user: User): string => {
 }
 
 export const groupRepoLink = (course: Course, group: Group): string => {
-    return `https://github.com/${course.organizationName}/${slugify(group.name)}`
+    return `https://github.com/${course.organizationName}/${group.name}`
 }
 
 export const getSubmissionCellColor = (submission: Submission): string => {
@@ -286,20 +289,6 @@ export const getSubmissionCellColor = (submission: Submission): string => {
         return "result-rejected"
     }
     return "clickable"
-}
-
-const slugify = (str: string): string => {
-    str = str.replace(/^\s+|\s+$/g, "").toLowerCase()
-
-    // Remove accents, swap ñ for n, etc
-    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆaæ·/,:;&"
-    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaa-cccdeeeeeeeeiiiinnooooo-orrstuuuuuyyzbBDdBAa-------"
-    for (let i = 0; i < from.length; i++) {
-        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i))
-    }
-
-    // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-")
 }
 
 /* Use this function to simulate a delay in the loading of data */

@@ -2,7 +2,7 @@ import React from 'react'
 import { useHistory } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
-import { Course, Enrollment } from '../../gen/qf/types_pb'
+import { Course, Enrollment } from '../../proto/qf/types_pb'
 import CourseFavoriteButton from './CourseFavoriteButton'
 
 
@@ -29,7 +29,7 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
         } else if (hasPending(status)) {
             return <div className="btn btn-secondary course-button disabled">Pending</div>
         }
-        return <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.courseID.toString())}>Go to Course</div>
+        return <div className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</div>
     }
 
     const CourseEnrollmentStatus = (): JSX.Element | null => {
@@ -47,7 +47,7 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
     return (
         <div className="col-sm-4">
             <div className="card" style={{ maxWidth: "35rem", marginBottom: "10px", minHeight: "205px" }}>
-                <div className={"card-header bg-" + CardColor[status] + " text-white"}>
+                <div className={`card-header bg-${CardColor[status]} text-white`}>
                     {course.code}
                     <CourseEnrollmentStatus />
                 </div>

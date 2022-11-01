@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { GradingBenchmark } from "../../../gen/qf/types_pb"
+import { GradingBenchmark } from "../../../proto/qf/types_pb"
 import GradeComment from "./GradeComment"
 
 

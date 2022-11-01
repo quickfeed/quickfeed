@@ -1,5 +1,5 @@
 import React from "react"
-import { Assignment, Submission } from "../../gen/qf/types_pb"
+import { Assignment, Submission } from "../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../components/ProgressBar"
 import { initializeOvermind } from "./TestHelpers"
 import { Provider } from "overmind-react"
@@ -24,48 +24,48 @@ describe("ProgressBar", () => {
             submission: new Submission({
                 score: 100,
             }),
-            assignment: new Assignment({scoreLimit: 100}),
+            assignment: new Assignment({ scoreLimit: 100 }),
             want: "100 %"
         },
         {
             desc: "0% Progress Bar",
-            submission: new Submission({score: 0}),
-            assignment: new Assignment({scoreLimit: 100}),
+            submission: new Submission({ score: 0 }),
+            assignment: new Assignment({ scoreLimit: 100 }),
             want: "0 %"
         },
         {
             desc: "50% Progress Bar",
-            submission: new Submission({score: 50}),
-            assignment: new Assignment({scoreLimit: 100}),
+            submission: new Submission({ score: 50 }),
+            assignment: new Assignment({ scoreLimit: 100 }),
             want: "50 %"
         },
         {
             desc: "50% Progress Bar, with 75% scorelimit",
-            submission: new Submission({score: 50}),
-            assignment: new Assignment({scoreLimit: 75}),
+            submission: new Submission({ score: 50 }),
+            assignment: new Assignment({ scoreLimit: 75 }),
             want: "50 %"
         },
         {
             desc: "75% Progress Bar, with 50% scorelimit",
-            submission: new Submission({score: 75}),
-            assignment: new Assignment({scoreLimit: 50}),
+            submission: new Submission({ score: 75 }),
+            assignment: new Assignment({ scoreLimit: 50 }),
             want: "75 %"
         },
         {
             desc: "75% Progress Bar, with 75% scorelimit",
-            submission: new Submission({score: 75}),
-            assignment: new Assignment({scoreLimit: 75}),
+            submission: new Submission({ score: 75 }),
+            assignment: new Assignment({ scoreLimit: 75 }),
             want: "75 %"
         },
         {
             desc: "Progress Bar without score",
             submission: new Submission(),
-            assignment: new Assignment({scoreLimit: 100}),
+            assignment: new Assignment({ scoreLimit: 100 }),
             want: "0 %"
         },
         {
             desc: "Progress Bar without scorelimit",
-            submission: new Submission({score: 50}),
+            submission: new Submission({ score: 50 }),
             assignment: new Assignment(),
             want: "50 %"
         },
@@ -77,24 +77,24 @@ describe("ProgressBar", () => {
         },
         {
             desc: "Progress Bar with incorrect index",
-            submission: new Submission({score: 50}),
-            assignment: new Assignment({scoreLimit: 100}),
+            submission: new Submission({ score: 50 }),
+            assignment: new Assignment({ scoreLimit: 100 }),
             want: "0 %",
             assignmentIndex: 10
         }
     ]
 
-    test.each(progressBarTests)(`[Progress.LAB] $desc`, async (test) => {
+    test.each(progressBarTests)(`[Progress.LAB] $desc`, (test) => {
         labTest(test, true)
     })
 
-    test.each(progressBarTests)(`[Progress.LAB - Without Submission] $desc`, async (test) => {
+    test.each(progressBarTests)(`[Progress.LAB - Without Submission] $desc`, (test) => {
         labTest(test, false)
     })
 
 
     test.each(progressBarTests)(`[Progress.NAV] $desc`, (test) => {
-        const overmind = initializeOvermind({ assignments: { ["1"]: [test.assignment] }, submissions: { ["1"]: [test.submission] } })
+        const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions: { "1": [test.submission] } })
 
         const { container } = render(
             <Provider value={overmind}>
@@ -115,7 +115,7 @@ describe("ProgressBar", () => {
 })
 
 const labTest = (test: ProgressBarTest, withSubmission: boolean) => {
-    const overmind = initializeOvermind({ assignments: { ["1"]: test.assignment ? [test.assignment] : [] }, submissions: { ["1"]: test.submission ? [test.submission] : [] } })
+    const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions: { "1": test.submission ? [test.submission] : [] } })
 
     const { container } = render(
         <Provider value={overmind}>

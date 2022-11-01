@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { Enrollment } from "../../../gen/qf/types_pb"
+import { Enrollment } from "../../../proto/qf/types_pb"
 import { Status } from "../../consts"
 import { isStudent, isTeacher } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
@@ -21,7 +21,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
             actions.setActiveCourse(BigInt(0))
             history.push("/")
         } else {
-            history.push("/course/" + courseID)
+            history.push(`/course/${courseID}`)
             actions.setActiveCourse(courseID)
         }
     }

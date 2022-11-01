@@ -1,6 +1,6 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import { Repository_Type } from "../../gen/qf/types_pb"
+import { Repository_Type } from "../../proto/qf/types_pb"
 import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 
@@ -40,10 +40,10 @@ const CourseUtilityLinks = (): JSX.Element => {
                 </a>
 
                 {state.hasGroup(Number(courseID)) ?
-                    <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action">
+                    <Link to={`/course/${courseID}/group`} className="list-group-item list-group-item-action">
                         View Group
                     </Link>
-                    : <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action list-group-item-success">
+                    : <Link to={`/course/${courseID}/group`} className="list-group-item list-group-item-action list-group-item-success">
                         Create a Group
                     </Link>}
             </div>

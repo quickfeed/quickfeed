@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Submission, Submission_Status } from "../../gen/qf/types_pb"
+import { Submission, Submission_Status } from "../../proto/qf/types_pb"
 
 export enum Progress {
     NAV,
@@ -73,9 +73,9 @@ const ProgressBar = ({ courseID, assignmentIndex, submission, type }: ProgressBa
     return (
         <div className="progress">
             <div
-                className={"progress-bar " + color}
+                className={`progress-bar ${color}`}
                 role="progressbar"
-                style={{ width: score + "%", transitionDelay: "0.5s" }}
+                style={{ width: `${score}%`, transitionDelay: "0.5s" }}
                 aria-valuenow={score}
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -86,7 +86,7 @@ const ProgressBar = ({ courseID, assignmentIndex, submission, type }: ProgressBa
                 <div
                     className={"progress-bar progressbar-secondary bg-secondary"}
                     role="progressbar"
-                    style={{ width: secondaryProgress + "%" }}
+                    style={{ width: `${secondaryProgress}%` }}
                     aria-valuemax={100}
                 >
                     {secondaryText}

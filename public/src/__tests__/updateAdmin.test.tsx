@@ -1,4 +1,4 @@
-import { User } from "../../gen/qf/types_pb"
+import { User } from "../../proto/qf/types_pb"
 import { initializeOvermind } from "./TestHelpers"
 
 

@@ -30,12 +30,11 @@ func TestAccessControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),
 	))
 	ctx := context.Background()
-	defer shutdown(ctx)
 
 	courseAdmin := qtest.CreateAdminUser(t, db, "fake")
 	groupStudent := qtest.CreateNamedUser(t, db, 2, "group student")

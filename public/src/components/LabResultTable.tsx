@@ -1,5 +1,5 @@
 import React, { useCallback } from "react"
-import { Assignment, Submission, Submission_Status } from "../../gen/qf/types_pb"
+import { Assignment, Submission, Submission_Status } from "../../proto/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"

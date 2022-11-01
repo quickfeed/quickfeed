@@ -41,22 +41,6 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	}
 }
 
-// UpdateOrganization implements the SCM interface.
-func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "UpdateOrganization",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Name, &github.Organization{
-		DefaultRepoPermission: &opt.DefaultPermission,
-		MembersCanCreateRepos: &opt.RepoPermissions,
-	})
-	return err
-}
-
 // GetOrganization implements the SCM interface.
 func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	if !opt.valid() {
@@ -85,7 +69,26 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 		}
 	}
 
-	// if user name is provided, return the found organization only if the user is one of its owners
+	org := &qf.Organization{
+		ID:          uint64(gitOrg.GetID()),
+		Name:        gitOrg.GetLogin(),
+		Avatar:      gitOrg.GetAvatarURL(),
+		PaymentPlan: gitOrg.GetPlan().GetName(),
+	}
+
+	// If getting organization for the purpose of creating a new course,
+	// ensure that the organization does not already contain any course repositories.
+	if opt.NewCourse {
+		repos, err := s.GetRepositories(ctx, org)
+		if err != nil {
+			return nil, err
+		}
+		if isDirty(repos) {
+			return nil, ErrAlreadyExists
+		}
+	}
+
+	// If user name is provided, return the organization only if the user is one of its owners.
 	if opt.Username != "" {
 		// fetch user membership in that organization, if exists
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
@@ -101,13 +104,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 			return nil, ErrNotOwner
 		}
 	}
-
-	return &qf.Organization{
-		ID:          uint64(gitOrg.GetID()),
-		Name:        gitOrg.GetLogin(),
-		Avatar:      gitOrg.GetAvatarURL(),
-		PaymentPlan: gitOrg.GetPlan().GetName(),
-	}, nil
+	return org, nil
 }
 
 // CreateRepository implements the SCM interface.
@@ -659,6 +656,85 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 		}
 	}
 	return nil
+}
+
+// CreateCourse creates repositories and teams for a new course.
+func (s *GithubSCM) CreateCourse(ctx context.Context, opt *NewCourseOptions) ([]*Repository, error) {
+	// Get and check the organization's suitability for the course
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
+	if err != nil {
+		return nil, err
+	}
+
+	// Set restrictions to prevent students from creating new repositories and prevent access
+	// to organization repositories. This will not affect organization owners (teachers).
+	defaultPermissions := OrgNone
+	createRepoPermissions := false
+	if _, _, err = s.client.Organizations.Edit(ctx, org.Name, &github.Organization{
+		DefaultRepoPermission: &defaultPermissions,
+		MembersCanCreateRepos: &createRepoPermissions,
+	}); err != nil {
+		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.Name, err)
+	}
+
+	// Create course repositories
+	repositories := make([]*Repository, 0, len(RepoPaths)+1)
+	for path, private := range RepoPaths {
+		repoOptions := &CreateRepositoryOptions{
+			Path:         path,
+			Organization: org.Name,
+			Private:      private,
+		}
+		repo, err := s.CreateRepository(ctx, repoOptions)
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, repo)
+	}
+
+	// Create teacher team with course creator
+	teamOpt := &NewTeamOptions{
+		Organization: org.Name,
+		TeamName:     TeachersTeam,
+		Users:        []string{opt.CourseCreator},
+	}
+	if _, err = s.CreateTeam(ctx, teamOpt); err != nil {
+		return nil, fmt.Errorf("failed to create teachers team: %w", err)
+	}
+
+	// Create student team without any members
+	studOpt := &NewTeamOptions{Organization: org.Name, TeamName: StudentsTeam}
+	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
+		return nil, fmt.Errorf("failed to create students team: %w", err)
+	}
+
+	// Create student repository for the course creator
+	repo, err := s.createStudentRepo(ctx, org, opt.CourseCreator)
+	if err != nil {
+		return nil, err
+	}
+	repositories = append(repositories, repo)
+	return repositories, nil
+}
+
+// createStudentRepo creates {username}-labs repository and enables push/pull access for the given student.
+func (s *GithubSCM) createStudentRepo(ctx context.Context, org *qf.Organization, student string) (*Repository, error) {
+	// Create repo, or return existing repo if it already exists;
+	// if repo is found, it is safe to reuse it.
+	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
+		Organization: org.Name,
+		Path:         qf.StudentRepoName(student),
+		Private:      private,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create repo: %w", err)
+	}
+
+	// Enable push and pull access to student repo
+	if err = s.UpdateRepoAccess(ctx, repo, student, RepoPush); err != nil {
+		return nil, fmt.Errorf("failed to enable push/pull access for repo: %w", err)
+	}
+	return repo, nil
 }
 
 // Client returns GitHub client.

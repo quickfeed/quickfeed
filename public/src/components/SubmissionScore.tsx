@@ -1,12 +1,12 @@
 import React from "react"
-import { Score } from "../../gen/kit/score/score_pb"
+import { Score } from "../../proto/kit/score/score_pb"
 
 
 const SubmissionScore = ({ score }: { score: Score }) => {
     const className = score.Score === score.MaxScore ? "passed" : "failed"
     return (
         <tr>
-            <td className={className + " pl-4"}>
+            <td className={`${className} pl-4`}>
                 {score.TestName}
             </td>
             <td>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Enrollment, Enrollment_UserStatus, Group } from "../../../gen/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
 import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"

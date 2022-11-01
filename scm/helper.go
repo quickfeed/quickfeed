@@ -2,6 +2,9 @@ package scm
 
 import (
 	"errors"
+	"fmt"
+
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 const (
@@ -47,7 +50,22 @@ const (
 	StudentsTeam = "allstudents"
 )
 
+const (
+	private = true
+	public  = !private
+)
+
 var (
+	// RepoPaths maps from QuickFeed repository path names to a boolean indicating
+	// whether or not the repository should be create as public or private.
+	RepoPaths = map[string]bool{
+		qf.InfoRepo:        public,
+		qf.AssignmentsRepo: private,
+		qf.TestsRepo:       private,
+	}
+	repoNames = fmt.Sprintf("(%s, %s, %s)",
+		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
+
 	// ErrNotMember indicates that the requested organization exists, but the current user
 	// is not its member.
 	ErrNotMember = errors.New("user is not a member of the organization")
@@ -55,13 +73,12 @@ var (
 	ErrNotOwner = errors.New("user is not an owner of the organization")
 	// ErrMissingInstallation indicates that GitHub application is not installed on organization.
 	ErrMissingInstallation = errors.New("github application is not installed on the course organization")
+	// ErrAlreadyExists indicates that one or more QuickFeed repositories
+	// already exists for the directory (or GitHub organization).
+	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
 
 // Validators //
-
-func (opt OrganizationOptions) valid() bool {
-	return opt.Name != "" && opt.DefaultPermission != ""
-}
 
 func (opt GetOrgOptions) valid() bool {
 	return opt.ID != 0 || opt.Name != ""
@@ -163,4 +180,18 @@ type ErrFailedSCM struct {
 // from GitHub, to make it suitable for informative back-end logging
 func (e ErrFailedSCM) Error() string {
 	return "github method " + e.Method + " failed: " + e.GitError.Error() + "\n" + e.Message
+}
+
+// isDirty returns true if the list of provided repositories contains
+// any of the repositories that QuickFeed wants to create.
+func isDirty(repos []*Repository) bool {
+	if len(repos) == 0 {
+		return false
+	}
+	for _, repo := range repos {
+		if _, exists := RepoPaths[repo.Path]; exists {
+			return true
+		}
+	}
+	return false
 }

@@ -12,8 +12,6 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub.
 type SCM interface {
-	// Updates an organization
-	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
 	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
 	// Create a new repository.
@@ -71,6 +69,9 @@ type SCM interface {
 
 	// AcceptInvitations accepts course invites.
 	AcceptInvitations(context.Context, *InvitationOptions) error
+
+	// CreateCourse creates repositories and teams for a new course.
+	CreateCourse(context.Context, *NewCourseOptions) ([]*Repository, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -96,14 +97,10 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// OrganizationOptions contains information on how an organization should be
-// created.
-type OrganizationOptions struct {
-	Name              string
-	DefaultPermission string
-	// prohibit students from creating new repos
-	// on the course organization
-	RepoPermissions bool
+// NewCourseOptions contain information about new course.
+type NewCourseOptions struct {
+	OrganizationID uint64
+	CourseCreator  string
 }
 
 // GetOrgOptions contains information on the organization to fetch
@@ -112,7 +109,8 @@ type GetOrgOptions struct {
 	Name string
 	// Username field is used to filter organizations
 	// where the given user has a certain role.
-	Username string
+	Username  string
+	NewCourse bool // Get organization for a new course
 }
 
 // Repository represents a git remote repository.

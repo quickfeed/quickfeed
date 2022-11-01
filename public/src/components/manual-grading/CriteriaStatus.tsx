@@ -1,5 +1,5 @@
 import React from "react"
-import { GradingCriterion, GradingCriterion_Grade } from "../../../gen/qf/types_pb"
+import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 
 

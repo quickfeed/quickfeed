@@ -1,7 +1,7 @@
 import { useHistory } from "react-router"
 import { assignmentStatusText, getCourseID, getFormattedTime } from "../Helpers"
 import { useAppState } from "../overmind"
-import { Submission } from "../../gen/qf/types_pb"
+import { Submission } from "../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "./ProgressBar"
 import React from "react"
 

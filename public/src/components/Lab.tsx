@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
-import { Assignment, Submission } from '../../gen/qf/types_pb'
+import { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useAppState, useActions } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
