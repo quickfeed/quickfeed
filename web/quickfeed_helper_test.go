@@ -17,15 +17,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/interceptor"
 )
 
-// Deprecated: Will be replaced by MockQuickFeedClient
-func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *web.QuickFeedService) {
-	t.Helper()
-	db, cleanup := qtest.TestDB(t)
-	sc, mgr := scm.MockSCMManager(t)
-	logger := qtest.Logger(t).Desugar()
-	return db, cleanup, sc, web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
-}
-
 // MockClient returns a QuickFeed client for invoking RPCs.
 func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconnect.QuickFeedServiceClient {
 	t.Helper()
