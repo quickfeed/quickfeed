@@ -480,6 +480,11 @@ func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOpt
 	return nil
 }
 
+// CreateGroup creates team and repository for a new group.
+func (s *MockSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+	return nil, nil, nil
+}
+
 // teamExists checks teams by ID, or by team and organization name.
 func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 	if id > 0 {

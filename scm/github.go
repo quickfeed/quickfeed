@@ -669,6 +669,40 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 	return err
 }
 
+// CreateGroup creates team and repository for a new group.
+func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+	orgOtions := &GetOrgOptions{Name: opt.Organization}
+	org, err := s.GetOrganization(ctx, orgOtions)
+	if err != nil {
+		return nil, nil, err
+	}
+	repoOptions := &CreateRepositoryOptions{
+		Organization: opt.Organization,
+		Path:         opt.TeamName,
+		Private:      true,
+	}
+	repo, err := s.CreateRepository(ctx, repoOptions)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	team, err := s.CreateTeam(ctx, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	addRepoOptions := &AddTeamRepoOptions{
+		TeamID:         team.ID,
+		OrganizationID: org.ID,
+		Owner:          org.Name,
+		Repo:           repo.Path,
+		Permission:     RepoPush,
+	}
+	if err := s.AddTeamRepo(ctx, addRepoOptions); err != nil {
+		return nil, nil, err
+	}
+	return repo, team, nil
+}
+
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists

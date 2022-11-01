@@ -68,6 +68,8 @@ type SCM interface {
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
 	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
+	// CreateGroup creates group repository and team.
+	CreateGroup(context.Context, *NewTeamOptions) (*Repository, *Team, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
