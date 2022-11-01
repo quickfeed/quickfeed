@@ -41,9 +41,9 @@ export const timeFormatter = (deadline: string): Deadline => {
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
 
     if (timeToDeadline < 0) {
-        const d = -days
-        const h = -hours
-        return { className: "table-danger", message: `Expired ${d > 0 ? `${d} days ago` : `${h} hours ago`}`, daysUntil: 0 }
+        const daysSince = -days
+        const hoursSince = -hours
+        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
     }
 
     if (days == 0) {
