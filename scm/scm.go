@@ -26,8 +26,6 @@ type SCM interface {
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
-	// Add repo to team.
-	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 

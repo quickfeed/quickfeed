@@ -173,24 +173,6 @@ func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) e
 	return nil
 }
 
-// AddTeamRepo implements the SCM interface.
-func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if !s.teamExists(opt.TeamID, opt.Repo, opt.Owner) {
-		return errors.New("team not found")
-	}
-	repo := &Repository{
-		ID:    generateID(s.Repositories),
-		Path:  opt.Repo,
-		Owner: opt.Owner,
-		OrgID: opt.OrganizationID,
-	}
-	s.Repositories[repo.ID] = repo
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {

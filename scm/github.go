@@ -359,29 +359,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
-// AddTeamRepo implements the SCM interface.
-func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "AddTeamRepo",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	_, err := s.client.Teams.AddTeamRepoByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), opt.Owner, opt.Repo,
-		&github.TeamAddTeamRepoOptions{
-			Permission: opt.Permission, // make sure users can pull and push
-		})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to make GitHub repository '%s' a team repository for team %d: %w", opt.Repo, opt.TeamID, err),
-			Method:   "AddTeamRepo",
-			Message:  fmt.Sprintf("failed to make GitHub repository '%s' a team repository", opt.Repo),
-		}
-	}
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {
@@ -696,14 +673,10 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repo
 	if err != nil {
 		return nil, nil, err
 	}
-	addRepoOptions := &AddTeamRepoOptions{
-		TeamID:         team.ID,
-		OrganizationID: org.ID,
-		Owner:          org.Name,
-		Repo:           repo.Path,
-		Permission:     RepoPush,
+	permissions := &github.TeamAddTeamRepoOptions{
+		Permission: RepoPush, // make sure users can pull and push
 	}
-	if err := s.AddTeamRepo(ctx, addRepoOptions); err != nil {
+	if _, err := s.client.Teams.AddTeamRepoByID(ctx, int64(org.ID), int64(team.ID), org.Name, repo.Path, permissions); err != nil {
 		return nil, nil, err
 	}
 	return repo, team, nil
