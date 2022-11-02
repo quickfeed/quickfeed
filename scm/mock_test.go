@@ -1277,3 +1277,136 @@ func TestMockCreateGroup(t *testing.T) {
 		}
 	}
 }
+
+func TestMockDeleteGroup(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	repositories := []*scm.Repository{
+		{
+			ID:      1,
+			OrgID:   1,
+			Owner:   qtest.MockOrg,
+			Path:    qf.StudentRepoName(user),
+			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, qf.StudentRepoName(user)),
+		},
+		{
+			ID:      2,
+			OrgID:   1,
+			Owner:   qtest.MockOrg,
+			Path:    mockTeams[0].Name,
+			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[0].Name),
+		},
+	}
+	s.Repositories = map[uint64]*scm.Repository{
+		1: repositories[0],
+		2: repositories[1],
+	}
+	s.Teams = map[uint64]*scm.Team{
+		1: mockTeams[0],
+		2: mockTeams[1],
+		3: mockTeams[2],
+	}
+
+	tests := []struct {
+		name      string
+		opt       *scm.GroupOptions
+		wantRepos map[uint64]*scm.Repository
+		wantTeams map[uint64]*scm.Team
+		wantErr   bool
+	}{
+		{
+			"invalid opt, missing organization",
+			&scm.GroupOptions{
+				TeamID:       1,
+				RepositoryID: 2,
+			},
+			map[uint64]*scm.Repository{
+				1: repositories[0],
+				2: repositories[1],
+			},
+			map[uint64]*scm.Team{
+				1: mockTeams[0],
+				2: mockTeams[1],
+				3: mockTeams[2],
+			},
+			true,
+		},
+		{
+			"invalid opt, missing team ID",
+			&scm.GroupOptions{
+				OrganizationID: 1,
+				RepositoryID:   1,
+			},
+			map[uint64]*scm.Repository{
+				1: repositories[0],
+				2: repositories[1],
+			},
+			map[uint64]*scm.Team{
+				1: mockTeams[0],
+				2: mockTeams[1],
+				3: mockTeams[2],
+			},
+			true,
+		},
+		{
+			"invalid opt, missing repo ID",
+			&scm.GroupOptions{
+				OrganizationID: 1,
+				TeamID:         1,
+			},
+			map[uint64]*scm.Repository{
+				1: repositories[0],
+				2: repositories[1],
+			},
+			map[uint64]*scm.Team{
+				1: mockTeams[0],
+				2: mockTeams[1],
+				3: mockTeams[2],
+			},
+			true,
+		},
+		{
+			"incorrect organization ID",
+			&scm.GroupOptions{
+				OrganizationID: 1,
+			},
+			map[uint64]*scm.Repository{
+				1: repositories[0],
+				2: repositories[1],
+			},
+			map[uint64]*scm.Team{
+				1: mockTeams[0],
+				2: mockTeams[1],
+				3: mockTeams[2],
+			},
+			true,
+		},
+		{
+			"correct opt, delete group repo with ID 2, team ID 1",
+			&scm.GroupOptions{
+				OrganizationID: 1,
+				TeamID:         1,
+				RepositoryID:   2,
+			},
+			map[uint64]*scm.Repository{
+				1: repositories[0],
+			},
+			map[uint64]*scm.Team{
+				2: mockTeams[1],
+				3: mockTeams[2],
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		if err := s.DeleteGroup(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Error(err)
+		}
+		if diff := cmp.Diff(tt.wantRepos, s.Repositories); diff != "" {
+			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
+		}
+		if diff := cmp.Diff(tt.wantTeams, s.Teams); diff != "" {
+			t.Errorf("%s: mismatch teams (-want +got):\n%s", tt.name, diff)
+		}
+	}
+}

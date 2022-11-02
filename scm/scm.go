@@ -122,6 +122,11 @@ type GroupOptions struct {
 	TeamID         uint64
 }
 
+func (opt *GroupOptions) valid() bool {
+	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
+		opt.TeamID > 0
+}
+
 // GetOrgOptions contain information about organization.
 type GetOrgOptions struct {
 	ID   uint64

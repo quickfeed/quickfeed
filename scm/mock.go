@@ -489,7 +489,22 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Reposi
 
 // DeleteGroup deletes repository and team for a group.
 func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
-	return nil
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
+	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID: opt.OrganizationID,
+	}); err != nil {
+		return errors.New("organization not found")
+	}
+	if err := s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
+		return err
+	}
+	teamOpt := &TeamOptions{
+		TeamID:         opt.TeamID,
+		OrganizationID: opt.OrganizationID,
+	}
+	return s.DeleteTeam(ctx, teamOpt)
 }
 
 // teamExists checks teams by ID, or by team and organization name.

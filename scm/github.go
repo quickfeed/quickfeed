@@ -684,6 +684,12 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repo
 
 // DeleteGroup deletes group's repository and team.
 func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "DeleteGroup",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
 	if err := s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
 		return err
 	}
