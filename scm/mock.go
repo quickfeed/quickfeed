@@ -128,7 +128,7 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 }
 
 // CreateTeam implements the SCM interface.
-func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
+func (s *MockSCM) CreateTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
@@ -381,7 +381,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		return nil, err
 	}
 	repositories = append(repositories, labRepo)
-	teams := []*NewTeamOptions{
+	teams := []*TeamOptions{
 		{
 			Organization: org.Name,
 			TeamName:     TeachersTeam,
@@ -441,7 +441,7 @@ func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOpt
 }
 
 // CreateGroup creates team and repository for a new group.
-func (s *MockSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
 	if !opt.valid() {
 		return nil, nil, fmt.Errorf("invalid argument: %v", opt)
 	}

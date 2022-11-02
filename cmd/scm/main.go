@@ -308,7 +308,7 @@ func createTeam(client *scm.GithubSCM) cli.ActionFunc {
 		if len(users) < 1 {
 			return cli.NewExitError("team user names must be provided (comma separated)", 3)
 		}
-		opt := &scm.NewTeamOptions{
+		opt := &scm.TeamOptions{
 			Organization: c.String("namespace"),
 			TeamName:     c.String("team"),
 			Users:        users,

@@ -447,13 +447,13 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// teacher promotes students to teachers, must succeed
 	ctx := auth.WithUserContext(context.Background(), teacher)
 	// Need course teams to update enrollments.
-	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
+	if _, err := mockSCM.CreateTeam(ctx, &scm.TeamOptions{
 		Organization: qtest.MockOrg,
 		TeamName:     "allstudents",
 	}); err != nil {
 		t.Error(err)
 	}
-	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
+	if _, err := mockSCM.CreateTeam(ctx, &scm.TeamOptions{
 		Organization: qtest.MockOrg,
 		TeamName:     "allteachers",
 	}); err != nil {

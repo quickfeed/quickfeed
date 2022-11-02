@@ -232,7 +232,7 @@ func TestMockCreateTeams(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	for _, team := range mockTeams {
-		newTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+		newTeam, err := s.CreateTeam(ctx, &scm.TeamOptions{
 			Organization: team.Organization,
 			TeamName:     team.Name,
 		})
@@ -252,7 +252,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	team, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+	team, err := s.CreateTeam(ctx, &scm.TeamOptions{
 		Organization: course.OrganizationName,
 		TeamName:     "test_team",
 	})
@@ -1115,7 +1115,7 @@ func TestMockCreateGroup(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		opt       *scm.NewTeamOptions
+		opt       *scm.TeamOptions
 		wantTeam  *scm.Team
 		wantRepo  *scm.Repository
 		wantTeams map[uint64]*scm.Team
@@ -1124,7 +1124,7 @@ func TestMockCreateGroup(t *testing.T) {
 	}{
 		{
 			"invalid opts, missing organization",
-			&scm.NewTeamOptions{
+			&scm.TeamOptions{
 				TeamName: "test-team",
 			},
 			nil,
@@ -1135,7 +1135,7 @@ func TestMockCreateGroup(t *testing.T) {
 		},
 		{
 			"invalid opts, missing team name",
-			&scm.NewTeamOptions{
+			&scm.TeamOptions{
 				Organization: qtest.MockOrg,
 			},
 			nil,
@@ -1146,7 +1146,7 @@ func TestMockCreateGroup(t *testing.T) {
 		},
 		{
 			"organization does not exist",
-			&scm.NewTeamOptions{
+			&scm.TeamOptions{
 				Organization: "some-org",
 				TeamName:     "team",
 			},
@@ -1158,7 +1158,7 @@ func TestMockCreateGroup(t *testing.T) {
 		},
 		{
 			"add a new group",
-			&scm.NewTeamOptions{
+			&scm.TeamOptions{
 				Organization: qtest.MockOrg,
 				TeamName:     mockTeams[0].Name,
 				Users:        []string{user},
@@ -1171,7 +1171,7 @@ func TestMockCreateGroup(t *testing.T) {
 		},
 		{
 			"add another group",
-			&scm.NewTeamOptions{
+			&scm.TeamOptions{
 				Organization: qtest.MockOrg,
 				TeamName:     mockTeams[1].Name,
 				Users:        []string{user},

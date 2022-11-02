@@ -21,7 +21,7 @@ type SCM interface {
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// Create team.
-	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
+	CreateTeam(context.Context, *TeamOptions) (*Team, error)
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 
@@ -63,7 +63,7 @@ type SCM interface {
 	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
 	// CreateGroup creates repository and team for a new group.
-	CreateGroup(context.Context, *NewTeamOptions) (*Repository, *Team, error)
+	CreateGroup(context.Context, *TeamOptions) (*Repository, *Team, error)
 	// DeleteGroup deletes group's repository and team.
 	DeleteGroup(context.Context, *GroupOptions) error
 }
@@ -160,17 +160,8 @@ type CreateRepositoryOptions struct {
 	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
-// TeamOptions contains information about the team and the organization it belongs to.
-// It must include either both IDs or both names for the team and organization/
+// TeamOptions used when creating a new team
 type TeamOptions struct {
-	Organization   string
-	OrganizationID uint64
-	TeamName       string
-	TeamID         uint64
-}
-
-// NewTeamOptions used when creating a new team
-type NewTeamOptions struct {
 	Organization string
 	TeamName     string
 	Users        []string

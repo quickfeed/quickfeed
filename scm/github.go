@@ -199,7 +199,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team, error) {
+func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
 		return nil, ErrMissingFields{
 			Method:  "CreateTeam",
@@ -497,7 +497,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create teacher team with course creator
-	teamOpt := &NewTeamOptions{
+	teamOpt := &TeamOptions{
 		Organization: org.Name,
 		TeamName:     TeachersTeam,
 		Users:        []string{opt.CourseCreator},
@@ -507,7 +507,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create student team without any members
-	studOpt := &NewTeamOptions{Organization: org.Name, TeamName: StudentsTeam}
+	studOpt := &TeamOptions{Organization: org.Name, TeamName: StudentsTeam}
 	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
 		return nil, fmt.Errorf("failed to create students team: %w", err)
 	}
@@ -591,7 +591,7 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 }
 
 // CreateGroup creates team and repository for a new group.
-func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
 	if !opt.valid() {
 		return nil, nil, ErrMissingFields{
 			Method:  "CreateGroup",

@@ -75,7 +75,7 @@ func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	opt := &scm.NewTeamOptions{
+	opt := &scm.TeamOptions{
 		Organization: course.OrganizationName,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
