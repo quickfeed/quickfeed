@@ -84,7 +84,7 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 		// Fetch user from database using the remote identity received
 		// from GitHub.
 		user, err := t.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
-			ID: externalUser.ID,
+			RemoteID: externalUser.ID,
 			// Unsure if required
 			Provider: env.ScmProvider(),
 		})
