@@ -93,14 +93,6 @@ func (opt *RejectEnrollmentOptions) valid() bool {
 		opt.User != ""
 }
 
-func (opt AddTeamRepoOptions) valid() bool {
-	return opt.TeamID > 0 &&
-		opt.OrganizationID > 0 &&
-		opt.Repo != "" &&
-		opt.Owner != "" &&
-		opt.Permission != ""
-}
-
 func (opt UpdateTeamOptions) valid() bool {
 	return opt.TeamID > 0 && opt.OrganizationID > 0
 }
