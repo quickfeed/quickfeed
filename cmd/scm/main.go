@@ -342,7 +342,7 @@ func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 
 			for _, team := range teams {
 				var errs []error
-				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: *team.Name, Organization: c.String("namespace")}); err != nil {
+				if _, err := (*client).Client().Teams.DeleteTeamBySlug(ctx, c.String("namespace"), *team.Name); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted team", *team.Name)
@@ -360,7 +360,8 @@ func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 			fmt.Println("Canceled")
 			return err
 		}
-		return (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: teamName})
+		_, err := (*client).Client().Teams.DeleteTeamBySlug(ctx, c.String("namespace"), teamName)
+		return err
 	}
 }
 

@@ -250,32 +250,6 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team,
 	}, nil
 }
 
-// DeleteTeam implements the SCM interface.
-func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "DeleteTeam",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	var err error
-	if opt.TeamID > 0 {
-		_, err = s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
-	} else {
-		_, err = s.client.Teams.DeleteTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
-	}
-
-	if err != nil {
-		return ErrFailedSCM{
-			Method:   "DeleteTeam",
-			Message:  fmt.Sprintf("failed to delete GitHub team '%s'", opt.TeamName),
-			GitError: fmt.Errorf("failed to get GitHub team '%s': %w", opt.TeamName, err),
-		}
-	}
-	return err
-}
-
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {
@@ -663,7 +637,8 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 	if err := s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
 		return err
 	}
-	return s.DeleteTeam(ctx, &TeamOptions{TeamID: opt.TeamID, OrganizationID: opt.OrganizationID})
+	_, err := s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
+	return err
 }
 
 // deleteRepository deletes repository by name or ID.

@@ -248,67 +248,6 @@ func TestMockCreateTeams(t *testing.T) {
 	}
 }
 
-func TestMockDeleteTeams(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	for _, team := range mockTeams {
-		s.Teams[team.ID] = team
-	}
-	tests := []struct {
-		name      string
-		opt       *scm.TeamOptions
-		wantTeams []uint64
-		wantErr   bool
-	}{
-		{
-			"delete team 2",
-			&scm.TeamOptions{
-				TeamID:         2,
-				OrganizationID: 1,
-			},
-			[]uint64{1, 3},
-			false,
-		},
-		{
-			"delete team 1",
-			&scm.TeamOptions{
-				TeamID:         1,
-				OrganizationID: 1,
-			},
-			[]uint64{3},
-			false,
-		},
-		{
-			"invalid opt, missing organization info",
-			&scm.TeamOptions{
-				TeamID:   3,
-				TeamName: mockTeams[2].Name,
-			},
-			[]uint64{3},
-			true,
-		},
-		{
-			"invalid opt, missing team info",
-			&scm.TeamOptions{
-				Organization:   qtest.MockOrg,
-				OrganizationID: 1,
-			},
-			[]uint64{3},
-			true,
-		},
-	}
-	for _, tt := range tests {
-		if err := s.DeleteTeam(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
-		}
-		for _, teamID := range tt.wantTeams {
-			if _, ok := s.Teams[teamID]; !ok {
-				t.Errorf("%s: expected team %d in remaining teams", tt.name, teamID)
-			}
-		}
-	}
-}
-
 func TestUpdateMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()

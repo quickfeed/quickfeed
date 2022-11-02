@@ -141,15 +141,6 @@ func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, err
 	return newTeam, nil
 }
 
-// DeleteTeam implements the SCM interface.
-func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	delete(s.Teams, opt.TeamID)
-	return nil
-}
-
 // UpdateTeamMembers implements the SCM interface.
 func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {
@@ -485,11 +476,8 @@ func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 		return errors.New("organization not found")
 	}
 	delete(s.Repositories, opt.RepositoryID)
-	teamOpt := &TeamOptions{
-		TeamID:         opt.TeamID,
-		OrganizationID: opt.OrganizationID,
-	}
-	return s.DeleteTeam(ctx, teamOpt)
+	delete(s.Teams, opt.TeamID)
+	return nil
 }
 
 // teamExists checks teams by ID, or by team and organization name.
