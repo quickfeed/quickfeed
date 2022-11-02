@@ -654,8 +654,8 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repo
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	orgOtions := &GetOrgOptions{Name: opt.Organization}
-	org, err := s.GetOrganization(ctx, orgOtions)
+	orgOptions := &GetOrgOptions{Name: opt.Organization}
+	org, err := s.GetOrganization(ctx, orgOptions)
 	if err != nil {
 		return nil, nil, err
 	}
