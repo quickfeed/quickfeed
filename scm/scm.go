@@ -18,8 +18,6 @@ type SCM interface {
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
-	// Delete repository.
-	DeleteRepository(context.Context, *RepositoryOptions) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// Create team.

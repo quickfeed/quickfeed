@@ -181,36 +181,6 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 	return repositories, nil
 }
 
-// DeleteRepository implements the SCM interface.
-func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-
-	// if ID provided, get path and owner from github
-	if opt.ID > 0 {
-		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: err,
-				Method:   "DeleteRepository",
-				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
-			}
-		}
-		opt.Path = repo.GetName()
-		opt.Owner = repo.Owner.GetLogin()
-	}
-
-	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "DeleteRepository",
-			Message:  fmt.Sprintf("failed to delete repository %s", opt.Path),
-		}
-	}
-	return nil
-}
-
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
 	_, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
@@ -629,7 +599,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if _, err := s.client.Organizations.RemoveMember(ctx, org.Name, opt.User); err != nil {
 		return err
 	}
-	return s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
+	return s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
 }
 
 // DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
@@ -690,10 +660,40 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	if err := s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
+	if err := s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
 		return err
 	}
 	return s.DeleteTeam(ctx, &TeamOptions{TeamID: opt.TeamID, OrganizationID: opt.OrganizationID})
+}
+
+// deleteRepository deletes repository by name or ID.
+func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
+
+	// if ID provided, get path and owner from github
+	if opt.ID > 0 {
+		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
+		if err != nil {
+			return ErrFailedSCM{
+				GitError: err,
+				Method:   "DeleteRepository",
+				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
+			}
+		}
+		opt.Path = repo.GetName()
+		opt.Owner = repo.Owner.GetLogin()
+	}
+
+	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "DeleteRepository",
+			Message:  fmt.Sprintf("failed to delete repository %s", opt.Path),
+		}
+	}
+	return nil
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.

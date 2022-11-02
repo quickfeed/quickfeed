@@ -122,18 +122,6 @@ func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*R
 	return repos, nil
 }
 
-// DeleteRepository implements the SCM interface.
-func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if _, ok := s.Repositories[opt.ID]; !ok {
-		return errors.New("repository not found")
-	}
-	delete(s.Repositories, opt.ID)
-	return nil
-}
-
 // RepositoryIsEmpty implements the SCM interface
 func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
 	return false
@@ -452,9 +440,8 @@ func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOpt
 	}); err != nil {
 		return errors.New("organization not found")
 	}
-	return s.DeleteRepository(ctx, &RepositoryOptions{
-		ID: opt.RepositoryID,
-	})
+	delete(s.Repositories, opt.RepositoryID)
+	return nil
 }
 
 // DemoteTeacherToStudent implements the SCM interface.
@@ -497,9 +484,7 @@ func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 	}); err != nil {
 		return errors.New("organization not found")
 	}
-	if err := s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
-		return err
-	}
+	delete(s.Repositories, opt.RepositoryID)
 	teamOpt := &TeamOptions{
 		TeamID:         opt.TeamID,
 		OrganizationID: opt.OrganizationID,

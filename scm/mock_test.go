@@ -208,20 +208,6 @@ func TestMockRepositories(t *testing.T) {
 	if diff := cmp.Diff(wantRepos, courseRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
 		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 	}
-
-	if err := s.DeleteRepository(ctx, &scm.RepositoryOptions{ID: 3}); err != nil {
-		t.Error(err)
-	}
-	courseRepos, err = s.GetRepositories(ctx, &qf.Organization{ID: course2.OrganizationID})
-	if err != nil {
-		t.Error(err)
-	}
-	if len(courseRepos) > 1 {
-		t.Errorf("expected 1 repository, got %d", len(courseRepos))
-	}
-	if diff := cmp.Diff(repos[3], courseRepos[0], cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
-	}
 }
 
 var mockTeams = []*scm.Team{
