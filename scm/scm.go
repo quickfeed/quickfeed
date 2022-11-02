@@ -66,8 +66,10 @@ type SCM interface {
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
 	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
-	// CreateGroup creates group repository and team.
+	// CreateGroup creates repository and team for a new group.
 	CreateGroup(context.Context, *NewTeamOptions) (*Repository, *Team, error)
+	// DeleteGroup deletes group's repository and team.
+	DeleteGroup(context.Context, *GroupOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -106,13 +108,21 @@ type UpdateEnrollmentOptions struct {
 	Status       qf.Enrollment_UserStatus
 }
 
+// RejectEnrollmentOptions contain information about enrollment.
 type RejectEnrollmentOptions struct {
 	OrganizationID uint64
 	RepositoryID   uint64
 	User           string
 }
 
-// GetOrgOptions contains information on the organization to fetch
+// GroupOptions contain information about group.
+type GroupOptions struct {
+	OrganizationID uint64
+	RepositoryID   uint64
+	TeamID         uint64
+}
+
+// GetOrgOptions contain information about organization.
 type GetOrgOptions struct {
 	ID   uint64
 	Name string

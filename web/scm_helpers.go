@@ -94,17 +94,6 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 	return groupRepo, team, nil
 }
 
-// deletes group repository and team
-func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID, teamID, orgID uint64) error {
-	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
-		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
-	}
-	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID, OrganizationID: orgID}); err != nil {
-		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete team: %w", err)
-	}
-	return nil
-}
-
 func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uint64) error {
 	opt := &scm.UpdateTeamOptions{
 		TeamID:         group.TeamID,

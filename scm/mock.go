@@ -487,6 +487,11 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Reposi
 	return repo, team, nil
 }
 
+// DeleteGroup deletes repository and team for a group.
+func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
+	return nil
+}
+
 // teamExists checks teams by ID, or by team and organization name.
 func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 	if id > 0 {

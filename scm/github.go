@@ -682,6 +682,14 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repo
 	return repo, team, nil
 }
 
+// DeleteGroup deletes group's repository and team.
+func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
+	if err := s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
+		return err
+	}
+	return s.DeleteTeam(ctx, &TeamOptions{TeamID: opt.TeamID, OrganizationID: opt.OrganizationID})
+}
+
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
