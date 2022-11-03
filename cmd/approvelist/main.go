@@ -13,9 +13,10 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/bufbuild/connect-go"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 )
 
 const (
@@ -25,12 +26,13 @@ const (
 	fail      = "Ikke godkjent"
 )
 
-func NewQuickFeed(serverURL string) qfconnect.QuickFeedServiceClient {
+func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
 	return qfconnect.NewQuickFeedServiceClient(
 		http.DefaultClient,
 		serverURL,
-		connect.WithGRPC(),
-		// connect.WithGRPCWeb(),
+		connect.WithInterceptors(
+			interceptor.NewClientInterceptor(token),
+		),
 	)
 }
 
@@ -119,9 +121,13 @@ func main() {
 
 func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.CourseSubmissions, error) {
 	// TODO(meling) how to get the cookie
-	cookie := "secret"
+	env.Load("")
+	token, err := env.GetAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("could not get find a GitHub access token in your .env file")
+	}
 
-	client := NewQuickFeed(serverURL)
+	client := NewQuickFeed(serverURL, token)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -131,13 +137,13 @@ func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.Cours
 		CourseYear: uint32(year),
 		UserLogin:  userName,
 	}
-	userResp, err := client.GetUserByCourse(ctx, requestWithCookie(courseUserRequest, cookie))
+	userResp, err := client.GetUserByCourse(ctx, connect.NewRequest(courseUserRequest))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user %s in course %s: %w", userName, courseCode, err)
 	}
 
 	enrollStatusRequest := &qf.EnrollmentStatusRequest{UserID: userResp.Msg.GetID()}
-	coursesResp, err := client.GetCoursesByUser(ctx, requestWithCookie(enrollStatusRequest, cookie))
+	coursesResp, err := client.GetCoursesByUser(ctx, connect.NewRequest(enrollStatusRequest))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get courses for user %s: %w", userName, err)
 	}
@@ -155,17 +161,11 @@ func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.Cours
 		CourseID: courseID,
 		Type:     qf.SubmissionsForCourseRequest_ALL,
 	}
-	submissions, err := client.GetSubmissionsByCourse(ctx, requestWithCookie(submissionCourseRequest, cookie))
+	submissions, err := client.GetSubmissionsByCourse(ctx, connect.NewRequest(submissionCourseRequest))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get submissions for course %s: %w", courseCode, err)
 	}
 	return submissions.Msg, err
-}
-
-func requestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
-	request := connect.NewRequest(message)
-	request.Header().Set(auth.Cookie, cookie)
-	return request
 }
 
 func lookupRow(name string, studentMap map[string]int) (int, error) {
