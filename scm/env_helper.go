@@ -32,8 +32,7 @@ func GetAccessToken(t *testing.T) string {
 	t.Helper()
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	if len(accessToken) < 1 {
-		qfTestOrg := GetTestOrganization(t)
-		t.Skipf("This test requires that 'GITHUB_ACCESS_TOKEN' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
+		t.Skip("This test requires that 'GITHUB_ACCESS_TOKEN' is set.")
 	}
 	return accessToken
 }
