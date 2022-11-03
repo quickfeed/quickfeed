@@ -51,62 +51,69 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 			return next(ctx, request)
 		}
 
-		if cookie, exists := t.tokenMap[token]; exists {
-			request.Header().Set(auth.Cookie, cookie)
-			response, err := next(ctx, request)
+		cookie, err := t.lookupToken(token)
+		if err != nil {
+			return nil, err
+		}
 
-			if response != nil {
-				updatedCookie := response.Header().Get(auth.SetCookie)
-				if len(updatedCookie) != 0 && updatedCookie != cookie {
-					t.tokenMap[token] = updatedCookie
-				}
+		request.Header().Set(auth.Cookie, cookie)
+		response, err := next(ctx, request)
+		if response != nil {
+			updatedCookie := response.Header().Get(auth.SetCookie)
+			if len(updatedCookie) != 0 && updatedCookie != cookie {
+				t.tokenMap[token] = updatedCookie
 			}
-
-			return response, err
 		}
-
-		// Verify that token has correct prefixes before continuing
-		if !(strings.HasPrefix(token, "ghp_") || strings.HasPrefix(token, "github_pat_")) {
-			// could also pass through for next interceptor to determine if the request
-			// has a valid cookie
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid token"))
-		}
-
-		// Attempt to fetch user from GitHub using provided token
-		externalUser, err := auth.FetchExternalUser(&oauth2.Token{
-			AccessToken: token,
-		})
-		if err != nil {
-			// Abort if any error occurs
-			return nil, connect.NewError(connect.CodeUnauthenticated, err)
-		}
-		t.logger.Debug("Retrieved user", externalUser)
-		// Fetch user from database using the remote identity received
-		// from GitHub.
-		user, err := t.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
-			RemoteID: externalUser.ID,
-			// Unsure if required
-			Provider: env.ScmProvider(),
-		})
-		if err != nil {
-			// Abort if any error occurs
-			return nil, connect.NewError(connect.CodeUnauthenticated, err)
-		}
-
-		// Create a new authentication cookie, which contains
-		// claims for the user associated with the token
-		// received in the request
-		cookie, err := t.tm.NewAuthCookie(user.ID)
-		if err != nil {
-			return nil, connect.NewError(connect.CodeUnauthenticated, err)
-		}
-
-		// Store the generated cookie in our token map
-		t.tokenMap[token] = cookie.String()
-
-		// Set the cookie to the request header for consumption
-		// in subsequent interceptors in the chain
-		request.Header().Set(auth.Cookie, cookie.String())
-		return next(ctx, request)
+		return response, err
 	})
+}
+
+// lookupToken checks if a given token exists in the tokenMap. If it does
+// not, it will attempt to query GitHub for user information associated
+// with the token. If a user exists for the token, we verify that the user
+// exists in our database, and create a cookie with claims for the user.
+func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
+	if cookie, exists := t.tokenMap[token]; exists {
+		return cookie, nil
+	}
+
+	// Verify that token has correct prefixes before continuing
+	if !(strings.HasPrefix(token, "ghp_") || strings.HasPrefix(token, "github_pat_")) {
+		// could also pass through for next interceptor to determine if the request
+		// has a valid cookie
+		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("invalid token"))
+	}
+
+	// Attempt to fetch user from GitHub using provided token
+	externalUser, err := auth.FetchExternalUser(&oauth2.Token{
+		AccessToken: token,
+	})
+	if err != nil {
+		// Abort if any error occurs
+		return "", connect.NewError(connect.CodeUnauthenticated, err)
+	}
+	t.logger.Debug("Retrieved user", externalUser)
+	// Fetch user from database using the remote identity received
+	// from GitHub.
+	user, err := t.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
+		RemoteID: externalUser.ID,
+		// Unsure if required
+		Provider: env.ScmProvider(),
+	})
+	if err != nil {
+		// Abort if any error occurs
+		return "", connect.NewError(connect.CodeUnauthenticated, err)
+	}
+
+	// Create a new authentication cookie, which contains
+	// claims for the user associated with the token
+	// received in the request
+	cookie, err := t.tm.NewAuthCookie(user.ID)
+	if err != nil {
+		return "", connect.NewError(connect.CodeUnauthenticated, err)
+	}
+
+	// Store the generated cookie in our token map
+	t.tokenMap[token] = cookie.String()
+	return cookie.String(), nil
 }
