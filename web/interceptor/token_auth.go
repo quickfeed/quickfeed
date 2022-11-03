@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
@@ -20,6 +21,7 @@ type TokenAuthInterceptor struct {
 	logger   *zap.SugaredLogger
 	db       database.Database
 	tokenMap map[string]string
+	mu       sync.Mutex
 }
 
 func NewTokenAuthInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager, db database.Database) *TokenAuthInterceptor {
@@ -49,7 +51,7 @@ func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandle
 		}
 		updatedCookie := conn.ResponseHeader().Get(auth.SetCookie)
 		if len(updatedCookie) != 0 && updatedCookie != cookie {
-			t.tokenMap[token] = updatedCookie
+			t.update(token, updatedCookie)
 		}
 		return nil
 	})
@@ -78,11 +80,24 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 		if response != nil {
 			updatedCookie := response.Header().Get(auth.SetCookie)
 			if len(updatedCookie) != 0 && updatedCookie != cookie {
-				t.tokenMap[token] = updatedCookie
+				t.update(token, updatedCookie)
 			}
 		}
 		return response, err
 	})
+}
+
+func (t *TokenAuthInterceptor) lookup(token string) (string, bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	cookie, exists := t.tokenMap[token]
+	return cookie, exists
+}
+
+func (t *TokenAuthInterceptor) update(token, cookie string) {
+	t.mu.Lock()
+	t.tokenMap[token] = cookie
+	t.mu.Unlock()
 }
 
 // lookupToken checks if a given token exists in the tokenMap. If it does
@@ -90,7 +105,7 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 // with the token. If a user exists for the token, we verify that the user
 // exists in our database, and create a cookie with claims for the user.
 func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
-	if cookie, exists := t.tokenMap[token]; exists {
+	if cookie, exists := t.lookup(token); exists {
 		return cookie, nil
 	}
 
@@ -128,6 +143,6 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 
 	// Store the generated cookie in our token map
 	cookieString := cookie.String()
-	t.tokenMap[token] = cookieString
+	t.update(token, cookieString)
 	return cookieString, nil
 }
