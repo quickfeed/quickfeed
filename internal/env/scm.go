@@ -90,6 +90,14 @@ func AppName() string {
 	return appName
 }
 
+func GetAccessToken() (string, error) {
+	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if len(accessToken) == 0 {
+		return "", fmt.Errorf("missing personal access token in .env")
+	}
+	return accessToken, nil
+}
+
 // SetFakeProvider sets the provider to fake. This is only for testing.
 // The t argument is added as a reminder that this is only for testing.
 func SetFakeProvider(t *testing.T) {
