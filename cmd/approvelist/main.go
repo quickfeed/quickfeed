@@ -120,11 +120,9 @@ func main() {
 }
 
 func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.CourseSubmissions, error) {
-	// TODO(meling) how to get the cookie
-	env.Load("")
 	token, err := env.GetAccessToken()
 	if err != nil {
-		return nil, fmt.Errorf("could not get find a GitHub access token in your .env file")
+		return nil, err
 	}
 
 	client := NewQuickFeed(serverURL, token)

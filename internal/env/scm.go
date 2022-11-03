@@ -1,6 +1,7 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -93,7 +94,7 @@ func AppName() string {
 func GetAccessToken() (string, error) {
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	if len(accessToken) == 0 {
-		return "", fmt.Errorf("missing personal access token in .env")
+		return "", errors.New("required 'GITHUB_ACCESS_TOKEN' is not set")
 	}
 	return accessToken, nil
 }
