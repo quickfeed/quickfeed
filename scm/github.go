@@ -359,29 +359,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
-// AddTeamRepo implements the SCM interface.
-func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "AddTeamRepo",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	_, err := s.client.Teams.AddTeamRepoByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), opt.Owner, opt.Repo,
-		&github.TeamAddTeamRepoOptions{
-			Permission: opt.Permission, // make sure users can pull and push
-		})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to make GitHub repository '%s' a team repository for team %d: %w", opt.Repo, opt.TeamID, err),
-			Method:   "AddTeamRepo",
-			Message:  fmt.Sprintf("failed to make GitHub repository '%s' a team repository", opt.Repo),
-		}
-	}
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {
@@ -667,6 +644,42 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 	role := OrgMember
 	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: &role})
 	return err
+}
+
+// CreateGroup creates team and repository for a new group.
+func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+	if !opt.valid() {
+		return nil, nil, ErrMissingFields{
+			Method:  "CreateGroup",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+	orgOptions := &GetOrgOptions{Name: opt.Organization}
+	org, err := s.GetOrganization(ctx, orgOptions)
+	if err != nil {
+		return nil, nil, err
+	}
+	repoOptions := &CreateRepositoryOptions{
+		Organization: opt.Organization,
+		Path:         opt.TeamName,
+		Private:      true,
+	}
+	repo, err := s.CreateRepository(ctx, repoOptions)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	team, err := s.CreateTeam(ctx, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	permissions := &github.TeamAddTeamRepoOptions{
+		Permission: RepoPush, // make sure users can pull and push
+	}
+	if _, err := s.client.Teams.AddTeamRepoByID(ctx, int64(org.ID), int64(team.ID), org.Name, repo.Path, permissions); err != nil {
+		return nil, nil, err
+	}
+	return repo, team, nil
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.

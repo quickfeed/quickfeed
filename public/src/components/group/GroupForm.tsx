@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
-import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -39,9 +39,11 @@ const GroupForm = (): JSX.Element | null => {
 
     const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => enrollment.clone())
 
+    // Determine the user's enrollment status (teacher or student)
+    const userEnrollmentStatus = hasTeacher(state.status[courseID.toString()]) ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
     const sortedAndFilteredEnrollments = enrollments
-        // Filter out enrollments where the user is not a student, or the user is already in a group
-        .filter(enrollment => enrollment.status == Enrollment_UserStatus.STUDENT && enrollment.groupID == BigInt(0))
+        // Filter enrollments where the user is not a student (or teacher), or the user is already in a group
+        .filter(enrollment => enrollment.status == userEnrollmentStatus && enrollment.groupID == BigInt(0))
         // Sort by name
         .sort((a, b) => (a.user?.name ?? "").localeCompare((b.user?.name ?? "")))
 

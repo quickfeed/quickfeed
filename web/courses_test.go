@@ -9,73 +9,84 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-func TestGetCourses(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+func TestCreateAndGetCourse(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	client, tm, _ := MockClientWithUser(t, db)
 
-	var wantCourses []*qf.Course
-	for _, course := range qtest.MockCourses {
-		err := db.CreateCourse(admin.ID, course)
-		if err != nil {
-			t.Fatal(err)
-		}
-		wantCourses = append(wantCourses, course)
-	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	cookie := Cookie(t, tm, admin)
 
-	foundCourses, err := qfService.GetCourses(context.Background(), connect.NewRequest(&qf.Void{}))
+	wantCourse := qtest.MockCourses[0]
+	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	gotCourses := foundCourses.Msg.Courses
-	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
+
+	gotCourse, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
+		CourseID: createdCourse.Msg.ID,
+	}, cookie))
+	if err != nil {
+		t.Error(err)
+	}
+
+	wantCourse.ID = createdCourse.Msg.ID
+	if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
+	}
+	if diff := cmp.Diff(createdCourse.Msg, gotCourse.Msg, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-createdCourse +gotCourse):\n%s", diff)
 	}
 }
 
-func TestNewCourse(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+func TestCreateAndGetCourses(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateAdminUser(t, db, "fake")
-	ctx := auth.WithUserContext(context.Background(), admin)
+	client, tm, _ := MockClientWithUser(t, db)
+
+	admin := qtest.CreateFakeUser(t, db, 1)
+	cookie := Cookie(t, tm, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
-		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
+		gotCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
+		// copy the ID from the created course to the expected course
 		wantCourse.ID = gotCourse.Msg.ID
 		if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
-			t.Errorf("ags.CreateCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
+			t.Errorf("CreateCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 		}
+	}
 
-		// check that the database also has the course
-		gotCourse.Msg, err = db.GetCourse(wantCourse.ID, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
-			t.Errorf("db.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
-		}
+	wantCourses := qtest.MockCourses
+	foundCourses, err := client.GetCourses(context.Background(), qtest.RequestWithCookie(&qf.Void{}, cookie))
+	if err != nil {
+		t.Error(err)
+	}
+	gotCourses := foundCourses.Msg.Courses
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
 }
 
 func TestNewCourseExistingRepos(t *testing.T) {
-	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := auth.WithUserContext(context.Background(), admin)
+	client, tm, mockSCM := MockClientWithUser(t, db)
 
+	admin := qtest.CreateFakeUser(t, db, 1)
+	cookie := Cookie(t, tm, admin)
+
+	ctx := context.Background()
 	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1, NewCourse: true})
 	if err != nil {
 		t.Fatal(err)
@@ -88,7 +99,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 		}
 	}
 
-	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
+	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], cookie))
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
@@ -104,30 +115,69 @@ func TestEnrollmentProcess(t *testing.T) {
 	// TODO(meling): This test no longer passes since the enrollment process includes accepting invitations on behalf of the user.
 	// A fix would probably be to implement a fake SCMInvite that behaves appropriately.
 	// We should add manual SCM_TEST for the actual AcceptRepositoryInvites using qf101.
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	// TODO(meling) The main problem with this test is that the SCMManager and Config.ExchangeToken is not mocked.
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	ctx := auth.WithUserContext(context.Background(), admin)
+	client, tm, _ := MockClientWithUser(t, db)
 
-	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
+	ctx := context.Background()
+	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
-	stud1 := qtest.CreateFakeUser(t, db, 2)
+	stud1 := qtest.CreateNamedUser(t, db, 2, "student1")
 	enrollStud1 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud1.ID}
-	if _, err = qfService.CreateEnrollment(ctx, connect.NewRequest(enrollStud1)); err != nil {
-		t.Fatal(err)
+	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud1, Cookie(t, tm, stud1))); err != nil {
+		t.Error(err)
 	}
 
-	// verify that a pending enrollment was indeed created.
-	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(course.Msg.ID, stud1.ID)
-	if err != nil {
-		t.Fatal(err)
+	// verify that a pending enrollment was indeed created for the user
+	enrollStatusReq := &qf.EnrollmentStatusRequest{
+		UserID: stud1.ID,
+		Statuses: []qf.Enrollment_UserStatus{
+			qf.Enrollment_PENDING,
+		},
 	}
+	userEnrollments, err := client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, admin)))
+	if err != nil {
+		t.Error(err)
+	}
+	var pendingUserEnrollment *qf.Enrollment
+	for _, enrollment := range userEnrollments.Msg.Enrollments {
+		if enrollment.CourseID == course.Msg.ID {
+			if enrollment.Status == qf.Enrollment_PENDING {
+				pendingUserEnrollment = enrollment
+			} else {
+				t.Errorf("expected student %d to have pending enrollment in course %d", stud1.ID, course.Msg.ID)
+			}
+		}
+	}
+
+	// verify that a pending enrollment was indeed created for the course.
+	enrollReq := &qf.EnrollmentRequest{CourseID: course.Msg.ID}
+	courseEnrollments, err := client.GetEnrollmentsByCourse(ctx, qtest.RequestWithCookie(enrollReq, Cookie(t, tm, admin)))
+	if err != nil {
+		t.Error(err)
+	}
+	var pendingCourseEnrollment *qf.Enrollment
+	for _, enrollment := range courseEnrollments.Msg.Enrollments {
+		if enrollment.UserID == stud1.ID {
+			if enrollment.Status == qf.Enrollment_PENDING {
+				pendingCourseEnrollment = enrollment
+			} else {
+				t.Errorf("expected student %d to have pending enrollment in course %d", stud1.ID, course.Msg.ID)
+			}
+		}
+	}
+	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-pendingUserEnrollment +pendingCourseEnrollment):\n%s", diff)
+	}
+
 	wantEnrollment := &qf.Enrollment{
-		ID:           pendingEnrollment.ID,
+		ID:           pendingCourseEnrollment.ID,
 		CourseID:     course.Msg.ID,
 		UserID:       stud1.ID,
 		Status:       qf.Enrollment_PENDING,
@@ -138,21 +188,22 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(wantEnrollment, pendingEnrollment, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
 
 	enrollStud1.Status = qf.Enrollment_STUDENT
-	if _, err = qfService.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
+	enrollStud1.Course = course.Msg
+	if _, err = client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{enrollStud1},
-	})); err != nil {
-		t.Fatal(err)
+	}, Cookie(t, tm, admin))); err != nil {
+		t.Error(err)
 	}
 
 	// verify that the enrollment was updated to student status.
 	gotEnrollment, err := db.GetEnrollmentByCourseAndUser(course.Msg.ID, stud1.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	wantEnrollment.Status = qf.Enrollment_STUDENT
 	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
@@ -163,16 +214,16 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	stud2 := qtest.CreateFakeUser(t, db, 3)
 	enrollStud2 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud2.ID}
-	if _, err = qfService.CreateEnrollment(ctx, connect.NewRequest(enrollStud2)); err != nil {
-		t.Fatal(err)
+	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud1))); err != nil { // todo(meling) should be stud2 but checking that stud1 can't enroll stud2
+		t.Error(err)
 	}
 	enrollStud2.Status = qf.Enrollment_STUDENT
-	if _, err = qfService.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
+	if _, err = client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
-	})); err != nil {
-		t.Fatal(err)
+	}, Cookie(t, tm, stud1))); err != nil { // todo(meling) should be admin but checking that stud1 can't enroll stud2
+		t.Error(err)
 	}
 	// verify that the stud2 was enrolled with student status.
 	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.Msg.ID, stud2.ID)
@@ -191,12 +242,12 @@ func TestEnrollmentProcess(t *testing.T) {
 	// promote stud2 to teaching assistant
 
 	enrollStud2.Status = qf.Enrollment_TEACHER
-	if _, err = qfService.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
+	if _, err = client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
-	})); err != nil {
-		t.Fatal(err)
+	}, Cookie(t, tm, stud2))); err != nil {
+		t.Error(err)
 	}
 	// verify that the stud2 was promoted to teacher status.
 	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.Msg.ID, stud2.ID)
@@ -211,8 +262,10 @@ func TestEnrollmentProcess(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+
+	client, tm, _ := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
@@ -257,9 +310,9 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	courses_request := &qf.EnrollmentStatusRequest{UserID: user.ID}
-	courses, err := qfService.GetCoursesByUser(context.Background(), connect.NewRequest(courses_request))
+	courses, err := client.GetCoursesByUser(context.Background(), qtest.RequestWithCookie(courses_request, Cookie(t, tm, user)))
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	wantCourses := []*qf.Course{
@@ -279,8 +332,10 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+
+	client, tm, _ := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var testCourses []*qf.Course
@@ -329,9 +384,9 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	stats := make([]qf.Enrollment_UserStatus, 0)
 	stats = append(stats, qf.Enrollment_STUDENT)
 	course_req := &qf.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
-	courses, err := qfService.GetCoursesByUser(context.Background(), connect.NewRequest(course_req))
+	courses, err := client.GetCoursesByUser(context.Background(), qtest.RequestWithCookie(course_req, Cookie(t, tm, user)))
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	wantCourses, err := db.GetCoursesByUser(user.ID, qf.Enrollment_STUDENT)
 	if err != nil {
@@ -343,32 +398,11 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 }
 
-func TestGetCourse(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
-	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, 1)
-	wantCourse := qtest.MockCourses[0]
-	err := db.CreateCourse(admin.ID, wantCourse)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	gotCourse, err := qfService.GetCourse(context.Background(), connect.NewRequest(&qf.CourseRequest{
-		CourseID: wantCourse.ID,
-	}))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(wantCourse, gotCourse.Msg, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
-	}
-}
-
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+
+	client, tm, mockSCM := MockClientWithUser(t, db)
 
 	teacher := qtest.CreateAdminUser(t, db, "fake")
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
@@ -445,7 +479,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	request := &qf.Enrollments{}
 
 	// teacher promotes students to teachers, must succeed
-	ctx := auth.WithUserContext(context.Background(), teacher)
+	ctx := context.Background()
 	// Need course teams to update enrollments.
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
 		Organization: qtest.MockOrg,
@@ -461,44 +495,41 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
-		t.Fatal(err)
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
+		t.Error(err)
 	}
 
 	// TA attempts to demote self, must succeed
 	taEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{taEnrollment}
-	ctx = auth.WithUserContext(context.Background(), ta)
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
-		t.Fatal(err)
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, ta))); err != nil {
+		t.Error(err)
 	}
 
 	// student2 attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{teacherEnrollment}
-	ctx = auth.WithUserContext(context.Background(), student2)
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
-		t.Error("expected error: 'only course creator can change status of other teachers'", err)
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, student2))); err == nil {
+		t.Errorf("expected error: 'permission_denied: course creator cannot be demoted', got: '%v'", err)
 	}
 
 	// student2 attempts to reject course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_NONE
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
-		t.Error("expected error: 'only course creator can change status of other teachers'")
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, student2))); err == nil {
+		t.Errorf("expected error: 'permission_denied: course creator cannot be demoted', got: '%v'", err)
 	}
 
 	// teacher demotes student1, must succeed
 	student1Enrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{student1Enrollment}
-	ctx = auth.WithUserContext(context.Background(), teacher)
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
-		t.Fatal(err)
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
+		t.Error(err)
 	}
 
 	// check that student1 is now enrolled as student
 	enrol, err := db.GetEnrollmentByCourseAndUser(course.ID, student1.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if enrol.Status != qf.Enrollment_STUDENT {
 		t.Errorf("expected status %s, got %s", qf.Enrollment_STUDENT, enrol.Status)
@@ -507,12 +538,12 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// teacher rejects student2, must succeed
 	student2Enrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{student2Enrollment}
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
-		t.Fatal(err)
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
+		t.Error(err)
 	}
 	student2Enrollment.Status = qf.Enrollment_NONE
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
-		t.Fatal(err)
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
+		t.Error(err)
 	}
 
 	// ensure that student2 is no longer enrolled in the course
@@ -525,57 +556,37 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// course creator attempts to demote himself, must fail as well
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{teacherEnrollment}
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
-		t.Error("expected error 'course creator cannot be demoted'")
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err == nil {
+		t.Errorf("expected error: 'permission_denied: course creator cannot be demoted', got: '%v'", err)
 	}
 
 	// same when rejecting
 	teacherEnrollment.Status = qf.Enrollment_NONE
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
-		t.Error("expected error 'course creator cannot be demoted'")
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err == nil {
+		t.Errorf("expected error: 'permission_denied: course creator cannot be demoted', got: '%v'", err)
 	}
 
 	// ta attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
-	ctx = auth.WithUserContext(context.Background(), ta)
-	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
-		t.Error("expected error 'ta cannot be demoted course creator'")
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, ta))); err == nil {
+		t.Errorf("expected error 'permission_denied: access denied for UpdateEnrollments: required roles [4] not satisfied by claims', got: '%v'", err)
 	}
 }
 
 func TestUpdateCourseVisibility(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t)
-	tm, err := auth.NewTokenManager(db)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	interceptors := connect.WithInterceptors(
-		interceptor.NewMetricsInterceptor(),
-		interceptor.NewValidationInterceptor(logger),
-		interceptor.NewUserInterceptor(logger, tm),
-		interceptor.NewAccessControlInterceptor(tm),
-		interceptor.NewTokenInterceptor(tm),
-	)
-	client := MockClient(t, db, interceptors)
-	ctx := context.Background()
+	client, tm, _ := MockClientWithUser(t, db)
 
 	teacher := qtest.CreateAdminUser(t, db, "fake")
 	user := qtest.CreateFakeUser(t, db, 2)
-	userCookie, err := tm.NewAuthCookie(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	cookie := Cookie(t, tm, user)
 
-	cookie := userCookie.String()
 	course := qtest.MockCourses[0]
-
 	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
-
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -583,14 +594,12 @@ func TestUpdateCourseVisibility(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := &qf.EnrollmentStatusRequest{
-		UserID: user.ID,
-	}
-	enrollments, err := client.GetEnrollmentsByUser(auth.WithUserContext(ctx, user), qtest.RequestWithCookie(req, cookie))
+	ctx := context.Background()
+	req := &qf.EnrollmentStatusRequest{UserID: user.ID}
+	enrollments, err := client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(req, cookie))
 	if err != nil {
 		t.Error(err)
 	}
-
 	if len(enrollments.Msg.GetEnrollments()) != 1 {
 		t.Errorf("expected 1 enrollment, got %d", len(enrollments.Msg.GetEnrollments()))
 	}
@@ -599,27 +608,23 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	enrollment := enrollments.Msg.Enrollments[0]
 	enrollment.State = qf.Enrollment_FAVORITE
 	enrollment.Status = qf.Enrollment_TEACHER
-
-	if _, err := client.UpdateCourseVisibility(auth.WithUserContext(ctx, user), qtest.RequestWithCookie(enrollment, cookie)); err != nil {
+	if _, err := client.UpdateCourseVisibility(ctx, qtest.RequestWithCookie(enrollment, cookie)); err != nil {
 		t.Error(err)
 	}
 
-	gotEnrollments, err := client.GetEnrollmentsByUser(auth.WithUserContext(ctx, user), qtest.RequestWithCookie(req, cookie))
+	gotEnrollments, err := client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(req, cookie))
 	if err != nil {
 		t.Error(err)
 	}
-
 	if len(gotEnrollments.Msg.GetEnrollments()) != 1 {
 		t.Errorf("expected 1 enrollment, got %d", len(gotEnrollments.Msg.GetEnrollments()))
 	}
 
 	gotEnrollment := gotEnrollments.Msg.Enrollments[0]
-
 	if gotEnrollment.State != qf.Enrollment_FAVORITE {
 		// State should have changed to favorite
 		t.Errorf("expected enrollment state %s, got %s", qf.Enrollment_FAVORITE, gotEnrollment.State)
 	}
-
 	if gotEnrollment.Status != qf.Enrollment_PENDING {
 		// Status should *not* have changed
 		t.Errorf("expected enrollment status %s, got %s", qf.Enrollment_NONE, gotEnrollment.Status)

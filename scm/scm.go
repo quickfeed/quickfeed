@@ -26,8 +26,6 @@ type SCM interface {
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
-	// Add repo to team.
-	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 
@@ -68,6 +66,8 @@ type SCM interface {
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
 	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
+	// CreateGroup creates group repository and team.
+	CreateGroup(context.Context, *NewTeamOptions) (*Repository, *Team, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -170,16 +170,6 @@ type UpdateTeamOptions struct {
 	OrganizationID uint64
 	TeamID         uint64
 	Users          []string
-}
-
-// AddTeamRepoOptions contains information about the repos to be added to a team.
-// All fields must be provided.
-type AddTeamRepoOptions struct {
-	OrganizationID uint64
-	TeamID         uint64
-	Repo           string
-	Owner          string // Name of the organization. Only used by GitHub.
-	Permission     string // Permission level for team members. Can be "push", "pull", "admin".
 }
 
 // Team represents a git Team

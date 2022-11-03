@@ -75,43 +75,15 @@ func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	if course.GetOrganizationName() == "" {
-		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.GetOrganizationID()})
-		if err != nil {
-			return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
-		}
-		course.OrganizationName = org.GetName()
-	}
-	org := &qf.Organization{ID: course.GetOrganizationID(), Name: course.GetOrganizationName()}
-	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org.Name,
-		Path:         group.GetName(),
-		Private:      true,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
-	}
-
-	team, err := sc.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: org.Name,
+	opt := &scm.NewTeamOptions{
+		Organization: course.OrganizationName,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create team: %w", err)
 	}
-
-	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-		TeamID:         team.ID,
-		OrganizationID: course.GetOrganizationID(),
-		Owner:          repo.Owner,
-		Repo:           repo.Path,
-		Permission:     scm.RepoPush,
-	})
+	repo, team, err := sc.CreateGroup(ctx, opt)
 	if err != nil {
-		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
+		return nil, nil, err
 	}
-
 	groupRepo := &qf.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   repo.ID,
