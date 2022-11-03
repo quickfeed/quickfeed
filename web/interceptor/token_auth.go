@@ -44,8 +44,7 @@ func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandle
 		}
 
 		conn.RequestHeader().Set(auth.Cookie, cookie)
-		err = next(ctx, conn)
-		if err != nil {
+		if err = next(ctx, conn); err != nil {
 			return err
 		}
 		updatedCookie := conn.ResponseHeader().Get(auth.SetCookie)
@@ -128,6 +127,7 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 	}
 
 	// Store the generated cookie in our token map
-	t.tokenMap[token] = cookie.String()
-	return cookie.String(), nil
+	cookieString := cookie.String()
+	t.tokenMap[token] = cookieString
+	return cookieString, nil
 }
