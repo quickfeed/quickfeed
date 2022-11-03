@@ -102,11 +102,6 @@ func (opt CreateRepositoryOptions) valid() bool {
 }
 
 func (opt TeamOptions) valid() bool {
-	return opt.TeamName != "" && opt.Organization != "" ||
-		opt.TeamID > 0 && opt.OrganizationID > 0
-}
-
-func (opt NewTeamOptions) valid() bool {
 	return opt.TeamName != "" && opt.Organization != ""
 }
 

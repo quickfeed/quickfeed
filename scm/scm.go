@@ -18,14 +18,10 @@ type SCM interface {
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
-	// Delete repository.
-	DeleteRepository(context.Context, *RepositoryOptions) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// Create team.
-	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
-	// Delete team.
-	DeleteTeam(context.Context, *TeamOptions) error
+	CreateTeam(context.Context, *TeamOptions) (*Team, error)
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 
@@ -66,8 +62,10 @@ type SCM interface {
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
 	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
-	// CreateGroup creates group repository and team.
-	CreateGroup(context.Context, *NewTeamOptions) (*Repository, *Team, error)
+	// CreateGroup creates repository and team for a new group.
+	CreateGroup(context.Context, *TeamOptions) (*Repository, *Team, error)
+	// DeleteGroup deletes group's repository and team.
+	DeleteGroup(context.Context, *GroupOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -106,13 +104,26 @@ type UpdateEnrollmentOptions struct {
 	Status       qf.Enrollment_UserStatus
 }
 
+// RejectEnrollmentOptions contain information about enrollment.
 type RejectEnrollmentOptions struct {
 	OrganizationID uint64
 	RepositoryID   uint64
 	User           string
 }
 
-// GetOrgOptions contains information on the organization to fetch
+// GroupOptions contain information about group.
+type GroupOptions struct {
+	OrganizationID uint64
+	RepositoryID   uint64
+	TeamID         uint64
+}
+
+func (opt *GroupOptions) valid() bool {
+	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
+		opt.TeamID > 0
+}
+
+// GetOrgOptions contain information about organization.
 type GetOrgOptions struct {
 	ID   uint64
 	Name string
@@ -149,17 +160,8 @@ type CreateRepositoryOptions struct {
 	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
-// TeamOptions contains information about the team and the organization it belongs to.
-// It must include either both IDs or both names for the team and organization/
+// TeamOptions used when creating a new team
 type TeamOptions struct {
-	Organization   string
-	OrganizationID uint64
-	TeamName       string
-	TeamID         uint64
-}
-
-// NewTeamOptions used when creating a new team
-type NewTeamOptions struct {
 	Organization string
 	TeamName     string
 	Users        []string

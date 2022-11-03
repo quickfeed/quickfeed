@@ -75,7 +75,7 @@ func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	opt := &scm.NewTeamOptions{
+	opt := &scm.TeamOptions{
 		Organization: course.OrganizationName,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
@@ -92,17 +92,6 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 		RepoType:       qf.Repository_GROUP,
 	}
 	return groupRepo, team, nil
-}
-
-// deletes group repository and team
-func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID, teamID, orgID uint64) error {
-	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
-		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
-	}
-	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID, OrganizationID: orgID}); err != nil {
-		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete team: %w", err)
-	}
-	return nil
 }
 
 func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uint64) error {

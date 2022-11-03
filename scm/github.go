@@ -181,36 +181,6 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 	return repositories, nil
 }
 
-// DeleteRepository implements the SCM interface.
-func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-
-	// if ID provided, get path and owner from github
-	if opt.ID > 0 {
-		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: err,
-				Method:   "DeleteRepository",
-				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
-			}
-		}
-		opt.Path = repo.GetName()
-		opt.Owner = repo.Owner.GetLogin()
-	}
-
-	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "DeleteRepository",
-			Message:  fmt.Sprintf("failed to delete repository %s", opt.Path),
-		}
-	}
-	return nil
-}
-
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
 	_, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
@@ -229,7 +199,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team, error) {
+func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
 		return nil, ErrMissingFields{
 			Method:  "CreateTeam",
@@ -278,32 +248,6 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team,
 		Name:         team.GetName(),
 		Organization: team.GetOrganization().GetLogin(),
 	}, nil
-}
-
-// DeleteTeam implements the SCM interface.
-func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "DeleteTeam",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	var err error
-	if opt.TeamID > 0 {
-		_, err = s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
-	} else {
-		_, err = s.client.Teams.DeleteTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
-	}
-
-	if err != nil {
-		return ErrFailedSCM{
-			Method:   "DeleteTeam",
-			Message:  fmt.Sprintf("failed to delete GitHub team '%s'", opt.TeamName),
-			GitError: fmt.Errorf("failed to get GitHub team '%s': %w", opt.TeamName, err),
-		}
-	}
-	return err
 }
 
 // UpdateTeamMembers implements the SCM interface
@@ -553,7 +497,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create teacher team with course creator
-	teamOpt := &NewTeamOptions{
+	teamOpt := &TeamOptions{
 		Organization: org.Name,
 		TeamName:     TeachersTeam,
 		Users:        []string{opt.CourseCreator},
@@ -563,7 +507,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create student team without any members
-	studOpt := &NewTeamOptions{Organization: org.Name, TeamName: StudentsTeam}
+	studOpt := &TeamOptions{Organization: org.Name, TeamName: StudentsTeam}
 	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
 		return nil, fmt.Errorf("failed to create students team: %w", err)
 	}
@@ -629,7 +573,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if _, err := s.client.Organizations.RemoveMember(ctx, org.Name, opt.User); err != nil {
 		return err
 	}
-	return s.DeleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
+	return s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
 }
 
 // DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
@@ -647,7 +591,7 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 }
 
 // CreateGroup creates team and repository for a new group.
-func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
 	if !opt.valid() {
 		return nil, nil, ErrMissingFields{
 			Method:  "CreateGroup",
@@ -680,6 +624,51 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repo
 		return nil, nil, err
 	}
 	return repo, team, nil
+}
+
+// DeleteGroup deletes group's repository and team.
+func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "DeleteGroup",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+	if err := s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
+		return err
+	}
+	_, err := s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
+	return err
+}
+
+// deleteRepository deletes repository by name or ID.
+func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
+
+	// if ID provided, get path and owner from github
+	if opt.ID > 0 {
+		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
+		if err != nil {
+			return ErrFailedSCM{
+				GitError: err,
+				Method:   "DeleteRepository",
+				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
+			}
+		}
+		opt.Path = repo.GetName()
+		opt.Owner = repo.Owner.GetLogin()
+	}
+
+	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "DeleteRepository",
+			Message:  fmt.Sprintf("failed to delete repository %s", opt.Path),
+		}
+	}
+	return nil
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.

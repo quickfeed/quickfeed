@@ -122,25 +122,13 @@ func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*R
 	return repos, nil
 }
 
-// DeleteRepository implements the SCM interface.
-func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	if _, ok := s.Repositories[opt.ID]; !ok {
-		return errors.New("repository not found")
-	}
-	delete(s.Repositories, opt.ID)
-	return nil
-}
-
 // RepositoryIsEmpty implements the SCM interface
 func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
 	return false
 }
 
 // CreateTeam implements the SCM interface.
-func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
+func (s *MockSCM) CreateTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
@@ -151,15 +139,6 @@ func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, err
 	}
 	s.Teams[newTeam.ID] = newTeam
 	return newTeam, nil
-}
-
-// DeleteTeam implements the SCM interface.
-func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	delete(s.Teams, opt.TeamID)
-	return nil
 }
 
 // UpdateTeamMembers implements the SCM interface.
@@ -402,7 +381,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		return nil, err
 	}
 	repositories = append(repositories, labRepo)
-	teams := []*NewTeamOptions{
+	teams := []*TeamOptions{
 		{
 			Organization: org.Name,
 			TeamName:     TeachersTeam,
@@ -452,9 +431,8 @@ func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOpt
 	}); err != nil {
 		return errors.New("organization not found")
 	}
-	return s.DeleteRepository(ctx, &RepositoryOptions{
-		ID: opt.RepositoryID,
-	})
+	delete(s.Repositories, opt.RepositoryID)
+	return nil
 }
 
 // DemoteTeacherToStudent implements the SCM interface.
@@ -463,7 +441,7 @@ func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOpt
 }
 
 // CreateGroup creates team and repository for a new group.
-func (s *MockSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Repository, *Team, error) {
+func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
 	if !opt.valid() {
 		return nil, nil, fmt.Errorf("invalid argument: %v", opt)
 	}
@@ -485,6 +463,21 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *NewTeamOptions) (*Reposi
 		return nil, nil, err
 	}
 	return repo, team, nil
+}
+
+// DeleteGroup deletes repository and team for a group.
+func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
+	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID: opt.OrganizationID,
+	}); err != nil {
+		return errors.New("organization not found")
+	}
+	delete(s.Repositories, opt.RepositoryID)
+	delete(s.Teams, opt.TeamID)
+	return nil
 }
 
 // teamExists checks teams by ID, or by team and organization name.
