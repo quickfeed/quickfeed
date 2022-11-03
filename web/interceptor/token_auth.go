@@ -34,7 +34,26 @@ func NewTokenAuthInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager, d
 
 func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
+		token := conn.RequestHeader().Get(tokenHeader)
+		if len(token) == 0 {
+			return next(ctx, conn)
+		}
+
+		cookie, err := t.lookupToken(token)
+		if err != nil {
+			return err
+		}
+
+		conn.RequestHeader().Set(auth.Cookie, cookie)
+		err = next(ctx, conn)
+		if err != nil {
+			return err
+		}
+		updatedCookie := conn.ResponseHeader().Get(auth.SetCookie)
+		if len(updatedCookie) != 0 && updatedCookie != cookie {
+			t.tokenMap[token] = updatedCookie
+		}
+		return nil
 	})
 }
 
