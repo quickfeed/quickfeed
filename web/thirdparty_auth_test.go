@@ -21,7 +21,7 @@ func TestThirdPartyAuth(t *testing.T) {
 	user := fillDatabase(t, db, token)
 
 	client, _, _ := MockClientWithUser(t, db, connect.WithInterceptors(
-		interceptor.NewClientInterceptor(token),
+		interceptor.NewTokenAuthClientInterceptor(token),
 	))
 	ctx := context.Background()
 

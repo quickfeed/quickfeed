@@ -31,7 +31,7 @@ func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
 		http.DefaultClient,
 		serverURL,
 		connect.WithInterceptors(
-			interceptor.NewClientInterceptor(token),
+			interceptor.NewTokenAuthClientInterceptor(token),
 		),
 	)
 }
