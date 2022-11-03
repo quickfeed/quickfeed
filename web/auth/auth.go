@@ -71,7 +71,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			authenticationError(logger, w, err)
 			return
 		}
-		externalUser, err := fetchExternalUser(token)
+		externalUser, err := FetchExternalUser(token)
 		if err != nil {
 			authenticationError(logger, w, err)
 			return
@@ -122,7 +122,7 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func fetchExternalUser(token *oauth2.Token) (*externalUser, error) {
+func FetchExternalUser(token *oauth2.Token) (*externalUser, error) {
 	req, err := http.NewRequest("GET", githubUserAPI, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)

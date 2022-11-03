@@ -4,6 +4,7 @@ alecthomas
 allstudents
 allteachers
 apitest
+approvelist
 ASSIGNDIR
 assignmentid
 autoapprove

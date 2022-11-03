@@ -37,7 +37,7 @@ func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconne
 	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL)
 }
 
-func MockClientWithUser(t *testing.T, db database.Database) (qfconnect.QuickFeedServiceClient, *auth.TokenManager, scm.SCM) {
+func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager, scm.SCM) {
 	t.Helper()
 	scmClient, mgr := scm.MockSCMManager(t)
 	logger := qtest.Logger(t)
@@ -49,6 +49,7 @@ func MockClientWithUser(t *testing.T, db database.Database) (qfconnect.QuickFeed
 	}
 
 	opts := connect.WithInterceptors(
+		interceptor.NewTokenAuthInterceptor(logger, tm, db),
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),
 	)
@@ -59,7 +60,7 @@ func MockClientWithUser(t *testing.T, db database.Database) (qfconnect.QuickFeed
 	server.StartTLS()
 	t.Cleanup(server.Close)
 
-	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL), tm, scmClient
+	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL, clientOpts...), tm, scmClient
 }
 
 func Cookie(t *testing.T, tm *auth.TokenManager, user *qf.User) string {
