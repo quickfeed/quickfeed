@@ -6,26 +6,19 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/oauth2"
 )
 
-var user *qf.User
-
-// TODO(meling): Fix this test when support for third-party applications is added
 func TestThirdPartyAuth(t *testing.T) {
-	env.Load("")
-	token, err := env.GetAccessToken()
-	if err != nil {
-		t.Skip(err)
-	}
+	token := scm.GetAccessToken(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	fillDatabase(t, db, token)
+	user := fillDatabase(t, db, token)
 
 	client, _, _ := MockClientWithUser(t, db, connect.WithInterceptors(
 		interceptor.NewClientInterceptor(token),
@@ -47,9 +40,9 @@ func TestThirdPartyAuth(t *testing.T) {
 	}
 }
 
-func fillDatabase(t *testing.T, db database.Database, token string) {
+func fillDatabase(t *testing.T, db database.Database, token string) *qf.User {
 	t.Helper()
-	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
+
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Code: "DAT320",
@@ -64,8 +57,9 @@ func fillDatabase(t *testing.T, db database.Database, token string) {
 	if err != nil {
 		t.Fatalf("Error when fetching user %v", err)
 	}
-	user = qtest.CreateUser(t, db, externalUser.ID, &qf.User{Login: externalUser.Login})
-	qtest.EnrollTeacher(t, db, user, course)
+	teacher := qtest.CreateUser(t, db, externalUser.ID, &qf.User{Login: externalUser.Login})
+	qtest.EnrollTeacher(t, db, teacher, course)
+	return teacher
 }
 
 func check(t *testing.T, err error) {
