@@ -15,14 +15,7 @@ const (
 	defaultRepositoryPath = "$HOME/courses"
 )
 
-var (
-	provider     string
-	appID        string
-	appKey       string
-	appName      string
-	clientID     string
-	clientSecret string
-)
+var provider string
 
 func init() {
 	provider = os.Getenv("QUICKFEED_SCM_PROVIDER")
@@ -46,7 +39,7 @@ func RepositoryPath() string {
 
 // ClientID returns the client ID for the current SCM provider.
 func ClientID() (string, error) {
-	clientID = os.Getenv("QUICKFEED_CLIENT_ID")
+	clientID := os.Getenv("QUICKFEED_CLIENT_ID")
 	if clientID == "" {
 		return "", fmt.Errorf("missing client ID for %s", provider)
 	}
@@ -55,7 +48,7 @@ func ClientID() (string, error) {
 
 // ClientSecret returns the client secret for the current SCM provider.
 func ClientSecret() (string, error) {
-	clientSecret = os.Getenv("QUICKFEED_CLIENT_SECRET")
+	clientSecret := os.Getenv("QUICKFEED_CLIENT_SECRET")
 	if clientSecret == "" {
 		return "", fmt.Errorf("missing client secret for %s", provider)
 	}
@@ -64,7 +57,7 @@ func ClientSecret() (string, error) {
 
 // AppID returns the application ID for the current SCM provider.
 func AppID() (string, error) {
-	appID = os.Getenv("QUICKFEED_APP_ID")
+	appID := os.Getenv("QUICKFEED_APP_ID")
 	if appID == "" {
 		return "", fmt.Errorf("missing application ID for provider %s", provider)
 	}
@@ -75,7 +68,7 @@ func AppID() (string, error) {
 // For GitHub apps a key must be generated on the App's
 // settings page and saved into a file.
 func AppKey() string {
-	appKey = os.Getenv("QUICKFEED_APP_KEY")
+	appKey := os.Getenv("QUICKFEED_APP_KEY")
 	if appKey == "" {
 		return filepath.Join(Root(), defaultKeyPath)
 	}
@@ -84,7 +77,7 @@ func AppKey() string {
 
 // AppName returns the name of the QuickFeed app on GitHub.
 func AppName() string {
-	appName = os.Getenv("QUICKFEED_APP_NAME")
+	appName := os.Getenv("QUICKFEED_APP_NAME")
 	if appName == "" {
 		return defaultAppName
 	}
