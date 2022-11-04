@@ -23,7 +23,9 @@ type MockSCM struct {
 }
 
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
-func NewMockSCMClient() *MockSCM {
+// If withCourse is true, creates default course repositories and teams for a course
+// associated with qtest.MockOrg mock organization.
+func NewMockSCMClient(withCourse bool) *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
@@ -36,6 +38,36 @@ func NewMockSCMClient() *MockSCM {
 		s.Organizations[course.OrganizationID] = &qf.Organization{
 			ID:   course.OrganizationID,
 			Name: course.OrganizationName,
+		}
+	}
+	if withCourse {
+		s.Teams = map[uint64]*Team{
+			1: {
+				ID:           1,
+				Name:         TeachersTeam,
+				Organization: qtest.MockOrg,
+			},
+			2: {
+				ID:           2,
+				Name:         StudentsTeam,
+				Organization: qtest.MockOrg,
+			},
+		}
+		for path := range RepoPaths {
+			id := generateID(s.Repositories)
+			s.Repositories[id] = &Repository{
+				ID:    id,
+				Path:  path,
+				Owner: qtest.MockOrg,
+				OrgID: 1,
+			}
+		}
+		id := generateID(s.Repositories)
+		// add a "user=labs" repository.
+		s.Repositories[id] = &Repository{
+			ID:    id,
+			Path:  "user-labs",
+			Owner: qtest.MockOrg,
 		}
 	}
 	return s

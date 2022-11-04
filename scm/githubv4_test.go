@@ -11,22 +11,13 @@ import (
 )
 
 func TestDeleteIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(true)
 	ctx := context.Background()
 
-	repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: qtest.MockOrg,
-		Path:         qf.StudentRepoName("user"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("repo: %v", repo.Path)
-
+	repo := qf.StudentRepoName("user")
 	opt := &scm.IssueOptions{
 		Organization: qtest.MockOrg,
-		Repository:   repo.Path,
+		Repository:   repo,
 		Title:        "Dummy Title",
 		Body:         "Dummy body of the issue",
 	}
@@ -37,7 +28,7 @@ func TestDeleteIssue(t *testing.T) {
 
 	repoOpt := &scm.RepositoryOptions{
 		Owner: qtest.MockOrg,
-		Path:  repo.Path,
+		Path:  repo,
 	}
 	issues, err := s.GetIssues(ctx, repoOpt)
 	if err != nil {

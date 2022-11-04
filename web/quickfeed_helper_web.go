@@ -16,7 +16,7 @@ import (
 // MockClient returns a QuickFeed client for invoking RPCs.
 func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconnect.QuickFeedServiceClient {
 	t.Helper()
-	_, mgr := scm.MockSCMManager(t)
+	_, mgr := scm.MockSCMManager(t, false)
 	logger := qtest.Logger(t)
 	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, BaseHookOptions{}, &ci.Local{})
 

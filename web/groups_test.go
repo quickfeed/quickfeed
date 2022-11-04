@@ -16,7 +16,7 @@ func TestNewGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
@@ -59,7 +59,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
@@ -107,7 +107,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
@@ -175,7 +175,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
@@ -228,7 +228,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: qtest.MockOrg}
@@ -391,7 +391,7 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	testCourse := qf.Course{
 		Name:             "Distributed Systems",
@@ -495,7 +495,7 @@ func TestGetGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	testCourse := qf.Course{
 		Name:           "Distributed Systems",
@@ -546,7 +546,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	course := qf.Course{
 		Name:             "Distributed Systems",
@@ -643,7 +643,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	course := qf.Course{
 		Name:           "Distributed Systems",
@@ -724,7 +724,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := qtest.MockCourses[0]
@@ -834,7 +834,7 @@ func TestGetGroups(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	var users []*qf.User
 	for _, u := range allUsers {

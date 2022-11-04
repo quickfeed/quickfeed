@@ -61,7 +61,7 @@ func TestCreateIssue(t *testing.T) {
 }
 
 func TestGetIssues(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	s.Repositories = map[uint64]*scm.Repository{
 		1: {
 			ID:    1,
@@ -239,7 +239,7 @@ func TestCreateIssueComment(t *testing.T) {
 }
 
 func TestUpdateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	repo := &scm.Repository{
 		ID:    1,
 		OrgID: 1,

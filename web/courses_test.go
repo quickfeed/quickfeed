@@ -18,7 +18,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	cookie := Cookie(t, tm, admin)
@@ -49,7 +49,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	cookie := Cookie(t, tm, admin)
@@ -81,7 +81,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, mockSCM := MockClientWithUser(t, db)
+	client, tm, mockSCM := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	cookie := Cookie(t, tm, admin)
@@ -120,7 +120,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	ctx := context.Background()
 	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
@@ -265,7 +265,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
@@ -335,7 +335,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var testCourses []*qf.Course
@@ -402,7 +402,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, mockSCM := MockClientWithUser(t, db)
+	client, tm, mockSCM := MockClientWithUser(t, db, false)
 
 	teacher := qtest.CreateAdminUser(t, db, "fake")
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
@@ -577,7 +577,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm, _ := MockClientWithUser(t, db, false)
 
 	teacher := qtest.CreateAdminUser(t, db, "fake")
 	user := qtest.CreateFakeUser(t, db, 2)

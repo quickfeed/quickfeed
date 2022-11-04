@@ -18,9 +18,9 @@ import (
 )
 
 // MockClient returns a QuickFeed client for invoking RPCs.
-func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconnect.QuickFeedServiceClient {
+func MockClient(t *testing.T, db database.Database, withCourse bool, opts connect.Option) qfconnect.QuickFeedServiceClient {
 	t.Helper()
-	_, mgr := scm.MockSCMManager(t)
+	_, mgr := scm.MockSCMManager(t, withCourse)
 	logger := qtest.Logger(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
@@ -37,9 +37,9 @@ func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconne
 	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL)
 }
 
-func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager, scm.SCM) {
+func MockClientWithUser(t *testing.T, db database.Database, withCourse bool, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager, scm.SCM) {
 	t.Helper()
-	scmClient, mgr := scm.MockSCMManager(t)
+	scmClient, mgr := scm.MockSCMManager(t, withCourse)
 	logger := qtest.Logger(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 

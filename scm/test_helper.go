@@ -10,7 +10,7 @@ import (
 
 // MockSCMManager sets the current provider to "fake", creates a "test" organization
 // and a fake scm client for this organization.
-func MockSCMManager(t *testing.T) (SCM, *Manager) {
+func MockSCMManager(t *testing.T, withCourse bool) (SCM, *Manager) {
 	t.Helper()
 	env.SetFakeProvider(t)
 	conf := &Config{
@@ -18,7 +18,7 @@ func MockSCMManager(t *testing.T) (SCM, *Manager) {
 		"qfClientSecret",
 		&app.Config{},
 	}
-	sc := NewMockSCMClient()
+	sc := NewMockSCMClient(withCourse)
 	return sc, &Manager{
 		scms: map[string]SCM{
 			qtest.MockOrg: sc,

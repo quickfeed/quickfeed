@@ -59,7 +59,7 @@ var (
 
 func TestMockClone(t *testing.T) {
 	dstDir := t.TempDir()
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	cloneTests := []struct {
 		name     string
@@ -121,7 +121,7 @@ func TestMockClone(t *testing.T) {
 const user = "test_user"
 
 func TestMockOrganizations(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	for _, course := range qtest.MockCourses {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID}); err != nil {
@@ -151,7 +151,7 @@ func TestMockOrganizations(t *testing.T) {
 }
 
 func TestMockRepositories(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	course, course2 := qtest.MockCourses[0], qtest.MockCourses[2]
 	repos := []*scm.Repository{
@@ -229,7 +229,7 @@ var mockTeams = []*scm.Team{
 }
 
 func TestMockCreateTeams(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	for _, team := range mockTeams {
 		newTeam, err := s.CreateTeam(ctx, &scm.TeamOptions{
@@ -249,7 +249,7 @@ func TestMockCreateTeams(t *testing.T) {
 }
 
 func TestUpdateMockTeamMembers(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
 	team, err := s.CreateTeam(ctx, &scm.TeamOptions{
@@ -303,7 +303,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 }
 
 func TestMockCreateIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	s.Repositories = map[uint64]*scm.Repository{
 		1: mockRepos[0],
@@ -388,7 +388,7 @@ func TestMockCreateIssue(t *testing.T) {
 }
 
 func TestMockUpdateIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	issue := mockIssues[0]
 	s.Repositories = map[uint64]*scm.Repository{
@@ -481,7 +481,7 @@ func TestMockUpdateIssue(t *testing.T) {
 }
 
 func TestMockGetIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	issue := mockIssues[0]
 	s.Repositories = map[uint64]*scm.Repository{
@@ -542,7 +542,7 @@ func TestMockGetIssue(t *testing.T) {
 }
 
 func TestMockGetIssues(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	s.Repositories = map[uint64]*scm.Repository{
 		1: mockRepos[0],
@@ -619,7 +619,7 @@ func TestMockGetIssues(t *testing.T) {
 }
 
 func TestMockDeleteIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	s.Repositories = map[uint64]*scm.Repository{
 		1: mockRepos[0],
@@ -653,7 +653,7 @@ func TestMockDeleteIssue(t *testing.T) {
 func TestMockDeleteIssues(t *testing.T) {
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	s.Repositories = map[uint64]*scm.Repository{
 		1: mockRepos[0],
 		2: mockRepos[1],
@@ -724,7 +724,7 @@ func TestMockDeleteIssues(t *testing.T) {
 }
 
 func TestMockCreateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	s.Repositories = map[uint64]*scm.Repository{
 		1: mockRepos[0],
@@ -849,7 +849,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 }
 
 func TestMockUpdateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	s.Repositories = map[uint64]*scm.Repository{
 		1: mockRepos[0],
@@ -915,7 +915,7 @@ func TestMockUpdateIssueComment(t *testing.T) {
 }
 
 func TestMockCreateCourse(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(user)}
 
@@ -963,7 +963,7 @@ func TestMockCreateCourse(t *testing.T) {
 }
 
 func TestMockUpdateEnrollment(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	tests := []struct {
 		name      string
@@ -1029,7 +1029,7 @@ func TestMockUpdateEnrollment(t *testing.T) {
 }
 
 func TestMockRejectEnrollment(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	repo := &scm.Repository{
 		ID:    1,
@@ -1095,7 +1095,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 }
 
 func TestMockCreateGroup(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	teamRepos := []*scm.Repository{
 		{
@@ -1204,7 +1204,7 @@ func TestMockCreateGroup(t *testing.T) {
 }
 
 func TestMockDeleteGroup(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	repositories := []*scm.Repository{
 		{
