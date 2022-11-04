@@ -18,8 +18,6 @@ type SCM interface {
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// Create team.
-	CreateTeam(context.Context, *TeamOptions) (*Team, error)
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 

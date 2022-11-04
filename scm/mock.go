@@ -142,20 +142,6 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 	return false
 }
 
-// CreateTeam implements the SCM interface.
-func (s *MockSCM) CreateTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("invalid argument: %+v", opt)
-	}
-	newTeam := &Team{
-		ID:           generateID(s.Teams),
-		Name:         opt.TeamName,
-		Organization: opt.Organization,
-	}
-	s.Teams[newTeam.ID] = newTeam
-	return newTeam, nil
-}
-
 // UpdateTeamMembers implements the SCM interface.
 func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {
@@ -393,21 +379,18 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 	}
 	s.Repositories[id] = labRepo
 	repositories = append(repositories, labRepo)
-	teams := []*TeamOptions{
-		{
+
+	s.Teams = map[uint64]*Team{
+		1: {
+			ID:           1,
+			Name:         TeachersTeam,
 			Organization: org.Name,
-			TeamName:     TeachersTeam,
-			Users:        []string{opt.CourseCreator},
 		},
-		{
+		2: {
+			ID:           2,
+			Name:         StudentsTeam,
 			Organization: org.Name,
-			TeamName:     StudentsTeam,
 		},
-	}
-	for _, team := range teams {
-		if _, err := s.CreateTeam(ctx, team); err != nil {
-			return nil, err
-		}
 	}
 	return repositories, nil
 }
@@ -464,11 +447,15 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repositor
 	}); err != nil {
 		return nil, nil, errors.New("organization not found")
 	}
-	team, err := s.CreateTeam(ctx, opt)
-	if err != nil {
-		return nil, nil, err
+	id := generateID(s.Teams)
+	team := &Team{
+		ID:           id,
+		Name:         opt.TeamName,
+		Organization: opt.Organization,
 	}
-	id := generateID(s.Repositories)
+	s.Teams[id] = team
+
+	id = generateID(s.Repositories)
 	repo := &Repository{
 		ID:    id,
 		Path:  opt.TeamName,

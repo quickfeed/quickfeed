@@ -10,8 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
-
-	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestCreateAndGetCourse(t *testing.T) {
@@ -390,7 +388,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, mockSCM := MockClientWithUser(t, db, false)
+	client, tm, _ := MockClientWithUser(t, db, true)
 
 	teacher := qtest.CreateAdminUser(t, db, "fake")
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
@@ -468,20 +466,6 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher promotes students to teachers, must succeed
 	ctx := context.Background()
-	// Need course teams to update enrollments.
-	if _, err := mockSCM.CreateTeam(ctx, &scm.TeamOptions{
-		Organization: qtest.MockOrg,
-		TeamName:     "allstudents",
-	}); err != nil {
-		t.Error(err)
-	}
-	if _, err := mockSCM.CreateTeam(ctx, &scm.TeamOptions{
-		Organization: qtest.MockOrg,
-		TeamName:     "allteachers",
-	}); err != nil {
-		t.Error(err)
-	}
-
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)

@@ -159,58 +159,6 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
 }
 
-// CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
-		return nil, ErrMissingFields{
-			Method:  "CreateTeam",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	// check that the team name does not already exist for this organization
-	team, _, err := s.client.Teams.GetTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
-	if err != nil {
-		// error expected to be 404 Not Found; logging here in case it's a different error
-		s.logger.Debugf("CreateTeam: check for team %s: %s", opt.TeamName, err)
-	}
-
-	if team == nil {
-		s.logger.Debugf("CreateTeam: creating %s", opt.TeamName)
-		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
-			Name: opt.TeamName,
-		})
-		if err != nil {
-			if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
-				return nil, ErrFailedSCM{
-					Method:   "CreateTeam",
-					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
-					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
-				}
-			}
-			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
-			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
-		}
-		s.logger.Debugf("CreateTeam: done creating %s", opt.TeamName)
-	}
-	for _, user := range opt.Users {
-		s.logger.Debugf("CreateTeam: adding user %s to %s", user, opt.TeamName)
-		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
-		if err != nil {
-			return nil, ErrFailedSCM{
-				Method:   "CreateTeam",
-				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, team.GetName()),
-				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, team.GetName(), err),
-			}
-		}
-	}
-	return &Team{
-		ID:           uint64(team.GetID()),
-		Name:         team.GetName(),
-		Organization: team.GetOrganization().GetLogin(),
-	}, nil
-}
-
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {
@@ -463,14 +411,14 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 		TeamName:     TeachersTeam,
 		Users:        []string{opt.CourseCreator},
 	}
-	if _, err = s.CreateTeam(ctx, teamOpt); err != nil {
-		return nil, fmt.Errorf("failed to create teachers team: %w", err)
+	if _, err = s.createTeam(ctx, teamOpt); err != nil {
+		return nil, err
 	}
 
 	// Create student team without any members
 	studOpt := &TeamOptions{Organization: org.Name, TeamName: StudentsTeam}
-	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
-		return nil, fmt.Errorf("failed to create students team: %w", err)
+	if _, err = s.createTeam(ctx, studOpt); err != nil {
+		return nil, err
 	}
 
 	// Create student repository for the course creator
@@ -574,7 +522,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Reposit
 		return nil, nil, err
 	}
 
-	team, err := s.CreateTeam(ctx, opt)
+	team, err := s.createTeam(ctx, opt)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -665,6 +613,58 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 		}
 	}
 	return nil
+}
+
+// createTeam creates a new GitHub team.
+func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
+	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
+		return nil, ErrMissingFields{
+			Method:  "CreateTeam",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	// check that the team name does not already exist for this organization
+	team, _, err := s.client.Teams.GetTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
+	if err != nil {
+		// error expected to be 404 Not Found; logging here in case it's a different error
+		s.logger.Debugf("CreateTeam: check for team %s: %s", opt.TeamName, err)
+	}
+
+	if team == nil {
+		s.logger.Debugf("CreateTeam: creating %s", opt.TeamName)
+		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
+			Name: opt.TeamName,
+		})
+		if err != nil {
+			if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
+				return nil, ErrFailedSCM{
+					Method:   "CreateTeam",
+					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
+					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
+				}
+			}
+			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
+			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
+		}
+		s.logger.Debugf("CreateTeam: done creating %s", opt.TeamName)
+	}
+	for _, user := range opt.Users {
+		s.logger.Debugf("CreateTeam: adding user %s to %s", user, opt.TeamName)
+		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
+		if err != nil {
+			return nil, ErrFailedSCM{
+				Method:   "CreateTeam",
+				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, team.GetName()),
+				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, team.GetName(), err),
+			}
+		}
+	}
+	return &Team{
+		ID:           uint64(team.GetID()),
+		Name:         team.GetName(),
+		Organization: team.GetOrganization().GetLogin(),
+	}, nil
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.

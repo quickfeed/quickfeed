@@ -214,37 +214,16 @@ var mockTeams = []*scm.Team{
 	},
 }
 
-func TestMockCreateTeams(t *testing.T) {
-	s := scm.NewMockSCMClient(false)
-	ctx := context.Background()
-	for _, team := range mockTeams {
-		newTeam, err := s.CreateTeam(ctx, &scm.TeamOptions{
-			Organization: team.Organization,
-			TeamName:     team.Name,
-		})
-		if err != nil {
-			t.Error(err)
-		}
-		if _, ok := s.Teams[newTeam.ID]; !ok {
-			t.Errorf("expected new team %d", newTeam.ID)
-		}
-	}
-	if len(s.Teams) != len(mockTeams) {
-		t.Fatalf("expected %d teams created, got %d", len(mockTeams), len(s.Teams))
-	}
-}
-
 func TestUpdateMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient(false)
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	team, err := s.CreateTeam(ctx, &scm.TeamOptions{
+	team := &scm.Team{
+		ID:           1,
+		Name:         "test-team",
 		Organization: course.OrganizationName,
-		TeamName:     "test_team",
-	})
-	if err != nil {
-		t.Fatal(err)
 	}
+	s.Teams[1] = team
 	tests := []struct {
 		name    string
 		opt     *scm.UpdateTeamOptions
