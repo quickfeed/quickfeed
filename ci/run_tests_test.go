@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -182,11 +183,14 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		Course:     course,
 		Assignment: assignment,
 		Repo: &qf.Repository{
-			UserID: 1,
+			RepoType: qf.Repository_USER,
+			UserID:   1,
 		},
 		JobOwner: "test",
 		CommitID: "deadbeef",
 	}
+
+	mockStream, waiter := runStream(t, streamService, admin)
 
 	// Check that submission is recorded correctly
 	submission, err := runData.RecordResults(qtest.Logger(t), db, streamService, results)
@@ -225,12 +229,12 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	runData.Rebuild = true
 	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
-	submission, err = runData.RecordResults(qtest.Logger(t), db, streamService, results)
+	rebuiltSubmission, err := runData.RecordResults(qtest.Logger(t), db, streamService, results)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if submission.BuildInfo.BuildDate != newBuildDate {
-		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, submission.BuildInfo.BuildDate)
+		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, rebuiltSubmission.BuildInfo.BuildDate)
 	}
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
@@ -239,12 +243,28 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if updatedEnrollment.RemainingSlipDays(course) != slipDaysBeforeUpdate {
 		t.Errorf("Incorrect number of slip days: expected %d, got %d", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
 	}
+
+	mockStream.Close()
+	waiter.Wait()
+
+	// We should have received three submissions
+	if len(mockStream.Messages) != 3 {
+		t.Errorf("Expected 1 message, got %d", len(mockStream.Messages))
+	}
+
+	// Check that the messages are correct
+	submissions := []*qf.Submission{submission, updatedSubmission, rebuiltSubmission}
+	for i, submission := range submissions {
+		if diff := cmp.Diff(mockStream.Messages[i], submission, protocmp.Transform()); diff != "" {
+			t.Errorf("Incorrect submission. Want: %+v, got %+v", submission, mockStream.Messages[i])
+		}
+	}
+
 }
 
 func TestRecordResultsForManualReview(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	streamService := stream.NewStreamServices()
 
 	course := &qf.Course{
 		Name:           "Test",
@@ -253,6 +273,9 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
+
+	streamService := stream.NewStreamServices()
+	mockStream, waiter := runStream(t, streamService, admin)
 
 	assignment := &qf.Assignment{
 		Order:      1,
@@ -281,7 +304,8 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		Course:     course,
 		Assignment: assignment,
 		Repo: &qf.Repository{
-			UserID: 1,
+			RepoType: qf.Repository_USER,
+			UserID:   admin.ID,
 		},
 		JobOwner: "test",
 	}
@@ -309,4 +333,29 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	if diff := cmp.Diff(initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "BuildInfo", "Scores")); diff != "" {
 		t.Errorf("Incorrect submission after update. Want: %+v, got %+v", initialSubmission, updatedSubmission)
 	}
+
+	mockStream.Close()
+	waiter.Wait()
+	if len(mockStream.Messages) != 1 {
+		t.Errorf("Expected 1 messages, got %d", len(mockStream.Messages))
+	}
+
+	for _, submission := range mockStream.Messages {
+		if diff := cmp.Diff(submission, updatedSubmission, protocmp.Transform()); diff != "" {
+			t.Errorf("Incorrect submission sent to stream. Want: %+v, got %+v", updatedSubmission, submission)
+		}
+	}
+}
+
+func runStream(t *testing.T, service *stream.StreamServices, user *qf.User) (*qtest.MockStream[qf.Submission], *sync.WaitGroup) {
+	var counter uint32
+	mockStream := qtest.NewMockStream[qf.Submission](t, context.Background(), &counter)
+	service.Submission.Add(mockStream, user.ID)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		mockStream.Run()
+	}()
+	return mockStream, &wg
 }
