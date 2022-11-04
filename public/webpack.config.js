@@ -6,18 +6,13 @@ module.exports = {
     entry: {
         index: {
             import: "./src/index.tsx",
-            dependOn: 'proto',
             dependOn: 'overmind'
         },
         overmind: {
             import: "./src/overmind/index.tsx",
-            dependOn: 'proto',
+            dependOn: 'shared',
         },
-        proto: {
-            import: "./proto/qf/quickfeed_pb.js",
-            dependOn: "protobuf",
-        },
-        protobuf: "google-protobuf",
+        shared: ["./node_modules/@bufbuild/protobuf", "./node_modules/@bufbuild/connect-web", "overmind"],
     },
     output: {
         // Bundle filenames include hashes based on the contents of the file.
@@ -59,6 +54,9 @@ module.exports = {
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: [".ts", ".tsx", ".js", ".json"],
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+        },
     },
 
 

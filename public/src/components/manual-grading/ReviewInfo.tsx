@@ -7,7 +7,7 @@ import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 
 
-const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | null => {
+const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
     const state = useAppState()
     const actions = useActions()
 

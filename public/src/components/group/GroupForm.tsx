@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react"
-import { Enrollment, Group } from "../../../proto/qf/types_pb"
-import { Converter } from "../../convert"
-import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
+import { getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -15,9 +14,9 @@ const GroupForm = (): JSX.Element | null => {
 
     const group = state.activeGroup
     useEffect(() => {
-        if (isStudent(state.enrollmentsByCourseID[courseID])) {
-            actions.setActiveGroup(Converter.create<Group.AsObject>(Group))
-            actions.updateGroupUsers(Converter.clone(state.self))
+        if (isStudent(state.enrollmentsByCourseID[courseID.toString()])) {
+            actions.setActiveGroup(new Group())
+            actions.updateGroupUsers(state.self.clone())
         }
         return () => {
             actions.setActiveGroup(null)
@@ -26,10 +25,10 @@ const GroupForm = (): JSX.Element | null => {
     if (!group) {
         return null
     }
-    const userIds = group.usersList.map(user => user.id)
+    const userIds = group.users.map(user => user.ID)
 
-    const search = (enrollment: Enrollment.AsObject): boolean => {
-        if (enrollment.userid in userIds || enrollment.group && enrollment.groupid != group.id) {
+    const search = (enrollment: Enrollment): boolean => {
+        if (userIds.includes(enrollment.userID) || enrollment.group && enrollment.groupID != group.ID) {
             return true
         }
         if (enrollment.user) {
@@ -38,22 +37,24 @@ const GroupForm = (): JSX.Element | null => {
         return false
     }
 
-    const enrollments = Converter.clone(state.courseEnrollments[courseID])
+    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => enrollment.clone())
 
+    // Determine the user's enrollment status (teacher or student)
+    const userEnrollmentStatus = hasTeacher(state.status[courseID.toString()]) ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
     const sortedAndFilteredEnrollments = enrollments
-        // Filter out enrollments where the user is not a student, or the user is already in a group
-        .filter(enrollment => enrollment.status == Enrollment.UserStatus.STUDENT && enrollment.groupid == 0)
+        // Filter enrollments where the user is not a student (or teacher), or the user is already in a group
+        .filter(enrollment => enrollment.status == userEnrollmentStatus && enrollment.groupID == BigInt(0))
         // Sort by name
         .sort((a, b) => (a.user?.name ?? "").localeCompare((b.user?.name ?? "")))
 
-    const AvailableUser = ({ enrollment }: { enrollment: Enrollment.AsObject }) => {
-        const id = enrollment.userid
+    const AvailableUser = ({ enrollment }: { enrollment: Enrollment }) => {
+        const id = enrollment.userID
         if (isPending(enrollment)) {
             return null
         }
-        if (id !== state.self.id && !userIds.includes(id)) {
+        if (id !== state.self.ID && !userIds.includes(id)) {
             return (
-                <li hidden={search(enrollment)} key={id} className="list-group-item">
+                <li hidden={search(enrollment)} key={id.toString()} className="list-group-item">
                     {enrollment.user?.name}
                     <i className="badge-pill badge-success ml-2 clickable float-right" onClick={() => actions.updateGroupUsers(enrollment.user)}>+</i>
                 </li>
@@ -62,10 +63,10 @@ const GroupForm = (): JSX.Element | null => {
         return null
     }
 
-    const groupMembers = group.usersList.map(user => {
+    const groupMembers = group.users.map(user => {
         return (
-            <li key={user.id} className="list-group-item">
-                <img id="group-image" src={user.avatarurl} alt="" />
+            <li key={user.ID.toString()} className="list-group-item">
+                <img id="group-image" src={user.avatarURL} alt="" />
                 {user.name}
                 <i className="badge-pill badge-danger rounded-circle clickable float-right" onClick={() => actions.updateGroupUsers(user)}>-</i>
             </li>
@@ -98,7 +99,7 @@ const GroupForm = (): JSX.Element | null => {
                         {GroupNameBanner}
                         {GroupNameInput}
                         {groupMembers}
-                        {group && group.id ?
+                        {group && group.ID ?
                             <div className="row justify-content-md-center">
                                 <div className="btn btn-primary ml-2" onClick={() => actions.updateGroup(group)}> Update </div>
                                 <div className="btn btn-danger ml-2" onClick={() => actions.setActiveGroup(null)}> Cancel </div>

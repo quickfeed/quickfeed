@@ -28,7 +28,7 @@ const StudentPage = (): JSX.Element => {
             </div>
             <Switch>
                 <Route path="/course/:id/group" exact component={GroupPage} />
-                <Route path="/course/:id/:lab" exact component={Lab} />
+                <Route path="/course/:id/lab/:lab" exact component={Lab} />
             </Switch>
         </>
     )

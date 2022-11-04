@@ -7,8 +7,8 @@ import CourseFavoriteButton from './CourseFavoriteButton'
 
 
 interface CardProps {
-    course: Course.AsObject,
-    enrollment: Enrollment.AsObject
+    course: Course,
+    enrollment: Enrollment
 }
 
 const CardColor = [
@@ -25,11 +25,11 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
 
     const CourseEnrollmentButton = (): JSX.Element => {
         if (hasNone(status)) {
-            return <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.id)}>Enroll</div>
+            return <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.ID)}>Enroll</div>
         } else if (hasPending(status)) {
             return <div className="btn btn-secondary course-button disabled">Pending</div>
         }
-        return <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.courseid)}>Go to Course</div>
+        return <div className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</div>
     }
 
     const CourseEnrollmentStatus = (): JSX.Element | null => {
@@ -47,7 +47,7 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
     return (
         <div className="col-sm-4">
             <div className="card" style={{ maxWidth: "35rem", marginBottom: "10px", minHeight: "205px" }}>
-                <div className={"card-header bg-" + CardColor[status] + " text-white"}>
+                <div className={`card-header bg-${CardColor[status]} text-white`}>
                     {course.code}
                     <CourseEnrollmentStatus />
                 </div>

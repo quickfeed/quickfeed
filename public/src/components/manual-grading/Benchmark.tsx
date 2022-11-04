@@ -3,7 +3,7 @@ import { GradingBenchmark } from "../../../proto/qf/types_pb"
 import GradeComment from "./GradeComment"
 
 
-const Benchmark = ({ children, bm }: { children: React.ReactNode, bm: GradingBenchmark.AsObject }): JSX.Element => {
+const Benchmark = ({ children, bm }: { children: React.ReactNode, bm: GradingBenchmark }): JSX.Element => {
     const [editing, setEditing] = useState<boolean>(false)
     return (
         <>

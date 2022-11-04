@@ -9,6 +9,7 @@ exclude_patterns = [
   "doc/**",
   "**/*.pb.go",
   "**/*_pb.js",
+  "**/*_pb.ts",
   "**/*_pb.d.ts",
   "**/*ServiceClientPb.ts",
   "**/*ServiceClientPb.js"

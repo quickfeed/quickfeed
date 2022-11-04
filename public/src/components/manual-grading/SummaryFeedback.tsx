@@ -4,7 +4,7 @@ import { Review } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
-const SummaryFeedback = ({ review }: { review: Review.AsObject }) => {
+const SummaryFeedback = ({ review }: { review: Review }) => {
     const state = useAppState()
     const actions = useActions()
     const [editing, setEditing] = useState<boolean>(false)

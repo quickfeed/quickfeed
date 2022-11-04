@@ -4,6 +4,7 @@ alecthomas
 allstudents
 allteachers
 apitest
+approvelist
 ASSIGNDIR
 assignmentid
 autoapprove
@@ -25,6 +26,7 @@ Chacon
 cmds
 cmpopts
 codecov
+connectweb
 containertimeout
 copytruncate
 covermode

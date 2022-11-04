@@ -18,7 +18,7 @@ const ProfileInfo = ({ setEditing }: { setEditing: Dispatch<SetStateAction<boole
             </div>
             <div className='card-text text-center'>
                 <i className='fa fa-graduation-cap text-muted' />
-                <span className='ml-3'>{self.studentid}</span>
+                <span className='ml-3'>{self.studentID}</span>
             </div>
             <span className="badge float-right clickable" onClick={() => setEditing(true)}><i className='fa fa-edit' /></span>
         </>

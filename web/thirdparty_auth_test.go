@@ -2,56 +2,34 @@ package web_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
+	"golang.org/x/oauth2"
 )
 
-const (
-	userName = "meling"
-)
-
-var user *qf.User
-
-// TODO(meling): Fix this test when support for third-party applications is added
 func TestThirdPartyAuth(t *testing.T) {
-	if os.Getenv("HELPBOT_TEST") == "" {
-		t.Skip("Needs update for helpbot compatibility")
-	}
+	token := scm.GetAccessToken(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t)
+	user := fillDatabase(t, db, token)
 
-	fillDatabase(t, db)
-	if user.Login != userName {
-		t.Errorf("Expected %v, got %v\n", userName, user.Login)
-	}
-
-	tm, err := auth.NewTokenManager(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client := MockClient(t, db, connect.WithInterceptors(
-		interceptor.NewMetricsInterceptor(),
-		interceptor.NewValidationInterceptor(logger),
-		interceptor.NewUserInterceptor(logger, tm),
-		interceptor.NewAccessControlInterceptor(tm),
-		interceptor.NewTokenInterceptor(tm),
+	client, _, _ := MockClientWithUser(t, db, connect.WithInterceptors(
+		interceptor.NewTokenAuthClientInterceptor(token),
 	))
 	ctx := context.Background()
 
 	request := connect.NewRequest(&qf.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
-		UserLogin:  userName,
+		UserLogin:  user.Login,
 	})
-	// request.Header().Set(auth.Cookie, firstAdminCookie.String())
 	userInfo, err := client.GetUserByCourse(ctx, request)
 	check(t, err)
 	if userInfo.Msg.ID != user.ID {
@@ -62,9 +40,9 @@ func TestThirdPartyAuth(t *testing.T) {
 	}
 }
 
-func fillDatabase(t *testing.T, db database.Database) {
+func fillDatabase(t *testing.T, db database.Database, token string) *qf.User {
 	t.Helper()
-	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
+
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Code: "DAT320",
@@ -73,8 +51,15 @@ func fillDatabase(t *testing.T, db database.Database) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user = qtest.CreateUser(t, db, 11, &qf.User{Login: userName})
-	qtest.EnrollStudent(t, db, user, course)
+	externalUser, err := auth.FetchExternalUser(&oauth2.Token{
+		AccessToken: token,
+	})
+	if err != nil {
+		t.Fatalf("Error when fetching user %v", err)
+	}
+	teacher := qtest.CreateUser(t, db, externalUser.ID, &qf.User{Login: externalUser.Login})
+	qtest.EnrollTeacher(t, db, teacher, course)
+	return teacher
 }
 
 func check(t *testing.T, err error) {

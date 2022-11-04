@@ -1,9 +1,9 @@
 import React from "react"
-import { GradingCriterion } from "../../../proto/qf/types_pb"
+import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
-const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion.AsObject }): JSX.Element | null => {
+const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Element | null => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()
 
@@ -11,10 +11,10 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion.AsObject })
         return null
     }
 
-    const buttons: { icon: string, status: GradingCriterion.Grade, style: string, onClick: () => void }[] = [
-        { icon: "fa fa-check", status: GradingCriterion.Grade.PASSED, style: "success", onClick: () => setGrade({ criterion: criterion, grade: GradingCriterion.Grade.PASSED }) },
-        { icon: "fa fa-ban", status: GradingCriterion.Grade.NONE, style: "secondary", onClick: () => setGrade({ criterion: criterion, grade: GradingCriterion.Grade.NONE }) },
-        { icon: "fa fa-times", status: GradingCriterion.Grade.FAILED, style: "danger", onClick: () => setGrade({ criterion: criterion, grade: GradingCriterion.Grade.FAILED }) },
+    const buttons: { icon: string, status: GradingCriterion_Grade, style: string, onClick: () => void }[] = [
+        { icon: "fa fa-check", status: GradingCriterion_Grade.PASSED, style: "success", onClick: () => setGrade({ criterion: criterion, grade: GradingCriterion_Grade.PASSED }) },
+        { icon: "fa fa-ban", status: GradingCriterion_Grade.NONE, style: "secondary", onClick: () => setGrade({ criterion: criterion, grade: GradingCriterion_Grade.NONE }) },
+        { icon: "fa fa-times", status: GradingCriterion_Grade.FAILED, style: "danger", onClick: () => setGrade({ criterion: criterion, grade: GradingCriterion_Grade.FAILED }) },
     ]
 
     const StatusButtons = buttons.map((button, index) => {

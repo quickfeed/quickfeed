@@ -2,20 +2,18 @@ import React from "react"
 import { Score } from "../../proto/kit/score/score_pb"
 
 
-const SubmissionScore = ({ score }: { score: Score.AsObject }) => {
-    const className = score.score === score.maxscore ? "passed" : "failed"
+const SubmissionScore = ({ score }: { score: Score }) => {
+    const className = score.Score === score.MaxScore ? "passed" : "failed"
     return (
         <tr>
-            <td className={className}>
-                <div className="pl-1">
-                    {score.testname}
-                </div>
+            <td className={`${className} pl-4`}>
+                {score.TestName}
             </td>
             <td>
-                {score.score}/{score.maxscore}
+                {score.Score}/{score.MaxScore}
             </td>
             <td>
-                {score.weight}
+                {score.Weight}
             </td>
         </tr>
     )
