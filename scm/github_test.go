@@ -320,6 +320,50 @@ func TestFeedbackCommentFormat(t *testing.T) {
 	}
 }
 
+// This test assumes that the test organization has an empty "info" repository
+// and non-empty "tests" repository.
+func TestEmptyRepo(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	s, _ := scm.GetTestSCM(t)
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		opt       *scm.RepositoryOptions
+		wantEmpty bool
+	}{
+		{
+			"tests repo, assume not empty",
+			&scm.RepositoryOptions{
+				Path:  "tests",
+				Owner: qfTestOrg,
+			},
+			false,
+		},
+		{
+			"info repo, assume empty",
+			&scm.RepositoryOptions{
+				Path:  "info",
+				Owner: qfTestOrg,
+			},
+			true,
+		},
+		{
+			"non-existent repo, handle as empty",
+			&scm.RepositoryOptions{
+				Path:  "some-other-repo",
+				Owner: qfTestOrg,
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		if empty := s.RepositoryIsEmpty(ctx, tt.opt); empty != tt.wantEmpty {
+			t.Errorf("%s: expected empty repository: %v, got = %v, ", tt.name, tt.wantEmpty, empty)
+		}
+	}
+}
+
 // createIssue on the given repository; returns the issue and a cleanup function.
 func createIssue(t *testing.T, s scm.SCM, org, repo string) (*scm.Issue, func()) {
 	t.Helper()
