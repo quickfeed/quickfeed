@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"go.uber.org/zap"
 
@@ -147,19 +146,17 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
-	_, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
-	if err != nil {
-		return false
-	}
-
-	// test to check how repo commits look like
-	_, _, err = s.client.Repositories.ListCommits(ctx, opt.Owner, opt.Path, nil)
-	if err != nil {
-		if strings.Contains(err.Error(), "Git Repository is empty") {
-			return true
-		}
-	}
-	return false
+	_, contents, resp, err := s.client.Repositories.GetContents(
+		ctx,
+		opt.Owner,
+		opt.Path,
+		"",
+		&github.RepositoryContentGetOptions{},
+	)
+	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
+	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
+	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
+	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
 }
 
 // CreateTeam implements the SCM interface.

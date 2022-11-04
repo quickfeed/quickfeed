@@ -107,7 +107,7 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uin
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
 		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
-			return fmt.Errorf("repository is not empty")
+			return fmt.Errorf("repository %s is not empty", r.Name())
 		}
 	}
 	return nil
