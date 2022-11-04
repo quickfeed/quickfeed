@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -34,11 +35,11 @@ func TestStream(t *testing.T) {
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
 	defer cancel()
-	streams := make([]*mockStream[Data], 0)
+	streams := make([]*qtest.MockStream[Data], 0)
 
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
-		stream := newMockStream[Data](ctx, &counter)
+		stream := qtest.NewMockStream[Data](t, ctx, &counter)
 		service.Add(stream, 1)
 		streams = append(streams, stream)
 		wg.Add(1)
@@ -79,14 +80,14 @@ func TestStream(t *testing.T) {
 // TestStreamClose tries to send messages to a stream that is closing.
 // This test should be run with the -race flag, e.g.,:
 // % go test -v -race -run TestStreamClose -test.count 10
-func TestStreamClose(_ *testing.T) {
+func TestStreamClose(t *testing.T) {
 	service := stream.NewService[uint64, Data]()
 
 	counter := uint32(0)
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
 	defer cancel()
-	stream := newMockStream[Data](ctx, &counter)
+	stream := qtest.NewMockStream[Data](t, ctx, &counter)
 	service.Add(stream, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
