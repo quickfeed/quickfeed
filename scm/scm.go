@@ -14,8 +14,6 @@ import (
 type SCM interface {
 	// Gets an organization.
 	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
-	// Create a new repository.
-	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository

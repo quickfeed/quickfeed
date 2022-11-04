@@ -107,42 +107,6 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 	return org, nil
 }
 
-// CreateRepository implements the SCM interface.
-func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	if !opt.valid() {
-		return nil, ErrMissingFields{
-			Method:  "CreateRepository",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
-	if repo != nil {
-		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
-		return toRepository(repo), nil
-	}
-	// error expected to be 404 Not Found; logging here in case it's a different error
-	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Path, err)
-
-	// repo does not exist, create it
-	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
-		Name:    &opt.Path,
-		Private: &opt.Private,
-	})
-	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "CreateRepository",
-			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
-			GitError: err,
-		}
-	}
-	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
-
-	return toRepository(repo), nil
-}
-
 // GetRepositories implements the SCM interface.
 func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
 	if !org.IsValid() {
@@ -489,7 +453,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 			Organization: org.Name,
 			Private:      private,
 		}
-		repo, err := s.CreateRepository(ctx, repoOptions)
+		repo, err := s.createRepository(ctx, repoOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -608,7 +572,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Reposit
 		Path:         opt.TeamName,
 		Private:      true,
 	}
-	repo, err := s.CreateRepository(ctx, repoOptions)
+	repo, err := s.createRepository(ctx, repoOptions)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -639,6 +603,41 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 	}
 	_, err := s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
 	return err
+}
+
+// createRepository creates a new repository or returns an existing repository with the given name.
+func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, ErrMissingFields{
+			Method:  "CreateRepository",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	// check that repo does not already exist for this user or group
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
+	if repo != nil {
+		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
+		return toRepository(repo), nil
+	}
+	// error expected to be 404 Not Found; logging here in case it's a different error
+	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Path, err)
+
+	// repo does not exist, create it
+	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
+		Name:    &opt.Path,
+		Private: &opt.Private,
+	})
+	if err != nil {
+		return nil, ErrFailedSCM{
+			Method:   "CreateRepository",
+			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
+			GitError: err,
+		}
+	}
+	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
+	return toRepository(repo), nil
 }
 
 // deleteRepository deletes repository by name or ID.
@@ -675,7 +674,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
-	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
+	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{
 		Organization: organization,
 		Path:         qf.StudentRepoName(login),
 		Private:      true,

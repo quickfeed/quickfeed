@@ -57,6 +57,54 @@ var (
 	}
 )
 
+func TestMockSCMWithCourse(t *testing.T) {
+	s := scm.NewMockSCMClient(true)
+	wantRepos := map[uint64]*scm.Repository{
+		1: {
+			ID:    1,
+			Path:  "info",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		2: {
+			ID:    2,
+			Path:  "assignments",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		3: {
+			ID:    3,
+			Path:  "tests",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		4: {
+			ID:    4,
+			Path:  qf.StudentRepoName("user"),
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+	}
+	if diff := cmp.Diff(wantRepos, s.Repositories); diff != "" {
+		t.Errorf("mismatch repos (-want +got):\n%s", diff)
+	}
+	wantTeams := map[uint64]*scm.Team{
+		1: {
+			ID:           1,
+			Name:         scm.TeachersTeam,
+			Organization: qtest.MockOrg,
+		},
+		2: {
+			ID:           2,
+			Name:         scm.StudentsTeam,
+			Organization: qtest.MockOrg,
+		},
+	}
+	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
+		t.Errorf("mismatch teams (-want +got):\n%s", diff)
+	}
+}
+
 func TestMockClone(t *testing.T) {
 	dstDir := t.TempDir()
 	s := scm.NewMockSCMClient(false)
@@ -147,66 +195,6 @@ func TestMockOrganizations(t *testing.T) {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: org.id, Name: org.name}); err == nil {
 			t.Errorf("expected error: %s", org.err)
 		}
-	}
-}
-
-func TestMockRepositories(t *testing.T) {
-	s := scm.NewMockSCMClient(false)
-	ctx := context.Background()
-	course, course2 := qtest.MockCourses[0], qtest.MockCourses[2]
-	repos := []*scm.Repository{
-		{
-			OrgID: course.OrganizationID,
-			Owner: course.OrganizationName,
-			Path:  "info",
-		},
-		{
-			OrgID: course.OrganizationID,
-			Owner: course.OrganizationName,
-			Path:  "tests",
-		},
-		{
-			OrgID: course2.OrganizationID,
-			Owner: course2.OrganizationName,
-			Path:  "assignments",
-		},
-		{
-			OrgID: course2.OrganizationID,
-			Owner: course2.OrganizationName,
-			Path:  "tests",
-		},
-	}
-
-	for _, repo := range repos {
-		r, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-			Organization: repo.Owner,
-			Path:         repo.Path,
-			Owner:        repo.Owner,
-			Permission:   "read",
-		})
-		if err != nil {
-			t.Error(err)
-		}
-		repo.ID = r.ID
-		gotRepo, ok := s.Repositories[repo.ID]
-		if !ok {
-			t.Errorf("expected repository %s to be found", repo.Path)
-		}
-		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-			t.Errorf("mismatch repositories (-want +got):\n%s", diff)
-		}
-	}
-
-	wantRepos := []*scm.Repository{repos[0], repos[1]}
-	courseRepos, err := s.GetRepositories(ctx, &qf.Organization{ID: course.OrganizationID})
-	if err != nil {
-		t.Error(err)
-	}
-	sort.Slice(courseRepos, func(i, j int) bool {
-		return courseRepos[i].ID < courseRepos[j].ID
-	})
-	if diff := cmp.Diff(wantRepos, courseRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
 	}
 }
 

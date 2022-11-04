@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"path/filepath"
 
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -68,6 +67,7 @@ func NewMockSCMClient(withCourse bool) *MockSCM {
 			ID:    id,
 			Path:  "user-labs",
 			Owner: qtest.MockOrg,
+			OrgID: 1,
 		}
 	}
 	return s
@@ -115,32 +115,6 @@ func (s *MockSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.
 		}
 	}
 	return org, nil
-}
-
-// CreateRepository implements the SCM interface.
-func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("invalid argument: %+v", opt)
-	}
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{
-		Name: opt.Organization,
-	})
-	if err != nil {
-		return nil, err
-	}
-	url, err := url.JoinPath("https://example.com", opt.Organization, opt.Path)
-	if err != nil {
-		return nil, err
-	}
-	repo := &Repository{
-		ID:      generateID(s.Repositories),
-		Path:    opt.Path,
-		Owner:   org.Name,
-		HTMLURL: url,
-		OrgID:   org.ID,
-	}
-	s.Repositories[repo.ID] = repo
-	return repo, nil
 }
 
 // GetRepositories implements the SCM interface.
@@ -392,26 +366,23 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		return nil, err
 	}
 	repositories := make([]*Repository, 0, len(RepoPaths)+1)
-	for path, private := range RepoPaths {
-		repoOptions := &CreateRepositoryOptions{
-			Path:         path,
-			Organization: org.Name,
-			Private:      private,
+	for path := range RepoPaths {
+		id := generateID(s.Repositories)
+		repo := &Repository{
+			ID:    id,
+			Path:  path,
+			Owner: org.Name,
 		}
-		repo, err := s.CreateRepository(ctx, repoOptions)
-		if err != nil {
-			return nil, err
-		}
+		s.Repositories[id] = repo
 		repositories = append(repositories, repo)
 	}
-	labRepo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
-		Path:         qf.StudentRepoName(opt.CourseCreator),
-		Organization: org.Name,
-		Private:      private,
-	})
-	if err != nil {
-		return nil, err
+	id := generateID(s.Repositories)
+	labRepo := &Repository{
+		ID:    id,
+		Path:  qf.StudentRepoName(opt.CourseCreator),
+		Owner: org.Name,
 	}
+	s.Repositories[id] = labRepo
 	repositories = append(repositories, labRepo)
 	teams := []*TeamOptions{
 		{
@@ -443,12 +414,13 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 		return nil, errors.New("organization not found")
 	}
 	if opt.Status == qf.Enrollment_STUDENT {
-		return s.CreateRepository(ctx, &CreateRepositoryOptions{
-			Organization: org.Name,
-			Path:         qf.StudentRepoName(opt.User),
-			Private:      true,
-			Owner:        org.Name,
-		})
+		id := generateID(s.Repositories)
+		repo := &Repository{
+			ID:    id,
+			Path:  qf.StudentRepoName(opt.User),
+			Owner: org.Name,
+		}
+		s.Repositories[id] = repo
 	}
 	return nil, nil
 }
@@ -486,14 +458,13 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repositor
 	if err != nil {
 		return nil, nil, err
 	}
-	repoOpt := &CreateRepositoryOptions{
-		Organization: opt.Organization,
-		Path:         opt.TeamName,
+	id := generateID(s.Repositories)
+	repo := &Repository{
+		ID:    id,
+		Path:  opt.TeamName,
+		Owner: opt.Organization,
 	}
-	repo, err := s.CreateRepository(ctx, repoOpt)
-	if err != nil {
-		return nil, nil, err
-	}
+	s.Repositories[id] = repo
 	return repo, team, nil
 }
 

@@ -81,24 +81,12 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, mockSCM := MockClientWithUser(t, db, false)
+	client, tm, _ := MockClientWithUser(t, db, true)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	cookie := Cookie(t, tm, admin)
 
 	ctx := context.Background()
-	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1, NewCourse: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for path, private := range scm.RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization.Name, Private: private}
-		_, err := mockSCM.CreateRepository(ctx, repoOptions)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
 	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], cookie))
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
