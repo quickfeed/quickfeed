@@ -2,13 +2,11 @@ package scm_test
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -1010,7 +1008,7 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		if _, err := s.UpdateEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
-		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos); diff != "" {
 			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
@@ -1076,7 +1074,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 		if err := s.RejectEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
-		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos); diff != "" {
 			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
@@ -1087,18 +1085,16 @@ func TestMockCreateGroup(t *testing.T) {
 	ctx := context.Background()
 	teamRepos := []*scm.Repository{
 		{
-			ID:      1,
-			Path:    mockTeams[0].Name,
-			Owner:   qtest.MockOrg,
-			OrgID:   1,
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[0].Name),
+			ID:    1,
+			Path:  mockTeams[0].Name,
+			Owner: qtest.MockOrg,
+			OrgID: 1,
 		},
 		{
-			ID:      2,
-			Path:    mockTeams[1].Name,
-			Owner:   qtest.MockOrg,
-			OrgID:   1,
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[1].Name),
+			ID:    2,
+			Path:  mockTeams[1].Name,
+			Owner: qtest.MockOrg,
+			OrgID: 1,
 		},
 	}
 	tests := []struct {
@@ -1196,18 +1192,16 @@ func TestMockDeleteGroup(t *testing.T) {
 	ctx := context.Background()
 	repositories := []*scm.Repository{
 		{
-			ID:      1,
-			OrgID:   1,
-			Owner:   qtest.MockOrg,
-			Path:    qf.StudentRepoName(user),
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, qf.StudentRepoName(user)),
+			ID:    1,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName(user),
 		},
 		{
-			ID:      2,
-			OrgID:   1,
-			Owner:   qtest.MockOrg,
-			Path:    mockTeams[0].Name,
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[0].Name),
+			ID:    2,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  mockTeams[0].Name,
 		},
 	}
 	s.Repositories = map[uint64]*scm.Repository{

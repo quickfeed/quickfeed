@@ -52,22 +52,31 @@ func NewMockSCMClient(withCourse bool) *MockSCM {
 				Organization: qtest.MockOrg,
 			},
 		}
-		for path := range RepoPaths {
-			id := generateID(s.Repositories)
-			s.Repositories[id] = &Repository{
-				ID:    id,
-				Path:  path,
+		s.Repositories = map[uint64]*Repository{
+			1: {
+				ID:    1,
+				Path:  "info",
 				Owner: qtest.MockOrg,
 				OrgID: 1,
-			}
-		}
-		id := generateID(s.Repositories)
-		// add a "user=labs" repository.
-		s.Repositories[id] = &Repository{
-			ID:    id,
-			Path:  "user-labs",
-			Owner: qtest.MockOrg,
-			OrgID: 1,
+			},
+			2: {
+				ID:    2,
+				Path:  "assignments",
+				Owner: qtest.MockOrg,
+				OrgID: 1,
+			},
+			3: {
+				ID:    3,
+				Path:  "tests",
+				Owner: qtest.MockOrg,
+				OrgID: 1,
+			},
+			4: {
+				ID:    4,
+				Path:  qf.StudentRepoName("user"),
+				Owner: qtest.MockOrg,
+				OrgID: 1,
+			},
 		}
 	}
 	return s
@@ -419,6 +428,7 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 			ID:    id,
 			Path:  qf.StudentRepoName(opt.User),
 			Owner: org.Name,
+			OrgID: 1,
 		}
 		s.Repositories[id] = repo
 	}
@@ -463,6 +473,7 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repositor
 		ID:    id,
 		Path:  opt.TeamName,
 		Owner: opt.Organization,
+		OrgID: 1,
 	}
 	s.Repositories[id] = repo
 	return repo, team, nil
