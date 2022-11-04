@@ -44,7 +44,7 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 		s.Submission.SendTo(newSubmission, r.Repo.GetUserID())
 	case r.Repo.IsGroupRepo():
 		if group, err := db.GetGroup(r.Repo.GetGroupID()); err != nil {
-			// log error but continue
+			logger.Debugf("Failed stream submission to group %d: %v", r.Repo.GetGroupID(), err)
 		} else {
 			s.Submission.SendTo(newSubmission, group.UserIDs()...)
 		}
