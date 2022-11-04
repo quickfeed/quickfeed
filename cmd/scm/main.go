@@ -238,7 +238,7 @@ func deleteRepositories(client *scm.GithubSCM) cli.ActionFunc {
 
 			for _, repo := range repos {
 				var errs []error
-				if err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.ID}); err != nil {
+				if _, err := (*client).Client().Repositories.Delete(ctx, repo.Owner, repo.Path); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted repository", repo.HTMLURL)
@@ -249,8 +249,7 @@ func deleteRepositories(client *scm.GithubSCM) cli.ActionFunc {
 			}
 			return nil
 		}
-		err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
-		if err != nil {
+		if _, err := (*client).Client().Repositories.Delete(ctx, c.String("namespace"), c.String("name")); err != nil {
 			return err
 		}
 		fmt.Println("Deleted repository ", c.String("name"), " on organization ", c.String("namespace"))
@@ -309,7 +308,7 @@ func createTeam(client *scm.GithubSCM) cli.ActionFunc {
 		if len(users) < 1 {
 			return cli.NewExitError("team user names must be provided (comma separated)", 3)
 		}
-		opt := &scm.NewTeamOptions{
+		opt := &scm.TeamOptions{
 			Organization: c.String("namespace"),
 			TeamName:     c.String("team"),
 			Users:        users,
@@ -343,7 +342,7 @@ func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 
 			for _, team := range teams {
 				var errs []error
-				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: *team.Name, Organization: c.String("namespace")}); err != nil {
+				if _, err := (*client).Client().Teams.DeleteTeamBySlug(ctx, c.String("namespace"), *team.Name); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted team", *team.Name)
@@ -361,7 +360,8 @@ func deleteTeams(client *scm.GithubSCM) cli.ActionFunc {
 			fmt.Println("Canceled")
 			return err
 		}
-		return (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: teamName})
+		_, err := (*client).Client().Teams.DeleteTeamBySlug(ctx, c.String("namespace"), teamName)
+		return err
 	}
 }
 
