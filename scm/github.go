@@ -183,7 +183,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
 	_, contents, resp, err := s.client.Repositories.GetContents(
-		context.Background(),
+		ctx,
 		opt.Owner,
 		opt.Path,
 		"",
