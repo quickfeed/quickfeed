@@ -20,6 +20,7 @@ bufbuild
 bufconn
 bufnet
 buildid
+centerblock
 Certbot
 certonly
 certutil
