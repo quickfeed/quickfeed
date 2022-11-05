@@ -70,30 +70,6 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 	return user
 }
 
-func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *qf.User) *qf.User {
-	t.Helper()
-	user.ScmRemoteID = remoteID
-	user.RefreshToken = "token"
-	if err := db.CreateUser(user); err != nil {
-		t.Fatal(err)
-	}
-	return user
-}
-
-func CreateAdminUser(t *testing.T, db database.Database, provider string) *qf.User {
-	t.Helper()
-	user := &qf.User{
-		Name:         "admin",
-		Login:        "admin",
-		ScmRemoteID:  1,
-		RefreshToken: "token",
-	}
-	if err := db.CreateUser(user); err != nil {
-		t.Fatal(err)
-	}
-	return user
-}
-
 func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
 	if course.Provider == "" {

@@ -36,7 +36,7 @@ func TestAccessControl(t *testing.T) {
 	))
 	ctx := context.Background()
 
-	courseAdmin := qtest.CreateAdminUser(t, db, "fake")
+	courseAdmin := qtest.CreateFakeUser(t, db, 1)
 	groupStudent := qtest.CreateNamedUser(t, db, 2, "group student")
 	student := qtest.CreateNamedUser(t, db, 3, "student")
 	user := qtest.CreateNamedUser(t, db, 4, "user")

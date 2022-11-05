@@ -19,7 +19,7 @@ func TestExtractAssignments(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	wh := NewGitHubWebHook(qtest.Logger(t), db, &scm.Manager{}, &ci.Local{}, "secret")
-	admin := qtest.CreateAdminUser(t, db, "fake")
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignments := []*qf.Assignment{
@@ -106,7 +106,7 @@ func TestLastActivityDate(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	wh := NewGitHubWebHook(qtest.Logger(t), db, &scm.Manager{}, &ci.Local{}, "secret")
-	admin := qtest.CreateAdminUser(t, db, "fake")
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	date := time.Now().Format("02 Jan")

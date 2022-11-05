@@ -401,7 +401,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	client, tm, mockSCM := MockClientWithUser(t, db)
 
-	teacher := qtest.CreateAdminUser(t, db, "fake")
+	teacher := qtest.CreateFakeUser(t, db, 1)
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
 	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
 	ta := qtest.CreateNamedUser(t, db, 13, "TA")
@@ -576,7 +576,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	teacher := qtest.CreateAdminUser(t, db, "fake")
+	teacher := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
 	cookie := Cookie(t, tm, user)
 

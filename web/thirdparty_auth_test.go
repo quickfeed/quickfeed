@@ -14,7 +14,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func TestThirdPartyAuth(t *testing.T) {
+func TestThirdPartyAppAuth(t *testing.T) {
 	token := scm.GetAccessToken(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -57,7 +57,13 @@ func fillDatabase(t *testing.T, db database.Database, token string) *qf.User {
 	if err != nil {
 		t.Fatalf("Error when fetching user %v", err)
 	}
-	teacher := qtest.CreateUser(t, db, externalUser.ID, &qf.User{Login: externalUser.Login})
+	teacher := &qf.User{
+		Login:       externalUser.Login,
+		ScmRemoteID: externalUser.ID,
+	}
+	if err := db.CreateUser(teacher); err != nil {
+		t.Error(err)
+	}
 	qtest.EnrollTeacher(t, db, teacher, course)
 	return teacher
 }

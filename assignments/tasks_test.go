@@ -132,10 +132,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		return err
 	}
 	course.OrganizationID = org.GetID()
-	admin := qtest.CreateAdminUser(t, db, course.GetProvider())
-	if err = db.UpdateUser(admin); err != nil {
-		return err
-	}
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
@@ -153,8 +150,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 			RepoType:       qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {
-			user := &qf.User{}
-			qtest.CreateUser(t, db, nxtRemoteID, user)
+			user := qtest.CreateFakeUser(t, db, nxtRemoteID)
 			nxtRemoteID++
 			qtest.EnrollStudent(t, db, user, course)
 			group := &qf.Group{

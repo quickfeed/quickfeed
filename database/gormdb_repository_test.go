@@ -113,7 +113,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		Provider:       "github",
 		OrganizationID: 1234,
 	}
-	admin := qtest.CreateAdminUser(t, db, course.Provider)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 11)
@@ -168,7 +168,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		OrganizationID: 120,
 	}
 
-	admin := qtest.CreateAdminUser(t, db, course.Provider)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
@@ -252,7 +252,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		OrganizationID: 120,
 	}
 
-	admin := qtest.CreateAdminUser(t, db, course.Provider)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
@@ -336,7 +336,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		OrganizationID: 1234,
 	}
 
-	admin := qtest.CreateAdminUser(t, db, course.Provider)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 11)
