@@ -347,7 +347,7 @@ export class MockGrpcManager {
             })
             group.users = (users)
         })
-        return this.grpcSend<Groups>(new Groups({ groups: groups }))
+        return this.grpcSend<Groups>(new Groups({ groups }))
     }
 
     public updateGroupStatus(groupID: bigint, status: Group_GroupStatus): Promise<IGrpcResponse<Void>> {
@@ -478,12 +478,11 @@ export class MockGrpcManager {
     public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
         // Get all assignment IDs
         const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID && !a.isGroupLab).map(a => a.ID)
-        const submissionList = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
-        if (submissionList.length === 0) {
-            return this.grpcSend<Submissions>(null, new Status({ Error: "No submissions found", Code: BigInt(Code.Unknown) }))
+        const submissions = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
+        if (submissions.length === 0) {
+            return this.grpcSend<Submissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "No submissions found" }))
         }
-        const submissions = new Submissions({ submissions: submissionList })
-        return this.grpcSend<Submissions>(submissions)
+        return this.grpcSend<Submissions>(new Submissions({ submissions }))
     }
 
     public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
@@ -492,7 +491,7 @@ export class MockGrpcManager {
         if (submissions.length === 0) {
             return this.grpcSend<Submissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "No submissions found" }))
         }
-        return this.grpcSend<Submissions>(new Submissions({ submissions: submissions }))
+        return this.grpcSend<Submissions>(new Submissions({ submissions }))
     }
 
     public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
