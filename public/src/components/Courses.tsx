@@ -19,7 +19,7 @@ const Courses = (overview: overview): JSX.Element => {
 
     // Notify user if there are no courses (should only ever happen with a fresh database on backend)
     // Display shortcut buttons for admins to create new course or managing (promoting) users
-    if (state.courses.length == 0) {
+    if (state.courses.length === 0) {
         return (
             <div className="container centered">
                 <h3>There are currently no available courses.</h3>
@@ -103,7 +103,7 @@ const Courses = (overview: overview): JSX.Element => {
                 }
                 {pending.length > 0 &&
                     <div className="container-fluid">
-                        {(student.length == 0 && teacher.length == 0) &&
+                        {(student.length === 0 && teacher.length === 0) &&
                             <h2>My Courses</h2>
                         }
                         <div className="card-deck">

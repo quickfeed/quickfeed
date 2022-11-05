@@ -46,12 +46,12 @@ export const timeFormatter = (deadline: string): Deadline => {
         return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
     }
 
-    if (days == 0) {
+    if (days === 0) {
         return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
     }
 
     if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days == 1 ? " " : "s"} to deadline`, daysUntil: days }
+        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
     }
 
     if (days < 14) {

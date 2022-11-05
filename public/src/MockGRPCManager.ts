@@ -271,7 +271,7 @@ export class MockGrpcManager {
     public getEnrollmentsByCourse(courseID: bigint, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment_UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
-        const enrollmentList = this.enrollments.enrollments.filter(e => e.courseID === courseID && (!statuses || statuses.length == 0 || statuses.includes(e.status)))
+        const enrollmentList = this.enrollments.enrollments.filter(e => e.courseID === courseID && (!statuses || statuses.length === 0 || statuses.includes(e.status)))
         if (enrollmentList.length === 0) {
             return this.grpcSend<Enrollments>(null)
         }
@@ -1282,13 +1282,13 @@ export class MockGrpcManager {
             for (let j = 0; j < gb.criteria.length; j++) {
                 const criterion = gb.criteria[j]
                 total++
-                if (criterion.grade == GradingCriterion_Grade.PASSED) {
+                if (criterion.grade === GradingCriterion_Grade.PASSED) {
                     score += Number(criterion.points)
                     totalApproved++
                 }
             }
         }
-        if (score == 0) {
+        if (score === 0) {
             score = 100 / total * totalApproved
         }
         return score

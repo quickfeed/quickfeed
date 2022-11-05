@@ -30,7 +30,7 @@ const AdminPage = (): JSX.Element => {
         <div className="box">
             <RedirectButton to={root} />
             <Alert />
-            <div className="row" hidden={history.location.pathname != root}>
+            <div className="row" hidden={history.location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
                 <Card {...editCourse} />

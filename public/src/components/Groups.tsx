@@ -14,7 +14,7 @@ const Groups = (): JSX.Element => {
 
     const groupSearch = (group: Group) => {
         // Show all groups if query is empty
-        if (state.query.length == 0) {
+        if (state.query.length === 0) {
             return false
         }
 

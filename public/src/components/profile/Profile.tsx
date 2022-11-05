@@ -14,7 +14,7 @@ const Profile = (): JSX.Element => {
     const [editing, setEditing] = useState(false)
 
     // Redirect from "/" to "/profile" when user object is invalid
-    if (!state.isValid && history.location.pathname == "/") {
+    if (!state.isValid && history.location.pathname === "/") {
         history.push("/profile")
     }
 
