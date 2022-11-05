@@ -9,143 +9,109 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func TestGormDBUpdateAccessToken(t *testing.T) {
+func TestDBUpdateUserAccessToken(t *testing.T) {
 	const (
-		uID = 1
-		rID = 1
-
 		accessToken    = "123"
 		newAccessToken = "4567890"
 		provider       = "github"
 		remoteID       = 10
 	)
-	admin := true
-	var (
-		wantUser = &qf.User{
-			ID:      uID,
-			IsAdmin: admin, // first user is always admin
-			RemoteIdentities: []*qf.RemoteIdentity{{
-				ID:          rID,
-				Provider:    provider,
-				RemoteID:    remoteID,
-				AccessToken: accessToken,
-				UserID:      uID,
-			}},
-		}
-		updateAccessToken = &qf.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: accessToken,
-		}
-	)
+	wantUser := &qf.User{
+		ID:      1,
+		IsAdmin: true, // first user is always admin
+	}
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	var user qf.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&qf.RemoteIdentity{
-			Provider: provider,
-			RemoteID: remoteID,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
+	if err := db.CreateUser(&user); err != nil {
 		t.Error(err)
 	}
 	gotUser, err := db.GetUser(user.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
+	}
+
+	user.RefreshToken = accessToken
+	user.ScmRemoteID = remoteID
+	if err := db.UpdateUser(&user); err != nil {
+		t.Error(err)
+	}
+	gotUser, err = db.GetUser(user.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	wantUser.RefreshToken = accessToken
+	wantUser.ScmRemoteID = remoteID
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// do another update
-	updateAccessToken.AccessToken = newAccessToken
-	wantUser.RemoteIdentities[0].AccessToken = newAccessToken
-	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
+	user.RefreshToken = newAccessToken
+	if err := db.UpdateUser(&user); err != nil {
 		t.Error(err)
 	}
 	gotUser, err = db.GetUser(user.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	gotUser.Enrollments = nil
+	wantUser.RefreshToken = newAccessToken
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
-func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
+func TestDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	const (
 		newAccessToken = "123"
 		anotherToken   = "456"
-		provider       = "fake"
 		remoteID       = 10
 	)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	wantUser := qtest.CreateFakeUser(t, db, remoteID)
 
-	cachedAccessToken, err := wantUser.GetRefreshToken(provider)
-	if err != nil {
-		t.Fatal(err)
-	}
+	cachedAccessToken := wantUser.GetRefreshToken()
 
 	// Update the access token for the user.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: newAccessToken,
-	}); err != nil {
+	wantUser.RefreshToken = newAccessToken
+	if err := db.UpdateUser(wantUser); err != nil {
 		t.Error(err)
 	}
 	gotUser, err := db.GetUser(wantUser.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	// Assign the access token we expect to the wantUser object.
-	wantUser.RemoteIdentities[0].AccessToken = newAccessToken
+	wantUser.RefreshToken = newAccessToken
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	cachedAccessToken2, err := gotUser.GetRefreshToken(provider)
-	if err != nil {
-		t.Fatal(err)
-	}
+	cachedAccessToken2 := gotUser.GetRefreshToken()
 
 	if cachedAccessToken == cachedAccessToken2 {
 		t.Errorf("cached access token before and after are the same: %s == %s", cachedAccessToken, cachedAccessToken2)
 	}
 
 	// Update the access token again for the user.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: anotherToken,
-	}); err != nil {
+	wantUser.RefreshToken = anotherToken
+	if err := db.UpdateUser(wantUser); err != nil {
 		t.Error(err)
 	}
 	gotUser, err = db.GetUser(wantUser.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-
-	// Assign the access token we expect to the wantUser object.
-	wantUser.RemoteIdentities[0].AccessToken = anotherToken
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	cachedAccessToken3, err := gotUser.GetRefreshToken(provider)
-	if err != nil {
-		t.Fatal(err)
-	}
+	cachedAccessToken3 := gotUser.GetRefreshToken()
 
 	if cachedAccessToken2 == cachedAccessToken3 {
 		t.Errorf("cached access token before and after are the same: %s == %s", cachedAccessToken2, cachedAccessToken3)

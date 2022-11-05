@@ -46,38 +46,25 @@ func TestDB(t *testing.T) (database.Database, func()) {
 // with the given remote id and the fake scm provider.
 func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *qf.User {
 	t.Helper()
-	var user qf.User
-	err := db.CreateUserFromRemoteIdentity(&user,
-		&qf.RemoteIdentity{
-			Provider:    "fake",
-			RemoteID:    remoteID,
-			AccessToken: "token",
-		})
-	if err != nil {
+	user := &qf.User{
+		ScmRemoteID:  remoteID,
+		RefreshToken: "token",
+	}
+	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
-	return &user
-}
-
-func CreateUserFromRemoteIdentity(t *testing.T, db database.Database, remoteID *qf.RemoteIdentity) *qf.User {
-	t.Helper()
-	var user qf.User
-	if err := db.CreateUserFromRemoteIdentity(&user, remoteID); err != nil {
-		t.Fatal(err)
-	}
-	return &user
+	return user
 }
 
 func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *qf.User {
 	t.Helper()
-	user := &qf.User{Name: name, Login: name}
-	err := db.CreateUserFromRemoteIdentity(user,
-		&qf.RemoteIdentity{
-			Provider:    "fake",
-			RemoteID:    remoteID,
-			AccessToken: "token",
-		})
-	if err != nil {
+	user := &qf.User{
+		Name:         name,
+		Login:        name,
+		ScmRemoteID:  remoteID,
+		RefreshToken: "token",
+	}
+	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
@@ -85,13 +72,9 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 
 func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *qf.User) *qf.User {
 	t.Helper()
-	err := db.CreateUserFromRemoteIdentity(user,
-		&qf.RemoteIdentity{
-			Provider:    "fake",
-			RemoteID:    remoteID,
-			AccessToken: "token",
-		})
-	if err != nil {
+	user.ScmRemoteID = remoteID
+	user.RefreshToken = "token"
+	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
@@ -99,14 +82,13 @@ func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *qf.Us
 
 func CreateAdminUser(t *testing.T, db database.Database, provider string) *qf.User {
 	t.Helper()
-	user := &qf.User{Name: "admin", Login: "admin"}
-	err := db.CreateUserFromRemoteIdentity(user,
-		&qf.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    1,
-			AccessToken: "token",
-		})
-	if err != nil {
+	user := &qf.User{
+		Name:         "admin",
+		Login:        "admin",
+		ScmRemoteID:  1,
+		RefreshToken: "token",
+	}
+	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
@@ -115,11 +97,7 @@ func CreateAdminUser(t *testing.T, db database.Database, provider string) *qf.Us
 func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
 	if course.Provider == "" {
-		for _, rid := range user.RemoteIdentities {
-			if rid.Provider != "" {
-				course.Provider = rid.Provider
-			}
-		}
+		course.Provider = "fake"
 	}
 	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)

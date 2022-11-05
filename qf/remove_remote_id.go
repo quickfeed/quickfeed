@@ -3,13 +3,8 @@ package qf
 // RemoveRemoteID removes user's remote identity before transmitting to client.
 func (u *User) RemoveRemoteID() {
 	if u != nil {
-		voidIDs := make([]*RemoteIdentity, 0)
-		u.RemoteIdentities = voidIDs
-		for _, enrollment := range u.GetEnrollments() {
-			if enrollment.User != nil && enrollment.User.RemoteIdentities != nil {
-				enrollment.User.RemoteIdentities = voidIDs
-			}
-		}
+		u.RefreshToken = ""
+		u.ScmRemoteID = 0
 	}
 }
 

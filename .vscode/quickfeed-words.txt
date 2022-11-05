@@ -142,6 +142,7 @@ protocolbuffers
 protoimpl
 protopatch
 protoreflect
+protoregistry
 qfconnect
 qlog
 qtest

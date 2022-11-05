@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -77,19 +76,14 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			return
 		}
 		logger.Debugf("ExternalUser: %v", qlog.IndentJson(externalUser))
-		remote := &qf.RemoteIdentity{
-			Provider:    env.ScmProvider(),
-			RemoteID:    externalUser.ID,
-			AccessToken: token.RefreshToken,
-		}
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
-		user, err := fetchUser(logger, db, remote, externalUser)
+		user, err := fetchUser(logger, db, token, externalUser)
 		if err != nil {
 			authenticationError(logger, w, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err))
 			return
 		}
-		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
+		logger.Debugf("Fetched full user info for user: %v", user)
 
 		cookie, err := tm.NewAuthCookie(user.ID)
 		if err != nil {
@@ -149,33 +143,36 @@ func FetchExternalUser(token *oauth2.Token) (*externalUser, error) {
 }
 
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
-func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.RemoteIdentity, externalUser *externalUser) (*qf.User, error) {
-	logger.Debugf("Lookup user: %q in database with: %v", externalUser.Login, remote)
-	user, err := db.GetUserByRemoteIdentity(remote)
+func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *externalUser) (*qf.User, error) {
+	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
+	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
 	switch {
 	case err == nil:
 		logger.Debugf("Found user: %v in database", user)
-		if err = db.UpdateAccessToken(remote); err != nil {
+		user.RefreshToken = token.RefreshToken
+		if err = db.UpdateUser(user); err != nil {
 			return nil, fmt.Errorf("failed to update access token for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("Access token updated: %v", remote)
+		logger.Debugf("Refresh token updated: %v", token.RefreshToken)
 
 	case err == gorm.ErrRecordNotFound:
 		logger.Debugf("User %q not found in database; creating new user", externalUser.Login)
 		user = &qf.User{
-			Name:      externalUser.Name,
-			Email:     externalUser.Email,
-			AvatarURL: externalUser.AvatarURL,
-			Login:     externalUser.Login,
+			Name:         externalUser.Name,
+			Email:        externalUser.Email,
+			AvatarURL:    externalUser.AvatarURL,
+			Login:        externalUser.Login,
+			ScmRemoteID:  externalUser.ID,
+			RefreshToken: token.RefreshToken,
 		}
-		if err = db.CreateUserFromRemoteIdentity(user, remote); err != nil {
+		if err = db.CreateUser(user); err != nil {
 			return nil, fmt.Errorf("failed to create remote identity for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("New user created: %v, remote: %v", user, remote)
+		logger.Debugf("New user created: %v", user)
 
 	default:
 		return nil, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err)
 	}
 	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
-	return db.GetUserByRemoteIdentity(remote)
+	return db.GetUserByRemoteIdentity(externalUser.ID)
 }

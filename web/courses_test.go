@@ -186,8 +186,6 @@ func TestEnrollmentProcess(t *testing.T) {
 		User:         stud1,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	}
-	// can't use: wantEnrollment.User.RemoveRemoteID()
-	wantEnrollment.User.RemoteIdentities = nil
 	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
@@ -234,7 +232,6 @@ func TestEnrollmentProcess(t *testing.T) {
 	wantEnrollment.Status = qf.Enrollment_STUDENT
 	wantEnrollment.UserID = stud2.ID
 	wantEnrollment.User = stud2
-	wantEnrollment.User.RemoteIdentities = nil
 	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}

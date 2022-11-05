@@ -125,10 +125,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
 	}
-	user, err := wh.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
-		RemoteID: uint64(payload.GetSender().GetID()),
-		Provider: "github",
-	})
+	user, err := wh.db.GetUserByRemoteIdentity(uint64(payload.GetSender().GetID()))
 	if err != nil {
 		wh.logger.Errorf("Failed to get user from database: %v", err)
 		return
@@ -213,10 +210,7 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, asso
 		return
 	}
 
-	user, err := wh.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
-		RemoteID: uint64(payload.GetSender().GetID()),
-		Provider: "github",
-	})
+	user, err := wh.db.GetUserByRemoteIdentity(uint64(payload.GetSender().GetID()))
 	if err != nil {
 		wh.logger.Errorf("Failed to get user from database: %v", err)
 		return

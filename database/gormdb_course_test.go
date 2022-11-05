@@ -26,8 +26,7 @@ func TestGormDBCreateCourse(t *testing.T) {
 		OrganizationID: 1,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, course.Provider)
 	qtest.CreateCourse(t, db, admin, course)
 	if course.ID == 0 {
 		t.Error("expected id to be set")
@@ -210,8 +209,7 @@ func TestGormDBGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &qf.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, wantCourse.Provider)
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
@@ -290,8 +288,7 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &qf.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, wantCourse.Provider)
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
@@ -326,8 +323,7 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 		OrganizationID: 1234,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, wantCourse.Provider)
 
 	if err := db.CreateCourse(admin.ID, wantCourse); err != nil {
 		t.Fatal(err)

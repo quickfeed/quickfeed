@@ -113,8 +113,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		Provider:       "github",
 		OrganizationID: 1234,
 	}
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, course.Provider)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 11)
@@ -169,8 +168,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		OrganizationID: 120,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, course.Provider)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
@@ -254,8 +252,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		OrganizationID: 120,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 1, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, course.Provider)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
@@ -339,8 +336,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		OrganizationID: 1234,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateAdminUser(t, db, course.Provider)
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 11)
