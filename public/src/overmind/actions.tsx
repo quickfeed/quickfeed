@@ -98,8 +98,8 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
         }
         // Insert users sorted by admin privileges
         state.allUsers = users.data.users.sort((a, b) => {
-            if (a.isAdmin > b.isAdmin) { return -1 }
-            if (a.isAdmin < b.isAdmin) { return 1 }
+            if (a.IsAdmin > b.IsAdmin) { return -1 }
+            if (a.IsAdmin < b.IsAdmin) { return 1 }
             return 0
         })
     }
@@ -131,17 +131,17 @@ export const getCourses = async ({ state, effects }: Context): Promise<boolean> 
 /** updateAdmin is used to update the admin privileges of a user. Admin status toggles between true and false */
 export const updateAdmin = async ({ state, effects }: Context, user: User): Promise<void> => {
     // Confirm that user really wants to change admin status
-    if (confirm(`Are you sure you want to ${user.isAdmin ? "demote" : "promote"} ${user.name}?`)) {
+    if (confirm(`Are you sure you want to ${user.IsAdmin ? "demote" : "promote"} ${user.Name}?`)) {
         // Convert to proto object and change admin status
         const req = new User(user)
-        req.isAdmin = !user.isAdmin
+        req.IsAdmin = !user.IsAdmin
         // Send updated user to server
         const result = await effects.grpcMan.updateUser(req)
         if (success(result)) {
             // If successful, update user in state with new admin status
             const found = state.allUsers.findIndex(s => s.ID == user.ID)
             if (found > -1) {
-                state.allUsers[found].isAdmin = req.isAdmin
+                state.allUsers[found].IsAdmin = req.IsAdmin
             }
         }
     }
@@ -226,10 +226,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
             break
         case Enrollment_UserStatus.STUDENT:
             // If the enrollment is pending, don't ask for confirmation
-            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user.name} is a teacher. Are sure you want to demote?`)
+            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user.Name} is a teacher. Are sure you want to demote?`)
             break
         case Enrollment_UserStatus.TEACHER:
-            confirmed = confirm(`Are you sure you want to promote ${enrollment.user.name} to teacher status?`)
+            confirmed = confirm(`Are you sure you want to promote ${enrollment.user.Name} to teacher status?`)
             break
     }
 
@@ -750,7 +750,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
                 actions.getGroupsByCourse(courseID)
             }
         }
-        if (state.self.isAdmin) {
+        if (state.self.IsAdmin) {
             actions.getUsers()
         }
         success = await actions.getRepositories()

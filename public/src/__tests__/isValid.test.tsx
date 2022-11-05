@@ -5,9 +5,9 @@ describe("User and enrollment validation", () => {
     it("User should be valid", () => {
         const user = new User({
             ID: BigInt(1),
-            name: "Test User",
-            email: "mail@mail.com",
-            studentID: "1234567"
+            Name: "Test User",
+            Email: "mail@mail.com",
+            StudentID: "1234567"
         })
         const isValidUser = isValid(user)
         expect(isValidUser).toBe(true)
@@ -16,8 +16,8 @@ describe("User and enrollment validation", () => {
     it("User should not be valid if name is empty", () => {
         const user2 = new User({
             ID: BigInt(2),
-            email: "mail@mail.com",
-            studentID: "1234567"
+            Email: "mail@mail.com",
+            StudentID: "1234567"
         })
         const isValidUser = isValid(user2)
         expect(isValidUser).toBe(false)
@@ -26,8 +26,8 @@ describe("User and enrollment validation", () => {
     it("User should not be valid if email is empty", () => {
         const user3 = new User({
             ID: BigInt(1),
-            name: "Test User 3",
-            studentID: "1234567"
+            Name: "Test User 3",
+            StudentID: "1234567"
         })
         const isValidUser = isValid(user3)
         expect(isValidUser).toBe(false)
@@ -64,8 +64,8 @@ describe("User and enrollment validation", () => {
     it("User should not be valid if studentId is empty", () => {
         const user4 = new User({
             ID: BigInt(4),
-            name: "Test User 4",
-            email: "mail@mail.com"
+            Name: "Test User 4",
+            Email: "mail@mail.com"
         })
         const isValidUser = isValid(user4)
         expect(isValidUser).toBe(false)
@@ -94,7 +94,7 @@ describe("User and enrollment validation", () => {
             submission: submission,
         })
         const submissionArray = [submissionLink]
-        const enrollmentLink = new EnrollmentLink({enrollment: enrollment, submissions: submissionArray})
+        const enrollmentLink = new EnrollmentLink({ enrollment: enrollment, submissions: submissionArray })
         const isValidEnrollmentLink = isValid(enrollmentLink)
         expect(isValidEnrollmentLink).toBe(true)
     })

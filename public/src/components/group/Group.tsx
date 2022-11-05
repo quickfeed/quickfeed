@@ -12,8 +12,8 @@ const GroupComponent = (): JSX.Element => {
     const pendingIcon = isPendingGroup(group) ? <span className="badge badge-warning ml-2">Pending</span> : null
     const members = group.users.map(user =>
         <li key={user.ID.toString()} className="list-group-item">
-            <img src={user.avatarURL} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} alt="" />
-            {user.name}
+            <img src={user.AvatarURL} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} alt="" />
+            {user.Name}
         </li>
     )
 

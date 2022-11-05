@@ -40,7 +40,7 @@ describe("UpdateEnrollment", () => {
 
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
-        const user = new User({ ID: BigInt(1), name: "Test User", studentID: "6583969706", email: "test@gmail.com" })
+        const user = new User({ ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
         const enrollment = new Enrollment({
             ID: BigInt(2),
             courseID: BigInt(1),
@@ -74,9 +74,9 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is student, button should display promote", () => {
         const user = new User({
             ID: BigInt(1),
-            name: "Test User",
-            studentID: "6583969706",
-            email: "test@gmail.com"
+            Name: "Test User",
+            StudentID: "6583969706",
+            Email: "test@gmail.com"
         })
         const enrollment = new Enrollment({
             ID: BigInt(2),

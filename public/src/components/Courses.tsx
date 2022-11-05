@@ -23,7 +23,7 @@ const Courses = (overview: overview): JSX.Element => {
         return (
             <div className="container centered">
                 <h3>There are currently no available courses.</h3>
-                {state.self.isAdmin ?
+                {state.self.IsAdmin ?
                     <div>
                         <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
                         <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} />
@@ -67,7 +67,7 @@ const Courses = (overview: overview): JSX.Element => {
         })
 
         if (overview.home) {
-            // Render only favorited courses.
+            // Render only favorite courses.
             return (
                 <>
                     {favorite.length > 0 &&

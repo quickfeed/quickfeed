@@ -14,6 +14,7 @@ Autograder
 backports
 beatlabs
 bitlab
+Bobsen
 Buf's
 bufbuild
 bufconn
@@ -164,6 +165,7 @@ signup
 skipcq
 skiptests
 Skylar
+Slipdays
 Slowloris
 slugified
 sqlite
@@ -178,6 +180,7 @@ subtest
 subtests
 testdata
 testdb
+Testersen
 testorg
 tmpl
 Typeflag

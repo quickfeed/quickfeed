@@ -39,9 +39,9 @@ This should return a response similar to this:
 {
     "ID":"1",
     "name":"Test User",
-    "studentID":"123456",
+    "StudentID":"123456",
     "email":"test.user@example.com",
-    "avatarURL":"https://example.com/avatar.png",
+    "AvatarURL":"https://example.com/avatar.png",
     "login":"TestUser",
 }
 ```

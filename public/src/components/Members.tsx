@@ -43,9 +43,9 @@ const Members = (): JSX.Element => {
     ]
     const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
         const data: Row = []
-        data.push(enrollment.user ? enrollment.user.name : "")
-        data.push(enrollment.user ? enrollment.user.email : "")
-        data.push(enrollment.user ? enrollment.user.studentID : "")
+        data.push(enrollment.user ? enrollment.user.Name : "")
+        data.push(enrollment.user ? enrollment.user.Email : "")
+        data.push(enrollment.user ? enrollment.user.StudentID : "")
         data.push(enrollment.lastActivityDate)
         data.push(enrollment.totalApproved.toString())
         data.push(enrollment.slipDaysRemaining.toString())

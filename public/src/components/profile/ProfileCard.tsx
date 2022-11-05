@@ -9,7 +9,7 @@ const ProfileCard = ({ children }: { children: React.ReactNode }): JSX.Element =
     return (
         <div className="card" style={{ width: "28rem" }}>
             <div className="card-header text-center bg-dark" style={{ height: "5rem", marginBottom: "3rem" }}>
-                <img className="card-img" style={{ borderRadius: "50%", width: "8rem" }} src={self.avatarURL} alt="Profile Card" />
+                <img className="card-img" style={{ borderRadius: "50%", width: "8rem" }} src={self.AvatarURL} alt="Profile Card" />
             </div>
             <div className="card-body">
                 {children}

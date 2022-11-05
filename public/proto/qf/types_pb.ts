@@ -17,49 +17,60 @@ export class User extends Message<User> {
   ID = protoInt64.zero;
 
   /**
-   * @generated from field: bool isAdmin = 2;
+   * @generated from field: bool IsAdmin = 2;
    */
-  isAdmin = false;
+  IsAdmin = false;
 
   /**
-   * @generated from field: string name = 3;
+   * @generated from field: string Name = 3;
    */
-  name = "";
+  Name = "";
 
   /**
-   * @generated from field: string studentID = 4;
+   * @generated from field: string StudentID = 4;
    */
-  studentID = "";
+  StudentID = "";
 
   /**
-   * @generated from field: string email = 5;
+   * @generated from field: string Email = 5;
    */
-  email = "";
+  Email = "";
 
   /**
-   * @generated from field: string avatarURL = 6;
+   * @generated from field: string AvatarURL = 6;
    */
-  avatarURL = "";
+  AvatarURL = "";
 
   /**
-   * @generated from field: string login = 7;
+   * @generated from field: string Login = 7;
    */
-  login = "";
+  Login = "";
 
   /**
-   * @generated from field: bool updateToken = 8;
+   * Filter; True if user's JWT token needs to be updated.
+   *
+   * @generated from field: bool UpdateToken = 8;
    */
-  updateToken = false;
+  UpdateToken = false;
 
   /**
-   * @generated from field: repeated qf.RemoteIdentity remoteIdentities = 9;
+   * Filter; The user's ID on the remote provider.
+   *
+   * @generated from field: uint64 ScmRemoteID = 9;
    */
-  remoteIdentities: RemoteIdentity[] = [];
+  ScmRemoteID = protoInt64.zero;
 
   /**
-   * @generated from field: repeated qf.Enrollment enrollments = 10;
+   * Filter; The user's refresh token that may be exchanged for an access token.
+   *
+   * @generated from field: string RefreshToken = 10;
    */
-  enrollments: Enrollment[] = [];
+  RefreshToken = "";
+
+  /**
+   * @generated from field: repeated qf.Enrollment Enrollments = 11;
+   */
+  Enrollments: Enrollment[] = [];
 
   constructor(data?: PartialMessage<User>) {
     super();
@@ -70,15 +81,16 @@ export class User extends Message<User> {
   static readonly typeName = "qf.User";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "isAdmin", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 3, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "studentID", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "avatarURL", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 7, name: "login", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 8, name: "updateToken", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 9, name: "remoteIdentities", kind: "message", T: RemoteIdentity, repeated: true },
-    { no: 10, name: "enrollments", kind: "message", T: Enrollment, repeated: true },
+    { no: 2, name: "IsAdmin", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 3, name: "Name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "StudentID", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "Email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "AvatarURL", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "Login", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "UpdateToken", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 9, name: "ScmRemoteID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 10, name: "RefreshToken", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 11, name: "Enrollments", kind: "message", T: Enrollment, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): User {
@@ -132,67 +144,6 @@ export class Users extends Message<Users> {
 
   static equals(a: Users | PlainMessage<Users> | undefined, b: Users | PlainMessage<Users> | undefined): boolean {
     return proto3.util.equals(Users, a, b);
-  }
-}
-
-/**
- * @generated from message qf.RemoteIdentity
- */
-export class RemoteIdentity extends Message<RemoteIdentity> {
-  /**
-   * @generated from field: uint64 ID = 1;
-   */
-  ID = protoInt64.zero;
-
-  /**
-   * @generated from field: string provider = 2;
-   */
-  provider = "";
-
-  /**
-   * @generated from field: uint64 remoteID = 3;
-   */
-  remoteID = protoInt64.zero;
-
-  /**
-   * @generated from field: string accessToken = 4;
-   */
-  accessToken = "";
-
-  /**
-   * @generated from field: uint64 userID = 5;
-   */
-  userID = protoInt64.zero;
-
-  constructor(data?: PartialMessage<RemoteIdentity>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.RemoteIdentity";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "provider", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "remoteID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 4, name: "accessToken", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RemoteIdentity {
-    return new RemoteIdentity().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RemoteIdentity {
-    return new RemoteIdentity().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RemoteIdentity {
-    return new RemoteIdentity().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: RemoteIdentity | PlainMessage<RemoteIdentity> | undefined, b: RemoteIdentity | PlainMessage<RemoteIdentity> | undefined): boolean {
-    return proto3.util.equals(RemoteIdentity, a, b);
   }
 }
 

@@ -25,7 +25,7 @@ const Groups = (): JSX.Element => {
 
         // Show group if any group user includes query
         for (const user of group.users) {
-            if (user.name.toLowerCase().includes(state.query)) {
+            if (user.Name.toLowerCase().includes(state.query)) {
                 return false
             }
         }
@@ -56,7 +56,7 @@ const Groups = (): JSX.Element => {
         const members = group.enrollments.map((enrollment, index) => {
             return (
                 <span key={enrollment.ID.toString()} className="inline-block">
-                    <a href={`https://github.com/${enrollment.user?.login}`} target="_blank" rel="noopener noreferrer">{enrollment.user?.name}</a>
+                    <a href={`https://github.com/${enrollment.user?.Login}`} target="_blank" rel="noopener noreferrer">{enrollment.user?.Name}</a>
                     {index >= group.enrollments.length - 1 ? "" : ", "}
                 </span>
             )

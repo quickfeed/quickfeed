@@ -15,8 +15,8 @@ describe("Visibility when logged in", () => {
     const mockedOvermind = createOvermindMock(config, (state) => {
         state.self = new User({
             ID: BigInt(1),
-            name: "Test User",
-            isAdmin: true,
+            Name: "Test User",
+            IsAdmin: true,
         })
     })
 
