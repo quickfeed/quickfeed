@@ -13,7 +13,6 @@ func TestDBUpdateUserAccessToken(t *testing.T) {
 	const (
 		accessToken    = "123"
 		newAccessToken = "4567890"
-		provider       = "github"
 		remoteID       = 10
 	)
 	wantUser := &qf.User{

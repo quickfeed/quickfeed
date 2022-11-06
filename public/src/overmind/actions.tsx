@@ -368,7 +368,6 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     /* Fill in required fields */
     course.organizationID = value.org.ID
     course.organizationName = value.org.name
-    course.provider = "github"
     course.courseCreatorID = state.self.ID
     /* Send the course to the server */
     const response = await effects.grpcMan.createCourse(course)
