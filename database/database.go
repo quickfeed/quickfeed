@@ -119,8 +119,8 @@ type Database interface {
 	CreateRepository(repo *qf.Repository) error
 	// GetRepositories returns repositories that match the given query.
 	GetRepositories(query *qf.Repository) ([]*qf.Repository, error)
-	// DeleteRepository deletes repository for the given remote provider's ID.
-	DeleteRepository(remoteID uint64) error
+	// DeleteRepository deletes the repository for the given remote provider's repository ID.
+	DeleteRepository(scmRepositoryID uint64) error
 	// GetRepositoriesWithIssues gets repositories with issues
 	GetRepositoriesWithIssues(query *qf.Repository) ([]*qf.Repository, error)
 
