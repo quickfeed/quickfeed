@@ -38,11 +38,11 @@ This should return a response similar to this:
 ```bash
 {
     "ID":"1",
-    "name":"Test User",
+    "Name":"Test User",
     "StudentID":"123456",
-    "email":"test.user@example.com",
+    "Email":"test.user@example.com",
     "AvatarURL":"https://example.com/avatar.png",
-    "login":"TestUser",
+    "Login":"TestUser",
 }
 ```
 
