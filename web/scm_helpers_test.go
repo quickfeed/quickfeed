@@ -26,7 +26,6 @@ func TestInitSCMs(t *testing.T) {
 	course := &qf.Course{
 		Name:             "Test course",
 		OrganizationName: scm.GetTestOrganization(t),
-		Provider:         "fake",
 	}
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Error(err)

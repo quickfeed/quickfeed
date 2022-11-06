@@ -49,7 +49,6 @@ func TestAccessControl(t *testing.T) {
 	course := &qf.Course{
 		Code:             "test101",
 		Year:             2022,
-		Provider:         "fake",
 		OrganizationID:   1,
 		OrganizationName: "test",
 		CourseCreatorID:  courseAdmin.ID,

@@ -68,7 +68,6 @@ message Course {
     string code                    = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_course"' }];
     uint32 year                    = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_course"' }];
     string tag                     = 6;
-    string provider                = 7;
     uint64 organizationID          = 8;
     string organizationName        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays                = 10;

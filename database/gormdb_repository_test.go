@@ -110,7 +110,6 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -164,7 +163,6 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 120,
 	}
 
@@ -248,7 +246,6 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 120,
 	}
 
@@ -332,7 +329,6 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 

@@ -24,7 +24,6 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
 		OrganizationName: qfTestOrg,
-		Provider:         "github",
 	}
 	if err := PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
 		t.Fatal(err)

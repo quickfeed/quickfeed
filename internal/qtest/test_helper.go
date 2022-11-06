@@ -72,9 +72,6 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 
 func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
-	if course.Provider == "" {
-		course.Provider = "fake"
-	}
 	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}

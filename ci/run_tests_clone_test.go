@@ -23,7 +23,6 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 
 	course := &qf.Course{
 		Code:             "QF101",
-		Provider:         "github",
 		OrganizationName: qfTestOrg,
 	}
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}

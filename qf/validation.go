@@ -14,7 +14,6 @@ func (grp *Group) IsValid() bool {
 func (c *Course) IsValid() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
-		(c.GetProvider() == "github" || c.GetProvider() == "fake") &&
 		c.GetOrganizationID() != 0 &&
 		c.GetYear() != 0 &&
 		c.GetTag() != ""

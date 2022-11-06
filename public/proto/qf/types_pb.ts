@@ -312,11 +312,6 @@ export class Course extends Message<Course> {
   tag = "";
 
   /**
-   * @generated from field: string provider = 7;
-   */
-  provider = "";
-
-  /**
    * @generated from field: uint64 organizationID = 8;
    */
   organizationID = protoInt64.zero;
@@ -372,7 +367,6 @@ export class Course extends Message<Course> {
     { no: 4, name: "code", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "year", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 6, name: "tag", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 7, name: "provider", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 8, name: "organizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 9, name: "organizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 10, name: "slipDays", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },

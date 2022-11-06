@@ -22,7 +22,6 @@ func TestGormDBCreateCourse(t *testing.T) {
 		Code:           "code",
 		Year:           2017,
 		Tag:            "tag",
-		Provider:       "github",
 		OrganizationID: 1,
 	}
 
@@ -122,10 +121,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*qf.Course{
-		{ID: c1.ID, OrganizationID: 1, Code: "DAT101", Year: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, Code: "DAT101", Year: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, Code: "DAT101", Year: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, Code: "DAT101", Year: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_NONE},
+		{ID: c1.ID, OrganizationID: 1, Code: "DAT101", Year: 1, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_PENDING},
+		{ID: c2.ID, OrganizationID: 2, Code: "DAT101", Year: 2, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
+		{ID: c3.ID, OrganizationID: 3, Code: "DAT101", Year: 3, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_STUDENT},
+		{ID: c4.ID, OrganizationID: 4, Code: "DAT101", Year: 4, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCoursesByUser() mismatch (-wantCourses, +gotCourses):\n%s", diff)
@@ -202,7 +201,6 @@ func TestGormDBGetCourse(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 
@@ -238,7 +236,6 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		Dockerfile:     "Dockerfile1",
 		OrganizationID: 1234,
 	}
@@ -247,7 +244,6 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Code:           "DAT100-1",
 		Year:           2018,
 		Tag:            "Autumn",
-		Provider:       "gitlab",
 		Dockerfile:     "Another Dockerfile1",
 		OrganizationID: 12345,
 	}
@@ -281,7 +277,6 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 
@@ -311,7 +306,6 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1235,
 	}
 	course := &qf.Course{
@@ -319,7 +313,6 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 

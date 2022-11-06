@@ -79,7 +79,6 @@ func TestRefreshTokens(t *testing.T) {
 		ID:               1,
 		OrganizationID:   1,
 		OrganizationName: qtest.MockOrg,
-		Provider:         "fake",
 	}
 	group := &qf.Group{
 		ID:       1,

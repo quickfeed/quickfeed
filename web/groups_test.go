@@ -20,7 +20,6 @@ func TestNewGroup(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
-	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.OrganizationID = 1
 	course.OrganizationName = "test"
@@ -63,7 +62,6 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
-	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.OrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
@@ -111,7 +109,6 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
-	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.OrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
@@ -179,7 +176,6 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
-	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.OrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
@@ -231,7 +227,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: qtest.MockOrg}
+	course := qf.Course{OrganizationID: 1, OrganizationName: qtest.MockOrg}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -398,7 +394,6 @@ func TestDeleteGroup(t *testing.T) {
 		Code:             "DAT520",
 		Year:             2018,
 		Tag:              "Spring",
-		Provider:         "fake",
 		OrganizationID:   1,
 		OrganizationName: "test",
 		ID:               1,
@@ -502,7 +497,6 @@ func TestGetGroup(t *testing.T) {
 		Code:           "DAT520",
 		Year:           2018,
 		Tag:            "Spring",
-		Provider:       "fake",
 		OrganizationID: 1,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -553,7 +547,6 @@ func TestPatchGroupStatus(t *testing.T) {
 		Code:             "DAT520",
 		Year:             2018,
 		Tag:              "Spring",
-		Provider:         "fake",
 		OrganizationID:   1,
 		OrganizationName: qtest.MockOrg,
 		ID:               1,
@@ -650,7 +643,6 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		Code:           "DAT520",
 		Year:           2018,
 		Tag:            "Spring",
-		Provider:       "fake",
 		OrganizationID: 1,
 		ID:             1,
 	}
