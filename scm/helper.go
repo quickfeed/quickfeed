@@ -123,7 +123,7 @@ func (opt IssueCommentOptions) valid() bool {
 }
 
 func (opt InvitationOptions) valid() bool {
-	return opt.Login != "" && opt.Owner != "" && opt.Token != ""
+	return opt.Login != "" && opt.Owner != "" && opt.RefreshToken != ""
 }
 
 // Errors //
