@@ -15,7 +15,7 @@ type Data struct {
 	Msg string
 }
 
-var messages = []Data{
+var messages = []*Data{
 	{Msg: "Hello"},
 	{Msg: "World"},
 	{Msg: "Foo"},
@@ -50,7 +50,7 @@ func TestStream(t *testing.T) {
 		}()
 		for _, data := range messages {
 			data := data
-			service.SendTo(&data, 1)
+			service.SendTo(data, 1)
 		}
 	}
 
@@ -93,7 +93,7 @@ func TestStreamClose(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		for i := 0; i < 1_000_000; i++ {
-			stream.Send(&messages[i%len(messages)])
+			stream.Send(messages[i%len(messages)])
 		}
 		wg.Done()
 	}()
