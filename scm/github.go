@@ -617,7 +617,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 
 // createTeam creates a new GitHub team.
 func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
+	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "CreateTeam",
 			Message: fmt.Sprintf("%+v", opt),
