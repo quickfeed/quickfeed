@@ -461,6 +461,12 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
+	if !opt.valid() {
+		return nil, ErrMissingFields{
+			Method:  "CreateCourse",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
 	// Get and check the organization's suitability for the course
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {

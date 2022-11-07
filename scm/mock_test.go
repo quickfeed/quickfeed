@@ -918,19 +918,6 @@ func TestMockCreateCourse(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(user)}
-
-	opt := &scm.CourseOptions{
-		OrganizationID: 1,
-		CourseCreator:  user,
-	}
-	repos, err := s.CreateCourse(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(repos) != len(wantRepos) {
-		t.Errorf("expected %d repositories, got %d", len(wantRepos), len(repos))
-	}
-
 	found := func(wantRepo string, repos []*scm.Repository) bool {
 		for _, repo := range repos {
 			if repo.Path == wantRepo {
@@ -939,26 +926,82 @@ func TestMockCreateCourse(t *testing.T) {
 		}
 		return false
 	}
-	for _, r := range wantRepos {
-		if !found(r, repos) {
-			t.Errorf("expected repository %s to be found", r)
-		}
-	}
 
-	wantTeams := map[uint64]*scm.Team{
-		1: {
-			ID:           1,
-			Name:         scm.TeachersTeam,
-			Organization: qtest.MockOrg,
+	tests := []struct {
+		name      string
+		opt       *scm.CourseOptions
+		wantRepos int
+		wantTeams map[uint64]*scm.Team
+		wantErr   bool
+	}{
+		{
+			"invalid opt, missing org ID",
+			&scm.CourseOptions{
+				CourseCreator: user,
+			},
+			0,
+			map[uint64]*scm.Team{},
+			true,
 		},
-		2: {
-			ID:           2,
-			Name:         scm.StudentsTeam,
-			Organization: qtest.MockOrg,
+		{
+			"invalid opt, missing user",
+			&scm.CourseOptions{
+				OrganizationID: 1,
+			},
+			0,
+			map[uint64]*scm.Team{},
+			true,
+		},
+		{
+			"incorrect organization ID",
+			&scm.CourseOptions{
+				OrganizationID: 123,
+				CourseCreator:  user,
+			},
+			0,
+			map[uint64]*scm.Team{},
+			true,
+		},
+		{
+			"correct arguments",
+			&scm.CourseOptions{
+				OrganizationID: 1,
+				CourseCreator:  user,
+			},
+			len(wantRepos),
+			map[uint64]*scm.Team{
+				1: {
+					ID:           1,
+					Name:         scm.TeachersTeam,
+					Organization: qtest.MockOrg,
+				},
+				2: {
+					ID:           2,
+					Name:         scm.StudentsTeam,
+					Organization: qtest.MockOrg,
+				},
+			},
+			false,
 		},
 	}
-	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
-		t.Errorf("mismatch teams (-want +got):\n%s", diff)
+	for _, tt := range tests {
+		repos, err := s.CreateCourse(ctx, tt.opt)
+		if (err != nil) != tt.wantErr {
+			t.Error(err)
+		}
+		if len(s.Repositories) != tt.wantRepos {
+			t.Errorf("expected repositories: %d, got: %d", tt.wantRepos, len(repos))
+		}
+		if !tt.wantErr {
+			for _, r := range wantRepos {
+				if !found(r, repos) {
+					t.Errorf("expected repository %s to be found", r)
+				}
+			}
+			if diff := cmp.Diff(tt.wantTeams, s.Teams); diff != "" {
+				t.Errorf("mismatch teams (-want +got):\n%s", diff)
+			}
+		}
 	}
 }
 

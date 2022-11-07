@@ -91,12 +91,6 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// CourseOptions contain information about new course.
-type CourseOptions struct {
-	OrganizationID uint64
-	CourseCreator  string
-}
-
 // UpdateEnrollmentOptions contain information about enrollment.
 type UpdateEnrollmentOptions struct {
 	Organization string

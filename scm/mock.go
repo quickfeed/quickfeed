@@ -355,6 +355,9 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
+	}
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
