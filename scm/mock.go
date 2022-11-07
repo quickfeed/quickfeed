@@ -22,8 +22,6 @@ type MockSCM struct {
 }
 
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
-// If withCourse is true, creates default course repositories and teams for a course
-// associated with qtest.MockOrg mock organization.
 func NewMockSCMClient() *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
@@ -42,6 +40,8 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
+// NewMockSCMClientWithCOurse creates a new mock scm with default course repositories and teams
+// associated with qtest.MockOrg mock organization.
 func NewMockSCMClientWithCourse() *MockSCM {
 	s := NewMockSCMClient()
 	s.Teams = map[uint64]*Team{
