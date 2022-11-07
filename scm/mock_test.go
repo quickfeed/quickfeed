@@ -2,13 +2,11 @@ package scm_test
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -56,6 +54,54 @@ var (
 		},
 	}
 )
+
+func TestMockSCMWithCourse(t *testing.T) {
+	s := scm.NewMockSCMClientWithCourse()
+	wantRepos := map[uint64]*scm.Repository{
+		1: {
+			ID:    1,
+			Path:  "info",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		2: {
+			ID:    2,
+			Path:  "assignments",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		3: {
+			ID:    3,
+			Path:  "tests",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		4: {
+			ID:    4,
+			Path:  qf.StudentRepoName("user"),
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+	}
+	if diff := cmp.Diff(wantRepos, s.Repositories); diff != "" {
+		t.Errorf("mismatch repos (-want +got):\n%s", diff)
+	}
+	wantTeams := map[uint64]*scm.Team{
+		1: {
+			ID:           1,
+			Name:         scm.TeachersTeam,
+			Organization: qtest.MockOrg,
+		},
+		2: {
+			ID:           2,
+			Name:         scm.StudentsTeam,
+			Organization: qtest.MockOrg,
+		},
+	}
+	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
+		t.Errorf("mismatch teams (-want +got):\n%s", diff)
+	}
+}
 
 func TestMockClone(t *testing.T) {
 	dstDir := t.TempDir()
@@ -150,66 +196,6 @@ func TestMockOrganizations(t *testing.T) {
 	}
 }
 
-func TestMockRepositories(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	course, course2 := qtest.MockCourses[0], qtest.MockCourses[2]
-	repos := []*scm.Repository{
-		{
-			OrgID: course.OrganizationID,
-			Owner: course.OrganizationName,
-			Path:  "info",
-		},
-		{
-			OrgID: course.OrganizationID,
-			Owner: course.OrganizationName,
-			Path:  "tests",
-		},
-		{
-			OrgID: course2.OrganizationID,
-			Owner: course2.OrganizationName,
-			Path:  "assignments",
-		},
-		{
-			OrgID: course2.OrganizationID,
-			Owner: course2.OrganizationName,
-			Path:  "tests",
-		},
-	}
-
-	for _, repo := range repos {
-		r, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-			Organization: repo.Owner,
-			Path:         repo.Path,
-			Owner:        repo.Owner,
-			Permission:   "read",
-		})
-		if err != nil {
-			t.Error(err)
-		}
-		repo.ID = r.ID
-		gotRepo, ok := s.Repositories[repo.ID]
-		if !ok {
-			t.Errorf("expected repository %s to be found", repo.Path)
-		}
-		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-			t.Errorf("mismatch repositories (-want +got):\n%s", diff)
-		}
-	}
-
-	wantRepos := []*scm.Repository{repos[0], repos[1]}
-	courseRepos, err := s.GetRepositories(ctx, &qf.Organization{ID: course.OrganizationID})
-	if err != nil {
-		t.Error(err)
-	}
-	sort.Slice(courseRepos, func(i, j int) bool {
-		return courseRepos[i].ID < courseRepos[j].ID
-	})
-	if diff := cmp.Diff(wantRepos, courseRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
-		t.Errorf("mismatch repositories (-want +got):\n%s", diff)
-	}
-}
-
 var mockTeams = []*scm.Team{
 	{
 		ID:           1,
@@ -228,37 +214,16 @@ var mockTeams = []*scm.Team{
 	},
 }
 
-func TestMockCreateTeams(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	for _, team := range mockTeams {
-		newTeam, err := s.CreateTeam(ctx, &scm.TeamOptions{
-			Organization: team.Organization,
-			TeamName:     team.Name,
-		})
-		if err != nil {
-			t.Error(err)
-		}
-		if _, ok := s.Teams[newTeam.ID]; !ok {
-			t.Errorf("expected new team %d", newTeam.ID)
-		}
-	}
-	if len(s.Teams) != len(mockTeams) {
-		t.Fatalf("expected %d teams created, got %d", len(mockTeams), len(s.Teams))
-	}
-}
-
 func TestUpdateMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	team, err := s.CreateTeam(ctx, &scm.TeamOptions{
+	team := &scm.Team{
+		ID:           1,
+		Name:         "test-team",
 		Organization: course.OrganizationName,
-		TeamName:     "test_team",
-	})
-	if err != nil {
-		t.Fatal(err)
 	}
+	s.Teams[1] = team
 	tests := []struct {
 		name    string
 		opt     *scm.UpdateTeamOptions
@@ -1022,7 +987,7 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		if _, err := s.UpdateEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
-		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos); diff != "" {
 			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
@@ -1088,7 +1053,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 		if err := s.RejectEnrollment(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
-		if diff := cmp.Diff(s.Repositories, tt.wantRepos, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+		if diff := cmp.Diff(s.Repositories, tt.wantRepos); diff != "" {
 			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
 		}
 	}
@@ -1099,18 +1064,16 @@ func TestMockCreateGroup(t *testing.T) {
 	ctx := context.Background()
 	teamRepos := []*scm.Repository{
 		{
-			ID:      1,
-			Path:    mockTeams[0].Name,
-			Owner:   qtest.MockOrg,
-			OrgID:   1,
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[0].Name),
+			ID:    1,
+			Path:  mockTeams[0].Name,
+			Owner: qtest.MockOrg,
+			OrgID: 1,
 		},
 		{
-			ID:      2,
-			Path:    mockTeams[1].Name,
-			Owner:   qtest.MockOrg,
-			OrgID:   1,
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[1].Name),
+			ID:    2,
+			Path:  mockTeams[1].Name,
+			Owner: qtest.MockOrg,
+			OrgID: 1,
 		},
 	}
 	tests := []struct {
@@ -1208,18 +1171,16 @@ func TestMockDeleteGroup(t *testing.T) {
 	ctx := context.Background()
 	repositories := []*scm.Repository{
 		{
-			ID:      1,
-			OrgID:   1,
-			Owner:   qtest.MockOrg,
-			Path:    qf.StudentRepoName(user),
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, qf.StudentRepoName(user)),
+			ID:    1,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName(user),
 		},
 		{
-			ID:      2,
-			OrgID:   1,
-			Owner:   qtest.MockOrg,
-			Path:    mockTeams[0].Name,
-			HTMLURL: fmt.Sprintf("https://example.com/%s/%s", qtest.MockOrg, mockTeams[0].Name),
+			ID:    2,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  mockTeams[0].Name,
 		},
 	}
 	s.Repositories = map[uint64]*scm.Repository{

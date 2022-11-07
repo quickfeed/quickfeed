@@ -106,42 +106,6 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 	return org, nil
 }
 
-// CreateRepository implements the SCM interface.
-func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	if !opt.valid() {
-		return nil, ErrMissingFields{
-			Method:  "CreateRepository",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
-	if repo != nil {
-		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
-		return toRepository(repo), nil
-	}
-	// error expected to be 404 Not Found; logging here in case it's a different error
-	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Path, err)
-
-	// repo does not exist, create it
-	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
-		Name:    &opt.Path,
-		Private: &opt.Private,
-	})
-	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "CreateRepository",
-			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
-			GitError: err,
-		}
-	}
-	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
-
-	return toRepository(repo), nil
-}
-
 // GetRepositories implements the SCM interface.
 func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
 	if !org.IsValid() {
@@ -193,58 +157,6 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
 	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
 	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
-}
-
-// CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
-		return nil, ErrMissingFields{
-			Method:  "CreateTeam",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	// check that the team name does not already exist for this organization
-	team, _, err := s.client.Teams.GetTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
-	if err != nil {
-		// error expected to be 404 Not Found; logging here in case it's a different error
-		s.logger.Debugf("CreateTeam: check for team %s: %s", opt.TeamName, err)
-	}
-
-	if team == nil {
-		s.logger.Debugf("CreateTeam: creating %s", opt.TeamName)
-		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
-			Name: opt.TeamName,
-		})
-		if err != nil {
-			if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
-				return nil, ErrFailedSCM{
-					Method:   "CreateTeam",
-					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
-					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
-				}
-			}
-			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
-			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
-		}
-		s.logger.Debugf("CreateTeam: done creating %s", opt.TeamName)
-	}
-	for _, user := range opt.Users {
-		s.logger.Debugf("CreateTeam: adding user %s to %s", user, opt.TeamName)
-		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
-		if err != nil {
-			return nil, ErrFailedSCM{
-				Method:   "CreateTeam",
-				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, team.GetName()),
-				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, team.GetName(), err),
-			}
-		}
-	}
-	return &Team{
-		ID:           uint64(team.GetID()),
-		Name:         team.GetName(),
-		Organization: team.GetOrganization().GetLogin(),
-	}, nil
 }
 
 // UpdateTeamMembers implements the SCM interface
@@ -486,7 +398,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 			Organization: org.Name,
 			Private:      private,
 		}
-		repo, err := s.CreateRepository(ctx, repoOptions)
+		repo, err := s.createRepository(ctx, repoOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -499,14 +411,14 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 		TeamName:     TeachersTeam,
 		Users:        []string{opt.CourseCreator},
 	}
-	if _, err = s.CreateTeam(ctx, teamOpt); err != nil {
-		return nil, fmt.Errorf("failed to create teachers team: %w", err)
+	if _, err = s.createTeam(ctx, teamOpt); err != nil {
+		return nil, err
 	}
 
 	// Create student team without any members
 	studOpt := &TeamOptions{Organization: org.Name, TeamName: StudentsTeam}
-	if _, err = s.CreateTeam(ctx, studOpt); err != nil {
-		return nil, fmt.Errorf("failed to create students team: %w", err)
+	if _, err = s.createTeam(ctx, studOpt); err != nil {
+		return nil, err
 	}
 
 	// Create student repository for the course creator
@@ -605,12 +517,12 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Reposit
 		Path:         opt.TeamName,
 		Private:      true,
 	}
-	repo, err := s.CreateRepository(ctx, repoOptions)
+	repo, err := s.createRepository(ctx, repoOptions)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	team, err := s.CreateTeam(ctx, opt)
+	team, err := s.createTeam(ctx, opt)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -636,6 +548,41 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 	}
 	_, err := s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
 	return err
+}
+
+// createRepository creates a new repository or returns an existing repository with the given name.
+func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, ErrMissingFields{
+			Method:  "CreateRepository",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	// check that repo does not already exist for this user or group
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
+	if repo != nil {
+		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
+		return toRepository(repo), nil
+	}
+	// error expected to be 404 Not Found; logging here in case it's a different error
+	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Path, err)
+
+	// repo does not exist, create it
+	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
+		Name:    &opt.Path,
+		Private: &opt.Private,
+	})
+	if err != nil {
+		return nil, ErrFailedSCM{
+			Method:   "CreateRepository",
+			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
+			GitError: err,
+		}
+	}
+	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
+	return toRepository(repo), nil
 }
 
 // deleteRepository deletes repository by name or ID.
@@ -668,11 +615,63 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 	return nil
 }
 
+// createTeam creates a new GitHub team.
+func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
+	if !opt.valid() {
+		return nil, ErrMissingFields{
+			Method:  "CreateTeam",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	// check that the team name does not already exist for this organization
+	team, _, err := s.client.Teams.GetTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
+	if err != nil {
+		// error expected to be 404 Not Found; logging here in case it's a different error
+		s.logger.Debugf("CreateTeam: check for team %s: %s", opt.TeamName, err)
+	}
+
+	if team == nil {
+		s.logger.Debugf("CreateTeam: creating %s", opt.TeamName)
+		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
+			Name: opt.TeamName,
+		})
+		if err != nil {
+			if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
+				return nil, ErrFailedSCM{
+					Method:   "CreateTeam",
+					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
+					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
+				}
+			}
+			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
+			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
+		}
+		s.logger.Debugf("CreateTeam: done creating %s", opt.TeamName)
+	}
+	for _, user := range opt.Users {
+		s.logger.Debugf("CreateTeam: adding user %s to %s", user, opt.TeamName)
+		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
+		if err != nil {
+			return nil, ErrFailedSCM{
+				Method:   "CreateTeam",
+				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, team.GetName()),
+				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, team.GetName(), err),
+			}
+		}
+	}
+	return &Team{
+		ID:           uint64(team.GetID()),
+		Name:         team.GetName(),
+		Organization: team.GetOrganization().GetLogin(),
+	}, nil
+}
+
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
-	repo, err := s.CreateRepository(ctx, &CreateRepositoryOptions{
+	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{
 		Organization: organization,
 		Path:         qf.StudentRepoName(login),
 		Private:      true,
