@@ -113,7 +113,7 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, err //connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create course"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create course"))
 	}
 	return connect.NewResponse(course), nil
 }
