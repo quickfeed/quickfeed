@@ -26,7 +26,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 	wantCourse := qtest.MockCourses[0]
 	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	gotCourse, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
@@ -87,7 +87,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	cookie := Cookie(t, tm, admin)
 
 	ctx := context.Background()
-	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1, NewCourse: true})
+	organization, err := mockSCM.GetOrganization(ctx, &scm.OrganizationOptions{ID: 1, NewCourse: true})
 	if err != nil {
 		t.Fatal(err)
 	}

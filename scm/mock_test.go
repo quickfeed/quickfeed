@@ -124,10 +124,10 @@ func TestMockOrganizations(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	for _, course := range qtest.MockCourses {
-		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID}); err != nil {
+		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: course.OrganizationID}); err != nil {
 			t.Error(err)
 		}
-		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName}); err != nil {
+		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{Name: course.OrganizationName}); err != nil {
 			t.Error(err)
 		}
 	}
@@ -144,7 +144,7 @@ func TestMockOrganizations(t *testing.T) {
 	}
 
 	for _, org := range invalidOrgs {
-		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: org.id, Name: org.name}); err == nil {
+		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: org.id, Name: org.name}); err == nil {
 			t.Errorf("expected error: %s", org.err)
 		}
 	}
@@ -181,7 +181,6 @@ func TestMockRepositories(t *testing.T) {
 		r, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 			Organization: repo.Owner,
 			Path:         repo.Path,
-			Owner:        repo.Owner,
 			Permission:   "read",
 		})
 		if err != nil {

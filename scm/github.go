@@ -41,7 +41,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 }
 
 // GetOrganization implements the SCM interface.
-func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
+func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetOrganization",
@@ -154,7 +154,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 	if org.Name != "" {
 		path = org.Name
 	} else {
-		opt := &GetOrgOptions{
+		opt := &OrganizationOptions{
 			ID: org.ID,
 		}
 		org, err := s.GetOrganization(ctx, opt)
@@ -197,7 +197,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 
 // CreateTeam implements the SCM interface.
 func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
+	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "CreateTeam",
 			Message: fmt.Sprintf("%+v", opt),
@@ -468,7 +468,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 		}
 	}
 	// Get and check the organization's suitability for the course
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +532,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{
 		Name: opt.Organization,
 	})
 	if err != nil {
@@ -569,7 +569,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID})
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{ID: opt.OrganizationID})
 	if err != nil {
 		return err
 	}
@@ -581,6 +581,12 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 
 // DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
 func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrollmentOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "UpdateEnrollment",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, TeachersTeam, opt.User); err != nil {
 		return err
 	}
@@ -601,7 +607,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Reposit
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	orgOptions := &GetOrgOptions{Name: opt.Organization}
+	orgOptions := &OrganizationOptions{Name: opt.Organization}
 	org, err := s.GetOrganization(ctx, orgOptions)
 	if err != nil {
 		return nil, nil, err
