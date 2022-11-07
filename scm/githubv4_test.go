@@ -11,7 +11,7 @@ import (
 )
 
 func TestDeleteIssue(t *testing.T) {
-	s := scm.NewMockSCMClient(true)
+	s := scm.NewMockSCMClientWithCourse()
 	ctx := context.Background()
 
 	repo := qf.StudentRepoName("user")

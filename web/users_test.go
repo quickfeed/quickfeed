@@ -17,7 +17,7 @@ import (
 func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := MockClient(t, db, false, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
 
 	unexpectedUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
@@ -61,7 +61,7 @@ var allUsers = []struct {
 func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := MockClient(t, db, false, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
 
 	var users []*qf.User
@@ -142,7 +142,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := MockClient(t, db, false, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
 
 	var users []*qf.User
@@ -233,7 +233,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := MockClient(t, db, false, connect.WithInterceptors(
+	client := MockClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
 	ctx := context.Background()
@@ -298,7 +298,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	t.Skip("TODO: Needs to be rewritten as a client-server test to verify (with interceptors) that the server is actually enforcing the rules")
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := MockClient(t, db, false, nil)
+	client := MockClient(t, db, nil)
 	ctx := context.Background()
 
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)

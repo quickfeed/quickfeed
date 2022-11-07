@@ -20,7 +20,7 @@ func TestThirdPartyAuth(t *testing.T) {
 	defer cleanup()
 	user := fillDatabase(t, db, token)
 
-	client, _, _ := MockClientWithUser(t, db, false, connect.WithInterceptors(
+	client, _, _ := MockClientWithUser(t, db, connect.WithInterceptors(
 		interceptor.NewTokenAuthClientInterceptor(token),
 	))
 	ctx := context.Background()

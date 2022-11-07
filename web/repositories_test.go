@@ -14,7 +14,7 @@ func TestGetRepositories(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db, false)
+	client, tm, _ := MockClientWithUser(t, db)
 
 	teacher := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{

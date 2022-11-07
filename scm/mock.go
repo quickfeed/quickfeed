@@ -24,7 +24,7 @@ type MockSCM struct {
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
 // If withCourse is true, creates default course repositories and teams for a course
 // associated with qtest.MockOrg mock organization.
-func NewMockSCMClient(withCourse bool) *MockSCM {
+func NewMockSCMClient() *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
@@ -39,45 +39,48 @@ func NewMockSCMClient(withCourse bool) *MockSCM {
 			Name: course.OrganizationName,
 		}
 	}
-	if withCourse {
-		s.Teams = map[uint64]*Team{
-			1: {
-				ID:           1,
-				Name:         TeachersTeam,
-				Organization: qtest.MockOrg,
-			},
-			2: {
-				ID:           2,
-				Name:         StudentsTeam,
-				Organization: qtest.MockOrg,
-			},
-		}
-		s.Repositories = map[uint64]*Repository{
-			1: {
-				ID:    1,
-				Path:  "info",
-				Owner: qtest.MockOrg,
-				OrgID: 1,
-			},
-			2: {
-				ID:    2,
-				Path:  "assignments",
-				Owner: qtest.MockOrg,
-				OrgID: 1,
-			},
-			3: {
-				ID:    3,
-				Path:  "tests",
-				Owner: qtest.MockOrg,
-				OrgID: 1,
-			},
-			4: {
-				ID:    4,
-				Path:  qf.StudentRepoName("user"),
-				Owner: qtest.MockOrg,
-				OrgID: 1,
-			},
-		}
+	return s
+}
+
+func NewMockSCMClientWithCourse() *MockSCM {
+	s := NewMockSCMClient()
+	s.Teams = map[uint64]*Team{
+		1: {
+			ID:           1,
+			Name:         TeachersTeam,
+			Organization: qtest.MockOrg,
+		},
+		2: {
+			ID:           2,
+			Name:         StudentsTeam,
+			Organization: qtest.MockOrg,
+		},
+	}
+	s.Repositories = map[uint64]*Repository{
+		1: {
+			ID:    1,
+			Path:  "info",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		2: {
+			ID:    2,
+			Path:  "assignments",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		3: {
+			ID:    3,
+			Path:  "tests",
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
+		4: {
+			ID:    4,
+			Path:  qf.StudentRepoName("user"),
+			Owner: qtest.MockOrg,
+			OrgID: 1,
+		},
 	}
 	return s
 }
