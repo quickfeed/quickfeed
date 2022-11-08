@@ -354,7 +354,7 @@ func runStream(t *testing.T, service *stream.StreamServices, user *qf.User) (*qt
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		mockStream.Run()
+		_ = mockStream.Run()
 	}()
 	return mockStream, &wg
 }
