@@ -1,4 +1,4 @@
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
 } from "../../proto/qf/types_pb"
@@ -12,23 +12,18 @@ import { Code } from "@bufbuild/connect-web"
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => !(response.status.Code > 0)
 
-export const onInitializeOvermind = ({ actions, effects }: Context) => {
+export const onInitializeOvermind = ({ actions }: Context) => {
     // Currently this only alerts the user if they are not logged in after a page refresh
     const alert = localStorage.getItem("alert")
     if (alert) {
         actions.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
     }
-
-    // Event handlers for stream responses
-    effects.streamService.submissionStream({
-        onMessage: actions.receiveSubmission,
-        onError: actions.handleStreamError,
-    })
 }
 
 export const handleStreamError = (context: Context, error: Error): void => {
     console.error(error)
+    context.state.connectionStatus = ConnStatus.DISCONNECTED
     context.actions.alert({ text: "An error occurred while connecting to the server", color: Color.RED })
 }
 
@@ -754,7 +749,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment):
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
-export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
+export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
 
     // If getSelf returns false, the user is not logged in. Abort.
@@ -789,6 +784,14 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         // End loading screen.
         state.isLoading = false
     }
+
+    // Starts submission stream 
+    effects.streamService.submissionStream({
+        onStatusChange: actions.setConnectionStatus,
+        onMessage: actions.receiveSubmission,
+        onError: actions.handleStreamError,
+    })
+
     // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
     // However, if one of the above calls fail, it could still be the case that success returns true.
     return success
@@ -911,6 +914,6 @@ export const updateGroupName = ({ state }: Context, name: string): void => {
     state.activeGroup.name = name
 }
 
-export const setIsLive = ({ state }: Context, isLive: boolean) => {
-    state.isLive = isLive
+export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
+    state.connectionStatus = status
 }
