@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, SubmissionLink, User } from "../../proto/qf/types_pb"
-import { Color, getNumApproved, getSubmissionByAssignmentID, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, getNumApproved, getSubmissionByAssignmentID, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -182,7 +182,7 @@ export type State = {
 
     hasGroup: (courseID: number) => boolean,
 
-    isLive: boolean,
+    connectionStatus: ConnStatus,
 }
 
 
@@ -376,5 +376,5 @@ export const state: State = {
     }),
     showFavorites: false,
 
-    isLive: false,
+    connectionStatus: ConnStatus.DISCONNECTED,
 }
