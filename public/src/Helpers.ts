@@ -18,6 +18,13 @@ export enum Sort {
     ID
 }
 
+// ConnStatus indicates the status of streaming connection to the server
+export enum ConnStatus {
+    CONNECTED,
+    DISCONNECTED,
+    RECONNECTING,
+}
+
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a deadline */

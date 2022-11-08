@@ -1,6 +1,7 @@
 import { QuickFeedService } from '../proto/qf/quickfeed_connectweb'
 import { Submission } from '../proto/qf/types_pb'
 import { createConnectTransport, createPromiseClient, PromiseClient } from "@bufbuild/connect-web"
+import { ConnStatus } from './Helpers'
 
 
 export class StreamService {
@@ -16,9 +17,14 @@ export class StreamService {
         return new Promise(resolve => setTimeout(resolve, this.backoff))
     }
 
-    public async submissionStream(options: { onMessage: (payload?: Submission | undefined) => void, onError: (error: Error) => void }) {
+    public async submissionStream(options: {
+        onMessage: (payload?: Submission | undefined) => void,
+        onError: (error: Error) => void
+        onStatusChange: (status: ConnStatus) => void
+    }) {
         const stream = this.service.submissionStream({})
         try {
+            options.onStatusChange(ConnStatus.CONNECTED)
             for await (const msg of stream) {
                 options.onMessage(msg)
             }
@@ -35,6 +41,7 @@ export class StreamService {
             // This is a total of 8 attempts with a maximum delay of 255 seconds
             if (this.backoff <= 128 * 1000) {
                 // Attempt to reconnect after a backoff
+                options.onStatusChange(ConnStatus.RECONNECTING)
                 await this.timeout()
                 this.submissionStream(options)
                 this.backoff *= 2
