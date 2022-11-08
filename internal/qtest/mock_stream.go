@@ -66,3 +66,10 @@ func (m *MockStream[T]) Close() {
 	}
 	m.closed = true
 }
+
+// SetCounter sets the counter used to count the number of messages sent.
+// Multiple streams can share the same counter to count the total number of
+// messages sent across all streams.
+func (m *MockStream[T]) SetCounter(counter *uint32) {
+	m.counter = counter
+}

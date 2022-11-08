@@ -34,7 +34,7 @@ func TestStream(t *testing.T) {
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
 		stream := qtest.NewMockStream[Data](t)
-		stream := qtest.NewMockStream[Data](t, ctx, &counter)
+		stream.SetCounter(&counter)
 		service.Add(stream, 1)
 		streams = append(streams, stream)
 		wg.Add(1)
