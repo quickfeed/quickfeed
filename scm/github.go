@@ -495,7 +495,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrollmentOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
-			Method:  "UpdateEnrollment",
+			Method:  "DemoteTeacherToStudent",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
