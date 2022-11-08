@@ -91,17 +91,6 @@ func (e ErrNotSupported) Error() string {
 	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
 }
 
-// ErrMissingFields is returned when scm struct validation fails.
-// This error only used for development/debugging and never goes to frontend user.
-type ErrMissingFields struct {
-	Message string
-	Method  string
-}
-
-func (e ErrMissingFields) Error() string {
-	return "github method " + e.Method + " called with missing required fields: " + e.Message
-}
-
 // ErrFailedSCM is returned to provide detailed information
 // to user about source of the error and possible solution
 type ErrFailedSCM struct {
