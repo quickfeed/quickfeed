@@ -348,8 +348,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 }
 
 func runStream(t *testing.T, service *stream.StreamServices, user *qf.User) (*qtest.MockStream[qf.Submission], *sync.WaitGroup) {
-	var counter uint32
-	mockStream := qtest.NewMockStream[qf.Submission](t, context.Background(), &counter)
+	mockStream := qtest.NewMockStream[qf.Submission](t)
 	service.Submission.Add(mockStream, user.ID)
 	var wg sync.WaitGroup
 	wg.Add(1)

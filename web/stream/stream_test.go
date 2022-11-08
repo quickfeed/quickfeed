@@ -1,10 +1,8 @@
 package stream_test
 
 import (
-	"context"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -30,15 +28,12 @@ var messages = []*Data{
 
 func TestStream(t *testing.T) {
 	service := stream.NewService[uint64, Data]()
-
-	counter := uint32(0)
-
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
-	defer cancel()
 	streams := make([]*qtest.MockStream[Data], 0)
 
+	var counter uint32
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
+		stream := qtest.NewMockStream[Data](t)
 		stream := qtest.NewMockStream[Data](t, ctx, &counter)
 		service.Add(stream, 1)
 		streams = append(streams, stream)
@@ -83,11 +78,7 @@ func TestStream(t *testing.T) {
 func TestStreamClose(t *testing.T) {
 	service := stream.NewService[uint64, Data]()
 
-	counter := uint32(0)
-
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
-	defer cancel()
-	stream := qtest.NewMockStream[Data](t, ctx, &counter)
+	stream := qtest.NewMockStream[Data](t)
 	service.Add(stream, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)

@@ -18,13 +18,14 @@ type MockStream[T any] struct {
 	MessageMap map[string]int
 }
 
-func NewMockStream[T any](t *testing.T, ctx context.Context, counter *uint32) *MockStream[T] {
+func NewMockStream[T any](t *testing.T) *MockStream[T] {
 	t.Helper()
+	var counter uint32
 	return &MockStream[T]{
-		ctx:        ctx,
+		ctx:        context.Background(),
 		ch:         make(chan *T),
 		closed:     false,
-		counter:    counter,
+		counter:    &counter,
 		Messages:   make([]*T, 0),
 		MessageMap: make(map[string]int),
 	}
