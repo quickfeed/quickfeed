@@ -347,6 +347,8 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	}
 }
 
+// runStream creates and returns a stream, and a waiter that the caller can use to wait for
+// the stream to close. The stream must be closed by the caller.
 func runStream(t *testing.T, service *stream.StreamServices, user *qf.User) (*qtest.MockStream[qf.Submission], *sync.WaitGroup) {
 	mockStream := qtest.NewMockStream[qf.Submission](t)
 	service.Submission.Add(mockStream, user.ID)
