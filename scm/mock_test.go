@@ -92,11 +92,6 @@ func TestMockSCMWithCourse(t *testing.T) {
 			Name:         scm.TeachersTeam,
 			Organization: qtest.MockOrg,
 		},
-		2: {
-			ID:           2,
-			Name:         scm.StudentsTeam,
-			Organization: qtest.MockOrg,
-		},
 	}
 	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
 		t.Errorf("mismatch teams (-want +got):\n%s", diff)
@@ -938,11 +933,6 @@ func TestMockCreateCourse(t *testing.T) {
 				1: {
 					ID:           1,
 					Name:         scm.TeachersTeam,
-					Organization: qtest.MockOrg,
-				},
-				2: {
-					ID:           2,
-					Name:         scm.StudentsTeam,
 					Organization: qtest.MockOrg,
 				},
 			},

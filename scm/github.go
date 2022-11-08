@@ -388,12 +388,6 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 		return nil, err
 	}
 
-	// Create student team without any members
-	studOpt := &TeamOptions{Organization: org.Name, TeamName: StudentsTeam}
-	if _, err = s.createTeam(ctx, studOpt); err != nil {
-		return nil, err
-	}
-
 	// Create student repository for the course creator
 	repo, err := s.createStudentRepo(ctx, org.Name, opt.CourseCreator)
 	if err != nil {
@@ -418,10 +412,6 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	case qf.Enrollment_STUDENT:
 		// Give access to the course's info and assignments repositories
 		if err := s.grantPullAccessToCourseRepos(ctx, org.Name, opt.User); err != nil {
-			return nil, err
-		}
-		// Add student to the organization's "students" team
-		if err := s.addUserToStudentsTeam(ctx, org.Name, opt.User); err != nil {
 			return nil, err
 		}
 		return s.createStudentRepo(ctx, org.Name, opt.User)
@@ -458,10 +448,6 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
 	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, TeachersTeam, opt.User); err != nil {
-		return err
-	}
-	teamMember := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
-	if _, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, StudentsTeam, opt.User, teamMember); err != nil {
 		return err
 	}
 	role := OrgMember
@@ -595,14 +581,14 @@ func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 			Name: opt.TeamName,
 		})
 		if err != nil {
-			if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
+			if opt.TeamName != TeachersTeam {
 				return nil, ErrFailedSCM{
 					Method:   "CreateTeam",
 					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
 					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
 				}
 			}
-			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
+			// continue if it is the standard teacher team that can be safely reused
 			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
 		}
 		s.logger.Debugf("CreateTeam: done creating %s", opt.TeamName)
@@ -662,18 +648,8 @@ func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login
 	return nil
 }
 
-// addUserToStudentsTeam adds user to the organization's "students" team.
-func (s *GithubSCM) addUserToStudentsTeam(ctx context.Context, org, login string) error {
-	teamMember := &github.TeamAddTeamMembershipOptions{Role: TeamMember}
-	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, StudentsTeam, login, teamMember)
-	return err
-}
-
 // promoteToTeacher adds user to the organization's "teachers" team, and removes the user from the "students" team.
 func (s *GithubSCM) promoteToTeacher(ctx context.Context, org, login string) error {
-	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, org, StudentsTeam, login); err != nil {
-		return err
-	}
 	teamMaintainer := &github.TeamAddTeamMembershipOptions{Role: TeamMaintainer}
 	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login, teamMaintainer)
 	return err
