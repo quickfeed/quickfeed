@@ -368,7 +368,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 	// ensure the organization exists
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
+	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{ID: request.OrganizationID})
 	if err != nil {
 		return err
 	}

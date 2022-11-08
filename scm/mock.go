@@ -87,7 +87,7 @@ func NewMockSCMClientWithCourse() *MockSCM {
 
 // Clone copies the repository in testdata to the given destination path.
 func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
 		Name: opt.Organization,
 	}); err != nil {
 		return "", err
@@ -102,7 +102,7 @@ func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 }
 
 // GetOrganization implements the SCM interface.
-func (s *MockSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
+func (s *MockSCM) GetOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
@@ -161,7 +161,7 @@ func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -190,7 +190,7 @@ func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -217,7 +217,7 @@ func (s *MockSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, issueNum
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Owner}); err != nil {
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -238,7 +238,7 @@ func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Iss
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Owner}); err != nil {
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -261,7 +261,7 @@ func (s *MockSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issue
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Owner}); err != nil {
 		return errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -278,7 +278,7 @@ func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) erro
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Owner}); err != nil {
 		return errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -300,7 +300,7 @@ func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptio
 	if !opt.valid() {
 		return 0, fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
 		return 0, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -322,7 +322,7 @@ func (s *MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptio
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
 		return errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
@@ -359,7 +359,10 @@ func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error
 
 // CreateCourse creates repositories and teams for a new course.
 func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.OrganizationID, NewCourse: true})
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
+	}
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{ID: opt.OrganizationID, NewCourse: true})
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +405,7 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
-	org, err := s.GetOrganization(ctx, &GetOrgOptions{
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{
 		Name: opt.Organization,
 	})
 	if err != nil {
@@ -426,7 +429,7 @@ func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOpt
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
 		ID: opt.OrganizationID,
 	}); err != nil {
 		return errors.New("organization not found")
@@ -445,7 +448,7 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repositor
 	if !opt.valid() {
 		return nil, nil, fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
 		Name: opt.Organization,
 	}); err != nil {
 		return nil, nil, errors.New("organization not found")
@@ -474,7 +477,7 @@ func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
 		ID: opt.OrganizationID,
 	}); err != nil {
 		return errors.New("organization not found")

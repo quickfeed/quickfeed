@@ -576,7 +576,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	org, err := scmClient.GetOrganization(ctx, &scm.GetOrgOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
+	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {

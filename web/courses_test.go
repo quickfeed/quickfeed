@@ -18,13 +18,13 @@ func TestCreateAndGetCourse(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	cookie := Cookie(t, tm, admin)
 
 	wantCourse := qtest.MockCourses[0]
 	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	gotCourse, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
@@ -49,7 +49,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	cookie := Cookie(t, tm, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
@@ -81,7 +81,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	cookie := Cookie(t, tm, admin)
 
 	ctx := context.Background()
