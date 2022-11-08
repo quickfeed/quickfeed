@@ -20,8 +20,7 @@ type GroupOptions struct {
 }
 
 func (opt *GroupOptions) valid() bool {
-	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
-		opt.TeamID > 0
+	return opt.OrganizationID > 0 && opt.RepositoryID > 0 && opt.TeamID > 0
 }
 
 // UpdateEnrollmentOptions contain information about enrollment.
@@ -43,8 +42,7 @@ type RejectEnrollmentOptions struct {
 }
 
 func (opt *RejectEnrollmentOptions) valid() bool {
-	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
-		opt.User != ""
+	return opt.OrganizationID > 0 && opt.RepositoryID > 0 && opt.User != ""
 }
 
 // OrganizationOptions contain information about organization.
@@ -146,6 +144,5 @@ type RequestReviewersOptions struct {
 }
 
 func (opt RequestReviewersOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" &&
-		opt.Number > 0 && len(opt.Reviewers) != 0
+	return opt.Organization != "" && opt.Repository != "" && opt.Number > 0 && len(opt.Reviewers) != 0
 }

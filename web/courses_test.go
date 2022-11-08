@@ -18,7 +18,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateAdminUser(t, db, "fake")
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	cookie := Cookie(t, tm, admin)
 
 	wantCourse := qtest.MockCourses[0]
@@ -49,7 +49,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateAdminUser(t, db, "fake")
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	cookie := Cookie(t, tm, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
@@ -81,7 +81,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	admin := qtest.CreateAdminUser(t, db, "fake")
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	cookie := Cookie(t, tm, admin)
 
 	ctx := context.Background()
