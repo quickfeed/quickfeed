@@ -33,17 +33,9 @@ export class StreamService {
                 // The stream was canceled, so we don't need to reconnect.
                 // This happens when the stream is closed by the server
                 // which happens only if the user opens a new stream, i.e., opens the frontend in a new tab.
-                options.onError(new Error("Stream was canceled by the server"))
+                options.onError(new Error("Stream was canceled by the server."))
                 return
             }
-
-            /* TODO(jostein): 
-             * Our streams currently time out after 2 minutes.
-             * Once (if) https://github.com/golang/go/issues/54136 is accepted
-             * we should be able to set longer timeouts for streaming requests.
-             */
-            // TODO: Figure out we should wait even longer
-            // TODO: onError could prompt the user to manually reconnect
 
             // Attempt to reconnect up to log2(128) + 1 times, increasing delay between attempts by 2x each time
             // This is a total of 8 attempts with a maximum delay of 255 seconds
