@@ -37,7 +37,7 @@ func TestRefreshTokens(t *testing.T) {
 		return cookie.String()
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateAdminUser(t, db, "fake")
 	user := qtest.CreateFakeUser(t, db, 56)
 	adminCookie := f(t, admin.ID)
 	userCookie := f(t, user.ID)

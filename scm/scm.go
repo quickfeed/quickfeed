@@ -13,15 +13,11 @@ import (
 // i.e., GitHub.
 type SCM interface {
 	// Gets an organization.
-	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
-	// Create a new repository.
-	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
+	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// Create team.
-	CreateTeam(context.Context, *TeamOptions) (*Team, error)
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 
@@ -91,48 +87,6 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// CourseOptions contain information about new course.
-type CourseOptions struct {
-	OrganizationID uint64
-	CourseCreator  string
-}
-
-// UpdateEnrollmentOptions contain information about enrollment.
-type UpdateEnrollmentOptions struct {
-	Organization string
-	User         string
-	Status       qf.Enrollment_UserStatus
-}
-
-// RejectEnrollmentOptions contain information about enrollment.
-type RejectEnrollmentOptions struct {
-	OrganizationID uint64
-	RepositoryID   uint64
-	User           string
-}
-
-// GroupOptions contain information about group.
-type GroupOptions struct {
-	OrganizationID uint64
-	RepositoryID   uint64
-	TeamID         uint64
-}
-
-func (opt *GroupOptions) valid() bool {
-	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
-		opt.TeamID > 0
-}
-
-// GetOrgOptions contain information about organization.
-type GetOrgOptions struct {
-	ID   uint64
-	Name string
-	// Username field is used to filter organizations
-	// where the given user has a certain role.
-	Username  string
-	NewCourse bool // Get organization for a new course
-}
-
 // Repository represents a git remote repository.
 type Repository struct {
 	ID      uint64
@@ -141,37 +95,6 @@ type Repository struct {
 	HTMLURL string // Repository website.
 	OrgID   uint64
 	Size    uint64
-}
-
-// RepositoryOptions is used to fetch a single repository by ID or name.
-// Either ID or both Path and Owner fields must be set.
-type RepositoryOptions struct {
-	ID    uint64
-	Path  string
-	Owner string
-}
-
-// CreateRepositoryOptions contains information on how a repository should be created.
-type CreateRepositoryOptions struct {
-	Organization string
-	Path         string
-	Private      bool
-	Owner        string // The owner of an organization's repo is always the organization itself.
-	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
-}
-
-// TeamOptions used when creating a new team
-type TeamOptions struct {
-	Organization string
-	TeamName     string
-	Users        []string
-}
-
-// UpdateTeamOptions used when updating team members.
-type UpdateTeamOptions struct {
-	OrganizationID uint64
-	TeamID         uint64
-	Users          []string
 }
 
 // Team represents a git Team
@@ -195,34 +118,4 @@ type Issue struct {
 	Assignee   string
 	Status     string
 	Number     int
-}
-
-// IssueOptions contains information for creating or updating an Issue.
-type IssueOptions struct {
-	Organization string
-	Repository   string
-	Title        string
-	Body         string
-	State        string
-	Labels       *[]string
-	Assignee     *string
-	Assignees    *[]string
-	Number       int
-}
-
-// RequestReviewersOptions contains information on how to create or edit a pull request comment.
-type IssueCommentOptions struct {
-	Organization string
-	Repository   string
-	Body         string
-	Number       int
-	CommentID    int64
-}
-
-// RequestReviewersOptions contains information on how to assign reviewers to a pull request.
-type RequestReviewersOptions struct {
-	Organization string
-	Repository   string
-	Number       int
-	Reviewers    []string // Reviewers is a slice of github usernames
 }

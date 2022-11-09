@@ -46,8 +46,6 @@ const (
 
 	// TeachersTeam is the team with all teachers and teaching assistants of a course.
 	TeachersTeam = "allteachers"
-	// StudentsTeam is the team with all students of a course.
-	StudentsTeam = "allstudents"
 )
 
 const (
@@ -78,54 +76,6 @@ var (
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
 
-// Validators //
-
-func (opt GetOrgOptions) valid() bool {
-	return opt.ID != 0 || opt.Name != ""
-}
-
-func (opt UpdateEnrollmentOptions) valid() bool {
-	return opt.Organization != "" && opt.User != ""
-}
-
-func (opt *RejectEnrollmentOptions) valid() bool {
-	return opt.OrganizationID > 0 && opt.RepositoryID > 0 &&
-		opt.User != ""
-}
-
-func (opt UpdateTeamOptions) valid() bool {
-	return opt.TeamID > 0 && opt.OrganizationID > 0
-}
-
-func (opt CreateRepositoryOptions) valid() bool {
-	return opt.Organization != "" && opt.Path != ""
-}
-
-func (opt TeamOptions) valid() bool {
-	return opt.TeamName != "" && opt.Organization != ""
-}
-
-func (opt RepositoryOptions) valid() bool {
-	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
-}
-
-func (opt *IssueOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
-}
-
-func (opt RequestReviewersOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" &&
-		opt.Number > 0 && len(opt.Reviewers) != 0
-}
-
-func (opt IssueCommentOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
-}
-
-func (opt InvitationOptions) valid() bool {
-	return opt.Login != "" && opt.Owner != "" && opt.Token != ""
-}
-
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used
@@ -137,17 +87,6 @@ type ErrNotSupported struct {
 
 func (e ErrNotSupported) Error() string {
 	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
-}
-
-// ErrMissingFields is returned when scm struct validation fails.
-// This error only used for development/debugging and never goes to frontend user.
-type ErrMissingFields struct {
-	Message string
-	Method  string
-}
-
-func (e ErrMissingFields) Error() string {
-	return "github method " + e.Method + " called with missing required fields: " + e.Message
 }
 
 // ErrFailedSCM is returned to provide detailed information
