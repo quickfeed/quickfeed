@@ -567,18 +567,18 @@ func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-
+	teamName := slug.Make(opt.TeamName)
 	// check that the team name does not already exist for this organization
-	team, _, err := s.client.Teams.GetTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
+	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, teamName)
 	if err != nil {
 		// error expected to be 404 Not Found; logging here in case it's a different error
-		s.logger.Debugf("CreateTeam: check for team %s: %s", opt.TeamName, err)
+		s.logger.Debugf("CreateTeam: check for team %s: %s", teamName, err)
 	}
 
 	if team == nil {
-		s.logger.Debugf("CreateTeam: creating %s", opt.TeamName)
+		s.logger.Debugf("CreateTeam: creating %s", teamName)
 		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
-			Name: opt.TeamName,
+			Name: teamName,
 		})
 		if err != nil {
 			if opt.TeamName != TeachersTeam {
@@ -589,12 +589,12 @@ func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 				}
 			}
 			// continue if it is the standard teacher team that can be safely reused
-			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
+			s.logger.Debugf("Team %s already exists on organization %s", teamName, opt.Organization)
 		}
-		s.logger.Debugf("CreateTeam: done creating %s", opt.TeamName)
+		s.logger.Debugf("CreateTeam: done creating %s", teamName)
 	}
 	for _, user := range opt.Users {
-		s.logger.Debugf("CreateTeam: adding user %s to %s", user, opt.TeamName)
+		s.logger.Debugf("CreateTeam: adding user %s to %s", user, teamName)
 		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
 		if err != nil {
 			return nil, ErrFailedSCM{
