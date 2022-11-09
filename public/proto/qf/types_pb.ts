@@ -900,13 +900,6 @@ export class Assignment extends Message<Assignment> {
   name = "";
 
   /**
-   * this assignment's run.sh script (the content)
-   *
-   * @generated from field: string runScriptContent = 4;
-   */
-  runScriptContent = "";
-
-  /**
    * @generated from field: string deadline = 5;
    */
   deadline = "";
@@ -979,7 +972,6 @@ export class Assignment extends Message<Assignment> {
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "CourseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "runScriptContent", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "deadline", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 6, name: "autoApprove", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 7, name: "order", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
