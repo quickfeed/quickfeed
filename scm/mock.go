@@ -50,11 +50,6 @@ func NewMockSCMClientWithCourse() *MockSCM {
 			Name:         TeachersTeam,
 			Organization: qtest.MockOrg,
 		},
-		2: {
-			ID:           2,
-			Name:         StudentsTeam,
-			Organization: qtest.MockOrg,
-		},
 	}
 	s.Repositories = map[uint64]*Repository{
 		1: {
@@ -390,11 +385,6 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		1: {
 			ID:           1,
 			Name:         TeachersTeam,
-			Organization: org.Name,
-		},
-		2: {
-			ID:           2,
-			Name:         StudentsTeam,
 			Organization: org.Name,
 		},
 	}
