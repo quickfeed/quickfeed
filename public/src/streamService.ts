@@ -33,7 +33,7 @@ export class StreamService {
                 // The stream was canceled, so we don't need to reconnect.
                 // This happens when the stream is closed by the server
                 // which happens only if the user opens a new stream, i.e., opens the frontend in a new tab.
-                options.onError(error)
+                options.onError(new Error("Stream was canceled by the server"))
                 return
             }
 
@@ -55,7 +55,7 @@ export class StreamService {
                 this.backoff *= 2
             } else {
                 this.backoff = 1000
-                options.onError(error)
+                options.onError(new Error("An error occurred while connecting to the server"))
             }
         }
     }

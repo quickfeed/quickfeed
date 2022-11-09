@@ -22,9 +22,8 @@ export const onInitializeOvermind = ({ actions }: Context) => {
 }
 
 export const handleStreamError = (context: Context, error: Error): void => {
-    console.error(error)
     context.state.connectionStatus = ConnStatus.DISCONNECTED
-    context.actions.alert({ text: "An error occurred while connecting to the server", color: Color.RED })
+    context.actions.alert({ text: error.message, color: Color.RED })
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
@@ -793,7 +792,6 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         state.isLoading = false
     }
 
-    // Starts submission stream 
     actions.startSubmissionStream()
 
     // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
