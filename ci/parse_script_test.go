@@ -1,32 +1,31 @@
 package ci
 
 import (
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-// Testdata copied from run_tests_test.go (since they are in different packages)
-func testRunData(qfTestOrg, userName, runScriptContent string) *RunData {
+func testRunData(qfTestOrg string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
-	courseID := uint64(1)
 	runData := &RunData{
 		Course: &qf.Course{
-			ID:   courseID,
-			Code: "DAT320",
+			ID:               1,
+			Code:             "DAT320",
+			OrganizationName: qfTestOrg,
 		},
 		Assignment: &qf.Assignment{
-			Name:             "lab1",
-			RunScriptContent: runScriptContent,
-			ContainerTimeout: 1,
+			Name: "lab3",
 		},
 		Repo: &qf.Repository{
-			HTMLURL:  repo.StudentRepoURL(userName),
+			HTMLURL:  repo.StudentRepoURL("user"),
 			RepoType: qf.Repository_USER,
 		},
 		JobOwner: "muggles",
@@ -35,10 +34,40 @@ func testRunData(qfTestOrg, userName, runScriptContent string) *RunData {
 	return runData
 }
 
+func TestLoadRunScript(t *testing.T) {
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	runData := &RunData{
+		Course: &qf.Course{
+			ID:               1,
+			Code:             "qf104",
+			OrganizationName: "qf104-2022",
+		},
+		Assignment: &qf.Assignment{
+			Name: "lab1",
+		},
+	}
+	runSh, err := runData.loadRunScript()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(runSh) == 0 {
+		t.Error("run script is empty")
+	}
+	runData.Assignment = &qf.Assignment{Name: "lab2"}
+	runSh, err = runData.loadRunScript()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(runSh) == 0 {
+		t.Error("run script is empty")
+	}
+}
+
 func TestParseTestRunnerScript(t *testing.T) {
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+
 	const (
-		// these are only used in text; no access to qf101 organization or user is needed
-		qfTestOrg        = "qf101"
+		qfTestOrg        = "qf104-2022"
 		image            = "quickfeed:go"
 		runScriptContent = `#image/quickfeed:go
 echo $TESTS
@@ -47,12 +76,10 @@ echo $SUBMITTED
 echo $CURRENT
 echo $QUICKFEED_SESSION_SECRET
 `
-		githubUserName = "user"
-		accessToken    = "open sesame"
 	)
 	randomSecret := rand.String()
 
-	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
+	runData := testRunData(qfTestOrg)
 	job, err := runData.parseTestRunnerScript(randomSecret, "")
 	if err != nil {
 		t.Fatal(err)
@@ -65,7 +92,7 @@ echo $QUICKFEED_SESSION_SECRET
 		"HOME=" + QuickFeedPath,
 		"TESTS=" + filepath.Join(QuickFeedPath, qf.TestsRepo),
 		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
-		"SUBMITTED=" + filepath.Join(QuickFeedPath, qf.StudentRepoName(githubUserName)),
+		"SUBMITTED=" + filepath.Join(QuickFeedPath, qf.StudentRepoName("user")),
 		"CURRENT=" + runData.Assignment.GetName(),
 		"QUICKFEED_SESSION_SECRET=" + randomSecret,
 	}
@@ -86,37 +113,34 @@ echo $QUICKFEED_SESSION_SECRET
 			t.Errorf("job.Commands[%d] = %s, want %s", i, job.Commands[i], line)
 		}
 	}
-	if job.Name != "dat320-lab1-muggles-"+runData.CommitID[:6] {
-		t.Errorf("job.Name = %s, want %s", job.Name, "dat320-lab1-muggles-"+runData.CommitID[:6])
+	if job.Name != "dat320-lab3-muggles-"+runData.CommitID[:6] {
+		t.Errorf("job.Name = %s, want %s", job.Name, "dat320-lab3-muggles-"+runData.CommitID[:6])
 	}
 }
 
 func TestParseBadTestRunnerScript(t *testing.T) {
-	const (
-		// these are only used in text; no access to qf101 organization or user is needed
-		qfTestOrg      = "qf101"
-		image          = "quickfeed:go"
-		githubUserName = "user"
-		accessToken    = "open sesame"
-	)
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+
+	const qfTestOrg = "qf104-2022"
 	randomSecret := rand.String()
 
-	const runScriptContent = `#image/quickfeed:go`
-	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
-	_, err := runData.parseTestRunnerScript(randomSecret, "")
-	const wantMsg = "failed to parse run script for assignment lab1 in https://github.com/qf101/tests: empty run script"
+	runData := testRunData(qfTestOrg)
+	runData.Assignment = &qf.Assignment{Name: "lab4-bad-run-script"}
+	job, err := runData.parseTestRunnerScript(randomSecret, "")
+	if err == nil {
+		t.Fatalf("expected error, got nil: %+v", job)
+	}
+	const wantMsg = "failed to parse run script for assignment lab4-bad-run-script in https://github.com/qf104-2022/tests: empty run script"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
 	}
 
-	const runScriptContent2 = `
-start=$SECONDS
-printf "*** Preparing for Test Execution ***\n"
-
-`
-	runData = testRunData(qfTestOrg, githubUserName, runScriptContent2)
-	_, err = runData.parseTestRunnerScript(randomSecret, "")
-	const wantMsg2 = "failed to parse run script for assignment lab1 in https://github.com/qf101/tests: no docker image specified in run script"
+	runData.Assignment = &qf.Assignment{Name: "lab5-bad-run-script"}
+	job, err = runData.parseTestRunnerScript(randomSecret, "")
+	if err == nil {
+		t.Fatalf("expected error, got nil: %+v", job)
+	}
+	const wantMsg2 = "failed to parse run script for assignment lab5-bad-run-script in https://github.com/qf104-2022/tests: no docker image specified in run script"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
 	}

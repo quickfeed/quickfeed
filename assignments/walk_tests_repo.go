@@ -15,8 +15,6 @@ const (
 	assignmentFile     = "assignment.yml"
 	assignmentFileYaml = "assignment.yaml"
 	criteriaFile       = "criteria.json"
-	scriptFile         = "run.sh"
-	scriptFolder       = "scripts"
 	dockerfile         = "Dockerfile"
 	taskFilePattern    = "task-*.md"
 )
@@ -25,7 +23,6 @@ var patterns = []string{
 	assignmentFile,
 	assignmentFileYaml,
 	criteriaFile,
-	scriptFile,
 	dockerfile,
 	taskFilePattern,
 }
@@ -71,7 +68,6 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		}
 	}
 
-	var defaultScriptContent string
 	var courseDockerfile string
 
 	// Process other files in tests repository
@@ -95,14 +91,6 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
 
-		case scriptFile:
-			if assignmentName != scriptFolder {
-				// Found assignment-specific run script
-				assignmentsMap[assignmentName].RunScriptContent = string(contents)
-			} else {
-				defaultScriptContent = string(contents)
-			}
-
 		case dockerfile:
 			courseDockerfile = string(contents)
 		}
@@ -115,16 +103,6 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 				return nil, "", err
 			}
 			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].Tasks, task)
-		}
-	}
-
-	// If there is a run.sh script in the scripts folder, save it for each
-	// assignment that is missing an assignment-specific script.
-	if defaultScriptContent != "" {
-		for _, assignment := range assignmentsMap {
-			if assignment.RunScriptContent == "" {
-				assignment.RunScriptContent = defaultScriptContent
-			}
 		}
 	}
 

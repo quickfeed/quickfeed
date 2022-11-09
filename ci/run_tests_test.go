@@ -140,12 +140,8 @@ func TestRecordResults(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		CourseID: course.ID,
-		Name:     "lab1",
-		RunScriptContent: `#image/quickfeed:go
-printf "AssignmentName: {{ .AssignmentName }}\n"
-printf "RandomSecret: {{ .RandomSecret }}\n"
-`,
+		CourseID:         course.ID,
+		Name:             "lab1",
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
 		ScoreLimit:       70,
