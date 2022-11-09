@@ -648,7 +648,7 @@ func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login
 	return nil
 }
 
-// promoteToTeacher adds user to the organization's "teachers" team, and removes the user from the "students" team.
+// promoteToTeacher adds user to the organization's "teachers" team.
 func (s *GithubSCM) promoteToTeacher(ctx context.Context, org, login string) error {
 	teamMaintainer := &github.TeamAddTeamMembershipOptions{Role: TeamMaintainer}
 	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login, teamMaintainer)
