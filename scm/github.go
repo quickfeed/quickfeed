@@ -581,15 +581,11 @@ func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 			Name: teamName,
 		})
 		if err != nil {
-			if opt.TeamName != TeachersTeam {
-				return nil, ErrFailedSCM{
-					Method:   "CreateTeam",
-					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
-					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
-				}
+			return nil, ErrFailedSCM{
+				Method:   "CreateTeam",
+				Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
+				GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
 			}
-			// continue if it is the standard teacher team that can be safely reused
-			s.logger.Debugf("Team %s already exists on organization %s", teamName, opt.Organization)
 		}
 		s.logger.Debugf("CreateTeam: done creating %s", teamName)
 	}
