@@ -130,6 +130,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 		wh.logger.Error(err)
 		return
 	}
+	// If we fail to get owners, we ignore sending on the stream.
 	if userIDs, err := runData.GetOwners(wh.db); err == nil {
 		wh.streams.Submission.SendTo(submission, userIDs...)
 	}
