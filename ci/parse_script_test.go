@@ -70,11 +70,11 @@ func TestParseTestRunnerScript(t *testing.T) {
 		qfTestOrg        = "qf104-2022"
 		image            = "quickfeed:go"
 		runScriptContent = `#image/quickfeed:go
-echo $TESTS
-echo $ASSIGNMENTS
-echo $SUBMITTED
-echo $CURRENT
-echo $QUICKFEED_SESSION_SECRET
+echo "$TESTS"
+echo "$ASSIGNMENTS"
+echo "$SUBMITTED"
+echo "$CURRENT"
+echo "$QUICKFEED_SESSION_SECRET"
 `
 	)
 	randomSecret := rand.String()
