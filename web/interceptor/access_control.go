@@ -37,6 +37,7 @@ var accessRolesFor = map[string]roles{
 	"GetUser":                 {none},
 	"GetCourse":               {none},
 	"GetCourses":              {none},
+	"SubmissionStream":        {none}, // No role required as long as the user is authenticated, i.e. has a valid token.
 	"CreateEnrollment":        {user},
 	"UpdateCourseVisibility":  {user},
 	"GetCoursesByUser":        {user},

@@ -641,3 +641,12 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
+
+// SubmissionStream adds the the created stream to the stream service.
+// The stream may be used to send the submission results to the frontend.
+// The stream is closed when the client disconnects.
+func (s *QuickFeedService) SubmissionStream(ctx context.Context, _ *connect.Request[qf.Void], st *connect.ServerStream[qf.Submission]) error {
+	stream := stream.NewStream(ctx, st)
+	s.streams.Submission.Add(stream, userID(ctx))
+	return stream.Run()
+}
