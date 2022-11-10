@@ -60,7 +60,7 @@ func (s *Stream[T]) Run() error {
 			return s.ctx.Err()
 		case data, ok := <-s.ch:
 			if !ok {
-				return fmt.Errorf("stream closed")
+				return connect.NewError(connect.CodeCanceled, fmt.Errorf("stream closed"))
 			}
 			if err := s.stream.Send(data); err != nil {
 				return err

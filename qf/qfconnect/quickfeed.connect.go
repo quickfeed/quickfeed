@@ -69,6 +69,9 @@ type QuickFeedServiceClient interface {
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
+	// rpc Notify(Notification) returns (Void) {}
+	// rpc NotificationStream(Void) returns (stream Notification) {}
+	SubmissionStream(context.Context, *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error)
 }
 
 // NewQuickFeedServiceClient constructs a client for the qf.QuickFeedService service. By default, it
@@ -281,6 +284,11 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/IsEmptyRepo",
 			opts...,
 		),
+		submissionStream: connect_go.NewClient[qf.Void, qf.Submission](
+			httpClient,
+			baseURL+"/qf.QuickFeedService/SubmissionStream",
+			opts...,
+		),
 	}
 }
 
@@ -326,6 +334,7 @@ type quickFeedServiceClient struct {
 	getOrganization         *connect_go.Client[qf.OrgRequest, qf.Organization]
 	getRepositories         *connect_go.Client[qf.URLRequest, qf.Repositories]
 	isEmptyRepo             *connect_go.Client[qf.RepositoryRequest, qf.Void]
+	submissionStream        *connect_go.Client[qf.Void, qf.Submission]
 }
 
 // GetUser calls qf.QuickFeedService.GetUser.
@@ -528,6 +537,11 @@ func (c *quickFeedServiceClient) IsEmptyRepo(ctx context.Context, req *connect_g
 	return c.isEmptyRepo.CallUnary(ctx, req)
 }
 
+// SubmissionStream calls qf.QuickFeedService.SubmissionStream.
+func (c *quickFeedServiceClient) SubmissionStream(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error) {
+	return c.submissionStream.CallServerStream(ctx, req)
+}
+
 // QuickFeedServiceHandler is an implementation of the qf.QuickFeedService service.
 type QuickFeedServiceHandler interface {
 	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
@@ -572,6 +586,9 @@ type QuickFeedServiceHandler interface {
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
+	// rpc Notify(Notification) returns (Void) {}
+	// rpc NotificationStream(Void) returns (stream Notification) {}
+	SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error
 }
 
 // NewQuickFeedServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -781,6 +798,11 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 		svc.IsEmptyRepo,
 		opts...,
 	))
+	mux.Handle("/qf.QuickFeedService/SubmissionStream", connect_go.NewServerStreamHandler(
+		"/qf.QuickFeedService/SubmissionStream",
+		svc.SubmissionStream,
+		opts...,
+	))
 	return "/qf.QuickFeedService/", mux
 }
 
@@ -945,4 +967,8 @@ func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *co
 
 func (UnimplementedQuickFeedServiceHandler) IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.IsEmptyRepo is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error {
+	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.SubmissionStream is not implemented"))
 }
