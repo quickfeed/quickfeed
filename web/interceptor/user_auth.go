@@ -73,10 +73,6 @@ func (u *UserInterceptor) processHeader(header http.Header) (*auth.Claims, *http
 	if err != nil {
 		return nil, nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("failed to extract JWT claims from session cookie: %w", err))
 	}
-	// if !u.tm.UpdateRequired(claims) {
-	// 	return claims, nil, nil
-	// }
-	// u.logger.Debug("Updating cookie for user ", claims.UserID)
 	updatedCookie, err := u.tm.UpdateCookie(claims)
 	if err != nil {
 		return claims, nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("failed to update session cookie: %w", err))

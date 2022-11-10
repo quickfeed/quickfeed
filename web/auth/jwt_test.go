@@ -35,14 +35,24 @@ func TestNewManager(t *testing.T) {
 		Admin:   true,
 		Courses: make(map[uint64]qf.Enrollment_UserStatus, 0),
 	}
-	if manager.UpdateRequired(&user1claims) {
+	cookie, err := manager.UpdateCookie(&user1claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie != nil {
 		t.Error("JWT update required is true, expected false")
 	}
+
 	// But must require update if claims are about to expire.
 	user1claims.StandardClaims.ExpiresAt = time.Now().Unix() - 10
-	if !manager.UpdateRequired(&user1claims) {
+	cookie, err = manager.UpdateCookie(&user1claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie == nil {
 		t.Error("JWT update required is false for expiring token, expected true")
 	}
+
 	// User 2 must be in the update list.
 	user2claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -51,7 +61,11 @@ func TestNewManager(t *testing.T) {
 		UserID: user2.ID,
 		Admin:  false,
 	}
-	if !manager.UpdateRequired(&user2claims) {
+	cookie, err = manager.UpdateCookie(&user2claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie == nil {
 		t.Error("JWT update required is false, expected true")
 	}
 }
@@ -136,14 +150,22 @@ func TestUpdateTokenList(t *testing.T) {
 		Admin:  false,
 	}
 	// Admin should not be in the token update list.
-	if manager.UpdateRequired(claims) {
+	cookie, err := manager.UpdateCookie(claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie != nil {
 		t.Error("JWT update required is true, expected false")
 	}
 	// Adding user must update manager's update list and database record.
 	if err := manager.Add(admin.ID); err != nil {
 		t.Fatal(err)
 	}
-	if !manager.UpdateRequired(claims) {
+	cookie, err = manager.UpdateCookie(claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie == nil {
 		t.Error("JWT update required is false, expected true")
 	}
 	updatedUser, err := db.GetUser(admin.ID)
@@ -157,7 +179,11 @@ func TestUpdateTokenList(t *testing.T) {
 	if err := manager.Remove(admin.ID); err != nil {
 		t.Fatal(err)
 	}
-	if manager.UpdateRequired(claims) {
+	cookie, err = manager.UpdateCookie(claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie != nil {
 		t.Error("JWT update required is true, expected false")
 	}
 	updatedUser, err = db.GetUser(admin.ID)
