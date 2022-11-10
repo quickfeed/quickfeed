@@ -124,20 +124,14 @@ message SubmissionsForCourseRequest {
         INDIVIDUAL = 1;
         GROUP      = 2;
     }
-    uint64 courseID    = 1;
-    Type type          = 2;
+    uint64 courseID = 1;
+    Type type       = 2;
 }
 
 message RebuildRequest {
     uint64 courseID     = 1;
     uint64 assignmentID = 2;
     uint64 submissionID = 3;
-}
-
-message CourseUserRequest {
-    string courseCode = 1;
-    uint32 courseYear = 2;
-    string userLogin  = 3;
 }
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
