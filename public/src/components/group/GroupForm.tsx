@@ -105,7 +105,7 @@ const GroupForm = (): JSX.Element | null => {
                                 <div className="btn btn-danger ml-2" onClick={() => actions.setActiveGroup(null)}> Cancel </div>
                             </div>
                             :
-                            <div className="btn btn-primary" onClick={() => actions.createGroup({ courseID: courseID, users: userIds, name: group.name })}> Create Group </div>
+                            <div className="btn btn-primary" onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}> Create Group </div>
                         }
                     </div>
                 </div>
