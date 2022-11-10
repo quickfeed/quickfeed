@@ -56,9 +56,12 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	if err != nil {
 		return nil, err
 	}
-	submission, err = runData.RecordResults(s.logger, s.db, s.streams, results)
+	submission, err = runData.RecordResults(s.logger, s.db, results)
 	if err != nil {
 		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
+	}
+	if userIDs, err := runData.GetOwners(s.db); err == nil {
+		s.streams.Submission.SendTo(submission, userIDs...)
 	}
 	return submission, nil
 }

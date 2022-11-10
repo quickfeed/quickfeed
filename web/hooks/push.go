@@ -113,7 +113,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 	}
 	if assignment.GradedManually() {
 		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
-		if _, err := runData.RecordResults(wh.logger, wh.db, wh.streams, nil); err != nil {
+		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
 			wh.logger.Error(err)
 		}
 		return
@@ -125,9 +125,13 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 		wh.logger.Error(err)
 		return
 	}
-	if _, err = runData.RecordResults(wh.logger, wh.db, wh.streams, results); err != nil {
+	submission, err := runData.RecordResults(wh.logger, wh.db, results)
+	if err != nil {
 		wh.logger.Error(err)
 		return
+	}
+	if userIDs, err := runData.GetOwners(wh.db); err == nil {
+		wh.streams.Submission.SendTo(submission, userIDs...)
 	}
 	// Non-default branch indicates push to a group repo.
 	if !isDefaultBranch(payload) {
