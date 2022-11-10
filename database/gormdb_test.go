@@ -62,6 +62,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		UserID:       admin.ID,
 		Status:       qf.Enrollment_TEACHER,
 		State:        qf.Enrollment_VISIBLE,
+		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 	admin.RemoteIdentities = nil
@@ -72,6 +73,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		UserID:       student.ID,
 		Status:       qf.Enrollment_STUDENT,
 		State:        qf.Enrollment_VISIBLE,
+		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 	student.RemoteIdentities = nil
