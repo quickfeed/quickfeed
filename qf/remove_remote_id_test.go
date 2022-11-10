@@ -13,6 +13,7 @@ func TestUserRemoveRemoteID(t *testing.T) {
 		RefreshToken: "abc",
 	}
 	user.RemoveRemoteID()
+	checkUser(t, user)
 }
 
 func TestGroupRemoveRemoteID(t *testing.T) {
