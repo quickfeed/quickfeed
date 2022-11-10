@@ -157,17 +157,12 @@ func TestUpdateTokenList(t *testing.T) {
 	if cookie != nil {
 		t.Error("JWT update required is true, expected false")
 	}
+
 	// Adding user must update manager's update list and database record.
 	if err := manager.Add(admin.ID); err != nil {
 		t.Fatal(err)
 	}
-	cookie, err = manager.UpdateCookie(claims)
-	if err != nil {
-		t.Error(err)
-	}
-	if cookie == nil {
-		t.Error("JWT update required is false, expected true")
-	}
+	// Check database record first.
 	updatedUser, err := db.GetUser(admin.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -175,23 +170,37 @@ func TestUpdateTokenList(t *testing.T) {
 	if !updatedUser.UpdateToken {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
-	// Removing user must update token list and user record in the database.
-	if err := manager.Remove(admin.ID); err != nil {
-		t.Fatal(err)
-	}
+	// UpdateCookie will remove user from token list and update the database record.
 	cookie, err = manager.UpdateCookie(claims)
 	if err != nil {
 		t.Error(err)
 	}
-	if cookie != nil {
-		t.Error("JWT update required is true, expected false")
+	if cookie == nil {
+		t.Error("JWT update required is false, expected true")
 	}
+
+	// Adding and then removing user from the list.
+	if err := manager.Add(admin.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := manager.Remove(admin.ID); err != nil {
+		t.Fatal(err)
+	}
+	// Database record should be updated.
 	updatedUser, err = db.GetUser(admin.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if updatedUser.UpdateToken {
 		t.Error("User's 'UpdateToken' field not updated in the database")
+	}
+	// UpdateCookie must return nil and not an updated cookie.
+	cookie, err = manager.UpdateCookie(claims)
+	if err != nil {
+		t.Error(err)
+	}
+	if cookie != nil {
+		t.Error("JWT update required is true, expected false")
 	}
 }
 
@@ -214,9 +223,16 @@ func TestUpdateCookie(t *testing.T) {
 	if err := db.UpdateUser(user); err != nil {
 		t.Fatal(err)
 	}
+	// To trigger cookie update add user to the update list.
+	if err := tm.Add(user.ID); err != nil {
+		t.Error(err)
+	}
 	newCookie, err := tm.UpdateCookie(claims)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if newCookie == nil {
+		t.Error("expected updated cookie")
 	}
 	newClaims, err := tm.GetClaims(newCookie.String())
 	if err != nil {
