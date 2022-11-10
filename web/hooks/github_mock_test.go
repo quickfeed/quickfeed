@@ -72,8 +72,8 @@ func (wh *MockWebHook) Handle() http.HandlerFunc {
 				wh.handlePush(e)
 				<-wh.sem // release semaphore
 				atomic.AddInt32(&wh.currentConcurrencyCnt, -1)
-				wh.wg.Done()
 				wh.dup.Remove(commitID)
+				wh.wg.Done()
 			}()
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
