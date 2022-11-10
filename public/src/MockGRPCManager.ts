@@ -257,7 +257,7 @@ export class MockGrpcManager {
     public getEnrollmentsByCourse(courseID: bigint, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment_UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
-        const enrollmentList = this.enrollments.enrollments.filter(e => e.courseID === courseID && (!statuses || statuses.length == 0 || statuses.includes(e.status)))
+        const enrollmentList = this.enrollments.enrollments.filter(e => e.courseID === courseID && (!statuses || statuses.length === 0 || statuses.includes(e.status)))
         if (enrollmentList.length === 0) {
             return this.grpcSend<Enrollments>(null)
         }
@@ -333,7 +333,7 @@ export class MockGrpcManager {
             })
             group.users = (users)
         })
-        return this.grpcSend<Groups>(new Groups({ groups: groups }))
+        return this.grpcSend<Groups>(new Groups({ groups }))
     }
 
     public updateGroupStatus(groupID: bigint, status: Group_GroupStatus): Promise<IGrpcResponse<Void>> {
@@ -347,7 +347,7 @@ export class MockGrpcManager {
     public updateGroup(group: Group): Promise<IGrpcResponse<Group>> {
         const groupID = group.ID
         const currentGroup = this.groups.groups.find(g => g.ID === groupID && g.courseID === group.courseID)
-        if (currentGroup === undefined) {
+        if (!currentGroup) {
             return this.grpcSend<Group>(new Void(), new Status({ Code: BigInt(Code.NotFound) }))
         }
         // Remove enrollments where the user is not in the group
@@ -478,7 +478,7 @@ export class MockGrpcManager {
         if (submissions.length === 0) {
             return this.grpcSend<Submissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "No submissions found" }))
         }
-        return this.grpcSend<Submissions>(new Submissions({ submissions: submissions }))
+        return this.grpcSend<Submissions>(new Submissions({ submissions }))
     }
 
     public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
@@ -1268,13 +1268,13 @@ export class MockGrpcManager {
             for (let j = 0; j < gb.criteria.length; j++) {
                 const criterion = gb.criteria[j]
                 total++
-                if (criterion.grade == GradingCriterion_Grade.PASSED) {
+                if (criterion.grade === GradingCriterion_Grade.PASSED) {
                     score += Number(criterion.points)
                     totalApproved++
                 }
             }
         }
-        if (score == 0) {
+        if (score === 0) {
             score = 100 / total * totalApproved
         }
         return score
