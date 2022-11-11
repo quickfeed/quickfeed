@@ -39,13 +39,20 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         const assignment = submissionLink.assignment
         if (submission && assignment && isManuallyGraded(assignment)) {
             const reviews = state.review.reviews[assignment.CourseID.toString()][Number(submission.ID)] ?? []
+            // Check if the current user has any pending reviews for this submission
+            // Used to give cell a box shadow to indicate that the user has a pending review
+            const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID)
+            // Check if the this submission is the currently selected submission
+            // Used to highlight the cell
             const isSelected = state.activeSubmission === Number(submission.ID)
             const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
+            // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
+            // Used to visually indicate that the submission will be released for the given minimum score
             const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
             return ({
                 // TODO: Figure out a better way to visualize released submissions than '(r)'
                 value: `${reviews.length}/${assignment.reviewers} ${submission.released ? "(r)" : ""}`,
-                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
+                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink.clone())
                     actions.review.setSelectedReview(-1)
@@ -64,6 +71,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const getSubmissionCell = (submissionLink: SubmissionLink, enrollment: Enrollment): CellElement => {
         const submission = submissionLink.submission
         if (submission) {
+            // Check if the this submission is the currently selected submission
+            // Used to highlight the cell
             const isSelected = BigInt(state.activeSubmission) === submission.ID
             return ({
                 value: `${submission.score} %`,
