@@ -40,7 +40,7 @@ func TestNewManager(t *testing.T) {
 		t.Error(err)
 	}
 	if cookie != nil {
-		t.Error("JWT update required is true, expected false")
+		t.Error("expected nil, got updated cookie")
 	}
 
 	// But must require update if claims are about to expire.
@@ -50,7 +50,7 @@ func TestNewManager(t *testing.T) {
 		t.Error(err)
 	}
 	if cookie == nil {
-		t.Error("JWT update required is false for expiring token, expected true")
+		t.Error("expected updated cookie, got nil")
 	}
 
 	// User 2 must be in the update list.
@@ -66,7 +66,7 @@ func TestNewManager(t *testing.T) {
 		t.Error(err)
 	}
 	if cookie == nil {
-		t.Error("JWT update required is false, expected true")
+		t.Error("expected updated cookie, got nil")
 	}
 }
 
@@ -155,7 +155,7 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Error(err)
 	}
 	if cookie != nil {
-		t.Error("JWT update required is true, expected false")
+		t.Error("expected nil, got updated cookie")
 	}
 
 	// Adding user must update manager's update list and database record.
@@ -176,7 +176,7 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Error(err)
 	}
 	if cookie == nil {
-		t.Error("JWT update required is false, expected true")
+		t.Error("expected updated cookie, got nil")
 	}
 
 	// Adding and then removing user from the list.
@@ -200,7 +200,7 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Error(err)
 	}
 	if cookie != nil {
-		t.Error("JWT update required is true, expected false")
+		t.Error("expected nil, got updated cookie")
 	}
 }
 
@@ -232,7 +232,7 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	if newCookie == nil {
-		t.Error("expected updated cookie")
+		t.Error("expected updated cookie, got nil")
 	}
 	newClaims, err := tm.GetClaims(newCookie.String())
 	if err != nil {
