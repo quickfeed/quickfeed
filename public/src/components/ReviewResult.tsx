@@ -3,6 +3,7 @@ import { Review } from "../../proto/qf/types_pb"
 import { hasBenchmarks } from "../Helpers"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"
+import MarkReadyButton from "./manual-grading/MarkReadyButton"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
@@ -39,6 +40,9 @@ const ReviewResult = ({ review }: { review?: Review }): JSX.Element | null => {
             </tbody>
             <tfoot>
                 <SummaryFeedback review={review} />
+                <tr>
+                    <MarkReadyButton review={review} />
+                </tr>
             </tfoot>
         </table>
     )
