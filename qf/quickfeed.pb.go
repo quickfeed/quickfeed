@@ -25,7 +25,7 @@ var file_qf_quickfeed_proto_rawDesc = []byte{
 	0x0a, 0x12, 0x71, 0x66, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x71, 0x66, 0x1a, 0x0e, 0x71, 0x66, 0x2f, 0x74, 0x79, 0x70,
 	0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x71, 0x66, 0x2f, 0x72, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32, 0xde, 0x10, 0x0a, 0x10,
+	0x75, 0x65, 0x73, 0x74, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32, 0x90, 0x11, 0x0a, 0x10,
 	0x51, 0x75, 0x69, 0x63, 0x6b, 0x46, 0x65, 0x65, 0x64, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
 	0x12, 0x1f, 0x0a, 0x07, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x12, 0x08, 0x2e, 0x71, 0x66,
 	0x2e, 0x56, 0x6f, 0x69, 0x64, 0x1a, 0x08, 0x2e, 0x71, 0x66, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x22,
@@ -159,10 +159,13 @@ var file_qf_quickfeed_proto_rawDesc = []byte{
 	0x73, 0x69, 0x74, 0x6f, 0x72, 0x69, 0x65, 0x73, 0x22, 0x00, 0x12, 0x30, 0x0a, 0x0b, 0x49, 0x73,
 	0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x12, 0x15, 0x2e, 0x71, 0x66, 0x2e, 0x52,
 	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x08, 0x2e, 0x71, 0x66, 0x2e, 0x56, 0x6f, 0x69, 0x64, 0x22, 0x00, 0x42, 0x26, 0x5a, 0x21,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b,
-	0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71,
-	0x66, 0xba, 0x02, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x1a, 0x08, 0x2e, 0x71, 0x66, 0x2e, 0x56, 0x6f, 0x69, 0x64, 0x22, 0x00, 0x12, 0x30, 0x0a, 0x10,
+	0x53, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d,
+	0x12, 0x08, 0x2e, 0x71, 0x66, 0x2e, 0x56, 0x6f, 0x69, 0x64, 0x1a, 0x0e, 0x2e, 0x71, 0x66, 0x2e,
+	0x53, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x00, 0x30, 0x01, 0x42, 0x26,
+	0x5a, 0x21, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x71, 0x75, 0x69,
+	0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64,
+	0x2f, 0x71, 0x66, 0xba, 0x02, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var file_qf_quickfeed_proto_goTypes = []interface{}{
@@ -243,48 +246,50 @@ var file_qf_quickfeed_proto_depIdxs = []int32{
 	21, // 37: qf.QuickFeedService.GetOrganization:input_type -> qf.OrgRequest
 	22, // 38: qf.QuickFeedService.GetRepositories:input_type -> qf.URLRequest
 	23, // 39: qf.QuickFeedService.IsEmptyRepo:input_type -> qf.RepositoryRequest
-	2,  // 40: qf.QuickFeedService.GetUser:output_type -> qf.User
-	24, // 41: qf.QuickFeedService.GetUsers:output_type -> qf.Users
-	2,  // 42: qf.QuickFeedService.GetUserByCourse:output_type -> qf.User
-	0,  // 43: qf.QuickFeedService.UpdateUser:output_type -> qf.Void
-	6,  // 44: qf.QuickFeedService.GetGroup:output_type -> qf.Group
-	6,  // 45: qf.QuickFeedService.GetGroupByUserAndCourse:output_type -> qf.Group
-	25, // 46: qf.QuickFeedService.GetGroupsByCourse:output_type -> qf.Groups
-	6,  // 47: qf.QuickFeedService.CreateGroup:output_type -> qf.Group
-	6,  // 48: qf.QuickFeedService.UpdateGroup:output_type -> qf.Group
-	0,  // 49: qf.QuickFeedService.DeleteGroup:output_type -> qf.Void
-	8,  // 50: qf.QuickFeedService.GetCourse:output_type -> qf.Course
-	26, // 51: qf.QuickFeedService.GetCourses:output_type -> qf.Courses
-	26, // 52: qf.QuickFeedService.GetCoursesByUser:output_type -> qf.Courses
-	8,  // 53: qf.QuickFeedService.CreateCourse:output_type -> qf.Course
-	0,  // 54: qf.QuickFeedService.UpdateCourse:output_type -> qf.Void
-	0,  // 55: qf.QuickFeedService.UpdateCourseVisibility:output_type -> qf.Void
-	27, // 56: qf.QuickFeedService.GetAssignments:output_type -> qf.Assignments
-	0,  // 57: qf.QuickFeedService.UpdateAssignments:output_type -> qf.Void
-	11, // 58: qf.QuickFeedService.GetEnrollmentsByUser:output_type -> qf.Enrollments
-	11, // 59: qf.QuickFeedService.GetEnrollmentsByCourse:output_type -> qf.Enrollments
-	0,  // 60: qf.QuickFeedService.CreateEnrollment:output_type -> qf.Void
-	0,  // 61: qf.QuickFeedService.UpdateEnrollments:output_type -> qf.Void
-	28, // 62: qf.QuickFeedService.GetSubmissions:output_type -> qf.Submissions
-	29, // 63: qf.QuickFeedService.GetSubmission:output_type -> qf.Submission
-	30, // 64: qf.QuickFeedService.GetSubmissionsByCourse:output_type -> qf.CourseSubmissions
-	0,  // 65: qf.QuickFeedService.UpdateSubmission:output_type -> qf.Void
-	0,  // 66: qf.QuickFeedService.UpdateSubmissions:output_type -> qf.Void
-	0,  // 67: qf.QuickFeedService.RebuildSubmissions:output_type -> qf.Void
-	18, // 68: qf.QuickFeedService.CreateBenchmark:output_type -> qf.GradingBenchmark
-	0,  // 69: qf.QuickFeedService.UpdateBenchmark:output_type -> qf.Void
-	0,  // 70: qf.QuickFeedService.DeleteBenchmark:output_type -> qf.Void
-	19, // 71: qf.QuickFeedService.CreateCriterion:output_type -> qf.GradingCriterion
-	0,  // 72: qf.QuickFeedService.UpdateCriterion:output_type -> qf.Void
-	0,  // 73: qf.QuickFeedService.DeleteCriterion:output_type -> qf.Void
-	31, // 74: qf.QuickFeedService.CreateReview:output_type -> qf.Review
-	31, // 75: qf.QuickFeedService.UpdateReview:output_type -> qf.Review
-	32, // 76: qf.QuickFeedService.GetReviewers:output_type -> qf.Reviewers
-	33, // 77: qf.QuickFeedService.GetOrganization:output_type -> qf.Organization
-	34, // 78: qf.QuickFeedService.GetRepositories:output_type -> qf.Repositories
-	0,  // 79: qf.QuickFeedService.IsEmptyRepo:output_type -> qf.Void
-	40, // [40:80] is the sub-list for method output_type
-	0,  // [0:40] is the sub-list for method input_type
+	0,  // 40: qf.QuickFeedService.SubmissionStream:input_type -> qf.Void
+	2,  // 41: qf.QuickFeedService.GetUser:output_type -> qf.User
+	24, // 42: qf.QuickFeedService.GetUsers:output_type -> qf.Users
+	2,  // 43: qf.QuickFeedService.GetUserByCourse:output_type -> qf.User
+	0,  // 44: qf.QuickFeedService.UpdateUser:output_type -> qf.Void
+	6,  // 45: qf.QuickFeedService.GetGroup:output_type -> qf.Group
+	6,  // 46: qf.QuickFeedService.GetGroupByUserAndCourse:output_type -> qf.Group
+	25, // 47: qf.QuickFeedService.GetGroupsByCourse:output_type -> qf.Groups
+	6,  // 48: qf.QuickFeedService.CreateGroup:output_type -> qf.Group
+	6,  // 49: qf.QuickFeedService.UpdateGroup:output_type -> qf.Group
+	0,  // 50: qf.QuickFeedService.DeleteGroup:output_type -> qf.Void
+	8,  // 51: qf.QuickFeedService.GetCourse:output_type -> qf.Course
+	26, // 52: qf.QuickFeedService.GetCourses:output_type -> qf.Courses
+	26, // 53: qf.QuickFeedService.GetCoursesByUser:output_type -> qf.Courses
+	8,  // 54: qf.QuickFeedService.CreateCourse:output_type -> qf.Course
+	0,  // 55: qf.QuickFeedService.UpdateCourse:output_type -> qf.Void
+	0,  // 56: qf.QuickFeedService.UpdateCourseVisibility:output_type -> qf.Void
+	27, // 57: qf.QuickFeedService.GetAssignments:output_type -> qf.Assignments
+	0,  // 58: qf.QuickFeedService.UpdateAssignments:output_type -> qf.Void
+	11, // 59: qf.QuickFeedService.GetEnrollmentsByUser:output_type -> qf.Enrollments
+	11, // 60: qf.QuickFeedService.GetEnrollmentsByCourse:output_type -> qf.Enrollments
+	0,  // 61: qf.QuickFeedService.CreateEnrollment:output_type -> qf.Void
+	0,  // 62: qf.QuickFeedService.UpdateEnrollments:output_type -> qf.Void
+	28, // 63: qf.QuickFeedService.GetSubmissions:output_type -> qf.Submissions
+	29, // 64: qf.QuickFeedService.GetSubmission:output_type -> qf.Submission
+	30, // 65: qf.QuickFeedService.GetSubmissionsByCourse:output_type -> qf.CourseSubmissions
+	0,  // 66: qf.QuickFeedService.UpdateSubmission:output_type -> qf.Void
+	0,  // 67: qf.QuickFeedService.UpdateSubmissions:output_type -> qf.Void
+	0,  // 68: qf.QuickFeedService.RebuildSubmissions:output_type -> qf.Void
+	18, // 69: qf.QuickFeedService.CreateBenchmark:output_type -> qf.GradingBenchmark
+	0,  // 70: qf.QuickFeedService.UpdateBenchmark:output_type -> qf.Void
+	0,  // 71: qf.QuickFeedService.DeleteBenchmark:output_type -> qf.Void
+	19, // 72: qf.QuickFeedService.CreateCriterion:output_type -> qf.GradingCriterion
+	0,  // 73: qf.QuickFeedService.UpdateCriterion:output_type -> qf.Void
+	0,  // 74: qf.QuickFeedService.DeleteCriterion:output_type -> qf.Void
+	31, // 75: qf.QuickFeedService.CreateReview:output_type -> qf.Review
+	31, // 76: qf.QuickFeedService.UpdateReview:output_type -> qf.Review
+	32, // 77: qf.QuickFeedService.GetReviewers:output_type -> qf.Reviewers
+	33, // 78: qf.QuickFeedService.GetOrganization:output_type -> qf.Organization
+	34, // 79: qf.QuickFeedService.GetRepositories:output_type -> qf.Repositories
+	0,  // 80: qf.QuickFeedService.IsEmptyRepo:output_type -> qf.Void
+	29, // 81: qf.QuickFeedService.SubmissionStream:output_type -> qf.Submission
+	41, // [41:82] is the sub-list for method output_type
+	0,  // [0:41] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

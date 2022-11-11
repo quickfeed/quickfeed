@@ -380,9 +380,6 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
-     * rpc Notify(Notification) returns (Void) {}
-     * rpc NotificationStream(Void) returns (stream Notification) {}
-     *
      * @generated from rpc qf.QuickFeedService.SubmissionStream
      */
     submissionStream: {

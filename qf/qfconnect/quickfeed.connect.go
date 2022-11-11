@@ -69,8 +69,6 @@ type QuickFeedServiceClient interface {
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
-	// rpc Notify(Notification) returns (Void) {}
-	// rpc NotificationStream(Void) returns (stream Notification) {}
 	SubmissionStream(context.Context, *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error)
 }
 
@@ -586,8 +584,6 @@ type QuickFeedServiceHandler interface {
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
-	// rpc Notify(Notification) returns (Void) {}
-	// rpc NotificationStream(Void) returns (stream Notification) {}
 	SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error
 }
 
