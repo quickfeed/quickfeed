@@ -40,9 +40,13 @@ const ReviewResult = ({ review }: { review?: Review }): JSX.Element | null => {
             </tbody>
             <tfoot>
                 <SummaryFeedback review={review} />
-                <tr>
-                    <MarkReadyButton review={review} />
-                </tr>
+                {!review.ready
+                    ?
+                    <tr>
+                        <MarkReadyButton review={review} />
+                    </tr>
+                    : null
+                }
             </tfoot>
         </table>
     )
