@@ -737,12 +737,14 @@ export const refreshSubmission = async ({ effects }: Context, { link }: { link: 
     return link
 }
 
-export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink): Promise<void> => {
-    link = await actions.refreshSubmission({ link })
+export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink | null): Promise<void> => {
+    if (link) {
+        link = await actions.refreshSubmission({ link })
+    }
     state.activeSubmissionLink = link ? link : null
 }
 
-export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment): void => {
+export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment | null): void => {
     state.activeEnrollment = enrollment ? enrollment : null
 }
 

@@ -22,10 +22,10 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             actions.getAllCourseSubmissions(courseID)
         }
         return () => {
-            actions.setActiveSubmissionLink(undefined)
+            actions.setActiveSubmissionLink(null)
             actions.setGroupView(false)
             actions.review.setAssignmentID(BigInt(-1))
-            actions.setActiveEnrollment(undefined)
+            actions.setActiveEnrollment(null)
         }
     }, [state.courseSubmissions])
 
@@ -58,14 +58,13 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                     actions.review.setSelectedReview(-1)
                 }
             })
-        } else {
-            return ({
-                value: "N/A",
-                onClick: () => {
-                    actions.setActiveSubmissionLink(undefined)
-                }
-            })
         }
+        return ({
+            value: "N/A",
+            onClick: () => {
+                actions.setActiveSubmissionLink(null)
+            }
+        })
     }
 
     const getSubmissionCell = (submissionLink: SubmissionLink, enrollment: Enrollment): CellElement => {
@@ -82,15 +81,14 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                     actions.setActiveEnrollment(enrollment.clone())
                 }
             })
-        } else {
-            return ({
-                value: "N/A",
-                onClick: () => {
-                    actions.setActiveSubmissionLink(undefined)
-                    actions.setActiveEnrollment(undefined)
-                }
-            })
         }
+        return ({
+            value: "N/A",
+            onClick: () => {
+                actions.setActiveSubmissionLink(null)
+                actions.setActiveEnrollment(null)
+            }
+        })
     }
 
 
