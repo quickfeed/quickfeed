@@ -76,6 +76,9 @@ func (req *RepositoryRequest) IsValid() bool {
 // It must have a positive course ID and
 // a positive user ID or group ID but not both.
 func (req *SubmissionRequest) IsValid() bool {
+	// TODO(meling) check semantics after update
+	// TODO(meling) check previous use of SubmissionsForCourseRequest
+	// TODO(meling) check previous use of SubmissionReviewersRequest: req.CourseID > 0 && req.SubmissionID > 0
 	uid, gid := req.GetUserID(), req.GetGroupID()
 	return req.GetCourseID() > 0 &&
 		(uid == 0 && gid > 0) ||
@@ -103,11 +106,6 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that course ID is provided.
-func (req *SubmissionsForCourseRequest) IsValid() bool {
-	return req.GetCourseID() != 0
-}
-
 // IsValid ensures that both course and assignment IDs are set.
 func (req *RebuildRequest) IsValid() bool {
 	aid, cid := req.GetAssignmentID(), req.GetCourseID()
@@ -118,11 +116,6 @@ func (req *RebuildRequest) IsValid() bool {
 func (org *Organization) IsValid() bool {
 	id, path := org.GetID(), org.GetName()
 	return id > 0 || path != ""
-}
-
-// IsValid ensures that course ID and submission ID are present.
-func (req *SubmissionReviewersRequest) IsValid() bool {
-	return req.CourseID > 0 && req.SubmissionID > 0
 }
 
 // IsValid ensures that a review always has a reviewer and a submission IDs.

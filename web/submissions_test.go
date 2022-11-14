@@ -205,16 +205,18 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	wantGroupSubmissions := []*qf.Submission{submission3, submission4}
 
 	// default is all submissions
-	submissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	submissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
 	}, cookie))
 	if err != nil {
 		t.Error(err)
 	}
 	// be specific that we want all submissions
-	allSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	allSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
-		Type:     qf.SubmissionsForCourseRequest_ALL,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_ALL,
+		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -237,9 +239,11 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	}
 
 	// get only individual submissions
-	individualSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	individualSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
-		Type:     qf.SubmissionsForCourseRequest_INDIVIDUAL,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_USER,
+		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -258,9 +262,11 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	}
 
 	// get only group submissions
-	groupSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	groupSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
-		Type:     qf.SubmissionsForCourseRequest_GROUP,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_GROUP,
+		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -415,9 +421,11 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	labsForCourse1, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course1.ID,
-		Type:     qf.SubmissionsForCourseRequest_ALL,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_ALL,
+		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -436,7 +444,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse2, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	labsForCourse2, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course2.ID,
 	}, cookie))
 	if err != nil {
@@ -456,7 +464,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that buildInformation is not included when not requested
-	labsForCourse3, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	labsForCourse3, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course1.ID,
 	}, cookie))
 	if err != nil {
@@ -470,7 +478,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse4, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	labsForCourse4, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course2.ID,
 	}, cookie))
 	if err != nil {
@@ -487,7 +495,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that no submissions will be returned for a wrong course ID
-	if _, err = client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	if _, err = client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: 234,
 	}, cookie)); err == nil {
 		t.Error("Expected 'no submissions found'")
@@ -662,9 +670,11 @@ func TestCreateApproveList(t *testing.T) {
 	ctx := context.Background()
 	cookie := Cookie(t, tm, admin)
 
-	gotSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+	gotSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
-		Type:     qf.SubmissionsForCourseRequest_ALL,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_ALL,
+		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -895,7 +905,9 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	gotStudentSubmissions, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
-		UserID:   student1.ID,
+		FetchMode: &qf.SubmissionRequest_UserID{
+			UserID: student1.GetID(),
+		},
 	}, studentCookie))
 	if err != nil {
 		t.Error(err)
@@ -959,7 +971,9 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	gotStudentSubmissions, err = client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.ID,
-		UserID:   student1.ID,
+		FetchMode: &qf.SubmissionRequest_UserID{
+			UserID: student1.GetID(),
+		},
 	}, studentCookie))
 	if err != nil {
 		t.Error(err)
