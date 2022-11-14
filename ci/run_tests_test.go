@@ -221,7 +221,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Fatal(err)
 	}
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
-		t.Error("tudent must have reduced slip days")
+		t.Error("student must have reduced slip days")
 	}
 	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate); diff != "" {
 		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
@@ -251,8 +251,8 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updatedEnrollment.RemainingSlipDays(course) != slipDaysBeforeUpdate {
-		t.Errorf("Incorrect number of slip days: expected %d, got %d", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
+	if diff := cmp.Diff(slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course)); diff != "" {
+		t.Errorf("slip days mismatch: (-want +got):\n%s", diff)
 	}
 }
 
