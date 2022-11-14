@@ -43,7 +43,8 @@ func TestNewestSubmissionDate(t *testing.T) {
 	buildDate := time.Now()
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate: buildDate.Format(qf.TimeLayout),
+			BuildDate:      buildDate.Format(qf.TimeLayout),
+			SubmissionDate: buildDate.Format(qf.TimeLayout),
 		},
 	}
 	newBuildDate, err = submission.NewestSubmissionDate(tim)
