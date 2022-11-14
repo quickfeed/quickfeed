@@ -83,18 +83,10 @@ describe("User and enrollment validation", () => {
         const user = new User({
             ID: BigInt(6),
         })
-        const enrollment = new Enrollment({
-            ID: BigInt(1),
-            user: user,
-        })
-        const submission = new Submission({
-            ID: BigInt(1),
-        })
-        const submissionLink = new SubmissionLink({
-            submission: submission,
-        })
-        const submissionArray = [submissionLink]
-        const enrollmentLink = new EnrollmentLink({ enrollment: enrollment, submissions: submissionArray })
+        const enrollment = new Enrollment({ ID: BigInt(1), user })
+        const submission = new Submission({ ID: BigInt(1) })
+        const submissionLink = new SubmissionLink({ submission })
+        const enrollmentLink = new EnrollmentLink({ enrollment, submissions: [submissionLink] })
         const isValidEnrollmentLink = isValid(enrollmentLink)
         expect(isValidEnrollmentLink).toBe(true)
     })

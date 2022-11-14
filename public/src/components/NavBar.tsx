@@ -3,6 +3,7 @@ import { useActions, useAppState } from "../overmind"
 import { Link } from "react-router-dom"
 import NavFavorites from "./NavFavorites"
 import NavBarUser from "./navbar/NavBarUser"
+import StreamStatus from "./navbar/StreamStatus"
 
 
 const NavBar = (): JSX.Element => {
@@ -17,6 +18,7 @@ const NavBar = (): JSX.Element => {
                 <div className="navbar-brand clickable" style={{ marginLeft: "30px", fontSize: "30px" }}>
                     <Link to="/" style={{ color: "#d4d4d4", fontWeight: "bold" }}>QuickFeed</Link>
                     {hamburger}
+                    <StreamStatus />
                 </div>
             }
             {!state.isLoggedIn &&

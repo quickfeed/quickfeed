@@ -2,6 +2,7 @@ package score
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -43,6 +44,11 @@ func (s *registry) Validate() error {
 // This should be called after test registration has been completed,
 // but before test execution. This can be done in TestMain.
 //
+// If the environment variable SCORE_INFO is set to a non-empty value,
+// the test info will be printed and the program will exit.
+// This can be used to ensure that the test info is always printed;
+// otherwise, a test failure may prevent the test info from being printed.
+//
 // Will panic if called from a non-test function.
 func (s *registry) PrintTestInfo(sorted ...bool) {
 	callFrame()
@@ -54,6 +60,10 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 		if sc, ok := s.scores[name]; ok {
 			fmt.Println(sc.json())
 		}
+	}
+	// force exit after printing test info if SCORE_INIT is set
+	if os.Getenv("SCORE_INIT") != "" {
+		os.Exit(0)
 	}
 }
 

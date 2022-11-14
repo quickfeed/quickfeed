@@ -576,7 +576,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	org, err := scmClient.GetOrganization(ctx, &scm.GetOrgOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
+	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
@@ -640,4 +640,13 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository does not exist or not empty"))
 	}
 	return &connect.Response[qf.Void]{}, nil
+}
+
+// SubmissionStream adds the the created stream to the stream service.
+// The stream may be used to send the submission results to the frontend.
+// The stream is closed when the client disconnects.
+func (s *QuickFeedService) SubmissionStream(ctx context.Context, _ *connect.Request[qf.Void], st *connect.ServerStream[qf.Submission]) error {
+	stream := stream.NewStream(ctx, st)
+	s.streams.Submission.Add(stream, userID(ctx))
+	return stream.Run()
 }

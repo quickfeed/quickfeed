@@ -1,5 +1,6 @@
 import { MockGrpcManager } from "../MockGRPCManager"
 import { GrpcManager } from "../GRPCManager"
+import { StreamService } from "../streamService"
 
 
 // Effects should contain all impure functions used to manage state.
@@ -14,3 +15,5 @@ export const grpcMan: GrpcManager | MockGrpcManager = (() => {
     }
     return grpcMan
 })()
+
+export const streamService = new StreamService()

@@ -217,7 +217,7 @@ export class GrpcManager {
             courseID: courseID,
             userID: userID,
         })
-        return this.grpcSend<Submissions>(this.agService.getSubmission, request)
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
         const request = new SubmissionReviewersRequest({

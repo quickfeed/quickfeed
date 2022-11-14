@@ -125,3 +125,23 @@ func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission)
 	}
 	return nil
 }
+
+// GetOwners returns the UserIDs of a user or group repository's owners.
+// Returns an error if no owners could be found.
+// This method should only be called for a user or group repository.
+func (r RunData) GetOwners(db database.Database) ([]uint64, error) {
+	var owners []uint64
+	if r.Repo.IsUserRepo() {
+		owners = []uint64{r.Repo.GetUserID()}
+	}
+	if r.Repo.IsGroupRepo() {
+		group, err := db.GetGroup(r.Repo.GetGroupID())
+		if err == nil {
+			owners = group.UserIDs()
+		}
+	}
+	if len(owners) == 0 {
+		return nil, fmt.Errorf("failed to get owners for %s", r)
+	}
+	return owners, nil
+}

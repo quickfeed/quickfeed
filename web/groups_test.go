@@ -398,7 +398,7 @@ func TestDeleteGroup(t *testing.T) {
 		OrganizationName: "test",
 		ID:               1,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 
 	ctx := context.Background()
 	if _, err := client.CreateCourse(ctx, qtest.RequestWithCookie(&testCourse, Cookie(t, tm, admin))); err != nil {

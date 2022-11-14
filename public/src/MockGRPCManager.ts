@@ -361,7 +361,7 @@ export class MockGrpcManager {
     public updateGroup(group: Group): Promise<IGrpcResponse<Group>> {
         const groupID = group.ID
         const currentGroup = this.groups.groups.find(g => g.ID === groupID && g.courseID === group.courseID)
-        if (currentGroup === undefined) {
+        if (!currentGroup) {
             return this.grpcSend<Group>(new Void(), new Status({ Code: BigInt(Code.NotFound) }))
         }
         // Remove enrollments where the user is not in the group
@@ -753,7 +753,6 @@ export class MockGrpcManager {
                 Login: "Test User",
                 StudentID: "9999",
                 IsAdmin: true,
-
             })
         )
 

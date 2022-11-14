@@ -6,3 +6,7 @@ type InvitationOptions struct {
 	Owner        string // Name of the organization.
 	RefreshToken string // Refresh token for the user.
 }
+
+func (opt InvitationOptions) valid() bool {
+	return opt.Login != "" && opt.Owner != "" && opt.RefreshToken != ""
+}
