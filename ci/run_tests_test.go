@@ -160,9 +160,10 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
-		BuildLog:  "Testing",
-		ExecTime:  33333,
+		SubmissionDate: "2022-11-10T13:00:00",
+		BuildDate:      "2022-11-10T13:00:00",
+		BuildLog:       "Testing",
+		ExecTime:       33333,
 	}
 	testScores := []*score.Score{
 		{

@@ -11,13 +11,13 @@ import (
 func TestNewestSubmissionDate(t *testing.T) {
 	submission := &qf.Submission{}
 	tim := time.Now()
-	newBuildDate, err := submission.NewestBuildDate(tim)
+	newBuildDate, err := submission.NewestSubmissionDate(tim)
 	if err == nil {
 		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
 	}
 
 	submission = &qf.Submission{}
-	newBuildDate, err = submission.NewestBuildDate(tim)
+	newBuildDate, err = submission.NewestSubmissionDate(tim)
 	if err == nil {
 		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
 	}
@@ -25,7 +25,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{},
 	}
-	newBuildDate, err = submission.NewestBuildDate(tim)
+	newBuildDate, err = submission.NewestSubmissionDate(tim)
 	if err == nil {
 		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
 	}
@@ -35,7 +35,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 			BuildDate: "string",
 		},
 	}
-	newBuildDate, err = submission.NewestBuildDate(tim)
+	newBuildDate, err = submission.NewestSubmissionDate(tim)
 	if err == nil {
 		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
 	}
@@ -46,7 +46,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 			BuildDate: buildDate.Format(qf.TimeLayout),
 		},
 	}
-	newBuildDate, err = submission.NewestBuildDate(tim)
+	newBuildDate, err = submission.NewestSubmissionDate(tim)
 	if err != nil {
 		t.Error(err)
 	}
