@@ -223,7 +223,7 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 		enrolLinks = makeGroupResults(course, assignments)
 	case qf.SubmissionRequest_USER:
 		enrolLinks = makeIndividualResults(course, assignments)
-	default: // case qf.SubmissionsForCourseRequest_ALL:
+	case qf.SubmissionRequest_ALL:
 		enrolLinks = makeAllResults(course, assignments)
 	}
 	return &qf.CourseSubmissions{Course: course, Links: enrolLinks}, nil
