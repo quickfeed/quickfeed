@@ -78,8 +78,8 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
 	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
 		// Keep previous submission's delivery date if this is a rebuild.
-		results.BuildInfo.BuildDate = previous.BuildInfo.BuildDate
-	} // TODO(vera)
+		results.BuildInfo.SubmissionDate = previous.BuildInfo.SubmissionDate
+	}
 	score := results.Sum()
 	return &qf.Submission{
 		ID:           previous.GetID(),
