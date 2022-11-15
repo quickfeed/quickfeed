@@ -13,7 +13,7 @@ func TestImplementsValidation(t *testing.T) {
 		T = true
 		F = false
 	)
-	var tests = map[protoreflect.FullName]*struct {
+	tests := map[protoreflect.FullName]*struct {
 		cleaner   bool
 		validator bool
 		found     bool
@@ -58,7 +58,6 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.Organization":                {cleaner: F, validator: T},
 		"qf.GetGroupRequest":             {cleaner: F, validator: T},
 		"qf.EnrollmentStatusRequest":     {cleaner: F, validator: T},
-		"qf.CourseUserRequest":           {cleaner: F, validator: T},
 		"qf.SubmissionRequest":           {cleaner: F, validator: T},
 		"qf.ReviewRequest":               {cleaner: F, validator: T},
 		"qf.RepositoryRequest":           {cleaner: F, validator: T},

@@ -132,8 +132,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "CreateEnrollment", err, tt.wantCode, tt.wantAccess)
 			_, err = client.UpdateCourseVisibility(ctx, qtest.RequestWithCookie(enrol, tt.cookie))
 			checkAccess(t, "UpdateCourseVisibility", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetCoursesByUser(ctx, qtest.RequestWithCookie(enrolRequest, tt.cookie))
-			checkAccess(t, "GetCoursesByUser", err, tt.wantCode, tt.wantAccess)
 			_, err = client.UpdateUser(ctx, qtest.RequestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(enrolRequest, tt.cookie))
@@ -286,12 +284,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
 			_, err = client.CreateCourse(ctx, qtest.RequestWithCookie(course, tt.cookie))
 			checkAccess(t, "CreateCourse", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetUserByCourse(ctx, qtest.RequestWithCookie(&qf.CourseUserRequest{
-				CourseCode: course.Code,
-				CourseYear: course.Year,
-				UserLogin:  "student",
-			}, tt.cookie))
-			checkAccess(t, "GetUserByCourse", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 
