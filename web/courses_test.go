@@ -292,24 +292,25 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	courses_request := &qf.EnrollmentStatusRequest{UserID: user.ID}
-	courses, err := client.GetCoursesByUser(context.Background(), qtest.RequestWithCookie(courses_request, Cookie(t, tm, user)))
+	gotUser, err := client.GetUser(context.Background(), qtest.RequestWithCookie(&qf.Void{}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
 
-	wantCourses := []*qf.Course{
-		{ID: testCourses[0].ID, Enrolled: qf.Enrollment_PENDING},
-		{ID: testCourses[1].ID, Enrolled: qf.Enrollment_NONE},
-		{ID: testCourses[2].ID, Enrolled: qf.Enrollment_STUDENT},
-		{ID: testCourses[3].ID, Enrolled: qf.Enrollment_NONE},
+	wantCourses := map[uint64]qf.Enrollment_UserStatus{
+		testCourses[0].ID: qf.Enrollment_PENDING,
+		testCourses[1].ID: qf.Enrollment_NONE,
+		testCourses[2].ID: qf.Enrollment_STUDENT,
+		testCourses[3].ID: qf.Enrollment_NONE,
 	}
-	for i, course := range courses.Msg.Courses {
-		if course.ID != wantCourses[i].ID {
-			t.Errorf("have course %+v want %+v", course.ID, wantCourses[i].ID)
+	for _, enrollment := range gotUser.Msg.GetEnrollments() {
+		course := enrollment.Course
+		wantStatus, ok := wantCourses[course.ID]
+		if !ok {
+			t.Errorf("unexpected course: %+v", course.ID)
 		}
-		if course.Enrolled != wantCourses[i].Enrolled {
-			t.Errorf("have course %+v want %+v", course.Enrolled, wantCourses[i].Enrolled)
+		if enrollment.Status != wantStatus {
+			t.Errorf("have course %+v want %+v", enrollment.Status, wantStatus)
 		}
 	}
 }
@@ -364,20 +365,44 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stats := make([]qf.Enrollment_UserStatus, 0)
-	stats = append(stats, qf.Enrollment_STUDENT)
-	course_req := &qf.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
-	courses, err := client.GetCoursesByUser(context.Background(), qtest.RequestWithCookie(course_req, Cookie(t, tm, user)))
+	gotUser, err := client.GetUser(context.Background(), qtest.RequestWithCookie(&qf.Void{}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
+	gotCourses := make([]*qf.Course, 0)
+	for _, enrollment := range gotUser.Msg.GetEnrollments() {
+		// since GetUser returns all enrollments, we only keep the student enrollments
+		if enrollment.Status == qf.Enrollment_STUDENT {
+			course := enrollment.Course
+			course.Enrolled = enrollment.Status
+			gotCourses = append(gotCourses, course)
+		}
+	}
+
+	stats := make([]qf.Enrollment_UserStatus, 0)
+	stats = append(stats, qf.Enrollment_STUDENT)
+	course_req := &qf.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
+	enrollments, err := client.GetEnrollmentsByUser(context.Background(), qtest.RequestWithCookie(course_req, Cookie(t, tm, user)))
+	if err != nil {
+		t.Error(err)
+	}
+	gotCourses2 := make([]*qf.Course, 0)
+	for _, enrollment := range enrollments.Msg.GetEnrollments() {
+		// since GetEnrollmentsByUser returns only student enrollments
+		course := enrollment.Course
+		course.Enrolled = enrollment.Status
+		gotCourses2 = append(gotCourses2, course)
+	}
+
 	wantCourses, err := db.GetCoursesByUser(user.ID, qf.Enrollment_STUDENT)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotCourses := courses.Msg.Courses
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCoursesByUser() mismatch (-wantCourses +gotCourses):\n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantCourses +gotCourses):\n%s", diff)
+	}
+	if diff := cmp.Diff(wantCourses, gotCourses2, protocmp.Transform()); diff != "" {
+		t.Errorf("GetEnrollmentsByUser() mismatch (-wantCourses +gotCourses2):\n%s", diff)
 	}
 }
 

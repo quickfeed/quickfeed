@@ -38,7 +38,6 @@ func TestFetchAssignments(t *testing.T) {
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	for _, assignment := range assignments {
-		assignment.RunScriptContent = "redacted" // too much noise otherwise
 		t.Logf("%+v", assignment)
 	}
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
@@ -63,23 +62,21 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Assignment that will be updated
 	assignment := &qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "Assignment 1",
-		RunScriptContent: "Script for assignment 1",
-		Deadline:         "12.12.2021",
-		AutoApprove:      false,
-		Order:            1,
-		IsGroupLab:       false,
+		CourseID:    course.ID,
+		Name:        "Assignment 1",
+		Deadline:    "12.12.2021",
+		AutoApprove: false,
+		Order:       1,
+		IsGroupLab:  false,
 	}
 
 	assignment2 := &qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "Assignment 2",
-		RunScriptContent: "Script for assignment 1",
-		Deadline:         "12.01.2022",
-		AutoApprove:      false,
-		Order:            2,
-		IsGroupLab:       false,
+		CourseID:    course.ID,
+		Name:        "Assignment 2",
+		Deadline:    "12.01.2022",
+		AutoApprove: false,
+		Order:       2,
+		IsGroupLab:  false,
 	}
 
 	for _, a := range []*qf.Assignment{assignment, assignment2} {

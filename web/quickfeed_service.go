@@ -65,17 +65,6 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Voi
 	}), nil
 }
 
-// GetUserByCourse returns the user for the given SCM login name if enrolled in the given course.
-func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Request[qf.CourseUserRequest]) (*connect.Response[qf.User], error) {
-	query := &qf.Course{Code: in.Msg.CourseCode, Year: in.Msg.CourseYear}
-	user, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
-	if err != nil {
-		s.logger.Errorf("GetUserByCourse failed: %v", err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get student information"))
-	}
-	return connect.NewResponse(user), nil
-}
-
 // UpdateUser updates the current users's information and returns the updated user.
 // This function can also promote a user to admin or demote a user.
 func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
@@ -222,18 +211,6 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 		}
 	}
 	return &connect.Response[qf.Void]{}, nil
-}
-
-// GetCoursesByUser returns all courses for the given user that match the provided enrollment status.
-func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Courses], error) {
-	courses, err := s.db.GetCoursesByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
-	if err != nil {
-		s.logger.Errorf("GetCoursesByUser failed: user %d: %v", in.Msg.GetUserID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("no courses with enrollment found"))
-	}
-	return connect.NewResponse(&qf.Courses{
-		Courses: courses,
-	}), nil
 }
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.

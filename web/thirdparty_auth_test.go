@@ -25,12 +25,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 	))
 	ctx := context.Background()
 
-	request := connect.NewRequest(&qf.CourseUserRequest{
-		CourseCode: "DAT320",
-		CourseYear: 2021,
-		UserLogin:  user.Login,
-	})
-	userInfo, err := client.GetUserByCourse(ctx, request)
+	userInfo, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))
 	check(t, err)
 	if userInfo.Msg.ID != user.ID {
 		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
