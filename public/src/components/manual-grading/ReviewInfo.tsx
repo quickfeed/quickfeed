@@ -47,7 +47,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
-                {state.review.reviewer?.name}
+                {state.review.reviewer?.Name}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>

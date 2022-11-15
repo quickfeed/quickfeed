@@ -25,10 +25,12 @@ Certbot
 certonly
 certutil
 Chacon
+classname
 cmds
 cmpopts
 codecov
 connectweb
+consts
 containertimeout
 copytruncate
 covermode
