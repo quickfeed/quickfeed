@@ -19,7 +19,7 @@ func Run(cmd string) error {
 // RunA runs the given command, directing stderr to the command's stderr and
 // printing stdout to stdout. RunA returns an error if any.
 func RunA(cmd string, args ...string) error {
-	_, err := run(os.Stdout, os.Stderr, cmd, args...)
+	_, err := internalRun(os.Stdout, os.Stderr, cmd, args...)
 	return err
 }
 
@@ -34,7 +34,7 @@ func Output(cmd string) (string, error) {
 // The command's stderr is sent to stderr.
 func OutputA(cmd string, args ...string) (string, error) {
 	stdout := &bytes.Buffer{}
-	_, err := run(stdout, os.Stderr, cmd, args...)
+	_, err := internalRun(stdout, os.Stderr, cmd, args...)
 	return strings.TrimSuffix(stdout.String(), "\n"), err
 }
 
@@ -48,11 +48,11 @@ func OutputErr(cmd string) (string, string, error) {
 func OutputErrA(cmd string, args ...string) (string, string, error) {
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
-	_, err := run(stdout, stderr, cmd, args...)
+	_, err := internalRun(stdout, stderr, cmd, args...)
 	return strings.TrimSuffix(stdout.String(), "\n"), strings.TrimSuffix(stderr.String(), "\n"), err
 }
 
-func run(stdout, stderr io.Writer, cmd string, args ...string) (ran bool, err error) {
+func internalRun(stdout, stderr io.Writer, cmd string, args ...string) (ran bool, err error) {
 	c := exec.Command(cmd, args...)
 	c.Stderr = stderr
 	c.Stdout = stdout
