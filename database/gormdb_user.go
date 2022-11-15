@@ -69,7 +69,11 @@ func (db *GormDB) GetUserByCourse(query *qf.Course, login string) (*qf.User, err
 // GetUserWithEnrollments returns user with the given ID with all enrollments.
 func (db *GormDB) GetUserWithEnrollments(userID uint64) (*qf.User, error) {
 	var user qf.User
-	if err := db.conn.Preload("Enrollments").Preload("Enrollments.UsedSlipDays").First(&user, userID).Error; err != nil {
+	if err := db.conn.
+		Preload("Enrollments").
+		Preload("Enrollments.Course").
+		Preload("Enrollments.UsedSlipDays").
+		First(&user, userID).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

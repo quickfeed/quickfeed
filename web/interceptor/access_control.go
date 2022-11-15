@@ -40,7 +40,6 @@ var accessRolesFor = map[string]roles{
 	"SubmissionStream":        {none}, // No role required as long as the user is authenticated, i.e. has a valid token.
 	"CreateEnrollment":        {user},
 	"UpdateCourseVisibility":  {user},
-	"GetCoursesByUser":        {user},
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {student, group, teacher},
@@ -71,7 +70,6 @@ var accessRolesFor = map[string]roles{
 	"GetReviewers":            {teacher},
 	"IsEmptyRepo":             {teacher},
 	"GetSubmissionsByCourse":  {teacher},
-	"GetUserByCourse":         {teacher, admin},
 	"GetUsers":                {admin},
 	"GetOrganization":         {admin},
 	"CreateCourse":            {admin},
@@ -161,13 +159,6 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					}
 				}
 			case teacher:
-				if method == "GetUserByCourse" {
-					if err := claims.IsCourseTeacher(a.tokenManager.Database(), request.Any().(*qf.CourseUserRequest)); err != nil {
-						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("access denied for %s: %w", method, err))
-					}
-					return next(ctx, request)
-				}
 				if method == "RebuildSubmissions" || method == "UpdateSubmission" {
 					if !isValidSubmission(a.tokenManager.Database(), req) {
 						return nil, connect.NewError(connect.CodePermissionDenied,

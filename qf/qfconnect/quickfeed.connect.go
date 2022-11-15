@@ -29,7 +29,6 @@ const (
 type QuickFeedServiceClient interface {
 	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
 	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
-	GetUserByCourse(context.Context, *connect_go.Request[qf.CourseUserRequest]) (*connect_go.Response[qf.User], error)
 	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
 	GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
@@ -39,7 +38,6 @@ type QuickFeedServiceClient interface {
 	DeleteGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Void], error)
 	GetCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Course], error)
 	GetCourses(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error)
-	GetCoursesByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Courses], error)
 	CreateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error)
 	UpdateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Void], error)
 	UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
@@ -92,11 +90,6 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/GetUsers",
 			opts...,
 		),
-		getUserByCourse: connect_go.NewClient[qf.CourseUserRequest, qf.User](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/GetUserByCourse",
-			opts...,
-		),
 		updateUser: connect_go.NewClient[qf.User, qf.Void](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/UpdateUser",
@@ -140,11 +133,6 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 		getCourses: connect_go.NewClient[qf.Void, qf.Courses](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/GetCourses",
-			opts...,
-		),
-		getCoursesByUser: connect_go.NewClient[qf.EnrollmentStatusRequest, qf.Courses](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/GetCoursesByUser",
 			opts...,
 		),
 		createCourse: connect_go.NewClient[qf.Course, qf.Course](
@@ -294,7 +282,6 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 type quickFeedServiceClient struct {
 	getUser                 *connect_go.Client[qf.Void, qf.User]
 	getUsers                *connect_go.Client[qf.Void, qf.Users]
-	getUserByCourse         *connect_go.Client[qf.CourseUserRequest, qf.User]
 	updateUser              *connect_go.Client[qf.User, qf.Void]
 	getGroup                *connect_go.Client[qf.GetGroupRequest, qf.Group]
 	getGroupByUserAndCourse *connect_go.Client[qf.GroupRequest, qf.Group]
@@ -304,7 +291,6 @@ type quickFeedServiceClient struct {
 	deleteGroup             *connect_go.Client[qf.GroupRequest, qf.Void]
 	getCourse               *connect_go.Client[qf.CourseRequest, qf.Course]
 	getCourses              *connect_go.Client[qf.Void, qf.Courses]
-	getCoursesByUser        *connect_go.Client[qf.EnrollmentStatusRequest, qf.Courses]
 	createCourse            *connect_go.Client[qf.Course, qf.Course]
 	updateCourse            *connect_go.Client[qf.Course, qf.Void]
 	updateCourseVisibility  *connect_go.Client[qf.Enrollment, qf.Void]
@@ -343,11 +329,6 @@ func (c *quickFeedServiceClient) GetUser(ctx context.Context, req *connect_go.Re
 // GetUsers calls qf.QuickFeedService.GetUsers.
 func (c *quickFeedServiceClient) GetUsers(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error) {
 	return c.getUsers.CallUnary(ctx, req)
-}
-
-// GetUserByCourse calls qf.QuickFeedService.GetUserByCourse.
-func (c *quickFeedServiceClient) GetUserByCourse(ctx context.Context, req *connect_go.Request[qf.CourseUserRequest]) (*connect_go.Response[qf.User], error) {
-	return c.getUserByCourse.CallUnary(ctx, req)
 }
 
 // UpdateUser calls qf.QuickFeedService.UpdateUser.
@@ -393,11 +374,6 @@ func (c *quickFeedServiceClient) GetCourse(ctx context.Context, req *connect_go.
 // GetCourses calls qf.QuickFeedService.GetCourses.
 func (c *quickFeedServiceClient) GetCourses(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error) {
 	return c.getCourses.CallUnary(ctx, req)
-}
-
-// GetCoursesByUser calls qf.QuickFeedService.GetCoursesByUser.
-func (c *quickFeedServiceClient) GetCoursesByUser(ctx context.Context, req *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Courses], error) {
-	return c.getCoursesByUser.CallUnary(ctx, req)
 }
 
 // CreateCourse calls qf.QuickFeedService.CreateCourse.
@@ -544,7 +520,6 @@ func (c *quickFeedServiceClient) SubmissionStream(ctx context.Context, req *conn
 type QuickFeedServiceHandler interface {
 	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
 	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
-	GetUserByCourse(context.Context, *connect_go.Request[qf.CourseUserRequest]) (*connect_go.Response[qf.User], error)
 	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
 	GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
@@ -554,7 +529,6 @@ type QuickFeedServiceHandler interface {
 	DeleteGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Void], error)
 	GetCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Course], error)
 	GetCourses(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error)
-	GetCoursesByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Courses], error)
 	CreateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error)
 	UpdateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Void], error)
 	UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
@@ -604,11 +578,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 		svc.GetUsers,
 		opts...,
 	))
-	mux.Handle("/qf.QuickFeedService/GetUserByCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetUserByCourse",
-		svc.GetUserByCourse,
-		opts...,
-	))
 	mux.Handle("/qf.QuickFeedService/UpdateUser", connect_go.NewUnaryHandler(
 		"/qf.QuickFeedService/UpdateUser",
 		svc.UpdateUser,
@@ -652,11 +621,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 	mux.Handle("/qf.QuickFeedService/GetCourses", connect_go.NewUnaryHandler(
 		"/qf.QuickFeedService/GetCourses",
 		svc.GetCourses,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetCoursesByUser", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetCoursesByUser",
-		svc.GetCoursesByUser,
 		opts...,
 	))
 	mux.Handle("/qf.QuickFeedService/CreateCourse", connect_go.NewUnaryHandler(
@@ -813,10 +777,6 @@ func (UnimplementedQuickFeedServiceHandler) GetUsers(context.Context, *connect_g
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetUsers is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetUserByCourse(context.Context, *connect_go.Request[qf.CourseUserRequest]) (*connect_go.Response[qf.User], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetUserByCourse is not implemented"))
-}
-
 func (UnimplementedQuickFeedServiceHandler) UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateUser is not implemented"))
 }
@@ -851,10 +811,6 @@ func (UnimplementedQuickFeedServiceHandler) GetCourse(context.Context, *connect_
 
 func (UnimplementedQuickFeedServiceHandler) GetCourses(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourses is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) GetCoursesByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Courses], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCoursesByUser is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) CreateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error) {

@@ -185,21 +185,6 @@ func (c *Claims) HasCourseStatus(req requestID, status qf.Enrollment_UserStatus)
 	return c.Courses[courseID] == status
 }
 
-func (c *Claims) IsCourseTeacher(db database.Database, req *qf.CourseUserRequest) error {
-	for courseID, status := range c.Courses {
-		if status == qf.Enrollment_TEACHER {
-			course, err := db.GetCourse(courseID, false)
-			if err != nil {
-				return err
-			}
-			if course.GetCode() == req.GetCourseCode() && course.GetYear() == req.GetCourseYear() {
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("user %d is not teacher of the %s course", c.UserID, req.GetCourseCode())
-}
-
 // SameUser returns true if user ID in request is the same as in claims.
 func (c *Claims) SameUser(req requestID) bool {
 	return req.IDFor("user") == c.UserID
