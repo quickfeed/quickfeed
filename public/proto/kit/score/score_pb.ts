@@ -138,6 +138,11 @@ export class BuildInfo extends Message<BuildInfo> {
    */
   ExecTime = protoInt64.zero;
 
+  /**
+   * @generated from field: string SubmissionDate = 6;
+   */
+  SubmissionDate = "";
+
   constructor(data?: PartialMessage<BuildInfo>) {
     super();
     proto3.util.initPartial(data, this);
@@ -151,6 +156,7 @@ export class BuildInfo extends Message<BuildInfo> {
     { no: 3, name: "BuildDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "BuildLog", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "ExecTime", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 6, name: "SubmissionDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): BuildInfo {

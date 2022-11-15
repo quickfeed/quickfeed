@@ -77,9 +77,10 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	}
 	res := &Results{
 		BuildInfo: &BuildInfo{
-			BuildDate: time.Now().Format(layout),
-			BuildLog:  strings.Join(filteredLog, "\n"),
-			ExecTime:  execTime.Milliseconds(),
+			BuildDate:      time.Now().Format(layout),
+			SubmissionDate: time.Now().Format(layout),
+			BuildLog:       strings.Join(filteredLog, "\n"),
+			ExecTime:       execTime.Milliseconds(),
 		},
 		Scores: results.toScoreSlice(),
 	}
