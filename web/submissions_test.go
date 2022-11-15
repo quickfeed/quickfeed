@@ -37,10 +37,9 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	lab := &qf.Assignment{
-		CourseID:         course.ID,
-		Name:             "test lab",
-		RunScriptContent: "Script for test lab",
-		Order:            1,
+		CourseID: course.ID,
+		Name:     "test lab",
+		Order:    1,
 	}
 	if err = db.CreateAssignment(lab); err != nil {
 		t.Fatal(err)
@@ -310,7 +309,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c1 := &qf.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 1",
-		RunScriptContent:  "Script for lab1",
 		Deadline:          "2020-02-23T18:00:00",
 		Order:             1,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -319,7 +317,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c1 := &qf.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 2",
-		RunScriptContent:  "Script for lab2",
 		Deadline:          "2020-03-23T18:00:00",
 		Order:             2,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -327,7 +324,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c2 := &qf.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 1",
-		RunScriptContent:  "Script for lab1",
 		Deadline:          "2020-04-23T18:00:00",
 		Order:             1,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -335,7 +331,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c2 := &qf.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 2",
-		RunScriptContent:  "Script for lab2",
 		Deadline:          "2020-05-23T18:00:00",
 		Order:             2,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -523,32 +518,28 @@ func TestCreateApproveList(t *testing.T) {
 
 	assignments := []*qf.Assignment{
 		{
-			CourseID:         course.ID,
-			Name:             "lab 1",
-			RunScriptContent: "Script for lab1",
-			Deadline:         "2020-02-23T18:00:00",
-			Order:            1,
+			CourseID: course.ID,
+			Name:     "lab 1",
+			Deadline: "2020-02-23T18:00:00",
+			Order:    1,
 		},
 		{
-			CourseID:         course.ID,
-			Name:             "lab 2",
-			RunScriptContent: "Script for lab2",
-			Deadline:         "2020-03-23T18:00:00",
-			Order:            2,
+			CourseID: course.ID,
+			Name:     "lab 2",
+			Deadline: "2020-03-23T18:00:00",
+			Order:    2,
 		},
 		{
-			CourseID:         course.ID,
-			Name:             "lab 3",
-			RunScriptContent: "Script for lab3",
-			Deadline:         "2020-04-23T18:00:00",
-			Order:            3,
+			CourseID: course.ID,
+			Name:     "lab 3",
+			Deadline: "2020-04-23T18:00:00",
+			Order:    3,
 		},
 		{
-			CourseID:         course.ID,
-			Name:             "lab 4",
-			RunScriptContent: "Script for lab4",
-			Deadline:         "2020-05-23T18:00:00",
-			Order:            4,
+			CourseID: course.ID,
+			Name:     "lab 4",
+			Deadline: "2020-05-23T18:00:00",
+			Order:    4,
 		},
 	}
 	for _, a := range assignments {
@@ -720,20 +711,18 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	assignments := []*qf.Assignment{
 		{
-			CourseID:         course.ID,
-			Name:             "lab 1",
-			RunScriptContent: "Script for lab1",
-			Deadline:         "2020-02-23T18:00:00",
-			Order:            1,
-			Reviewers:        1,
+			CourseID:  course.ID,
+			Name:      "lab 1",
+			Deadline:  "2020-02-23T18:00:00",
+			Order:     1,
+			Reviewers: 1,
 		},
 		{
-			CourseID:         course.ID,
-			Name:             "lab 2",
-			RunScriptContent: "Script for lab2",
-			Deadline:         "2020-03-23T18:00:00",
-			Order:            2,
-			Reviewers:        1,
+			CourseID:  course.ID,
+			Name:      "lab 2",
+			Deadline:  "2020-03-23T18:00:00",
+			Order:     2,
+			Reviewers: 1,
 		},
 	}
 

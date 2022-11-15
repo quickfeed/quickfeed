@@ -3,6 +3,7 @@ package ci
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -21,7 +22,11 @@ import (
 //	CURRENT     - name of the current assignment folder
 //	QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
 func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
-	image, commands, err := parseRunScript(r.Assignment.GetRunScriptContent())
+	scriptContent, err := r.loadRunScript()
+	if err != nil {
+		return nil, err
+	}
+	image, commands, err := parseRunScript(scriptContent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
@@ -41,9 +46,30 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 	}, nil
 }
 
+func (r *RunData) loadRunScript() (string, error) {
+	const (
+		scriptFile   = "run.sh"
+		scriptFolder = "scripts"
+	)
+	courseTestsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
+	runScript := filepath.Join(courseTestsDir, r.Assignment.GetName(), scriptFile)
+	if _, err := os.Stat(runScript); os.IsNotExist(err) {
+		// If the assignment does not have a run.sh script, use the default run.sh script
+		runScript = filepath.Join(courseTestsDir, scriptFolder, scriptFile)
+		if _, err := os.Stat(runScript); os.IsNotExist(err) {
+			return "", fmt.Errorf("run script not found for %s: %w", r.Course.GetCode(), err)
+		}
+	}
+	b, err := os.ReadFile(runScript)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
 func parseRunScript(scriptContent string) (image string, commands []string, err error) {
 	s := strings.Split(scriptContent, "\n")
-	if len(s) < 2 {
+	if len(s) < 3 {
 		return "", nil, errors.New("empty run script")
 	}
 	parts := strings.Split(s[0], "#image/")

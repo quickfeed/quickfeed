@@ -46,10 +46,6 @@ WORKDIR /quickfeed
 			Order:      1,
 			ScoreLimit: 80,
 			Deadline:   "2019-01-24T14:00:00",
-			RunScriptContent: `#image/quickfeed:go
-
-printf "Custom lab1 script\n"
-`,
 		},
 		{
 			Name:       "lab2",
@@ -57,10 +53,6 @@ printf "Custom lab1 script\n"
 			Order:      2,
 			ScoreLimit: 80,
 			Deadline:   "2019-01-31T16:00:00",
-			RunScriptContent: `#image/quickfeed:go
-
-printf "Default script\n"
-`,
 		},
 		{
 			Name:       "lab3",
@@ -69,10 +61,6 @@ printf "Default script\n"
 			ScoreLimit: 80,
 			Deadline:   "2019-02-14T23:00:00",
 			IsGroupLab: true,
-			RunScriptContent: `#image/quickfeed:go
-
-printf "Default script\n"
-`,
 			Tasks: []*qf.Task{
 				{
 					Title:           "Exercises from Tour of Go",

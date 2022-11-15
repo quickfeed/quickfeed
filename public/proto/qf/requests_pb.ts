@@ -989,55 +989,6 @@ export class RebuildRequest extends Message<RebuildRequest> {
 }
 
 /**
- * @generated from message qf.CourseUserRequest
- */
-export class CourseUserRequest extends Message<CourseUserRequest> {
-  /**
-   * @generated from field: string courseCode = 1;
-   */
-  courseCode = "";
-
-  /**
-   * @generated from field: uint32 courseYear = 2;
-   */
-  courseYear = 0;
-
-  /**
-   * @generated from field: string userLogin = 3;
-   */
-  userLogin = "";
-
-  constructor(data?: PartialMessage<CourseUserRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.CourseUserRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "courseCode", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "courseYear", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 3, name: "userLogin", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CourseUserRequest {
-    return new CourseUserRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CourseUserRequest {
-    return new CourseUserRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CourseUserRequest {
-    return new CourseUserRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: CourseUserRequest | PlainMessage<CourseUserRequest> | undefined, b: CourseUserRequest | PlainMessage<CourseUserRequest> | undefined): boolean {
-    return proto3.util.equals(CourseUserRequest, a, b);
-  }
-}
-
-/**
  * Void contains no fields. A server response with a Void still contains a gRPC status code,
  * which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
  * whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from

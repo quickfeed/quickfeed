@@ -25,15 +25,6 @@ import (
 // This test uses a test course for experimenting with run.sh behavior.
 // The tests below will run locally on the test machine, not on the QuickFeed machine.
 
-func loadRunScript(t *testing.T) string {
-	t.Helper()
-	b, err := os.ReadFile("testdata/run.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(b)
-}
-
 func loadDockerfile(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile("testdata/Dockerfile")
@@ -44,7 +35,6 @@ func loadDockerfile(t *testing.T) string {
 }
 
 func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
-	runScriptContent := loadRunScript(t)
 	dockerfileContent := loadDockerfile(t)
 
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -62,7 +52,6 @@ func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
-			RunScriptContent: runScriptContent,
 			ContainerTimeout: 1, // minutes
 		},
 		Repo: &qf.Repository{
@@ -141,12 +130,8 @@ func TestRecordResults(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		CourseID: course.ID,
-		Name:     "lab1",
-		RunScriptContent: `#image/quickfeed:go
-printf "AssignmentName: {{ .AssignmentName }}\n"
-printf "RandomSecret: {{ .RandomSecret }}\n"
-`,
+		CourseID:         course.ID,
+		Name:             "lab1",
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
 		ScoreLimit:       70,

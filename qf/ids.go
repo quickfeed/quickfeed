@@ -135,8 +135,3 @@ func (r *GradingCriterion) IDFor(_ string) uint64 {
 func (*OrgRequest) IDFor(_ string) uint64 {
 	return 0
 }
-
-// IDFor returns 0.
-func (*CourseUserRequest) IDFor(_ string) uint64 {
-	return 0
-}

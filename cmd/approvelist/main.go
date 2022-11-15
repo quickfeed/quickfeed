@@ -43,7 +43,6 @@ func main() {
 		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
 		showAll    = flag.Bool("all", false, "show all students")
 		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
-		userName   = flag.String("user", "meling", "user name to request courses for")
 		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
 	)
 	flag.Parse()
@@ -53,7 +52,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	submissions, err := getSubmissions(*serverURL, *userName, *courseCode, *year)
+	submissions, err := getSubmissions(*serverURL, *courseCode, uint32(*year))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -119,7 +118,7 @@ func main() {
 	}
 }
 
-func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.CourseSubmissions, error) {
+func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmissions, error) {
 	token, err := env.GetAccessToken()
 	if err != nil {
 		return nil, err
@@ -129,30 +128,20 @@ func getSubmissions(serverURL, userName, courseCode string, year int) (*qf.Cours
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// TODO(meling) Do we need all these RPCs just to get the submissions? See issue #724.
-	courseUserRequest := &qf.CourseUserRequest{
-		CourseCode: courseCode,
-		CourseYear: uint32(year),
-		UserLogin:  userName,
-	}
-	userResp, err := client.GetUserByCourse(ctx, connect.NewRequest(courseUserRequest))
+	user, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user %s in course %s: %w", userName, courseCode, err)
-	}
-
-	enrollStatusRequest := &qf.EnrollmentStatusRequest{UserID: userResp.Msg.GetID()}
-	coursesResp, err := client.GetCoursesByUser(ctx, connect.NewRequest(enrollStatusRequest))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get courses for user %s: %w", userName, err)
+		return nil, err
 	}
 	var courseID uint64
-	for _, c := range coursesResp.Msg.GetCourses() {
-		if c.GetCode() == courseCode {
-			courseID = c.GetID()
+	for _, enrollment := range user.Msg.GetEnrollments() {
+		course := enrollment.GetCourse()
+		if course.GetCode() == courseCode && course.GetYear() == year {
+			courseID = course.GetID()
+			break
 		}
 	}
 	if courseID == 0 {
-		return nil, fmt.Errorf("course %s not found", courseCode)
+		return nil, fmt.Errorf("course %s-%d not found", courseCode, year)
 	}
 
 	submissionCourseRequest := &qf.SubmissionRequest{
