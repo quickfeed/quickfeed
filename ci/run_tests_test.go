@@ -196,7 +196,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Fatal(err)
 	}
 	if submission.Status == qf.Submission_APPROVED {
-		t.Error("submission must not be auto approved")
+		t.Error("Submission must not be auto approved")
 	}
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
 		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
@@ -221,7 +221,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Fatal(err)
 	}
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
-		t.Error("student must have reduced slip days")
+		t.Error("Student must have reduced slip days")
 	}
 	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate); diff != "" {
 		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
@@ -230,7 +230,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 
-	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must update
+	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
 	runData.Rebuild = true
 	wantSubmissionDate := newSubmissionDate
 	newDate := "2022-11-13T15:00:00"

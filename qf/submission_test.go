@@ -11,23 +11,23 @@ import (
 func TestNewestSubmissionDate(t *testing.T) {
 	submission := &qf.Submission{}
 	tim := time.Now()
-	newBuildDate, err := submission.NewestSubmissionDate(tim)
+	newSubmissionDate, err := submission.NewestSubmissionDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
 	}
 
 	submission = &qf.Submission{}
-	newBuildDate, err = submission.NewestSubmissionDate(tim)
+	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
 	}
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{},
 	}
-	newBuildDate, err = submission.NewestSubmissionDate(tim)
+	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
 	}
 
 	submission = &qf.Submission{
@@ -35,9 +35,9 @@ func TestNewestSubmissionDate(t *testing.T) {
 			BuildDate: "string",
 		},
 	}
-	newBuildDate, err = submission.NewestSubmissionDate(tim)
+	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
 	}
 
 	buildDate := time.Now()
@@ -47,12 +47,12 @@ func TestNewestSubmissionDate(t *testing.T) {
 			SubmissionDate: buildDate.Format(qf.TimeLayout),
 		},
 	}
-	newBuildDate, err = submission.NewestSubmissionDate(tim)
+	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
 	if err != nil {
 		t.Error(err)
 	}
-	if newBuildDate.Before(tim) {
-		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newBuildDate, buildDate)
+	if newSubmissionDate.Before(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
 }
 
