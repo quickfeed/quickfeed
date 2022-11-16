@@ -177,7 +177,5 @@ func (db *GormDB) GetCourseTeachers(query *qf.Course) ([]*qf.User, error) {
 
 // UpdateCourse updates course information.
 func (db *GormDB) UpdateCourse(course *qf.Course) error {
-	return db.conn.Model(&qf.Course{}).
-		Where(&qf.Course{ID: course.GetID()}).
-		Updates(course).Error
+	return db.conn.Save(course).Error
 }
