@@ -97,9 +97,9 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
-func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
-	course, user := enrolled.GetCourse(), enrolled.GetUser()
+	course, user := query.GetCourse(), query.GetUser()
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
@@ -107,15 +107,12 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
-
+	// Use enrollment with full updated info to ensure that gorm Select.Updates works correctly.
+	query.Status = qf.Enrollment_STUDENT
 	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
 	if repo != nil {
 		// repo already exist, update enrollment in database
-		return s.db.UpdateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: course.ID,
-			Status:   qf.Enrollment_STUDENT,
-		})
+		return s.db.UpdateEnrollment(query)
 	}
 	// create user scmRepo, user team, and add user to students team
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
@@ -144,19 +141,14 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 		// log error, but continue with enrollment; we can manually accept invitations later
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
-
-	return s.db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	})
+	return s.db.UpdateEnrollment(query)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
-func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, query *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
-	course, user := enrolled.GetCourse(), enrolled.GetUser()
-
+	course, user := query.GetCourse(), query.GetUser()
+	query.Status = qf.Enrollment_TEACHER
 	// make owner, remove from students, add to teachers
 	if _, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
 		Organization: course.OrganizationName,
@@ -165,16 +157,12 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 	}); err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}
-	return s.db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	})
+	return s.db.UpdateEnrollment(query)
 }
 
-func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, query *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
-	course, user := enrolled.GetCourse(), enrolled.GetUser()
+	course, user := query.GetCourse(), query.GetUser()
 	err := sc.DemoteTeacherToStudent(ctx, &scm.UpdateEnrollmentOptions{
 		Organization: course.GetOrganizationName(),
 		User:         user.GetLogin(),
@@ -184,11 +172,8 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 		// log error, but continue to update enrollment; we can manually revoke teacher access later
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 	}
-	return s.db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	})
+	query.Status = qf.Enrollment_STUDENT
+	return s.db.UpdateEnrollment(query)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
