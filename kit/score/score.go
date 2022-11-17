@@ -84,7 +84,7 @@ func (s *Score) RelativeScore() string {
 // The msg parameter is optional, and will be printed in case of a panic.
 func (s *Score) Print(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
-		s.fail(t)
+		s.internalFail(t)
 		printPanicMessage(s.TestName, msg[0], r)
 	}
 	// We rely on JSON score objects to start on a new line, since otherwise
@@ -101,18 +101,19 @@ func (s *Score) Print(t *testing.T, msg ...string) {
 //
 // This must be called as a deferred function from within a subtest, that is
 // within a t.Run() function:
-//   defer s.PanicHandler(t)
+//
+//	defer s.PanicHandler(t)
 //
 // The msg parameter is optional, and will be printed in case of a panic.
 func (s *Score) PanicHandler(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
-		s.fail(t)
+		s.internalFail(t)
 		printPanicMessage(t.Name(), msg[0], r)
 	}
 }
 
-// fail resets the score to zero and fails the provided test.
-func (s *Score) fail(t *testing.T) {
+// internalFail resets the score to zero and fails the provided test.
+func (s *Score) internalFail(t *testing.T) {
 	// reset score for panicked test functions
 	s.Score = 0
 	// fail the test

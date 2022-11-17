@@ -18,7 +18,7 @@ type registry struct {
 	scores    map[string]*Score // map from TestName to score object
 }
 
-func NewRegistry() *registry {
+func NewRegistry() *registry { // skipcq: RVV-B0011
 	return &registry{
 		testNames: make([]string, 0),
 		scores:    make(map[string]*Score),
@@ -63,7 +63,7 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 	}
 	// force exit after printing test info if SCORE_INIT is set
 	if os.Getenv("SCORE_INIT") != "" {
-		os.Exit(0)
+		os.Exit(0) // skipcq: RVV-A0003
 	}
 }
 
@@ -71,7 +71,7 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) Add(test interface{}, max, weight int) {
-	s.add(testName(test), "", max, weight)
+	s.internalAdd(testName(test), "", max, weight)
 }
 
 // AddWithTask test with given taskName, max score and weight to the registry.
@@ -79,7 +79,7 @@ func (s *registry) Add(test interface{}, max, weight int) {
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddWithTask(test interface{}, taskName string, max, weight int) {
-	s.add(testName(test), taskName, max, weight)
+	s.internalAdd(testName(test), taskName, max, weight)
 }
 
 // AddSub test with given max score and weight to the registry.
@@ -89,7 +89,7 @@ func (s *registry) AddWithTask(test interface{}, taskName string, max, weight in
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddSub(test interface{}, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	s.add(tstName, "", max, weight)
+	s.internalAdd(tstName, "", max, weight)
 }
 
 // AddSubWithTask test with given taskName, max score and weight to the registry.
@@ -100,7 +100,7 @@ func (s *registry) AddSub(test interface{}, subTestName string, max, weight int)
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddSubWithTask(test interface{}, subTestName, taskName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	s.add(tstName, taskName, max, weight)
+	s.internalAdd(tstName, taskName, max, weight)
 }
 
 // Max returns a score object with Score equal to MaxScore.
@@ -188,7 +188,7 @@ func firstElem(name string) string {
 	return name[:end]
 }
 
-func (s *registry) add(testName, taskName string, max, weight int) {
+func (s *registry) internalAdd(testName, taskName string, max, weight int) {
 	if _, found := s.scores[testName]; found {
 		panic(errMsg(testName, "Duplicate score test"))
 	}

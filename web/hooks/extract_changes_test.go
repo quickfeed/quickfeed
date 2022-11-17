@@ -17,6 +17,7 @@ func TestExtractChanges(t *testing.T) {
 		"paxos/proposer.go",
 		"/hallo",
 		"",
+		"/",
 	}
 	want := map[string]bool{
 		"lab2":  true,
