@@ -50,7 +50,8 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     if (submission && assignment) {
         const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.CourseID.toString()]
         const buildInfo = submission.BuildInfo
-        const delivered = buildInfo ? getFormattedTime(buildInfo.BuildDate) : "N/A"
+        const delivered = buildInfo ? getFormattedTime(buildInfo.SubmissionDate) : "N/A"
+        const built = buildInfo ? getFormattedTime(buildInfo.BuildDate) : "N/A"
         const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
 
         const className = (submission.status === Submission_Status.APPROVED) ? "passed" : "failed"
@@ -74,6 +75,10 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         <tr>
                             <td colSpan={2}>Delivered</td>
                             <td>{delivered}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={2}>Built</td>
+                            <td>{built}</td>
                         </tr>
                         { // Only render row if submission has an approved date
                             submission.approvedDate ?

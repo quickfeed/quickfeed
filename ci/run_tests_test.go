@@ -144,9 +144,10 @@ func TestRecordResults(t *testing.T) {
 	}
 
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
-		BuildLog:  "Testing",
-		ExecTime:  33333,
+		SubmissionDate: "2022-11-10T13:00:00",
+		BuildDate:      "2022-11-10T13:00:00",
+		BuildLog:       "Testing",
+		ExecTime:       33333,
 	}
 	testScores := []*score.Score{
 		{
@@ -182,15 +183,19 @@ func TestRecordResults(t *testing.T) {
 		t.Error("Submission must not be auto approved")
 	}
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
-		t.Errorf("Incorrect submission scores. Want: %+v, got %+v", testScores, submission.Scores)
+		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate); diff != "" {
-		t.Errorf("Incorrect build date. Want: %s, got %s", buildInfo.BuildDate, submission.BuildInfo.BuildDate)
+		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.BuildInfo.SubmissionDate); diff != "" {
+		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 
-	// When updating submission after deadline: build info and slip days must be updated
-	newBuildDate := "2022-11-12T13:00:00"
-	results.BuildInfo.BuildDate = newBuildDate
+	// When updating submission after deadline: build info (submission and build dates) and slip days must be updated
+	newSubmissionDate := "2022-11-12T13:00:00"
+	results.BuildInfo.BuildDate = newSubmissionDate
+	results.BuildInfo.SubmissionDate = newSubmissionDate
 	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
 	if err != nil {
 		t.Fatal(err)
@@ -202,27 +207,36 @@ func TestRecordResults(t *testing.T) {
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	if updatedSubmission.BuildInfo.BuildDate != newBuildDate {
-		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, updatedSubmission.BuildInfo.BuildDate)
+	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate); diff != "" {
+		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.SubmissionDate); diff != "" {
+		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 
-	// When rebuilding after deadline: delivery date and slip days must stay unchanged
+	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
 	runData.Rebuild = true
-	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
+	wantSubmissionDate := newSubmissionDate
+	newDate := "2022-11-13T15:00:00"
+	results.BuildInfo.BuildDate = newDate
+	results.BuildInfo.SubmissionDate = newDate
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
 	rebuiltSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submission.BuildInfo.BuildDate != newBuildDate {
-		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, rebuiltSubmission.BuildInfo.BuildDate)
+	if diff := cmp.Diff(newDate, rebuiltSubmission.BuildInfo.BuildDate); diff != "" {
+		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate); diff != "" {
+		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updatedEnrollment.RemainingSlipDays(course) != slipDaysBeforeUpdate {
-		t.Errorf("Incorrect number of slip days: expected %d, got %d", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
+	if diff := cmp.Diff(slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course)); diff != "" {
+		t.Errorf("slip days mismatch: (-want +got):\n%s", diff)
 	}
 }
 
@@ -344,9 +358,10 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
-		BuildLog:  "Testing",
-		ExecTime:  33333,
+		BuildDate:      "2022-11-10T13:00:00",
+		SubmissionDate: "2022-11-10T13:00:00",
+		BuildLog:       "Testing",
+		ExecTime:       33333,
 	}
 	testScores := []*score.Score{
 		{

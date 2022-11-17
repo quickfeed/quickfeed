@@ -353,8 +353,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
-		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
+		if enrollments[i] == qf.Enrollment_STUDENT {
 			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: c1.ID,
@@ -493,8 +492,7 @@ func TestDeleteGroup(t *testing.T) {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
-		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
+		if enrollments[i] == qf.Enrollment_STUDENT {
 			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: course.ID,

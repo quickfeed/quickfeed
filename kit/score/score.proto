@@ -24,4 +24,5 @@ message BuildInfo {
     string BuildDate = 3;
     string BuildLog = 4;
     int64 ExecTime = 5;
+    string SubmissionDate = 6;
 }

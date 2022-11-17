@@ -87,27 +87,27 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +191,7 @@ func TestParseUnknownFields(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
