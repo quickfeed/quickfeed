@@ -74,15 +74,23 @@ func (req *RepositoryRequest) IsValid() bool {
 
 // IsValid checks required fields of an action request.
 // It must have a positive course ID and
-// a positive user ID or group ID but not both.
+// one of the fetch modes must be set with a positive ID.
 func (req *SubmissionRequest) IsValid() bool {
-	// TODO(meling) check semantics after update
-	// TODO(meling) check previous use of SubmissionsForCourseRequest
-	// TODO(meling) check previous use of SubmissionReviewersRequest: req.CourseID > 0 && req.SubmissionID > 0
-	uid, gid := req.GetUserID(), req.GetGroupID()
-	return req.GetCourseID() > 0 &&
-		(uid == 0 && gid > 0) ||
-		(uid > 0 && gid == 0)
+	if hasCourseID := req.GetCourseID() > 0; !hasCourseID {
+		return false
+	}
+	switch req.GetFetchMode().(type) {
+	case nil:
+		return false
+	case *SubmissionRequest_SubmissionID:
+		return req.GetSubmissionID() > 0
+	case *SubmissionRequest_UserID:
+		return req.GetUserID() > 0
+	case *SubmissionRequest_GroupID:
+		return req.GetGroupID() > 0
+	default: // *SubmissionRequest_Type, requires only course ID
+		return true
+	}
 }
 
 // IsValid ensures that both submission and course IDs are set
