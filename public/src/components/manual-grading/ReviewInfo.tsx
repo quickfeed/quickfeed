@@ -5,6 +5,7 @@ import { Color, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
+import MarkReadyButton from "./MarkReadyButton"
 
 
 const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
@@ -18,16 +19,8 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
     const assignment = state.activeSubmissionLink?.assignment
     const submission = state.activeSubmissionLink?.submission
     const ready = review.ready
-    const allCriteriaGraded = state.review.graded === state.review.criteriaTotal
 
-    const markReadyButton = (
-        <Button onclick={() => { allCriteriaGraded || ready ? actions.review.updateReady(!ready) : null }}
-            classname={ready ? "float-right" : allCriteriaGraded ? "" : "disabled"}
-            text={ready ? "Mark In progress" : "Mark Ready"}
-            color={ready ? Color.YELLOW : Color.GREEN}
-            type={ready ? ButtonType.BADGE : ButtonType.BUTTON}
-        />
-    )
+    const markReadyButton = <MarkReadyButton review={review} />
 
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
