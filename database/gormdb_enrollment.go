@@ -39,7 +39,7 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 // UpdateEnrollment changes status and display state of the given enrollment.
 func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
 	return db.conn.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).Select("*").
+		Where(&qf.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).Select("*").Omit("ID").
 		Updates(enrol).Error
 }
 
