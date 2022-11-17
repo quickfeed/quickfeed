@@ -6,13 +6,18 @@ import Button, { ButtonType } from "../admin/Button"
 
 
 const MarkReadyButton = ({ review }: { review: Review }) => {
-    const state = useAppState()
+    const allCriteriaGraded = useAppState((state) => state.review.graded === state.review.criteriaTotal)
     const actions = useActions()
     const ready = review.ready
-    const allCriteriaGraded = state.review.graded === state.review.criteriaTotal
+
+    const handleMarkReady = React.useCallback(() => {
+        if (allCriteriaGraded || ready) {
+            actions.review.updateReady(!ready)
+        }
+    }, [allCriteriaGraded, ready])
 
     return (
-        <Button onclick={() => { allCriteriaGraded || ready ? actions.review.updateReady(!ready) : null }}
+        <Button onclick={handleMarkReady}
             classname={ready ? "float-right" : allCriteriaGraded ? "" : "disabled"}
             text={ready ? "Mark In progress" : "Mark Ready"}
             color={ready ? Color.YELLOW : Color.GREEN}
