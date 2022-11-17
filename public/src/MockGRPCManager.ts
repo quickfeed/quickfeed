@@ -431,20 +431,6 @@ export class MockGrpcManager {
     }
 
     // /* SUBMISSIONS */ //
-    public getAllSubmissions(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const submissions: Submissions = new Submissions()
-        // Get all assignment IDs
-        const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID).map(a => a.ID)
-        if (groupID) {
-            const subs = this.submissions.submissions.filter(s => s.groupID === groupID && assignmentIDs.includes(s.AssignmentID))
-            submissions.submissions = subs
-        }
-        if (userID) {
-            const subs = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
-            submissions.submissions = subs
-        }
-        return this.grpcSend<Submissions>(submissions)
-    }
 
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
         const enrollment = this.enrollments.enrollments.find(enrollment =>

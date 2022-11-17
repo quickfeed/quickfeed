@@ -194,18 +194,6 @@ export class GrpcManager {
 
     // /* SUBMISSIONS */ //
 
-    //TODO(meling) currently not used
-    public getAllSubmissions(courseID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest({
-            CourseID: courseID,
-            FetchMode: {
-                case: "Type",
-                value: SubmissionRequest_SubmissionType.ALL,
-            },
-        })
-        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
-    }
-
     //TODO(meling) Rename to getUserSubmissions
     public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
         const request = new SubmissionRequest({
