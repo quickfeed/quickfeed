@@ -293,13 +293,6 @@ func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, statu
 		return err
 	}
 
-	// if approving previously unapproved submission
-	if status == qf.Submission_APPROVED && submission.Status != qf.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(qf.TimeLayout)
-		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
-			return err
-		}
-	}
 	submission.Status = status
 	submission.Released = released
 	if score > 0 {
@@ -403,31 +396,6 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	// append pending users
 	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
 	return enrollmentsWithActivity, nil
-}
-
-func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, courseID uint64) error {
-	query := &qf.Enrollment{
-		CourseID: courseID,
-	}
-	if submission.GroupID > 0 {
-		group, err := s.db.GetGroup(submission.GroupID)
-		if err != nil {
-			return err
-		}
-		groupMembers, err := s.getGroupUsers(group)
-		if err != nil {
-			return err
-		}
-		for _, member := range groupMembers {
-			query.UserID = member.ID
-			if err := s.db.UpdateEnrollment(query); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-	query.UserID = submission.UserID
-	return s.db.UpdateEnrollment(query)
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
