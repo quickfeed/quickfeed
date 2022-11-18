@@ -65,16 +65,15 @@ func (r *EnrollmentStatusRequest) IDFor(_ string) uint64 {
 
 // IDFor returns user, group, or course ID.
 func (r *SubmissionRequest) IDFor(role string) uint64 {
-	// TODO(meling) check use of this function
-	// TODO(meling) check funcs that used SubmissionsForCourseRequest
-	// TODO(meling) check funcs that used SubmissionReviewersRequest
 	switch role {
+	case "course":
+		return r.GetCourseID()
 	case "user":
 		return r.GetUserID()
 	case "group":
 		return r.GetGroupID()
-	case "course":
-		return r.GetCourseID()
+	case "submission":
+		return r.GetSubmissionID()
 	}
 	return 0
 }
