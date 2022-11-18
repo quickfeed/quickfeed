@@ -67,7 +67,6 @@ var accessRolesFor = map[string]roles{
 	"DeleteCriterion":         {teacher},
 	"CreateReview":            {teacher},
 	"UpdateReview":            {teacher},
-	"GetReviewers":            {teacher},
 	"IsEmptyRepo":             {teacher},
 	"GetSubmissionsByCourse":  {teacher},
 	"GetUsers":                {admin},

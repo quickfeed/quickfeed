@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -323,15 +323,6 @@ export const QuickFeedService = {
       name: "UpdateReview",
       I: ReviewRequest,
       O: Review,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.GetReviewers
-     */
-    getReviewers: {
-      name: "GetReviewers",
-      I: SubmissionRequest,
-      O: Reviewers,
       kind: MethodKind.Unary,
     },
     /**

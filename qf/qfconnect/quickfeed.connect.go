@@ -63,7 +63,6 @@ type QuickFeedServiceClient interface {
 	DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
 	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	GetReviewers(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Reviewers], error)
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
@@ -250,11 +249,6 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/UpdateReview",
 			opts...,
 		),
-		getReviewers: connect_go.NewClient[qf.SubmissionRequest, qf.Reviewers](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/GetReviewers",
-			opts...,
-		),
 		getOrganization: connect_go.NewClient[qf.OrgRequest, qf.Organization](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/GetOrganization",
@@ -314,7 +308,6 @@ type quickFeedServiceClient struct {
 	deleteCriterion         *connect_go.Client[qf.GradingCriterion, qf.Void]
 	createReview            *connect_go.Client[qf.ReviewRequest, qf.Review]
 	updateReview            *connect_go.Client[qf.ReviewRequest, qf.Review]
-	getReviewers            *connect_go.Client[qf.SubmissionRequest, qf.Reviewers]
 	getOrganization         *connect_go.Client[qf.OrgRequest, qf.Organization]
 	getRepositories         *connect_go.Client[qf.URLRequest, qf.Repositories]
 	isEmptyRepo             *connect_go.Client[qf.RepositoryRequest, qf.Void]
@@ -491,11 +484,6 @@ func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *connect_
 	return c.updateReview.CallUnary(ctx, req)
 }
 
-// GetReviewers calls qf.QuickFeedService.GetReviewers.
-func (c *quickFeedServiceClient) GetReviewers(ctx context.Context, req *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Reviewers], error) {
-	return c.getReviewers.CallUnary(ctx, req)
-}
-
 // GetOrganization calls qf.QuickFeedService.GetOrganization.
 func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error) {
 	return c.getOrganization.CallUnary(ctx, req)
@@ -554,7 +542,6 @@ type QuickFeedServiceHandler interface {
 	DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
 	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	GetReviewers(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Reviewers], error)
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
@@ -738,11 +725,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 		svc.UpdateReview,
 		opts...,
 	))
-	mux.Handle("/qf.QuickFeedService/GetReviewers", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetReviewers",
-		svc.GetReviewers,
-		opts...,
-	))
 	mux.Handle("/qf.QuickFeedService/GetOrganization", connect_go.NewUnaryHandler(
 		"/qf.QuickFeedService/GetOrganization",
 		svc.GetOrganization,
@@ -903,10 +885,6 @@ func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *conne
 
 func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) GetReviewers(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Reviewers], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetReviewers is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error) {

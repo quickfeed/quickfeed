@@ -74,10 +74,3 @@ func (l *CourseSubmissions) RemoveRemoteID() {
 		link.RemoveRemoteID()
 	}
 }
-
-// RemoveRemoteID removes remote identities for all reviewers.
-func (r *Reviewers) RemoveRemoteID() {
-	for _, user := range r.GetReviewers() {
-		user.RemoveRemoteID()
-	}
-}

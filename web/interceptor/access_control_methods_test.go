@@ -54,7 +54,6 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"DeleteCriterion":         true,
 		"CreateReview":            true,
 		"UpdateReview":            true,
-		"GetReviewers":            true,
 		"IsEmptyRepo":             true,
 		"GetSubmissionsByCourse":  true,
 		"GetUsers":                true,

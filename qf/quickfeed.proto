@@ -65,7 +65,6 @@ service QuickFeedService {
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
-    rpc GetReviewers(SubmissionRequest) returns (Reviewers) {}
 
     // misc //
 

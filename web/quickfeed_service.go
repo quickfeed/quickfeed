@@ -492,16 +492,6 @@ func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Requ
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// GetReviewers returns names of all active reviewers for a student submission.
-func (s *QuickFeedService) GetReviewers(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Reviewers], error) {
-	reviewers, err := s.getReviewers(in.Msg.GetSubmissionID())
-	if err != nil {
-		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get reviewers"))
-	}
-	return connect.NewResponse(&qf.Reviewers{Reviewers: reviewers}), nil
-}
-
 // GetAssignments returns a list of all assignments for the given course.
 func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error) {
 	assignments, err := s.getAssignments(in.Msg.GetCourseID())
