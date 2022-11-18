@@ -194,17 +194,6 @@ export class GrpcManager {
 
     // /* SUBMISSIONS */ //
 
-    //TODO(meling) Rename to getUserSubmissions
-    public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest({
-            CourseID: courseID,
-            FetchMode: {
-                case: "UserID",
-                value: userID,
-            },
-        })
-        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
-    }
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
         const request = new SubmissionRequest({
             CourseID: courseID,
@@ -214,6 +203,17 @@ export class GrpcManager {
             },
         })
         return this.grpcSend<Submission>(this.agService.getSubmission, request)
+    }
+
+    public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
+        const request = new SubmissionRequest({
+            CourseID: courseID,
+            FetchMode: {
+                case: "UserID",
+                value: userID,
+            },
+        })
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
     public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
