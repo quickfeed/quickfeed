@@ -135,8 +135,7 @@ func (db *GormDB) UpdateBenchmark(query *qf.GradingBenchmark) error {
 			ID:           query.ID,
 			AssignmentID: query.AssignmentID,
 			ReviewID:     query.ReviewID,
-		}).Select("Heading", "Comment").
-		Updates(query).Error
+		}).Select("*").Updates(query).Error
 }
 
 // DeleteBenchmark removes the given benchmark
