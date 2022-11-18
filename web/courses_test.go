@@ -172,8 +172,6 @@ func TestEnrollmentProcess(t *testing.T) {
 		User:         stud1,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	}
-	// can't use: wantEnrollment.User.RemoveRemoteID()
-	wantEnrollment.User.RemoteIdentities = nil
 	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
@@ -220,7 +218,6 @@ func TestEnrollmentProcess(t *testing.T) {
 	wantEnrollment.Status = qf.Enrollment_STUDENT
 	wantEnrollment.UserID = stud2.ID
 	wantEnrollment.User = stud2
-	wantEnrollment.User.RemoteIdentities = nil
 	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
@@ -415,7 +412,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	teacher := qtest.CreateAdminUser(t, db, "fake")
+	teacher := qtest.CreateFakeUser(t, db, 1)
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
 	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
 	ta := qtest.CreateNamedUser(t, db, 13, "TA")
@@ -576,7 +573,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	teacher := qtest.CreateAdminUser(t, db, "fake")
+	teacher := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
 	cookie := Cookie(t, tm, user)
 

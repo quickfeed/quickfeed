@@ -18,17 +18,17 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
         const { name, value } = event.currentTarget
         switch (name) {
             case "name":
-                user.name = value
+                user.Name = value
                 break
             case "email":
-                user.email = value
+                user.Email = value
                 break
             case "studentid":
-                user.studentID = value
+                user.StudentID = value
                 break
         }
         setUser(user)
-        if (user.name !== "" && user.email !== "" && user.studentID !== "") {
+        if (user.Name !== "" && user.Email !== "" && user.StudentID !== "") {
             setIsValid(true)
         } else {
             setIsValid(false)
@@ -50,9 +50,9 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
         <div>
             {!isValid ? children : null}
             <form className="form-group" onSubmit={e => { e.preventDefault(); submitHandler() }}>
-                <FormInput prepend="Name" name="name" defaultValue={user.name} onChange={handleChange} />
-                <FormInput prepend="Email" name="email" defaultValue={user.email} onChange={handleChange} type="email" />
-                <FormInput prepend="Student ID" name="studentid" defaultValue={user.studentID} onChange={handleChange} type="number" />
+                <FormInput prepend="Name" name="name" defaultValue={user.Name} onChange={handleChange} />
+                <FormInput prepend="Email" name="email" defaultValue={user.Email} onChange={handleChange} type="email" />
+                <FormInput prepend="Student ID" name="studentid" defaultValue={user.StudentID} onChange={handleChange} type="number" />
                 <div className="col input-group mb-3">
                     <input className="btn btn-primary" disabled={!isValid} type="submit" value="Save" style={{ marginTop: "20px" }} />
                 </div>

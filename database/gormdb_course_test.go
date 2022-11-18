@@ -22,12 +22,10 @@ func TestGormDBCreateCourse(t *testing.T) {
 		Code:           "code",
 		Year:           2017,
 		Tag:            "tag",
-		Provider:       "github",
 		OrganizationID: 1,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 	if course.ID == 0 {
 		t.Error("expected id to be set")
@@ -123,10 +121,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*qf.Course{
-		{ID: c1.ID, OrganizationID: 1, Code: "DAT101", Year: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, Code: "DAT101", Year: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, Code: "DAT101", Year: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, Code: "DAT101", Year: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: qf.Enrollment_NONE},
+		{ID: c1.ID, OrganizationID: 1, Code: "DAT101", Year: 1, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_PENDING},
+		{ID: c2.ID, OrganizationID: 2, Code: "DAT101", Year: 2, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
+		{ID: c3.ID, OrganizationID: 3, Code: "DAT101", Year: 3, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_STUDENT},
+		{ID: c4.ID, OrganizationID: 4, Code: "DAT101", Year: 4, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCoursesByUser() mismatch (-wantCourses, +gotCourses):\n%s", diff)
@@ -203,15 +201,13 @@ func TestGormDBGetCourse(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &qf.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
@@ -240,7 +236,6 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		Dockerfile:     "Dockerfile1",
 		OrganizationID: 1234,
 	}
@@ -249,7 +244,6 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Code:           "DAT100-1",
 		Year:           2018,
 		Tag:            "Autumn",
-		Provider:       "gitlab",
 		Dockerfile:     "Another Dockerfile1",
 		OrganizationID: 12345,
 	}
@@ -283,15 +277,13 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &qf.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
@@ -314,7 +306,6 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1235,
 	}
 	course := &qf.Course{
@@ -322,13 +313,10 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 		Code:           "DAT100",
 		Year:           2017,
 		Tag:            "Spring",
-		Provider:       "github",
 		OrganizationID: 1234,
 	}
 
-	remoteID := &qf.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-
+	admin := qtest.CreateFakeUser(t, db, 1)
 	if err := db.CreateCourse(admin.ID, wantCourse); err != nil {
 		t.Fatal(err)
 	}
@@ -376,17 +364,21 @@ func TestGetCourseTeachers(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 			defer cleanup()
-			admin := qtest.CreateUser(t, db, 1, &qf.User{})
+			admin := qtest.CreateFakeUser(t, db, 1)
 			course := &qf.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 			nextRemoteID := uint64(2)
 			for _, teacher := range tt.wantTeachers {
-				qtest.CreateUser(t, db, nextRemoteID, teacher)
+				if err := db.CreateUser(teacher); err != nil {
+					t.Error(err)
+				}
 				qtest.EnrollTeacher(t, db, teacher, course)
 				nextRemoteID++
 			}
 			for _, student := range tt.students {
-				qtest.CreateUser(t, db, nextRemoteID, student)
+				if err := db.CreateUser(student); err != nil {
+					t.Error(err)
+				}
 				qtest.EnrollStudent(t, db, student, course)
 				nextRemoteID++
 			}

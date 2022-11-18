@@ -9,7 +9,7 @@ describe("Correct permission status should be set", () => {
             desc: "If user is not admin, promote to admin",
             user: new User({
                 ID: BigInt(1),
-                isAdmin: false,
+                IsAdmin: false,
             }),
             confirm: true,
             want: true
@@ -18,7 +18,7 @@ describe("Correct permission status should be set", () => {
             desc: "If user is admin, demote to non-admin",
             user: new User({
                 ID: BigInt(1),
-                isAdmin: true,
+                IsAdmin: true,
             }),
             confirm: true,
             want: false
@@ -27,7 +27,7 @@ describe("Correct permission status should be set", () => {
             desc: "If user does not confirm, do not change status",
             user: new User({
                 ID: BigInt(1),
-                isAdmin: true,
+                IsAdmin: true,
             }),
             confirm: false,
             want: true
@@ -37,6 +37,6 @@ describe("Correct permission status should be set", () => {
         const { state, actions } = initializeOvermind({ allUsers: [test.user] })
         window.confirm = jest.fn(() => test.confirm)
         await actions.updateAdmin(test.user)
-        expect(state.allUsers[0].isAdmin).toEqual(test.want)
+        expect(state.allUsers[0].IsAdmin).toEqual(test.want)
     })
 })

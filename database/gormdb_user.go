@@ -2,46 +2,42 @@ package database
 
 import "github.com/quickfeed/quickfeed/qf"
 
-// GetUser fetches a user by ID with remote identities.
+// CreateUser creates new user record. The first user is set as admin.
+func (db *GormDB) CreateUser(user *qf.User) error {
+	if err := db.conn.Create(&user).Error; err != nil {
+		return err
+	}
+	// The first user defaults to admin user.
+	if user.ID == 1 {
+		user.IsAdmin = true
+		if err := db.UpdateUser(user); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetUser returns the given user.
 func (db *GormDB) GetUser(userID uint64) (*qf.User, error) {
 	var user qf.User
-	if err := db.conn.Preload("RemoteIdentities").First(&user, userID).Error; err != nil {
+	if err := db.conn.First(&user, userID).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-// GetUserByRemoteIdentity fetches user by remote identity.
-func (db *GormDB) GetUserByRemoteIdentity(remote *qf.RemoteIdentity) (*qf.User, error) {
-	tx := db.conn.Begin()
-
-	// Get the remote identity.
-	var remoteIdentity qf.RemoteIdentity
-	if err := tx.
-		Where(&qf.RemoteIdentity{
-			Provider: remote.Provider,
-			RemoteID: remote.RemoteID,
-		}).
-		First(&remoteIdentity).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	// Get the user.
+// GetUserByRemoteIdentity returns the user for the given remote identity.
+func (db *GormDB) GetUserByRemoteIdentity(scmRemoteID uint64) (*qf.User, error) {
 	var user qf.User
-	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
+	if err := db.conn.
+		Where(&qf.User{ScmRemoteID: scmRemoteID}).
+		First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-// GetUserByCourse returns user and course matching the provided course query
-// and the provided user login name.
+// GetUserByCourse returns the given user with enrollments matching the given course query.
 func (db *GormDB) GetUserByCourse(query *qf.Course, login string) (*qf.User, error) {
 	var user qf.User
 	var course qf.Course
@@ -54,7 +50,9 @@ func (db *GormDB) GetUserByCourse(query *qf.Course, login string) (*qf.User, err
 		return nil, err
 	}
 
-	if err := db.conn.Preload("Enrollments", "status in (?)", enrollmentStatuses).First(&user, &qf.User{Login: login}).Error; err != nil {
+	if err := db.conn.
+		Preload("Enrollments", "status in (?)", enrollmentStatuses).
+		First(&user, &qf.User{Login: login}).Error; err != nil {
 		return nil, err
 	}
 	for _, e := range user.Enrollments {
@@ -66,7 +64,7 @@ func (db *GormDB) GetUserByCourse(query *qf.Course, login string) (*qf.User, err
 	return nil, ErrNotEnrolled
 }
 
-// GetUserWithEnrollments returns user with the given ID with all enrollments.
+// GetUserWithEnrollments returns the given user with enrollments.
 func (db *GormDB) GetUserWithEnrollments(userID uint64) (*qf.User, error) {
 	var user qf.User
 	if err := db.conn.
@@ -85,8 +83,6 @@ func (db *GormDB) GetUsers(userIDs ...uint64) ([]*qf.User, error) {
 	if len(userIDs) > 0 {
 		m = m.Where(userIDs)
 	}
-	m = m.Preload("RemoteIdentities")
-
 	var users []*qf.User
 	if err := m.Find(&users).Error; err != nil {
 		return nil, err

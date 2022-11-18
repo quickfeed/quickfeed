@@ -22,28 +22,22 @@ import "patch/go.proto";
 
 message User {
     uint64 ID        = 1;
-    bool isAdmin     = 2;
-    string name      = 3;
-    string studentID = 4;
-    string email     = 5;
-    string avatarURL = 6;
-    string login     = 7;
-    bool updateToken = 8;
+    bool IsAdmin     = 2;
+    string Name      = 3;
+    string StudentID = 4;
+    string Email     = 5;
+    string AvatarURL = 6;
+    string Login     = 7;
 
-    repeated RemoteIdentity remoteIdentities = 9;
-    repeated Enrollment enrollments          = 10;
+    bool UpdateToken    = 8;   // Filter; True if user's JWT token needs to be updated.
+    uint64 ScmRemoteID  = 9;   // Filter; The user's ID on the remote provider.
+    string RefreshToken = 10;  // Filter; The user's refresh token that may be exchanged for an access token.
+
+    repeated Enrollment Enrollments = 11;
 }
 
 message Users {
     repeated User users = 1;
-}
-
-message RemoteIdentity {
-    uint64 ID          = 1;
-    string provider    = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_provider_remote_id"' }];
-    uint64 remoteID    = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_provider_remote_id"' }];
-    string accessToken = 4;
-    uint64 userID      = 5;
 }
 
 message Group {
@@ -74,7 +68,6 @@ message Course {
     string code                    = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_course"' }];
     uint32 year                    = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_course"' }];
     string tag                     = 6;
-    string provider                = 7;
     uint64 organizationID          = 8;
     string organizationName        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays                = 10;

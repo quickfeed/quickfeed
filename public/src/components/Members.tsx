@@ -43,9 +43,9 @@ const Members = (): JSX.Element => {
     ]
     const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
         const data: Row = []
-        data.push(enrollment.user ? enrollment.user.name : "")
-        data.push(enrollment.user ? enrollment.user.email : "")
-        data.push(enrollment.user ? enrollment.user.studentID : "")
+        data.push(enrollment.user ? enrollment.user.Name : "")
+        data.push(enrollment.user ? enrollment.user.Email : "")
+        data.push(enrollment.user ? enrollment.user.StudentID : "")
         data.push(enrollment.lastActivityDate)
         data.push(enrollment.totalApproved.toString())
         data.push(enrollment.slipDaysRemaining.toString())
@@ -54,11 +54,11 @@ const Members = (): JSX.Element => {
             data.push(
                 <div>
                     <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment_UserStatus.STUDENT }) }}>
+                        onClick={() => { actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT }) }}>
                         Accept
                     </i>
                     <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment_UserStatus.NONE })}>
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}>
                         Reject
                     </i>
                 </div>)
@@ -66,11 +66,11 @@ const Members = (): JSX.Element => {
             data.push(edit ? (
                 <div>
                     <i className={`badge badge-${isTeacher(enrollment) ? "warning" : "primary"} clickable`}
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}>
+                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}>
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
                     </i>
                     <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment_UserStatus.NONE })}>
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}>
                         Reject
                     </i>
                 </div>) :

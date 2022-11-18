@@ -13,20 +13,20 @@ const Users = (): JSX.Element => {
 
     useEffect(() => {
         actions.getUsers()
-    } , [])
+    }, [])
 
     const headers: string[] = ["Name", "GitHub", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user) => {
         const data: Row = []
-        data.push(<User user={user} hidden={!isHidden(user.name, state.query)} />)
-        data.push(<a href={userLink(user)}>{user.login}</a>)
-        data.push(user.email)
-        data.push(user.studentID)
+        data.push(<User user={user} hidden={!isHidden(user.Name, state.query)} />)
+        data.push(<a href={userLink(user)}>{user.Login}</a>)
+        data.push(user.Email)
+        data.push(user.StudentID)
         data.push(
             <Button
-                color={user.isAdmin ? Color.RED : Color.BLUE}
+                color={user.IsAdmin ? Color.RED : Color.BLUE}
                 type={ButtonType.BADGE}
-                text={user.isAdmin ? "Demote" : "Promote"}
+                text={user.IsAdmin ? "Demote" : "Promote"}
                 onclick={() => actions.updateAdmin(user)}
             />
         )

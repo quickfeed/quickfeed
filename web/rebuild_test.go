@@ -76,7 +76,6 @@ func TestRebuildSubmissions(t *testing.T) {
 	course := qf.Course{
 		Name:             "QuickFeed Test Course",
 		Code:             "qf101",
-		Provider:         "fake",
 		OrganizationID:   1,
 		OrganizationName: qtest.MockOrg,
 	}

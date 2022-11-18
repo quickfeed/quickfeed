@@ -43,19 +43,18 @@ func TestGetUsers(t *testing.T) {
 }
 
 var allUsers = []struct {
-	provider string
 	remoteID uint64
 	secret   string
 }{
-	{"github", 1, "123"},
-	{"github", 2, "123"},
-	{"github", 3, "456"},
-	{"gitlab", 4, "789"},
-	{"gitlab", 5, "012"},
-	{"bitlab", 6, "345"},
-	{"gitlab", 7, "678"},
-	{"gitlab", 8, "901"},
-	{"gitlab", 9, "234"},
+	{1, "123"},
+	{2, "123"},
+	{3, "456"},
+	{4, "789"},
+	{5, "012"},
+	{6, "345"},
+	{7, "678"},
+	{8, "901"},
+	{9, "234"},
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
@@ -67,8 +66,6 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	var users []*qf.User
 	for _, u := range allUsers {
 		user := qtest.CreateFakeUser(t, db, u.remoteID)
-		// remote identities should not be loaded.
-		user.RemoteIdentities = nil
 		users = append(users, user)
 	}
 	admin := users[0]
@@ -281,13 +278,14 @@ func TestUpdateUser(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantUser := &qf.User{
-		ID:               gotUser.ID,
-		Name:             "Scrooge McDuck",
-		IsAdmin:          true,
-		StudentID:        "99",
-		Email:            "test@test.com",
-		AvatarURL:        "www.hello.com",
-		RemoteIdentities: nonAdminUser.RemoteIdentities,
+		ID:           gotUser.ID,
+		Name:         "Scrooge McDuck",
+		IsAdmin:      true,
+		StudentID:    "99",
+		Email:        "test@test.com",
+		AvatarURL:    "www.hello.com",
+		RefreshToken: nonAdminUser.RefreshToken,
+		ScmRemoteID:  nonAdminUser.ScmRemoteID,
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
@@ -351,13 +349,12 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantUser := &qf.User{
-		ID:               gotUser.ID,
-		Name:             "Scrooge McDuck",
-		IsAdmin:          false, // we want that the current user u cannot promote himself to admin
-		StudentID:        "99",
-		Email:            "test@test.com",
-		AvatarURL:        "www.hello.com",
-		RemoteIdentities: u.RemoteIdentities,
+		ID:        gotUser.ID,
+		Name:      "Scrooge McDuck",
+		IsAdmin:   false, // we want that the current user u cannot promote himself to admin
+		StudentID: "99",
+		Email:     "test@test.com",
+		AvatarURL: "www.hello.com",
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)

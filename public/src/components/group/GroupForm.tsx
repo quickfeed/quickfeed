@@ -28,11 +28,11 @@ const GroupForm = (): JSX.Element | null => {
     const userIds = group.users.map(user => user.ID)
 
     const search = (enrollment: Enrollment): boolean => {
-        if (userIds.includes(enrollment.userID) || enrollment.group && enrollment.groupID != group.ID) {
+        if (userIds.includes(enrollment.userID) || enrollment.group && enrollment.groupID !== group.ID) {
             return true
         }
         if (enrollment.user) {
-            return isHidden(enrollment.user.name, query)
+            return isHidden(enrollment.user.Name, query)
         }
         return false
     }
@@ -43,9 +43,9 @@ const GroupForm = (): JSX.Element | null => {
     const userEnrollmentStatus = hasTeacher(state.status[courseID.toString()]) ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
     const sortedAndFilteredEnrollments = enrollments
         // Filter enrollments where the user is not a student (or teacher), or the user is already in a group
-        .filter(enrollment => enrollment.status == userEnrollmentStatus && enrollment.groupID == BigInt(0))
+        .filter(enrollment => enrollment.status === userEnrollmentStatus && enrollment.groupID === BigInt(0))
         // Sort by name
-        .sort((a, b) => (a.user?.name ?? "").localeCompare((b.user?.name ?? "")))
+        .sort((a, b) => (a.user?.Name ?? "").localeCompare((b.user?.Name ?? "")))
 
     const AvailableUser = ({ enrollment }: { enrollment: Enrollment }) => {
         const id = enrollment.userID
@@ -55,7 +55,7 @@ const GroupForm = (): JSX.Element | null => {
         if (id !== state.self.ID && !userIds.includes(id)) {
             return (
                 <li hidden={search(enrollment)} key={id.toString()} className="list-group-item">
-                    {enrollment.user?.name}
+                    {enrollment.user?.Name}
                     <i className="badge-pill badge-success ml-2 clickable float-right" onClick={() => actions.updateGroupUsers(enrollment.user)}>+</i>
                 </li>
             )
@@ -66,8 +66,8 @@ const GroupForm = (): JSX.Element | null => {
     const groupMembers = group.users.map(user => {
         return (
             <li key={user.ID.toString()} className="list-group-item">
-                <img id="group-image" src={user.avatarURL} alt="" />
-                {user.name}
+                <img id="group-image" src={user.AvatarURL} alt="" />
+                {user.Name}
                 <i className="badge-pill badge-danger rounded-circle clickable float-right" onClick={() => actions.updateGroupUsers(user)}>-</i>
             </li>
         )
@@ -105,7 +105,7 @@ const GroupForm = (): JSX.Element | null => {
                                 <div className="btn btn-danger ml-2" onClick={() => actions.setActiveGroup(null)}> Cancel </div>
                             </div>
                             :
-                            <div className="btn btn-primary" onClick={() => actions.createGroup({ courseID: courseID, users: userIds, name: group.name })}> Create Group </div>
+                            <div className="btn btn-primary" onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}> Create Group </div>
                         }
                     </div>
                 </div>

@@ -60,14 +60,9 @@ func TestUserVerifier(t *testing.T) {
 			}
 		}
 		wantUser := user.wantUser
-		if wantUser != nil {
-			// ignore comparing remote identity
-			user.wantUser.RemoteIdentities = nil
-		}
-
 		if gotUser == nil {
 			if wantUser != nil {
-				t.Fatalf("GetUser(): %v, want: %v", gotUser, wantUser)
+				t.Errorf("GetUser(): %v, want: %v", gotUser, wantUser)
 			}
 		} else {
 			if diff := cmp.Diff(wantUser, gotUser.Msg, protocmp.Transform()); diff != "" {

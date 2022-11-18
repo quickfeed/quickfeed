@@ -21,7 +21,7 @@ const AdminPage = (): JSX.Element => {
     const editCourse = { title: "Edit Course", text: "Edit an existing course.", buttonText: "Edit Course", to: "/admin/edit" }
 
     // If the user is not an admin, redirect to the home page.
-    if (!state.self.isAdmin) {
+    if (!state.self.IsAdmin) {
         return <Redirect to="/" />
     }
 
@@ -30,12 +30,12 @@ const AdminPage = (): JSX.Element => {
         <div className="box">
             <RedirectButton to={root} />
             <Alert />
-            <div className="row" hidden={history.location.pathname != root}>
+            <div className="row" hidden={history.location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
                 <Card {...editCourse} />
             </div>
-            
+
             <Switch>
                 <Route path="/admin/manage">
                     <Users />

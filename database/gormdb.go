@@ -50,7 +50,6 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 
 	if err := conn.AutoMigrate(
 		&qf.User{},
-		&qf.RemoteIdentity{},
 		&qf.Course{},
 		&qf.Enrollment{},
 		&qf.Assignment{},
@@ -71,73 +70,6 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	}
 
 	return &GormDB{conn}, nil
-}
-
-///  Remote Identities ///
-
-// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
-func (db *GormDB) CreateUserFromRemoteIdentity(user *qf.User, remoteIdentity *qf.RemoteIdentity) error {
-	user.RemoteIdentities = []*qf.RemoteIdentity{remoteIdentity}
-	if err := db.conn.Create(&user).Error; err != nil {
-		return err
-	}
-	// The first user defaults to admin user.
-	if user.ID == 1 {
-		user.IsAdmin = true
-		if err := db.UpdateUser(user); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// AssociateUserWithRemoteIdentity associates remote identity with the user with given ID.
-func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, remoteID uint64, accessToken string) error {
-	var count int64
-	if err := db.conn.
-		Model(&qf.RemoteIdentity{}).
-		Where(&qf.RemoteIdentity{
-			Provider: provider,
-			RemoteID: remoteID,
-		}).
-		Not(&qf.RemoteIdentity{
-			UserID: uid,
-		}).
-		Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return ErrDuplicateIdentity
-	}
-
-	var remoteIdentity qf.RemoteIdentity
-	return db.conn.
-		Where(qf.RemoteIdentity{Provider: provider, RemoteID: remoteID, UserID: uid}).
-		Assign(qf.RemoteIdentity{AccessToken: accessToken}).
-		FirstOrCreate(&remoteIdentity).Error
-}
-
-// UpdateAccessToken refreshes the token info for the given remote identity.
-func (db *GormDB) UpdateAccessToken(remote *qf.RemoteIdentity) error {
-	tx := db.conn.Begin()
-
-	// Get the remote identity.
-	var remoteIdentity qf.RemoteIdentity
-	if err := tx.
-		Where(&qf.RemoteIdentity{
-			Provider: remote.Provider,
-			RemoteID: remote.RemoteID,
-		}).
-		First(&remoteIdentity).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Model(&remoteIdentity).Update("access_token", remote.AccessToken).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	return tx.Commit().Error
 }
 
 func (db *GormDB) Close() error {
