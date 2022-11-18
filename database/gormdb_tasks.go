@@ -67,7 +67,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 					existingTask.Body = task.Body
 					updatedTasks = append(updatedTasks, existingTask)
 					err = tx.Model(&qf.Task{}).
-						Where(&qf.Task{ID: existingTask.GetID()}).
+						Where(&qf.Task{ID: existingTask.GetID()}).Select("*").
 						Updates(existingTask).Error
 					if err != nil {
 						return err // will rollback transaction
@@ -139,6 +139,6 @@ func (db *GormDB) HandleMergingPR(pullRequest *qf.PullRequest) error {
 // DeletePullRequest updates the pull request matching the given query
 func (db *GormDB) UpdatePullRequest(pullRequest *qf.PullRequest) error {
 	return db.conn.Model(&qf.PullRequest{}).
-		Where(&qf.PullRequest{ID: pullRequest.GetID()}).
+		Where(&qf.PullRequest{ID: pullRequest.GetID()}).Select("*").
 		Updates(pullRequest).Error
 }

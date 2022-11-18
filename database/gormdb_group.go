@@ -74,7 +74,7 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 	}
 
 	tx := db.conn.Begin()
-	if err := tx.Model(group).Updates(group).Error; err != nil {
+	if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
 		tx.Rollback()
 		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
 			return ErrDuplicateGroup
