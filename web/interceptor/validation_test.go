@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
@@ -46,7 +46,6 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.Review":                      {cleaner: F, validator: T},
 		"qf.Benchmarks":                  {cleaner: F, validator: F},
 		"qf.Issue":                       {cleaner: F, validator: F},
-		"qf.RemoteIdentity":              {cleaner: F, validator: F},
 		"qf.UpdateSubmissionRequest":     {cleaner: F, validator: T},
 		"qf.UsedSlipDays":                {cleaner: F, validator: F},
 		"qf.Task":                        {cleaner: F, validator: F},

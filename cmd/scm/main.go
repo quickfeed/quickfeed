@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v45/github"
-	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -176,35 +175,13 @@ func main() {
 
 func before(client *scm.GithubSCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
-		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
+		if accessToken == "" {
+			return fmt.Errorf("required access token not provided")
+		}
 		logger, err := qlog.Zap()
 		if err != nil {
 			return err
-		}
-		if accessToken != "" {
-			*client = *scm.NewGithubSCMClient(logger.Sugar(), accessToken)
-			return
-		}
-
-		// access token not provided in env variable; check if database holds access token
-		db, err := database.NewGormDB(c.String("database"), logger)
-		if err != nil {
-			return err
-		}
-
-		u, err := db.GetUser(c.Uint64("admin"))
-		if err != nil {
-			return err
-		}
-
-		for _, ri := range u.RemoteIdentities {
-			if ri.Provider == provider {
-				accessToken = ri.AccessToken
-			}
-		}
-		if accessToken == "" {
-			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
 		*client = *scm.NewGithubSCMClient(logger.Sugar(), accessToken)
 		return

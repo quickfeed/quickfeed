@@ -14,7 +14,7 @@ describe("Profile", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = new User({
                 ID: BigInt(1),
-                name: "Test User",
+                Name: "Test User",
             })
         })
         const history = createMemoryHistory()

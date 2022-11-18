@@ -11,7 +11,7 @@ export const generateSubmissionRows = (links: UserCourseSubmissions[], review: b
         const row: Row = []
         if (link.enrollment && link.user) {
             const url = course ? userRepoLink(course, link.user) : userLink(link.user)
-            row.push({ value: link.user.name, link: url })
+            row.push({ value: link.user.Name, link: url })
             groupName && row.push(link.enrollment.group?.name ?? "")
         } else if (link.group) {
             const data: RowElement = course ? { value: link.group.name, link: groupRepoLink(course, link.group) } : link.group.name

@@ -36,9 +36,9 @@ func (db *GormDB) GetRepositories(query *qf.Repository) ([]*qf.Repository, error
 	return repos, nil
 }
 
-// DeleteRepository deletes repository for the given remote provider's ID.
-func (db *GormDB) DeleteRepository(remoteID uint64) error {
-	return db.conn.Delete(&qf.Repository{}, &qf.Repository{RepositoryID: remoteID}).Error
+// DeleteRepository deletes the repository for the given remote provider's repository ID.
+func (db *GormDB) DeleteRepository(scmRepositoryID uint64) error {
+	return db.conn.Delete(&qf.Repository{}, &qf.Repository{RepositoryID: scmRepositoryID}).Error
 }
 
 // GetRepositoriesWithIssues gets repositories with issues

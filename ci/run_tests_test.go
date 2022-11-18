@@ -47,7 +47,6 @@ func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 		Course: &qf.Course{
 			ID:               courseID,
 			Code:             "QF101",
-			Provider:         "github",
 			OrganizationName: qfTestOrg,
 			Dockerfile:       dockerfileContent,
 		},

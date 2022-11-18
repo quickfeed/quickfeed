@@ -5,9 +5,9 @@ describe("User and enrollment validation", () => {
     it("User should be valid", () => {
         const user = new User({
             ID: BigInt(1),
-            name: "Test User",
-            email: "mail@mail.com",
-            studentID: "1234567"
+            Name: "Test User",
+            Email: "mail@mail.com",
+            StudentID: "1234567"
         })
         const isValidUser = isValid(user)
         expect(isValidUser).toBe(true)
@@ -16,8 +16,8 @@ describe("User and enrollment validation", () => {
     it("User should not be valid if name is empty", () => {
         const user2 = new User({
             ID: BigInt(2),
-            email: "mail@mail.com",
-            studentID: "1234567"
+            Email: "mail@mail.com",
+            StudentID: "1234567"
         })
         const isValidUser = isValid(user2)
         expect(isValidUser).toBe(false)
@@ -26,8 +26,8 @@ describe("User and enrollment validation", () => {
     it("User should not be valid if email is empty", () => {
         const user3 = new User({
             ID: BigInt(1),
-            name: "Test User 3",
-            studentID: "1234567"
+            Name: "Test User 3",
+            StudentID: "1234567"
         })
         const isValidUser = isValid(user3)
         expect(isValidUser).toBe(false)
@@ -64,8 +64,8 @@ describe("User and enrollment validation", () => {
     it("User should not be valid if studentId is empty", () => {
         const user4 = new User({
             ID: BigInt(4),
-            name: "Test User 4",
-            email: "mail@mail.com"
+            Name: "Test User 4",
+            Email: "mail@mail.com"
         })
         const isValidUser = isValid(user4)
         expect(isValidUser).toBe(false)
@@ -83,18 +83,10 @@ describe("User and enrollment validation", () => {
         const user = new User({
             ID: BigInt(6),
         })
-        const enrollment = new Enrollment({
-            ID: BigInt(1),
-            user: user,
-        })
-        const submission = new Submission({
-            ID: BigInt(1),
-        })
-        const submissionLink = new SubmissionLink({
-            submission: submission,
-        })
-        const submissionArray = [submissionLink]
-        const enrollmentLink = new EnrollmentLink({enrollment: enrollment, submissions: submissionArray})
+        const enrollment = new Enrollment({ ID: BigInt(1), user })
+        const submission = new Submission({ ID: BigInt(1) })
+        const submissionLink = new SubmissionLink({ submission })
+        const enrollmentLink = new EnrollmentLink({ enrollment, submissions: [submissionLink] })
         const isValidEnrollmentLink = isValid(enrollmentLink)
         expect(isValidEnrollmentLink).toBe(true)
     })

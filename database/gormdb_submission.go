@@ -182,7 +182,7 @@ func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
 
 // UpdateSubmissions approves and/or releases all submissions that have score
 // equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(courseID uint64, query *qf.Submission) error {
+func (db *GormDB) UpdateSubmissions(_ uint64, query *qf.Submission) error {
 	return db.conn.
 		Model(query).
 		Where("assignment_id = ?", query.AssignmentID).

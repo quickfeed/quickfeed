@@ -345,11 +345,11 @@ func (*MockSCM) RequestReviewers(_ context.Context, _ *RequestReviewersOptions) 
 }
 
 // AcceptInvitations accepts course invites.
-func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error {
-	return ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "AcceptInvitations",
+func (*MockSCM) AcceptInvitations(_ context.Context, opt *InvitationOptions) (string, error) {
+	if !opt.valid() {
+		return "", fmt.Errorf("invalid argument: %v", opt)
 	}
+	return "refresh_token", nil
 }
 
 // CreateCourse creates repositories and teams for a new course.
@@ -414,7 +414,7 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 	return nil, nil
 }
 
-// RejectEnrollment removes user's repository and revokes user's membersip in the course organization.
+// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
 func (s *MockSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)

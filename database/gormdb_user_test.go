@@ -12,7 +12,7 @@ func TestGetUserByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateUser(t, db, 1, &qf.User{Login: "admin"})
+	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		ID:              1,
 		CourseCreatorID: admin.ID,
@@ -22,7 +22,10 @@ func TestGetUserByCourse(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateUser(t, db, 2, &qf.User{Login: username})
+	user := &qf.User{Login: username}
+	if err := db.CreateUser(user); err != nil {
+		t.Error(err)
+	}
 	qtest.EnrollStudent(t, db, user, course)
 
 	u, err := db.GetUserByCourse(course, username)

@@ -33,7 +33,7 @@ export const DevelopmentMode = () => {
             </span>
             <select className="form-control" onChange={(e) => setUser(e.target.value)}>
                 {effects.grpcMan.getMockedUsers().users.map((user) => (
-                    <option key={user.ID.toString()} value={user.ID.toString()}>{user.name}</option>
+                    <option key={user.ID.toString()} value={user.ID.toString()}>{user.Name}</option>
                 ))}
             </select>
         </div>

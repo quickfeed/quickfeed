@@ -195,7 +195,7 @@ export const state: State = {
     }),
 
     isValid: derived(({ self }: State) => {
-        return self.name.length > 0 && self.studentID.length > 0 && self.email.length > 0
+        return self.Name.length > 0 && self.StudentID.length > 0 && self.Email.length > 0
     }),
 
     enrollments: [],
@@ -312,8 +312,8 @@ export const state: State = {
                     return sortOrder * (aApproved - bApproved)
                 }
                 case SubmissionSort.Name: {
-                    const nameA = a.user?.name ?? ""
-                    const nameB = b.user?.name ?? ""
+                    const nameA = a.user?.Name ?? ""
+                    const nameB = b.user?.Name ?? ""
                     return sortOrder * (nameA.localeCompare(nameB))
                 }
                 default:

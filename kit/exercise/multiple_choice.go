@@ -57,7 +57,6 @@ func CheckMultipleChoice(answers, correct map[int]string) (correctA []int, incor
 	for qNum, label := range correct {
 		if answers[qNum] == label {
 			correctA = append(correctA, qNum)
-			continue
 		} else {
 			incorrectA = append(incorrectA, qNum)
 		}

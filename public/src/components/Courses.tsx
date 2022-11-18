@@ -19,11 +19,11 @@ const Courses = (overview: overview): JSX.Element => {
 
     // Notify user if there are no courses (should only ever happen with a fresh database on backend)
     // Display shortcut buttons for admins to create new course or managing (promoting) users
-    if (state.courses.length == 0) {
+    if (state.courses.length === 0) {
         return (
             <div className="container centered">
                 <h3>There are currently no available courses.</h3>
-                {state.self.isAdmin ?
+                {state.self.IsAdmin ?
                     <div>
                         <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
                         <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} />
@@ -67,7 +67,7 @@ const Courses = (overview: overview): JSX.Element => {
         })
 
         if (overview.home) {
-            // Render only favorited courses.
+            // Render only favorite courses.
             return (
                 <>
                     {favorite.length > 0 &&
@@ -103,7 +103,7 @@ const Courses = (overview: overview): JSX.Element => {
                 }
                 {pending.length > 0 &&
                     <div className="container-fluid">
-                        {(student.length == 0 && teacher.length == 0) &&
+                        {(student.length === 0 && teacher.length === 0) &&
                             <h2>My Courses</h2>
                         }
                         <div className="card-deck">

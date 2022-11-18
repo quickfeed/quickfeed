@@ -6,16 +6,13 @@ import (
 	"fmt"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-var (
-	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
-	// and not because of some application error
-	ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
-)
+// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
+// and not because of some application error
+var ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
 
 // InitSCMs creates and saves SCM clients for each course without an active SCM client.
 func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
@@ -44,29 +41,6 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 		return nil, err
 	}
 	return q.getSCM(ctx, course.OrganizationName)
-}
-
-// getCredsForUserSCM returns the given user's personal access token.
-func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
-	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
-	if err != nil {
-		return "", err
-	}
-	// Exchange a refresh token for an access token.
-	token, err := q.scmMgr.ExchangeToken(refreshToken)
-	if err != nil {
-		return "", err
-	}
-	// Save user's refresh token in the database.
-	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
-	// TODO(meling) rename UpdateAccessToken() database method to UpdateRefreshToken()
-	// TODO(meling) later: move RefreshToken and ScmRemoteID directly into User type (requires updating the User proto message)
-	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
-	remoteIdentity.AccessToken = token.RefreshToken
-	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
-		return "", err
-	}
-	return token.AccessToken, nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the

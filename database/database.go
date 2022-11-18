@@ -4,27 +4,19 @@ import "github.com/quickfeed/quickfeed/qf"
 
 // Database contains methods for manipulating the database.
 type Database interface {
-	// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
-	CreateUserFromRemoteIdentity(*qf.User, *qf.RemoteIdentity) error
-	// AssociateUserWithRemoteIdentity associates user with the given remote identity.
-	AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error
-	// UpdateAccessToken updates the access token for the given remote identity.
-	// The supplied remote identity must contain Provider, RemoteID and AccessToken.
-	UpdateAccessToken(*qf.RemoteIdentity) error
+	// CreateUser creates new user record. The first user is set as admin.
+	CreateUser(user *qf.User) error
 	// GetUserByRemoteIdentity returns the user for the given remote identity.
-	// The supplied remote identity must contain Provider and RemoteID.
-	GetUserByRemoteIdentity(*qf.RemoteIdentity) (*qf.User, error)
-
-	// GetUser returns the given user, including remote identities.
-	GetUser(uint64) (*qf.User, error)
-	// GetUserByCourse returns the owner of the given login
-	// with preloaded course matching the given query.
-	GetUserByCourse(*qf.Course, string) (*qf.User, error)
-	// GetUserWithEnrollments returns the user by ID with preloaded user enrollments.
-	GetUserWithEnrollments(uint64) (*qf.User, error)
+	GetUserByRemoteIdentity(scmRemoteID uint64) (*qf.User, error)
+	// GetUser returns the given user.
+	GetUser(userID uint64) (*qf.User, error)
+	// GetUserWithEnrollments returns the given user with enrollments.
+	GetUserWithEnrollments(userID uint64) (*qf.User, error)
+	// GetUserByCourse returns the given user with enrollments matching the given course query.
+	GetUserByCourse(query *qf.Course, login string) (*qf.User, error)
 	// GetUsers returns the users for the given set of user IDs.
 	GetUsers(...uint64) ([]*qf.User, error)
-	// UpdateUser updates the user's details, excluding remote identities.
+	// UpdateUser updates the user's details.
 	UpdateUser(*qf.User) error
 
 	// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
@@ -75,7 +67,7 @@ type Database interface {
 
 	// CreateAssignment creates a new or updates an existing assignment.
 	CreateAssignment(*qf.Assignment) error
-	// GetAssignment returns assignment mathing the given query.
+	// GetAssignment returns assignment matching the given query.
 	GetAssignment(query *qf.Assignment) (*qf.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
 	GetAssignmentsByCourse(uint64, bool) ([]*qf.Assignment, error)
@@ -121,14 +113,14 @@ type Database interface {
 	UpdateReview(*qf.Review) error
 	// DeleteReview removes all review records matching the query.
 	DeleteReview(*qf.Review) error
-	// GetBenchmarks return all benchmarks and criteria for an assignmend
+	// GetBenchmarks return all benchmarks and criteria for an assignment
 	GetBenchmarks(*qf.Assignment) ([]*qf.GradingBenchmark, error)
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *qf.Repository) error
 	// GetRepositories returns repositories that match the given query.
 	GetRepositories(query *qf.Repository) ([]*qf.Repository, error)
-	// DeleteRepository deletes repository for the given remote provider's ID.
-	DeleteRepository(remoteID uint64) error
+	// DeleteRepository deletes the repository for the given remote provider's repository ID.
+	DeleteRepository(scmRepositoryID uint64) error
 	// GetRepositoriesWithIssues gets repositories with issues
 	GetRepositoriesWithIssues(query *qf.Repository) ([]*qf.Repository, error)
 
@@ -147,6 +139,6 @@ type Database interface {
 	// DeletePullRequest updates the pull request matching the given query
 	UpdatePullRequest(pullRequest *qf.PullRequest) error
 
-	// UpdateSlipDays updates used slipdays for the given course enrollment
+	// UpdateSlipDays updates used slip days for the given course enrollment
 	UpdateSlipDays([]*qf.UsedSlipDays) error
 }

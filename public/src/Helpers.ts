@@ -53,12 +53,12 @@ export const timeFormatter = (deadline: string): Deadline => {
         return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
     }
 
-    if (days == 0) {
+    if (days === 0) {
         return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
     }
 
     if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days == 1 ? " " : "s"} to deadline`, daysUntil: days }
+        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
     }
 
     if (days < 14) {
@@ -137,7 +137,7 @@ export const getPassedTestsCount = (score: Score[]): string => {
 
 export const isValid = (elm: User | EnrollmentLink): boolean => {
     if (elm instanceof User) {
-        return elm.name.length > 0 && elm.email.length > 0 && elm.studentID.length > 0
+        return elm.Name.length > 0 && elm.Email.length > 0 && elm.StudentID.length > 0
     }
     if (elm instanceof EnrollmentLink) {
         return elm.enrollment?.user !== undefined && elm.submissions.length > 0
@@ -274,11 +274,11 @@ export const defaultYear = (date: Date): number => {
 }
 
 export const userLink = (user: User): string => {
-    return `https://github.com/${user.login}`
+    return `https://github.com/${user.Login}`
 }
 
 export const userRepoLink = (course: Course, user: User): string => {
-    return `https://github.com/${course.organizationName}/${user.login}-labs`
+    return `https://github.com/${course.organizationName}/${user.Login}-labs`
 }
 
 export const groupRepoLink = (course: Course, group: Group): string => {
@@ -327,15 +327,15 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
     const sortOrder = descending ? -1 : 1
     switch (sortBy) {
         case EnrollmentSort.Name: {
-            const nameA = a.user?.name ?? ""
-            const nameB = b.user?.name ?? ""
+            const nameA = a.user?.Name ?? ""
+            const nameB = b.user?.Name ?? ""
             return sortOrder * (nameA.localeCompare(nameB))
         }
         case EnrollmentSort.Status:
             return sortOrder * (a.status - b.status)
         case EnrollmentSort.Email: {
-            const emailA = a.user?.email ?? ""
-            const emailB = b.user?.email ?? ""
+            const emailA = a.user?.Email ?? ""
+            const emailB = b.user?.Email ?? ""
             return sortOrder * (emailA.localeCompare(emailB))
         }
         case EnrollmentSort.Activity:

@@ -2,7 +2,6 @@ package score_test
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"testing"
@@ -171,7 +170,7 @@ func TestStudentAttackCode(t *testing.T) {
 				}
 			}()
 			sc := test.fn(test.test)
-			log.Fatalf("Should never be reached: %v", sc)
+			t.Fatalf("Should never be reached: %v", sc)
 		})
 	}
 }

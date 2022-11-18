@@ -3,13 +3,8 @@ package qf
 // RemoveRemoteID removes user's remote identity before transmitting to client.
 func (u *User) RemoveRemoteID() {
 	if u != nil {
-		voidIDs := make([]*RemoteIdentity, 0)
-		u.RemoteIdentities = voidIDs
-		for _, enrollment := range u.GetEnrollments() {
-			if enrollment.User != nil && enrollment.User.RemoteIdentities != nil {
-				enrollment.User.RemoteIdentities = voidIDs
-			}
-		}
+		u.RefreshToken = ""
+		u.ScmRemoteID = 0
 	}
 }
 
@@ -22,13 +17,11 @@ func (u *Users) RemoveRemoteID() {
 
 // RemoveRemoteID nullifies remote identities of all users in a group
 func (g *Group) RemoveRemoteID() {
-	if g != nil {
-		for _, user := range g.GetUsers() {
-			user.RemoveRemoteID()
-		}
-		for _, enrollment := range g.GetEnrollments() {
-			enrollment.RemoveRemoteID()
-		}
+	for _, user := range g.GetUsers() {
+		user.RemoveRemoteID()
+	}
+	for _, enrollment := range g.GetEnrollments() {
+		enrollment.RemoveRemoteID()
 	}
 }
 
@@ -41,15 +34,9 @@ func (g *Groups) RemoveRemoteID() {
 
 // RemoveRemoteID removes remote identity of the enrolled user
 func (e *Enrollment) RemoveRemoteID() {
-	if e != nil && e.User != nil {
-		e.User.RemoveRemoteID()
-	}
-	if e.Group != nil {
-		e.Group.RemoveRemoteID()
-	}
-	if e.Course != nil {
-		e.Course.RemoveRemoteID()
-	}
+	e.GetUser().RemoveRemoteID()
+	e.GetGroup().RemoveRemoteID()
+	e.GetCourse().RemoveRemoteID()
 }
 
 // RemoveRemoteID removes remote identities for every enrollment
@@ -78,7 +65,7 @@ func (c *Courses) RemoveRemoteID() {
 
 // RemoveRemoteID removes remote identities for enrollment in lab link
 func (l *EnrollmentLink) RemoveRemoteID() {
-	l.Enrollment.RemoveRemoteID()
+	l.GetEnrollment().RemoveRemoteID()
 }
 
 // RemoveRemoteID removes remote identities for all lab links
@@ -88,8 +75,9 @@ func (l *CourseSubmissions) RemoveRemoteID() {
 	}
 }
 
+// RemoveRemoteID removes remote identities for all reviewers.
 func (r *Reviewers) RemoveRemoteID() {
-	for _, user := range r.Reviewers {
+	for _, user := range r.GetReviewers() {
 		user.RemoveRemoteID()
 	}
 }

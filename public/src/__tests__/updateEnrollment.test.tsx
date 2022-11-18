@@ -28,24 +28,24 @@ describe("UpdateEnrollment", () => {
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
         const enrollment = mockedOvermind.state.courseEnrollments[test.courseID.toString()].find(e => e.userID === test.userID)
-        if (enrollment === undefined) {
+        if (!enrollment) {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
         mockedOvermind.actions.setActiveCourse(test.courseID)
         window.confirm = jest.fn(() => true)
-        await mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: test.want })
+        await mockedOvermind.actions.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })
 })
 
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
-        const user = new User({ ID: BigInt(1), name: "Test User", studentID: "6583969706", email: "test@gmail.com" })
+        const user = new User({ ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
         const enrollment = new Enrollment({
             ID: BigInt(2),
             courseID: BigInt(1),
             status: 3,
-            user: user,
+            user,
             slipDaysRemaining: 3,
             lastActivityDate: "10 Mar",
             totalApproved: BigInt(0),
@@ -74,15 +74,15 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is student, button should display promote", () => {
         const user = new User({
             ID: BigInt(1),
-            name: "Test User",
-            studentID: "6583969706",
-            email: "test@gmail.com"
+            Name: "Test User",
+            StudentID: "6583969706",
+            Email: "test@gmail.com"
         })
         const enrollment = new Enrollment({
             ID: BigInt(2),
             courseID: BigInt(1),
             status: 2,
-            user: user,
+            user,
             slipDaysRemaining: 3,
             lastActivityDate: "10 Mar",
             totalApproved: BigInt(0),

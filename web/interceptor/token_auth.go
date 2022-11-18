@@ -8,7 +8,6 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -124,11 +123,8 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 		return "", connect.NewError(connect.CodeUnauthenticated, err)
 	}
 	t.logger.Debug("Retrieved user", externalUser)
-	// Fetch user from database using the remote identity received
-	// from GitHub.
-	user, err := t.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
-		RemoteID: externalUser.ID,
-	})
+	// Fetch user from database using the remote identity received from GitHub.
+	user, err := t.db.GetUserByRemoteIdentity(externalUser.ID)
 	if err != nil {
 		return "", connect.NewError(connect.CodeUnauthenticated, err)
 	}

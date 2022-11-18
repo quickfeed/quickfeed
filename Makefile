@@ -12,6 +12,7 @@ protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch
 toolsdir			:= bin
 tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
+export PATH			:= $(shell pwd)/$(toolsdir):$(PATH)
 
 # necessary when target is not tied to a specific file
 .PHONY: download tools brew version-check install ui proto test qcm scm

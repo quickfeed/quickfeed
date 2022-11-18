@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestGormDBGetUser(t *testing.T) {
+func TestDBGetUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -21,7 +21,7 @@ func TestGormDBGetUser(t *testing.T) {
 	}
 }
 
-func TestGormDBGetUsers(t *testing.T) {
+func TestDBGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -30,7 +30,7 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
-func TestGormDBGetUserWithEnrollments(t *testing.T) {
+func TestDBGetUserWithEnrollments(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -43,7 +43,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		CourseID: course.ID,
 		UserID:   student.ID,
 	}); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	query := &qf.Enrollment{
 		UserID:   student.ID,
@@ -51,7 +51,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		Status:   qf.Enrollment_STUDENT,
 	}
 	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	// user entries from the database will have to be enrolled as
@@ -65,7 +65,6 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
-	admin.RemoteIdentities = nil
 
 	student.Enrollments = append(student.Enrollments, &qf.Enrollment{
 		ID:           2,
@@ -75,57 +74,49 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
-	student.RemoteIdentities = nil
 
 	gotTeacher, err := db.GetUserWithEnrollments(admin.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if diff := cmp.Diff(admin, gotTeacher, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-teacher +gotTeacher):\n%s", diff)
 	}
 	gotStudent, err := db.GetUserWithEnrollments(student.ID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if diff := cmp.Diff(student, gotStudent, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-student +gotStudent):\n%s", diff)
 	}
 }
 
-func TestGormDBUpdateUser(t *testing.T) {
+func TestDBUpdateUser(t *testing.T) {
 	const (
-		uID = 1
-		rID = 1
-
+		userID   = 1
 		secret   = "123"
-		provider = "github"
 		remoteID = 10
 	)
-	admin := true
 	var (
 		wantUser = &qf.User{
-			ID:        uID,
-			IsAdmin:   admin, // first user is always admin
-			Name:      "Scrooge McDuck",
-			StudentID: "22",
-			Email:     "scrooge@mc.duck",
-			AvatarURL: "https://github.com",
-			RemoteIdentities: []*qf.RemoteIdentity{{
-				ID:          rID,
-				Provider:    provider,
-				RemoteID:    remoteID,
-				AccessToken: secret,
-				UserID:      uID,
-			}},
+			ID:           userID,
+			IsAdmin:      true, // first user is always admin
+			Name:         "Scrooge McDuck",
+			StudentID:    "22",
+			Email:        "scrooge@mc.duck",
+			AvatarURL:    "https://github.com",
+			ScmRemoteID:  remoteID,
+			RefreshToken: secret,
 		}
-		updates = &qf.User{
-			ID:        uID,
-			Name:      "Scrooge McDuck",
-			StudentID: "22",
-			Email:     "scrooge@mc.duck",
-			AvatarURL: "https://github.com",
-			IsAdmin:   true, // have to set IsAdmin or will be switched back to false
+		updatedUser = &qf.User{
+			ID:           userID,
+			IsAdmin:      true, // have to set IsAdmin or will be switched back to false
+			Name:         "Scrooge McDuck",
+			StudentID:    "22",
+			Email:        "scrooge@mc.duck",
+			AvatarURL:    "https://github.com",
+			ScmRemoteID:  remoteID,
+			RefreshToken: secret,
 		}
 	)
 
@@ -133,47 +124,36 @@ func TestGormDBUpdateUser(t *testing.T) {
 	defer cleanup()
 
 	var user qf.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&qf.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
-	); err != nil {
+	if err := db.CreateUser(&user); err != nil {
 		t.Fatal(err)
 	}
-
-	if err := db.UpdateUser(updates); err != nil {
+	if err := db.UpdateUser(updatedUser); err != nil {
 		t.Error(err)
 	}
-
 	gotUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotUser.Enrollments = nil
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// check that admin role can be revoked
-	updates.IsAdmin = false
+	updatedUser.IsAdmin = false
 	wantUser.IsAdmin = false
-	if err := db.UpdateUser(updates); err != nil {
+	if err := db.UpdateUser(updatedUser); err != nil {
 		t.Fatal(err)
 	}
 	gotUser, err = db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotUser.Enrollments = nil
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
-func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
+func TestDBCreateEnrollmentNoRecord(t *testing.T) {
 	const (
 		userId   = 1
 		courseId = 1
@@ -190,7 +170,7 @@ func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
 	}
 }
 
-func TestGormDBCreateEnrollment(t *testing.T) {
+func TestDBCreateEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -214,7 +194,7 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 	}
 }
 
-func TestGormDBAcceptRejectEnrollment(t *testing.T) {
+func TestDBAcceptRejectEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -278,131 +258,19 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 }
 
-func TestGormDBDuplicateIdentity(t *testing.T) {
+func TestDBDuplicateIdentity(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if err := db.CreateUserFromRemoteIdentity(
-		&qf.User{}, &qf.RemoteIdentity{},
-	); err != nil {
+	if err := db.CreateUser(&qf.User{}); err != nil {
 		t.Fatal(err)
 	}
-
-	if err := db.CreateUserFromRemoteIdentity(
-		&qf.User{}, &qf.RemoteIdentity{},
-	); err == nil {
+	if err := db.CreateUser(&qf.User{}); err != nil {
 		t.Fatal("expected duplicate remote identity creation to fail")
 	}
 }
 
-func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
-	const (
-		uID  = 2
-		rID1 = 2
-		rID2 = 3
-
-		secret1   = "123"
-		provider1 = "github"
-		remoteID1 = 10
-
-		secret2   = "ABC"
-		provider2 = "gitlab"
-		remoteID2 = 20
-
-		secret3 = "DEF"
-	)
-
-	var (
-		wantUser1 = &qf.User{
-			ID: uID,
-			RemoteIdentities: []*qf.RemoteIdentity{{
-				ID:          rID1,
-				Provider:    provider1,
-				RemoteID:    remoteID1,
-				AccessToken: secret1,
-				UserID:      uID,
-			}},
-		}
-
-		wantUser2 = &qf.User{
-			ID: uID,
-			RemoteIdentities: []*qf.RemoteIdentity{
-				{
-					ID:          rID1,
-					Provider:    provider1,
-					RemoteID:    remoteID1,
-					AccessToken: secret1,
-					UserID:      uID,
-				},
-				{
-					ID:          rID2,
-					Provider:    provider2,
-					RemoteID:    remoteID2,
-					AccessToken: secret2,
-					UserID:      uID,
-				},
-			},
-		}
-	)
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	// Create first user (the admin).
-	if err := db.CreateUserFromRemoteIdentity(
-		&qf.User{},
-		&qf.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	gotUser1 := &qf.User{}
-	if err := db.CreateUserFromRemoteIdentity(
-		gotUser1,
-		&qf.RemoteIdentity{
-			Provider:    provider1,
-			RemoteID:    remoteID1,
-			AccessToken: secret1,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(wantUser1, gotUser1, protocmp.Transform()); diff != "" {
-		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser1, +gotUser1):\n%s", diff)
-	}
-
-	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret2); err != nil {
-		t.Fatal(err)
-	}
-
-	gotUser2, err := db.GetUser(uID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	gotUser2.Enrollments = nil
-
-	if diff := cmp.Diff(wantUser2, gotUser2, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser2):\n%s", diff)
-	}
-
-	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret3); err != nil {
-		t.Fatal(err)
-	}
-
-	gotUser3, err := db.GetUser(uID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	gotUser3.Enrollments = nil
-	wantUser2.RemoteIdentities[1].AccessToken = secret3
-
-	if diff := cmp.Diff(wantUser2, gotUser3, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser3):\n%s", diff)
-	}
-}
-
-func TestGormDBSetAdminNoRecord(t *testing.T) {
+func TestDBSetAdminNoRecord(t *testing.T) {
 	const id = 1
 
 	db, cleanup := qtest.TestDB(t)
@@ -413,32 +281,17 @@ func TestGormDBSetAdminNoRecord(t *testing.T) {
 	}
 }
 
-func TestGormDBSetAdmin(t *testing.T) {
-	const (
-		github = "github"
-		gitlab = "gitlab"
-	)
-
+func TestDBSetAdmin(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	// Create first user (the admin).
-	if err := db.CreateUserFromRemoteIdentity(
-		&qf.User{},
-		&qf.RemoteIdentity{
-			Provider: github,
-		},
-	); err != nil {
+	if err := db.CreateUser(&qf.User{}); err != nil {
 		t.Fatal(err)
 	}
 
 	var user qf.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&qf.RemoteIdentity{
-			Provider: gitlab,
-		},
-	); err != nil {
+	if err := db.CreateUser(&user); err != nil {
 		t.Fatal(err)
 	}
 
@@ -460,7 +313,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 	}
 }
 
-func TestGormDBGetGroupSubmissions(t *testing.T) {
+func TestDBGetGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -470,7 +323,7 @@ func TestGormDBGetGroupSubmissions(t *testing.T) {
 	}
 }
 
-func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
+func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -499,8 +352,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
-		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
+		if enrollments[i] == qf.Enrollment_STUDENT {
 			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: c1.ID,
@@ -639,8 +491,7 @@ func TestDeleteGroup(t *testing.T) {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
-		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
+		if enrollments[i] == qf.Enrollment_STUDENT {
 			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: course.ID,

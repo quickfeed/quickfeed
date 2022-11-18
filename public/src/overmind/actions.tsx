@@ -122,8 +122,8 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
         }
         // Insert users sorted by admin privileges
         state.allUsers = users.data.users.sort((a, b) => {
-            if (a.isAdmin > b.isAdmin) { return -1 }
-            if (a.isAdmin < b.isAdmin) { return 1 }
+            if (a.IsAdmin > b.IsAdmin) { return -1 }
+            if (a.IsAdmin < b.IsAdmin) { return 1 }
             return 0
         })
     }
@@ -155,17 +155,17 @@ export const getCourses = async ({ state, effects }: Context): Promise<boolean> 
 /** updateAdmin is used to update the admin privileges of a user. Admin status toggles between true and false */
 export const updateAdmin = async ({ state, effects }: Context, user: User): Promise<void> => {
     // Confirm that user really wants to change admin status
-    if (confirm(`Are you sure you want to ${user.isAdmin ? "demote" : "promote"} ${user.name}?`)) {
+    if (confirm(`Are you sure you want to ${user.IsAdmin ? "demote" : "promote"} ${user.Name}?`)) {
         // Convert to proto object and change admin status
         const req = new User(user)
-        req.isAdmin = !user.isAdmin
+        req.IsAdmin = !user.IsAdmin
         // Send updated user to server
         const result = await effects.grpcMan.updateUser(req)
         if (success(result)) {
             // If successful, update user in state with new admin status
-            const found = state.allUsers.findIndex(s => s.ID == user.ID)
+            const found = state.allUsers.findIndex(s => s.ID === user.ID)
             if (found > -1) {
-                state.allUsers[found].isAdmin = req.isAdmin
+                state.allUsers[found].IsAdmin = req.IsAdmin
             }
         }
     }
@@ -192,7 +192,7 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
 export const updateSubmission = async ({ state, actions, effects }: Context, status: Submission_Status): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
-    if (!state.currentSubmission || state.currentSubmission.status == status) {
+    if (!state.currentSubmission || state.currentSubmission.status === status) {
         return
     }
 
@@ -229,7 +229,7 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
             if (!submission.submission) {
                 continue
             }
-            if (submission.submission.ID == BigInt(state.activeSubmission)) {
+            if (submission.submission.ID === BigInt(state.activeSubmission)) {
                 submission.submission.status = status
             }
         }
@@ -250,10 +250,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
             break
         case Enrollment_UserStatus.STUDENT:
             // If the enrollment is pending, don't ask for confirmation
-            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user.name} is a teacher. Are sure you want to demote?`)
+            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user.Name} is a teacher. Are sure you want to demote?`)
             break
         case Enrollment_UserStatus.TEACHER:
-            confirmed = confirm(`Are you sure you want to promote ${enrollment.user.name} to teacher status?`)
+            confirmed = confirm(`Are you sure you want to promote ${enrollment.user.Name} to teacher status?`)
             break
     }
 
@@ -261,7 +261,7 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
         // Lookup the enrollment
         // The enrollment should be in state, if it is not, do nothing
         const enrollments = state.courseEnrollments[state.activeCourse.toString()] ?? []
-        const found = enrollments.findIndex(e => e.ID == enrollment.ID)
+        const found = enrollments.findIndex(e => e.ID === enrollment.ID)
         if (found === -1) {
             return
         }
@@ -274,7 +274,7 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
         const response = await effects.grpcMan.updateEnrollments([temp])
         if (success(response)) {
             // If successful, update enrollment in state with new status
-            if (status == Enrollment_UserStatus.NONE) {
+            if (status === Enrollment_UserStatus.NONE) {
                 // If the enrollment is rejected, remove it from state
                 enrollments.splice(found, 1)
             } else {
@@ -392,7 +392,6 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     /* Fill in required fields */
     course.organizationID = value.org.ID
     course.organizationName = value.org.name
-    course.provider = "github"
     course.courseCreatorID = state.self.ID
     /* Send the course to the server */
     const response = await effects.grpcMan.createCourse(course)
@@ -785,7 +784,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
                 actions.getGroupsByCourse(courseID)
             }
         }
-        if (state.self.isAdmin) {
+        if (state.self.IsAdmin) {
             actions.getUsers()
         }
         success = await actions.getRepositories()
@@ -809,7 +808,7 @@ export const changeView = async ({ state, effects }: Context, courseID: bigint):
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     if (hasStudent(enrollment.status)) {
         const status = await effects.grpcMan.getEnrollmentsByUser(state.self.ID, [Enrollment_UserStatus.TEACHER])
-        if (status.data?.enrollments.find(enrollment => enrollment.courseID == BigInt(courseID) && hasTeacher(enrollment.status))) {
+        if (status.data?.enrollments.find(enrollment => enrollment.courseID === BigInt(courseID) && hasTeacher(enrollment.status))) {
             enrollment.status = Enrollment_UserStatus.TEACHER
         }
     } else if (hasTeacher(enrollment.status)) {
@@ -871,7 +870,7 @@ export const setAscending = ({ state }: Context, ascending: boolean): void => {
 }
 
 export const setSubmissionSort = ({ state }: Context, sort: SubmissionSort): void => {
-    if (state.sortSubmissionsBy != sort) {
+    if (state.sortSubmissionsBy !== sort) {
         state.sortSubmissionsBy = sort
     } else {
         state.sortAscending = !state.sortAscending
@@ -884,7 +883,7 @@ export const clearSubmissionFilter = ({ state }: Context): void => {
 
 export const setSubmissionFilter = ({ state }: Context, filter: string): void => {
     if (state.submissionFilters.includes(filter)) {
-        state.submissionFilters = state.submissionFilters.filter(f => f != filter)
+        state.submissionFilters = state.submissionFilters.filter(f => f !== filter)
     } else {
         state.submissionFilters.push(filter)
     }
@@ -904,7 +903,7 @@ export const updateGroupUsers = ({ state }: Context, user: User): void => {
     }
     const group = state.activeGroup
     // Remove the user from the group if they are already in it.
-    const index = group.users.findIndex(u => u.ID == user.ID)
+    const index = group.users.findIndex(u => u.ID === user.ID)
     if (index >= 0) {
         group.users.splice(index, 1)
     } else {

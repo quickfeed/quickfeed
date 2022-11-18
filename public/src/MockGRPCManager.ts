@@ -122,14 +122,14 @@ export class MockGrpcManager {
     }
 
     public getUsers(): Promise<IGrpcResponse<Users>> {
-        if (this.currentUser?.isAdmin) {
+        if (this.currentUser?.IsAdmin) {
             return this.grpcSend<Users>(this.users)
         }
         return this.grpcSend<Users>(null)
     }
 
     public updateUser(user: User): Promise<IGrpcResponse<Void>> {
-        if (!this.currentUser?.isAdmin) {
+        if (!this.currentUser?.IsAdmin) {
             return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unauthenticated) }))
         }
         const usr = this.users.users?.findIndex(u => u.ID === user.ID)
@@ -144,9 +144,9 @@ export class MockGrpcManager {
     public createCourse(course: Course): Promise<IGrpcResponse<Course>> {
         let data: Course | null = null
         const found = this.courses.courses.find(c => c.ID === course.ID)
-        const isAdmin = this.currentUser?.isAdmin
+        const IsAdmin = this.currentUser?.IsAdmin
         const user = this.currentUser
-        if (!found && user && isAdmin) {
+        if (!found && user && IsAdmin) {
             course.ID = this.generateID(Generate.Course)
             course.courseCreatorID = user.ID
 
@@ -464,12 +464,11 @@ export class MockGrpcManager {
     public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
         // Get all assignment IDs
         const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID && !a.isGroupLab).map(a => a.ID)
-        const submissionList = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
-        if (submissionList.length === 0) {
-            return this.grpcSend<Submissions>(null, new Status({ Error: "No submissions found", Code: BigInt(Code.Unknown) }))
+        const submissions = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
+        if (submissions.length === 0) {
+            return this.grpcSend<Submissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "No submissions found" }))
         }
-        const submissions = new Submissions({ submissions: submissionList })
-        return this.grpcSend<Submissions>(submissions)
+        return this.grpcSend<Submissions>(new Submissions({ submissions }))
     }
 
     public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
@@ -735,55 +734,54 @@ export class MockGrpcManager {
         userList.push(
             new User({
                 ID: BigInt(1),
-                name: "Test Testersen",
-                email: "test@testersen.no",
-                login: "Test User",
-                studentID: "9999",
-                isAdmin: true,
-
+                Name: "Test Testersen",
+                Email: "test@testersen.no",
+                Login: "Test User",
+                StudentID: "9999",
+                IsAdmin: true,
             })
         )
 
         userList.push(
             new User({
                 ID: BigInt(2),
-                name: "Admin Admin",
-                email: "admin@admin",
-                login: "Admin",
-                studentID: "1000",
-                isAdmin: true,
+                Name: "Admin Admin",
+                Email: "admin@admin",
+                Login: "Admin",
+                StudentID: "1000",
+                IsAdmin: true,
             })
         )
 
         userList.push(
             new User({
                 ID: BigInt(3),
-                name: "Test Student",
-                email: "test@student.no",
-                login: "Student",
-                avatarURL: "https://avatars0.githubusercontent.com/u/1?v=4",
-                isAdmin: false,
+                Name: "Test Student",
+                Email: "test@student.no",
+                Login: "Student",
+                AvatarURL: "https://avatars0.githubusercontent.com/u/1?v=4",
+                IsAdmin: false,
             })
         )
 
         userList.push(
             new User({
                 ID: BigInt(4),
-                name: "Bob Bobsen",
-                email: "bob@bobsen.no",
-                login: "Bob",
-                studentID: "1234",
-                isAdmin: true,
+                Name: "Bob Bobsen",
+                Email: "bob@bobsen.no",
+                Login: "Bob",
+                StudentID: "1234",
+                IsAdmin: true,
             })
         )
 
         userList.push(
             new User({
                 ID: BigInt(5),
-                name: "Petter Pan",
-                email: "petter@pan.no",
-                studentID: "2345",
-                isAdmin: false,
+                Name: "Petter Pan",
+                Email: "petter@pan.no",
+                StudentID: "2345",
+                IsAdmin: false,
             })
         )
         this.users.users = (userList)
@@ -902,16 +900,14 @@ export class MockGrpcManager {
         course0.code = "DAT100"
         course0.tag = "Spring"
         course0.year = 2017
-        course0.provider = "github"
         course0.organizationID = BigInt(23650610)
         course0.courseCreatorID = BigInt(1)
 
         course1.ID = BigInt(2)
-        course1.name = "Algorithms and Datastructures"
+        course1.name = "Algorithms and Data Structures"
         course1.code = "DAT200"
         course1.tag = "Spring"
         course1.year = 2017
-        course1.provider = "github"
         course1.organizationID = BigInt(23650611)
 
         course2.ID = BigInt(3)
@@ -919,7 +915,6 @@ export class MockGrpcManager {
         course2.code = "DAT220"
         course2.tag = "Spring"
         course2.year = 2017
-        course2.provider = "github"
         course2.organizationID = BigInt(23650612)
 
         course3.ID = BigInt(4)
@@ -927,7 +922,6 @@ export class MockGrpcManager {
         course3.code = "DAT230"
         course3.tag = "Spring"
         course3.year = 2017
-        course3.provider = "github"
         course3.organizationID = BigInt(23650613)
 
         course4.ID = BigInt(5)
@@ -935,7 +929,6 @@ export class MockGrpcManager {
         course4.code = "DAT320"
         course4.tag = "Spring"
         course4.year = 2017
-        course4.provider = "github"
         course4.organizationID = BigInt(23650614)
 
         const tempCourses: Course[] = [course0, course1, course2, course3, course4]
