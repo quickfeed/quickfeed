@@ -118,26 +118,24 @@ func RandomString(t *testing.T) string {
 func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 	return []*qf.Assignment{
 		{
-			CourseID:         courseID,
-			Name:             "lab1",
-			RunScriptContent: "Script for lab1",
-			Deadline:         "12.01.2022",
-			AutoApprove:      false,
-			Order:            1,
-			IsGroupLab:       false,
+			CourseID:    courseID,
+			Name:        "lab1",
+			Deadline:    "12.01.2022",
+			AutoApprove: false,
+			Order:       1,
+			IsGroupLab:  false,
 			Tasks: []*qf.Task{
 				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
 				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
 			},
 		},
 		{
-			CourseID:         courseID,
-			Name:             "lab2",
-			RunScriptContent: "Script for lab2",
-			Deadline:         "12.12.2021",
-			AutoApprove:      false,
-			Order:            2,
-			IsGroupLab:       false,
+			CourseID:    courseID,
+			Name:        "lab2",
+			Deadline:    "12.12.2021",
+			AutoApprove: false,
+			Order:       2,
+			IsGroupLab:  false,
 			Tasks: []*qf.Task{
 				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
 				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},

@@ -28,7 +28,6 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"GetCourses":              true,
 		"CreateEnrollment":        true,
 		"UpdateCourseVisibility":  true,
-		"GetCoursesByUser":        true,
 		"UpdateUser":              true,
 		"GetEnrollmentsByUser":    true,
 		"GetSubmissions":          true,
@@ -58,11 +57,11 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"GetReviewers":            true,
 		"IsEmptyRepo":             true,
 		"GetSubmissionsByCourse":  true,
-		"GetUserByCourse":         true,
 		"GetUsers":                true,
 		"GetOrganization":         true,
 		"CreateCourse":            true,
 		"GetSubmission":           true,
+		"SubmissionStream":        true,
 	}
 	if err := checkAccessControlMethods(serviceMethods); err != nil {
 		t.Error(err)

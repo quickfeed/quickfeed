@@ -61,7 +61,6 @@ func main() {
 func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	fmt.Printf("Running tests for %s\n", cli.Clone.Lab)
 	dockerfileContent := readFile(destDir, "Dockerfile")
-	runScriptContent := readFile(destDir, "run.sh")
 
 	runData := &ci.RunData{
 		Course: &qf.Course{
@@ -71,7 +70,6 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 		},
 		Assignment: &qf.Assignment{
 			Name:             cli.Clone.Lab,
-			RunScriptContent: runScriptContent,
 			ContainerTimeout: 1, // minutes
 		},
 		Repo: &qf.Repository{

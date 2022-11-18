@@ -258,6 +258,10 @@ input {
   height: 90vh;
 }
 
+.pending-review {
+  box-shadow: inset 0 0 4px 2px #626280;
+}
+
 #group-image {
   width: 23px;
   margin-right: 10px;

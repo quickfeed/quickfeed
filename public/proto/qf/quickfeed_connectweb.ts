@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {CourseRequest, CourseSubmissions, CourseUserRequest, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, SubmissionReviewersRequest, SubmissionsForCourseRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, SubmissionReviewersRequest, SubmissionsForCourseRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -31,15 +31,6 @@ export const QuickFeedService = {
       name: "GetUsers",
       I: Void,
       O: Users,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.GetUserByCourse
-     */
-    getUserByCourse: {
-      name: "GetUserByCourse",
-      I: CourseUserRequest,
-      O: User,
       kind: MethodKind.Unary,
     },
     /**
@@ -120,15 +111,6 @@ export const QuickFeedService = {
     getCourses: {
       name: "GetCourses",
       I: Void,
-      O: Courses,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.GetCoursesByUser
-     */
-    getCoursesByUser: {
-      name: "GetCoursesByUser",
-      I: EnrollmentStatusRequest,
       O: Courses,
       kind: MethodKind.Unary,
     },
@@ -378,6 +360,15 @@ export const QuickFeedService = {
       I: RepositoryRequest,
       O: Void,
       kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc qf.QuickFeedService.SubmissionStream
+     */
+    submissionStream: {
+      name: "SubmissionStream",
+      I: Void,
+      O: Submission,
+      kind: MethodKind.ServerStreaming,
     },
   }
 } as const;

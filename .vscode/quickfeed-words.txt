@@ -63,6 +63,7 @@ gopath
 gopb
 gopls
 Gorm
+gormlogger
 gosecret
 gosimple
 gotest
@@ -194,6 +195,7 @@ urfave
 URL's
 usermod
 verdana
+Warnf
 webpack's
 wojtekmaj
 WORKDIR

@@ -6,18 +6,10 @@ import (
 	"time"
 )
 
-// UpdateRequired returns true if JWT update is needed for this user ID
-// because the user's role has changed or the JWT is about to expire.
-func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
-	for _, token := range tm.tokensToUpdate {
-		if claims.UserID == token {
-			return true
-		}
-	}
-	return claims.ExpiresAt <= time.Now().Unix()
-}
-
 func (tm *TokenManager) UpdateCookie(claims *Claims) (*http.Cookie, error) {
+	if !tm.updateRequired(claims) {
+		return nil, nil
+	}
 	updatedCookie, err := tm.NewAuthCookie(claims.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update cookie for user %d: %w", claims.UserID, err)
@@ -56,6 +48,17 @@ func (tm *TokenManager) Add(userID uint64) error {
 	}
 	tm.tokensToUpdate = append(tm.tokensToUpdate, userID)
 	return nil
+}
+
+// updateRequired returns true if JWT update is needed for this user ID
+// because the user's role has changed or the JWT is about to expire.
+func (tm *TokenManager) updateRequired(claims *Claims) bool {
+	for _, token := range tm.tokensToUpdate {
+		if claims.UserID == token {
+			return true
+		}
+	}
+	return claims.ExpiresAt <= time.Now().Unix()
 }
 
 // updateTokenList fetches IDs of users who need token updates from the database

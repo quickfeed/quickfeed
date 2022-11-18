@@ -30,7 +30,7 @@ const (
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, qfTestUser := scm.GetTestSCM(t)
-	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{
+	org, err := s.GetOrganization(context.Background(), &scm.OrganizationOptions{
 		Name:     qfTestOrg,
 		Username: qfTestUser,
 	})

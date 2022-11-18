@@ -87,27 +87,27 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,18 +140,16 @@ func TestParse(t *testing.T) {
 	// We expect assignment names to be set based on
 	// assignment folder names.
 	wantAssignment1 := &qf.Assignment{
-		Name:             "lab1",
-		Deadline:         "2017-08-27T12:00:00",
-		RunScriptContent: "Script for Lab1",
-		AutoApprove:      false,
-		Order:            1,
-		ScoreLimit:       80,
+		Name:        "lab1",
+		Deadline:    "2017-08-27T12:00:00",
+		AutoApprove: false,
+		Order:       1,
+		ScoreLimit:  80,
 	}
 
 	wantAssignment2 := &qf.Assignment{
 		Name:              "lab2",
 		Deadline:          "2018-08-27T12:00:00",
-		RunScriptContent:  "Default script",
 		AutoApprove:       false,
 		Order:             2,
 		ScoreLimit:        80,
@@ -193,7 +191,7 @@ func TestParseUnknownFields(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}

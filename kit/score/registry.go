@@ -2,6 +2,7 @@ package score
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -17,7 +18,7 @@ type registry struct {
 	scores    map[string]*Score // map from TestName to score object
 }
 
-func NewRegistry() *registry {
+func NewRegistry() *registry { // skipcq: RVV-B0011
 	return &registry{
 		testNames: make([]string, 0),
 		scores:    make(map[string]*Score),
@@ -43,6 +44,11 @@ func (s *registry) Validate() error {
 // This should be called after test registration has been completed,
 // but before test execution. This can be done in TestMain.
 //
+// If the environment variable SCORE_INFO is set to a non-empty value,
+// the test info will be printed and the program will exit.
+// This can be used to ensure that the test info is always printed;
+// otherwise, a test failure may prevent the test info from being printed.
+//
 // Will panic if called from a non-test function.
 func (s *registry) PrintTestInfo(sorted ...bool) {
 	callFrame()
@@ -55,13 +61,17 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 			fmt.Println(sc.json())
 		}
 	}
+	// force exit after printing test info if SCORE_INIT is set
+	if os.Getenv("SCORE_INIT") != "" {
+		os.Exit(0) // skipcq: RVV-A0003
+	}
 }
 
 // Add test with given max score and weight to the registry.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) Add(test interface{}, max, weight int) {
-	s.add(testName(test), "", max, weight)
+	s.internalAdd(testName(test), "", max, weight)
 }
 
 // AddWithTask test with given taskName, max score and weight to the registry.
@@ -69,7 +79,7 @@ func (s *registry) Add(test interface{}, max, weight int) {
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddWithTask(test interface{}, taskName string, max, weight int) {
-	s.add(testName(test), taskName, max, weight)
+	s.internalAdd(testName(test), taskName, max, weight)
 }
 
 // AddSub test with given max score and weight to the registry.
@@ -79,7 +89,7 @@ func (s *registry) AddWithTask(test interface{}, taskName string, max, weight in
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddSub(test interface{}, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	s.add(tstName, "", max, weight)
+	s.internalAdd(tstName, "", max, weight)
 }
 
 // AddSubWithTask test with given taskName, max score and weight to the registry.
@@ -90,7 +100,7 @@ func (s *registry) AddSub(test interface{}, subTestName string, max, weight int)
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddSubWithTask(test interface{}, subTestName, taskName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	s.add(tstName, taskName, max, weight)
+	s.internalAdd(tstName, taskName, max, weight)
 }
 
 // Max returns a score object with Score equal to MaxScore.
@@ -178,7 +188,7 @@ func firstElem(name string) string {
 	return name[:end]
 }
 
-func (s *registry) add(testName, taskName string, max, weight int) {
+func (s *registry) internalAdd(testName, taskName string, max, weight int) {
 	if _, found := s.scores[testName]; found {
 		panic(errMsg(testName, "Duplicate score test"))
 	}

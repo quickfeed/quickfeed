@@ -62,6 +62,7 @@ func TestDBGetUserWithEnrollments(t *testing.T) {
 		UserID:       admin.ID,
 		Status:       qf.Enrollment_TEACHER,
 		State:        qf.Enrollment_VISIBLE,
+		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 
@@ -71,6 +72,7 @@ func TestDBGetUserWithEnrollments(t *testing.T) {
 		UserID:       student.ID,
 		Status:       qf.Enrollment_STUDENT,
 		State:        qf.Enrollment_VISIBLE,
+		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 
@@ -351,8 +353,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
-		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
+		if enrollments[i] == qf.Enrollment_STUDENT {
 			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: c1.ID,
@@ -491,8 +492,7 @@ func TestDeleteGroup(t *testing.T) {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
-		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
+		if enrollments[i] == qf.Enrollment_STUDENT {
 			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: course.ID,

@@ -1,4 +1,4 @@
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
 } from "../../proto/qf/types_pb"
@@ -19,6 +19,30 @@ export const onInitializeOvermind = ({ actions }: Context) => {
         actions.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
     }
+}
+
+export const handleStreamError = (context: Context, error: Error): void => {
+    context.state.connectionStatus = ConnStatus.DISCONNECTED
+    context.actions.alert({ text: error.message, color: Color.RED })
+}
+
+export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
+    let courseID = 0n
+    let assignmentOrder = 0
+    Object.entries(state.assignments).forEach(
+        ([, assignments]) => {
+            const assignment = assignments.find(assignment => assignment.ID === submission.AssignmentID)
+            if (assignment && assignment.CourseID !== 0n) {
+                assignmentOrder = assignment.order
+                courseID = assignment.CourseID
+                return
+            }
+        }
+    )
+    if (courseID === 0n) {
+        return
+    }
+    Object.assign(state.submissions[courseID.toString()][assignmentOrder - 1], submission)
 }
 
 export const resetState = ({ state }: Context) => {
@@ -712,13 +736,24 @@ export const refreshSubmission = async ({ effects }: Context, { link }: { link: 
     return link
 }
 
-export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink): Promise<void> => {
-    link = await actions.refreshSubmission({ link })
-    state.activeSubmissionLink = link ? link : null
+export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink | null): Promise<void> => {
+    let submissionLink = link
+    if (submissionLink) {
+        submissionLink = await actions.refreshSubmission({ link: submissionLink })
+    }
+    state.activeSubmissionLink = submissionLink
 }
 
-export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment): void => {
+export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment | null): void => {
     state.activeEnrollment = enrollment ? enrollment : null
+}
+
+export const startSubmissionStream = ({ actions, effects }: Context) => {
+    effects.streamService.submissionStream({
+        onStatusChange: actions.setConnectionStatus,
+        onMessage: actions.receiveSubmission,
+        onError: actions.handleStreamError,
+    })
 }
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
@@ -758,6 +793,9 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         // End loading screen.
         state.isLoading = false
     }
+
+    actions.startSubmissionStream()
+
     // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
     // However, if one of the above calls fail, it could still be the case that success returns true.
     return success
@@ -878,4 +916,8 @@ export const updateGroupName = ({ state }: Context, name: string): void => {
         return
     }
     state.activeGroup.name = name
+}
+
+export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
+    state.connectionStatus = status
 }

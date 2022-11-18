@@ -28,12 +28,12 @@ describe("UpdateEnrollment", () => {
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
         const enrollment = mockedOvermind.state.courseEnrollments[test.courseID.toString()].find(e => e.userID === test.userID)
-        if (enrollment === undefined) {
+        if (!enrollment) {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
         mockedOvermind.actions.setActiveCourse(test.courseID)
         window.confirm = jest.fn(() => true)
-        await mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: test.want })
+        await mockedOvermind.actions.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })
 })
@@ -45,7 +45,7 @@ describe("UpdateEnrollment in webpage", () => {
             ID: BigInt(2),
             courseID: BigInt(1),
             status: 3,
-            user: user,
+            user,
             slipDaysRemaining: 3,
             lastActivityDate: "10 Mar",
             totalApproved: BigInt(0),
@@ -82,7 +82,7 @@ describe("UpdateEnrollment in webpage", () => {
             ID: BigInt(2),
             courseID: BigInt(1),
             status: 2,
-            user: user,
+            user,
             slipDaysRemaining: 3,
             lastActivityDate: "10 Mar",
             totalApproved: BigInt(0),

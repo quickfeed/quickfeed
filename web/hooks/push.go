@@ -125,9 +125,14 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 		wh.logger.Error(err)
 		return
 	}
-	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
+	submission, err := runData.RecordResults(wh.logger, wh.db, results)
+	if err != nil {
 		wh.logger.Error(err)
 		return
+	}
+	// If we fail to get owners, we ignore sending on the stream.
+	if userIDs, err := runData.GetOwners(wh.db); err == nil {
+		wh.streams.Submission.SendTo(submission, userIDs...)
 	}
 	// Non-default branch indicates push to a group repo.
 	if !isDefaultBranch(payload) {

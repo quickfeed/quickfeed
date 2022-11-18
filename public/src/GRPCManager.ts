@@ -93,14 +93,6 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCourses, new Void())
     }
 
-    public getCoursesByUser(userID: bigint, statuses: Enrollment_UserStatus[]): Promise<IGrpcResponse<Courses>> {
-        const request = new EnrollmentStatusRequest({
-            userID: userID,
-            statuses: statuses,
-        })
-        return this.grpcSend<Courses>(this.agService.getCoursesByUser, request)
-    }
-
     public updateCourseVisibility(request: Enrollment): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(this.agService.updateCourseVisibility, request)
     }
@@ -217,7 +209,7 @@ export class GrpcManager {
             courseID: courseID,
             userID: userID,
         })
-        return this.grpcSend<Submissions>(this.agService.getSubmission, request)
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
         const request = new SubmissionReviewersRequest({

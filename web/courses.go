@@ -368,7 +368,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 	// ensure the organization exists
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
+	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{ID: request.OrganizationID})
 	if err != nil {
 		return err
 	}
@@ -398,7 +398,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 					totalApproved++
 				}
 				if enrol.LastActivityDate == "" {
-					submissionDate, err = submission.NewestBuildDate(submissionDate)
+					submissionDate, err = submission.NewestSubmissionDate(submissionDate)
 					if err != nil {
 						return nil, err
 					}

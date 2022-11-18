@@ -67,9 +67,10 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 		Status:       previous.GetStatus(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
-			BuildDate: time.Now().Format(qf.TimeLayout),
-			BuildLog:  "No automated tests for this assignment",
-			ExecTime:  1,
+			SubmissionDate: time.Now().Format(qf.TimeLayout),
+			BuildDate:      time.Now().Format(qf.TimeLayout),
+			BuildLog:       "No automated tests for this assignment",
+			ExecTime:       1,
 		},
 	}
 }
@@ -77,7 +78,7 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
 	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
 		// Keep previous submission's delivery date if this is a rebuild.
-		results.BuildInfo.BuildDate = previous.BuildInfo.BuildDate
+		results.BuildInfo.SubmissionDate = previous.BuildInfo.SubmissionDate
 	}
 	score := results.Sum()
 	return &qf.Submission{
@@ -94,10 +95,10 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	buildDate := submission.GetBuildInfo().GetBuildDate()
-	buildTime, err := time.Parse(qf.TimeLayout, buildDate)
+	submissionDate := submission.GetBuildInfo().GetSubmissionDate()
+	submissionTime, err := time.Parse(qf.TimeLayout, submissionDate)
 	if err != nil {
-		return fmt.Errorf("failed to parse time from build date (%s): %w", buildDate, err)
+		return fmt.Errorf("failed to parse time from submission date (%s): %w", submissionDate, err)
 	}
 
 	enrollments := make([]*qf.Enrollment, 0)
@@ -116,7 +117,7 @@ func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission)
 	}
 
 	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(buildTime, r.Assignment, submission); err != nil {
+		if err := enrol.UpdateSlipDays(submissionTime, r.Assignment, submission); err != nil {
 			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enrol.UserID, r.Assignment.CourseID, err)
 		}
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {
@@ -124,4 +125,24 @@ func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission)
 		}
 	}
 	return nil
+}
+
+// GetOwners returns the UserIDs of a user or group repository's owners.
+// Returns an error if no owners could be found.
+// This method should only be called for a user or group repository.
+func (r RunData) GetOwners(db database.Database) ([]uint64, error) {
+	var owners []uint64
+	if r.Repo.IsUserRepo() {
+		owners = []uint64{r.Repo.GetUserID()}
+	}
+	if r.Repo.IsGroupRepo() {
+		group, err := db.GetGroup(r.Repo.GetGroupID())
+		if err == nil {
+			owners = group.UserIDs()
+		}
+	}
+	if len(owners) == 0 {
+		return nil, fmt.Errorf("failed to get owners for %s", r)
+	}
+	return owners, nil
 }
