@@ -43,22 +43,6 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.OrganizationName)
 }
 
-// getCredsForUserSCM returns the given user's personal access token.
-func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
-	// Exchange the user's refresh token for an access token.
-	token, err := q.scmMgr.ExchangeToken(user.GetRefreshToken())
-	if err != nil {
-		return "", err
-	}
-	// Save the user's new refresh token in the database.
-	user.RefreshToken = token.RefreshToken
-	if err := q.db.UpdateUser(user); err != nil {
-		return "", err
-	}
-	// Return the newly exchanged access token.
-	return token.AccessToken, nil
-}
-
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified course (represented with organization ID). The SCM team name
 // is also used as the group name and repository path. The provided user names represent the SCM group members.

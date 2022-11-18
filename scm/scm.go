@@ -47,8 +47,9 @@ type SCM interface {
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
-	// AcceptInvitations accepts course invites.
-	AcceptInvitations(context.Context, *InvitationOptions) error
+	// AcceptInvitations accepts course invites on behalf of the user.
+	// A new refresh token for the user is returned, which may be used in subsequent requests.
+	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
 
 	// CreateCourse creates repositories and teams for a new course.
 	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)

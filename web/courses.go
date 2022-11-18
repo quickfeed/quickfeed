@@ -451,16 +451,15 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
-	userToken, err := s.getCredsForUserSCM(user)
+	newRefreshToken, err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
+		Login:        user.GetLogin(),
+		Owner:        organizationName,
+		RefreshToken: user.GetRefreshToken(),
+	})
 	if err != nil {
-		return fmt.Errorf("failed to get access token for user %d: %w", user.ID, err)
-	}
-	if err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
-		Login: user.GetLogin(),
-		Owner: organizationName,
-		Token: userToken,
-	}); err != nil {
 		return fmt.Errorf("failed to accept invites for %s: %w", user.Login, err)
 	}
-	return nil
+	// Save the user's new refresh token in the database.
+	user.RefreshToken = newRefreshToken
+	return s.db.UpdateUser(user)
 }
