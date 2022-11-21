@@ -215,7 +215,15 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 	// By default, Gorm will not update zero value fields; such as the Ready bool field.
 	// Therefore we use Select before the Updates call. For additional context, see
 	// https://github.com/quickfeed/quickfeed/issues/569#issuecomment-1013729572
-	return db.conn.Model(&query).Select("*").Updates(query).Error
+	return db.conn.Model(&query).Select("*").Updates(&qf.Review{
+		ID:           query.ID,
+		SubmissionID: query.SubmissionID,
+		Feedback:     query.Feedback,
+		Ready:        query.Ready,
+		Score:        query.Score,
+		ReviewerID:   query.ReviewerID,
+		Edited:       query.Edited,
+	}).Error
 }
 
 // DeleteReview removes all reviews matching the query.
