@@ -76,8 +76,8 @@ func (req *RepositoryRequest) IsValid() bool {
 // It must have a positive course ID and
 // one of the fetch modes must be set with a positive ID.
 func (req *SubmissionRequest) IsValid() bool {
-	if hasCourseID := req.GetCourseID() > 0; !hasCourseID {
-		return false
+	if req.GetCourseID() == 0 {
+		return false // invalid: course ID must be set
 	}
 	switch req.GetFetchMode().(type) {
 	case nil:

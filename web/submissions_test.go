@@ -220,7 +220,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// check that default and all submissions (SubmissionsForCourseRequest_ALL) are the same
+	// check that default and all submissions are the same
 	if diff := cmp.Diff(submissions.Msg, allSubmissions.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("TestGetSubmissionsByCourse() mismatch (-submissions +allSubmissions):\n%s", diff)
 	}

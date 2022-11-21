@@ -96,15 +96,15 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 }
 
 // GetAssignmentsWithSubmissions returns all course assignments
-// of requested type with preloaded submissions.
+// preloaded with submissions of the requested submission type.
 func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Assignment, error) {
 	var assignments []*qf.Assignment
-	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
 	m := db.conn.Preload("Submissions").
 		Preload("Submissions.Reviews").
 		Preload("Submissions.Reviews.GradingBenchmarks").
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.Scores")
+	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
 	if err := m.Where(&qf.Assignment{CourseID: courseID}).
 		Order("'order'").
 		Find(&assignments).Error; err != nil {
