@@ -24,11 +24,6 @@ func (u *User) IsValid() bool {
 	return u.GetID() > 0
 }
 
-// IsValid ensures that user ID is set
-func (u *UserRequest) IsValid() bool {
-	return u.GetUserID() > 0
-}
-
 // IsValid checks required fields of an enrollment request.
 func (req *Enrollment) IsValid() bool {
 	return req.GetStatus() <= Enrollment_TEACHER &&
