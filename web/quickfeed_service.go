@@ -378,7 +378,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
-	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
+	err := s.updateSubmission(in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))

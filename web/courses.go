@@ -287,7 +287,7 @@ func makeSubmissionLinks(assignments []*qf.Assignment, include func(*qf.Submissi
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
+func (s *QuickFeedService) updateSubmission(submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return err
