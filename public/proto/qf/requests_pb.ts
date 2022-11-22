@@ -5,7 +5,7 @@
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
 import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
-import {Course, Enrollment_UserStatus, EnrollmentLink, Repository_Type, Review, Submission_Status, User} from "./types_pb.js";
+import {Course, Enrollment_UserStatus, EnrollmentLink, Repository_Type, Review, Submission_Status} from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -381,43 +381,6 @@ export class Organizations extends Message<Organizations> {
 
   static equals(a: Organizations | PlainMessage<Organizations> | undefined, b: Organizations | PlainMessage<Organizations> | undefined): boolean {
     return proto3.util.equals(Organizations, a, b);
-  }
-}
-
-/**
- * @generated from message qf.Reviewers
- */
-export class Reviewers extends Message<Reviewers> {
-  /**
-   * @generated from field: repeated qf.User reviewers = 1;
-   */
-  reviewers: User[] = [];
-
-  constructor(data?: PartialMessage<Reviewers>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.Reviewers";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "reviewers", kind: "message", T: User, repeated: true },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Reviewers {
-    return new Reviewers().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Reviewers {
-    return new Reviewers().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Reviewers {
-    return new Reviewers().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: Reviewers | PlainMessage<Reviewers> | undefined, b: Reviewers | PlainMessage<Reviewers> | undefined): boolean {
-    return proto3.util.equals(Reviewers, a, b);
   }
 }
 

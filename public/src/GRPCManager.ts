@@ -36,7 +36,6 @@ import {
     UpdateSubmissionsRequest,
     URLRequest,
     Void,
-    Reviewers,
     SubmissionRequest_SubmissionType,
 } from "../proto/qf/requests_pb"
 import { QuickFeedService } from "../proto/qf/quickfeed_connectweb"
@@ -317,18 +316,6 @@ export class GrpcManager {
             review: r,
         })
         return this.grpcSend<Review>(this.agService.updateReview, request)
-    }
-
-    //TODO(meling) currently not used
-    public getReviewers(submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Reviewers>> {
-        const request = new SubmissionRequest({
-            CourseID: courseID,
-            FetchMode: {
-                case: "SubmissionID",
-                value: submissionID,
-            },
-        })
-        return this.grpcSend<Reviewers>(this.agService.getReviewers, request)
     }
 
     // /* REPOSITORY */ //

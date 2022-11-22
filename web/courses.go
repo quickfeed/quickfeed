@@ -345,21 +345,6 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 	return s.db.UpdateSubmissions(request.CourseID, query)
 }
 
-func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*qf.User, error) {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
-	if err != nil {
-		return nil, err
-	}
-	names := make([]*qf.User, 0)
-	// TODO: make sure to preload reviews here
-	for _, review := range submission.Reviews {
-		// ignore possible error, will just add an empty string
-		u, _ := s.db.GetUser(review.ReviewerID)
-		names = append(names, u)
-	}
-	return names, nil
-}
-
 // updateCourse updates an existing course.
 func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
 	// ensure the course exists

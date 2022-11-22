@@ -245,13 +245,6 @@ func TestAccessControl(t *testing.T) {
 				},
 			}, tt.cookie))
 			checkAccess(t, "UpdateReview", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetReviewers(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
-				CourseID: tt.courseID,
-				FetchMode: &qf.SubmissionRequest_SubmissionID{
-					SubmissionID: 1,
-				},
-			}, tt.cookie))
-			checkAccess(t, "GetReviewers", err, tt.wantCode, tt.wantAccess)
 			_, err = client.IsEmptyRepo(ctx, qtest.RequestWithCookie(&qf.RepositoryRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "IsEmptyRepo", err, tt.wantCode, tt.wantAccess)
 		})
