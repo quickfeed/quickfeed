@@ -206,8 +206,8 @@ func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Su
 }
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
-func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
-	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
+func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest) (*qf.CourseSubmissions, error) {
+	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.GetType())
 	if err != nil {
 		return nil, err
 	}
@@ -218,12 +218,12 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCou
 	}
 
 	var enrolLinks []*qf.EnrollmentLink
-	switch request.Type {
-	case qf.SubmissionsForCourseRequest_GROUP:
+	switch request.GetType() {
+	case qf.SubmissionRequest_GROUP:
 		enrolLinks = makeGroupResults(course, assignments)
-	case qf.SubmissionsForCourseRequest_INDIVIDUAL:
+	case qf.SubmissionRequest_USER:
 		enrolLinks = makeIndividualResults(course, assignments)
-	default: // case qf.SubmissionsForCourseRequest_ALL:
+	case qf.SubmissionRequest_ALL:
 		enrolLinks = makeAllResults(course, assignments)
 	}
 	return &qf.CourseSubmissions{Course: course, Links: enrolLinks}, nil
@@ -379,9 +379,11 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 // returns all enrollments for the course ID with last activity date and number of approved assignments
 func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
 	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
-		&qf.SubmissionsForCourseRequest{
+		&qf.SubmissionRequest{
 			CourseID: courseID,
-			Type:     qf.SubmissionsForCourseRequest_ALL,
+			FetchMode: &qf.SubmissionRequest_Type{
+				Type: qf.SubmissionRequest_ALL,
+			},
 		})
 	if err != nil {
 		return nil, err

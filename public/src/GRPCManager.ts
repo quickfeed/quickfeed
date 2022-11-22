@@ -32,14 +32,12 @@ import {
     ReviewRequest,
     Status,
     SubmissionRequest,
-    SubmissionsForCourseRequest,
-    SubmissionReviewersRequest,
     UpdateSubmissionRequest,
     UpdateSubmissionsRequest,
     URLRequest,
     Void,
     Reviewers,
-    SubmissionsForCourseRequest_Type,
+    SubmissionRequest_SubmissionType,
 } from "../proto/qf/requests_pb"
 import { QuickFeedService } from "../proto/qf/quickfeed_connectweb"
 import { createConnectTransport, ConnectError, createCallbackClient, CallbackClient } from "@bufbuild/connect-web"
@@ -195,42 +193,47 @@ export class GrpcManager {
     }
 
     // /* SUBMISSIONS */ //
-    public getAllSubmissions(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest({
-            courseID: courseID,
-            userID: userID,
-            groupID: groupID,
-        })
-        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
-    }
 
-    public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const request = new SubmissionRequest({
-            courseID: courseID,
-            userID: userID,
-        })
-        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
-    }
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
-        const request = new SubmissionReviewersRequest({
-            courseID: courseID,
-            submissionID: submissionID
+        const request = new SubmissionRequest({
+            CourseID: courseID,
+            FetchMode: {
+                case: "SubmissionID",
+                value: submissionID,
+            },
         })
         return this.grpcSend<Submission>(this.agService.getSubmission, request)
     }
 
-    public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
+    public getSubmissions(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Submissions>> {
         const request = new SubmissionRequest({
-            courseID: courseID,
-            groupID: groupID,
+            CourseID: courseID,
+            FetchMode: {
+                case: "UserID",
+                value: userID,
+            },
         })
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
-    public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
-        const request = new SubmissionsForCourseRequest({
-            courseID: courseID,
-            type: type,
+    public getGroupSubmissions(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
+        const request = new SubmissionRequest({
+            CourseID: courseID,
+            FetchMode: {
+                case: "GroupID",
+                value: groupID,
+            },
+        })
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
+    }
+
+    public getSubmissionsByCourse(courseID: bigint, type: SubmissionRequest_SubmissionType): Promise<IGrpcResponse<CourseSubmissions>> {
+        const request = new SubmissionRequest({
+            CourseID: courseID,
+            FetchMode: {
+                case: "Type",
+                value: type,
+            }
         })
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request)
     }
@@ -316,10 +319,14 @@ export class GrpcManager {
         return this.grpcSend<Review>(this.agService.updateReview, request)
     }
 
+    //TODO(meling) currently not used
     public getReviewers(submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Reviewers>> {
-        const request = new SubmissionReviewersRequest({
-            courseID: courseID,
-            submissionID: submissionID,
+        const request = new SubmissionRequest({
+            CourseID: courseID,
+            FetchMode: {
+                case: "SubmissionID",
+                value: submissionID,
+            },
         })
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request)
     }

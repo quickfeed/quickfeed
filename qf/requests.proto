@@ -71,9 +71,19 @@ message EnrollmentStatusRequest {
 }
 
 message SubmissionRequest {
-    uint64 userID   = 1;
-    uint64 groupID  = 2;
-    uint64 courseID = 3;
+    enum SubmissionType {
+        ALL   = 0;  // fetch all submissions
+        USER  = 1;  // fetch all user submissions
+        GROUP = 2;  // fetch all group submissions
+    }
+    uint64 CourseID     = 1;
+    uint64 AssignmentID = 2;  // only used for user and group submissions
+    oneof FetchMode {
+        uint64 UserID       = 3;  // fetch single user's submissions with build info
+        uint64 GroupID      = 4;  // fetch single group's submissions with build info
+        uint64 SubmissionID = 5;  // fetch single specific submission with build info
+        SubmissionType Type = 6;  // fetch all submissions of given type without build info
+    }
 }
 
 message UpdateSubmissionRequest {
@@ -90,11 +100,6 @@ message UpdateSubmissionsRequest {
     uint32 scoreLimit   = 3;
     bool release        = 4;
     bool approve        = 5;
-}
-
-message SubmissionReviewersRequest {
-    uint64 submissionID = 1;
-    uint64 courseID     = 2;
 }
 
 message URLRequest {
@@ -116,16 +121,6 @@ message Repositories {
 message Status {
     uint64 Code  = 1;
     string Error = 2;
-}
-
-message SubmissionsForCourseRequest {
-    enum Type {
-        ALL        = 0;
-        INDIVIDUAL = 1;
-        GROUP      = 2;
-    }
-    uint64 courseID = 1;
-    Type type       = 2;
 }
 
 message RebuildRequest {

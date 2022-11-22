@@ -150,8 +150,10 @@ func TestAccessControl(t *testing.T) {
 	for name, tt := range studentAccessTests {
 		t.Run("StudentAccess/"+name, func(t *testing.T) {
 			_, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
-				UserID:   tt.userID,
 				CourseID: tt.courseID,
+				FetchMode: &qf.SubmissionRequest_UserID{
+					UserID: tt.userID,
+				},
 			}, tt.cookie))
 			checkAccess(t, "GetSubmissions", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
@@ -243,9 +245,11 @@ func TestAccessControl(t *testing.T) {
 				},
 			}, tt.cookie))
 			checkAccess(t, "UpdateReview", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetReviewers(ctx, qtest.RequestWithCookie(&qf.SubmissionReviewersRequest{
-				CourseID:     tt.courseID,
-				SubmissionID: 1,
+			_, err = client.GetReviewers(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+				CourseID: tt.courseID,
+				FetchMode: &qf.SubmissionRequest_SubmissionID{
+					SubmissionID: 1,
+				},
 			}, tt.cookie))
 			checkAccess(t, "GetReviewers", err, tt.wantCode, tt.wantAccess)
 			_, err = client.IsEmptyRepo(ctx, qtest.RequestWithCookie(&qf.RepositoryRequest{CourseID: tt.courseID}, tt.cookie))
@@ -258,7 +262,7 @@ func TestAccessControl(t *testing.T) {
 	}
 	for name, tt := range courseAdminTests {
 		t.Run("CourseAdminAccess/"+name, func(t *testing.T) {
-			_, err = client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionsForCourseRequest{
+			_, err = client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 				CourseID: tt.courseID,
 			}, tt.cookie))
 			checkAccess(t, "GetSubmissionsByCourse", err, tt.wantCode, tt.wantAccess)

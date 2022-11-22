@@ -144,9 +144,11 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 		return nil, fmt.Errorf("course %s-%d not found", courseCode, year)
 	}
 
-	submissionCourseRequest := &qf.SubmissionsForCourseRequest{
+	submissionCourseRequest := &qf.SubmissionRequest{
 		CourseID: courseID,
-		Type:     qf.SubmissionsForCourseRequest_ALL,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_ALL,
+		},
 	}
 	submissions, err := client.GetSubmissionsByCourse(ctx, connect.NewRequest(submissionCourseRequest))
 	if err != nil {

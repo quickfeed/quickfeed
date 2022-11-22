@@ -2,7 +2,7 @@ import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeac
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
 } from "../../proto/qf/types_pb"
-import { CourseSubmissions, Organization, SubmissionsForCourseRequest_Type, } from "../../proto/qf/requests_pb"
+import { CourseSubmissions, Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import { Alert, UserCourseSubmissions } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
@@ -474,8 +474,8 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     state.isLoading = true
 
     // None of these should fail independently.
-    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest_Type.ALL)
-    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest_Type.GROUP)
+    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.ALL)
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)

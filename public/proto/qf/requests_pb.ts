@@ -530,19 +530,53 @@ export class EnrollmentStatusRequest extends Message<EnrollmentStatusRequest> {
  */
 export class SubmissionRequest extends Message<SubmissionRequest> {
   /**
-   * @generated from field: uint64 userID = 1;
+   * @generated from field: uint64 CourseID = 1;
    */
-  userID = protoInt64.zero;
+  CourseID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 groupID = 2;
+   * only used for user and group submissions
+   *
+   * @generated from field: uint64 AssignmentID = 2;
    */
-  groupID = protoInt64.zero;
+  AssignmentID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 courseID = 3;
+   * @generated from oneof qf.SubmissionRequest.FetchMode
    */
-  courseID = protoInt64.zero;
+  FetchMode: {
+    /**
+     * fetch single user's submissions with build info
+     *
+     * @generated from field: uint64 UserID = 3;
+     */
+    value: bigint;
+    case: "UserID";
+  } | {
+    /**
+     * fetch single group's submissions with build info
+     *
+     * @generated from field: uint64 GroupID = 4;
+     */
+    value: bigint;
+    case: "GroupID";
+  } | {
+    /**
+     * fetch single specific submission with build info
+     *
+     * @generated from field: uint64 SubmissionID = 5;
+     */
+    value: bigint;
+    case: "SubmissionID";
+  } | {
+    /**
+     * fetch all submissions of given type without build info
+     *
+     * @generated from field: qf.SubmissionRequest.SubmissionType Type = 6;
+     */
+    value: SubmissionRequest_SubmissionType;
+    case: "Type";
+  } | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<SubmissionRequest>) {
     super();
@@ -552,9 +586,12 @@ export class SubmissionRequest extends Message<SubmissionRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.SubmissionRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 1, name: "CourseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "AssignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "UserID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "FetchMode" },
+    { no: 4, name: "GroupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "FetchMode" },
+    { no: 5, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "FetchMode" },
+    { no: 6, name: "Type", kind: "enum", T: proto3.getEnumType(SubmissionRequest_SubmissionType), oneof: "FetchMode" },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubmissionRequest {
@@ -573,6 +610,38 @@ export class SubmissionRequest extends Message<SubmissionRequest> {
     return proto3.util.equals(SubmissionRequest, a, b);
   }
 }
+
+/**
+ * @generated from enum qf.SubmissionRequest.SubmissionType
+ */
+export enum SubmissionRequest_SubmissionType {
+  /**
+   * fetch all submissions
+   *
+   * @generated from enum value: ALL = 0;
+   */
+  ALL = 0,
+
+  /**
+   * fetch all user submissions
+   *
+   * @generated from enum value: USER = 1;
+   */
+  USER = 1,
+
+  /**
+   * fetch all group submissions
+   *
+   * @generated from enum value: GROUP = 2;
+   */
+  GROUP = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(SubmissionRequest_SubmissionType)
+proto3.util.setEnumType(SubmissionRequest_SubmissionType, "qf.SubmissionRequest.SubmissionType", [
+  { no: 0, name: "ALL" },
+  { no: 1, name: "USER" },
+  { no: 2, name: "GROUP" },
+]);
 
 /**
  * @generated from message qf.UpdateSubmissionRequest
@@ -693,49 +762,6 @@ export class UpdateSubmissionsRequest extends Message<UpdateSubmissionsRequest> 
 
   static equals(a: UpdateSubmissionsRequest | PlainMessage<UpdateSubmissionsRequest> | undefined, b: UpdateSubmissionsRequest | PlainMessage<UpdateSubmissionsRequest> | undefined): boolean {
     return proto3.util.equals(UpdateSubmissionsRequest, a, b);
-  }
-}
-
-/**
- * @generated from message qf.SubmissionReviewersRequest
- */
-export class SubmissionReviewersRequest extends Message<SubmissionReviewersRequest> {
-  /**
-   * @generated from field: uint64 submissionID = 1;
-   */
-  submissionID = protoInt64.zero;
-
-  /**
-   * @generated from field: uint64 courseID = 2;
-   */
-  courseID = protoInt64.zero;
-
-  constructor(data?: PartialMessage<SubmissionReviewersRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.SubmissionReviewersRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "submissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubmissionReviewersRequest {
-    return new SubmissionReviewersRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SubmissionReviewersRequest {
-    return new SubmissionReviewersRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SubmissionReviewersRequest {
-    return new SubmissionReviewersRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: SubmissionReviewersRequest | PlainMessage<SubmissionReviewersRequest> | undefined, b: SubmissionReviewersRequest | PlainMessage<SubmissionReviewersRequest> | undefined): boolean {
-    return proto3.util.equals(SubmissionReviewersRequest, a, b);
   }
 }
 
@@ -912,75 +938,6 @@ export class Status extends Message<Status> {
     return proto3.util.equals(Status, a, b);
   }
 }
-
-/**
- * @generated from message qf.SubmissionsForCourseRequest
- */
-export class SubmissionsForCourseRequest extends Message<SubmissionsForCourseRequest> {
-  /**
-   * @generated from field: uint64 courseID = 1;
-   */
-  courseID = protoInt64.zero;
-
-  /**
-   * @generated from field: qf.SubmissionsForCourseRequest.Type type = 2;
-   */
-  type = SubmissionsForCourseRequest_Type.ALL;
-
-  constructor(data?: PartialMessage<SubmissionsForCourseRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.SubmissionsForCourseRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "type", kind: "enum", T: proto3.getEnumType(SubmissionsForCourseRequest_Type) },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubmissionsForCourseRequest {
-    return new SubmissionsForCourseRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SubmissionsForCourseRequest {
-    return new SubmissionsForCourseRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SubmissionsForCourseRequest {
-    return new SubmissionsForCourseRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: SubmissionsForCourseRequest | PlainMessage<SubmissionsForCourseRequest> | undefined, b: SubmissionsForCourseRequest | PlainMessage<SubmissionsForCourseRequest> | undefined): boolean {
-    return proto3.util.equals(SubmissionsForCourseRequest, a, b);
-  }
-}
-
-/**
- * @generated from enum qf.SubmissionsForCourseRequest.Type
- */
-export enum SubmissionsForCourseRequest_Type {
-  /**
-   * @generated from enum value: ALL = 0;
-   */
-  ALL = 0,
-
-  /**
-   * @generated from enum value: INDIVIDUAL = 1;
-   */
-  INDIVIDUAL = 1,
-
-  /**
-   * @generated from enum value: GROUP = 2;
-   */
-  GROUP = 2,
-}
-// Retrieve enum metadata with: proto3.getEnumType(SubmissionsForCourseRequest_Type)
-proto3.util.setEnumType(SubmissionsForCourseRequest_Type, "qf.SubmissionsForCourseRequest.Type", [
-  { no: 0, name: "ALL" },
-  { no: 1, name: "INDIVIDUAL" },
-  { no: 2, name: "GROUP" },
-]);
 
 /**
  * @generated from message qf.RebuildRequest

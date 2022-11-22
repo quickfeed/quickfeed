@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, SubmissionReviewersRequest, SubmissionsForCourseRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -196,6 +196,15 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc qf.QuickFeedService.GetSubmission
+     */
+    getSubmission: {
+      name: "GetSubmission",
+      I: SubmissionRequest,
+      O: Submission,
+      kind: MethodKind.Unary,
+    },
+    /**
      * Get latest submissions for all course assignments for a user or a group.
      *
      * @generated from rpc qf.QuickFeedService.GetSubmissions
@@ -207,22 +216,13 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc qf.QuickFeedService.GetSubmission
-     */
-    getSubmission: {
-      name: "GetSubmission",
-      I: SubmissionReviewersRequest,
-      O: Submission,
-      kind: MethodKind.Unary,
-    },
-    /**
      * Get lab submissions for every course user or every course group
      *
      * @generated from rpc qf.QuickFeedService.GetSubmissionsByCourse
      */
     getSubmissionsByCourse: {
       name: "GetSubmissionsByCourse",
-      I: SubmissionsForCourseRequest,
+      I: SubmissionRequest,
       O: CourseSubmissions,
       kind: MethodKind.Unary,
     },
@@ -330,7 +330,7 @@ export const QuickFeedService = {
      */
     getReviewers: {
       name: "GetReviewers",
-      I: SubmissionReviewersRequest,
+      I: SubmissionRequest,
       O: Reviewers,
       kind: MethodKind.Unary,
     },

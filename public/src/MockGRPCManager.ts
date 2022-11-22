@@ -29,11 +29,9 @@ import {
     Organization,
     Repositories,
     Status,
-    SubmissionReviewersRequest,
     Void,
-    Reviewers,
     Organizations,
-    SubmissionsForCourseRequest_Type,
+    SubmissionRequest_SubmissionType,
 } from "../proto/qf/requests_pb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
@@ -433,20 +431,6 @@ export class MockGrpcManager {
     }
 
     // /* SUBMISSIONS */ //
-    public getAllSubmissions(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const submissions: Submissions = new Submissions()
-        // Get all assignment IDs
-        const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID).map(a => a.ID)
-        if (groupID) {
-            const subs = this.submissions.submissions.filter(s => s.groupID === groupID && assignmentIDs.includes(s.AssignmentID))
-            submissions.submissions = subs
-        }
-        if (userID) {
-            const subs = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
-            submissions.submissions = subs
-        }
-        return this.grpcSend<Submissions>(submissions)
-    }
 
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
         const enrollment = this.enrollments.enrollments.find(enrollment =>
@@ -480,7 +464,7 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(new Submissions({ submissions }))
     }
 
-    public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: bigint, type: SubmissionRequest_SubmissionType): Promise<IGrpcResponse<CourseSubmissions>> {
         // TODO: Remove `.clone()` when done migrating to AsObject in state
         const users = this.users.users
         const groups = this.groups.groups
@@ -510,13 +494,13 @@ export class MockGrpcManager {
                 subLink.assignment = assignment.clone()
                 let submission: Submission | undefined
                 switch (type) {
-                    case SubmissionsForCourseRequest_Type.ALL:
+                    case SubmissionRequest_SubmissionType.ALL:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && (s.userID === enrollment.userID || (s.groupID > 0 && s.groupID === enrollment.groupID)))
                         break
-                    case SubmissionsForCourseRequest_Type.INDIVIDUAL:
+                    case SubmissionRequest_SubmissionType.USER:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.userID === enrollment.userID)
                         break
-                    case SubmissionsForCourseRequest_Type.GROUP:
+                    case SubmissionRequest_SubmissionType.GROUP:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.groupID > 0 && s.groupID === enrollment.groupID)
                         break
                 }
@@ -676,13 +660,6 @@ export class MockGrpcManager {
             return rev
         }))
         return this.grpcSend<Review>(r)
-    }
-
-    public getReviewers(submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Reviewers>> {
-        const request = new SubmissionReviewersRequest()
-        request.submissionID = submissionID
-        request.courseID = courseID
-        return this.grpcSend<Reviewers>(new Reviewers())
     }
 
     // /* REPOSITORY */ //
