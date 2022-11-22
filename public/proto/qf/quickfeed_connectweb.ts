@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, EnrollmentRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -160,19 +160,10 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc qf.QuickFeedService.GetEnrollmentsByUser
+     * @generated from rpc qf.QuickFeedService.GetEnrollments
      */
-    getEnrollmentsByUser: {
-      name: "GetEnrollmentsByUser",
-      I: EnrollmentStatusRequest,
-      O: Enrollments,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.GetEnrollmentsByCourse
-     */
-    getEnrollmentsByCourse: {
-      name: "GetEnrollmentsByCourse",
+    getEnrollments: {
+      name: "GetEnrollments",
       I: EnrollmentRequest,
       O: Enrollments,
       kind: MethodKind.Unary,

@@ -35,11 +35,6 @@ func (req *CourseRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that user ID is set
-func (req *EnrollmentStatusRequest) IsValid() bool {
-	return req.GetUserID() > 0
-}
-
 // IsValid checks whether OrgRequest fields are valid
 func (req *OrgRequest) IsValid() bool {
 	return req.GetOrgName() != ""
@@ -106,7 +101,13 @@ func (req *GroupRequest) IsValid() bool {
 
 // IsValid checks that course ID is positive.
 func (req *EnrollmentRequest) IsValid() bool {
-	return req.GetCourseID() > 0
+	switch req.GetFetchMode() {
+	case &EnrollmentRequest_CourseID{}:
+		return req.GetCourseID() > 0
+	case &EnrollmentRequest_UserID{}:
+		return req.GetUserID() > 0
+	}
+	return false
 }
 
 // IsValid ensures that both course and assignment IDs are set.

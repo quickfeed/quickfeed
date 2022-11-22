@@ -13,30 +13,12 @@ import (
 )
 
 // getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) (*qf.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
+func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) ([]*qf.Enrollment, error) {
+	enrollments, err := s.getEnrollmentsWithActivity(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}
-	if request.WithActivity {
-		enrollments, err = s.getEnrollmentsWithActivity(request.CourseID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// to populate response only with users who are not member of any group, we must filter the result
-	if request.IgnoreGroupMembers {
-		enrollmentsWithoutGroups := make([]*qf.Enrollment, 0)
-		for _, enrollment := range enrollments {
-			if enrollment.GroupID == 0 {
-				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
-			}
-		}
-		enrollments = enrollmentsWithoutGroups
-	}
-
-	return &qf.Enrollments{Enrollments: enrollments}, nil
+	return enrollments, nil
 }
 
 // updateEnrollment changes the status of the given course enrollment.

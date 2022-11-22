@@ -43,8 +43,7 @@ type QuickFeedServiceClient interface {
 	UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
 	GetAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Assignments], error)
 	UpdateAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Void], error)
-	GetEnrollmentsByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error)
-	GetEnrollmentsByCourse(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error)
+	GetEnrollments(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error)
 	CreateEnrollment(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
 	UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error)
 	GetSubmission(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submission], error)
@@ -159,14 +158,9 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/UpdateAssignments",
 			opts...,
 		),
-		getEnrollmentsByUser: connect_go.NewClient[qf.EnrollmentStatusRequest, qf.Enrollments](
+		getEnrollments: connect_go.NewClient[qf.EnrollmentRequest, qf.Enrollments](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetEnrollmentsByUser",
-			opts...,
-		),
-		getEnrollmentsByCourse: connect_go.NewClient[qf.EnrollmentRequest, qf.Enrollments](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/GetEnrollmentsByCourse",
+			baseURL+"/qf.QuickFeedService/GetEnrollments",
 			opts...,
 		),
 		createEnrollment: connect_go.NewClient[qf.Enrollment, qf.Void](
@@ -290,8 +284,7 @@ type quickFeedServiceClient struct {
 	updateCourseVisibility  *connect_go.Client[qf.Enrollment, qf.Void]
 	getAssignments          *connect_go.Client[qf.CourseRequest, qf.Assignments]
 	updateAssignments       *connect_go.Client[qf.CourseRequest, qf.Void]
-	getEnrollmentsByUser    *connect_go.Client[qf.EnrollmentStatusRequest, qf.Enrollments]
-	getEnrollmentsByCourse  *connect_go.Client[qf.EnrollmentRequest, qf.Enrollments]
+	getEnrollments          *connect_go.Client[qf.EnrollmentRequest, qf.Enrollments]
 	createEnrollment        *connect_go.Client[qf.Enrollment, qf.Void]
 	updateEnrollments       *connect_go.Client[qf.Enrollments, qf.Void]
 	getSubmission           *connect_go.Client[qf.SubmissionRequest, qf.Submission]
@@ -394,14 +387,9 @@ func (c *quickFeedServiceClient) UpdateAssignments(ctx context.Context, req *con
 	return c.updateAssignments.CallUnary(ctx, req)
 }
 
-// GetEnrollmentsByUser calls qf.QuickFeedService.GetEnrollmentsByUser.
-func (c *quickFeedServiceClient) GetEnrollmentsByUser(ctx context.Context, req *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return c.getEnrollmentsByUser.CallUnary(ctx, req)
-}
-
-// GetEnrollmentsByCourse calls qf.QuickFeedService.GetEnrollmentsByCourse.
-func (c *quickFeedServiceClient) GetEnrollmentsByCourse(ctx context.Context, req *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return c.getEnrollmentsByCourse.CallUnary(ctx, req)
+// GetEnrollments calls qf.QuickFeedService.GetEnrollments.
+func (c *quickFeedServiceClient) GetEnrollments(ctx context.Context, req *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error) {
+	return c.getEnrollments.CallUnary(ctx, req)
 }
 
 // CreateEnrollment calls qf.QuickFeedService.CreateEnrollment.
@@ -522,8 +510,7 @@ type QuickFeedServiceHandler interface {
 	UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
 	GetAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Assignments], error)
 	UpdateAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Void], error)
-	GetEnrollmentsByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error)
-	GetEnrollmentsByCourse(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error)
+	GetEnrollments(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error)
 	CreateEnrollment(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
 	UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error)
 	GetSubmission(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submission], error)
@@ -635,14 +622,9 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 		svc.UpdateAssignments,
 		opts...,
 	))
-	mux.Handle("/qf.QuickFeedService/GetEnrollmentsByUser", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetEnrollmentsByUser",
-		svc.GetEnrollmentsByUser,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetEnrollmentsByCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetEnrollmentsByCourse",
-		svc.GetEnrollmentsByCourse,
+	mux.Handle("/qf.QuickFeedService/GetEnrollments", connect_go.NewUnaryHandler(
+		"/qf.QuickFeedService/GetEnrollments",
+		svc.GetEnrollments,
 		opts...,
 	))
 	mux.Handle("/qf.QuickFeedService/CreateEnrollment", connect_go.NewUnaryHandler(
@@ -815,12 +797,8 @@ func (UnimplementedQuickFeedServiceHandler) UpdateAssignments(context.Context, *
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateAssignments is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetEnrollmentsByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetEnrollmentsByUser is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) GetEnrollmentsByCourse(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetEnrollmentsByCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetEnrollments(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetEnrollments is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) CreateEnrollment(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error) {

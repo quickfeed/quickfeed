@@ -311,30 +311,28 @@ export class Organization extends Message<Organization> {
 }
 
 /**
- * EnrollmentRequest is a request for enrolled users of a given course,
- * whose enrollment status match those provided in the request. To ignore group members
- * that otherwise match the enrollment request, set ignoreGroupMembers to true.
- *
  * @generated from message qf.EnrollmentRequest
  */
 export class EnrollmentRequest extends Message<EnrollmentRequest> {
   /**
-   * @generated from field: uint64 courseID = 1;
+   * @generated from oneof qf.EnrollmentRequest.FetchMode
    */
-  courseID = protoInt64.zero;
+  FetchMode: {
+    /**
+     * @generated from field: uint64 courseID = 1;
+     */
+    value: bigint;
+    case: "courseID";
+  } | {
+    /**
+     * @generated from field: uint64 userID = 2;
+     */
+    value: bigint;
+    case: "userID";
+  } | { case: undefined; value?: undefined } = { case: undefined };
 
   /**
-   * @generated from field: bool ignoreGroupMembers = 2;
-   */
-  ignoreGroupMembers = false;
-
-  /**
-   * @generated from field: bool withActivity = 3;
-   */
-  withActivity = false;
-
-  /**
-   * @generated from field: repeated qf.Enrollment.UserStatus statuses = 4;
+   * @generated from field: repeated qf.Enrollment.UserStatus statuses = 3;
    */
   statuses: Enrollment_UserStatus[] = [];
 
@@ -346,10 +344,9 @@ export class EnrollmentRequest extends Message<EnrollmentRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.EnrollmentRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "ignoreGroupMembers", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 3, name: "withActivity", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 4, name: "statuses", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus), repeated: true },
+    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "FetchMode" },
+    { no: 2, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "FetchMode" },
+    { no: 3, name: "statuses", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus), repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EnrollmentRequest {
@@ -366,51 +363,6 @@ export class EnrollmentRequest extends Message<EnrollmentRequest> {
 
   static equals(a: EnrollmentRequest | PlainMessage<EnrollmentRequest> | undefined, b: EnrollmentRequest | PlainMessage<EnrollmentRequest> | undefined): boolean {
     return proto3.util.equals(EnrollmentRequest, a, b);
-  }
-}
-
-/**
- * EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
- *
- * @generated from message qf.EnrollmentStatusRequest
- */
-export class EnrollmentStatusRequest extends Message<EnrollmentStatusRequest> {
-  /**
-   * @generated from field: uint64 userID = 1;
-   */
-  userID = protoInt64.zero;
-
-  /**
-   * @generated from field: repeated qf.Enrollment.UserStatus statuses = 2;
-   */
-  statuses: Enrollment_UserStatus[] = [];
-
-  constructor(data?: PartialMessage<EnrollmentStatusRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.EnrollmentStatusRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "statuses", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus), repeated: true },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EnrollmentStatusRequest {
-    return new EnrollmentStatusRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EnrollmentStatusRequest {
-    return new EnrollmentStatusRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EnrollmentStatusRequest {
-    return new EnrollmentStatusRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: EnrollmentStatusRequest | PlainMessage<EnrollmentStatusRequest> | undefined, b: EnrollmentStatusRequest | PlainMessage<EnrollmentStatusRequest> | undefined): boolean {
-    return proto3.util.equals(EnrollmentStatusRequest, a, b);
   }
 }
 

@@ -124,8 +124,10 @@ func TestAccessControl(t *testing.T) {
 				CourseID: tt.courseID,
 				UserID:   tt.userID,
 			}
-			enrolRequest := &qf.EnrollmentStatusRequest{
-				UserID: tt.userID,
+			enrolRequest := &qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_UserID{
+					UserID: tt.userID,
+				},
 			}
 			_, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrol, tt.cookie))
 			checkAccess(t, "CreateEnrollment", err, tt.wantCode, tt.wantAccess)
@@ -133,8 +135,8 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateCourseVisibility", err, tt.wantCode, tt.wantAccess)
 			_, err = client.UpdateUser(ctx, qtest.RequestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(enrolRequest, tt.cookie))
-			checkAccess(t, "GetEnrollmentsByCourse", err, tt.wantCode, tt.wantAccess)
+			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(enrolRequest, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.UpdateUser(ctx, qtest.RequestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 		})
@@ -158,8 +160,12 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetSubmissions", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetAssignments", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetEnrollmentsByCourse(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, "GetEnrollmentsByCourse", err, tt.wantCode, tt.wantAccess)
+			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_CourseID{
+					CourseID: tt.courseID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetRepositories", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetGroupByUserAndCourse(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
@@ -272,8 +278,12 @@ func TestAccessControl(t *testing.T) {
 		t.Run("AdminAccess/"+name, func(t *testing.T) {
 			_, err := client.UpdateUser(ctx, qtest.RequestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(&qf.EnrollmentStatusRequest{UserID: tt.userID}, tt.cookie))
-			checkAccess(t, "GetEnrollmentsByUser", err, tt.wantCode, tt.wantAccess)
+			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_UserID{
+					UserID: tt.userID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, tt.cookie))
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.OrgRequest{OrgName: "test"}, tt.cookie))

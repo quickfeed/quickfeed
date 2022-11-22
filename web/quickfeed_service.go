@@ -213,27 +213,53 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
-func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Enrollments], error) {
-	enrollments, err := s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
-	if err != nil {
-		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
+// GetEnrollments returns all enrollments for the given course ID or user ID and enrollent status.
+func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+	var enrollments []*qf.Enrollment
+	var err error
+	switch in.Msg.GetFetchMode() {
+	case &qf.EnrollmentRequest_CourseID{}:
+		enrollments, err = s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
+		if err != nil {
+			s.logger.Errorf("GetEnrollments failed: user %d: %v", in.Msg.GetUserID(), err)
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
+		}
+	case &qf.EnrollmentRequest_UserID{}:
+		enrollments, err = s.getEnrollmentsByCourse(in.Msg)
+		if err != nil {
+			s.logger.Errorf("GetEnrollments failed: course %d: %v", in.Msg.GetCourseID(), err)
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollments for course"))
+		}
+	default:
+		s.logger.Errorf("GetEnrollments failed: unknown message type: %v", in.Msg.GetFetchMode())
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get enrollments"))
 	}
 	return connect.NewResponse(&qf.Enrollments{
 		Enrollments: enrollments,
 	}), nil
 }
 
-// GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
-func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
-	enrolls, err := s.getEnrollmentsByCourse(in.Msg)
-	if err != nil {
-		s.logger.Errorf("GetEnrollmentsByCourse failed: course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get enrollments for given course"))
-	}
-	return connect.NewResponse(enrolls), nil
-}
+// GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
+// func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Enrollments], error) {
+// 	enrollments, err := s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
+// 	if err != nil {
+// 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
+// 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
+// 	}
+// 	return connect.NewResponse(&qf.Enrollments{
+// 		Enrollments: enrollments,
+// 	}), nil
+// }
+
+// // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
+// func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+// 	enrolls, err := s.getEnrollmentsByCourse(in.Msg)
+// 	if err != nil {
+// 		s.logger.Errorf("GetEnrollmentsByCourse failed: course %d: %v", in.Msg.GetCourseID(), err)
+// 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get enrollments for given course"))
+// 	}
+// 	return connect.NewResponse(enrolls), nil
+// }
 
 // GetGroup returns information about the given group.
 func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.GetGroupRequest]) (*connect.Response[qf.Group], error) {

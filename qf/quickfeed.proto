@@ -37,8 +37,7 @@ service QuickFeedService {
 
     // enrollments //
 
-    rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
-    rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
+    rpc GetEnrollments(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {}
     rpc UpdateEnrollments(Enrollments) returns (Void) {}
 
