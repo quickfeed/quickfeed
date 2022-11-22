@@ -162,12 +162,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetEnrollmentsByCourse", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetRepositories", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetGroupByUserAndCourse(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-				CourseID: tt.courseID,
-				UserID:   tt.userID,
-				GroupID:  0,
-			}, tt.cookie))
-			checkAccess(t, "GetGroupByUserAndCourse", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 
@@ -178,7 +172,10 @@ func TestAccessControl(t *testing.T) {
 	}
 	for name, tt := range groupAccessTests {
 		t.Run("GroupAccess/"+name, func(t *testing.T) {
-			_, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{GroupID: tt.groupID}, tt.cookie))
+			_, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+				CourseID: tt.courseID,
+				GroupID:  tt.groupID,
+			}, tt.cookie))
 			checkAccess(t, "GetGroup", err, tt.wantCode, tt.wantAccess)
 		})
 	}
@@ -190,7 +187,15 @@ func TestAccessControl(t *testing.T) {
 	}
 	for name, tt := range teacherAccessTests {
 		t.Run("TeacherAccess/"+name, func(t *testing.T) {
-			_, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{GroupID: tt.groupID}, tt.cookie))
+			_, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+				CourseID: tt.courseID,
+				GroupID:  tt.groupID,
+			}, tt.cookie))
+			checkAccess(t, "GetGroup", err, tt.wantCode, tt.wantAccess)
+			_, err = client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+				CourseID: tt.courseID,
+				UserID:   tt.userID,
+			}, tt.cookie))
 			checkAccess(t, "GetGroup", err, tt.wantCode, tt.wantAccess)
 			_, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 				GroupID:  tt.groupID,
@@ -356,6 +361,7 @@ func checkAccess(t *testing.T, method string, err error, wantCode connect.Code, 
 		gotAccess := gotCode == wantCode
 		if gotAccess == wantAccess {
 			t.Errorf("%23s: (%v == %v) = %t, want %t", method, gotCode, wantCode, gotAccess, !wantAccess)
+			t.Log(err)
 		}
 	} else if err != nil && wantAccess {
 		// got error and want access; expected non-error or not access

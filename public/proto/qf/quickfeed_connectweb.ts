@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, EnrollmentRequest, EnrollmentStatusRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -43,19 +43,12 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
+     * GetGroup returns a group with the given group ID or user ID. Course ID is required.
+     *
      * @generated from rpc qf.QuickFeedService.GetGroup
      */
     getGroup: {
       name: "GetGroup",
-      I: GetGroupRequest,
-      O: Group,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.GetGroupByUserAndCourse
-     */
-    getGroupByUserAndCourse: {
-      name: "GetGroupByUserAndCourse",
       I: GroupRequest,
       O: Group,
       kind: MethodKind.Unary,

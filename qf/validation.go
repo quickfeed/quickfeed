@@ -93,15 +93,10 @@ func (req *UpdateSubmissionRequest) IsValid() bool {
 	return req.GetCourseID() > 0 && req.GetSubmissionID() > 0
 }
 
-// IsValid ensures that group ID is provided
-func (req *GetGroupRequest) IsValid() bool {
-	return req.GetGroupID() > 0
-}
-
-// IsValid ensures that course ID and group or user IDs are set
+// IsValid ensures that either user ID or group ID is set and course ID.
 func (req *GroupRequest) IsValid() bool {
-	uid, gid := req.GetUserID(), req.GetGroupID()
-	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
+	cid, uid, gid := req.GetCourseID(), req.GetUserID(), req.GetGroupID()
+	return (uid > 0 || gid > 0) && cid > 0
 }
 
 // IsValid checks that course ID is positive.

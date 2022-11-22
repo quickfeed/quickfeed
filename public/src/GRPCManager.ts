@@ -22,7 +22,6 @@ import {
     CourseSubmissions,
     EnrollmentStatusRequest,
     EnrollmentRequest,
-    GetGroupRequest,
     GroupRequest,
     Organization,
     OrgRequest,
@@ -145,7 +144,8 @@ export class GrpcManager {
     // /* GROUPS */ //
 
     public getGroup(groupID: bigint): Promise<IGrpcResponse<Group>> {
-        const request = new GetGroupRequest({ groupID: groupID })
+        // TODO(meling): This now requires courseID; but this method is not used.
+        const request = new GroupRequest({ groupID: groupID })
         return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
@@ -154,7 +154,7 @@ export class GrpcManager {
             courseID: courseID,
             userID: userID,
         })
-        return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request)
+        return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
     public getGroupsByCourse(courseID: bigint): Promise<IGrpcResponse<Groups>> {

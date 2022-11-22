@@ -15,8 +15,8 @@ service QuickFeedService {
 
     // groups //
 
-    rpc GetGroup(GetGroupRequest) returns (Group) {}
-    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {}
+    // GetGroup returns a group with the given group ID or user ID. Course ID is required.
+    rpc GetGroup(GroupRequest) returns (Group) {}
     rpc GetGroupsByCourse(CourseRequest) returns (Groups) {}
     rpc CreateGroup(Group) returns (Group) {}
     rpc UpdateGroup(Group) returns (Group) {}
