@@ -133,60 +133,23 @@ export class CourseRequest extends Message<CourseRequest> {
 }
 
 /**
- * @generated from message qf.GetGroupRequest
- */
-export class GetGroupRequest extends Message<GetGroupRequest> {
-  /**
-   * @generated from field: uint64 groupID = 1;
-   */
-  groupID = protoInt64.zero;
-
-  constructor(data?: PartialMessage<GetGroupRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.GetGroupRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetGroupRequest {
-    return new GetGroupRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetGroupRequest {
-    return new GetGroupRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetGroupRequest {
-    return new GetGroupRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: GetGroupRequest | PlainMessage<GetGroupRequest> | undefined, b: GetGroupRequest | PlainMessage<GetGroupRequest> | undefined): boolean {
-    return proto3.util.equals(GetGroupRequest, a, b);
-  }
-}
-
-/**
  * @generated from message qf.GroupRequest
  */
 export class GroupRequest extends Message<GroupRequest> {
   /**
-   * @generated from field: uint64 userID = 1;
+   * @generated from field: uint64 courseID = 1;
+   */
+  courseID = protoInt64.zero;
+
+  /**
+   * @generated from field: uint64 userID = 2;
    */
   userID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 groupID = 2;
+   * @generated from field: uint64 groupID = 3;
    */
   groupID = protoInt64.zero;
-
-  /**
-   * @generated from field: uint64 courseID = 3;
-   */
-  courseID = protoInt64.zero;
 
   constructor(data?: PartialMessage<GroupRequest>) {
     super();
@@ -196,9 +159,9 @@ export class GroupRequest extends Message<GroupRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.GroupRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GroupRequest {

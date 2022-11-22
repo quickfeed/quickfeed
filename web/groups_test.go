@@ -45,7 +45,7 @@ func TestNewGroup(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}, Cookie(t, tm, user)))
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{CourseID: course.ID, GroupID: wantGroup.Msg.ID}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -148,17 +148,18 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Error(err)
 	}
 	// check that group member (user) can access group
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}, Cookie(t, tm, user)))
+	groupReq := &qf.GroupRequest{CourseID: course.ID, GroupID: wantGroup.Msg.ID}
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
 	// check that teacher can access group
-	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}, Cookie(t, tm, teacher)))
+	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, teacher)))
 	if err != nil {
 		t.Error(err)
 	}
 	// check that admin can access group
-	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}, Cookie(t, tm, admin)))
+	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -292,8 +293,9 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{
-		GroupID: wantGroup.Msg.ID,
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+		CourseID: course.ID,
+		GroupID:  wantGroup.Msg.ID,
 	}, Cookie(t, tm, user1)))
 	if err != nil {
 		t.Error(err)
@@ -525,8 +527,9 @@ func TestGetGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{
-		GroupID: wantGroup.Msg.ID,
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+		CourseID: testCourse.ID,
+		GroupID:  wantGroup.Msg.ID,
 	}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
@@ -694,15 +697,16 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantGroup, err := client.GetGroupByUserAndCourse(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		UserID:   user1.ID,
+	wantGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		CourseID: course.ID,
+		UserID:   user1.ID,
 	}, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
 	}
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GetGroupRequest{
-		GroupID: group.ID,
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+		CourseID: course.ID,
+		GroupID:  group.ID,
 	}, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
