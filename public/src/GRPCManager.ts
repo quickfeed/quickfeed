@@ -143,9 +143,11 @@ export class GrpcManager {
 
     // /* GROUPS */ //
 
-    public getGroup(groupID: bigint): Promise<IGrpcResponse<Group>> {
-        // TODO(meling): This now requires courseID; but this method is not used.
-        const request = new GroupRequest({ groupID: groupID })
+    public getGroup(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Group>> {
+        const request = new GroupRequest({
+            courseID: courseID,
+            groupID: groupID,
+        })
         return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
