@@ -48,7 +48,6 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.UpdateSubmissionRequest":  {cleaner: F, validator: T},
 		"qf.UsedSlipDays":             {cleaner: F, validator: F},
 		"qf.Task":                     {cleaner: F, validator: F},
-		"qf.Organizations":            {cleaner: F, validator: F},
 		"qf.GradingCriterion":         {cleaner: F, validator: T},
 		"qf.Repositories":             {cleaner: F, validator: F},
 		"qf.CourseSubmissions":        {cleaner: T, validator: F},
