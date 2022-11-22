@@ -24,11 +24,6 @@ func (u *User) IsValid() bool {
 	return u.GetID() > 0
 }
 
-// IsValid ensures that user ID is set
-func (u *UserRequest) IsValid() bool {
-	return u.GetUserID() > 0
-}
-
 // IsValid checks required fields of an enrollment request.
 func (req *Enrollment) IsValid() bool {
 	return req.GetStatus() <= Enrollment_TEACHER &&
@@ -74,12 +69,23 @@ func (req *RepositoryRequest) IsValid() bool {
 
 // IsValid checks required fields of an action request.
 // It must have a positive course ID and
-// a positive user ID or group ID but not both.
+// one of the fetch modes must be set with a positive ID.
 func (req *SubmissionRequest) IsValid() bool {
-	uid, gid := req.GetUserID(), req.GetGroupID()
-	return req.GetCourseID() > 0 &&
-		(uid == 0 && gid > 0) ||
-		(uid > 0 && gid == 0)
+	if req.GetCourseID() == 0 {
+		return false // invalid: course ID must be set
+	}
+	switch req.GetFetchMode().(type) {
+	case nil:
+		return false
+	case *SubmissionRequest_SubmissionID:
+		return req.GetSubmissionID() > 0
+	case *SubmissionRequest_UserID:
+		return req.GetUserID() > 0
+	case *SubmissionRequest_GroupID:
+		return req.GetGroupID() > 0
+	default: // *SubmissionRequest_Type, requires only course ID
+		return true
+	}
 }
 
 // IsValid ensures that both submission and course IDs are set
@@ -103,11 +109,6 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that course ID is provided.
-func (req *SubmissionsForCourseRequest) IsValid() bool {
-	return req.GetCourseID() != 0
-}
-
 // IsValid ensures that both course and assignment IDs are set.
 func (req *RebuildRequest) IsValid() bool {
 	aid, cid := req.GetAssignmentID(), req.GetCourseID()
@@ -118,11 +119,6 @@ func (req *RebuildRequest) IsValid() bool {
 func (org *Organization) IsValid() bool {
 	id, path := org.GetID(), org.GetName()
 	return id > 0 || path != ""
-}
-
-// IsValid ensures that course ID and submission ID are present.
-func (req *SubmissionReviewersRequest) IsValid() bool {
-	return req.CourseID > 0 && req.SubmissionID > 0
 }
 
 // IsValid ensures that a review always has a reviewer and a submission IDs.

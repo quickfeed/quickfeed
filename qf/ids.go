@@ -66,23 +66,20 @@ func (r *EnrollmentStatusRequest) IDFor(_ string) uint64 {
 // IDFor returns user, group, or course ID.
 func (r *SubmissionRequest) IDFor(role string) uint64 {
 	switch role {
+	case "course":
+		return r.GetCourseID()
 	case "user":
 		return r.GetUserID()
 	case "group":
 		return r.GetGroupID()
-	case "course":
-		return r.GetCourseID()
+	case "submission":
+		return r.GetSubmissionID()
 	}
 	return 0
 }
 
 // IDFor returns course ID.
 func (r *UpdateSubmissionsRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
-}
-
-// IDFor returns course ID.
-func (r *SubmissionsForCourseRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
@@ -115,11 +112,6 @@ func (r *RepositoryRequest) IDFor(_ string) uint64 {
 
 // IDFor returns course ID.
 func (r *ReviewRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
-}
-
-// IDFor returns course ID.
-func (r *SubmissionReviewersRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 

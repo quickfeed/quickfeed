@@ -67,7 +67,6 @@ var accessRolesFor = map[string]roles{
 	"DeleteCriterion":         {teacher},
 	"CreateReview":            {teacher},
 	"UpdateReview":            {teacher},
-	"GetReviewers":            {teacher},
 	"IsEmptyRepo":             {teacher},
 	"GetSubmissionsByCourse":  {teacher},
 	"GetUsers":                {admin},
@@ -129,7 +128,11 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 			case student:
 				// GetSubmissions is used to fetch individual and group submissions.
 				// For individual submissions needs an extra check for user ID in request.
-				if method == "GetSubmissions" && req.IDFor("group") == 0 {
+				if method == "GetSubmissions" {
+					if req.IDFor("group") != 0 {
+						// Group submissions are handled by the group role.
+						continue
+					}
 					if !claims.SameUser(req) {
 						return nil, connect.NewError(connect.CodePermissionDenied,
 							fmt.Errorf("access denied for %s: ID mismatch in claims (%d) and request (%d)",

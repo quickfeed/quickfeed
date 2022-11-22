@@ -44,11 +44,11 @@ service QuickFeedService {
 
     // submissions //
 
+    rpc GetSubmission(SubmissionRequest) returns (Submission) {}
     // Get latest submissions for all course assignments for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
-    rpc GetSubmission(SubmissionReviewersRequest) returns (Submission) {}
     // Get lab submissions for every course user or every course group
-    rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
+    rpc GetSubmissionsByCourse(SubmissionRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmissions(RebuildRequest) returns (Void) {}
@@ -65,7 +65,6 @@ service QuickFeedService {
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
-    rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
 
     // misc //
 

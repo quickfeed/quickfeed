@@ -29,11 +29,8 @@ import {
     Organization,
     Repositories,
     Status,
-    SubmissionReviewersRequest,
     Void,
-    Reviewers,
-    Organizations,
-    SubmissionsForCourseRequest_Type,
+    SubmissionRequest_SubmissionType,
 } from "../proto/qf/requests_pb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
@@ -96,7 +93,7 @@ export class MockGrpcManager {
     private currentUser: User | null
     private assignments: Assignments
     private courses: Courses
-    private organizations: Organizations
+    private organizations: Organization[]
     private submissions: Submissions
     private templateBenchmarks: GradingBenchmark[]
     // idMap is a map of auto incrementing IDs
@@ -433,20 +430,6 @@ export class MockGrpcManager {
     }
 
     // /* SUBMISSIONS */ //
-    public getAllSubmissions(courseID: bigint, userID: bigint, groupID: bigint): Promise<IGrpcResponse<Submissions>> {
-        const submissions: Submissions = new Submissions()
-        // Get all assignment IDs
-        const assignmentIDs = this.assignments.assignments.filter(a => a.CourseID === courseID).map(a => a.ID)
-        if (groupID) {
-            const subs = this.submissions.submissions.filter(s => s.groupID === groupID && assignmentIDs.includes(s.AssignmentID))
-            submissions.submissions = subs
-        }
-        if (userID) {
-            const subs = this.submissions.submissions.filter(s => s.userID === userID && assignmentIDs.includes(s.AssignmentID))
-            submissions.submissions = subs
-        }
-        return this.grpcSend<Submissions>(submissions)
-    }
 
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
         const enrollment = this.enrollments.enrollments.find(enrollment =>
@@ -480,7 +463,7 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(new Submissions({ submissions }))
     }
 
-    public getSubmissionsByCourse(courseID: bigint, type: SubmissionsForCourseRequest_Type): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: bigint, type: SubmissionRequest_SubmissionType): Promise<IGrpcResponse<CourseSubmissions>> {
         // TODO: Remove `.clone()` when done migrating to AsObject in state
         const users = this.users.users
         const groups = this.groups.groups
@@ -510,13 +493,13 @@ export class MockGrpcManager {
                 subLink.assignment = assignment.clone()
                 let submission: Submission | undefined
                 switch (type) {
-                    case SubmissionsForCourseRequest_Type.ALL:
+                    case SubmissionRequest_SubmissionType.ALL:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && (s.userID === enrollment.userID || (s.groupID > 0 && s.groupID === enrollment.groupID)))
                         break
-                    case SubmissionsForCourseRequest_Type.INDIVIDUAL:
+                    case SubmissionRequest_SubmissionType.USER:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.userID === enrollment.userID)
                         break
-                    case SubmissionsForCourseRequest_Type.GROUP:
+                    case SubmissionRequest_SubmissionType.GROUP:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.groupID > 0 && s.groupID === enrollment.groupID)
                         break
                 }
@@ -678,13 +661,6 @@ export class MockGrpcManager {
         return this.grpcSend<Review>(r)
     }
 
-    public getReviewers(submissionID: bigint, courseID: bigint): Promise<IGrpcResponse<Reviewers>> {
-        const request = new SubmissionReviewersRequest()
-        request.submissionID = submissionID
-        request.courseID = courseID
-        return this.grpcSend<Reviewers>(new Reviewers())
-    }
-
     // /* REPOSITORY */ //
 
     public getRepositories(courseID: bigint, types: Repository_Type[]): Promise<IGrpcResponse<Repositories>> {
@@ -702,7 +678,7 @@ export class MockGrpcManager {
     // /* ORGANIZATIONS */ //
 
     public async getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const org = this.organizations.organizations.find(o => o.name === orgName)
+        const org = this.organizations.find(o => o.name === orgName)
         await delay(2000)
         if (!org) {
             return this.grpcSend<Organization>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Organization not found" }))
@@ -1003,14 +979,13 @@ export class MockGrpcManager {
     }
 
     private initOrganizations(): Organization[] {
-        this.organizations = new Organizations()
         const localOrgs: Organization[] = []
         const localOrg = new Organization()
         localOrg.ID = BigInt(23650610)
         localOrg.name = "test"
         localOrg.avatar = "https://avatars2.githubusercontent.com/u/23650610?v=3"
         localOrgs.push(localOrg)
-        this.organizations.organizations = localOrgs
+        this.organizations = localOrgs
         return localOrgs
     }
 

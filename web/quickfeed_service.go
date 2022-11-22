@@ -339,8 +339,8 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 
 // GetSubmission returns a fully populated submission matching the given submission ID if it exists for the given course ID.
 // Used in the frontend to fetch a full submission for a given submission ID and course ID.
-func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Submission], error) {
-	submission, err := s.db.GetLastSubmission(in.Msg.CourseID, &qf.Submission{ID: in.Msg.GetSubmissionID()})
+func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submission], error) {
+	submission, err := s.db.GetLastSubmission(in.Msg.GetCourseID(), &qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
 		s.logger.Errorf("GetSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get submission"))
@@ -365,7 +365,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
-func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionsForCourseRequest]) (*connect.Response[qf.CourseSubmissions], error) {
+func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 
 	courseLinks, err := s.getAllCourseSubmissions(in.Msg)
@@ -490,16 +490,6 @@ func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Requ
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
 	}
 	return &connect.Response[qf.Void]{}, nil
-}
-
-// GetReviewers returns names of all active reviewers for a student submission.
-func (s *QuickFeedService) GetReviewers(_ context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Reviewers], error) {
-	reviewers, err := s.getReviewers(in.Msg.SubmissionID)
-	if err != nil {
-		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get reviewers"))
-	}
-	return connect.NewResponse(&qf.Reviewers{Reviewers: reviewers}), nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.
