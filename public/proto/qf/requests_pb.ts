@@ -348,43 +348,6 @@ export class Organization extends Message<Organization> {
 }
 
 /**
- * @generated from message qf.Organizations
- */
-export class Organizations extends Message<Organizations> {
-  /**
-   * @generated from field: repeated qf.Organization organizations = 1;
-   */
-  organizations: Organization[] = [];
-
-  constructor(data?: PartialMessage<Organizations>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.Organizations";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "organizations", kind: "message", T: Organization, repeated: true },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Organizations {
-    return new Organizations().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Organizations {
-    return new Organizations().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Organizations {
-    return new Organizations().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: Organizations | PlainMessage<Organizations> | undefined, b: Organizations | PlainMessage<Organizations> | undefined): boolean {
-    return proto3.util.equals(Organizations, a, b);
-  }
-}
-
-/**
  * EnrollmentRequest is a request for enrolled users of a given course,
  * whose enrollment status match those provided in the request. To ignore group members
  * that otherwise match the enrollment request, set ignoreGroupMembers to true.

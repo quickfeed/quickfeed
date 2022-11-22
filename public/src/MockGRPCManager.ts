@@ -30,7 +30,6 @@ import {
     Repositories,
     Status,
     Void,
-    Organizations,
     SubmissionRequest_SubmissionType,
 } from "../proto/qf/requests_pb"
 import { delay } from "./Helpers"
@@ -94,7 +93,7 @@ export class MockGrpcManager {
     private currentUser: User | null
     private assignments: Assignments
     private courses: Courses
-    private organizations: Organizations
+    private organizations: Organization[]
     private submissions: Submissions
     private templateBenchmarks: GradingBenchmark[]
     // idMap is a map of auto incrementing IDs
@@ -679,7 +678,7 @@ export class MockGrpcManager {
     // /* ORGANIZATIONS */ //
 
     public async getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const org = this.organizations.organizations.find(o => o.name === orgName)
+        const org = this.organizations.find(o => o.name === orgName)
         await delay(2000)
         if (!org) {
             return this.grpcSend<Organization>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Organization not found" }))
@@ -980,14 +979,13 @@ export class MockGrpcManager {
     }
 
     private initOrganizations(): Organization[] {
-        this.organizations = new Organizations()
         const localOrgs: Organization[] = []
         const localOrg = new Organization()
         localOrg.ID = BigInt(23650610)
         localOrg.name = "test"
         localOrg.avatar = "https://avatars2.githubusercontent.com/u/23650610?v=3"
         localOrgs.push(localOrg)
-        this.organizations.organizations = localOrgs
+        this.organizations = localOrgs
         return localOrgs
     }
 
