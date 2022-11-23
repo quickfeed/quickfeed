@@ -43,11 +43,6 @@ func (r *GroupRequest) IDFor(role string) uint64 {
 	return 0
 }
 
-// IDFor returns group ID.
-func (r *GetGroupRequest) IDFor(_ string) uint64 {
-	return r.GetGroupID()
-}
-
 // IDFor returns course ID.
 func (r *CourseRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()

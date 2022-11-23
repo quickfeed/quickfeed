@@ -21,14 +21,10 @@ message CourseRequest {
     uint64 courseID = 1;
 }
 
-message GetGroupRequest {
-    uint64 groupID = 1;
-}
-
 message GroupRequest {
-    uint64 userID   = 1;
-    uint64 groupID  = 2;
-    uint64 courseID = 3;
+    uint64 courseID = 1;
+    uint64 userID   = 2;
+    uint64 groupID  = 3;
 }
 
 message OrgRequest {

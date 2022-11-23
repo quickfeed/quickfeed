@@ -22,7 +22,6 @@ import {
     CourseSubmissions,
     EnrollmentStatusRequest,
     EnrollmentRequest,
-    GetGroupRequest,
     GroupRequest,
     Organization,
     OrgRequest,
@@ -144,21 +143,18 @@ export class GrpcManager {
 
     // /* GROUPS */ //
 
-    public getGroup(groupID: bigint): Promise<IGrpcResponse<Group>> {
-        const request = new GetGroupRequest({ groupID: groupID })
+    public getGroup(courseID: bigint, groupID: bigint): Promise<IGrpcResponse<Group>> {
+        const request = new GroupRequest({ courseID, groupID })
         return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
     public getGroupByUserAndCourse(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Group>> {
-        const request = new GroupRequest({
-            courseID: courseID,
-            userID: userID,
-        })
-        return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request)
+        const request = new GroupRequest({ courseID, userID })
+        return this.grpcSend<Group>(this.agService.getGroup, request)
     }
 
     public getGroupsByCourse(courseID: bigint): Promise<IGrpcResponse<Groups>> {
-        const request = new CourseRequest({ courseID: courseID })
+        const request = new CourseRequest({ courseID })
         return this.grpcSend<Groups>(this.agService.getGroupsByCourse, request)
     }
 

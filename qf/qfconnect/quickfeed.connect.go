@@ -30,8 +30,8 @@ type QuickFeedServiceClient interface {
 	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
 	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
 	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
-	GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error)
-	GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
+	// GetGroup returns a group with the given group ID or user ID. Course ID is required.
+	GetGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error)
 	CreateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
 	UpdateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
@@ -93,14 +93,9 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/UpdateUser",
 			opts...,
 		),
-		getGroup: connect_go.NewClient[qf.GetGroupRequest, qf.Group](
+		getGroup: connect_go.NewClient[qf.GroupRequest, qf.Group](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/GetGroup",
-			opts...,
-		),
-		getGroupByUserAndCourse: connect_go.NewClient[qf.GroupRequest, qf.Group](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/GetGroupByUserAndCourse",
 			opts...,
 		),
 		getGroupsByCourse: connect_go.NewClient[qf.CourseRequest, qf.Groups](
@@ -268,43 +263,42 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 
 // quickFeedServiceClient implements QuickFeedServiceClient.
 type quickFeedServiceClient struct {
-	getUser                 *connect_go.Client[qf.Void, qf.User]
-	getUsers                *connect_go.Client[qf.Void, qf.Users]
-	updateUser              *connect_go.Client[qf.User, qf.Void]
-	getGroup                *connect_go.Client[qf.GetGroupRequest, qf.Group]
-	getGroupByUserAndCourse *connect_go.Client[qf.GroupRequest, qf.Group]
-	getGroupsByCourse       *connect_go.Client[qf.CourseRequest, qf.Groups]
-	createGroup             *connect_go.Client[qf.Group, qf.Group]
-	updateGroup             *connect_go.Client[qf.Group, qf.Group]
-	deleteGroup             *connect_go.Client[qf.GroupRequest, qf.Void]
-	getCourse               *connect_go.Client[qf.CourseRequest, qf.Course]
-	getCourses              *connect_go.Client[qf.Void, qf.Courses]
-	createCourse            *connect_go.Client[qf.Course, qf.Course]
-	updateCourse            *connect_go.Client[qf.Course, qf.Void]
-	updateCourseVisibility  *connect_go.Client[qf.Enrollment, qf.Void]
-	getAssignments          *connect_go.Client[qf.CourseRequest, qf.Assignments]
-	updateAssignments       *connect_go.Client[qf.CourseRequest, qf.Void]
-	getEnrollments          *connect_go.Client[qf.EnrollmentRequest, qf.Enrollments]
-	createEnrollment        *connect_go.Client[qf.Enrollment, qf.Void]
-	updateEnrollments       *connect_go.Client[qf.Enrollments, qf.Void]
-	getSubmission           *connect_go.Client[qf.SubmissionRequest, qf.Submission]
-	getSubmissions          *connect_go.Client[qf.SubmissionRequest, qf.Submissions]
-	getSubmissionsByCourse  *connect_go.Client[qf.SubmissionRequest, qf.CourseSubmissions]
-	updateSubmission        *connect_go.Client[qf.UpdateSubmissionRequest, qf.Void]
-	updateSubmissions       *connect_go.Client[qf.UpdateSubmissionsRequest, qf.Void]
-	rebuildSubmissions      *connect_go.Client[qf.RebuildRequest, qf.Void]
-	createBenchmark         *connect_go.Client[qf.GradingBenchmark, qf.GradingBenchmark]
-	updateBenchmark         *connect_go.Client[qf.GradingBenchmark, qf.Void]
-	deleteBenchmark         *connect_go.Client[qf.GradingBenchmark, qf.Void]
-	createCriterion         *connect_go.Client[qf.GradingCriterion, qf.GradingCriterion]
-	updateCriterion         *connect_go.Client[qf.GradingCriterion, qf.Void]
-	deleteCriterion         *connect_go.Client[qf.GradingCriterion, qf.Void]
-	createReview            *connect_go.Client[qf.ReviewRequest, qf.Review]
-	updateReview            *connect_go.Client[qf.ReviewRequest, qf.Review]
-	getOrganization         *connect_go.Client[qf.OrgRequest, qf.Organization]
-	getRepositories         *connect_go.Client[qf.URLRequest, qf.Repositories]
-	isEmptyRepo             *connect_go.Client[qf.RepositoryRequest, qf.Void]
-	submissionStream        *connect_go.Client[qf.Void, qf.Submission]
+	getUser                *connect_go.Client[qf.Void, qf.User]
+	getUsers               *connect_go.Client[qf.Void, qf.Users]
+	updateUser             *connect_go.Client[qf.User, qf.Void]
+	getGroup               *connect_go.Client[qf.GroupRequest, qf.Group]
+	getGroupsByCourse      *connect_go.Client[qf.CourseRequest, qf.Groups]
+	createGroup            *connect_go.Client[qf.Group, qf.Group]
+	updateGroup            *connect_go.Client[qf.Group, qf.Group]
+	deleteGroup            *connect_go.Client[qf.GroupRequest, qf.Void]
+	getCourse              *connect_go.Client[qf.CourseRequest, qf.Course]
+	getCourses             *connect_go.Client[qf.Void, qf.Courses]
+	createCourse           *connect_go.Client[qf.Course, qf.Course]
+	updateCourse           *connect_go.Client[qf.Course, qf.Void]
+	updateCourseVisibility *connect_go.Client[qf.Enrollment, qf.Void]
+	getAssignments         *connect_go.Client[qf.CourseRequest, qf.Assignments]
+	updateAssignments      *connect_go.Client[qf.CourseRequest, qf.Void]
+	getEnrollments         *connect_go.Client[qf.EnrollmentRequest, qf.Enrollments]
+	createEnrollment       *connect_go.Client[qf.Enrollment, qf.Void]
+	updateEnrollments      *connect_go.Client[qf.Enrollments, qf.Void]
+	getSubmission          *connect_go.Client[qf.SubmissionRequest, qf.Submission]
+	getSubmissions         *connect_go.Client[qf.SubmissionRequest, qf.Submissions]
+	getSubmissionsByCourse *connect_go.Client[qf.SubmissionRequest, qf.CourseSubmissions]
+	updateSubmission       *connect_go.Client[qf.UpdateSubmissionRequest, qf.Void]
+	updateSubmissions      *connect_go.Client[qf.UpdateSubmissionsRequest, qf.Void]
+	rebuildSubmissions     *connect_go.Client[qf.RebuildRequest, qf.Void]
+	createBenchmark        *connect_go.Client[qf.GradingBenchmark, qf.GradingBenchmark]
+	updateBenchmark        *connect_go.Client[qf.GradingBenchmark, qf.Void]
+	deleteBenchmark        *connect_go.Client[qf.GradingBenchmark, qf.Void]
+	createCriterion        *connect_go.Client[qf.GradingCriterion, qf.GradingCriterion]
+	updateCriterion        *connect_go.Client[qf.GradingCriterion, qf.Void]
+	deleteCriterion        *connect_go.Client[qf.GradingCriterion, qf.Void]
+	createReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
+	updateReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
+	getOrganization        *connect_go.Client[qf.OrgRequest, qf.Organization]
+	getRepositories        *connect_go.Client[qf.URLRequest, qf.Repositories]
+	isEmptyRepo            *connect_go.Client[qf.RepositoryRequest, qf.Void]
+	submissionStream       *connect_go.Client[qf.Void, qf.Submission]
 }
 
 // GetUser calls qf.QuickFeedService.GetUser.
@@ -323,13 +317,8 @@ func (c *quickFeedServiceClient) UpdateUser(ctx context.Context, req *connect_go
 }
 
 // GetGroup calls qf.QuickFeedService.GetGroup.
-func (c *quickFeedServiceClient) GetGroup(ctx context.Context, req *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error) {
+func (c *quickFeedServiceClient) GetGroup(ctx context.Context, req *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error) {
 	return c.getGroup.CallUnary(ctx, req)
-}
-
-// GetGroupByUserAndCourse calls qf.QuickFeedService.GetGroupByUserAndCourse.
-func (c *quickFeedServiceClient) GetGroupByUserAndCourse(ctx context.Context, req *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error) {
-	return c.getGroupByUserAndCourse.CallUnary(ctx, req)
 }
 
 // GetGroupsByCourse calls qf.QuickFeedService.GetGroupsByCourse.
@@ -497,8 +486,8 @@ type QuickFeedServiceHandler interface {
 	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
 	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
 	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
-	GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error)
-	GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
+	// GetGroup returns a group with the given group ID or user ID. Course ID is required.
+	GetGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error)
 	CreateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
 	UpdateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
@@ -560,11 +549,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 	mux.Handle("/qf.QuickFeedService/GetGroup", connect_go.NewUnaryHandler(
 		"/qf.QuickFeedService/GetGroup",
 		svc.GetGroup,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetGroupByUserAndCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetGroupByUserAndCourse",
-		svc.GetGroupByUserAndCourse,
 		opts...,
 	))
 	mux.Handle("/qf.QuickFeedService/GetGroupsByCourse", connect_go.NewUnaryHandler(
@@ -745,12 +729,8 @@ func (UnimplementedQuickFeedServiceHandler) UpdateUser(context.Context, *connect
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateUser is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error) {
+func (UnimplementedQuickFeedServiceHandler) GetGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetGroup is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetGroupByUserAndCourse is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error) {

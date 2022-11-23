@@ -261,11 +261,20 @@ func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request
 // 	return connect.NewResponse(enrolls), nil
 // }
 
-// GetGroup returns information about the given group.
-func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.GetGroupRequest]) (*connect.Response[qf.Group], error) {
-	group, err := s.db.GetGroup(in.Msg.GetGroupID())
+// GetGroup returns information about the given group ID, or the given user's course group if group ID is 0.
+func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
+	var (
+		group   *qf.Group
+		err     error
+		groupID = in.Msg.GetGroupID()
+	)
+	if groupID > 0 {
+		group, err = s.db.GetGroup(groupID)
+	} else {
+		group, err = s.getGroupByUserAndCourse(in.Msg)
+	}
 	if err != nil {
-		s.logger.Errorf("GetGroup failed: group %d: %v", in.Msg.GetGroupID(), err)
+		s.logger.Errorf("GetGroup failed: group %d: %v", in.Msg, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group"))
 	}
 	return connect.NewResponse(group), nil
@@ -281,18 +290,6 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 	return connect.NewResponse(&qf.Groups{
 		Groups: groups,
 	}), nil
-}
-
-// GetGroupByUserAndCourse returns the group of the given student for a given course.
-func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
-	group, err := s.getGroupByUserAndCourse(in.Msg)
-	if err != nil {
-		if err != ErrUserNotInGroup {
-			s.logger.Errorf("GetGroupByUserAndCourse failed: %v", err)
-		}
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group for given user and course"))
-	}
-	return connect.NewResponse(group), nil
 }
 
 // CreateGroup creates a new group in the database.
