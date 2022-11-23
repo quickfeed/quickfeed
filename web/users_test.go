@@ -121,9 +121,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	request := &connect.Request[qf.EnrollmentRequest]{
-		Msg: &qf.EnrollmentRequest{CourseID: qtest.MockCourses[0].ID},
+		Msg: &qf.EnrollmentRequest{
+			FetchMode: &qf.EnrollmentRequest_CourseID{
+				CourseID: qtest.MockCourses[0].ID,
+			},
+		},
 	}
-	gotEnrollments, err := client.GetEnrollmentsByCourse(ctx, request)
+	gotEnrollments, err := client.GetEnrollments(ctx, request)
 	if err != nil {
 		t.Error(err)
 	}
@@ -204,9 +208,13 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	}
 
 	request := connect.NewRequest(
-		&qf.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true},
+		&qf.EnrollmentRequest{
+			FetchMode: &qf.EnrollmentRequest_CourseID{
+				CourseID: course.ID,
+			},
+		},
 	)
-	enrollments, err := client.GetEnrollmentsByCourse(ctx, request)
+	enrollments, err := client.GetEnrollments(ctx, request)
 	if err != nil {
 		t.Fatal(err)
 	}

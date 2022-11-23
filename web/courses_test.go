@@ -121,13 +121,15 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	// verify that a pending enrollment was indeed created for the user
-	enrollStatusReq := &qf.EnrollmentStatusRequest{
-		UserID: stud1.ID,
+	enrollStatusReq := &qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_UserID{
+			UserID: stud1.ID,
+		},
 		Statuses: []qf.Enrollment_UserStatus{
 			qf.Enrollment_PENDING,
 		},
 	}
-	userEnrollments, err := client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, admin)))
+	userEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -143,8 +145,12 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	// verify that a pending enrollment was indeed created for the course.
-	enrollReq := &qf.EnrollmentRequest{CourseID: course.Msg.ID}
-	courseEnrollments, err := client.GetEnrollmentsByCourse(ctx, qtest.RequestWithCookie(enrollReq, Cookie(t, tm, admin)))
+	enrollReq := &qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_CourseID{
+			CourseID: course.Msg.ID,
+		},
+	}
+	courseEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollReq, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -381,8 +387,13 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	stats := make([]qf.Enrollment_UserStatus, 0)
 	stats = append(stats, qf.Enrollment_STUDENT)
-	course_req := &qf.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
-	enrollments, err := client.GetEnrollmentsByUser(context.Background(), qtest.RequestWithCookie(course_req, Cookie(t, tm, user)))
+	course_req := &qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_UserID{
+			UserID: user.ID,
+		},
+		Statuses: stats,
+	}
+	enrollments, err := client.GetEnrollments(context.Background(), qtest.RequestWithCookie(course_req, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -589,8 +600,12 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	req := &qf.EnrollmentStatusRequest{UserID: user.ID}
-	enrollments, err := client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(req, cookie))
+	req := &qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_UserID{
+			UserID: user.ID,
+		},
+	}
+	enrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(req, cookie))
 	if err != nil {
 		t.Error(err)
 	}
@@ -606,7 +621,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 		t.Error(err)
 	}
 
-	gotEnrollments, err := client.GetEnrollmentsByUser(ctx, qtest.RequestWithCookie(req, cookie))
+	gotEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(req, cookie))
 	if err != nil {
 		t.Error(err)
 	}
