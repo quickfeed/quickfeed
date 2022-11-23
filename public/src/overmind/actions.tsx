@@ -291,14 +291,12 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
         // Clone and set status to student for all pending enrollments.
         // We need to clone the enrollments to avoid modifying the state directly.
         // We do not want to update set the enrollment status before the update is successful.
-        //const enrollments = Object.assign({}, state.pendingEnrollments)
         const enrollments = state.pendingEnrollments.map(e => {
             const temp = e.clone()
             temp.status = Enrollment_UserStatus.STUDENT
             return temp
         })
-        enrollments.forEach(e => e.status = Enrollment_UserStatus.STUDENT)
-
+       
         // Send updated enrollments to server
         const response = await effects.grpcMan.updateEnrollments(enrollments)
         if (success(response)) {

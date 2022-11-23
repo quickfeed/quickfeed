@@ -130,12 +130,12 @@ func (db *GormDB) CreateBenchmark(query *qf.GradingBenchmark) error {
 
 // UpdateBenchmark updates the given benchmark
 func (db *GormDB) UpdateBenchmark(query *qf.GradingBenchmark) error {
-	return db.conn.
+	return db.conn.Select("*").
 		Where(&qf.GradingBenchmark{
 			ID:           query.ID,
 			AssignmentID: query.AssignmentID,
 			ReviewID:     query.ReviewID,
-		}).Select("*").Updates(query).Error
+		}).Updates(query).Error
 }
 
 // DeleteBenchmark removes the given benchmark
@@ -151,8 +151,11 @@ func (db *GormDB) CreateCriterion(query *qf.GradingCriterion) error {
 
 // UpdateCriterion updates the given criterion
 func (db *GormDB) UpdateCriterion(query *qf.GradingCriterion) error {
-	return db.conn.
-		Where(&qf.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).Select("*").Updates(query).Error
+	return db.conn.Select("*").
+		Where(&qf.GradingCriterion{
+			ID:          query.ID,
+			BenchmarkID: query.BenchmarkID}).
+		Updates(query).Error
 }
 
 // DeleteCriterion removes the given criterion

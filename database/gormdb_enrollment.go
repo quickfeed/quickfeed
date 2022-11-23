@@ -42,8 +42,11 @@ func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
 	// which would set the ID of the Enrollment record to zero.This omission is no longer required
 	// outside the tests and can be safely removed when the tests are rewritten or updated.
 	return db.conn.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).Select("*").Omit("ID").
-		Updates(enrol).Error
+		Select("*").Omit("ID").
+		Where(&qf.Enrollment{
+			CourseID: enrol.CourseID,
+			UserID:   enrol.UserID,
+		}).Updates(enrol).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.

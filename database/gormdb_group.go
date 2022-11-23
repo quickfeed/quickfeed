@@ -92,9 +92,11 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 	}
 	query := tx.Model(&qf.Enrollment{}).
 		Where(&qf.Enrollment{CourseID: group.CourseID}).
-		Where("user_id IN (?) AND status IN (?)", userids,
-			[]qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_TEACHER}).
-		Updates(&qf.Enrollment{GroupID: group.ID})
+		Where("user_id IN (?)", userids).
+		Where("status IN (?)", []qf.Enrollment_UserStatus{
+			qf.Enrollment_STUDENT,
+			qf.Enrollment_TEACHER,
+		}).Updates(&qf.Enrollment{GroupID: group.ID})
 	if query.Error != nil {
 		tx.Rollback()
 		return query.Error
