@@ -136,31 +136,27 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 // GetGroup returns the group with the specified group id.
 func (db *GormDB) GetGroup(groupID uint64) (*qf.Group, error) {
 	var group qf.Group
-	if err := db.conn.Preload("Enrollments").Preload("Enrollments.UsedSlipDays").First(&group, groupID).Error; err != nil {
+	userIDs := make([]uint64, 0)
+	if err := db.conn.
+		Model(&qf.Enrollment{}).
+		Where("group_id = ?", groupID).
+		Pluck("user_id", &userIDs).Error; err != nil {
+		return nil, err
+	}
+	if err := db.conn.
+		Preload("Enrollments").
+		Preload("Enrollments.UsedSlipDays").
+		Preload("Enrollments.User").
+		Preload("Users", "id IN ?", userIDs).
+		First(&group, groupID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
 		return nil, fmt.Errorf("error fetching group record for group with ID %d: %w", groupID, err)
 	}
-
-	// TODO(espeland): I do not understand all this logic. Can't we just simply preload users, as we do with enrollments?
-	var userIds []uint64
-	for _, enrollment := range group.Enrollments {
-		userIds = append(userIds, enrollment.UserID)
-		u, err := db.GetUser(enrollment.UserID)
-		if err != nil {
-			return nil, err
-		}
-		enrollment.User = u
-	}
-	if len(userIds) == 0 {
+	if len(userIDs) == 0 {
 		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
-	users, err := db.GetUsers(userIds...)
-	if err != nil {
-		return nil, err
-	}
-	group.Users = users
 	return &group, nil
 }
 
@@ -176,29 +172,12 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 	if err := db.conn.
 		Preload("Enrollments").
 		Preload("Enrollments.UsedSlipDays").
+		Preload("Enrollments.User").
+		Preload("Users").
 		Where(&qf.Group{CourseID: courseID}).
 		Where("status in (?)", statuses).
 		Find(&groups).Error; err != nil {
 		return nil, err
-	}
-
-	for _, group := range groups {
-		var userIds []uint64
-		for _, enrollment := range group.Enrollments {
-			userIds = append(userIds, enrollment.UserID)
-			u, err := db.GetUser(enrollment.UserID)
-			if err != nil {
-				return nil, err
-			}
-			enrollment.User = u
-		}
-		if len(userIds) > 0 {
-			users, err := db.GetUsers(userIds...)
-			if err != nil {
-				return nil, err
-			}
-			group.Users = users
-		}
 	}
 	return groups, nil
 }
