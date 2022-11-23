@@ -41,7 +41,7 @@ var accessRolesFor = map[string]roles{
 	"CreateEnrollment":       {user},
 	"UpdateCourseVisibility": {user},
 	"UpdateUser":             {user, admin},
-	"GetEnrollments":         {student, teacher, admin},
+	"GetEnrollments":         {user, student, teacher, admin},
 	"GetSubmissions":         {student, group, teacher},
 	"GetSubmission":          {teacher},
 	"CreateGroup":            {group, teacher},
@@ -137,6 +137,13 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 								method, claims.UserID, req.IDFor("user")))
 					}
 				}
+				// GetEnrollments can be used to fetch all enrollments for a course or for a user.
+				// The "student" role should only access student's own enrollments.
+				if method == "GetEnrollments" && !claims.SameUser(req) {
+					return nil, connect.NewError(connect.CodePermissionDenied,
+						fmt.Errorf("access denied for %s: ID mismatch in claims (%d) and request (%d)",
+							method, claims.UserID, req.IDFor("user")))
+				}
 				if claims.HasCourseStatus(req, qf.Enrollment_STUDENT) {
 					return next(ctx, request)
 				}
@@ -171,6 +178,13 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 				}
 			case admin:
 				if claims.Admin {
+					// GetEnrollments can be used to fetch all enrollments for a course or for a user.
+					// The "admin" role should not have access to course enrollments.
+					if method == "GetEnrollments" && req.IDFor("course") > 0 {
+						return nil, connect.NewError(connect.CodePermissionDenied,
+							fmt.Errorf("access denied for %s: ID mismatch in claims (%d) and request (%d)",
+								method, claims.UserID, req.IDFor("user")))
+					}
 					return next(ctx, request)
 				}
 			}

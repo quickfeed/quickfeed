@@ -151,6 +151,7 @@ func TestAccessControl(t *testing.T) {
 	}
 	for name, tt := range studentAccessTests {
 		t.Run("StudentAccess/"+name, func(t *testing.T) {
+			t.Log("NAME: ", name)
 			_, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 				CourseID: tt.courseID,
 				FetchMode: &qf.SubmissionRequest_UserID{
@@ -161,8 +162,8 @@ func TestAccessControl(t *testing.T) {
 			_, err = client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetAssignments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
-				FetchMode: &qf.EnrollmentRequest_CourseID{
-					CourseID: tt.courseID,
+				FetchMode: &qf.EnrollmentRequest_UserID{
+					UserID: tt.userID,
 				},
 			}, tt.cookie))
 			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
