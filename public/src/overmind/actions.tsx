@@ -172,7 +172,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
 }
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: bigint, statuses: Enrollment_UserStatus[] }): Promise<boolean> => {
-    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, true, value.statuses)
+    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, value.statuses)
     if (result.data) {
         state.courseEnrollments[value.courseID.toString()] = result.data.enrollments
         return true

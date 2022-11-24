@@ -251,7 +251,7 @@ export class MockGrpcManager {
         return this.grpcSend<Enrollments>(enrollments)
     }
 
-    public getEnrollmentsByCourse(courseID: bigint, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment_UserStatus[]):
+    public getEnrollmentsByCourse(courseID: bigint, statuses?: Enrollment_UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
         const enrollmentList = this.enrollments.enrollments.filter(e => e.courseID === courseID && (!statuses || statuses.length === 0 || statuses.includes(e.status)))
@@ -261,13 +261,6 @@ export class MockGrpcManager {
         enrollmentList.forEach(e => {
             e.user = this.users.users.find(u => u.ID === e.userID)
         })
-        // TODO: add group & group members
-        if (withoutGroupMembers) {
-            // TODO
-        }
-        if (withActivity) {
-            // TODO
-        }
         const enrollments = new Enrollments({ enrollments: enrollmentList })
         return this.grpcSend<Enrollments>(enrollments)
     }
