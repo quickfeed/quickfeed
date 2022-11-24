@@ -98,10 +98,10 @@ func (req *GroupRequest) IsValid() bool {
 
 // IsValid checks that course ID is positive.
 func (req *EnrollmentRequest) IsValid() bool {
-	switch req.GetFetchMode() {
-	case &EnrollmentRequest_CourseID{}:
+	switch req.GetFetchMode().(type) {
+	case *EnrollmentRequest_CourseID:
 		return req.GetCourseID() > 0
-	case &EnrollmentRequest_UserID{}:
+	case *EnrollmentRequest_UserID:
 		return req.GetUserID() > 0
 	}
 	return false
