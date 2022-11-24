@@ -284,12 +284,6 @@ func TestAccessControl(t *testing.T) {
 		t.Run("AdminAccess/"+name, func(t *testing.T) {
 			_, err := client.UpdateUser(ctx, qtest.RequestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
-				FetchMode: &qf.EnrollmentRequest_UserID{
-					UserID: tt.userID,
-				},
-			}, tt.cookie))
-			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, tt.cookie))
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.OrgRequest{OrgName: "test"}, tt.cookie))
