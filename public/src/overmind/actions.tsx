@@ -921,3 +921,41 @@ export const updateGroupName = ({ state }: Context, name: string): void => {
 export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
     state.connectionStatus = status
 }
+
+// searchLogs searches all build logs for the current course for the given query.
+// returns all UserCourseSubmissions that have a build log that matches the query, with non-matching logs removed.
+export const searchLogs = async ({ state }: Context, query: string): Promise<UserCourseSubmissions[]> => {
+    if (query.length === 0) {
+        return []
+    }
+
+    const promises: Promise<UserCourseSubmissions | null>[] = []
+    const submissions = state.courseSubmissions[state.activeCourse.toString()]
+    if (submissions) {
+        submissions.forEach(link => {
+            promises.push(new Promise((resolve) => {
+                if (!link.submissions) {
+                    resolve(null)
+                    return
+                }
+                // Remove all submissions that do not contain the query.
+                const submissions = link.submissions.filter(submission => submission.submission?.BuildInfo?.BuildLog.toLowerCase().includes(query.toLowerCase()))
+                if (submissions.length === 0) {
+                    // If there are no submissions left, return null.
+                    resolve(null)
+                    return
+                }
+                // Create and return a new UserCourseSubmissions object with the filtered submissions.
+                resolve({ ...link, submissions })
+            }))
+        })
+    }
+
+    return Promise.all(promises).then(link => {
+        const logs = link.filter(link => link !== null) as UserCourseSubmissions[]
+        return logs
+    }).catch(err => {
+        console.log(err)
+        return []
+    })
+}

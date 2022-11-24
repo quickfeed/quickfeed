@@ -15,7 +15,7 @@ export interface Alert {
     color: Color
 }
 
-export interface UserCourseSubmissions {
+export type UserCourseSubmissions = {
     group?: Group
     enrollment?: Enrollment
     user?: User
