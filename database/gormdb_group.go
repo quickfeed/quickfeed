@@ -81,6 +81,7 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		}
 		return err
 	}
+	// Set group ID to zero to remove all enrollments from the given group to safely add all members of the incoming group request.
 	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
 		tx.Rollback()
 		return err
