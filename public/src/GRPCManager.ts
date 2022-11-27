@@ -20,7 +20,6 @@ import {
 import {
     CourseRequest,
     CourseSubmissions,
-    EnrollmentStatusRequest,
     EnrollmentRequest,
     GroupRequest,
     Organization,
@@ -108,22 +107,26 @@ export class GrpcManager {
     // /* ENROLLMENTS */ //
 
     public getEnrollmentsByUser(userID: bigint, statuses?: Enrollment_UserStatus[]): Promise<IGrpcResponse<Enrollments>> {
-        const request = new EnrollmentStatusRequest({
-            userID: userID,
+        const request = new EnrollmentRequest({
+            FetchMode: {
+                case: "userID",
+                value: userID,
+            },
             statuses: statuses,
         })
-        return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request)
+        return this.grpcSend<Enrollments>(this.agService.getEnrollments, request)
     }
 
-    public getEnrollmentsByCourse(courseID: bigint, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment_UserStatus[]):
+    public getEnrollmentsByCourse(courseID: bigint, statuses?: Enrollment_UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
         const request = new EnrollmentRequest({
-            courseID: courseID,
-            ignoreGroupMembers: withoutGroupMembers ?? false,
-            withActivity: withActivity ?? false,
+            FetchMode: {
+                case: "courseID",
+                value: courseID,
+            },
             statuses: statuses,
         })
-        return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request)
+        return this.grpcSend<Enrollments>(this.agService.getEnrollments, request)
     }
 
     public createEnrollment(courseID: bigint, userID: bigint): Promise<IGrpcResponse<Void>> {

@@ -121,9 +121,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	request := &connect.Request[qf.EnrollmentRequest]{
-		Msg: &qf.EnrollmentRequest{CourseID: qtest.MockCourses[0].ID},
+		Msg: &qf.EnrollmentRequest{
+			FetchMode: &qf.EnrollmentRequest_CourseID{
+				CourseID: qtest.MockCourses[0].ID,
+			},
+		},
 	}
-	gotEnrollments, err := client.GetEnrollmentsByCourse(ctx, request)
+	gotEnrollments, err := client.GetEnrollments(ctx, request)
 	if err != nil {
 		t.Error(err)
 	}
@@ -133,91 +137,6 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
-	}
-}
-
-func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	client := MockClient(t, db, nil)
-	ctx := context.Background()
-
-	var users []*qf.User
-	for _, u := range allUsers {
-		user := qtest.CreateFakeUser(t, db, u.remoteID)
-		users = append(users, user)
-	}
-	admin := users[0]
-
-	ctx = auth.WithUserContext(ctx, admin)
-
-	course := qtest.MockCourses[1]
-	err := db.CreateCourse(admin.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var wantEnrollments []*qf.Enrollment
-	for i, user := range users {
-		query := &qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: course.ID,
-			Status:   qf.Enrollment_STUDENT,
-		}
-		if i == 0 {
-			// we want to skip enrolling admin, as he must have been enrolled when creating course
-			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			enr.User = nil
-			enr.Course = nil
-			wantEnrollments = append(wantEnrollments, enr)
-		} else if i%3 != 0 {
-			// enroll every third student as a group member
-			if err := db.CreateEnrollment(&qf.Enrollment{
-				UserID: user.ID, CourseID: course.ID, GroupID: 1,
-			}); err != nil {
-				t.Fatal(err)
-			}
-			if err := db.UpdateEnrollment(query); err != nil {
-				t.Fatal(err)
-			}
-		} else {
-			// enroll rest of the students and add them to the list to check against
-			if err := db.CreateEnrollment(&qf.Enrollment{
-				UserID: user.ID, CourseID: course.ID,
-			}); err != nil {
-				t.Fatal(err)
-			}
-			if err := db.UpdateEnrollment(query); err != nil {
-				t.Fatal(err)
-			}
-			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			enr.User = nil
-			enr.Course = nil
-			wantEnrollments = append(wantEnrollments, enr)
-		}
-	}
-
-	request := connect.NewRequest(
-		&qf.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true},
-	)
-	enrollments, err := client.GetEnrollmentsByCourse(ctx, request)
-	if err != nil {
-		t.Fatal(err)
-	}
-	gotEnrollments := enrollments.Msg.GetEnrollments()
-	// set user references to nil as db methods populating the first list will not have them
-	for _, u := range gotEnrollments {
-		u.User = nil
-		u.Course = nil
-	}
-	if diff := cmp.Diff(wantEnrollments, gotEnrollments, protocmp.Transform()); diff != "" {
-		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
 	}
 }
 

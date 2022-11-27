@@ -49,13 +49,14 @@ func (r *CourseRequest) IDFor(_ string) uint64 {
 }
 
 // IDFor returns course ID.
-func (r *EnrollmentRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
-}
-
-// IDFor returns user ID.
-func (r *EnrollmentStatusRequest) IDFor(_ string) uint64 {
-	return r.GetUserID()
+func (r *EnrollmentRequest) IDFor(role string) uint64 {
+	switch role {
+	case "course":
+		return r.GetCourseID()
+	case "user":
+		return r.GetUserID()
+	}
+	return 0
 }
 
 // IDFor returns user, group, or course ID.
