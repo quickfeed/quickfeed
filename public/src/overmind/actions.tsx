@@ -291,9 +291,12 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
         // Clone and set status to student for all pending enrollments.
         // We need to clone the enrollments to avoid modifying the state directly.
         // We do not want to update set the enrollment status before the update is successful.
-        const enrollments = Object.assign({}, state.pendingEnrollments)
-        enrollments.forEach(e => e.status = Enrollment_UserStatus.STUDENT)
-
+        const enrollments = state.pendingEnrollments.map(e => {
+            const temp = e.clone()
+            temp.status = Enrollment_UserStatus.STUDENT
+            return temp
+        })
+       
         // Send updated enrollments to server
         const response = await effects.grpcMan.updateEnrollments(enrollments)
         if (success(response)) {
@@ -529,7 +532,7 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
     if (enrollment && enrollment.group) {
         const submissions = await effects.grpcMan.getGroupSubmissions(courseID, enrollment.groupID)
         state.assignments[courseID.toString()]?.forEach(assignment => {
-            const submission = submissions.data?.submissions.find(submission => submission.AssignmentID === assignment.ID)
+            const submission = submissions.data?.submissions.find(sbm => sbm.AssignmentID === assignment.ID)
             if (submission && assignment.isGroupLab) {
                 state.submissions[courseID.toString()][assignment.order - 1] = submission
             }
@@ -636,7 +639,7 @@ export const updateGroup = async ({ state, actions, effects }: Context, group: G
 }
 
 export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    const benchmark = assignment.gradingBenchmarks.find(benchmark => benchmark.ID === criterion.ID)
+    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.ID)
     if (!benchmark) {
         // If a benchmark is not found, the criterion is invalid.
         return
@@ -686,7 +689,7 @@ export const deleteCriterion = async ({ actions, effects }: Context, { criterion
         return
     }
 
-    const benchmark = assignment.gradingBenchmarks.find(benchmark => benchmark.ID === criterion?.ID)
+    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion?.ID)
     if (!benchmark) {
         // Criterion has no parent benchmark
         return
@@ -808,7 +811,7 @@ export const changeView = async ({ state, effects }: Context, courseID: bigint):
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     if (hasStudent(enrollment.status)) {
         const status = await effects.grpcMan.getEnrollmentsByUser(state.self.ID, [Enrollment_UserStatus.TEACHER])
-        if (status.data?.enrollments.find(enrollment => enrollment.courseID === BigInt(courseID) && hasTeacher(enrollment.status))) {
+        if (status.data?.enrollments.find(enrol => enrol.courseID === BigInt(courseID) && hasTeacher(enrol.status))) {
             enrollment.status = Enrollment_UserStatus.TEACHER
         }
     } else if (hasTeacher(enrollment.status)) {
@@ -841,8 +844,8 @@ export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown
     }
 }
 
-export const alert = ({ state }: Context, alert: Alert): void => {
-    state.alerts.push(alert)
+export const alert = ({ state }: Context, a: Alert): void => {
+    state.alerts.push(a)
 }
 
 export const popAlert = ({ state }: Context, index: number): void => {

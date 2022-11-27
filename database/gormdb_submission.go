@@ -205,12 +205,12 @@ func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 	return &review, nil
 }
 
-// CreateReview creates a new submission review
+// CreateReview creates a new submission review.
 func (db *GormDB) CreateReview(query *qf.Review) error {
 	return db.conn.Create(query).Error
 }
 
-// UpdateReview updates feedback text, review and ready status
+// UpdateReview updates a review.
 func (db *GormDB) UpdateReview(query *qf.Review) error {
 	// By default, Gorm will not update zero value fields; such as the Ready bool field.
 	// Therefore we use Select before the Updates call. For additional context, see
@@ -226,7 +226,7 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 	}).Error
 }
 
-// DeleteReview removes all reviews matching the query
+// DeleteReview removes all reviews matching the query.
 func (db *GormDB) DeleteReview(query *qf.Review) error {
 	return db.conn.Delete(&qf.Review{}, &query).Error
 }

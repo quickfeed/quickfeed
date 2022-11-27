@@ -145,23 +145,26 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
 func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
-	query := &qf.Enrollment{
-		UserID:           repo.UserID,
-		CourseID:         course.ID,
-		LastActivityDate: time.Now().Format("02 Jan"),
-	}
-
-	if repo.IsGroupRepo() {
+	userID := repo.UserID
+	if userID < 1 && repo.IsGroupRepo() {
 		user, err := wh.db.GetUserByCourse(course, login)
 		if err != nil {
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 			return
 		}
-		query.UserID = user.ID
+		userID = user.ID
 	}
+	// We want to fetch the original enrollment to ensure all Enrollment fields are set to correct values
+	// to ensure gorm Select.Updates behave correctly.
+	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.ID, userID)
+	if err != nil {
+		wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
+		return
+	}
+	enrol.LastActivityDate = time.Now().Format("02 Jan")
 
-	if err := wh.db.UpdateEnrollment(query); err != nil {
-		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", query.UserID, err)
+	if err := wh.db.UpdateEnrollment(enrol); err != nil {
+		wh.logger.Errorf("Failed to update the last activity date for user %d (%s): %v", userID, login, err)
 	}
 }
 
