@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -152,10 +151,10 @@ func (db *GormDB) GetGroup(groupID uint64) (*qf.Group, error) {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
-		return nil, fmt.Errorf("error fetching group record for group with ID %d: %w", groupID, err)
+		return nil, fmt.Errorf("failed to get group with ID %d: %w", groupID, err)
 	}
 	if len(userIDs) == 0 {
-		return nil, errors.New("failed to get next student reviewer: no users in group")
+		return nil, fmt.Errorf("no users found for group with ID %d", groupID)
 	}
 	return &group, nil
 }
