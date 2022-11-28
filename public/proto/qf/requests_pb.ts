@@ -5,7 +5,7 @@
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
 import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
-import {Course, Enrollment_UserStatus, EnrollmentLink, Repository_Type, Review, Submission_Status} from "./types_pb.js";
+import {Course, Enrollment_UserStatus, EnrollmentLink, Review, Submission_Status} from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -566,49 +566,6 @@ export class UpdateSubmissionsRequest extends Message<UpdateSubmissionsRequest> 
 
   static equals(a: UpdateSubmissionsRequest | PlainMessage<UpdateSubmissionsRequest> | undefined, b: UpdateSubmissionsRequest | PlainMessage<UpdateSubmissionsRequest> | undefined): boolean {
     return proto3.util.equals(UpdateSubmissionsRequest, a, b);
-  }
-}
-
-/**
- * @generated from message qf.URLRequest
- */
-export class URLRequest extends Message<URLRequest> {
-  /**
-   * @generated from field: uint64 courseID = 1;
-   */
-  courseID = protoInt64.zero;
-
-  /**
-   * @generated from field: repeated qf.Repository.Type repoTypes = 2;
-   */
-  repoTypes: Repository_Type[] = [];
-
-  constructor(data?: PartialMessage<URLRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.URLRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "repoTypes", kind: "enum", T: proto3.getEnumType(Repository_Type), repeated: true },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): URLRequest {
-    return new URLRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): URLRequest {
-    return new URLRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): URLRequest {
-    return new URLRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: URLRequest | PlainMessage<URLRequest> | undefined, b: URLRequest | PlainMessage<URLRequest> | undefined): boolean {
-    return proto3.util.equals(URLRequest, a, b);
   }
 }
 

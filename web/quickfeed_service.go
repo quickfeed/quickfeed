@@ -563,7 +563,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
-func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.URLRequest]) (*connect.Response[qf.Repositories], error) {
+func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
@@ -573,7 +573,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
 
 	urls := make(map[string]string)
-	for _, repoType := range in.Msg.GetRepoTypes() {
+	for _, repoType := range repoTypes(enrol) {
 		var id uint64
 		switch repoType {
 		case qf.Repository_USER:

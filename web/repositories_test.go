@@ -26,7 +26,7 @@ func TestGetRepositories(t *testing.T) {
 
 	ctx := context.Background()
 	// check that no repositories are returned when no repo types are specified
-	repos, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	repos, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
 	}, cookie))
 	if err != nil {
@@ -37,11 +37,11 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// check that empty user repository is returned before user repository has been created
-	gotUserRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	gotUserRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
-		RepoTypes: []qf.Repository_Type{
-			qf.Repository_USER,
-		},
+		// RepoTypes: []qf.Repository_Type{
+		// 	qf.Repository_USER,
+		// },
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -65,7 +65,7 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// check that no repositories are returned when no repo types are specified
-	repos, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	repos, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
 	}, cookie))
 	if err != nil {
@@ -76,11 +76,11 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// check that user repository is returned when user repo type is specified
-	gotUserRepoURLs, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	gotUserRepoURLs, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
-		RepoTypes: []qf.Repository_Type{
-			qf.Repository_USER,
-		},
+		// RepoTypes: []qf.Repository_Type{
+		// 	qf.Repository_USER,
+		// },
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -93,11 +93,11 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// try to get group repository before group exists (user not enrolled in group)
-	gotGroupRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	gotGroupRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
-		RepoTypes: []qf.Repository_Type{
-			qf.Repository_GROUP,
-		},
+		// RepoTypes: []qf.Repository_Type{
+		// 	qf.Repository_GROUP,
+		// },
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -130,11 +130,11 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// check that group repository is returned when group repo type is specified
-	gotGroupRepoURLs, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	gotGroupRepoURLs, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
-		RepoTypes: []qf.Repository_Type{
-			qf.Repository_GROUP,
-		},
+		// RepoTypes: []qf.Repository_Type{
+		// 	qf.Repository_GROUP,
+		// },
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -147,12 +147,12 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// check that both user and group repositories are returned when both repo types are specified
-	gotUserGroupRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	gotUserGroupRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
-		RepoTypes: []qf.Repository_Type{
-			qf.Repository_USER,
-			qf.Repository_GROUP,
-		},
+		// RepoTypes: []qf.Repository_Type{
+		// 	qf.Repository_USER,
+		// 	qf.Repository_GROUP,
+		// },
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -196,15 +196,15 @@ func TestGetRepositories(t *testing.T) {
 	}
 
 	// check that all repositories are returned when all repo types are specified
-	gotAllRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{
+	gotAllRepoURLs, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.ID,
-		RepoTypes: []qf.Repository_Type{
-			qf.Repository_USER,
-			qf.Repository_GROUP,
-			qf.Repository_INFO,
-			qf.Repository_ASSIGNMENTS,
-			qf.Repository_TESTS,
-		},
+		// RepoTypes: []qf.Repository_Type{
+		// 	qf.Repository_USER,
+		// 	qf.Repository_GROUP,
+		// 	qf.Repository_INFO,
+		// 	qf.Repository_ASSIGNMENTS,
+		// 	qf.Repository_TESTS,
+		// },
 	}, cookie))
 	if err != nil {
 		t.Error(err)

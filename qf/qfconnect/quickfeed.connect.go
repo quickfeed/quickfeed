@@ -63,7 +63,7 @@ type QuickFeedServiceClient interface {
 	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
-	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
+	GetRepositories(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error)
 }
@@ -243,7 +243,7 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/GetOrganization",
 			opts...,
 		),
-		getRepositories: connect_go.NewClient[qf.URLRequest, qf.Repositories](
+		getRepositories: connect_go.NewClient[qf.CourseRequest, qf.Repositories](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/GetRepositories",
 			opts...,
@@ -296,7 +296,7 @@ type quickFeedServiceClient struct {
 	createReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
 	updateReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
 	getOrganization        *connect_go.Client[qf.OrgRequest, qf.Organization]
-	getRepositories        *connect_go.Client[qf.URLRequest, qf.Repositories]
+	getRepositories        *connect_go.Client[qf.CourseRequest, qf.Repositories]
 	isEmptyRepo            *connect_go.Client[qf.RepositoryRequest, qf.Void]
 	submissionStream       *connect_go.Client[qf.Void, qf.Submission]
 }
@@ -467,7 +467,7 @@ func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *conne
 }
 
 // GetRepositories calls qf.QuickFeedService.GetRepositories.
-func (c *quickFeedServiceClient) GetRepositories(ctx context.Context, req *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error) {
+func (c *quickFeedServiceClient) GetRepositories(ctx context.Context, req *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Repositories], error) {
 	return c.getRepositories.CallUnary(ctx, req)
 }
 
@@ -519,7 +519,7 @@ type QuickFeedServiceHandler interface {
 	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
-	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
+	GetRepositories(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error
 }
@@ -849,7 +849,7 @@ func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *co
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetOrganization is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error) {
+func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Repositories], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetRepositories is not implemented"))
 }
 
