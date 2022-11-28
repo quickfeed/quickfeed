@@ -349,7 +349,7 @@ export const getRepositories = async ({ state, effects }: Context): Promise<bool
         const courseID = enrollment.courseID
         state.repositories[courseID.toString()] = {}
 
-        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(enrollment))
+        const response = await effects.grpcMan.getRepositories(courseID)
         if (response.data) {
             state.repositories[courseID.toString()] = response.data.URLs
         } else {
