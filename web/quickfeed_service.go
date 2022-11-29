@@ -570,7 +570,11 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	usrID := userID(ctx)
-	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
+	enrol, err := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
+	if err != nil {
+		s.logger.Error("GetRepositories failed: enrollment for user %d and course %d not found", usrID, course.GetID())
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("enrollment not found"))
+	}
 
 	urls := make(map[string]string)
 	for _, repoType := range repoTypes(enrol) {
