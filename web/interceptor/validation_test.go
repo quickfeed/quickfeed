@@ -34,7 +34,6 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.OrgRequest":               {cleaner: F, validator: T},
 		"qf.Repository":               {cleaner: F, validator: F},
 		"qf.UpdateSubmissionsRequest": {cleaner: F, validator: F},
-		"qf.URLRequest":               {cleaner: F, validator: T},
 		"qf.RebuildRequest":           {cleaner: F, validator: T},
 		"qf.CourseRequest":            {cleaner: F, validator: T},
 		"qf.PullRequest":              {cleaner: F, validator: F},
