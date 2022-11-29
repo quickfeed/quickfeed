@@ -1,6 +1,6 @@
 import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
+    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus,
 } from "../../proto/qf/types_pb"
 import { CourseSubmissions, Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import { Alert, UserCourseSubmissions } from "./state"
@@ -855,17 +855,6 @@ export const popAlert = ({ state }: Context, index: number): void => {
 export const logout = ({ state }: Context): void => {
     // This does not empty the state.
     state.self = new User()
-}
-
-const generateRepositoryList = (enrollment: Enrollment): Repository_Type[] => {
-    switch (enrollment.status) {
-        case Enrollment_UserStatus.TEACHER:
-            return [Repository_Type.ASSIGNMENTS, Repository_Type.INFO, Repository_Type.GROUP, Repository_Type.TESTS, Repository_Type.USER]
-        case Enrollment_UserStatus.STUDENT:
-            return [Repository_Type.ASSIGNMENTS, Repository_Type.INFO, Repository_Type.GROUP, Repository_Type.USER]
-        default:
-            return [Repository_Type.NONE]
-    }
 }
 
 export const setAscending = ({ state }: Context, ascending: boolean): void => {
