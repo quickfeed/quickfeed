@@ -1,6 +1,6 @@
 import React from "react"
 import { Review } from "../../../proto/qf/types_pb"
-import { getCourseID, isManuallyGraded, Color } from "../../Helpers"
+import { isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ReviewInfo from "./ReviewInfo"
@@ -10,14 +10,13 @@ import ReviewResult from "../ReviewResult"
 const ReviewForm = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
-    const courseID = getCourseID()
 
-    if (!state.activeSubmissionLink) {
+    if (!state.currentSubmission) {
         return <div>No submission selected</div>
     }
 
-    const assignment = state.activeSubmissionLink.assignment
-    const submission = state.activeSubmissionLink.submission
+    const assignment = state.selectedAssignment
+    const submission = state.currentSubmission
     if (!assignment || !submission) {
         return <div>No Submission</div>
     }
@@ -27,7 +26,7 @@ const ReviewForm = (): JSX.Element => {
     }
 
     const reviewers = assignment.reviewers ?? 0
-    const reviews = state.review.reviews[courseID.toString()][state.activeSubmission] ?? []
+    const reviews = state.review.reviews.get(state.activeSubmission) ?? []
     const selectReviewButton: JSX.Element[] = []
 
     reviews.forEach((review, index) => {

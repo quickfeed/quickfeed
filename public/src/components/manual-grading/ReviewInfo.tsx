@@ -16,8 +16,8 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
         return null
     }
 
-    const assignment = state.activeSubmissionLink?.assignment
-    const submission = state.activeSubmissionLink?.submission
+    const assignment = state.selectedAssignment
+    const submission = state.currentSubmission
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
