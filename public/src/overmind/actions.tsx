@@ -793,11 +793,6 @@ export const setQuery = ({ state }: Context, query: string): void => {
     state.query = query
 }
 
-export const setSelectedUser = ({ state }: Context, user: User | null): void => {
-    state.activeUser = user
-}
-
-
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
     if (response.status.Code === BigInt(Code.Unauthenticated)) {
         // If we end up here, the user session has expired.
