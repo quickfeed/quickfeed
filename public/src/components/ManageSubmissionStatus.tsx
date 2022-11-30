@@ -6,7 +6,7 @@ import { useActions, useAppState } from "../overmind"
 const ManageSubmissionStatus = (): JSX.Element => {
     const actions = useActions()
     const state = useAppState()
-    const assignment = state.activeSubmissionLink?.assignment
+    const assignment = state.selectedAssignment
 
     const [rebuilding, setRebuilding] = React.useState(false)
 
