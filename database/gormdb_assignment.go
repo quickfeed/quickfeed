@@ -97,30 +97,31 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 
 // GetAssignmentsWithSubmissions returns all course assignments
 // preloaded with submissions of the requested submission type.
-func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Assignment, error) {
-	var assignments []*qf.Assignment
-	m := db.conn.Preload("Submissions").
-		Preload("Submissions.Reviews").
-		Preload("Submissions.Reviews.GradingBenchmarks").
-		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
-		Preload("Submissions.Scores")
+func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error) {
+	var assignmentIDs []uint64
+	a := db.conn.Model(&qf.Assignment{}).Where("course_id = ?", courseID)
+	switch submissionType {
+	case qf.SubmissionRequest_USER:
+		a.Where("is_group_lab = ?", false)
+	case qf.SubmissionRequest_GROUP:
+		a.Where("is_group_lab = ?", true)
+	default: // all
+	}
 	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := m.Where(&qf.Assignment{CourseID: courseID}).
-		Order("'order'").
-		Find(&assignments).Error; err != nil {
+	if err := a.Order("'order'").Pluck("id", &assignmentIDs).Error; err != nil {
 		return nil, err
 	}
-	if submissionType == qf.SubmissionRequest_ALL {
-		return assignments, nil
+	var submissions []*qf.Submission
+	m := db.conn.Model(&qf.Submission{}).Preload("Reviews").
+		Preload("Reviews.GradingBenchmarks").
+		Preload("Reviews.GradingBenchmarks.Criteria").
+		Preload("Scores")
+	if err := m.Where("assignment_id IN ?", assignmentIDs).
+		Find(&submissions).Error; err != nil {
+		return nil, err
 	}
-	wantGroupLabs := submissionType == qf.SubmissionRequest_GROUP
-	filteredAssignments := make([]*qf.Assignment, 0)
-	for _, a := range assignments {
-		if a.IsGroupLab == wantGroupLabs {
-			filteredAssignments = append(filteredAssignments, a)
-		}
-	}
-	return filteredAssignments, nil
+
+	return submissions, nil
 }
 
 // CreateBenchmark creates a new grading benchmark
