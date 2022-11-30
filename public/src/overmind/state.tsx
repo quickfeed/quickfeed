@@ -183,6 +183,9 @@ export type State = {
     hasGroup: (courseID: number) => boolean,
 
     connectionStatus: ConnStatus,
+    // ID of owner of the current submission
+    // Must be either an enrollment ID or a group ID
+    submissionOwner: bigint,
 }
 
 

@@ -884,3 +884,9 @@ export const updateGroupName = ({ state }: Context, name: string): void => {
 export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
     state.connectionStatus = status
 }
+
+// setSubmissionOwner sets the owner of the currently selected submission.
+// The owner must be either the ID of an enrolled user or the ID of a group.
+export const setSubmissionOwner = ({ state }: Context, owner: bigint) => {
+    state.submissionOwner = owner
+}
