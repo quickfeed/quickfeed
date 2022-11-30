@@ -5,23 +5,16 @@
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
 import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
-import {Course, Enrollment_UserStatus, EnrollmentLink, Repository_Type, Review, Submission_Status} from "./types_pb.js";
+import {Enrollment_UserStatus, Repository_Type, Review, Submission_Status, Submissions} from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
  */
 export class CourseSubmissions extends Message<CourseSubmissions> {
   /**
-   * preloaded assignments
-   *
-   * @generated from field: qf.Course course = 1;
+   * @generated from field: map<uint64, qf.Submissions> submissions = 1;
    */
-  course?: Course;
-
-  /**
-   * @generated from field: repeated qf.EnrollmentLink links = 2;
-   */
-  links: EnrollmentLink[] = [];
+  submissions: { [key: string]: Submissions } = {};
 
   constructor(data?: PartialMessage<CourseSubmissions>) {
     super();
@@ -31,8 +24,7 @@ export class CourseSubmissions extends Message<CourseSubmissions> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.CourseSubmissions";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "course", kind: "message", T: Course },
-    { no: 2, name: "links", kind: "message", T: EnrollmentLink, repeated: true },
+    { no: 1, name: "submissions", kind: "map", K: 4 /* ScalarType.UINT64 */, V: {kind: "message", T: Submissions} },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CourseSubmissions {
