@@ -220,7 +220,7 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
             actions.updateSubmissionByOwners({ IDs: group.enrollments.map(e => e.ID) })
             // Update submission in state for the group itself
             actions.updateSubmissionByOwners({ IDs: [state.submissionOwner], group: true })
-    }
+        }
     } else {
         actions.updateSubmissionByOwners({ IDs: [state.submissionOwner] })
     }
@@ -234,7 +234,7 @@ export const updateSubmissionByOwners = ({ state }: Context, { IDs, group }: { I
         if (submission) {
             submission.status = state.currentSubmission!.status
         }
-            }
+    }
     if (group) {
         state.submissionsByGroup = allSubmissions
     } else {
@@ -479,7 +479,7 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         const submissionsMap = new Map<bigint, Submission[]>()
         for (const id of Object.keys(groups.data.submissions)) {
             submissionsMap.set(BigInt(id), groups.data.submissions[id].submissions)
-            }
+        }
         state.submissionsByGroup = submissionsMap
     }
     state.isLoading = false
@@ -534,6 +534,10 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
+export const setActiveSubmission = ({ state }: Context, submissionID: bigint): void => {
+    state.activeSubmission = submissionID
+}
+
 export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
     const response = await effects.grpcMan.getSubmission(courseID, submissionID)
     if (!response.data || !success(response)) {
@@ -547,11 +551,11 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
     const index = submissions?.findIndex(sub => sub.ID === submissionID)
     if (!(index && response.data)) {
         return
-            }
+    }
     submissions![index] = response.data
     if (state.currentSubmission) {
         state.currentSubmission = response.data
-        }
+    }
 }
 
 /** Rebuilds the currently active submission */
