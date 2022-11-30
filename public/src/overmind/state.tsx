@@ -15,11 +15,11 @@ export interface Alert {
     color: Color
 }
 
-export interface UserCourseSubmissions {
-    group?: Group
-    enrollment?: Enrollment
-    user?: User
-    submissions?: SubmissionLink[]
+interface GroupOrEnrollment {
+    ID: bigint,
+    name?: string,
+    user?: User,
+    status?: Enrollment_UserStatus | Group_GroupStatus
 }
 
 type EnrollmentsByCourse = { [CourseID: string]: Enrollment }
