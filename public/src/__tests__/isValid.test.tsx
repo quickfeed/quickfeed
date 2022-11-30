@@ -1,5 +1,5 @@
 import { isValid } from "../Helpers"
-import { User, Enrollment, Submission, EnrollmentLink, SubmissionLink } from "../../proto/qf/types_pb"
+import { User, Enrollment } from "../../proto/qf/types_pb"
 
 describe("User and enrollment validation", () => {
     it("User should be valid", () => {
@@ -79,21 +79,14 @@ describe("User and enrollment validation", () => {
         expect(isValidUser).toBe(false)
     })
 
-    it("If enrollment link is valid it should pass", () => {
+    it("Enrollment should not be valid if it has an invalid user", () => {
         const user = new User({
             ID: BigInt(6),
         })
         const enrollment = new Enrollment({ ID: BigInt(1), user })
-        const submission = new Submission({ ID: BigInt(1) })
-        const submissionLink = new SubmissionLink({ submission })
-        const enrollmentLink = new EnrollmentLink({ enrollment, submissions: [submissionLink] })
-        const isValidEnrollmentLink = isValid(enrollmentLink)
-        expect(isValidEnrollmentLink).toBe(true)
-    })
+        const isValidEnrollment = isValid(enrollment)
 
-    it("If enrollment link has no submission list, enrollment or user it should be invalid", () => {
-        const enrollmentLink = new EnrollmentLink()
-        const isValidEnrollmentLink = isValid(enrollmentLink)
-        expect(isValidEnrollmentLink).toBe(false)
+        // should be false because user is not valid
+        expect(isValidEnrollment).toBe(false)
     })
 })
