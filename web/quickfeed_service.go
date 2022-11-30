@@ -578,6 +578,12 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 
 	urls := make(map[string]string)
 	for _, repoType := range repoTypes(enrol) {
+		if repoType == qf.Repository_GROUP && enrol.GroupID == 0 {
+			// If groupID for a group repository type is 0, getRepo() returns the first group repository for the course
+			// because database query looks like this: Repository{type: GROUP, OrganizationID: course.OrgID} which mathes
+			// to any group repository for this course. To prevent this, ignore such cases instead of calling getRepo().
+			continue
+		}
 		var id uint64
 		switch repoType {
 		case qf.Repository_USER:
