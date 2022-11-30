@@ -1,9 +1,9 @@
 import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
+    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
 } from "../../proto/qf/types_pb"
-import { CourseSubmissions, Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert, UserCourseSubmissions } from "./state"
+import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import { Alert } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
 import { Code } from "@bufbuild/connect-web"
@@ -64,7 +64,6 @@ export const resetState = ({ state }: Context) => {
         submissionFilters: [],
         groupView: false,
         status: [],
-        activeUser: null,
         assignments: {},
         repositories: {},
 
@@ -558,7 +557,7 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
     if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, BigInt(state.activeSubmission), state.activeCourse)
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.activeSubmission, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
