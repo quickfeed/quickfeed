@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, SubmissionLink, User } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionByAssignmentID, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -90,9 +90,7 @@ export type State = {
      ***************************************************************************/
 
     /* Contains all submissions for a given course */
-    courseSubmissions: { [courseID: string]: UserCourseSubmissions[] },
 
-    courseGroupSubmissions: { [courseID: string]: UserCourseSubmissions[] },
 
     /** Contains all submissions for the current course.
      *  Derived from either courseSubmissions or courseGroupSubmissions based on groupView.
@@ -107,10 +105,7 @@ export type State = {
     groups: { [courseID: string]: Group[] },
 
     /* Currently selected submission ID */
-    activeSubmission: number,
-
-    /* Currently selected user */
-    activeUser: User | null,
+    activeSubmission: bigint,
 
     /* Number of enrolled users */
     // derived from courseEnrollments
@@ -153,9 +148,6 @@ export type State = {
     /* Current search query */
     query: string,
 
-    /* Current submission link */
-    activeSubmissionLink: SubmissionLink | null,
-
     /* Current enrollment */
     activeEnrollment: Enrollment | null,
 
@@ -183,6 +175,12 @@ export type State = {
     hasGroup: (courseID: number) => boolean,
 
     connectionStatus: ConnStatus,
+
+    // Submissions by enrollment ID
+    submissionsByEnrollment: Map<bigint, Submission[]>,
+    // Submissions by group ID
+    submissionsByGroup: Map<bigint, Submission[]>,
+
     // ID of owner of the current submission
     // Must be either an enrollment ID or a group ID
     submissionOwner: bigint,
@@ -230,8 +228,6 @@ export const state: State = {
     users: {},
     allUsers: [],
     courses: [],
-    courseSubmissions: {},
-    courseGroupSubmissions: {},
     sortedAndFilteredSubmissions: derived((state: State, rootState: Context["state"]) => {
         // Filter and sort submissions based on the current state
         if (!state.activeCourse || !state.courseSubmissions[state.activeCourse.toString()]) {
