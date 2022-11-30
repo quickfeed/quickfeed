@@ -712,24 +712,6 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
     }
 }
 
-export const refreshSubmission = async ({ effects }: Context, { link }: { link: SubmissionLink }): Promise<SubmissionLink> => {
-    if (link.submission && link.assignment) {
-        const response = await effects.grpcMan.getSubmission(link.assignment.CourseID, link.submission.ID)
-        if (success(response) && response.data) {
-            link.submission = response.data
-        }
-    }
-    return link
-}
-
-export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink | null): Promise<void> => {
-    let submissionLink = link
-    if (submissionLink) {
-        submissionLink = await actions.refreshSubmission({ link: submissionLink })
-    }
-    state.activeSubmissionLink = submissionLink
-}
-
 export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment | null): void => {
     state.activeEnrollment = enrollment ? enrollment : null
 }
