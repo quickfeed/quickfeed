@@ -184,6 +184,9 @@ export type State = {
     // ID of owner of the current submission
     // Must be either an enrollment ID or a group ID
     submissionOwner: bigint,
+
+    isManuallyGraded: (submission: Submission) => boolean,
+    loadedCourse: { [courseID: string]: boolean },
 }
 
 
@@ -384,4 +387,9 @@ export const state: State = {
     showFavorites: false,
 
     connectionStatus: ConnStatus.DISCONNECTED,
+    isManuallyGraded: derived(({ activeCourse, assignments }: State) => submission => {
+        const assignment = assignments[activeCourse.toString()]?.find(a => a.ID === submission.AssignmentID)
+        return assignment ? assignment.reviewers > 0 : false
+    }),
+    loadedCourse: {},
 }
