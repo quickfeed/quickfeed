@@ -454,32 +454,9 @@ export const refreshSubmissions = async ({ state, effects }: Context, input: { c
     }
 }
 
-export const convertCourseSubmission = ({ state }: Context, { courseID, data }: { courseID: bigint, data: CourseSubmissions }): void => {
-    state.review.reviews[courseID.toString()] = {}
-    state.courseSubmissions[courseID.toString()] = []
-    for (const link of data.links) {
-        if (link.enrollment) {
-            const submissionLinks = link.submissions
-            submissionLinks.forEach(submissionLink => {
-                if (submissionLink.submission) {
-                    const submission = submissionLink.submission
-                    state.review.reviews[courseID.toString()][Number(submission.ID)] = submission.reviews
-                }
-            })
-            state.courseSubmissions[courseID.toString()].push({
-                enrollment: link.enrollment,
-                submissions: link.submissions,
-                user: link.enrollment?.user
-            })
-        }
-    }
-    state.isLoading = false
-}
-
 /** Fetches and stores all submissions of a given course into state */
 export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<boolean> => {
     state.isLoading = true
-
     // None of these should fail independently.
     const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.ALL)
     const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.GROUP)
@@ -489,23 +466,25 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         state.isLoading = false
         return false
     }
-
     if (result.data) {
-        actions.convertCourseSubmission({ courseID: courseID, data: result.data })
+        const submissionsMap = new Map<bigint, Submission[]>()
+        for (const [id, submissions] of Object.entries(result.data.submissions)) {
+            submissionsMap.set(BigInt(id), result.data.submissions[id].submissions)
+            for (const submission of submissions.submissions) {
+                state.review.reviews.set(submission.ID, submission.reviews)
+            }
+        }
+        state.submissionsByEnrollment = submissionsMap
     }
     if (groups.data) {
-        state.courseGroupSubmissions[courseID.toString()] = []
-        groups.data.links.forEach(link => {
-            if (!link.enrollment?.group) {
-                return
+        const submissionsMap = new Map<bigint, Submission[]>()
+        for (const id of Object.keys(groups.data.submissions)) {
+            submissionsMap.set(BigInt(id), groups.data.submissions[id].submissions)
             }
-            state.courseGroupSubmissions[courseID.toString()].push({
-                group: link.enrollment?.group,
-                submissions: link.submissions
-            })
-        })
+        state.submissionsByGroup = submissionsMap
     }
     state.isLoading = false
+    state.loadedCourse[courseID.toString()] = true
     return true
 }
 
