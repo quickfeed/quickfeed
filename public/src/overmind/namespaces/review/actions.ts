@@ -1,15 +1,15 @@
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review } from '../../../../proto/qf/types_pb'
+import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
 import { success } from '../../actions'
 
 
 /* Set the index of the selected review */
 export const setSelectedReview = ({ state }: Context, index: number): void => {
-    const reviews = state.review.reviews[state.activeCourse.toString()][state.activeSubmission]
+    const reviews = state.review.reviews.get(state.activeSubmission)
     if (index < 0) {
         const idx = reviews?.findIndex(r => isAuthor(state.self, r) || isCourseCreator(state.self, state.courses[Number(state.activeCourse)]))
-        state.review.selectedReview = idx >= 0 ? idx : -1
+        state.review.selectedReview = idx && idx >= 0 ? idx : -1
     } else {
         state.review.selectedReview = index
     }
@@ -23,7 +23,11 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
         const response = await effects.grpcMan.updateReview(review, state.activeCourse)
         if (success(response) && response.data) {
             // Updates the currently selected review with the new data from the server
-            state.review.reviews[state.activeCourse.toString()][state.activeSubmission][state.review.selectedReview] = response.data
+            const reviews = new Map(state.review.reviews)
+            reviews.set(state.activeSubmission, state.review.reviews.get(state.activeSubmission)?.map(r => r.ID === review.ID ? response.data as Review : r) ?? [])
+            state.review.reviews = reviews;
+            
+            (state.currentSubmission as Submission).score = response.data.score
             return true
         } else {
             actions.alertHandler(response)
@@ -74,7 +78,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
         return
     }
 
-    const submission = state.activeSubmissionLink?.submission
+    const submission = state.currentSubmission
     // If there is no submission or active course, we cannot create a review
     if (submission && state.activeCourse) {
         // Set the current user as the reviewer
@@ -86,7 +90,9 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
         const response = await effects.grpcMan.createReview(review, state.activeCourse)
         if (response.data) {
             // Adds the new review to the reviews list if the server responded with a review
-            const length = state.review.reviews[state.activeCourse.toString()][Number(submission.ID)].push(response.data)
+            const reviews = new Map(state.review.reviews)
+            const length = reviews.get(state.activeSubmission)?.push(response.data as Review) ?? 0
+            state.review.reviews = reviews;
             actions.review.setSelectedReview(length - 1)
         }
     }
@@ -126,7 +132,7 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
 }
 
 export const release = async ({ state, actions, effects }: Context, release: boolean): Promise<void> => {
-    const submission = state.activeSubmissionLink?.submission
+    const submission = state.currentSubmission
     if (submission) {
         submission.released = release
         const response = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
