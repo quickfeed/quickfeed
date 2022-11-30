@@ -199,9 +199,26 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	// submission3 appears before submission2 because the allSubmissions.Links ([]*EnrollmentLink)
 	// are returned in the order of enrollments, not the order of submission inserts.
 	// Similarly, submission3 also appear at the end because student3 (last to enroll) is in submission3's group.
-	wantAllSubmissions := []*qf.Submission{submission1, submission3, submission2, submission4, submission3}
-	wantIndividualSubmissions := []*qf.Submission{submission1, submission2}
-	wantGroupSubmissions := []*qf.Submission{submission3, submission4}
+	wantAllSubmissions := map[uint64]*qf.Submissions{
+		1: {}, // admin has no submissions
+		2: {Submissions: []*qf.Submission{submission1, submission3}},
+		3: {Submissions: []*qf.Submission{submission2, submission4}},
+		4: {Submissions: []*qf.Submission{submission3}},
+	}
+	// wantAllSubmissions := []*qf.Submission{submission1, submission3, submission2, submission4, submission3}
+	// wantIndividualSubmissions := []*qf.Submission{submission1, submission2}
+	wantIndividualSubmissions := map[uint64]*qf.Submissions{
+		1: {}, // admin has no submissions
+		2: {Submissions: []*qf.Submission{submission1}},
+		3: {Submissions: []*qf.Submission{submission2}},
+		4: {}, // student3 has no individual submissions
+	}
+
+	// wantGroupSubmissions := []*qf.Submission{submission3, submission4}
+	wantGroupSubmissions := map[uint64]*qf.Submissions{
+		1: {Submissions: []*qf.Submission{submission3}},
+		2: {Submissions: []*qf.Submission{submission4}},
+	}
 
 	// default is all submissions
 	submissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
@@ -221,20 +238,12 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 		t.Error(err)
 	}
 	// check that default and all submissions are the same
-	if diff := cmp.Diff(submissions.Msg, allSubmissions.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions.Msg.GetSubmissions(), allSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
 		t.Errorf("TestGetSubmissionsByCourse() mismatch (-submissions +allSubmissions):\n%s", diff)
 	}
 
-	gotAllSubmissions := []*qf.Submission{}
-	for _, s := range allSubmissions.Msg.Links {
-		for _, subLink := range s.Submissions {
-			if subLink.Submission != nil {
-				gotAllSubmissions = append(gotAllSubmissions, subLink.Submission)
-			}
-		}
-	}
-	if diff := cmp.Diff(wantAllSubmissions, gotAllSubmissions, protocmp.Transform()); diff != "" {
-		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantAllSubmissions +gotAllSubmissions):\n%s", diff)
+	if diff := cmp.Diff(wantAllSubmissions, allSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
+		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantAllSubmissions +gotAllSubmissions):\n%s\n%d:%d", diff, len(wantAllSubmissions), len(allSubmissions.Msg.GetSubmissions()))
 	}
 
 	// get only individual submissions
@@ -248,15 +257,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 		t.Error(err)
 	}
 
-	gotIndividualSubmissions := []*qf.Submission{}
-	for _, s := range individualSubmissions.Msg.Links {
-		for _, subLink := range s.Submissions {
-			if subLink.Submission != nil {
-				gotIndividualSubmissions = append(gotIndividualSubmissions, subLink.Submission)
-			}
-		}
-	}
-	if diff := cmp.Diff(wantIndividualSubmissions, gotIndividualSubmissions, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantIndividualSubmissions, individualSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
 		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantIndividualSubmissions +gotIndividualSubmissions):\n%s", diff)
 	}
 
@@ -271,15 +272,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 		t.Error(err)
 	}
 
-	gotGroupSubmissions := []*qf.Submission{}
-	for _, s := range groupSubmissions.Msg.Links {
-		for _, subLink := range s.Submissions {
-			if subLink.Submission != nil {
-				gotGroupSubmissions = append(gotGroupSubmissions, subLink.Submission)
-			}
-		}
-	}
-	if diff := cmp.Diff(wantGroupSubmissions, gotGroupSubmissions, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroupSubmissions, groupSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
 		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantGroupSubmissions +gotGroupSubmissions):\n%s", diff)
 	}
 }
@@ -302,8 +295,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	student := qtest.CreateFakeUser(t, db, 2)
-	qtest.EnrollStudent(t, db, student, course1)
-	qtest.EnrollStudent(t, db, student, course2)
+	enrolC1 := qtest.EnrollUser(t, db, student, course1, qf.Enrollment_STUDENT)
+	enrolC2 := qtest.EnrollUser(t, db, student, course2, qf.Enrollment_STUDENT)
 
 	// make labs with similar lab names for both courses
 	lab1c1 := &qf.Assignment{
@@ -418,24 +411,23 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	// check that all submissions were saved for the correct labs
 	labsForCourse1, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course1.ID,
-		FetchMode: &qf.SubmissionRequest_Type{
-			Type: qf.SubmissionRequest_ALL,
-		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)
 	}
 
-	for _, enrolLink := range labsForCourse1.Msg.GetLinks() {
-		if enrolLink.GetEnrollment().GetUserID() == student.ID {
-			labs := enrolLink.GetSubmissions()
-			if len(labs) != 2 {
-				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
-			}
-			gotSubmission1 := labs[0].GetSubmission()
-			if diff := cmp.Diff(wantSubmission1, gotSubmission1, protocmp.Transform()); diff != "" {
-				t.Errorf("GetSubmissionsByCourse() mismatch (-wantSubmission1 +gotSubmission1):\n%s", diff)
-			}
+	labMap := labsForCourse1.Msg.GetSubmissions()
+	t.Log(enrolC1)
+	if submissions, ok := labMap[enrolC1.ID]; !ok {
+		t.Fatalf("GetSubmissionsByCourse() did not return submissions for enrollment ID %d", enrolC1.ID)
+	} else {
+		labs := submissions.GetSubmissions()
+		if len(labs) != 1 {
+			t.Fatalf("Expected 1 submission for course 1, got %d", len(labs))
+		}
+		gotSubmission1 := labs[0]
+		if diff := cmp.Diff(wantSubmission1, gotSubmission1, protocmp.Transform()); diff != "" {
+			t.Errorf("GetSubmissionsByCourse() mismatch (-wantSubmission1 +gotSubmission1):\n%s", diff)
 		}
 	}
 
@@ -445,16 +437,17 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	for _, labLink := range labsForCourse2.Msg.GetLinks() {
-		if labLink.GetEnrollment().GetUserID() == student.ID {
-			labs := labLink.GetSubmissions()
-			if len(labs) != 2 {
-				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
-			}
-			gotSubmission2 := labs[1].GetSubmission()
-			if diff := cmp.Diff(wantSubmission2, gotSubmission2, protocmp.Transform()); diff != "" {
-				t.Errorf("GetSubmissionsByCourse() mismatch (-wantSubmission2 +gotSubmission2):\n%s", diff)
-			}
+	labMap = labsForCourse2.Msg.GetSubmissions()
+	if submissions, ok := labMap[enrolC2.ID]; !ok {
+		t.Fatalf("GetSubmissionsByCourse() did not return submissions for enrollment ID %d", enrolC2.ID)
+	} else {
+		labs := submissions.GetSubmissions()
+		if len(labs) != 1 {
+			t.Fatalf("Expected 1 submission for course 2, got %d", len(labs))
+		}
+		gotSubmission2 := labs[0]
+		if diff := cmp.Diff(wantSubmission2, gotSubmission2, protocmp.Transform()); diff != "" {
+			t.Errorf("GetSubmissionsByCourse() mismatch (-wantSubmission2 +gotSubmission2):\n%s", diff)
 		}
 	}
 
@@ -465,10 +458,10 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	for _, labLink := range labsForCourse3.Msg.GetLinks() {
+	for _, labLink := range labsForCourse3.Msg.GetSubmissions() {
 		for _, submission := range labLink.GetSubmissions() {
-			if submission.Submission.GetBuildInfo() != nil {
-				t.Errorf("Expected build info to be nil, got %+v", submission.GetSubmission().GetBuildInfo())
+			if submission.GetBuildInfo() != nil {
+				t.Errorf("Expected build info to be nil, got %+v", submission.GetBuildInfo())
 			}
 		}
 	}
@@ -479,11 +472,11 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	for _, labLink := range labsForCourse4.Msg.GetLinks() {
+	for _, labLink := range labsForCourse4.Msg.GetSubmissions() {
 		for _, submission := range labLink.GetSubmissions() {
-			if submission.GetSubmission() != nil {
-				if submission.GetSubmission().GetBuildInfo() != nil {
-					t.Errorf("Expected build info to be nil, got %+v", submission.GetSubmission().GetBuildInfo())
+			if submission != nil {
+				if submission.GetBuildInfo() != nil {
+					t.Errorf("Expected build info to be nil, got %+v", submission.GetBuildInfo())
 				}
 			}
 		}
@@ -512,9 +505,9 @@ func TestCreateApproveList(t *testing.T) {
 	student1 := qtest.CreateNamedUser(t, db, 2, "Leslie Lamport")
 	student2 := qtest.CreateNamedUser(t, db, 3, "Hein Meling")
 	student3 := qtest.CreateNamedUser(t, db, 4, "John Doe")
-	qtest.EnrollStudent(t, db, student1, course)
-	qtest.EnrollStudent(t, db, student2, course)
-	qtest.EnrollStudent(t, db, student3, course)
+	enrollStudent1 := qtest.EnrollUser(t, db, student1, course, qf.Enrollment_STUDENT)
+	enrollStudent2 := qtest.EnrollUser(t, db, student2, course, qf.Enrollment_STUDENT)
+	enrollStudent3 := qtest.EnrollUser(t, db, student3, course, qf.Enrollment_STUDENT)
 
 	assignments := []*qf.Assignment{
 		{
@@ -607,52 +600,52 @@ func TestCreateApproveList(t *testing.T) {
 	}
 
 	testCases := []struct {
-		student          *qf.User
+		student          *qf.Enrollment
 		minNumApproved   int
 		expectedApproved bool
 	}{
 		{
-			student:          student1,
+			student:          enrollStudent1,
 			minNumApproved:   4,
 			expectedApproved: true,
 		},
 		{
-			student:          student1,
+			student:          enrollStudent1,
 			minNumApproved:   3,
 			expectedApproved: true,
 		},
 		{
-			student:          student2,
+			student:          enrollStudent2,
 			minNumApproved:   4,
 			expectedApproved: false,
 		},
 		{
-			student:          student2,
+			student:          enrollStudent2,
 			minNumApproved:   3,
 			expectedApproved: true,
 		},
 		{
-			student:          student2,
+			student:          enrollStudent2,
 			minNumApproved:   2,
 			expectedApproved: true,
 		},
 		{
-			student:          student3,
+			student:          enrollStudent3,
 			minNumApproved:   4,
 			expectedApproved: false,
 		},
 		{
-			student:          student3,
+			student:          enrollStudent3,
 			minNumApproved:   3,
 			expectedApproved: false,
 		},
 		{
-			student:          student3,
+			student:          enrollStudent3,
 			minNumApproved:   2,
 			expectedApproved: false,
 		},
 		{
-			student:          student3,
+			student:          enrollStudent3,
 			minNumApproved:   1,
 			expectedApproved: true,
 		},
@@ -670,23 +663,23 @@ func TestCreateApproveList(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	for _, el := range gotSubmissions.Msg.GetLinks() {
-		if el.Enrollment.User.IsAdmin {
+	for id, submissions := range gotSubmissions.Msg.GetSubmissions() {
+		if id == admin.ID {
 			continue
 		}
-		approved := make([]bool, len(el.Submissions))
-		for i, s := range el.Submissions {
-			approved[i] = s.GetSubmission().IsApproved()
+		approved := make([]bool, len(submissions.Submissions))
+		for i, s := range submissions.Submissions {
+			approved[i] = s.IsApproved()
 		}
 		for _, test := range testCases {
-			if test.student.ID == el.Enrollment.UserID {
+			if test.student.ID == id {
 				got := isApproved(test.minNumApproved, approved)
 				if got != test.expectedApproved {
 					t.Errorf("isApproved(%d, %v) = %t, expected %t", test.minNumApproved, approved, got, test.expectedApproved)
 				}
 			}
 		}
-		t.Logf("%s\t%t", el.Enrollment.User.Name, isApproved(4, approved))
+		t.Logf("%d\t%t", id, isApproved(4, approved))
 	}
 }
 
