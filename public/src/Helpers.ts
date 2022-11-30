@@ -1,5 +1,5 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export enum Color {
@@ -135,12 +135,12 @@ export const getPassedTestsCount = (score: Score[]): string => {
     return `${passedTests}/${totalTests}`
 }
 
-export const isValid = (elm: User | EnrollmentLink): boolean => {
+export const isValid = (elm: User | Enrollment): boolean => {
     if (elm instanceof User) {
         return elm.Name.length > 0 && elm.Email.length > 0 && elm.StudentID.length > 0
     }
-    if (elm instanceof EnrollmentLink) {
-        return elm.enrollment?.user !== undefined && elm.submissions.length > 0
+    if (elm instanceof Enrollment) {
+        return elm.user !== undefined && isValid(elm.user)
     }
     return true
 }
@@ -203,33 +203,27 @@ export const isHidden = (value: string, query: string): boolean => {
 }
 
 /** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
-export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+export const getSubmissionsScore = (submissions: Submission[]): number => {
     let score = 0
-    submissions.forEach(link => {
-        if (!link.submission) {
-            return
-        }
-        score += link.submission.score
+    submissions.forEach(submission => {
+        score += submission.score
     })
     return score
 }
 
 /** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
-export const getNumApproved = (submissions: SubmissionLink[]): number => {
+export const getNumApproved = (submissions: Submission[]): number => {
     let num = 0
     submissions.forEach(submission => {
-        if (!submission.submission) {
-            return
-        }
-        if (isApproved(submission.submission)) {
+        if (isApproved(submission)) {
             num++
         }
     })
     return num
 }
 
-export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: bigint): Submission | undefined => {
-    return submissions?.find(submission => submission.assignment?.ID === assignmentID)?.submission
+export const getSubmissionByAssignmentID = (submissions: Submission[] | undefined, assignmentID: bigint): Submission | undefined => {
+    return submissions?.find(submission => submission.AssignmentID === assignmentID)
 }
 
 export const EnrollmentStatusBadge = {
