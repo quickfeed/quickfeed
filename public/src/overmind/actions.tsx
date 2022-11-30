@@ -540,19 +540,19 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
     if (!response.data || !success(response)) {
         return
     }
-    const submissions = state.groupView ? state.courseGroupSubmissions[courseID.toString()] : state.courseSubmissions[courseID.toString()]
-    if (!submissions) {
+    const courseSubmissions = state.groupView ? new Map(state.submissionsByGroup) : new Map(state.submissionsByEnrollment)
+    if (!courseSubmissions.has(state.submissionOwner)) {
         return
     }
-    submissions.forEach(link => {
-        const sub = link.submissions?.find(submission => submission.submission?.ID === submissionID)
-        if (sub?.submission && response.data) {
-            sub.submission = response.data
-            if (state.activeSubmissionLink) {
-                state.activeSubmissionLink.submission = response.data
+    const submissions = courseSubmissions.get(state.submissionOwner)
+    const index = submissions?.findIndex(sub => sub.ID === submissionID)
+    if (!(index && response.data)) {
+        return
             }
+    submissions![index] = response.data
+    if (state.currentSubmission) {
+        state.currentSubmission = response.data
         }
-    })
 }
 
 /** Rebuilds the currently active submission */
