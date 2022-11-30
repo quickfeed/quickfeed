@@ -332,21 +332,21 @@ export const state: State = {
         })
         return sortedSubmissions as Group[] | Enrollment[]
     }),
-    activeSubmission: derived((state: State) => {
-        if (state.activeSubmissionLink) {
-            return state.activeSubmissionLink.submission ? Number(state.activeSubmissionLink.submission.ID) : -1
-        }
-        return -1
-    }),
+    activeSubmission: 0n,
     activeEnrollment: null,
-    activeSubmissionLink: null,
-    currentSubmission: derived(({ activeSubmissionLink }: State) => {
-        return activeSubmissionLink?.submission ?? null
+    currentSubmission: derived((state: State) => {
+        if (state.activeSubmission === 0n) {
+            return null
+        }
+        const submissions = state.groupView ? state.submissionsByGroup.get(state.submissionOwner) : state.submissionsByEnrollment.get(state.submissionOwner)
+        if (!submissions || submissions.length === 0) {
+            return null
+        }
+        return submissions.find(submission => submission.ID === state.activeSubmission) ?? null
     }),
     selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
         return assignments[activeCourse.toString()]?.find(a => a.ID === currentSubmission?.AssignmentID) ?? null
     }),
-    activeUser: null,
     assignments: {},
     repositories: {},
 
@@ -387,9 +387,15 @@ export const state: State = {
     showFavorites: false,
 
     connectionStatus: ConnStatus.DISCONNECTED,
+
+    submissionsByEnrollment: new Map<bigint, Submission[]>(),
+    submissionsByGroup: new Map<bigint, Submission[]>(),
+
     isManuallyGraded: derived(({ activeCourse, assignments }: State) => submission => {
         const assignment = assignments[activeCourse.toString()]?.find(a => a.ID === submission.AssignmentID)
         return assignment ? assignment.reviewers > 0 : false
     }),
+
+    submissionOwner: 0n,
     loadedCourse: {},
 }
