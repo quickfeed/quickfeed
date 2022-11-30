@@ -213,26 +213,33 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
         return
     }
 
-    if (state.activeSubmissionLink?.assignment?.isGroupLab) {
-        actions.updateCurrentSubmissionStatus({ links: state.courseGroupSubmissions[state.activeCourse.toString()], status: status })
+    if (state.currentSubmission.groupID > 0) {
+        /* If the group view is active, update all submissions in the group */
+        const group = state.groups[state.activeCourse.toString()].find(g => g.ID === state.currentSubmission?.groupID)
+        if (group) {
+            // Update submissions in state for all group members
+            actions.updateSubmissionByOwners({ IDs: group.enrollments.map(e => e.ID) })
+            // Update submission in state for the group itself
+            actions.updateSubmissionByOwners({ IDs: [state.submissionOwner], group: true })
     }
-    actions.updateCurrentSubmissionStatus({ links: state.courseSubmissions[state.activeCourse.toString()], status: status })
+    } else {
+        actions.updateSubmissionByOwners({ IDs: [state.submissionOwner] })
+    }
 }
 
-export const updateCurrentSubmissionStatus = ({ state }: Context, { links, status }: { links: UserCourseSubmissions[], status: Submission_Status }): void => {
-    /* Loop through all submissions for the current course and update the status if it matches the current submission ID */
-    for (const link of links) {
-        if (!link.submissions) {
-            continue
+export const updateSubmissionByOwners = ({ state }: Context, { IDs, group }: { IDs: bigint[], group?: boolean }): void => {
+    const allSubmissions = group ? new Map<bigint, Submission[]>(state.submissionsByGroup) : new Map<bigint, Submission[]>(state.submissionsByEnrollment)
+    for (const ID of IDs) {
+        const submissions = allSubmissions.get(ID) || []
+        const submission = submissions.find(s => s.ID === state.currentSubmission?.ID)
+        if (submission) {
+            submission.status = state.currentSubmission!.status
         }
-        for (const submission of link.submissions) {
-            if (!submission.submission) {
-                continue
             }
-            if (submission.submission.ID === BigInt(state.activeSubmission)) {
-                submission.submission.status = status
-            }
-        }
+    if (group) {
+        state.submissionsByGroup = allSubmissions
+    } else {
+        state.submissionsByEnrollment = allSubmissions
     }
 }
 
