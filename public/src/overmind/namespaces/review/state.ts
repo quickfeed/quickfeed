@@ -7,11 +7,7 @@ export type ReviewState = {
     selectedReview: number
 
     /* Contains all reviews for the different courses, indexed by the course id and submission id */
-    reviews: {
-        [courseID: string]: {
-            [submissionID: number]: Review[]
-        }
-    }
+    reviews: Map<bigint, Review[]>
 
     /* The current review */
     // derived from reviews and selectedReview
@@ -41,13 +37,13 @@ export type ReviewState = {
 export const state: ReviewState = {
     selectedReview: -1,
 
-    reviews: {},
+    reviews: new Map(),
 
     currentReview: derived(({ reviews, selectedReview }: ReviewState, rootState: Context["state"]) => {
         if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
             return null
         }
-        const check = reviews[rootState.activeCourse.toString()][rootState.activeSubmission]
+        const check = reviews.get(rootState.activeSubmission)
         return check ? check[selectedReview] : null
     }),
 
@@ -59,7 +55,7 @@ export const state: ReviewState = {
     }),
 
     canUpdate: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
-        return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.ID > 0
+        return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview?.ID > 0 && rootState.currentSubmission !== null
     }),
 
     criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {
