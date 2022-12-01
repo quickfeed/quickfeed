@@ -38,9 +38,15 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 
 // UpdateEnrollment changes status and display state of the given enrollment.
 func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
+	// TODO(vera): Omitting ID because a lot of old tests rely on passing a query with empty ID here
+	// which would set the ID of the Enrollment record to zero.This omission is no longer required
+	// outside the tests and can be safely removed when the tests are rewritten or updated.
 	return db.conn.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
-		Updates(&qf.Enrollment{State: enrol.State, Status: enrol.Status, LastActivityDate: enrol.LastActivityDate}).Error
+		Select("*").Omit("ID").
+		Where(&qf.Enrollment{
+			CourseID: enrol.CourseID,
+			UserID:   enrol.UserID,
+		}).Updates(enrol).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.

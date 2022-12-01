@@ -249,7 +249,7 @@ export class MockGrpcManager {
         return this.grpcSend<Enrollments>(enrollments)
     }
 
-    public getEnrollmentsByCourse(courseID: bigint, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment_UserStatus[]):
+    public getEnrollmentsByCourse(courseID: bigint, statuses?: Enrollment_UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
         const enrollmentList = this.enrollments.enrollments.filter(e => e.courseID === courseID && (!statuses || statuses.length === 0 || statuses.includes(e.status)))
@@ -259,13 +259,6 @@ export class MockGrpcManager {
         enrollmentList.forEach(e => {
             e.user = this.users.users.find(u => u.ID === e.userID)
         })
-        // TODO: add group & group members
-        if (withoutGroupMembers) {
-            // TODO
-        }
-        if (withActivity) {
-            // TODO
-        }
         const enrollments = new Enrollments({ enrollments: enrollmentList })
         return this.grpcSend<Enrollments>(enrollments)
     }
@@ -430,9 +423,9 @@ export class MockGrpcManager {
     // /* SUBMISSIONS */ //
 
     public getSubmission(courseID: bigint, submissionID: bigint): Promise<IGrpcResponse<Submission>> {
-        const enrollment = this.enrollments.enrollments.find(enrollment =>
-            enrollment.courseID === courseID &&
-            enrollment.userID === this.currentUser?.ID
+        const enrollment = this.enrollments.enrollments.find(enrol =>
+            enrol.courseID === courseID &&
+            enrol.userID === this.currentUser?.ID
         )
         if (!enrollment) {
             // Current user is not enrolled in course, not allowed to fetch submissions
@@ -524,7 +517,7 @@ export class MockGrpcManager {
     }
 
     public updateSubmissions(assignmentID: bigint, courseID: bigint, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
-        const assignment = this.assignments.assignments.find(assignment => assignment.ID === assignmentID && assignment.CourseID === courseID)
+        const assignment = this.assignments.assignments.find(asgn => asgn.ID === assignmentID && asgn.CourseID === courseID)
         if (!assignment) {
             return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Assignment not found" }))
         }

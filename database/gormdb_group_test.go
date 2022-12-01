@@ -202,12 +202,6 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 			}
 			group.Enrollments = enrollments
-			for _, usr := range have.Users {
-				usr.Enrollments = nil
-			}
-			for _, e := range have.Enrollments {
-				e.User.Enrollments = nil
-			}
 
 			have.RemoveRemoteID()
 			group.RemoveRemoteID()

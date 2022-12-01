@@ -115,8 +115,10 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	ctx := context.Background()
 	cookie := Cookie(t, tm, admin)
 
-	enrols, err := client.GetEnrollmentsByCourse(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
-		CourseID: course.ID,
+	enrols, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_CourseID{
+			CourseID: course.ID,
+		},
 	}, cookie))
 	if err != nil {
 		t.Error(err)

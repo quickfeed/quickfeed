@@ -71,7 +71,6 @@ func TestDBGetUserWithEnrollments(t *testing.T) {
 		CourseID:     course.ID,
 		UserID:       student.ID,
 		Status:       qf.Enrollment_STUDENT,
-		State:        qf.Enrollment_VISIBLE,
 		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
