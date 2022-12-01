@@ -1,6 +1,6 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, Submissions, User } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
@@ -177,9 +177,9 @@ export type State = {
     connectionStatus: ConnStatus,
 
     // Submissions by enrollment ID
-    submissionsByEnrollment: Map<bigint, Submission[]>,
+    submissionsByEnrollment: { [enrollmentID: string]: Submissions },
     // Submissions by group ID
-    submissionsByGroup: Map<bigint, Submission[]>,
+    submissionsByGroup: { [groupID: string]: Submissions },
 
     // ID of owner of the current submission
     // Must be either an enrollment ID or a group ID
@@ -240,7 +240,7 @@ export const state: State = {
             ? state.submissionsByGroup
             : state.submissionsByEnrollment
 
-        if (submissions.size === 0) {
+        if (Object.keys(submissions).length === 0) {
             return []
         }
 
@@ -267,10 +267,10 @@ export const state: State = {
                     filtered = filtered.filter(el => {
                         if (rootState.review.assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
-                            const sub = submissions.get(el.ID)?.find(sub => sub.AssignmentID === rootState.review.assignmentID)
+                            const sub = submissions[el.ID.toString()].submissions?.find(sub => sub.AssignmentID === rootState.review.assignmentID)
                             return sub !== undefined && !isApproved(sub)
                         }
-                        const numApproved = submissions.get(el.ID)?.reduce((acc, cur) => {
+                        const numApproved = submissions[el.ID.toString()].submissions?.reduce((acc, cur) => {
                             return acc + ((cur &&
                                 isApproved(cur)) ? 1 : 0)
                         }, 0) ?? 0
@@ -288,12 +288,12 @@ export const state: State = {
             let subB: Submission | undefined
             if (rootState.review.assignmentID > 0) {
                 // If a specific assignment is selected, sort by that assignment
-                subA = submissions.get(a.ID)?.find(sub => sub.AssignmentID === rootState.review.assignmentID)
-                subB = submissions.get(b.ID)?.find(sub => sub.AssignmentID === rootState.review.assignmentID)
+                subA = submissions[a.ID.toString()]?.submissions.find(sub => sub.AssignmentID === rootState.review.assignmentID)
+                subB = submissions[b.ID.toString()]?.submissions.find(sub => sub.AssignmentID === rootState.review.assignmentID)
             }
 
-            const subsA = submissions.get(a.ID)
-            const subsB = submissions.get(b.ID)
+            const subsA = submissions[a.ID.toString()].submissions
+            const subsB = submissions[b.ID.toString()].submissions
 
             switch (state.sortSubmissionsBy) {
                 case SubmissionSort.Score: {
@@ -338,7 +338,7 @@ export const state: State = {
         if (state.activeSubmission === 0n) {
             return null
         }
-        const submissions = state.groupView ? state.submissionsByGroup.get(state.submissionOwner) : state.submissionsByEnrollment.get(state.submissionOwner)
+        const submissions = state.groupView ? state.submissionsByGroup[state.submissionOwner.toString()].submissions : state.submissionsByEnrollment[state.submissionOwner.toString()].submissions
         if (!submissions || submissions.length === 0) {
             return null
         }
@@ -388,8 +388,8 @@ export const state: State = {
 
     connectionStatus: ConnStatus.DISCONNECTED,
 
-    submissionsByEnrollment: new Map<bigint, Submission[]>(),
-    submissionsByGroup: new Map<bigint, Submission[]>(),
+    submissionsByEnrollment: {},
+    submissionsByGroup: {},
 
     isManuallyGraded: derived(({ activeCourse, assignments }: State) => submission => {
         const assignment = assignments[activeCourse.toString()]?.find(a => a.ID === submission.AssignmentID)

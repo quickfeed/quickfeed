@@ -227,18 +227,12 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
 }
 
 export const updateSubmissionByOwners = ({ state }: Context, { IDs, group }: { IDs: bigint[], group?: boolean }): void => {
-    const allSubmissions = group ? new Map<bigint, Submission[]>(state.submissionsByGroup) : new Map<bigint, Submission[]>(state.submissionsByEnrollment)
+    const allSubmissions = group ? state.submissionsByGroup : state.submissionsByEnrollment
     for (const ID of IDs) {
-        const submissions = allSubmissions.get(ID) || []
-        const submission = submissions.find(s => s.ID === state.currentSubmission?.ID)
+        const submission = allSubmissions[ID.toString()]?.submissions.find(s => s.ID === state.currentSubmission?.ID) || null
         if (submission) {
             submission.status = state.currentSubmission!.status
         }
-    }
-    if (group) {
-        state.submissionsByGroup = allSubmissions
-    } else {
-        state.submissionsByEnrollment = allSubmissions
     }
 }
 
@@ -302,7 +296,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
             temp.status = Enrollment_UserStatus.STUDENT
             return temp
         })
-       
+
         // Send updated enrollments to server
         const response = await effects.grpcMan.updateEnrollments(enrollments)
         if (success(response)) {
@@ -469,21 +463,15 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         return false
     }
     if (result.data) {
-        const submissionsMap = new Map<bigint, Submission[]>()
-        for (const [id, submissions] of Object.entries(result.data.submissions)) {
-            submissionsMap.set(BigInt(id), result.data.submissions[id].submissions)
+        state.submissionsByEnrollment = result.data.submissions
+        for (const submissions of Object.values(state.submissionsByEnrollment)) {
             for (const submission of submissions.submissions) {
                 state.review.reviews.set(submission.ID, submission.reviews)
             }
         }
-        state.submissionsByEnrollment = submissionsMap
     }
     if (groups.data) {
-        const submissionsMap = new Map<bigint, Submission[]>()
-        for (const id of Object.keys(groups.data.submissions)) {
-            submissionsMap.set(BigInt(id), groups.data.submissions[id].submissions)
-        }
-        state.submissionsByGroup = submissionsMap
+        state.submissionsByGroup = groups.data.submissions
     }
     state.isLoading = false
     state.loadedCourse[courseID.toString()] = true
@@ -546,16 +534,13 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
     if (!response.data || !success(response)) {
         return
     }
-    const courseSubmissions = state.groupView ? new Map(state.submissionsByGroup) : new Map(state.submissionsByEnrollment)
-    if (!courseSubmissions.has(state.submissionOwner)) {
+    const courseSubmissions = state.groupView ? state.submissionsByGroup : state.submissionsByEnrollment
+
+    const submission = courseSubmissions[state.submissionOwner.toString()]?.submissions.find(s => s.ID === submissionID)
+    if (!submission) {
         return
     }
-    const submissions = courseSubmissions.get(state.submissionOwner)
-    const index = submissions?.findIndex(sub => sub.ID === submissionID)
-    if (!(index && response.data)) {
-        return
-    }
-    submissions![index] = response.data
+    Object.assign(submission, response.data)
     if (state.currentSubmission) {
         state.currentSubmission = response.data
     }

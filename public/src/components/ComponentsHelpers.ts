@@ -14,7 +14,7 @@ export const generateSubmissionRows = (elements: Enrollment[] | Group[], generat
         } else if (element instanceof Group) {
             row.push({ value: element.name, link: groupRepoLink(element, course) })
         }
-        const submissionsList = submissions.get(element.ID)
+        const submissionsList = submissions[element.ID.toString()].submissions
         assignmentIDs?.forEach(assignment => {
             const submission = submissionsList?.find(s => s.AssignmentID === assignment)
             if (submission) {
