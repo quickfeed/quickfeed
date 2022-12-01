@@ -86,7 +86,7 @@ message RepositoryRequest {
 }
 
 message Repositories {
-    map<string, string> URLs = 1;
+    map<uint32, string> URLs = 1;
 }
 
 message Status {

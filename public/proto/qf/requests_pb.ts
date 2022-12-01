@@ -625,9 +625,9 @@ export class RepositoryRequest extends Message<RepositoryRequest> {
  */
 export class Repositories extends Message<Repositories> {
   /**
-   * @generated from field: map<string, string> URLs = 1;
+   * @generated from field: map<uint32, string> URLs = 1;
    */
-  URLs: { [key: string]: string } = {};
+  URLs: { [key: number]: string } = {};
 
   constructor(data?: PartialMessage<Repositories>) {
     super();
@@ -637,7 +637,7 @@ export class Repositories extends Message<Repositories> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.Repositories";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "URLs", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
+    { no: 1, name: "URLs", kind: "map", K: 13 /* ScalarType.UINT32 */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Repositories {

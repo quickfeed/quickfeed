@@ -140,11 +140,11 @@ func TestGetRepositories(t *testing.T) {
 			courseID: course.ID,
 			cookie:   teacherCookie,
 			wantRepos: &qf.Repositories{
-				URLs: map[string]string{
-					"ASSIGNMENTS": assignments.HTMLURL,
-					"INFO":        info.HTMLURL,
-					"TESTS":       testRepo.HTMLURL,
-					"USER":        teacherRepo.HTMLURL,
+				URLs: map[uint32]string{
+					uint32(qf.Repository_ASSIGNMENTS): assignments.HTMLURL,
+					uint32(qf.Repository_INFO):        info.HTMLURL,
+					uint32(qf.Repository_TESTS):       testRepo.HTMLURL,
+					uint32(qf.Repository_USER):        teacherRepo.HTMLURL,
 				},
 			},
 			wantErr: false,
@@ -154,10 +154,10 @@ func TestGetRepositories(t *testing.T) {
 			courseID: course.ID,
 			cookie:   studentCookie,
 			wantRepos: &qf.Repositories{
-				URLs: map[string]string{
-					"ASSIGNMENTS": assignments.HTMLURL,
-					"INFO":        info.HTMLURL,
-					"USER":        studentRepo.HTMLURL,
+				URLs: map[uint32]string{
+					uint32(qf.Repository_ASSIGNMENTS): assignments.HTMLURL,
+					uint32(qf.Repository_INFO):        info.HTMLURL,
+					uint32(qf.Repository_USER):        studentRepo.HTMLURL,
 				},
 			},
 			wantErr: false,
@@ -167,11 +167,11 @@ func TestGetRepositories(t *testing.T) {
 			courseID: course.ID,
 			cookie:   groupStudentCookie,
 			wantRepos: &qf.Repositories{
-				URLs: map[string]string{
-					"ASSIGNMENTS": assignments.HTMLURL,
-					"INFO":        info.HTMLURL,
-					"USER":        groupStudentRepo.HTMLURL,
-					"GROUP":       groupRepo.HTMLURL,
+				URLs: map[uint32]string{
+					uint32(qf.Repository_ASSIGNMENTS): assignments.HTMLURL,
+					uint32(qf.Repository_INFO):        info.HTMLURL,
+					uint32(qf.Repository_USER):        groupStudentRepo.HTMLURL,
+					uint32(qf.Repository_GROUP):       groupRepo.HTMLURL,
 				},
 			},
 			wantErr: false,

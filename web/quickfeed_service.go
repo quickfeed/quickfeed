@@ -576,7 +576,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("enrollment not found"))
 	}
 
-	urls := make(map[string]string)
+	urls := make(map[uint32]string)
 	for _, repoType := range repoTypes(enrol) {
 		var id uint64
 		switch repoType {
@@ -587,7 +587,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		}
 		repo, _ := s.getRepo(course, id, repoType)
 		// for repo == nil: will result in an empty URL string, which will be ignored by the frontend
-		urls[repoType.String()] = repo.GetHTMLURL()
+		urls[uint32(repoType)] = repo.GetHTMLURL()
 	}
 	return connect.NewResponse(&qf.Repositories{URLs: urls}), nil
 }
