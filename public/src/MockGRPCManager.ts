@@ -656,7 +656,6 @@ export class MockGrpcManager {
     // /* REPOSITORY */ //
 
     public getRepositories(courseID: bigint): Promise<IGrpcResponse<Repositories>> {
-        // TODO
         if (!this.courses.courses.find(c => c.ID === courseID)) {
             return this.grpcSend<Repositories>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }

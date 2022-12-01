@@ -52,9 +52,15 @@ func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request 
 }
 
 func repoTypes(enrollment *qf.Enrollment) []qf.Repository_Type {
-	repositories := []qf.Repository_Type{qf.Repository_INFO, qf.Repository_ASSIGNMENTS, qf.Repository_USER, qf.Repository_GROUP}
+	repositories := []qf.Repository_Type{
+		qf.Repository_INFO,
+		qf.Repository_ASSIGNMENTS,
+		qf.Repository_USER}
 	if enrollment.IsTeacher() {
 		repositories = append(repositories, qf.Repository_TESTS)
+	}
+	if enrollment.GroupID > 0 {
+		repositories = append(repositories, qf.Repository_GROUP)
 	}
 	return repositories
 }
