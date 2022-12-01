@@ -97,7 +97,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const generator = review ? generateReviewCell : getSubmissionCell
-    const rows = generateSubmissionRows(members, generator, assignmentIDs, false)
+    const rows = generateSubmissionRows(members, generator, assignmentIDs)
 
 
     return (

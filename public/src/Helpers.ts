@@ -271,11 +271,17 @@ export const userLink = (user: User): string => {
     return `https://github.com/${user.Login}`
 }
 
-export const userRepoLink = (course: Course, user: User): string => {
+export const userRepoLink = (user: User, course?: Course): string => {
+    if (!course) {
+        return userLink(user)
+    }
     return `https://github.com/${course.organizationName}/${user.Login}-labs`
 }
 
-export const groupRepoLink = (course: Course, group: Group): string => {
+export const groupRepoLink = (group: Group, course?: Course): string => {
+    if (!course) {
+        return ""
+    }
     return `https://github.com/${course.organizationName}/${group.name}`
 }
 
