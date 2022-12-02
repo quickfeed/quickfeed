@@ -86,7 +86,7 @@ message RepositoryRequest {
 }
 
 message Repositories {
-    map<uint32, string> URLs = 1;
+    map<uint32, string> URLs = 1; // Map key is the Repository.Type
 }
 
 message Status {
