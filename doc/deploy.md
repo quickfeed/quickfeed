@@ -27,7 +27,6 @@ QuickFeed depends on these technologies.
 - Buf's [connect-go](https://buf.build/blog/connect-a-better-grpc) for gRPC
 - Buf's [connect-web](https://buf.build/blog/connect-web-protobuf-grpc-in-the-browser) replaces gRPC-Web
 - [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/proto3)
-- TODO remove when no longer used [gRPC-Web](https://github.com/grpc/grpc-web) (currently only used in the frontend)
 
 ## Recommended VSCode Plugins
 
