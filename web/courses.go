@@ -292,7 +292,6 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 	}, false); err != nil {
 		return err
 	}
-
 	query := &qf.Submission{
 		AssignmentID: request.AssignmentID,
 		Score:        request.ScoreLimit,
@@ -301,8 +300,7 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 	if request.Approve {
 		query.Status = qf.Submission_APPROVED
 	}
-
-	return s.db.UpdateSubmissions(request.CourseID, query)
+	return s.db.UpdateSubmissions(query)
 }
 
 // updateCourse updates an existing course.
