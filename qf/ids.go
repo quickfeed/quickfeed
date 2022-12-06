@@ -112,11 +112,6 @@ func (r *ReviewRequest) IDFor(_ string) uint64 {
 }
 
 // IDFor returns course ID.
-func (r *URLRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
-}
-
-// IDFor returns course ID.
 func (r *GradingBenchmark) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }

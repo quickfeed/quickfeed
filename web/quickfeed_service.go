@@ -563,17 +563,21 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
-func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.URLRequest]) (*connect.Response[qf.Repositories], error) {
+func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	usrID := userID(ctx)
-	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
+	enrol, err := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
+	if err != nil {
+		s.logger.Error("GetRepositories failed: enrollment for user %d and course %d not found: v", usrID, course.GetID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("enrollment not found"))
+	}
 
-	urls := make(map[string]string)
-	for _, repoType := range in.Msg.GetRepoTypes() {
+	urls := make(map[uint32]string)
+	for _, repoType := range repoTypes(enrol) {
 		var id uint64
 		switch repoType {
 		case qf.Repository_USER:
@@ -583,7 +587,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		}
 		repo, _ := s.getRepo(course, id, repoType)
 		// for repo == nil: will result in an empty URL string, which will be ignored by the frontend
-		urls[repoType.String()] = repo.GetHTMLURL()
+		urls[uint32(repoType)] = repo.GetHTMLURL()
 	}
 	return connect.NewResponse(&qf.Repositories{URLs: urls}), nil
 }
