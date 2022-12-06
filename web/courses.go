@@ -286,12 +286,6 @@ func (s *QuickFeedService) updateSubmission(submissionID uint64, status qf.Submi
 // updateSubmissions updates status and release state of multiple submissions for the
 // given course and assignment ID for all submissions with score equal or above the provided score
 func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsRequest) error {
-	if _, _, err := s.getAssignmentWithCourse(&qf.Assignment{
-		CourseID: request.CourseID,
-		ID:       request.AssignmentID,
-	}, false); err != nil {
-		return err
-	}
 	query := &qf.Submission{
 		AssignmentID: request.AssignmentID,
 		Score:        request.ScoreLimit,
