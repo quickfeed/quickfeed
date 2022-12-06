@@ -187,18 +187,18 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 	var submissionsMap map[uint64]*qf.Submissions
 	switch request.GetType() {
 	case qf.SubmissionRequest_GROUP:
-		submissionsMap = makeGroupResults(course, submissions, course.GetAssignments())
+		submissionsMap = makeGroupResults(course, submissions)
 	case qf.SubmissionRequest_USER:
-		submissionsMap = makeIndividualResults(course, submissions, course.GetAssignments())
+		submissionsMap = makeIndividualResults(course, submissions)
 	case qf.SubmissionRequest_ALL:
-		submissionsMap = makeAllResults(course, submissions, course.GetAssignments())
+		submissionsMap = makeAllResults(course, submissions)
 	}
 	return &qf.CourseSubmissions{Submissions: submissionsMap}, nil
 }
 
 // makeGroupResults generates enrollment to assignment to submissions links
 // for all course groups and all group assignments
-func makeGroupResults(course *qf.Course, submissions []*qf.Submission, assignments []*qf.Assignment) map[uint64]*qf.Submissions {
+func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	seenGroup := make(map[uint64]bool)
 	om := newOrderMap(course.GetAssignments())
@@ -219,7 +219,7 @@ func makeGroupResults(course *qf.Course, submissions []*qf.Submission, assignmen
 
 // makeIndividualResults returns enrollment links with submissions
 // for individual assignments for all students in the course.
-func makeIndividualResults(course *qf.Course, submission []*qf.Submission, assignments []*qf.Assignment) map[uint64]*qf.Submissions {
+func makeIndividualResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
@@ -235,7 +235,7 @@ func makeIndividualResults(course *qf.Course, submission []*qf.Submission, assig
 
 // makeAllResults returns enrollment links with submissions
 // for both individual and group assignments for all students/groups in the course.
-func makeAllResults(course *qf.Course, submissions []*qf.Submission, assignments []*qf.Assignment) map[uint64]*qf.Submissions {
+func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
