@@ -144,7 +144,7 @@ func TestLastActivityDate(t *testing.T) {
 		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:           admin.ID,
 			CourseID:         course.ID,
-			LastActivityDate: "none",
+			LastActivityDate: nil,
 		}); err != nil {
 			t.Fatal(err)
 		}

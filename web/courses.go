@@ -9,6 +9,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -344,7 +345,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 				if submission.Status == qf.Submission_APPROVED {
 					totalApproved++
 				}
-				if enrol.LastActivityDate == "" {
+				if enrol.LastActivityDate == nil {
 					submissionDate, err = submission.NewestSubmissionDate(submissionDate)
 					if err != nil {
 						return nil, err
@@ -353,8 +354,8 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 			}
 		}
 		enrol.TotalApproved = totalApproved
-		if enrol.LastActivityDate == "" && !submissionDate.IsZero() {
-			enrol.LastActivityDate = submissionDate.Format("02 Jan")
+		if enrol.LastActivityDate == nil && !submissionDate.IsZero() {
+			enrol.LastActivityDate = timestamppb.New(submissionDate)
 		}
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}
