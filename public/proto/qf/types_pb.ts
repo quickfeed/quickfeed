@@ -613,9 +613,9 @@ export class Enrollment extends Message<Enrollment> {
   slipDaysRemaining = 0;
 
   /**
-   * @generated from field: string lastActivityDate = 11;
+   * @generated from field: google.protobuf.Timestamp lastActivityDate = 11;
    */
-  lastActivityDate = "";
+  lastActivityDate?: Timestamp;
 
   /**
    * @generated from field: uint64 totalApproved = 12;
@@ -645,7 +645,7 @@ export class Enrollment extends Message<Enrollment> {
     { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
     { no: 9, name: "state", kind: "enum", T: proto3.getEnumType(Enrollment_DisplayState) },
     { no: 10, name: "slipDaysRemaining", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 11, name: "lastActivityDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 11, name: "lastActivityDate", kind: "message", T: Timestamp },
     { no: 12, name: "totalApproved", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 13, name: "usedSlipDays", kind: "message", T: UsedSlipDays, repeated: true },
   ]);
