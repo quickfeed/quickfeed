@@ -318,7 +318,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
 func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
-	submissionsMap, err := s.getAllCourseSubmissions(
+	submissions, err := s.getAllCourseSubmissions(
 		&qf.SubmissionRequest{
 			CourseID: courseID,
 			FetchMode: &qf.SubmissionRequest_Type{
@@ -337,21 +337,18 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	for _, enrollment := range course.Enrollments {
 		var totalApproved uint64
 		var submissionDate time.Time
-		if submissions, ok := submissionsMap.Submissions[enrollment.ID]; ok {
-			for _, submission := range submissions.Submissions {
-				if submission != nil {
-					if submission.Status == qf.Submission_APPROVED {
-						totalApproved++
-					}
-					if enrollment.LastActivityDate == "" {
-						submissionDate, err = submission.NewestSubmissionDate(submissionDate)
-						if err != nil {
-							return nil, err
-						}
-					}
+		for _, submission := range submissions.For(enrollment.ID) {
+			if submission.Status == qf.Submission_APPROVED {
+				totalApproved++
+			}
+			if enrollment.LastActivityDate == "" {
+				submissionDate, err = submission.NewestSubmissionDate(submissionDate)
+				if err != nil {
+					return nil, err
 				}
 			}
 		}
+
 		enrollment.TotalApproved = totalApproved
 		if enrollment.LastActivityDate == "" && !submissionDate.IsZero() {
 			enrollment.LastActivityDate = submissionDate.Format("02 Jan")
