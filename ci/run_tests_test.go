@@ -132,7 +132,7 @@ func TestRecordResults(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab1",
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,
@@ -144,8 +144,8 @@ func TestRecordResults(t *testing.T) {
 	}
 
 	buildInfo := &score.BuildInfo{
-		SubmissionDate: "2022-11-10T13:00:00",
-		BuildDate:      "2022-11-10T13:00:00",
+		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
 		BuildLog:       "Testing",
 		ExecTime:       33333,
 	}
@@ -193,7 +193,7 @@ func TestRecordResults(t *testing.T) {
 	}
 
 	// When updating submission after deadline: build info (submission and build dates) and slip days must be updated
-	newSubmissionDate := "2022-11-12T13:00:00"
+	newSubmissionDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
 	results.BuildInfo.BuildDate = newSubmissionDate
 	results.BuildInfo.SubmissionDate = newSubmissionDate
 	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
@@ -217,7 +217,7 @@ func TestRecordResults(t *testing.T) {
 	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
 	runData.Rebuild = true
 	wantSubmissionDate := newSubmissionDate
-	newDate := "2022-11-13T15:00:00"
+	newDate := qtest.Timestamp(t, "2022-11-13T15:00:00")
 	results.BuildInfo.BuildDate = newDate
 	results.BuildInfo.SubmissionDate = newDate
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
@@ -256,7 +256,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		Order:      1,
 		CourseID:   course.ID,
 		Name:       "assignment-1",
-		Deadline:   "2022-11-11T13:00:00",
+		Deadline:   qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		IsGroupLab: false,
 		Reviewers:  1,
 	}
@@ -346,7 +346,7 @@ func TestStreamRecordResults(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab1",
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,
@@ -358,8 +358,8 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 
 	buildInfo := &score.BuildInfo{
-		BuildDate:      "2022-11-10T13:00:00",
-		SubmissionDate: "2022-11-10T13:00:00",
+		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
 		BuildLog:       "Testing",
 		ExecTime:       33333,
 	}
@@ -420,7 +420,7 @@ func TestStreamRecordResults(t *testing.T) {
 		t.Error("Submission must not be auto approved")
 	}
 
-	newBuildDate := "2022-11-12T13:00:00"
+	newBuildDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
 	results.BuildInfo.BuildDate = newBuildDate
 	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
 	if err != nil {
@@ -429,7 +429,7 @@ func TestStreamRecordResults(t *testing.T) {
 	streamService.Submission.SendTo(updatedSubmission, owners...)
 
 	runData.Rebuild = true
-	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
+	results.BuildInfo.BuildDate = qtest.Timestamp(t, "2022-11-13T13:00:00")
 	rebuiltSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
 	if err != nil {
 		t.Fatal(err)

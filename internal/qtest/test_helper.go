@@ -117,12 +117,12 @@ func RandomString(t *testing.T) string {
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
-func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
+func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
 	return []*qf.Assignment{
 		{
 			CourseID:    courseID,
 			Name:        "lab1",
-			Deadline:    "12.01.2022",
+			Deadline:    Timestamp(t, "12.01.2022"),
 			AutoApprove: false,
 			Order:       1,
 			IsGroupLab:  false,
@@ -134,7 +134,7 @@ func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 		{
 			CourseID:    courseID,
 			Name:        "lab2",
-			Deadline:    "12.12.2021",
+			Deadline:    Timestamp(t, "12.12.2021"),
 			AutoApprove: false,
 			Order:       2,
 			IsGroupLab:  false,

@@ -64,7 +64,7 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "Assignment 1",
-		Deadline:    "12.12.2021",
+		Deadline:    qtest.Timestamp(t, "2021-12-12T19:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		IsGroupLab:  false,
@@ -73,7 +73,7 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment2 := &qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "Assignment 2",
-		Deadline:    "12.01.2022",
+		Deadline:    qtest.Timestamp(t, "2022-01-12T19:00:00"),
 		AutoApprove: false,
 		Order:       2,
 		IsGroupLab:  false,

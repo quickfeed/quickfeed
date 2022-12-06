@@ -400,7 +400,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 
 	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
 		BuildLog:  "Testing",
 		ExecTime:  33333,
 	}
@@ -453,7 +453,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	// of saving a duplicate
 	oldSubmissionID := submissions[0].ID
 	updatedBuildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T15:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T15:00:00"),
 		BuildLog:  "Updated",
 		ExecTime:  12345,
 	}
