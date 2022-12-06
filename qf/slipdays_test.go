@@ -195,7 +195,10 @@ func TestScoreLimitSlipDays(t *testing.T) {
 			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
 		}
 		t.Run(test.name, func(t *testing.T) {
-			test.submission.BuildInfo = &score.BuildInfo{BuildDate: timestamppb.New(testNow)}
+			test.submission.BuildInfo = &score.BuildInfo{
+				BuildDate:      timestamppb.New(testNow),
+				SubmissionDate: timestamppb.New(testNow),
+			}
 			err := enrol.UpdateSlipDays(test.assignment, test.submission)
 			if err != nil {
 				t.Fatal(err)
@@ -224,7 +227,8 @@ func TestMismatchingAssignmentID(t *testing.T) {
 		Status:       qf.Submission_NONE,
 		AssignmentID: lab1.ID + 1,
 		BuildInfo: &score.BuildInfo{
-			BuildDate: timestamppb.New(testNow),
+			BuildDate:      timestamppb.New(testNow),
+			SubmissionDate: timestamppb.New(testNow),
 		},
 	}
 	err := enrol.UpdateSlipDays(lab1, submission)
@@ -249,7 +253,8 @@ func TestMismatchingCourseID(t *testing.T) {
 		AssignmentID: lab1.ID,
 		Status:       qf.Submission_NONE,
 		BuildInfo: &score.BuildInfo{
-			BuildDate: timestamppb.New(testNow),
+			BuildDate:      timestamppb.New(testNow),
+			SubmissionDate: timestamppb.New(testNow),
 		},
 	}
 	err := enrol.UpdateSlipDays(lab1, submission)
@@ -271,7 +276,8 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 		AssignmentID: lab1.ID,
 		Status:       qf.Submission_NONE,
 		BuildInfo: &score.BuildInfo{
-			BuildDate: timestamppb.New(testNow),
+			BuildDate:      timestamppb.New(testNow),
+			SubmissionDate: timestamppb.New(testNow),
 		},
 	}
 	usedSlipDays := enrol.GetUsedSlipDays()
@@ -351,7 +357,10 @@ func TestSlipDaysWGracePeriod(t *testing.T) {
 			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
 		}
 		t.Run(fmt.Sprintf("%s/Want UsedSlipDays:%d", test.comment, test.wantSlipDays), func(t *testing.T) {
-			submission.BuildInfo = &score.BuildInfo{BuildDate: timestamppb.New(test.delivered)}
+			submission.BuildInfo = &score.BuildInfo{
+				BuildDate:      timestamppb.New(test.delivered),
+				SubmissionDate: timestamppb.New(test.delivered),
+			}
 			err := enrol.UpdateSlipDays(lab, submission)
 			if err != nil {
 				t.Fatal(err)
