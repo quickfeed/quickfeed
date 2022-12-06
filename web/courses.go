@@ -201,7 +201,7 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	seenGroup := make(map[uint64]bool)
-	om := NewOrderMap(course.GetAssignments())
+	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
 		if seenGroup[enrollment.GroupID] || enrollment.GroupID == 0 {
 			continue // include group enrollment only once
@@ -221,7 +221,7 @@ func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint6
 // for individual assignments for all students in the course.
 func makeIndividualResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
-	om := NewOrderMap(course.GetAssignments())
+	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
 		submissionsMap[enrollment.ID] = &qf.Submissions{
 			Submissions: makeSubmissionLinks(submission, om, func(submission *qf.Submission) bool {
@@ -237,7 +237,7 @@ func makeIndividualResults(course *qf.Course, submission []*qf.Submission) map[u
 // for both individual and group assignments for all students/groups in the course.
 func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
-	om := NewOrderMap(course.GetAssignments())
+	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
 		submissionsMap[enrollment.ID] = &qf.Submissions{
 			Submissions: makeSubmissionLinks(submissions, om, func(submission *qf.Submission) bool {
@@ -388,11 +388,11 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 
 type orderMap map[uint64]uint32
 
-// NewOrderMap creates a new orderMap from a list of assignments.
+// newOrderMap creates a new orderMap from a list of assignments.
 // The ID of each assignment is mapped to its order.
 // Useful for sorting submissions by assignment order
 // as the order is not stored in the submission themselves.
-func NewOrderMap(assignments []*qf.Assignment) *orderMap {
+func newOrderMap(assignments []*qf.Assignment) *orderMap {
 	om := make(orderMap)
 	for _, assignment := range assignments {
 		om[assignment.ID] = assignment.Order
