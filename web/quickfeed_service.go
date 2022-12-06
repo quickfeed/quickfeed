@@ -213,7 +213,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// GetEnrollments returns all enrollments for the given course ID or user ID and enrollent status.
+// GetEnrollments returns all enrollments for the given course ID or user ID and enrollment status.
 func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	var enrollments []*qf.Enrollment
 	var err error
@@ -487,7 +487,7 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
 	err := s.updateSubmissions(in.Msg)
 	if err != nil {
-		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
+		s.logger.Errorf("UpdateSubmissions failed for request %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
 	}
 	return &connect.Response[qf.Void]{}, nil
