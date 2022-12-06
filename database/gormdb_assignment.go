@@ -32,7 +32,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 		Assign(map[string]interface{}{
 			"name":              assignment.Name,
 			"order":             assignment.Order,
-			"deadline":          assignment.Deadline,
+			"deadline":          assignment.Deadline.AsTime(),
 			"auto_approve":      assignment.AutoApprove,
 			"score_limit":       assignment.ScoreLimit,
 			"is_group_lab":      assignment.IsGroupLab,
