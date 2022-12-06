@@ -659,7 +659,6 @@ export class MockGrpcManager {
         if (!this.courses.courses.find(c => c.ID === courseID)) {
             return this.grpcSend<Repositories>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
-        //const repos = this.repositories.getRepositoriesList().filter(r => r.courseID === courseID && types.includes(r.getType()))
         return this.grpcSend<Repositories>(new Repositories())
     }
 
