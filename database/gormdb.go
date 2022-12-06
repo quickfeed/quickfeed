@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 var (
@@ -47,6 +48,8 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	schema.RegisterSerializer("timestamp", &TimestampSerializer{})
 
 	if err := conn.AutoMigrate(
 		&qf.User{},
