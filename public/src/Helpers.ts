@@ -140,7 +140,7 @@ export const isValid = (elm: User | Enrollment): boolean => {
         return elm.Name.length > 0 && elm.Email.length > 0 && elm.StudentID.length > 0
     }
     if (elm instanceof Enrollment) {
-        return elm.user !== undefined && isValid(elm.user)
+        return !!elm.user && isValid(elm.user)
     }
     return true
 }
@@ -202,7 +202,7 @@ export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 
-/** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
+/** getSubmissionsScore calculates the total score of all submissions */
 export const getSubmissionsScore = (submissions: Submission[]): number => {
     let score = 0
     submissions.forEach(submission => {
@@ -211,7 +211,7 @@ export const getSubmissionsScore = (submissions: Submission[]): number => {
     return score
 }
 
-/** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
+/** getNumApproved returns the number of approved submissions */
 export const getNumApproved = (submissions: Submission[]): number => {
     let num = 0
     submissions.forEach(submission => {
