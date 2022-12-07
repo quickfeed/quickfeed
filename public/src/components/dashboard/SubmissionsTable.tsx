@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { assignmentStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../../Helpers"
+import { assignmentStatusText, SubmissionStatus, timeFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
@@ -17,10 +17,10 @@ const SubmissionsTable = (): JSX.Element => {
             assignments.push(...state.assignments[courseID])
         }
         assignments.sort((a, b) => {
-            if (b.deadline > a.deadline) {
+            if ((a.deadline && b.deadline) && (b.deadline > a.deadline)) {
                 return -1
             }
-            if (a.deadline > b.deadline) {
+            if ((a.deadline && b.deadline) && (a.deadline > b.deadline)) {
                 return 1
             }
             return 0
@@ -38,7 +38,7 @@ const SubmissionsTable = (): JSX.Element => {
             }
             // Submissions are indexed by the assignment order - 1.
             const submission = submissions[assignment.order - 1] ?? new Submission()
-            if (submission.status !== Submission_Status.APPROVED) {
+            if (submission.status !== Submission_Status.APPROVED && assignment.deadline) {
                 const deadline = timeFormatter(assignment.deadline)
                 if (deadline.daysUntil > 3 && submission.score >= assignment.scoreLimit) {
                     deadline.className = "table-success"
@@ -57,7 +57,7 @@ const SubmissionsTable = (): JSX.Element => {
                                 <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment" /></span> : null}
                         </td>
                         <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
-                        <td>{getFormattedTime(assignment.deadline)}</td>
+                        <td>{assignment.deadline}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
                         <td className={SubmissionStatus[submission.status]}>
                             {assignmentStatusText(assignment, submission)}

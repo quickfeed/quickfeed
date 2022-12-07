@@ -1,6 +1,7 @@
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import {Timestamp} from "@bufbuild/protobuf";
 
 export enum Color {
     RED = "danger",
@@ -41,8 +42,8 @@ export interface Deadline {
 
 /** Utility function for LandingPageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 // layoutTime = "2021-03-20T23:59:00"
-export const timeFormatter = (deadline: string): Deadline => {
-    const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()
+export const timeFormatter = (deadline: Timestamp): Deadline => {
+    const timeToDeadline = deadline.toDate().getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -339,7 +340,10 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
             return sortOrder * (emailA.localeCompare(emailB))
         }
         case EnrollmentSort.Activity:
-            return sortOrder * (new Date(a.lastActivityDate).getTime() - new Date(b.lastActivityDate).getTime())
+            if (a.lastActivityDate && b.lastActivityDate) {
+                return sortOrder * (a.lastActivityDate.toDate().getTime() - b.lastActivityDate.toDate().getTime()) 
+            }
+            return 0               
         case EnrollmentSort.Slipdays:
             return sortOrder * (a.slipDaysRemaining - b.slipDaysRemaining)
         case EnrollmentSort.Approved:

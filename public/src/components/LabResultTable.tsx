@@ -1,6 +1,6 @@
 import React, { useCallback } from "react"
 import { Assignment, Submission, Submission_Status } from "../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
+import { assignmentStatusText, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
 import SubmissionScore from "./SubmissionScore"
@@ -50,8 +50,8 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     if (submission && assignment) {
         const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.CourseID.toString()]
         const buildInfo = submission.BuildInfo
-        const delivered = buildInfo ? getFormattedTime(buildInfo.SubmissionDate) : "N/A"
-        const built = buildInfo ? getFormattedTime(buildInfo.BuildDate) : "N/A"
+        const delivered = buildInfo?.SubmissionDate?.toDate() || "N/A"
+        const built = buildInfo?.BuildDate?.toDate() || "N/A"
         const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
 
         const className = (submission.status === Submission_Status.APPROVED) ? "passed" : "failed"
@@ -84,13 +84,13 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             submission.approvedDate ?
                                 <tr>
                                     <td colSpan={2}>Approved</td>
-                                    <td>{getFormattedTime(submission.approvedDate)}</td>
+                                    <td>{submission.approvedDate.toDate()}</td>
                                 </tr>
                                 : null
                         }
                         <tr>
                             <td colSpan={2}>Deadline</td>
-                            <td>{getFormattedTime(assignment.deadline)}</td>
+                            <td>{assignment.deadline?.toDate() || "N/A"}</td>
                         </tr>
 
                         {!isManuallyGraded(assignment) ?

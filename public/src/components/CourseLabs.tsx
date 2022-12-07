@@ -1,5 +1,5 @@
 import { useHistory } from "react-router"
-import { assignmentStatusText, getCourseID, getFormattedTime } from "../Helpers"
+import { assignmentStatusText, getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 import { Submission } from "../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "./ProgressBar"
@@ -41,7 +41,7 @@ const CourseLabs = (): JSX.Element => {
                             {assignmentStatusText(assignment, submission)}
                         </div>
                         <div className="col-4 text-center">
-                            {getFormattedTime(assignment.deadline)}
+                            {assignment.deadline?.toDate() || "N/A"}
                         </div>
                     </div>
                 </li>
