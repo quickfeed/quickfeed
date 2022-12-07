@@ -200,13 +200,13 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 // for all course groups and all group assignments
 func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
-	seenGroup := make(map[uint64]bool)
+	skipGroup := map[uint64]bool{0: true} // skip group ID 0 (no group)
 	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
-		if seenGroup[enrollment.GroupID] || enrollment.GroupID == 0 {
+		if skipGroup[enrollment.GroupID] {
 			continue // include group enrollment only once
 		}
-		seenGroup[enrollment.GroupID] = true
+		skipGroup[enrollment.GroupID] = true
 		submissionsMap[enrollment.GroupID] = &qf.Submissions{
 			Submissions: makeSubmissionLinks(submissions, om, func(submission *qf.Submission) bool {
 				// include group submissions for this enrollment
