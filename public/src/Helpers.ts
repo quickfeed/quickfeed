@@ -135,16 +135,6 @@ export const getPassedTestsCount = (score: Score[]): string => {
     return `${passedTests}/${totalTests}`
 }
 
-export const isValid = (elm: User | Enrollment): boolean => {
-    if (elm instanceof User) {
-        return elm.Name.length > 0 && elm.Email.length > 0 && elm.StudentID.length > 0
-    }
-    if (elm instanceof Enrollment) {
-        return !!elm.user && isValid(elm.user)
-    }
-    return true
-}
-
 /** hasEnrollment returns true if any of the provided has been approved */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     return enrollments.some(enrollment => enrollment.status > Enrollment_UserStatus.PENDING)
