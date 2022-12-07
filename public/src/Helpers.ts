@@ -76,48 +76,6 @@ export const EnrollmentStatus = {
     3: "Teacher",
 }
 
-/*
-    arr: Any array, ex. Enrollment[], User[],
-    funcs: an array of functions that will be applied in order to reach the field to sort on
-    by: A function returning an element to sort on
-
-    Example:
-        To sort state.enrollmentsByCourseId[2].getUser().getName() by name, call like
-        (state.enrollmentsByCourseId[2], [Enrollment.prototype.getUser], User.prototype.getName)
-
-    Returns an array of the same type as arr, sorted by the by-function
-*/
-export const sortByField = (arr: any[], funcs: Function[], by: Function, descending?: boolean) => {
-    const unsortedArray = Object.assign([], arr)
-    const sortedArray = unsortedArray.sort((a, b) => {
-        let x: any
-        let y: any
-        if (!a || !b) {
-            return 0
-        }
-        if (funcs.length > 0) {
-            funcs.forEach(func => {
-                x = x ? func.call(x) : func.call(a)
-                y = y ? func.call(y) : func.call(b)
-            })
-        } else {
-            x = a
-            y = b
-        }
-        if (by.call(x) === by.call(y)) {
-            return 0
-        }
-        if (by.call(x) < by.call(y)) {
-            return descending ? 1 : -1
-        }
-        if (by.call(x) > by.call(y)) {
-            return descending ? -1 : 1
-        }
-        return -1
-    })
-    return sortedArray
-}
-
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
 /** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
 export const getPassedTestsCount = (score: Score[]): string => {
@@ -149,11 +107,6 @@ export const isApprovedGroup = (group: Group): boolean => { return group.status 
 
 /** isEnrolled returns true if the user is enrolled in the course, and is no longer pending. */
 export const isEnrolled = (enrollment: Enrollment): boolean => { return enrollment.status >= Enrollment_UserStatus.STUDENT }
-
-/** toggleUserStatus switches between teacher and student status. */
-export const toggleUserStatus = (enrollment: Enrollment): Enrollment_UserStatus => {
-    return isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER
-}
 
 export const hasNone = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.NONE }
 export const hasPending = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.PENDING }
@@ -210,10 +163,6 @@ export const getNumApproved = (submissions: Submission[]): number => {
         }
     })
     return num
-}
-
-export const getSubmissionByAssignmentID = (submissions: Submission[] | undefined, assignmentID: bigint): Submission | undefined => {
-    return submissions?.find(submission => submission.AssignmentID === assignmentID)
 }
 
 export const EnrollmentStatusBadge = {
