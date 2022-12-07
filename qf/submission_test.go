@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -33,15 +34,16 @@ func TestNewestSubmissionDate(t *testing.T) {
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate: &timestamppb.Timestamp{},
+			BuildDate:      &timestamppb.Timestamp{},
+			SubmissionDate: &timestamppb.Timestamp{},
 		},
 	}
 	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
 	if err != nil {
 		t.Error(err)
 	}
-	if !newSubmissionDate.Equal(tim) {
-		t.Errorf("NewestBuildDate(%v) = %v, expected '%v' = '%v'\n", tim, newSubmissionDate, tim, newSubmissionDate)
+	if diff := cmp.Diff(tim, newSubmissionDate); diff != "" {
+		t.Errorf("submission date mismatch: (-want, +got):\n%s", diff)
 	}
 	if newSubmissionDate.Before(submission.BuildInfo.BuildDate.AsTime()) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected tim '%v' to be after submission.BuildDate '%v'\n", tim, newSubmissionDate, tim, submission.BuildInfo.BuildDate.AsTime())

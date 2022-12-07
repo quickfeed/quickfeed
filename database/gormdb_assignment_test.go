@@ -9,6 +9,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -113,7 +114,7 @@ func TestUpdateAssignment(t *testing.T) {
 	wantAssignments := make([]*qf.Assignment, len(assignments))
 	for i, a := range assignments {
 		// test setting various zero-value entries to check that we can read back the same value
-		a.Deadline = nil
+		a.Deadline = &timestamppb.Timestamp{}
 		a.ScoreLimit = 0
 		a.Reviewers = 0
 		a.AutoApprove = !a.AutoApprove

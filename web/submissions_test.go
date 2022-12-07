@@ -149,13 +149,13 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	lab1 := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab 1",
-		Deadline: qtest.Timestamp(t, "2020-02-23T18:00"),
+		Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		Order:    1,
 	}
 	lab2 := &qf.Assignment{
 		CourseID:   course.ID,
 		Name:       "lab 2",
-		Deadline:   qtest.Timestamp(t, "2020-02-23T18:00"),
+		Deadline:   qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		Order:      2,
 		IsGroupLab: true,
 	}

@@ -185,10 +185,10 @@ func TestRecordResults(t *testing.T) {
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
 		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate); diff != "" {
+	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
 		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.BuildInfo.SubmissionDate); diff != "" {
+	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
 		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 
@@ -207,10 +207,10 @@ func TestRecordResults(t *testing.T) {
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate); diff != "" {
+	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
 		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.SubmissionDate); diff != "" {
+	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
 		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 
@@ -225,10 +225,10 @@ func TestRecordResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(newDate, rebuiltSubmission.BuildInfo.BuildDate); diff != "" {
+	if diff := cmp.Diff(newDate, rebuiltSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
 		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate); diff != "" {
+	if diff := cmp.Diff(wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
 		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
