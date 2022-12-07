@@ -43,7 +43,8 @@ type GormDB struct {
 // NewGormDB creates a new gorm database using the provided driver.
 func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
-		Logger: NewGORMLogger(logger),
+		Logger:                 NewGORMLogger(logger),
+		SkipDefaultTransaction: true,
 	})
 	if err != nil {
 		return nil, err

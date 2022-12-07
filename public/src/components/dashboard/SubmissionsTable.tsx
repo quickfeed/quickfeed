@@ -28,7 +28,7 @@ const SubmissionsTable = (): JSX.Element => {
         return assignments
     }
 
-    const SubmissionsTable = (): JSX.Element[] => {
+    const NewSubmissionsTable = (): JSX.Element[] => {
         const table: JSX.Element[] = []
         sortedAssignments().forEach(assignment => {
             const courseID = assignment.CourseID
@@ -46,7 +46,7 @@ const SubmissionsTable = (): JSX.Element => {
                 if (!deadline.message) {
                     return
                 }
-                const course = state.courses.find(course => course.ID === courseID)
+                const course = state.courses.find(c => c.ID === courseID)
                 table.push(
                     <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
                         onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
@@ -83,7 +83,7 @@ const SubmissionsTable = (): JSX.Element => {
                     </tr>
                 </thead>
                 <tbody>
-                    {SubmissionsTable()}
+                    {NewSubmissionsTable()}
                 </tbody>
             </table>
         </div>
