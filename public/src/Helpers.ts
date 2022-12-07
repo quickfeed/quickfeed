@@ -29,8 +29,7 @@ export enum ConnStatus {
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (deadline_string: string): string => {
-    const deadline = new Date(deadline_string)
+export const getFormattedTime = (deadline: Date): string => {
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" : ""}${deadline.getMinutes()}`
 }
 
