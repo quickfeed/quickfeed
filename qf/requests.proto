@@ -78,11 +78,6 @@ message UpdateSubmissionsRequest {
     bool approve        = 5;
 }
 
-message URLRequest {
-    uint64 courseID                    = 1;
-    repeated Repository.Type repoTypes = 2;
-}
-
 // used to check whether student/group submission repo is empty
 message RepositoryRequest {
     uint64 userID   = 1;
@@ -91,7 +86,7 @@ message RepositoryRequest {
 }
 
 message Repositories {
-    map<string, string> URLs = 1;
+    map<uint32, string> URLs = 1; // Map key is the Repository.Type
 }
 
 message Status {
