@@ -60,7 +60,7 @@ export const state: ReviewState = {
 
     criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {
         let total = 0
-        if (rootState.currentSubmission, rootState.activeCourse) {
+        if (rootState.currentSubmission && rootState.activeCourse) {
             const assignment = rootState.assignments[rootState.activeCourse.toString()]?.find(a => a.ID === rootState.currentSubmission?.AssignmentID)
             if (assignment) {
                 assignment.gradingBenchmarks.forEach(bm => {
