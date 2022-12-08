@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"log"
 	"reflect"
 	"time"
 
@@ -25,7 +24,6 @@ func (TimestampSerializer) Value(_ context.Context, _ *schema.Field, _ reflect.V
 	}
 	t, ok := fieldValue.(*timestamppb.Timestamp)
 	if !ok {
-		log.Printf("Unsupported type when reading value") // tmp
 		return nil, ErrUnsupportedType
 	}
 	return t.AsTime(), nil
@@ -38,8 +36,6 @@ func (TimestampSerializer) Scan(ctx context.Context, field *schema.Field, dst re
 	if dbValue != nil {
 		t, ok := dbValue.(time.Time)
 		if !ok {
-			log.Printf("Unsupported type when scanning: %v", dbValue) // tmp
-			log.Printf("Type of value: %v", reflect.TypeOf(dbValue))  // tmp
 			return ErrUnsupportedType
 		}
 		ts = timestamppb.New(t)
