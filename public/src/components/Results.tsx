@@ -17,6 +17,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const courseID = getCourseID()
 
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
+    const assignments = useMemo(() => { return state.assignments[courseID.toString()] }, [state.assignments, courseID])
 
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
@@ -58,7 +59,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 if (enrollment instanceof Enrollment) {
                     actions.setActiveEnrollment(enrollment.clone())
                 }
-                actions.setSubmissionOwner(enrollment.ID)
+                actions.setSubmissionOwner({ submission, enrollment })
                 actions.review.setSelectedReview(-1)
             }
         })
@@ -76,7 +77,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 if (enrollment instanceof Enrollment) {
                     actions.setActiveEnrollment(enrollment.clone())
                 }
-                actions.setSubmissionOwner(enrollment.ID)
+                actions.setSubmissionOwner({ submission, enrollment })
                 actions.getSubmission({ submissionID: submission.ID, courseID: state.activeCourse })
             }
         })
@@ -85,12 +86,10 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
     const groupView = state.groupView
     const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
-    const assignments = state.assignments[courseID.toString()].filter(assignment => (state.review.assignmentID < 0) || assignment.ID === state.review.assignmentID)
-    const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isGroupLab : true).map(assignment => assignment.ID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const generator = review ? generateReviewCell : getSubmissionCell
-    const rows = generateSubmissionRows(members, generator, assignmentIDs)
+    const rows = generateSubmissionRows(members, generator)
 
 
     return (
