@@ -473,15 +473,8 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
     if (!response.data || !success(response)) {
         return
     }
-    const courseSubmissions = state.groupView ? state.submissionsByGroup : state.submissionsByEnrollment
-
-    const submission = courseSubmissions[state.submissionOwner.toString()]?.submissions.find(s => s.ID === submissionID)
-    if (!submission) {
-        return
-    }
-    Object.assign(submission, response.data)
     if (state.currentSubmission) {
-        state.currentSubmission = response.data
+        Object.assign(state.currentSubmission, response.data)
     }
 }
 
