@@ -65,7 +65,7 @@ export class Score extends Message<Score> {
   Weight = 0;
 
   /**
-   * if populated, the frontend may display additional details (TODO(meling) adapt to output from go test -json)
+   * if populated, the frontend may display these details
    *
    * @generated from field: string TestDetails = 9;
    */
@@ -124,19 +124,19 @@ export class BuildInfo extends Message<BuildInfo> {
   SubmissionID = protoInt64.zero;
 
   /**
-   * @generated from field: google.protobuf.Timestamp BuildDate = 3;
-   */
-  BuildDate?: Timestamp;
-
-  /**
-   * @generated from field: string BuildLog = 4;
+   * @generated from field: string BuildLog = 3;
    */
   BuildLog = "";
 
   /**
-   * @generated from field: int64 ExecTime = 5;
+   * @generated from field: int64 ExecTime = 4;
    */
   ExecTime = protoInt64.zero;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp BuildDate = 5;
+   */
+  BuildDate?: Timestamp;
 
   /**
    * @generated from field: google.protobuf.Timestamp SubmissionDate = 6;
@@ -153,9 +153,9 @@ export class BuildInfo extends Message<BuildInfo> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "BuildDate", kind: "message", T: Timestamp },
-    { no: 4, name: "BuildLog", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "ExecTime", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 3, name: "BuildLog", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "ExecTime", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 5, name: "BuildDate", kind: "message", T: Timestamp },
     { no: 6, name: "SubmissionDate", kind: "message", T: Timestamp },
   ]);
 
