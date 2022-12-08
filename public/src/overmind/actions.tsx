@@ -393,7 +393,7 @@ export const refreshSubmissions = async ({ state, effects }: Context, input: { c
 export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<boolean> => {
     state.isLoading = true
     // None of these should fail independently.
-    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.ALL)
+    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.USER)
     const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
