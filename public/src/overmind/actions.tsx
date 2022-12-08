@@ -151,7 +151,7 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 }
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
-export const updateSubmission = async ({ state, actions, effects }: Context, status: Submission_Status): Promise<void> => {
+export const updateSubmission = async ({ state, effects }: Context, status: Submission_Status): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
     if (!state.currentSubmission || state.currentSubmission.status === status) {
         return
@@ -809,7 +809,18 @@ export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
 }
 
 // setSubmissionOwner sets the owner of the currently selected submission.
-// The owner must be either the ID of an enrolled user or the ID of a group.
-export const setSubmissionOwner = ({ state }: Context, owner: bigint) => {
-    state.submissionOwner = owner
+// The owner is either an enrollment or a group.
+export const setSubmissionOwner = ({ state }: Context, { submission, enrollment }: { submission: Submission, enrollment: Enrollment | Group }) => {
+    if (submission.groupID > 0) {
+        // If the submission has a groupID, it is a group submission,
+        // regardless of whether the enrollment object is of group or enrollment type.
+        state.submissionOwner = { type: "GROUP", id: submission.groupID }
+    } else if (enrollment instanceof Group) {
+        // If the enrollment object is a group, it is a group submission.
+        // However, the submission does not have a groupID.
+        // This should not happen, but we handle it anyway.
+        return
+    } else {
+        state.submissionOwner = { type: "ENROLLMENT", id: enrollment.ID }
+    }
 }
