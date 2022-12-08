@@ -1,7 +1,8 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, Submissions, User } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
+import { AssignmentsMap } from "../components/Results"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -176,15 +177,11 @@ export type State = {
 
     connectionStatus: ConnStatus,
 
-    // Submissions by enrollment ID
-    submissionsByEnrollment: { [enrollmentID: string]: Submissions },
-    // Submissions by group ID
-    submissionsByGroup: { [groupID: string]: Submissions },
-
     // ID of owner of the current submission
     // Must be either an enrollment ID or a group ID
-    submissionOwner: bigint,
+    submissionOwner: { type: "GROUP" | "ENROLLMENT", id: bigint },
 
+    submissionsForCourse: SubmissionsForCourse,
     isManuallyGraded: (submission: Submission) => boolean,
     loadedCourse: { [courseID: string]: boolean },
 }
@@ -237,13 +234,15 @@ export const state: State = {
             return []
         }
         const submissions = state.groupView
-            ? state.submissionsByGroup
-            : state.submissionsByEnrollment
+            ? state.submissionsForCourse.groupSubmissions
+            : state.submissionsForCourse.userSubmissions
 
         if (Object.keys(submissions).length === 0) {
             return []
         }
 
+        const assignmentsMap: AssignmentsMap = {}
+        state.assignments[state.activeCourse.toString()].forEach(assignment => assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab)
         // If a specific assignment is selected, filter by that assignment
         let numAssignments = 0
         if (rootState.review.assignmentID > 0) {
@@ -292,8 +291,8 @@ export const state: State = {
                 subB = submissions[b.ID.toString()]?.submissions.find(sub => sub.AssignmentID === rootState.review.assignmentID)
             }
 
-            const subsA = submissions[a.ID.toString()].submissions
-            const subsB = submissions[b.ID.toString()].submissions
+            const subsA = submissions[a.ID.toString()]?.submissions
+            const subsB = submissions[b.ID.toString()]?.submissions
 
             switch (state.sortSubmissionsBy) {
                 case SubmissionSort.Score: {
@@ -338,7 +337,7 @@ export const state: State = {
         if (state.activeSubmission === 0n) {
             return null
         }
-        const submissions = state.groupView ? state.submissionsByGroup[state.submissionOwner.toString()].submissions : state.submissionsByEnrollment[state.submissionOwner.toString()].submissions
+        const submissions = state.submissionsForCourse.getSubmissionsForOwner(state.submissionOwner)
         if (!submissions || submissions.length === 0) {
             return null
         }
@@ -387,15 +386,12 @@ export const state: State = {
     showFavorites: false,
 
     connectionStatus: ConnStatus.DISCONNECTED,
-
-    submissionsByEnrollment: {},
-    submissionsByGroup: {},
-
     isManuallyGraded: derived(({ activeCourse, assignments }: State) => submission => {
         const assignment = assignments[activeCourse.toString()]?.find(a => a.ID === submission.AssignmentID)
         return assignment ? assignment.reviewers > 0 : false
     }),
 
-    submissionOwner: 0n,
+    submissionOwner: { type: "ENROLLMENT", id: 0n },
     loadedCourse: {},
+    submissionsForCourse: new SubmissionsForCourse()
 }
