@@ -39,23 +39,23 @@ export const state: ReviewState = {
 
     reviews: new Map(),
 
-    currentReview: derived(({ reviews, selectedReview }: ReviewState, rootState: Context["state"]) => {
-        if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
+    currentReview: derived(({ reviews, selectedReview }: ReviewState, { activeSubmission, activeCourse }: Context["state"]) => {
+        if (!(activeCourse > 0 && activeSubmission > 0)) {
             return null
         }
-        const check = reviews.get(rootState.activeSubmission)
+        const check = reviews.get(activeSubmission)
         return check ? check[selectedReview] : null
     }),
 
-    reviewer: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
+    reviewer: derived(({ currentReview }: ReviewState, { users }: Context["state"]) => {
         if (!currentReview) {
             return null
         }
-        return rootState.users[currentReview.ReviewerID.toString()]
+        return users[currentReview.ReviewerID.toString()]
     }),
 
-    canUpdate: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
-        return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview?.ID > 0 && rootState.currentSubmission !== null
+    canUpdate: derived(({ currentReview }: ReviewState, { activeSubmission, activeCourse, currentSubmission }: Context["state"]) => {
+        return currentReview !== null && activeSubmission > 0 && activeCourse > 0 && currentReview?.ID > 0 && currentSubmission !== null
     }),
 
     criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {

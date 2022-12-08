@@ -252,7 +252,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
 
 /** Get assignments for all the courses the current user is enrolled in */
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
-    let success = true
+    let successful = true
     for (const enrollment of state.enrollments) {
         if (isPending(enrollment)) {
             // No need to get assignments for pending enrollments
@@ -263,10 +263,10 @@ export const getAssignments = async ({ state, effects }: Context): Promise<boole
             // Store assignments in state by course ID
             state.assignments[enrollment.courseID.toString()] = response.data.assignments
         } else {
-            success = false
+            successful = false
         }
     }
-    return success
+    return successful
 }
 
 /** Get assignments for a single course, given by courseID */
@@ -650,23 +650,23 @@ export const startSubmissionStream = ({ actions, effects }: Context) => {
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
 export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
-    let success = await actions.getSelf()
+    let successful = await actions.getSelf()
 
     // If getSelf returns false, the user is not logged in. Abort.
-    if (!success) { state.isLoading = false; return false }
+    if (!successful) { state.isLoading = false; return false }
 
     // Start fetching all data. Loading screen will be shown until all data is fetched, i.e state.isLoading is set to false.
     while (state.isLoading) {
         // Order matters here. Some data is dependent on other data. Ex. fetching submissions depends on enrollments.
-        success = await actions.getEnrollmentsByUser()
-        success = await actions.getAssignments()
+        successful = await actions.getEnrollmentsByUser()
+        successful = await actions.getAssignments()
         for (const enrollment of state.enrollments) {
             const courseID = enrollment.courseID
             if (isStudent(enrollment) || isTeacher(enrollment)) {
-                success = await actions.getUserSubmissions(courseID)
+                successful = await actions.getUserSubmissions(courseID)
                 await actions.getGroupSubmissions(courseID)
                 const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
-                success = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
+                successful = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
                 if (enrollment.groupID > 0) {
                     await actions.getGroupByUserAndCourse(courseID)
                 }
@@ -678,8 +678,8 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         if (state.self.IsAdmin) {
             actions.getUsers()
         }
-        success = await actions.getRepositories()
-        success = await actions.getCourses()
+        successful = await actions.getRepositories()
+        successful = await actions.getCourses()
 
         // End loading screen.
         state.isLoading = false
@@ -687,9 +687,9 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 
     actions.startSubmissionStream()
 
-    // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
-    // However, if one of the above calls fail, it could still be the case that success returns true.
-    return success
+    // The value of successful is unreliable. The intention is to return true if the user is logged in and all data was fetched.
+    // However, if one of the above calls fail, it could still be the case that successful returns true.
+    return successful
 }
 
 /* Utility Actions */

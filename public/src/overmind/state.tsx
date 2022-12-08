@@ -201,9 +201,9 @@ export const state: State = {
     }),
 
     enrollments: [],
-    enrollmentsByCourseID: derived((state: State) => {
+    enrollmentsByCourseID: derived(({ enrollments }: State) => {
         const enrollmentsByCourseID: EnrollmentsByCourse = {}
-        for (const enrollment of state.enrollments) {
+        for (const enrollment of enrollments) {
             enrollmentsByCourseID[enrollment.courseID.toString()] = enrollment
         }
         return enrollmentsByCourseID
@@ -211,15 +211,15 @@ export const state: State = {
     submissions: {},
     userGroup: {},
 
-    isTeacher: derived((state: State) => {
-        if (state.activeCourse > 0 && state.enrollmentsByCourseID[state.activeCourse.toString()]) {
-            return isTeacher(state.enrollmentsByCourseID[state.activeCourse.toString()])
+    isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
+        if (activeCourse > 0 && enrollmentsByCourseID[activeCourse.toString()]) {
+            return isTeacher(enrollmentsByCourseID[activeCourse.toString()])
         }
         return false
     }),
-    isCourseCreator: derived((state: State) => {
-        const course = state.courses.find(course => course.ID === state.activeCourse)
-        if (course && course.courseCreatorID === state.self.ID) {
+    isCourseCreator: derived(({ courses, activeCourse, self }: State) => {
+        const course = courses.find(c => c.ID === activeCourse)
+        if (course && course.courseCreatorID === self.ID) {
             return true
         }
         return false
@@ -229,14 +229,19 @@ export const state: State = {
     users: {},
     allUsers: [],
     courses: [],
-    courseMembers: derived((state: State, rootState: Context["state"]) => {
+    courseMembers: derived(({
+        activeCourse, groupView, submissionsForCourse, assignments, groups,
+        courseEnrollments, submissionFilters, sortAscending, sortSubmissionsBy
+    }: State, {
+        review: { assignmentID }
+    }: Context["state"]) => {
         // Filter and sort course members based on the current state
-        if (!state.activeCourse) {
+        if (!activeCourse) {
             return []
         }
-        const submissions = state.groupView
-            ? state.submissionsForCourse.groupSubmissions
-            : state.submissionsForCourse.userSubmissions
+        const submissions = groupView
+            ? submissionsForCourse.groupSubmissions
+            : submissionsForCourse.userSubmissions
 
         if (Object.keys(submissions).length === 0) {
             return []
@@ -244,16 +249,16 @@ export const state: State = {
 
         // If a specific assignment is selected, filter by that assignment
         let numAssignments = 0
-        if (rootState.review.assignmentID > 0) {
+        if (assignmentID > 0) {
             numAssignments = 1
-        } else if (state.groupView) {
-            numAssignments = state.assignments[state.activeCourse.toString()].filter(a => a.isGroupLab).length || 0
+        } else if (groupView) {
+            numAssignments = assignments[activeCourse.toString()].filter(a => a.isGroupLab).length || 0
         } else {
-            numAssignments = state.assignments[state.activeCourse.toString()].length || 0
+            numAssignments = assignments[activeCourse.toString()].length || 0
         }
 
-        let filtered: GroupOrEnrollment[] = state.groupView ? state.groups[state.activeCourse.toString()] : state.courseEnrollments[state.activeCourse.toString()] ?? []
-        for (const filter of state.submissionFilters) {
+        let filtered: GroupOrEnrollment[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
+        for (const filter of submissionFilters) {
             switch (filter) {
                 case "teachers":
                     filtered = filtered.filter(el => {
@@ -263,9 +268,9 @@ export const state: State = {
                 case "approved":
                     // approved filters all entries where all assignments have been approved
                     filtered = filtered.filter(el => {
-                        if (rootState.review.assignmentID > 0) {
+                        if (assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
-                            const sub = submissions[el.ID.toString()].submissions?.find(sub => sub.AssignmentID === rootState.review.assignmentID)
+                            const sub = submissions[el.ID.toString()].submissions?.find(s => s.AssignmentID === assignmentID)
                             return sub !== undefined && !isApproved(sub)
                         }
                         const numApproved = submissions[el.ID.toString()].submissions?.reduce((acc, cur) => {
@@ -280,22 +285,22 @@ export const state: State = {
             }
         }
 
-        const sortOrder = state.sortAscending ? -1 : 1
+        const sortOrder = sortAscending ? -1 : 1
         const sortedSubmissions = Object.values(filtered).sort((a, b) => {
             let subA: Submission | undefined
             let subB: Submission | undefined
-            if (rootState.review.assignmentID > 0) {
+            if (assignmentID > 0) {
                 // If a specific assignment is selected, sort by that assignment
-                subA = submissions[a.ID.toString()]?.submissions.find(sub => sub.AssignmentID === rootState.review.assignmentID)
-                subB = submissions[b.ID.toString()]?.submissions.find(sub => sub.AssignmentID === rootState.review.assignmentID)
+                subA = submissions[a.ID.toString()]?.submissions.find(sub => sub.AssignmentID === assignmentID)
+                subB = submissions[b.ID.toString()]?.submissions.find(sub => sub.AssignmentID === assignmentID)
             }
 
             const subsA = submissions[a.ID.toString()]?.submissions
             const subsB = submissions[b.ID.toString()]?.submissions
 
-            switch (state.sortSubmissionsBy) {
+            switch (sortSubmissionsBy) {
                 case SubmissionSort.Score: {
-                    if (rootState.review.assignmentID > 0) {
+                    if (assignmentID > 0) {
                         const sA = subA?.score
                         const sB = subB?.score
                         if (sA !== undefined && sB !== undefined) {
@@ -310,7 +315,7 @@ export const state: State = {
                     return sortOrder * (aSubs - bSubs)
                 }
                 case SubmissionSort.Approved: {
-                    if (rootState.review.assignmentID > 0) {
+                    if (assignmentID > 0) {
                         const sA = subA && isApproved(subA) ? 1 : 0
                         const sB = subB && isApproved(subB) ? 1 : 0
                         return sortOrder * (sA - sB)
@@ -320,8 +325,8 @@ export const state: State = {
                     return sortOrder * (aApproved - bApproved)
                 }
                 case SubmissionSort.Name: {
-                    const nameA = state.groupView ? a.name ?? "" : a.user?.Name ?? ""
-                    const nameB = state.groupView ? b.name ?? "" : b.user?.Name ?? ""
+                    const nameA = groupView ? a.name ?? "" : a.user?.Name ?? ""
+                    const nameB = groupView ? b.name ?? "" : b.user?.Name ?? ""
                     return sortOrder * (nameA.localeCompare(nameB))
                 }
                 default:
@@ -332,15 +337,15 @@ export const state: State = {
     }),
     activeSubmission: 0n,
     activeEnrollment: null,
-    currentSubmission: derived((state: State) => {
-        if (state.activeSubmission === 0n) {
+    currentSubmission: derived(({ activeSubmission, submissionsForCourse, submissionOwner }: State) => {
+        if (activeSubmission === 0n) {
             return null
         }
-        const submissions = state.submissionsForCourse.getSubmissionsForOwner(state.submissionOwner)
+        const submissions = submissionsForCourse.getSubmissionsForOwner(submissionOwner)
         if (!submissions || submissions.length === 0) {
             return null
         }
-        return submissions.find(submission => submission.ID === state.activeSubmission) ?? null
+        return submissions.find(submission => submission.ID === activeSubmission) ?? null
     }),
     selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
         return assignments[activeCourse.toString()]?.find(a => a.ID === currentSubmission?.AssignmentID) ?? null
@@ -390,8 +395,8 @@ export const state: State = {
         return assignment ? assignment.reviewers > 0 : false
     }),
 
-    getAssignmentsMap: derived(({ assignments }: State, rootState: Context["state"]) => courseID => {
-        const asgmts = assignments[courseID.toString()].filter(assignment => (rootState.review.assignmentID < 0) || assignment.ID === rootState.review.assignmentID)
+    getAssignmentsMap: derived(({ assignments }: State, { review: { assignmentID } }: Context["state"]) => courseID => {
+        const asgmts = assignments[courseID.toString()].filter(assignment => (assignmentID < 0) || assignment.ID === assignmentID)
         const assignmentsMap: AssignmentsMap = {}
         asgmts.forEach(assignment => {
             assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab

@@ -26,7 +26,7 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
             const reviews = new Map(state.review.reviews)
             reviews.set(state.activeSubmission, state.review.reviews.get(state.activeSubmission)?.map(r => r.ID === review.ID ? response.data as Review : r) ?? [])
             state.review.reviews = reviews;
-            
+
             (state.currentSubmission as Submission).score = response.data.score
             return true
         } else {
@@ -56,8 +56,8 @@ export const updateFeedback = async ({ state, actions }: Context, { feedback }: 
     if (state.review.currentReview) {
         const oldFeedback = state.review.currentReview.feedback
         state.review.currentReview.feedback = feedback
-        const success = await actions.review.updateReview()
-        if (!success) {
+        const successful = await actions.review.updateReview()
+        if (!successful) {
             state.review.currentReview.feedback = oldFeedback
         }
     }
@@ -66,8 +66,8 @@ export const updateFeedback = async ({ state, actions }: Context, { feedback }: 
 export const setGrade = async ({ actions }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion_Grade }): Promise<void> => {
     const oldGrade = criterion.grade
     criterion.grade = grade
-    const success = await actions.review.updateReview()
-    if (!success) {
+    const successful = await actions.review.updateReview()
+    if (!successful) {
         criterion.grade = oldGrade
     }
 }
@@ -92,7 +92,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
             // Adds the new review to the reviews list if the server responded with a review
             const reviews = new Map(state.review.reviews)
             const length = reviews.get(state.activeSubmission)?.push(response.data as Review) ?? 0
-            state.review.reviews = reviews;
+            state.review.reviews = reviews
             actions.review.setSelectedReview(length - 1)
         }
     }
@@ -131,13 +131,13 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     }
 }
 
-export const release = async ({ state, actions, effects }: Context, release: boolean): Promise<void> => {
+export const release = async ({ state, actions, effects }: Context, released: boolean): Promise<void> => {
     const submission = state.currentSubmission
     if (submission) {
-        submission.released = release
+        submission.released = released
         const response = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
         if (!success(response)) {
-            submission.released = !release
+            submission.released = !released
             actions.alertHandler(response)
         }
     }
