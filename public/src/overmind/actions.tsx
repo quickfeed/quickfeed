@@ -402,15 +402,15 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         return false
     }
     if (result.data) {
-        state.submissionsByEnrollment = result.data.submissions
-        for (const submissions of Object.values(state.submissionsByEnrollment)) {
+        state.submissionsForCourse.userSubmissions = { ...state.submissionsForCourse.userSubmissions, ...result.data.submissions }
+        for (const submissions of Object.values(result.data.submissions)) {
             for (const submission of submissions.submissions) {
                 state.review.reviews.set(submission.ID, submission.reviews)
             }
         }
     }
     if (groups.data) {
-        state.submissionsByGroup = groups.data.submissions
+        state.submissionsForCourse.groupSubmissions = { ...state.submissionsForCourse.groupSubmissions, ...groups.data.submissions }
     }
     state.isLoading = false
     state.loadedCourse[courseID.toString()] = true
