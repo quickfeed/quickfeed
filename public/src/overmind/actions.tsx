@@ -173,29 +173,6 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
         state.currentSubmission.status = previousStatus
         return
     }
-
-    if (state.currentSubmission.groupID > 0) {
-        /* If the group view is active, update all submissions in the group */
-        const group = state.groups[state.activeCourse.toString()].find(g => g.ID === state.currentSubmission?.groupID)
-        if (group) {
-            // Update submissions in state for all group members
-            actions.updateSubmissionByOwners({ IDs: group.enrollments.map(e => e.ID) })
-            // Update submission in state for the group itself
-            actions.updateSubmissionByOwners({ IDs: [state.submissionOwner], group: true })
-        }
-    } else {
-        actions.updateSubmissionByOwners({ IDs: [state.submissionOwner] })
-    }
-}
-
-export const updateSubmissionByOwners = ({ state }: Context, { IDs, group }: { IDs: bigint[], group?: boolean }): void => {
-    const allSubmissions = group ? state.submissionsByGroup : state.submissionsByEnrollment
-    for (const ID of IDs) {
-        const submission = allSubmissions[ID.toString()]?.submissions.find(s => s.ID === state.currentSubmission?.ID) || null
-        if (submission) {
-            submission.status = state.currentSubmission!.status
-        }
-    }
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
