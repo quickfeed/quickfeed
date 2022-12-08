@@ -50,7 +50,7 @@ describe("User and enrollment validation", () => {
         },
     ]
 
-    test.each(tests)(`$desc`, async (test) => {
+    test.each(tests)(`$desc`, (test) => {
         const { state } = initializeOvermind({ self: test.user })
         expect(state.isValid).toBe(test.expect)
     })
@@ -67,7 +67,7 @@ describe("User and enrollment validation", () => {
             expect: false
         }
     ]
-    test.each(emailTests)(`$desc`, async (test) => {
+    test.each(emailTests)(`$desc`, (test) => {
         const regex = /\S+@\S+\.\S+/
         const match = test.email.match(regex)
         // If no match is found, match is null, otherwise it is an array
