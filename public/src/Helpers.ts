@@ -1,5 +1,5 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export enum Color {
@@ -297,4 +297,27 @@ export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSor
     return enrollments.sort((a, b) => {
         return enrollmentCompare(a, b, sortBy, descending)
     })
+}
+
+export class SubmissionsForCourse {
+    userSubmissions: { [key: string]: Submissions } = {}
+    groupSubmissions: { [key: string]: Submissions } = {}
+
+    getSubmissionsForEnrollment(enrollment: Enrollment): Submission[] {
+        return this.userSubmissions[enrollment.ID.toString()]?.submissions ?? []
+    }
+
+    getSubmissionsForGroup(group: Group | Enrollment): Submission[] {
+        if (group instanceof Group) {
+            return this.groupSubmissions[group.ID.toString()]?.submissions ?? []
+        }
+        return this.groupSubmissions[group.groupID?.toString()]?.submissions ?? []
+    }
+
+    getSubmissionsForOwner(owner: { type: "GROUP" | "ENROLLMENT", id: bigint }): Submission[] {
+        if (owner.type === "GROUP") {
+            return this.groupSubmissions[owner.id.toString()]?.submissions ?? []
+        }
+        return this.userSubmissions[owner.id.toString()]?.submissions ?? []
+    }
 }
