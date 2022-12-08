@@ -242,8 +242,6 @@ export const state: State = {
             return []
         }
 
-        const assignmentsMap: AssignmentsMap = {}
-        state.assignments[state.activeCourse.toString()].forEach(assignment => assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab)
         // If a specific assignment is selected, filter by that assignment
         let numAssignments = 0
         if (rootState.review.assignmentID > 0) {
@@ -395,7 +393,9 @@ export const state: State = {
     getAssignmentsMap: derived(({ assignments }: State, rootState: Context["state"]) => courseID => {
         const asgmts = assignments[courseID.toString()].filter(assignment => (rootState.review.assignmentID < 0) || assignment.ID === rootState.review.assignmentID)
         const assignmentsMap: AssignmentsMap = {}
-        asgmts.forEach(assignment => assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab)
+        asgmts.forEach(assignment => {
+            assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab
+        })
         return assignmentsMap
     }),
 
