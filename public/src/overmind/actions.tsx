@@ -7,7 +7,9 @@ import { Alert } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
 import { Code } from "@bufbuild/connect-web"
+import * as internalActions from "./internalActions"
 
+export const internal = internalActions
 
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => !(response.status.Code > 0)
@@ -43,46 +45,6 @@ export const receiveSubmission = ({ state }: Context, submission: Submission): v
         return
     }
     Object.assign(state.submissions[courseID.toString()][assignmentOrder - 1], submission)
-}
-
-export const resetState = ({ state }: Context) => {
-    Object.assign(state.review, {
-        selectedReview: -1,
-        reviews: {},
-        minimumScore: 0,
-        assignmentID: -1
-    })
-
-    const initialState = {
-        activeAssignment: -1,
-        activeCourse: -1,
-        activeEnrollment: null,
-        activeSubmissionLink: null,
-        query: "",
-        sortSubmissionsBy: SubmissionSort.Approved,
-        sortAscending: true,
-        submissionFilters: [],
-        groupView: false,
-        status: [],
-        assignments: {},
-        repositories: {},
-
-        courseGroup: { courseID: 0, enrollments: [], users: [], groupName: "" },
-        alerts: [],
-        isLoading: true,
-        courseEnrollments: {},
-        groups: {},
-        users: {},
-        allUsers: [],
-        courses: [],
-        courseSubmissions: [],
-        courseGroupSubmissions: {},
-        submissions: {},
-        userGroup: {},
-        enrollments: [],
-    }
-
-    Object.assign(state, initialState)
 }
 
 /**
