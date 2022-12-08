@@ -1,7 +1,6 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
-import { AssignmentsMap } from "../components/Results"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
@@ -24,7 +23,8 @@ interface GroupOrEnrollment {
 }
 
 type EnrollmentsByCourse = { [CourseID: string]: Enrollment }
-
+export type SubmissionOwner = { type: "ENROLLMENT" | "GROUP", id: bigint }
+export type AssignmentsMap = { [key: string]: boolean }
 export type State = {
 
     /***************************************************************************
@@ -179,11 +179,12 @@ export type State = {
 
     // ID of owner of the current submission
     // Must be either an enrollment ID or a group ID
-    submissionOwner: { type: "GROUP" | "ENROLLMENT", id: bigint },
+    submissionOwner: SubmissionOwner,
 
     submissionsForCourse: SubmissionsForCourse,
     isManuallyGraded: (submission: Submission) => boolean,
     loadedCourse: { [courseID: string]: boolean },
+    getAssignmentsMap: (courseID: bigint) => AssignmentsMap,
 }
 
 
@@ -389,6 +390,13 @@ export const state: State = {
     isManuallyGraded: derived(({ activeCourse, assignments }: State) => submission => {
         const assignment = assignments[activeCourse.toString()]?.find(a => a.ID === submission.AssignmentID)
         return assignment ? assignment.reviewers > 0 : false
+    }),
+
+    getAssignmentsMap: derived(({ assignments }: State, rootState: Context["state"]) => courseID => {
+        const asgmts = assignments[courseID.toString()].filter(assignment => (rootState.review.assignmentID < 0) || assignment.ID === rootState.review.assignmentID)
+        const assignmentsMap: AssignmentsMap = {}
+        asgmts.forEach(assignment => assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab)
+        return assignmentsMap
     }),
 
     submissionOwner: { type: "ENROLLMENT", id: 0n },
