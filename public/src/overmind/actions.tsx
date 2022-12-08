@@ -1,6 +1,6 @@
 import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus, Repository_Type
+    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import { Alert } from "./state"
@@ -288,7 +288,7 @@ export const getRepositories = async ({ state, effects }: Context): Promise<bool
         const courseID = enrollment.courseID
         state.repositories[courseID.toString()] = {}
 
-        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(enrollment))
+        const response = await effects.grpcMan.getRepositories(courseID)
         if (response.data) {
             state.repositories[courseID.toString()] = response.data.URLs
         } else {
@@ -738,17 +738,6 @@ export const popAlert = ({ state }: Context, index: number): void => {
 export const logout = ({ state }: Context): void => {
     // This does not empty the state.
     state.self = new User()
-}
-
-const generateRepositoryList = (enrollment: Enrollment): Repository_Type[] => {
-    switch (enrollment.status) {
-        case Enrollment_UserStatus.TEACHER:
-            return [Repository_Type.ASSIGNMENTS, Repository_Type.INFO, Repository_Type.GROUP, Repository_Type.TESTS, Repository_Type.USER]
-        case Enrollment_UserStatus.STUDENT:
-            return [Repository_Type.ASSIGNMENTS, Repository_Type.INFO, Repository_Type.GROUP, Repository_Type.USER]
-        default:
-            return [Repository_Type.NONE]
-    }
 }
 
 export const setAscending = ({ state }: Context, ascending: boolean): void => {

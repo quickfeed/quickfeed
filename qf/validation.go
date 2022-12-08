@@ -40,19 +40,6 @@ func (req *OrgRequest) IsValid() bool {
 	return req.GetOrgName() != ""
 }
 
-// IsValid checks that all requested repo types are valid types and course ID field is set
-func (req *URLRequest) IsValid() bool {
-	if req.GetCourseID() < 1 {
-		return false
-	}
-	for _, r := range req.GetRepoTypes() {
-		if r <= Repository_NONE {
-			return false
-		}
-	}
-	return true
-}
-
 // IsValid checks that the request has positive course ID
 // and either user ID or group ID is set
 func (req *RepositoryRequest) IsValid() bool {

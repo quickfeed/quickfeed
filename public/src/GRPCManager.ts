@@ -10,7 +10,6 @@ import {
     Group,
     Groups,
     Group_GroupStatus,
-    Repository_Type,
     Review,
     Submission,
     Submissions,
@@ -32,7 +31,6 @@ import {
     SubmissionRequest,
     UpdateSubmissionRequest,
     UpdateSubmissionsRequest,
-    URLRequest,
     Void,
     SubmissionRequest_SubmissionType,
 } from "../proto/qf/requests_pb"
@@ -319,10 +317,9 @@ export class GrpcManager {
 
     // /* REPOSITORY */ //
 
-    public getRepositories(courseID: bigint, types: Repository_Type[]): Promise<IGrpcResponse<Repositories>> {
-        const req = new URLRequest({
+    public getRepositories(courseID: bigint): Promise<IGrpcResponse<Repositories>> {
+        const req = new CourseRequest({
             courseID: courseID,
-            repoTypes: types,
         })
         return this.grpcSend<Repositories>(this.agService.getRepositories, req)
     }

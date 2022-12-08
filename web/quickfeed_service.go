@@ -213,7 +213,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// GetEnrollments returns all enrollments for the given course ID or user ID and enrollent status.
+// GetEnrollments returns all enrollments for the given course ID or user ID and enrollment status.
 func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	var enrollments []*qf.Enrollment
 	var err error
@@ -490,7 +490,7 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
 	err := s.updateSubmissions(in.Msg)
 	if err != nil {
-		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
+		s.logger.Errorf("UpdateSubmissions failed for request %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
 	}
 	return &connect.Response[qf.Void]{}, nil
@@ -566,17 +566,21 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
-func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.URLRequest]) (*connect.Response[qf.Repositories], error) {
+func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	usrID := userID(ctx)
-	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
+	enrol, err := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
+	if err != nil {
+		s.logger.Error("GetRepositories failed: enrollment for user %d and course %d not found: v", usrID, course.GetID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("enrollment not found"))
+	}
 
-	urls := make(map[string]string)
-	for _, repoType := range in.Msg.GetRepoTypes() {
+	urls := make(map[uint32]string)
+	for _, repoType := range repoTypes(enrol) {
 		var id uint64
 		switch repoType {
 		case qf.Repository_USER:
@@ -586,7 +590,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		}
 		repo, _ := s.getRepo(course, id, repoType)
 		// for repo == nil: will result in an empty URL string, which will be ignored by the frontend
-		urls[repoType.String()] = repo.GetHTMLURL()
+		urls[uint32(repoType)] = repo.GetHTMLURL()
 	}
 	return connect.NewResponse(&qf.Repositories{URLs: urls}), nil
 }

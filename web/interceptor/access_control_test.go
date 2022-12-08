@@ -166,7 +166,7 @@ func TestAccessControl(t *testing.T) {
 				},
 			}, tt.cookie))
 			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.URLRequest{CourseID: tt.courseID}, tt.cookie))
+			_, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetRepositories", err, tt.wantCode, tt.wantAccess)
 		})
 	}

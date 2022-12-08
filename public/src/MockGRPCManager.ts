@@ -19,7 +19,6 @@ import {
     Group_GroupStatus,
     Submission_Status,
     GradingCriterion_Grade,
-    Repository_Type,
     Enrollment_DisplayState,
 } from "../proto/qf/types_pb"
 import {
@@ -648,15 +647,10 @@ export class MockGrpcManager {
 
     // /* REPOSITORY */ //
 
-    public getRepositories(courseID: bigint, types: Repository_Type[]): Promise<IGrpcResponse<Repositories>> {
-        // TODO
+    public getRepositories(courseID: bigint): Promise<IGrpcResponse<Repositories>> {
         if (!this.courses.courses.find(c => c.ID === courseID)) {
             return this.grpcSend<Repositories>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
-        types.forEach(() => {
-            // TODO
-        })
-        //const repos = this.repositories.getRepositoriesList().filter(r => r.courseID === courseID && types.includes(r.getType()))
         return this.grpcSend<Repositories>(new Repositories())
     }
 

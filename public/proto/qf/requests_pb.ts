@@ -5,7 +5,7 @@
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
 import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
-import {Enrollment_UserStatus, Repository_Type, Review, Submission_Status, Submissions} from "./types_pb.js";
+import {Enrollment_UserStatus, Review, Submission_Status, Submissions} from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -562,49 +562,6 @@ export class UpdateSubmissionsRequest extends Message<UpdateSubmissionsRequest> 
 }
 
 /**
- * @generated from message qf.URLRequest
- */
-export class URLRequest extends Message<URLRequest> {
-  /**
-   * @generated from field: uint64 courseID = 1;
-   */
-  courseID = protoInt64.zero;
-
-  /**
-   * @generated from field: repeated qf.Repository.Type repoTypes = 2;
-   */
-  repoTypes: Repository_Type[] = [];
-
-  constructor(data?: PartialMessage<URLRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.URLRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "repoTypes", kind: "enum", T: proto3.getEnumType(Repository_Type), repeated: true },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): URLRequest {
-    return new URLRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): URLRequest {
-    return new URLRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): URLRequest {
-    return new URLRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: URLRequest | PlainMessage<URLRequest> | undefined, b: URLRequest | PlainMessage<URLRequest> | undefined): boolean {
-    return proto3.util.equals(URLRequest, a, b);
-  }
-}
-
-/**
  * used to check whether student/group submission repo is empty
  *
  * @generated from message qf.RepositoryRequest
@@ -660,9 +617,11 @@ export class RepositoryRequest extends Message<RepositoryRequest> {
  */
 export class Repositories extends Message<Repositories> {
   /**
-   * @generated from field: map<string, string> URLs = 1;
+   * Map key is the Repository.Type
+   *
+   * @generated from field: map<uint32, string> URLs = 1;
    */
-  URLs: { [key: string]: string } = {};
+  URLs: { [key: number]: string } = {};
 
   constructor(data?: PartialMessage<Repositories>) {
     super();
@@ -672,7 +631,7 @@ export class Repositories extends Message<Repositories> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.Repositories";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "URLs", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
+    { no: 1, name: "URLs", kind: "map", K: 13 /* ScalarType.UINT32 */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Repositories {

@@ -68,7 +68,7 @@ service QuickFeedService {
     // misc //
 
     rpc GetOrganization(OrgRequest) returns (Organization) {}
-    rpc GetRepositories(URLRequest) returns (Repositories) {}
+    rpc GetRepositories(CourseRequest) returns (Repositories) {}
     rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
     rpc SubmissionStream(Void) returns (stream Submission) {}
 }
