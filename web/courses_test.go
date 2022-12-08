@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
@@ -95,23 +94,16 @@ func TestNewCourseExistingRepos(t *testing.T) {
 }
 
 func TestEnrollmentProcess(t *testing.T) {
-	if os.Getenv("TODO") == "" {
-		t.Skip("See TODO description")
-	}
-	// TODO(meling): This test no longer passes since the enrollment process includes accepting invitations on behalf of the user.
-	// A fix would probably be to implement a fake SCMInvite that behaves appropriately.
-	// We should add manual SCM_TEST for the actual AcceptRepositoryInvites using qf101.
-	// TODO(meling) The main problem with this test is that the SCMManager and Config.ExchangeToken is not mocked.
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	client, tm, _ := MockClientWithUser(t, db)
 
 	ctx := context.Background()
 	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	stud1 := qtest.CreateNamedUser(t, db, 2, "student1")
@@ -129,9 +121,9 @@ func TestEnrollmentProcess(t *testing.T) {
 			qf.Enrollment_PENDING,
 		},
 	}
-	userEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, admin)))
+	userEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, stud1)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	var pendingUserEnrollment *qf.Enrollment
 	for _, enrollment := range userEnrollments.Msg.Enrollments {
@@ -202,9 +194,9 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// create another user and enroll as student
 
-	stud2 := qtest.CreateFakeUser(t, db, 3)
+	stud2 := qtest.CreateNamedUser(t, db, 3, "student2")
 	enrollStud2 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud2.ID}
-	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud1))); err != nil { // todo(meling) should be stud2 but checking that stud1 can't enroll stud2
+	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud2))); err != nil {
 		t.Error(err)
 	}
 	enrollStud2.Status = qf.Enrollment_STUDENT
@@ -212,7 +204,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
-	}, Cookie(t, tm, stud1))); err != nil { // todo(meling) should be admin but checking that stud1 can't enroll stud2
+	}, Cookie(t, tm, admin))); err != nil {
 		t.Error(err)
 	}
 	// verify that the stud2 was enrolled with student status.
@@ -235,7 +227,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
-	}, Cookie(t, tm, stud2))); err != nil {
+	}, Cookie(t, tm, admin))); err != nil {
 		t.Error(err)
 	}
 	// verify that the stud2 was promoted to teacher status.

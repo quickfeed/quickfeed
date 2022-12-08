@@ -62,7 +62,7 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 		Name:         name,
 		Login:        name,
 		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
+		RefreshToken: "refresh_token",
 	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
