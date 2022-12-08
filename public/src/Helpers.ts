@@ -1,6 +1,7 @@
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import { SubmissionOwner } from "./overmind/state"
 
 export enum Color {
     RED = "danger",
@@ -303,10 +304,12 @@ export class SubmissionsForCourse {
     userSubmissions: { [key: string]: Submissions } = {}
     groupSubmissions: { [key: string]: Submissions } = {}
 
+    /** getSubmissionsForEnrollment returns user submissions for the given enrollment */
     getSubmissionsForEnrollment(enrollment: Enrollment): Submission[] {
         return this.userSubmissions[enrollment.ID.toString()]?.submissions ?? []
     }
 
+    /** getSubmissionsForGroup returns group submissions for the given group or enrollment */
     getSubmissionsForGroup(group: Group | Enrollment): Submission[] {
         if (group instanceof Group) {
             return this.groupSubmissions[group.ID.toString()]?.submissions ?? []
@@ -314,7 +317,9 @@ export class SubmissionsForCourse {
         return this.groupSubmissions[group.groupID?.toString()]?.submissions ?? []
     }
 
-    getSubmissionsForOwner(owner: { type: "GROUP" | "ENROLLMENT", id: bigint }): Submission[] {
+    /** getSubmissionsForOwner returns all submissions related to the passed in owner.
+     * This is usually the currently selected group or user. */
+    getSubmissionsForOwner(owner: SubmissionOwner): Submission[] {
         if (owner.type === "GROUP") {
             return this.groupSubmissions[owner.id.toString()]?.submissions ?? []
         }
