@@ -1,7 +1,11 @@
 package database
 
 import (
+	"fmt"
+
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
@@ -71,11 +75,106 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, e
 
 // UpdateAssignments updates assignment information.
 func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
-	// TODO(meling) Updating the database may need locking?? Or maybe rewrite as a single query or txn.
-	for _, v := range assignments {
-		// this will create or update an existing assignment
-		if err := db.CreateAssignment(v); err != nil {
-			return err
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		for _, v := range assignments {
+			if err := check(tx, v); err != nil {
+				return err
+			}
+
+			assignment := qf.Assignment{}
+			if tx.Model(&qf.Assignment{}).FirstOrInit(&assignment,
+				&qf.Assignment{
+					CourseID: v.CourseID,
+					Order:    v.Order,
+				},
+			).RowsAffected == 0 {
+				// Zero rows affected indicates that the assignment does not exist
+				return tx.Model(&qf.Assignment{}).Create(v).Error
+			}
+
+			// Assign the existing assignment ID to the incoming assignment
+			v.ID = assignment.ID
+			if err := db.updateGradingCriteria(tx, v); err != nil {
+				return err // will rollback transaction
+			}
+
+			if err := tx.Model(v).Where(&qf.Assignment{
+				ID: assignment.ID,
+			}).Select("*").Updates(&qf.Assignment{
+				ID:               v.ID,
+				CourseID:         v.CourseID,
+				Name:             v.Name,
+				Deadline:         v.Deadline,
+				AutoApprove:      v.AutoApprove,
+				Order:            v.Order,
+				IsGroupLab:       v.IsGroupLab,
+				ScoreLimit:       v.ScoreLimit,
+				Reviewers:        v.Reviewers,
+				ContainerTimeout: v.ContainerTimeout,
+				// Submissions:       v.Submissions,
+				Tasks:             v.Tasks,
+				GradingBenchmarks: v.GradingBenchmarks,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func check(tx *gorm.DB, assignment *qf.Assignment) error {
+	// Course id and assignment order must be given.
+	if assignment.CourseID < 1 || assignment.Order < 1 {
+		return gorm.ErrRecordNotFound
+	}
+	var course int64
+	if err := tx.Model(&qf.Course{}).Where(&qf.Course{
+		ID: assignment.CourseID,
+	}).Count(&course).Error; err != nil {
+		return err
+	}
+	if course != 1 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated.
+func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) error {
+	if len(assignment.GetGradingBenchmarks()) > 0 {
+		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
+			ID: assignment.ID,
+		})
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// a new assignment, no actions required
+				return nil
+			}
+			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.Name, err)
+		}
+		if len(gradingBenchmarks) > 0 {
+			if cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
+				protocmp.Transform(),
+				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
+				protocmp.IgnoreEnums(),
+			}) {
+				// no changes in the grading criteria for this assignment (from the tests repository)
+				// we set this to nil to avoid duplicates in the database
+				assignment.GradingBenchmarks = nil
+			} else {
+				// grading criteria changed for this assignment, remove old criteria and reviews
+				for _, bm := range gradingBenchmarks {
+					for _, c := range bm.Criteria {
+						if err := tx.Delete(c).Error; err != nil {
+							return fmt.Errorf("failed to delete criterion %d: %w", c.GetID(), err)
+						}
+					}
+					if err := tx.Delete(bm).Error; err != nil {
+						return fmt.Errorf("failed to delete benchmark %d: %w", bm.GetID(), err)
+					}
+				}
+			}
 		}
 	}
 	return nil
