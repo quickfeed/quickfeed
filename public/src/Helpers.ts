@@ -132,8 +132,8 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
 export const getPassedTestsCount = (score: Score[]): string => {
     let totalTests = 0
     let passedTests = 0
-    score.forEach(score => {
-        if (score.Score === score.MaxScore) {
+    score.forEach(s => {
+        if (s.Score === s.MaxScore) {
             passedTests++
         }
         totalTests++
