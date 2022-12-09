@@ -1,0 +1,67 @@
+package database_test
+
+import (
+	"context"
+	"reflect"
+	"testing"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/database"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm/schema"
+)
+
+func TestTimestampSerializer_Value(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+	tests := []struct {
+		name       string
+		fieldValue interface{}
+		want       interface{}
+		wantErr    bool
+	}{
+		{
+			name:       "correct timestamp, current time",
+			fieldValue: timestamppb.New(now),
+			want:       now,
+			wantErr:    false,
+		},
+		{
+			name:       "correct timestamp, preset time",
+			fieldValue: timestamppb.New(time.Date(2000, 1, 1, 1, 1, 1, 1, time.UTC)),
+			want:       time.Date(2000, 1, 1, 1, 1, 1, 1, time.UTC),
+			wantErr:    false,
+		},
+		{
+			name:       "incorrect type: time.Time",
+			fieldValue: time.Now(),
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "incorrect type: string",
+			fieldValue: "2022-11-11T23:59:00",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "empty interface",
+			fieldValue: nil,
+			want:       nil,
+			wantErr:    false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := database.TimestampSerializer{}
+			got, err := ts.Value(ctx, &schema.Field{}, reflect.Value{}, tt.fieldValue)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s: expected error: %v, got = %v, ", tt.name, tt.wantErr, err)
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mismatch timestamp (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
