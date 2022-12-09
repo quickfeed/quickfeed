@@ -41,7 +41,7 @@ const CourseLabs = (): JSX.Element => {
                             {assignmentStatusText(assignment, submission)}
                         </div>
                         <div className="col-4 text-center">
-                            {assignment.deadline ? getFormattedTime(assignment.deadline.toDate()) : "N/A"}
+                            {getFormattedTime(assignment.deadline)}
                         </div>
                     </div>
                 </li>

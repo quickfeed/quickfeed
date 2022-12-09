@@ -18,6 +18,7 @@ type TimestampSerializer struct{}
 
 // Value implements https://pkg.go.dev/gorm.io/gorm/schema#SerializerValuerInterface to indicate
 // how this struct will be saved into an SQL database field.
+// Serializing timestamppb.Timestamp to time.Time allows saving it to database as "datetime" type.
 func (TimestampSerializer) Value(_ context.Context, _ *schema.Field, _ reflect.Value, fieldValue interface{}) (interface{}, error) {
 	if fieldValue == nil {
 		return nil, nil

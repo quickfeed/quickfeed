@@ -44,7 +44,7 @@ type GormDB struct {
 func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
 		Logger:                 NewGORMLogger(logger),
-		SkipDefaultTransaction: true,
+		SkipDefaultTransaction: false,
 	})
 	if err != nil {
 		return nil, err

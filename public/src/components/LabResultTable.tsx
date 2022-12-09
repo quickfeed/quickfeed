@@ -50,8 +50,8 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     if (submission && assignment) {
         const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.CourseID.toString()]
         const buildInfo = submission.BuildInfo
-        const delivered = (buildInfo && buildInfo.SubmissionDate) ? getFormattedTime(buildInfo.SubmissionDate.toDate()) : "N/A"
-        const built = (buildInfo && buildInfo.BuildDate) ? getFormattedTime(buildInfo.BuildDate.toDate()) : "N/A"
+        const delivered = getFormattedTime(buildInfo?.SubmissionDate)
+        const built = getFormattedTime(buildInfo?.BuildDate)
         const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
 
         const className = (submission.status === Submission_Status.APPROVED) ? "passed" : "failed"
@@ -84,13 +84,13 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             submission.approvedDate ?
                                 <tr>
                                     <td colSpan={2}>Approved</td>
-                                    <td>{getFormattedTime(submission.approvedDate.toDate())}</td>
+                                    <td>{getFormattedTime(submission.approvedDate)}</td>
                                 </tr>
                                 : null
                         }
                         <tr>
                             <td colSpan={2}>Deadline</td>
-                            <td>{assignment.deadline ? getFormattedTime(assignment.deadline.toDate()) : "N/A"}</td>
+                            <td>{assignment.deadline ? getFormattedTime(assignment.deadline) : "N/A"}</td>
                         </tr>
 
                         {!isManuallyGraded(assignment) ?

@@ -26,11 +26,16 @@ export enum ConnStatus {
     RECONNECTING,
 }
 
-const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-
 /** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (deadline: Date): string => {
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" : ""}${deadline.getMinutes()}`
+export const getFormattedTime = (timestamp: Timestamp | undefined): string => {
+    if (!timestamp) {
+        return "N/A"
+    }
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    const deadline = timestamp.toDate()
+    const minutes = deadline.getMinutes()
+    const zero = minutes < 10 ? "0" : ""
+    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
 export interface Deadline {
@@ -39,8 +44,12 @@ export interface Deadline {
     daysUntil: number,
 }
 
-/** Utility function for LandingPageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-// layoutTime = "2021-03-20T23:59:00"
+/**
+ * Utility function for LandingPageTable to format the output string and class/css
+ * depending on how far into the future the deadline is.
+ *
+ * layoutTime = "2021-03-20T23:59:00"
+ */
 export const timeFormatter = (deadline: Timestamp): Deadline => {
     const timeToDeadline = deadline.toDate().getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))

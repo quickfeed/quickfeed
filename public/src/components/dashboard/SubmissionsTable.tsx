@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { assignmentStatusText, SubmissionStatus, timeFormatter } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
@@ -17,11 +17,8 @@ const SubmissionsTable = (): JSX.Element => {
             assignments.push(...state.assignments[courseID])
         }
         assignments.sort((a, b) => {
-            if ((a.deadline && b.deadline) && (b.deadline > a.deadline)) {
-                return -1
-            }
-            if ((a.deadline && b.deadline) && (a.deadline > b.deadline)) {
-                return 1
+            if (a.deadline && b.deadline) {
+                return a.deadline.toDate().getTime() - b.deadline.toDate().getTime()
             }
             return 0
         })
@@ -57,7 +54,7 @@ const SubmissionsTable = (): JSX.Element => {
                                 <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment" /></span> : null}
                         </td>
                         <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
-                        <td>{assignment.deadline}</td>
+                        <td>{getFormattedTime(assignment.deadline)}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
                         <td className={SubmissionStatus[submission.status]}>
                             {assignmentStatusText(assignment, submission)}

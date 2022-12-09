@@ -46,7 +46,7 @@ const Members = (): JSX.Element => {
         data.push(enrollment.user ? enrollment.user.Name : "")
         data.push(enrollment.user ? enrollment.user.Email : "")
         data.push(enrollment.user ? enrollment.user.StudentID : "")
-        data.push(enrollment.lastActivityDate ? getFormattedTime(enrollment.lastActivityDate.toDate()) : "N/A")
+        data.push(getFormattedTime(enrollment.lastActivityDate))
         data.push(enrollment.totalApproved.toString())
         data.push(enrollment.slipDaysRemaining.toString())
 
