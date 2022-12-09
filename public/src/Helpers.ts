@@ -1,7 +1,7 @@
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
-import {Timestamp} from "@bufbuild/protobuf";
+import { Timestamp } from "@bufbuild/protobuf"
 
 export enum Color {
     RED = "danger",
@@ -26,12 +26,13 @@ export enum ConnStatus {
     RECONNECTING,
 }
 
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
 /** Returns a string with a prettier format for a deadline */
 export const getFormattedTime = (timestamp: Timestamp | undefined): string => {
     if (!timestamp) {
         return "N/A"
     }
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const deadline = timestamp.toDate()
     const minutes = deadline.getMinutes()
     const zero = minutes < 10 ? "0" : ""
@@ -349,9 +350,9 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
         }
         case EnrollmentSort.Activity:
             if (a.lastActivityDate && b.lastActivityDate) {
-                return sortOrder * (a.lastActivityDate.toDate().getTime() - b.lastActivityDate.toDate().getTime()) 
+                return sortOrder * (a.lastActivityDate.toDate().getTime() - b.lastActivityDate.toDate().getTime())
             }
-            return 0               
+            return 0
         case EnrollmentSort.Slipdays:
             return sortOrder * (a.slipDaysRemaining - b.slipDaysRemaining)
         case EnrollmentSort.Approved:
