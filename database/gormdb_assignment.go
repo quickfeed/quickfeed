@@ -55,32 +55,18 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 }
 
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
-func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*qf.Assignment, error) {
+func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
-	assignments := course.Assignments
-	if withGrading {
-		for _, a := range assignments {
-			var benchmarks []*qf.GradingBenchmark
-			if err := db.conn.
-				Where("assignment_id = ?", a.ID).
-				Where("review_id = ?", 0).
-				Find(&benchmarks).Error; err != nil {
-				return nil, err
-			}
-			a.GradingBenchmarks = benchmarks
-			for _, b := range a.GradingBenchmarks {
-				var criteria []*qf.GradingCriterion
-				if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
-					return nil, err
-				}
-				b.Criteria = criteria
-			}
+	for _, a := range course.Assignments {
+		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.ID})
+		if err != nil {
+			return nil, err
 		}
 	}
-	return assignments, nil
+	return course.Assignments, nil
 }
 
 // UpdateAssignments updates assignment information.
@@ -97,7 +83,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 
 // GetAssignmentsWithSubmissions returns all course assignments
 // preloaded with submissions of the requested submission type.
-func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Assignment, error) {
+func (db *GormDB) GetAssignmentsWithSubmissions(req *qf.SubmissionRequest) ([]*qf.Assignment, error) {
 	var assignments []*qf.Assignment
 	m := db.conn.Preload("Submissions").
 		Preload("Submissions.Reviews").
@@ -105,18 +91,17 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.Scores")
 	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := m.Where(&qf.Assignment{CourseID: courseID}).
+	if err := m.Where(&qf.Assignment{CourseID: req.GetCourseID()}).
 		Order("'order'").
 		Find(&assignments).Error; err != nil {
 		return nil, err
 	}
-	if submissionType == qf.SubmissionRequest_ALL {
+	if req.IncludeAll() {
 		return assignments, nil
 	}
-	wantGroupLabs := submissionType == qf.SubmissionRequest_GROUP
 	filteredAssignments := make([]*qf.Assignment, 0)
 	for _, a := range assignments {
-		if a.IsGroupLab == wantGroupLabs {
+		if req.Include(a) {
 			filteredAssignments = append(filteredAssignments, a)
 		}
 	}
@@ -154,7 +139,8 @@ func (db *GormDB) UpdateCriterion(query *qf.GradingCriterion) error {
 	return db.conn.Select("*").
 		Where(&qf.GradingCriterion{
 			ID:          query.ID,
-			BenchmarkID: query.BenchmarkID}).
+			BenchmarkID: query.BenchmarkID,
+		}).
 		Updates(query).Error
 }
 

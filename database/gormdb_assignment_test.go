@@ -16,7 +16,7 @@ func TestGormDBGetAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if _, err := db.GetAssignmentsByCourse(10, false); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetAssignmentsByCourse(10); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 
@@ -56,7 +56,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(1, false)
+	assignments, err := db.GetAssignmentsByCourse(1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestUpdateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(course.ID, false)
+	assignments, err := db.GetAssignmentsByCourse(course.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -125,7 +125,7 @@ func TestUpdateAssignment(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	gotAssignments, err := db.GetAssignmentsByCourse(course.ID, false)
+	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -162,7 +162,13 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionRequest_ALL)
+	req := &qf.SubmissionRequest{
+		CourseID: course.ID,
+		FetchMode: &qf.SubmissionRequest_Type{
+			Type: qf.SubmissionRequest_ALL,
+		},
+	}
+	assignments, err := db.GetAssignmentsWithSubmissions(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +201,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantReview); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionRequest_ALL)
+	assignments, err = db.GetAssignmentsWithSubmissions(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,7 +273,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		}
 	}
 
-	gotAssignments, err := db.GetAssignmentsByCourse(course.ID, true)
+	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -292,7 +298,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		}
 	}
 	assignment.GradingBenchmarks = benchmarks
-	gotAssignments, err = db.GetAssignmentsByCourse(course.ID, true)
+	gotAssignments, err = db.GetAssignmentsByCourse(course.ID)
 	if err != nil {
 		t.Error(err)
 	}
