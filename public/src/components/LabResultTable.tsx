@@ -1,6 +1,6 @@
 import React, { useCallback } from "react"
-import { Assignment, Submission, Submission_Status } from "../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
+import { Assignment, Submission } from "../../proto/qf/types_pb"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isApproved, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
 import SubmissionScore from "./SubmissionScore"
@@ -54,7 +54,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
         const built = getFormattedTime(buildInfo?.BuildDate)
         const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
 
-        const className = (submission.status === Submission_Status.APPROVED) ? "passed" : "failed"
+        const className = isApproved(submission) ? "passed" : "failed"
         return (
             <div className="pb-2">
                 <div className="pb-2">
@@ -90,7 +90,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         }
                         <tr>
                             <td colSpan={2}>Deadline</td>
-                            <td>{assignment.deadline ? getFormattedTime(assignment.deadline) : "N/A"}</td>
+                            <td>{getFormattedTime(assignment.deadline)}</td>
                         </tr>
 
                         {!isManuallyGraded(assignment) ?
