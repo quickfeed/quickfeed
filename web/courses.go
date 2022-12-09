@@ -333,13 +333,11 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		var submissionDate time.Time
 		for _, submissionLink := range enrolLink.Submissions {
 			submission := submissionLink.Submission
-			if submission != nil {
-				if submission.Status == qf.Submission_APPROVED {
-					totalApproved++
-				}
-				if enrol.LastActivityDate == nil {
-					submissionDate = submission.NewestSubmissionDate(submissionDate)
-				}
+			if submission.IsApproved() {
+				totalApproved++
+			}
+			if enrol.LastActivityDate == nil {
+				submissionDate = submission.NewestSubmissionDate(submissionDate)
 			}
 		}
 		enrol.TotalApproved = totalApproved

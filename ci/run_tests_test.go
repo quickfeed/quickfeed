@@ -179,7 +179,7 @@ func TestRecordResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submission.Status == qf.Submission_APPROVED {
+	if submission.IsApproved() {
 		t.Error("Submission must not be auto approved")
 	}
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
@@ -416,7 +416,7 @@ func TestStreamRecordResults(t *testing.T) {
 		t.Fatal(err)
 	}
 	streamService.Submission.SendTo(submission, owners...)
-	if submission.Status == qf.Submission_APPROVED {
+	if submission.IsApproved() {
 		t.Error("Submission must not be auto approved")
 	}
 
