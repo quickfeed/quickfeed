@@ -33,7 +33,7 @@ func (db *GormDB) CreateIssues(issues []*qf.Issue) error {
 func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint32]map[string]*qf.Task) (createdTasks, updatedTasks []*qf.Task, err error) {
 	createdTasks = []*qf.Task{}
 	updatedTasks = []*qf.Task{}
-	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
+	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		return nil, nil, err
 	}

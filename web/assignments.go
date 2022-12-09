@@ -12,7 +12,7 @@ const reviewLayout = "02 Jan 15:04"
 
 // getAssignments lists the assignments for the provided course.
 func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, error) {
-	allAssignments, err := s.db.GetAssignmentsByCourse(courseID, true)
+	allAssignments, err := s.db.GetAssignmentsByCourse(courseID)
 	if err != nil {
 		return nil, err
 	}

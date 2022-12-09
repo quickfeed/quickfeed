@@ -55,32 +55,18 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 }
 
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
-func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*qf.Assignment, error) {
+func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
-	assignments := course.Assignments
-	if withGrading {
-		for _, a := range assignments {
-			var benchmarks []*qf.GradingBenchmark
-			if err := db.conn.
-				Where("assignment_id = ?", a.ID).
-				Where("review_id = ?", 0).
-				Find(&benchmarks).Error; err != nil {
-				return nil, err
-			}
-			a.GradingBenchmarks = benchmarks
-			for _, b := range a.GradingBenchmarks {
-				var criteria []*qf.GradingCriterion
-				if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
-					return nil, err
-				}
-				b.Criteria = criteria
-			}
+	for _, a := range course.Assignments {
+		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.ID})
+		if err != nil {
+			return nil, err
 		}
 	}
-	return assignments, nil
+	return course.Assignments, nil
 }
 
 // UpdateAssignments updates assignment information.

@@ -30,7 +30,7 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 		}
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
+	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Error(err)
 	}
