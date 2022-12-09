@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -13,53 +12,54 @@ import (
 func TestNewestSubmissionDate(t *testing.T) {
 	submission := &qf.Submission{}
 	tim := time.Now()
-	newSubmissionDate, err := submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
+	newSubmissionDate := submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
 	submission = &qf.Submission{}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{},
 	}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate:      &timestamppb.Timestamp{},
 			SubmissionDate: &timestamppb.Timestamp{},
 		},
 	}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err != nil {
-		t.Error(err)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
-	if diff := cmp.Diff(tim, newSubmissionDate); diff != "" {
-		t.Errorf("submission date mismatch: (-want, +got):\n%s", diff)
-	}
-	if newSubmissionDate.Before(submission.BuildInfo.BuildDate.AsTime()) {
-		t.Errorf("NewestBuildDate(%v) = %v, expected tim '%v' to be after submission.BuildDate '%v'\n", tim, newSubmissionDate, tim, submission.BuildInfo.BuildDate.AsTime())
-	}
-	buildDate := time.Now()
+
+	// Seems like the conversion from time.Time to timestamppb.Timestamp is not
+	// exact, so we need to add a second to make sure the build date is newer.
+	buildDate := time.Now().Add(1 * time.Second)
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate:      timestamppb.Now(),
-			SubmissionDate: timestamppb.Now(),
+			SubmissionDate: timestamppb.New(buildDate),
 		},
 	}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err != nil {
-		t.Error(err)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
 	if newSubmissionDate.Before(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
+	}
+	if newSubmissionDate.After(buildDate) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
+	}
+	if !newSubmissionDate.After(tim) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
 }

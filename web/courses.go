@@ -338,10 +338,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 					totalApproved++
 				}
 				if enrol.LastActivityDate == nil {
-					submissionDate, err = submission.NewestSubmissionDate(submissionDate)
-					if err != nil {
-						return nil, err
-					}
+					submissionDate = submission.NewestSubmissionDate(submissionDate)
 				}
 			}
 		}
