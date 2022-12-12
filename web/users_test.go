@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
@@ -212,70 +211,68 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestUpdateUserFailures(t *testing.T) {
-	t.Skip("TODO: Needs to be rewritten as a client-server test to verify (with interceptors) that the server is actually enforcing the rules")
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := MockClient(t, db, nil)
+	//client := MockClient(t, db, nil)
+	client, tm, _ := MockClientWithUser(t, db)
 	ctx := context.Background()
 
-	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
-	qtest.CreateFakeUser(t, db, 11)
-
-	u := qtest.CreateFakeUser(t, db, 3)
-	if u.IsAdmin {
-		t.Fatalf("expected user %v to be non-admin", u)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	if !admin.IsAdmin {
+		t.Fatalf("expected user %v to be admin", admin)
 	}
-	// context with user u (non-admin user); can only change its own name etc
-	ctx = auth.WithUserContext(ctx, u)
-	// trying to demote current adminUser by setting IsAdmin to false
-	nameChangeRequest := connect.NewRequest(&qf.User{
-		ID:        wantAdminUser.ID,
-		IsAdmin:   false,
-		Name:      "Scrooge McDuck",
-		StudentID: "99",
-		Email:     "test@test.com",
-		AvatarURL: "www.hello.com",
-	})
-	// current user u (non-admin) is in the ctx and tries to change adminUser
-	us, err := client.UpdateUser(ctx, nameChangeRequest)
-	if err == nil {
-		fmt.Println(us)
-		t.Fatal(err)
+	user := qtest.CreateNamedUser(t, db, 2, "user")
+	if user.IsAdmin {
+		t.Fatalf("expected user %v to be non-admin", user)
 	}
-
-	gotAdminUserWithoutChanges, err := db.GetUser(wantAdminUser.ID)
-	if err != nil {
-		t.Fatal(err)
+	userCookie := Cookie(t, tm, user)
+	tests := []struct {
+		name     string
+		cookie   string
+		req      *qf.User
+		wantUser *qf.User
+		wantErr  bool
+	}{
+		{
+			name:   "user demotes admin, must fail",
+			cookie: userCookie,
+			req: &qf.User{
+				ID:        admin.ID,
+				IsAdmin:   false,
+				Name:      admin.Name,
+				Email:     admin.Email,
+				StudentID: admin.StudentID,
+				AvatarURL: admin.AvatarURL,
+			},
+			wantUser: nil,
+			wantErr:  true,
+		},
+		{
+			name:   "user promotes self to admin, must fail",
+			cookie: userCookie,
+			req: &qf.User{
+				ID:        user.ID,
+				Name:      user.Name,
+				Email:     user.Email,
+				StudentID: user.StudentID,
+				AvatarURL: user.AvatarURL,
+				IsAdmin:   true,
+			},
+			wantUser: nil,
+			wantErr:  true,
+		},
 	}
-	if diff := cmp.Diff(wantAdminUser, gotAdminUserWithoutChanges, protocmp.Transform()); diff != "" {
-		t.Errorf("UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
-	}
-
-	nameChangeRequest = connect.NewRequest(&qf.User{
-		ID:        u.ID,
-		IsAdmin:   true,
-		Name:      "Scrooge McDuck",
-		StudentID: "99",
-		Email:     "test@test.com",
-		AvatarURL: "www.hello.com",
-	})
-	_, err = client.UpdateUser(ctx, nameChangeRequest)
-	if err != nil {
-		t.Error(err)
-	}
-	gotUser, err := db.GetUser(u.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantUser := &qf.User{
-		ID:        gotUser.ID,
-		Name:      "Scrooge McDuck",
-		IsAdmin:   false, // we want that the current user u cannot promote himself to admin
-		StudentID: "99",
-		Email:     "test@test.com",
-		AvatarURL: "www.hello.com",
-	}
-	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			user, err := client.UpdateUser(ctx, qtest.RequestWithCookie(tt.req, tt.cookie))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+			}
+			if !tt.wantErr {
+				if diff := cmp.Diff(tt.wantUser, user, protocmp.Transform()); diff != "" {
+					t.Errorf("%s: mismatch users (-want +got):\n%s", tt.name, diff)
+				}
+			}
+		})
 	}
 }
