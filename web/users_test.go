@@ -213,7 +213,6 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	//client := MockClient(t, db, nil)
 	client, tm, _ := MockClientWithUser(t, db)
 	ctx := context.Background()
 
