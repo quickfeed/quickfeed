@@ -208,18 +208,17 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 
-	// If assignment.GradingBenchmarks is empty beyond this point, it means that there were no added / removed benchmarks / criteria
-	updateGradingCriteria(qtest.Logger(t), db, assignment)
-
-	// Assignment has no added or removed benchmarks, expect nil
-	if assignment.GradingBenchmarks != nil {
-		t.Fatalf("Expected assignment.GradingBenchmarks to be nil, got %v", assignment.GradingBenchmarks)
+	if diff := cmp.Diff(benchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
 	}
 
 	// Update assignments. GradingBenchmarks should not be updated
-	err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
-	if err != nil {
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2}); err != nil {
 		t.Fatal(err)
+	}
+	// Assignment has no added or removed benchmarks, expect nil
+	if assignment.GradingBenchmarks != nil {
+		t.Errorf("Expected nil, got %v", assignment.GradingBenchmarks)
 	}
 
 	for _, wantReview := range []*qf.Review{review, review2} {
@@ -264,19 +263,16 @@ func TestUpdateCriteria(t *testing.T) {
 
 	assignment.GradingBenchmarks = updatedBenchmarks
 
-	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
-	updateGradingCriteria(qtest.Logger(t), db, assignment)
-
-	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
-	if err != nil {
-		t.Fatal(err)
-	}
-	// updateGradingCriteria should have deleted the old benchmarks and criteria
-	if len(gotBenchmarks) > 0 {
-		t.Fatalf("Expected no benchmarks, got %v", gotBenchmarks)
+	if diff := cmp.Diff(updatedBenchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
 	}
 
-	// Assignment has been modified, expect benchmarks to not be nil
+	// Update assignments. GradingBenchmarks should be updated.
+	// This should also delete the old benchmarks in the database, and return the new benchmarks.
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2}); err != nil {
+		t.Error(err)
+	}
+	// Assignment should still reflect the updated benchmark
 	if assignment.GradingBenchmarks == nil {
 		t.Fatal("Expected assignment.GradingBenchmarks to not be nil")
 	}

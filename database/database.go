@@ -70,7 +70,7 @@ type Database interface {
 	// GetAssignment returns assignment matching the given query.
 	GetAssignment(query *qf.Assignment) (*qf.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
-	GetAssignmentsByCourse(uint64, bool) ([]*qf.Assignment, error)
+	GetAssignmentsByCourse(uint64) ([]*qf.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*qf.Assignment) error
 	// CreateBenchmark creates a new grading benchmark.
@@ -100,7 +100,7 @@ type Database interface {
 	// GetSubmissions returns all submissions matching the query.
 	GetSubmissions(*qf.Submission) ([]*qf.Submission, error)
 	// GetAssignmentsWithSubmissions returns a list of assignments with the latest submissions for the given course.
-	GetAssignmentsWithSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Assignment, error)
+	GetAssignmentsWithSubmissions(*qf.SubmissionRequest) ([]*qf.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score
