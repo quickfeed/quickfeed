@@ -43,9 +43,9 @@ type GormDB struct {
 // NewGormDB creates a new gorm database using the provided driver.
 func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	// We are conservative and use transactions for create/update/delete operations.
-	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{ // skipcq: GO-W1004
 		Logger:                 NewGORMLogger(logger),
-		SkipDefaultTransaction: false, // skipcq: GO-W1004
+		SkipDefaultTransaction: false,
 	})
 	if err != nil {
 		return nil, err
