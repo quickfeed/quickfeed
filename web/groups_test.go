@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -390,45 +389,30 @@ func TestDeleteGroup(t *testing.T) {
 	defer cleanup()
 
 	client, tm, _ := MockClientWithUser(t, db)
-
-	testCourse := qf.Course{
-		Name:             "Distributed Systems",
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		OrganizationID:   1,
-		OrganizationName: "test",
-		ID:               1,
-	}
 	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 
 	ctx := context.Background()
-	if _, err := client.CreateCourse(ctx, qtest.RequestWithCookie(&testCourse, Cookie(t, tm, admin))); err != nil {
+	testCourse, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
+	if err != nil {
 		t.Error(err)
 	}
+	course := testCourse.Msg
 
 	// create user and enroll as pending (teacher)
-	teacher := qtest.CreateFakeUser(t, db, 3)
+	teacher := qtest.CreateNamedUser(t, db, 3, "teacher")
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   teacher.ID,
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 	}, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)
 	}
-
-	if os.Getenv("TODO") == "" {
-		t.Skip("See TODO description")
-	}
-	// TODO(meling) Calling UpdateEnrollments will trigger enrollStudent and acceptRepositoryInvites
-	// This requires a real or fake SCMInvite App that implements invite handling
-	// Specifically, the Config.ExchangeToken() method should have a fake implementation.
 
 	// update enrollment from pending->student->teacher; must be done by admin
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   teacher.ID,
-				CourseID: testCourse.ID,
+				CourseID: course.ID,
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
@@ -441,7 +425,7 @@ func TestDeleteGroup(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   teacher.ID,
-				CourseID: testCourse.ID,
+				CourseID: course.ID,
 				Status:   qf.Enrollment_TEACHER,
 			},
 		},
@@ -450,10 +434,10 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create user and enroll as pending (student)
-	user := qtest.CreateFakeUser(t, db, 2)
+	user := qtest.CreateNamedUser(t, db, 2, "student")
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   user.ID,
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 	}, Cookie(t, tm, user))); err != nil {
 		t.Error(err)
 	}
@@ -463,7 +447,7 @@ func TestDeleteGroup(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   user.ID,
-				CourseID: testCourse.ID,
+				CourseID: course.ID,
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
@@ -472,16 +456,16 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create group as student user
-	group := &qf.Group{Name: "TestDeleteGroup", CourseID: testCourse.ID, Users: []*qf.User{user}}
+	group := &qf.Group{Name: "TestDeleteGroup", CourseID: course.ID, Users: []*qf.User{user}}
 	respGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	// delete group as teacher
 	_, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		GroupID:  respGroup.Msg.ID,
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 	}, Cookie(t, tm, teacher)))
 	if err != nil {
 		t.Error(err)
