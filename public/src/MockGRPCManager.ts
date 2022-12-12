@@ -103,12 +103,8 @@ export class MockGrpcManager {
     }
 
     public setCurrentUser(id: number) {
-        const user = this.users.users.find(u => Number(u.ID) === id)
-        if (user) {
-            this.currentUser = user
-        } else {
-            this.currentUser = null
-        }
+        const user = this.users.users.find(u => Number(u.ID) === id) ?? null
+        this.currentUser = user
     }
 
     public getUser(): Promise<IGrpcResponse<User>> {
@@ -454,9 +450,8 @@ export class MockGrpcManager {
     }
 
     public getSubmissionsByCourse(courseID: bigint, type: SubmissionRequest_SubmissionType): Promise<IGrpcResponse<CourseSubmissions>> {
-        // TODO: Remove `.clone()` when done migrating to AsObject in state
         const groups = this.groups.groups
-        const submissions = new CourseSubmissions({submissions: {}})
+        const submissions = new CourseSubmissions({ submissions: {} })
         const course = this.courses.courses.find(c => c.ID === courseID)
         if (!course) {
             return this.grpcSend<CourseSubmissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
@@ -470,7 +465,7 @@ export class MockGrpcManager {
             // Get all enrollments
             ids = this.enrollments.enrollments.filter(e => e.courseID === courseID)
         }
-        
+
         const aIDs = this.assignments.assignments.filter(a => a.CourseID === courseID).map(a => a.ID)
         ids.forEach((id) => {
             submissions.submissions[id.ID.toString()] = new Submissions()
@@ -482,8 +477,8 @@ export class MockGrpcManager {
                 switch (type) {
                     case SubmissionRequest_SubmissionType.ALL:
                         submission = this.submissions.submissions.find(
-                            s => s.AssignmentID === assignment.ID && 
-                            (s.userID === id.ID || (s.groupID > 0 && s.groupID === (id as Enrollment).groupID)))
+                            s => s.AssignmentID === assignment.ID &&
+                                (s.userID === id.ID || (s.groupID > 0 && s.groupID === (id as Enrollment).groupID)))
                         break
                     case SubmissionRequest_SubmissionType.USER:
                         submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.userID === (id as Enrollment).userID)
@@ -500,7 +495,6 @@ export class MockGrpcManager {
                 submissions.submissions[id.ID.toString()].submissions.push(submission.clone())
             })
         })
-        // TODO
         return this.grpcSend<CourseSubmissions>(submissions)
     }
 
