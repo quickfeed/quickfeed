@@ -65,3 +65,31 @@ func TestTimestampSerializer_Value(t *testing.T) {
 		})
 	}
 }
+
+func TestTimestampSerializer_Scan(t *testing.T) {
+	ctx := context.Background()
+	ts := database.TimestampSerializer{}
+	tests := []struct {
+		name    string
+		field   *schema.Field
+		dst     reflect.Value
+		dbValue interface{}
+		wantErr bool
+	}{
+		{
+			name:    "incorrect db type",
+			field:   &schema.Field{},
+			dst:     reflect.Value{},
+			dbValue: "2022-01-24 14:03:00 +0000 UTC",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ts.Scan(ctx, tt.field, tt.dst, tt.dbValue)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s: expected error: %v, got = %v, ", tt.name, tt.wantErr, err)
+			}
+		})
+	}
+}
