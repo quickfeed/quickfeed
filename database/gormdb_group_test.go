@@ -150,11 +150,11 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				case qf.Enrollment_NONE:
 					err = db.RejectEnrollment(user.GetID(), course.ID)
 				case qf.Enrollment_STUDENT:
-					query := &qf.Enrollment{
-						UserID:   user.ID,
-						CourseID: course.ID,
-						Status:   qf.Enrollment_STUDENT,
+					query, err1 := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+					if err1 != nil {
+						t.Fatal(err1)
 					}
+					query.Status = qf.Enrollment_STUDENT
 					err = db.UpdateEnrollment(query)
 				}
 				if err != nil {
@@ -240,11 +240,11 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		}
 		err := errors.New("enrollment status not implemented")
 		if enrollments[i] == qf.Enrollment_STUDENT {
-			query := &qf.Enrollment{
-				UserID:   users[i].ID,
-				CourseID: course.ID,
-				Status:   qf.Enrollment_STUDENT,
+			query, err1 := db.GetEnrollmentByCourseAndUser(course.ID, users[i].ID)
+			if err1 != nil {
+				t.Fatal(err1)
 			}
+			query.Status = qf.Enrollment_STUDENT
 			err = db.UpdateEnrollment(query)
 		}
 		if err != nil {
@@ -300,11 +300,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		}
 		err := errors.New("enrollment status not implemented")
 		if enrollments[i] == qf.Enrollment_STUDENT {
-			query := &qf.Enrollment{
-				UserID:   users[i].ID,
-				CourseID: course.ID,
-				Status:   qf.Enrollment_STUDENT,
+			query, err1 := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+			if err1 != nil {
+				t.Fatal(err)
 			}
+			query.Status = qf.Enrollment_STUDENT
 			err = db.UpdateEnrollment(query)
 		}
 		if err != nil {
