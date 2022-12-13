@@ -26,16 +26,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, &course)
 
 	ctx := context.Background()
 	// current user must be in the group being created
@@ -67,16 +58,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 		t.Fatal(err)
 	}
 	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, &course)
 
 	users := []*qf.User{{ID: user.ID}}
 
@@ -115,28 +97,10 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollTeacher(t, db, teacher, &course)
 
 	user := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, &course)
 
 	users := []*qf.User{{ID: user.ID}}
 	ctx := context.Background()
@@ -183,28 +147,10 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	}
 
 	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollTeacher(t, db, teacher, &course)
 
 	user := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, &course)
 
 	// current user must be in the group being created
 	group_req := qtest.RequestWithCookie(&qf.Group{
@@ -233,50 +179,16 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 
 	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollTeacher(t, db, teacher, &course)
 
 	user1 := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user1.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, &course)
+
 	user2 := qtest.CreateFakeUser(t, db, 4)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user2.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user2, &course)
+
 	user3 := qtest.CreateFakeUser(t, db, 5)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user3.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user3.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user3, &course)
 
 	// set user1 in cookie, which is a group member
 	// group with two students
@@ -492,16 +404,7 @@ func TestGetGroup(t *testing.T) {
 
 	// create user and enroll as student
 	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, &testCourse)
 
 	ctx := context.Background()
 
@@ -546,16 +449,8 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollTeacher(t, db, teacher, &course)
+
 	if err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true}); err != nil {
 		t.Fatal(err)
 	}
@@ -566,30 +461,8 @@ func TestPatchGroupStatus(t *testing.T) {
 	user2 := qtest.CreateFakeUser(t, db, 4)
 
 	// enroll users in course and group
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user1.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user2.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, &course)
+	qtest.EnrollStudent(t, db, user2, &course)
 
 	group := &qf.Group{
 		ID:       1,
@@ -646,33 +519,10 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	user2 := qtest.CreateFakeUser(t, db, 3)
 
 	// enroll users in course and group
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user1.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user2.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, &course)
+	qtest.EnrollStudent(t, db, user2, &course)
 
 	group := &qf.Group{
-		ID:       1,
 		CourseID: course.ID,
 		Users:    []*qf.User{user1, user2},
 	}
@@ -708,46 +558,14 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := qtest.MockCourses[0]
-	err := db.CreateCourse(admin.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	user1 := qtest.CreateFakeUser(t, db, 2)
 	user2 := qtest.CreateFakeUser(t, db, 3)
 
 	// enroll users in course and group
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user1.ID, CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user2.ID, CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   admin.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, course)
+	qtest.EnrollStudent(t, db, user2, course)
 
 	group := &qf.Group{
 		ID:       1,
@@ -832,18 +650,7 @@ func TestGetGroups(t *testing.T) {
 
 	// enroll all users in course
 	for _, user := range users[1:] {
-		if err := db.CreateEnrollment(&qf.Enrollment{
-			UserID: user.ID, CourseID: course.ID,
-		}); err != nil {
-			t.Fatal(err)
-		}
-		if err := db.UpdateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: course.ID,
-			Status:   qf.Enrollment_STUDENT,
-		}); err != nil {
-			t.Fatal(err)
-		}
+		qtest.EnrollStudent(t, db, user, course)
 	}
 	// place some students in groups
 	// current user must be in the group being created

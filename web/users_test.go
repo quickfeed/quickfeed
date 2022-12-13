@@ -85,38 +85,14 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			// skip enrolling admin as student
 			continue
 		}
-		if err := db.CreateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: qtest.MockCourses[0].ID,
-		}); err != nil {
-			t.Fatal(err)
-		}
-		if err := db.UpdateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: qtest.MockCourses[0].ID,
-			Status:   qf.Enrollment_STUDENT,
-		}); err != nil {
-			t.Fatal(err)
-		}
+		qtest.EnrollStudent(t, db, user, qtest.MockCourses[0])
 	}
 
 	// users to enroll in course DAT320 Operating Systems
 	// (excluding admin because admin is enrolled on creation)
 	osUsers := users[3:7]
 	for _, user := range osUsers {
-		if err := db.CreateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: qtest.MockCourses[1].ID,
-		}); err != nil {
-			t.Fatal(err)
-		}
-		if err := db.UpdateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: qtest.MockCourses[1].ID,
-			Status:   qf.Enrollment_STUDENT,
-		}); err != nil {
-			t.Fatal(err)
-		}
+		qtest.EnrollStudent(t, db, user, qtest.MockCourses[1])
 	}
 
 	request := &connect.Request[qf.EnrollmentRequest]{
