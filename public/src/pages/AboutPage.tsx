@@ -155,7 +155,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c2r3" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/assets/img/intro4.png"
+                                src="/assets/img/intro-2.png"
                                 alt="Generic placeholder image" />
                         </div>
                     </div>
@@ -168,7 +168,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c1r4" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/assets/img/intro2.png"
+                                src="/assets/img/intro-4.png"
                                 alt="Generic placeholder image" />
                         </div>
                         <div key="c2r4" className="col-md-7">
