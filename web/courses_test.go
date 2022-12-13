@@ -272,20 +272,17 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[2].ID,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
+	query.Status = qf.Enrollment_STUDENT
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
@@ -343,10 +340,11 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[2].ID,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -354,11 +352,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
+	query.Status = qf.Enrollment_STUDENT
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}

@@ -141,11 +141,8 @@ func TestLastActivityDate(t *testing.T) {
 			t.Errorf("expected last activity date: %s, got %s", date, enrol.LastActivityDate)
 		}
 		// Remove updated date.
-		if err := db.UpdateEnrollment(&qf.Enrollment{
-			UserID:           admin.ID,
-			CourseID:         course.ID,
-			LastActivityDate: "none",
-		}); err != nil {
+		enrol.LastActivityDate = "none"
+		if err := db.UpdateEnrollment(enrol); err != nil {
 			t.Fatal(err)
 		}
 	}

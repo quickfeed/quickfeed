@@ -37,20 +37,7 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 
 	// create user and enroll as student
 	user := qtest.CreateFakeUser(t, db, 11)
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, course)
 	return user, course, assignment
 }
 
@@ -300,20 +287,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	user := qtest.CreateFakeUser(t, db, 11)
 
 	// enroll student in course c1
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: c1.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: c1.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, c1)
 
 	// Create some assignments
 	assignment1 := qf.Assignment{
