@@ -79,11 +79,11 @@ func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.
 
 func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
+	query := &qf.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
 	}
-	query, err := db.GetEnrollmentByCourseAndUser(course.ID, student.ID)
-	if err != nil {
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_STUDENT
@@ -94,11 +94,11 @@ func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course 
 
 func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
+	query := &qf.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
 	}
-	query, err := db.GetEnrollmentByCourseAndUser(course.ID, student.ID)
-	if err != nil {
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_TEACHER
