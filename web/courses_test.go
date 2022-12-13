@@ -415,56 +415,16 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
+	teacher := qtest.CreateNamedUser(t, db, 1, "teacher")
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
 	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
 	ta := qtest.CreateNamedUser(t, db, 13, "TA")
 
 	course := qtest.MockCourses[0]
-	err := db.CreateCourse(teacher.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   ta.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-	query.UserID = student1.ID
-	query.Status = qf.Enrollment_STUDENT
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-	query.UserID = student2.ID
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-	query.UserID = ta.ID
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, teacher, course)
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, ta, course)
 
 	student1Enrollment := &qf.Enrollment{
 		UserID:   student1.ID,
@@ -547,8 +507,6 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	if _, err := db.GetEnrollmentByCourseAndUser(course.ID, student2.ID); err == nil {
 		t.Error("expected error 'record not found'")
 	}
-
-	// justice is served
 
 	// course creator attempts to demote himself, must fail as well
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
