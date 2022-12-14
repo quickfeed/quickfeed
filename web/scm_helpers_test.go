@@ -24,8 +24,8 @@ func TestInitSCMs(t *testing.T) {
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
-		Name:             "Test course",
-		OrganizationName: scm.GetTestOrganization(t),
+		Name:                "Test course",
+		ScmOrganizationName: scm.GetTestOrganization(t),
 	}
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Error(err)
@@ -33,7 +33,7 @@ func TestInitSCMs(t *testing.T) {
 	if err := q.InitSCMs(ctx); err != nil {
 		t.Error(err)
 	}
-	if _, ok := mgr.GetSCM(course.OrganizationName); !ok {
-		t.Errorf("Missing scm client for organization %s", course.OrganizationName)
+	if _, ok := mgr.GetSCM(course.ScmOrganizationName); !ok {
+		t.Errorf("Missing scm client for organization %s", course.ScmOrganizationName)
 	}
 }

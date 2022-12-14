@@ -21,8 +21,8 @@ func TestNewGroup(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
-	course.OrganizationName = "test"
+	course.ScmOrganizationID = 1
+	course.ScmOrganizationName = "test"
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
+	course.ScmOrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
+	course.ScmOrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
+	course.ScmOrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -228,7 +228,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{OrganizationID: 1, OrganizationName: qtest.MockOrg}
+	course := qf.Course{ScmOrganizationID: 1, ScmOrganizationName: qtest.MockOrg}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -334,7 +334,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup = gotGroup
 	wantGroup.Msg.Name = updateGroupRequest.Msg.Name
 	wantGroup.Msg.Users = grpUsers
-	wantGroup.Msg.TeamID = 1
+	wantGroup.Msg.ScmTeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
 	// Ignore enrollments in check
@@ -374,7 +374,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 	wantGroup.Msg = updateGroupRequest.Msg
 	wantGroup.Msg.Users = grpUsers
-	wantGroup.Msg.TeamID = 1
+	wantGroup.Msg.ScmTeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
 	gotUpdatedGroup.Msg.Enrollments = nil
@@ -392,13 +392,13 @@ func TestDeleteGroup(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	testCourse := qf.Course{
-		Name:             "Distributed Systems",
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		OrganizationID:   1,
-		OrganizationName: "test",
-		ID:               1,
+		Name:                "Distributed Systems",
+		Code:                "DAT520",
+		Year:                2018,
+		Tag:                 "Spring",
+		ScmOrganizationID:   1,
+		ScmOrganizationName: "test",
+		ID:                  1,
 	}
 	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 
@@ -495,11 +495,11 @@ func TestGetGroup(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	testCourse := qf.Course{
-		Name:           "Distributed Systems",
-		Code:           "DAT520",
-		Year:           2018,
-		Tag:            "Spring",
-		OrganizationID: 1,
+		Name:              "Distributed Systems",
+		Code:              "DAT520",
+		Year:              2018,
+		Tag:               "Spring",
+		ScmOrganizationID: 1,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
@@ -546,13 +546,13 @@ func TestPatchGroupStatus(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	course := qf.Course{
-		Name:             "Distributed Systems",
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		OrganizationID:   1,
-		OrganizationName: qtest.MockOrg,
-		ID:               1,
+		Name:                "Distributed Systems",
+		Code:                "DAT520",
+		Year:                2018,
+		Tag:                 "Spring",
+		ScmOrganizationID:   1,
+		ScmOrganizationName: qtest.MockOrg,
+		ID:                  1,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -608,11 +608,11 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	group := &qf.Group{
-		ID:       1,
-		Name:     "Test Group",
-		CourseID: course.ID,
-		Users:    []*qf.User{user1, user2},
-		TeamID:   1,
+		ID:        1,
+		Name:      "Test Group",
+		CourseID:  course.ID,
+		Users:     []*qf.User{user1, user2},
+		ScmTeamID: 1,
 	}
 	err = db.CreateGroup(group)
 	if err != nil {
@@ -642,12 +642,12 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	course := qf.Course{
-		Name:           "Distributed Systems",
-		Code:           "DAT520",
-		Year:           2018,
-		Tag:            "Spring",
-		OrganizationID: 1,
-		ID:             1,
+		Name:              "Distributed Systems",
+		Code:              "DAT520",
+		Year:              2018,
+		Tag:               "Spring",
+		ScmOrganizationID: 1,
+		ID:                1,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)

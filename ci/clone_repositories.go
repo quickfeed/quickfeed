@@ -22,7 +22,7 @@ func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf
 	if !testsExists {
 		// Clone the tests repository
 		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   qf.TestsRepo,
 			DestDir:      course.CloneDir(),
 		})
@@ -33,7 +33,7 @@ func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf
 	if !assignmentsExists {
 		// Clone the assignments repository
 		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   qf.AssignmentsRepo,
 			DestDir:      course.CloneDir(),
 		})

@@ -38,41 +38,41 @@ func TestGetRepositories(t *testing.T) {
 
 	// create repositories for users and group
 	teacherRepo := &qf.Repository{
-		OrganizationID: course.OrganizationID,
-		RepositoryID:   1,
-		UserID:         teacher.ID,
-		HTMLURL:        "teacher.repo",
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: course.ScmOrganizationID,
+		ScmRepositoryID:   1,
+		UserID:            teacher.ID,
+		HTMLURL:           "teacher.repo",
+		RepoType:          qf.Repository_USER,
 	}
 	if err := db.CreateRepository(teacherRepo); err != nil {
 		t.Fatal(err)
 	}
 	studentRepo := &qf.Repository{
-		OrganizationID: course.OrganizationID,
-		RepositoryID:   2,
-		UserID:         student.ID,
-		HTMLURL:        "student.repo",
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: course.ScmOrganizationID,
+		ScmRepositoryID:   2,
+		UserID:            student.ID,
+		HTMLURL:           "student.repo",
+		RepoType:          qf.Repository_USER,
 	}
 	if err := db.CreateRepository(studentRepo); err != nil {
 		t.Fatal(err)
 	}
 	groupStudentRepo := &qf.Repository{
-		OrganizationID: course.OrganizationID,
-		RepositoryID:   3,
-		UserID:         groupStudent.ID,
-		HTMLURL:        "group.student.repo",
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: course.ScmOrganizationID,
+		ScmRepositoryID:   3,
+		UserID:            groupStudent.ID,
+		HTMLURL:           "group.student.repo",
+		RepoType:          qf.Repository_USER,
 	}
 	if err := db.CreateRepository(groupStudentRepo); err != nil {
 		t.Fatal(err)
 	}
 	groupRepo := &qf.Repository{
-		OrganizationID: course.OrganizationID,
-		RepositoryID:   4,
-		GroupID:        1,
-		HTMLURL:        "group.repo",
-		RepoType:       qf.Repository_GROUP,
+		ScmOrganizationID: course.ScmOrganizationID,
+		ScmRepositoryID:   4,
+		GroupID:           1,
+		HTMLURL:           "group.repo",
+		RepoType:          qf.Repository_GROUP,
 	}
 	if err := db.CreateRepository(groupRepo); err != nil {
 		t.Fatal(err)
@@ -80,28 +80,28 @@ func TestGetRepositories(t *testing.T) {
 
 	// create course repositories
 	info := &qf.Repository{
-		RepositoryID:   5,
-		OrganizationID: course.OrganizationID,
-		HTMLURL:        "course.info",
-		RepoType:       qf.Repository_INFO,
+		ScmRepositoryID:   5,
+		ScmOrganizationID: course.ScmOrganizationID,
+		HTMLURL:           "course.info",
+		RepoType:          qf.Repository_INFO,
 	}
 	if err := db.CreateRepository(info); err != nil {
 		t.Fatal(err)
 	}
 	assignments := &qf.Repository{
-		RepositoryID:   6,
-		OrganizationID: course.OrganizationID,
-		HTMLURL:        "course.assignments",
-		RepoType:       qf.Repository_ASSIGNMENTS,
+		ScmRepositoryID:   6,
+		ScmOrganizationID: course.ScmOrganizationID,
+		HTMLURL:           "course.assignments",
+		RepoType:          qf.Repository_ASSIGNMENTS,
 	}
 	if err := db.CreateRepository(assignments); err != nil {
 		t.Fatal(err)
 	}
 	testRepo := &qf.Repository{
-		RepositoryID:   7,
-		OrganizationID: course.OrganizationID,
-		HTMLURL:        "course.tests",
-		RepoType:       qf.Repository_TESTS,
+		ScmRepositoryID:   7,
+		ScmOrganizationID: course.ScmOrganizationID,
+		HTMLURL:           "course.tests",
+		RepoType:          qf.Repository_TESTS,
 	}
 	if err := db.CreateRepository(testRepo); err != nil {
 		t.Fatal(err)

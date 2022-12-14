@@ -18,11 +18,11 @@ func TestGormDBCreateCourse(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:           "name",
-		Code:           "code",
-		Year:           2017,
-		Tag:            "tag",
-		OrganizationID: 1,
+		Name:              "name",
+		Code:              "code",
+		Year:              2017,
+		Tag:               "tag",
+		ScmOrganizationID: 1,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -75,10 +75,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	c1 := &qf.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
-	c2 := &qf.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
-	c3 := &qf.Course{OrganizationID: 3, Code: "DAT101", Year: 3}
-	c4 := &qf.Course{OrganizationID: 4, Code: "DAT101", Year: 4}
+	c1 := &qf.Course{ScmOrganizationID: 1, Code: "DAT101", Year: 1}
+	c2 := &qf.Course{ScmOrganizationID: 2, Code: "DAT101", Year: 2}
+	c3 := &qf.Course{ScmOrganizationID: 3, Code: "DAT101", Year: 3}
+	c4 := &qf.Course{ScmOrganizationID: 4, Code: "DAT101", Year: 4}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 	qtest.CreateCourse(t, db, admin, c3)
@@ -121,10 +121,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*qf.Course{
-		{ID: c1.ID, OrganizationID: 1, Code: "DAT101", Year: 1, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, Code: "DAT101", Year: 2, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, Code: "DAT101", Year: 3, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, Code: "DAT101", Year: 4, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
+		{ID: c1.ID, ScmOrganizationID: 1, Code: "DAT101", Year: 1, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_PENDING},
+		{ID: c2.ID, ScmOrganizationID: 2, Code: "DAT101", Year: 2, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
+		{ID: c3.ID, ScmOrganizationID: 3, Code: "DAT101", Year: 3, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_STUDENT},
+		{ID: c4.ID, ScmOrganizationID: 4, Code: "DAT101", Year: 4, CourseCreatorID: admin.ID, Enrolled: qf.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCoursesByUser() mismatch (-wantCourses, +gotCourses):\n%s", diff)
@@ -150,9 +150,9 @@ func TestGormDBGetCourses(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &qf.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
-	c2 := &qf.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
-	c3 := &qf.Course{OrganizationID: 3, Code: "DAT101", Year: 3}
+	c1 := &qf.Course{ScmOrganizationID: 1, Code: "DAT101", Year: 1}
+	c2 := &qf.Course{ScmOrganizationID: 2, Code: "DAT101", Year: 2}
+	c3 := &qf.Course{ScmOrganizationID: 3, Code: "DAT101", Year: 3}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 	qtest.CreateCourse(t, db, admin, c3)
@@ -197,11 +197,11 @@ func TestGormDBGetCourses(t *testing.T) {
 
 func TestGormDBGetCourse(t *testing.T) {
 	wantCourse := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 1234,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 1234,
 	}
 
 	db, cleanup := qtest.TestDB(t)
@@ -232,20 +232,20 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 
 func TestGormDBUpdateCourse(t *testing.T) {
 	course := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Dockerfile:     "Dockerfile1",
-		OrganizationID: 1234,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		Dockerfile:        "Dockerfile1",
+		ScmOrganizationID: 1234,
 	}
 	wantCourse := &qf.Course{
-		Name:           "Test Course Edit",
-		Code:           "DAT100-1",
-		Year:           2018,
-		Tag:            "Autumn",
-		Dockerfile:     "Another Dockerfile1",
-		OrganizationID: 12345,
+		Name:              "Test Course Edit",
+		Code:              "DAT100-1",
+		Year:              2018,
+		Tag:               "Autumn",
+		Dockerfile:        "Another Dockerfile1",
+		ScmOrganizationID: 12345,
 	}
 
 	db, cleanup := qtest.TestDB(t)
@@ -273,11 +273,11 @@ func TestGormDBUpdateCourse(t *testing.T) {
 
 func TestGormDBGetCourseByOrganization(t *testing.T) {
 	wantCourse := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 1234,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 1234,
 	}
 
 	db, cleanup := qtest.TestDB(t)
@@ -287,7 +287,7 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
-	gotCourse, err := db.GetCourseByOrganizationID(wantCourse.OrganizationID)
+	gotCourse, err := db.GetCourseByOrganizationID(wantCourse.ScmOrganizationID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,18 +302,18 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	wantCourse := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 1235,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 1235,
 	}
 	course := &qf.Course{
-		Name:           "Test Course 2",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 1234,
+		Name:              "Test Course 2",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 1234,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -327,7 +327,7 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 	}
 
 	// CreateCourse should fail because OrganizationID is not unique
-	if err := db.CreateCourse(admin.ID, &qf.Course{OrganizationID: wantCourse.OrganizationID}); err != nil && !errors.Is(err, database.ErrCourseExists) {
+	if err := db.CreateCourse(admin.ID, &qf.Course{ScmOrganizationID: wantCourse.ScmOrganizationID}); err != nil && !errors.Is(err, database.ErrCourseExists) {
 		t.Fatal(err)
 	}
 

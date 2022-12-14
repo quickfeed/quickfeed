@@ -64,9 +64,9 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 
 	runData := &ci.RunData{
 		Course: &qf.Course{
-			Code:             cli.Clone.Course[:len(cli.Clone.Course)-5], // assume course has four digit year (-YYYY)
-			OrganizationName: cli.Clone.Course,
-			Dockerfile:       dockerfileContent,
+			Code:                cli.Clone.Course[:len(cli.Clone.Course)-5], // assume course has four digit year (-YYYY)
+			ScmOrganizationName: cli.Clone.Course,
+			Dockerfile:          dockerfileContent,
 		},
 		Assignment: &qf.Assignment{
 			Name:             cli.Clone.Lab,

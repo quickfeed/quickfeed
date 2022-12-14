@@ -82,9 +82,9 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 
 // CreateCourse creates a new course.
 func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
+	scmClient, err := s.getSCM(ctx, in.Msg.ScmOrganizationName)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
+		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.ScmOrganizationName, err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	// make sure that the current user is set as course creator
@@ -109,9 +109,9 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 
 // UpdateCourse changes the course information details.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
+	scmClient, err := s.getSCM(ctx, in.Msg.ScmOrganizationName)
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
+		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.ScmOrganizationName, err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
@@ -511,15 +511,15 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	scmClient, err := s.getSCM(ctx, course.GetOrganizationName())
+	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetOrganizationName(), err)
+		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetScmOrganizationName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	assignments.UpdateFromTestsRepo(s.logger, s.db, scmClient, course)
 
 	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationName(),
+		Organization: course.GetScmOrganizationName(),
 		Repository:   qf.AssignmentsRepo,
 		DestDir:      course.CloneDir(),
 	})
@@ -539,12 +539,12 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		s.logger.Errorf("GetOrganization(userID=%d) failed: %v", userID(ctx), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
-	scmClient, err := s.getSCM(ctx, in.Msg.GetOrgName())
+	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
+		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetOrgName(), Username: usr.GetLogin(), NewCourse: true})
+	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetScmOrganizationName(), Username: usr.GetLogin(), NewCourse: true})
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {

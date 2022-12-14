@@ -13,7 +13,7 @@ func (course *Course) HasUpdatedDockerfile(dockerfile string) bool {
 }
 
 func (course *Course) CloneDir() string {
-	return filepath.Join(env.RepositoryPath(), course.GetOrganizationName())
+	return filepath.Join(env.RepositoryPath(), course.GetScmOrganizationName())
 }
 
 func (course *Course) TeacherEnrollments() []*Enrollment {

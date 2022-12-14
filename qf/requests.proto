@@ -28,7 +28,7 @@ message GroupRequest {
 }
 
 message OrgRequest {
-    string orgName = 1;
+    string ScmOrganizationName = 1;
 }
 
 message Organization {
@@ -86,7 +86,7 @@ message RepositoryRequest {
 }
 
 message Repositories {
-    map<uint32, string> URLs = 1; // Map key is the Repository.Type
+    map<uint32, string> URLs = 1;  // Map key is the Repository.Type
 }
 
 message Status {

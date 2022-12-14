@@ -11,8 +11,8 @@ import (
 
 func (s *QuickFeedService) getRepo(course *qf.Course, id uint64, repoType qf.Repository_Type) (*qf.Repository, error) {
 	query := &qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       repoType,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		RepoType:          repoType,
 	}
 	switch repoType {
 	case qf.Repository_USER:
@@ -38,9 +38,9 @@ func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request 
 		return err
 	}
 	repos, err := s.db.GetRepositories(&qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		UserID:         request.GetUserID(),
-		GroupID:        request.GetGroupID(),
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		UserID:            request.GetUserID(),
+		GroupID:           request.GetGroupID(),
 	})
 	if err != nil {
 		return err

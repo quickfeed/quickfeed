@@ -40,7 +40,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 	defer cancel()
 
 	clonedTestsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationName(),
+		Organization: course.GetScmOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      course.CloneDir(),
 	})

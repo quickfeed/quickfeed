@@ -28,7 +28,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		return
 	}
 
-	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
+	course, err := wh.db.GetCourseByOrganizationID(repo.ScmOrganizationID)
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
@@ -40,7 +40,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 
 	ctx := context.Background()
-	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
+	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetScmOrganizationName())
 	if err != nil {
 		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
 		return
@@ -55,7 +55,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
 		clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   qf.AssignmentsRepo,
 			DestDir:      course.CloneDir(),
 		})

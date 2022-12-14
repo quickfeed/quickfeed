@@ -76,9 +76,9 @@ func TestRefreshTokens(t *testing.T) {
 		t.Error("User should not be in the token update list after the token has been updated")
 	}
 	course := &qf.Course{
-		ID:               1,
-		OrganizationID:   1,
-		OrganizationName: qtest.MockOrg,
+		ID:                  1,
+		ScmOrganizationID:   1,
+		ScmOrganizationName: qtest.MockOrg,
 	}
 	group := &qf.Group{
 		ID:       1,

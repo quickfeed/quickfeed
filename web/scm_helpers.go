@@ -21,7 +21,7 @@ func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
 		return err
 	}
 	for _, course := range courses {
-		_, err := q.getSCM(ctx, course.GetOrganizationName())
+		_, err := q.getSCM(ctx, course.GetScmOrganizationName())
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	if err != nil {
 		return nil, err
 	}
-	return q.getSCM(ctx, course.OrganizationName)
+	return q.getSCM(ctx, course.ScmOrganizationName)
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -50,7 +50,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
 	opt := &scm.TeamOptions{
-		Organization: course.OrganizationName,
+		Organization: course.ScmOrganizationName,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
 	}
@@ -59,18 +59,18 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 		return nil, nil, err
 	}
 	groupRepo := &qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepositoryID:   repo.ID,
-		GroupID:        group.GetID(),
-		HTMLURL:        repo.HTMLURL,
-		RepoType:       qf.Repository_GROUP,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		ScmRepositoryID:   repo.ID,
+		GroupID:           group.GetID(),
+		HTMLURL:           repo.HTMLURL,
+		RepoType:          qf.Repository_GROUP,
 	}
 	return groupRepo, team, nil
 }
 
 func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uint64) error {
 	opt := &scm.UpdateTeamOptions{
-		TeamID:         group.TeamID,
+		TeamID:         group.ScmTeamID,
 		OrganizationID: orgID,
 		Users:          group.UserNames(),
 	}
@@ -80,7 +80,7 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uin
 // isEmpty ensured that all of the provided repositories are empty
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
-		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
+		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetScmRepositoryID()}) {
 			return fmt.Errorf("repository %s is not empty", r.Name())
 		}
 	}

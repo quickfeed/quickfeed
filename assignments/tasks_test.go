@@ -22,8 +22,8 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:             "QuickFeed Test Course",
-		OrganizationName: qfTestOrg,
+		Name:                "QuickFeed Test Course",
+		ScmOrganizationName: qfTestOrg,
 	}
 	if err := PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
 		t.Fatal(err)
@@ -38,7 +38,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	repos, err := s.GetRepositories(ctx, &qf.Organization{Name: course.OrganizationName})
+	repos, err := s.GetRepositories(ctx, &qf.Organization{Name: course.ScmOrganizationName})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Delete all issues on student repositories
 	repoFn(repos, func(repo *scm.Repository) {
 		if err := s.DeleteIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.OrganizationName,
+			Owner: course.ScmOrganizationName,
 			Path:  repo.Path,
 		}); err != nil {
 			t.Fatal(err)
@@ -64,7 +64,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := s.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.OrganizationName,
+			Owner: course.ScmOrganizationName,
 			Path:  repo.Path,
 		})
 		if err != nil {
@@ -92,7 +92,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := s.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.OrganizationName,
+			Owner: course.ScmOrganizationName,
 			Path:  repo.Path,
 		})
 		if err != nil {
@@ -126,11 +126,11 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	t.Helper()
 
 	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{Name: course.OrganizationName})
+	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{Name: course.ScmOrganizationName})
 	if err != nil {
 		return err
 	}
-	course.OrganizationID = org.GetID()
+	course.ScmOrganizationID = org.GetID()
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
@@ -143,10 +143,10 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	nxtRemoteID := uint64(2)
 	for _, repo := range repos {
 		dbRepo := &qf.Repository{
-			RepositoryID:   repo.ID,
-			OrganizationID: org.GetID(),
-			HTMLURL:        repo.HTMLURL,
-			RepoType:       qf.RepoType(repo.Path),
+			ScmRepositoryID:   repo.ID,
+			ScmOrganizationID: org.GetID(),
+			HTMLURL:           repo.HTMLURL,
+			RepoType:          qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {
 			user := qtest.CreateFakeUser(t, db, nxtRemoteID)

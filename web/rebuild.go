@@ -48,7 +48,7 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	sc, err := s.getSCM(ctx, course.OrganizationName)
+	sc, err := s.getSCM(ctx, course.ScmOrganizationName)
 	if err != nil {
 		return nil, err
 	}

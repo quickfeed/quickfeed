@@ -13,7 +13,7 @@ import (
 func TestGormDBGetEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	repos, err := db.GetRepositories(&qf.Repository{RepositoryID: 10})
+	repos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,15 +28,15 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 
 	user := qtest.CreateFakeUser(t, db, 10)
 	repo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		UserID:            user.ID,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := db.GetRepositories(&qf.Repository{RepositoryID: repo.RepositoryID}); err != nil {
+	if _, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.ScmRepositoryID}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -46,9 +46,9 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 	defer cleanup()
 
 	repo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         20,
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		UserID:            20,
 	}
 	if err := db.CreateRepository(&repo); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
@@ -60,15 +60,15 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 	defer cleanup()
 
 	repo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		RepoType:       qf.Repository_INFO,
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		RepoType:          qf.Repository_INFO,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
 
-	gotRepos, err := db.GetRepositories(&qf.Repository{RepositoryID: repo.RepositoryID})
+	gotRepos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.ScmRepositoryID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,17 +82,17 @@ func TestGormDeleteRepo(t *testing.T) {
 	defer cleanup()
 
 	repo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		RepoType:       qf.Repository_INFO,
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		RepoType:          qf.Repository_INFO,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.DeleteRepository(repo.RepositoryID); err != nil {
+	if err := db.DeleteRepository(repo.ScmRepositoryID); err != nil {
 		t.Fatal(err)
 	}
-	gotRepos, err := db.GetRepositories(&qf.Repository{RepositoryID: repo.RepositoryID})
+	gotRepos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.ScmRepositoryID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,11 +106,11 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 1234,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 1234,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
@@ -119,11 +119,11 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_INFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_INFO,
+		HTMLURL:           "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -131,11 +131,11 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   102,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_ASSIGNMENTS,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -143,7 +143,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 
 	wantRepo := []*qf.Repository{&repoCourseInfo, &repoAssignment}
 
-	gotRepo, err := db.GetRepositories(&qf.Repository{OrganizationID: 120})
+	gotRepo, err := db.GetRepositories(&qf.Repository{ScmOrganizationID: 120})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,12 +158,12 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		ID:             1234,
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 120,
+		ID:                1234,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 120,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -174,11 +174,11 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_INFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_INFO,
+		HTMLURL:           "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -186,11 +186,11 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   102,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_ASSIGNMENTS,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -198,11 +198,11 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 
 	// Creating UserRepo for user
 	repoUser := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   103,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   103,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_USER,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUser); err != nil {
 		t.Fatal(err)
@@ -210,11 +210,11 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 
 	// Creating UserRepo for userTwo
 	repoUserTwo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   104,
-		UserID:         userTwo.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   104,
+		UserID:            userTwo.ID,
+		RepoType:          qf.Repository_USER,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUserTwo); err != nil {
 		t.Fatal(err)
@@ -223,9 +223,9 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	wantRepo := []*qf.Repository{&repoUserTwo}
 
 	repoQuery := &qf.Repository{
-		OrganizationID: course.OrganizationID,
-		UserID:         userTwo.ID,
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: course.ScmOrganizationID,
+		UserID:            userTwo.ID,
+		RepoType:          qf.Repository_USER,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
@@ -242,11 +242,11 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 120,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 120,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -257,11 +257,11 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_INFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   100,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_INFO,
+		HTMLURL:           "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -269,11 +269,11 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   102,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_ASSIGNMENTS,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -281,11 +281,11 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating UserRepo for user
 	repoUser := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   103,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   103,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_USER,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUser); err != nil {
 		t.Fatal(err)
@@ -293,11 +293,11 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating UserRepo for userTwo
 	repoUserTwo := qf.Repository{
-		OrganizationID: 120,
-		RepositoryID:   104,
-		UserID:         userTwo.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 120,
+		ScmRepositoryID:   104,
+		UserID:            userTwo.ID,
+		RepoType:          qf.Repository_USER,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUserTwo); err != nil {
 		t.Fatal(err)
@@ -306,9 +306,9 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	wantRepo := []*qf.Repository{&repoUserTwo}
 
 	repoQuery := &qf.Repository{
-		OrganizationID: course.OrganizationID,
-		UserID:         userTwo.ID,
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: course.ScmOrganizationID,
+		UserID:            userTwo.ID,
+		RepoType:          qf.Repository_USER,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
@@ -325,11 +325,11 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		OrganizationID: 1234,
+		Name:              "Test Course",
+		Code:              "DAT100",
+		Year:              2017,
+		Tag:               "Spring",
+		ScmOrganizationID: 1234,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -339,11 +339,11 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
-		OrganizationID: 1234,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_INFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
+		ScmOrganizationID: 1234,
+		ScmRepositoryID:   100,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_INFO,
+		HTMLURL:           "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -351,11 +351,11 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := qf.Repository{
-		OrganizationID: 1234,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
+		ScmOrganizationID: 1234,
+		ScmRepositoryID:   102,
+		UserID:            user.ID,
+		RepoType:          qf.Repository_ASSIGNMENTS,
+		HTMLURL:           "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -364,8 +364,8 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	wantRepo := []*qf.Repository{&repoCourseInfo}
 
 	repoQuery := &qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       qf.Repository_INFO,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		RepoType:          qf.Repository_INFO,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {

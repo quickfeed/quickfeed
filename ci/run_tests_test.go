@@ -45,10 +45,10 @@ func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	courseID := uint64(1)
 	runData := &ci.RunData{
 		Course: &qf.Course{
-			ID:               courseID,
-			Code:             "QF101",
-			OrganizationName: qfTestOrg,
-			Dockerfile:       dockerfileContent,
+			ID:                  courseID,
+			Code:                "QF101",
+			ScmOrganizationName: qfTestOrg,
+			Dockerfile:          dockerfileContent,
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
@@ -121,10 +121,10 @@ func TestRecordResults(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:           "Test",
-		Code:           "DAT320",
-		OrganizationID: 1,
-		SlipDays:       5,
+		Name:              "Test",
+		Code:              "DAT320",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
@@ -245,9 +245,9 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{
-		Name:           "Test",
-		OrganizationID: 1,
-		SlipDays:       5,
+		Name:              "Test",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
@@ -316,10 +316,10 @@ func TestStreamRecordResults(t *testing.T) {
 	streamService := stream.NewStreamServices()
 
 	course := &qf.Course{
-		Name:           "Test",
-		Code:           "DAT320",
-		OrganizationID: 1,
-		SlipDays:       5,
+		Name:              "Test",
+		Code:              "DAT320",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
