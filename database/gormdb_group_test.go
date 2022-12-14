@@ -294,7 +294,7 @@ func TestGetGroupsByCourse(t *testing.T) {
 		// enroll users in course
 		if err := db.CreateEnrollment(&qf.Enrollment{
 			CourseID: course.ID,
-			UserID:   users[i].ID,
+			UserID:   user.ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
