@@ -201,6 +201,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatalf("expected user %v to be non-admin", user)
 	}
 	userCookie := Cookie(t, tm, user)
+	adminCookie := Cookie(t, tm, admin)
 	tests := []struct {
 		name     string
 		cookie   string
@@ -219,8 +220,7 @@ func TestUpdateUserFailures(t *testing.T) {
 				StudentID: admin.StudentID,
 				AvatarURL: admin.AvatarURL,
 			},
-			wantUser: nil,
-			wantErr:  true,
+			wantErr: true,
 		},
 		{
 			name:   "user promotes self to admin, must fail",
@@ -233,19 +233,45 @@ func TestUpdateUserFailures(t *testing.T) {
 				AvatarURL: user.AvatarURL,
 				IsAdmin:   true,
 			},
-			wantUser: nil,
-			wantErr:  true,
+			wantErr: true,
+		},
+		{
+			name:   "admin changes own name, must pass",
+			cookie: adminCookie,
+			req: &qf.User{
+				ID:   admin.ID,
+				Name: "super user",
+			},
+			wantUser: &qf.User{
+				ID:           admin.ID,
+				IsAdmin:      true,
+				Login:        admin.Login,
+				Name:         "super user",
+				RefreshToken: admin.RefreshToken,
+				ScmRemoteID:  admin.ScmRemoteID,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := client.UpdateUser(ctx, qtest.RequestWithCookie(tt.req, tt.cookie))
+			// UpdateUser returns void, so we cannot check that the user was updated
+			_, err := client.UpdateUser(ctx, qtest.RequestWithCookie(tt.req, tt.cookie))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 			}
 			if !tt.wantErr {
-				if diff := cmp.Diff(tt.wantUser, user, protocmp.Transform()); diff != "" {
-					t.Errorf("%s: mismatch users (-want +got):\n%s", tt.name, diff)
+				// Instead (for success cases), get all users and check that the user was updated
+				users, err := client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, tt.cookie))
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, u := range users.Msg.GetUsers() {
+					if u.ID == tt.wantUser.ID {
+						if diff := cmp.Diff(tt.wantUser, u, protocmp.Transform()); diff != "" {
+							t.Errorf("%s: UpdateUser() mismatch (-wantUser +gotUser):\n%s", tt.name, diff)
+						}
+					}
 				}
 			}
 		})
