@@ -186,6 +186,7 @@ testdata
 testdb
 Testersen
 testorg
+timestamppb
 tmpl
 Typeflag
 Unexported

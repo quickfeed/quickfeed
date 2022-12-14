@@ -374,7 +374,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 
 	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
 		BuildLog:  "Testing",
 		ExecTime:  33333,
 	}
@@ -427,7 +427,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	// of saving a duplicate
 	oldSubmissionID := submissions[0].ID
 	updatedBuildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T15:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T15:00:00"),
 		BuildLog:  "Updated",
 		ExecTime:  12345,
 	}
@@ -462,6 +462,52 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	submissions[0].ID = 123
 	if err := db.CreateSubmission(submissions[0]); err == nil {
 		t.Fatal("expected error: record not found")
+	}
+}
+
+func TestGormDBSubmissionWithBuildDate(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, course, assignment := setupCourseAssignment(t, db)
+
+	if err := db.CreateSubmission(&qf.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		BuildInfo: &score.BuildInfo{
+			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	want := &qf.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Status:       qf.Submission_NONE,
+		Reviews:      []*qf.Review{},
+		Scores:       []*score.Score{},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+		},
+	}
+	submission, err := db.GetSubmission(&qf.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.ID = submission.ID
+	want.BuildInfo.ID = 1
+	want.BuildInfo.SubmissionID = submission.ID
+	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+
+	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.ID = submissions[0].ID
+	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 }
 

@@ -6,53 +6,76 @@ import (
 
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestNewestSubmissionDate(t *testing.T) {
 	submission := &qf.Submission{}
 	tim := time.Now()
-	newSubmissionDate, err := submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
+	newSubmissionDate := submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
 	submission = &qf.Submission{}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{},
 	}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, qf.ErrMissingBuildInfo)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate: "string",
+			SubmissionDate: &timestamppb.Timestamp{},
 		},
 	}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSubmissionDate, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if !newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, tim)
 	}
 
-	buildDate := time.Now()
+	// Seems like the conversion from time.Time to timestamppb.Timestamp is not
+	// exact, so we need to add a second to make sure the build date is newer.
+	buildDate := time.Now().Add(1 * time.Second)
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate:      buildDate.Format(qf.TimeLayout),
-			SubmissionDate: buildDate.Format(qf.TimeLayout),
+			SubmissionDate: timestamppb.New(buildDate),
 		},
 	}
-	newSubmissionDate, err = submission.NewestSubmissionDate(tim)
-	if err != nil {
-		t.Error(err)
+	newSubmissionDate = submission.NewestSubmissionDate(tim)
+	if newSubmissionDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
 	if newSubmissionDate.Before(tim) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
+	}
+	if newSubmissionDate.After(buildDate) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
+	}
+	if !newSubmissionDate.After(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
+	}
+
+	zero := time.Time{}
+	newSubmissionDate = submission.NewestSubmissionDate(zero)
+	if newSubmissionDate.Equal(zero) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
+	}
+	if newSubmissionDate.Before(zero) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
+	}
+	if newSubmissionDate.After(buildDate) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
+	}
+	if !newSubmissionDate.After(zero) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
 	}
 }
 

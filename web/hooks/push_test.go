@@ -3,7 +3,6 @@ package hooks
 import (
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v45/github"
@@ -13,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestExtractAssignments(t *testing.T) {
@@ -110,7 +110,6 @@ func TestLastActivityDate(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
-	date := time.Now().Format("02 Jan")
 	tests := []struct {
 		name string
 		repo *qf.Repository
@@ -132,20 +131,31 @@ func TestLastActivityDate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		date := timestamppb.Now()
 		wh.updateLastActivityDate(course, tt.repo, admin.Login)
 		enrol, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if diff := cmp.Diff(enrol.LastActivityDate, date); diff != "" {
-			t.Errorf("expected last activity date: %s, got %s", date, enrol.LastActivityDate)
+		if !inOneSecondRange(date.Seconds, enrol.LastActivityDate.Seconds) {
+			t.Errorf("last activity date mismatch: %d, expected %d", enrol.LastActivityDate.Seconds, date.Seconds)
 		}
 		// Remove updated date.
-		enrol.LastActivityDate = "none"
-		if err := db.UpdateEnrollment(enrol); err != nil {
+		if err := db.UpdateEnrollment(&qf.Enrollment{
+			ID:               enrol.ID,
+			UserID:           admin.ID,
+			CourseID:         course.ID,
+			LastActivityDate: nil,
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
+}
+
+// inOneSecondRange returns true if a and b are within one second of each other.
+func inOneSecondRange(a, b int64) bool {
+	diff := a - b
+	return diff < 2 && diff > -2
 }
 
 func TestBranchName(t *testing.T) {

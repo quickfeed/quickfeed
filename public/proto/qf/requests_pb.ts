@@ -625,6 +625,8 @@ export class RepositoryRequest extends Message<RepositoryRequest> {
  */
 export class Repositories extends Message<Repositories> {
   /**
+   * Map key is the Repository.Type
+   *
    * @generated from field: map<uint32, string> URLs = 1;
    */
   URLs: { [key: number]: string } = {};

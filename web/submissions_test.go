@@ -140,13 +140,13 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	lab1 := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab 1",
-		Deadline: "2020-02-23T18:00",
+		Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		Order:    1,
 	}
 	lab2 := &qf.Assignment{
 		CourseID:   course.ID,
 		Name:       "lab 2",
-		Deadline:   "2020-02-23T18:00",
+		Deadline:   qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		Order:      2,
 		IsGroupLab: true,
 	}
@@ -302,7 +302,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c1 := &qf.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 1",
-		Deadline:          "2020-02-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		Order:             1,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
 	}
@@ -310,21 +310,21 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c1 := &qf.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 2",
-		Deadline:          "2020-03-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-03-23T18:00:00"),
 		Order:             2,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
 	}
 	lab1c2 := &qf.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 1",
-		Deadline:          "2020-04-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-04-23T18:00:00"),
 		Order:             1,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
 	}
 	lab2c2 := &qf.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 2",
-		Deadline:          "2020-05-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-05-23T18:00:00"),
 		Order:             2,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
 	}
@@ -342,13 +342,13 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	buildInfo1 := &score.BuildInfo{
-		BuildDate: "2020-02-23T18:00:00",
+		BuildDate: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		BuildLog:  "runtime error",
 		ExecTime:  3,
 	}
 
 	buildInfo2 := &score.BuildInfo{
-		BuildDate: "2020-02-23T18:00:00",
+		BuildDate: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		BuildLog:  "runtime error",
 		ExecTime:  3,
 	}
@@ -513,25 +513,25 @@ func TestCreateApproveList(t *testing.T) {
 		{
 			CourseID: course.ID,
 			Name:     "lab 1",
-			Deadline: "2020-02-23T18:00:00",
+			Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 			Order:    1,
 		},
 		{
 			CourseID: course.ID,
 			Name:     "lab 2",
-			Deadline: "2020-03-23T18:00:00",
+			Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"),
 			Order:    2,
 		},
 		{
 			CourseID: course.ID,
 			Name:     "lab 3",
-			Deadline: "2020-04-23T18:00:00",
+			Deadline: qtest.Timestamp(t, "2020-04-23T18:00:00"),
 			Order:    3,
 		},
 		{
 			CourseID: course.ID,
 			Name:     "lab 4",
-			Deadline: "2020-05-23T18:00:00",
+			Deadline: qtest.Timestamp(t, "2020-05-23T18:00:00"),
 			Order:    4,
 		},
 	}
@@ -706,14 +706,14 @@ func TestReleaseApproveAll(t *testing.T) {
 		{
 			CourseID:  course.ID,
 			Name:      "lab 1",
-			Deadline:  "2020-02-23T18:00:00",
+			Deadline:  qtest.Timestamp(t, "2020-02-23T18:00:00"),
 			Order:     1,
 			Reviewers: 1,
 		},
 		{
 			CourseID:  course.ID,
 			Name:      "lab 2",
-			Deadline:  "2020-03-23T18:00:00",
+			Deadline:  qtest.Timestamp(t, "2020-03-23T18:00:00"),
 			Order:     2,
 			Reviewers: 1,
 		},
