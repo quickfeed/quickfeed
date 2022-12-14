@@ -8,6 +8,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestCreateUpdateReview(t *testing.T) {
@@ -37,7 +38,7 @@ func TestCreateUpdateReview(t *testing.T) {
 		Feedback:     "my very good feedback",
 		Ready:        false,
 		Score:        95,
-		Edited:       "last night",
+		Edited:       &timestamppb.Timestamp{},
 		GradingBenchmarks: []*qf.GradingBenchmark{
 			{
 				ID:           1,
@@ -69,13 +70,12 @@ func TestCreateUpdateReview(t *testing.T) {
 	}
 	updateSubmission(t, db, review)
 
-	review.Edited = "today"
+	review.Edited = qtest.Timestamp(t, "2022-03-03T19:00:00")
 	review.Score = 90
 	review.Ready = true
 	updateSubmission(t, db, review)
 
-	review.Edited = "now"
-	review.Score = 50
+	review.Edited = timestamppb.Now()
 	review.Ready = false
 	updateSubmission(t, db, review)
 }

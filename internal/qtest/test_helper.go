@@ -62,7 +62,7 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 		Name:         name,
 		Login:        name,
 		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
+		RefreshToken: "refresh_token",
 	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
@@ -79,11 +79,11 @@ func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.
 
 func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
+	query := &qf.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
 	}
-	query, err := db.GetEnrollmentByCourseAndUser(course.ID, student.ID)
-	if err != nil {
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_STUDENT
@@ -94,11 +94,11 @@ func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course 
 
 func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
+	query := &qf.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
 	}
-	query, err := db.GetEnrollmentByCourseAndUser(course.ID, student.ID)
-	if err != nil {
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_TEACHER
@@ -133,12 +133,12 @@ func RandomString(t *testing.T) string {
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
-func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
+func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
 	return []*qf.Assignment{
 		{
 			CourseID:    courseID,
 			Name:        "lab1",
-			Deadline:    "12.01.2022",
+			Deadline:    Timestamp(t, "12.01.2022"),
 			AutoApprove: false,
 			Order:       1,
 			IsGroupLab:  false,
@@ -150,7 +150,7 @@ func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 		{
 			CourseID:    courseID,
 			Name:        "lab2",
-			Deadline:    "12.12.2021",
+			Deadline:    Timestamp(t, "12.12.2021"),
 			AutoApprove: false,
 			Order:       2,
 			IsGroupLab:  false,

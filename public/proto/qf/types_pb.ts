@@ -4,7 +4,7 @@
 /* @ts-nocheck */
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
-import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
+import {Message, proto3, protoInt64, Timestamp} from "@bufbuild/protobuf";
 import {BuildInfo, Score} from "../kit/score/score_pb.js";
 
 /**
@@ -613,9 +613,9 @@ export class Enrollment extends Message<Enrollment> {
   slipDaysRemaining = 0;
 
   /**
-   * @generated from field: string lastActivityDate = 11;
+   * @generated from field: google.protobuf.Timestamp lastActivityDate = 11;
    */
-  lastActivityDate = "";
+  lastActivityDate?: Timestamp;
 
   /**
    * @generated from field: uint64 totalApproved = 12;
@@ -645,7 +645,7 @@ export class Enrollment extends Message<Enrollment> {
     { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
     { no: 9, name: "state", kind: "enum", T: proto3.getEnumType(Enrollment_DisplayState) },
     { no: 10, name: "slipDaysRemaining", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 11, name: "lastActivityDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 11, name: "lastActivityDate", kind: "message", T: Timestamp },
     { no: 12, name: "totalApproved", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 13, name: "usedSlipDays", kind: "message", T: UsedSlipDays, repeated: true },
   ]);
@@ -845,64 +845,64 @@ export class Assignment extends Message<Assignment> {
   name = "";
 
   /**
-   * @generated from field: string deadline = 5;
+   * @generated from field: google.protobuf.Timestamp deadline = 4;
    */
-  deadline = "";
+  deadline?: Timestamp;
 
   /**
-   * @generated from field: bool autoApprove = 6;
+   * @generated from field: bool autoApprove = 5;
    */
   autoApprove = false;
 
   /**
-   * @generated from field: uint32 order = 7;
+   * @generated from field: uint32 order = 6;
    */
   order = 0;
 
   /**
-   * @generated from field: bool isGroupLab = 8;
+   * @generated from field: bool isGroupLab = 7;
    */
   isGroupLab = false;
 
   /**
    * minimal score limit for auto approval
    *
-   * @generated from field: uint32 scoreLimit = 9;
+   * @generated from field: uint32 scoreLimit = 8;
    */
   scoreLimit = 0;
 
   /**
    * number of reviewers that will review submissions for this assignment
    *
-   * @generated from field: uint32 reviewers = 10;
+   * @generated from field: uint32 reviewers = 9;
    */
   reviewers = 0;
 
   /**
    * container timeout for this assignment
    *
-   * @generated from field: uint32 containerTimeout = 11;
+   * @generated from field: uint32 containerTimeout = 10;
    */
   containerTimeout = 0;
 
   /**
    * submissions produced for this assignment
    *
-   * @generated from field: repeated qf.Submission submissions = 12;
+   * @generated from field: repeated qf.Submission submissions = 11;
    */
   submissions: Submission[] = [];
 
   /**
    * tasks associated with this assignment
    *
-   * @generated from field: repeated qf.Task tasks = 13;
+   * @generated from field: repeated qf.Task tasks = 12;
    */
   tasks: Task[] = [];
 
   /**
    * grading benchmarks for this assignment
    *
-   * @generated from field: repeated qf.GradingBenchmark gradingBenchmarks = 14;
+   * @generated from field: repeated qf.GradingBenchmark gradingBenchmarks = 13;
    */
   gradingBenchmarks: GradingBenchmark[] = [];
 
@@ -917,16 +917,16 @@ export class Assignment extends Message<Assignment> {
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "CourseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "deadline", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "autoApprove", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 7, name: "order", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 8, name: "isGroupLab", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 9, name: "scoreLimit", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 10, name: "reviewers", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 11, name: "containerTimeout", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 12, name: "submissions", kind: "message", T: Submission, repeated: true },
-    { no: 13, name: "tasks", kind: "message", T: Task, repeated: true },
-    { no: 14, name: "gradingBenchmarks", kind: "message", T: GradingBenchmark, repeated: true },
+    { no: 4, name: "deadline", kind: "message", T: Timestamp },
+    { no: 5, name: "autoApprove", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "order", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 7, name: "isGroupLab", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 8, name: "scoreLimit", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 9, name: "reviewers", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 10, name: "containerTimeout", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 11, name: "submissions", kind: "message", T: Submission, repeated: true },
+    { no: 12, name: "tasks", kind: "message", T: Task, repeated: true },
+    { no: 13, name: "gradingBenchmarks", kind: "message", T: GradingBenchmark, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Assignment {
@@ -1301,9 +1301,9 @@ export class Submission extends Message<Submission> {
   status = Submission_Status.NONE;
 
   /**
-   * @generated from field: string approvedDate = 9;
+   * @generated from field: google.protobuf.Timestamp approvedDate = 9;
    */
-  approvedDate = "";
+  approvedDate?: Timestamp;
 
   /**
    * reviews produced for this submission
@@ -1342,7 +1342,7 @@ export class Submission extends Message<Submission> {
     { no: 6, name: "commitHash", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
-    { no: 9, name: "approvedDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "approvedDate", kind: "message", T: Timestamp },
     { no: 10, name: "reviews", kind: "message", T: Review, repeated: true },
     { no: 11, name: "BuildInfo", kind: "message", T: BuildInfo },
     { no: 12, name: "Scores", kind: "message", T: Score, repeated: true },
@@ -1697,9 +1697,9 @@ export class Review extends Message<Review> {
   gradingBenchmarks: GradingBenchmark[] = [];
 
   /**
-   * @generated from field: string edited = 8;
+   * @generated from field: google.protobuf.Timestamp edited = 8;
    */
-  edited = "";
+  edited?: Timestamp;
 
   constructor(data?: PartialMessage<Review>) {
     super();
@@ -1716,7 +1716,7 @@ export class Review extends Message<Review> {
     { no: 5, name: "ready", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 6, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 7, name: "gradingBenchmarks", kind: "message", T: GradingBenchmark, repeated: true },
-    { no: 8, name: "edited", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "edited", kind: "message", T: Timestamp },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Review {

@@ -8,6 +8,7 @@ import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { initializeOvermind } from "./TestHelpers"
 import { render, screen } from "@testing-library/react"
+import { Timestamp } from "@bufbuild/protobuf";
 
 
 describe("UpdateEnrollment", () => {
@@ -47,7 +48,7 @@ describe("UpdateEnrollment in webpage", () => {
             status: 3,
             user,
             slipDaysRemaining: 3,
-            lastActivityDate: "10 Mar",
+            lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
 
@@ -84,7 +85,7 @@ describe("UpdateEnrollment in webpage", () => {
             status: 2,
             user,
             slipDaysRemaining: 3,
-            lastActivityDate: "10 Mar",
+            lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
         const mockedOvermind = createOvermindMock(config, (state) => {

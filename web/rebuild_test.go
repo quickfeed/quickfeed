@@ -83,27 +83,11 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	student1 := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, student1, &course)
+
 	student2 := qtest.CreateFakeUser(t, db, 4)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, student2, &course)
+
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.OrganizationName}
 	repo1 := qf.Repository{
 		OrganizationID: 1,
@@ -129,7 +113,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab1",
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,

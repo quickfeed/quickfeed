@@ -32,6 +32,7 @@ import {
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { Code } from "@bufbuild/connect-web"
+import {Timestamp} from "@bufbuild/protobuf";
 
 export interface IGrpcResponse<T> {
     status: Status
@@ -613,7 +614,7 @@ export class MockGrpcManager {
             bm.AssignmentID === submission.AssignmentID
         )
         review.gradingBenchmarks = benchmarks
-        review.edited = new Date().getTime().toString()
+        review.edited = new Timestamp() 
         submission.reviews = submission.reviews.concat([review])
         return this.grpcSend<Review>(review)
     }
@@ -627,7 +628,7 @@ export class MockGrpcManager {
             return this.grpcSend<Review>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Submission not found" }))
         }
         r.score = this.computeScore(r)
-        r.edited = new Date().getTime().toString()
+        r.edited = new Timestamp()
         submission.reviews = (submission.reviews.map(rev => {
             if (rev.ID === r.ID) {
                 // Return the updated review
@@ -739,7 +740,7 @@ export class MockGrpcManager {
 
     private initAssignments() {
         this.assignments = new Assignments()
-        const ts = new Date(2017, 5, 25)
+        const ts = Timestamp.fromDate(new Date(2017, 5, 25))
         const a0 = new Assignment()
         const a1 = new Assignment()
         const a2 = new Assignment()
@@ -755,14 +756,14 @@ export class MockGrpcManager {
         a0.ID = BigInt(1)
         a0.CourseID = BigInt(1)
         a0.name = "Lab 1"
-        a0.deadline = ts.toDateString()
+        a0.deadline = ts
         a0.scoreLimit = 80
         a0.order = 1
 
         a1.ID = BigInt(2)
         a1.CourseID = BigInt(1)
         a1.name = ("Lab 2")
-        a1.deadline = ts.toDateString()
+        a1.deadline = ts
         a1.scoreLimit = 80
         a1.order = 2
 
@@ -770,14 +771,14 @@ export class MockGrpcManager {
         a2.CourseID = BigInt(1)
         a2.name = "Lab 3"
         a2.reviewers = 1
-        a2.deadline = ts.toDateString()
+        a2.deadline = ts
         a2.scoreLimit = 60
         a2.order = 3
 
         a3.ID = BigInt(4)
         a3.CourseID = BigInt(1)
         a3.name = "Lab 4"
-        a3.deadline = ts.toDateString()
+        a3.deadline = ts
         a3.scoreLimit = 75
         a3.order = 4
         a3.isGroupLab = true
@@ -785,49 +786,49 @@ export class MockGrpcManager {
         a4.ID = BigInt(5)
         a4.CourseID = BigInt(2)
         a4.name = "Lab 1"
-        a4.deadline = ts.toDateString()
+        a4.deadline = ts
         a4.scoreLimit = 90
         a4.order = 1
 
         a5.ID = BigInt(6)
         a5.CourseID = BigInt(2)
         a5.name = "Lab 2"
-        a5.deadline = ts.toDateString()
+        a5.deadline = ts
         a5.scoreLimit = 85
         a5.order = 2
 
         a6.ID = BigInt(7)
         a6.CourseID = BigInt(2)
         a6.name = "Lab 3"
-        a6.deadline = ts.toDateString()
+        a6.deadline = ts
         a6.scoreLimit = 80
         a6.order = 3
 
         a7.ID = BigInt(8)
         a7.CourseID = BigInt(3)
         a7.name = "Lab 1"
-        a7.deadline = ts.toDateString()
+        a7.deadline = ts
         a7.scoreLimit = 90
         a7.order = 1
 
         a8.ID = BigInt(9)
         a8.CourseID = BigInt(3)
         a8.name = "Lab 2"
-        a8.deadline = ts.toDateString()
+        a8.deadline = ts
         a8.scoreLimit = 85
         a8.order = 2
 
         a9.ID = BigInt(10)
         a9.CourseID = BigInt(4)
         a9.name = "Lab 1"
-        a9.deadline = ts.toDateString()
+        a9.deadline = ts
         a9.scoreLimit = 90
         a9.order = 1
 
         a10.ID = BigInt(11)
         a10.CourseID = BigInt(5)
         a10.name = "Lab 1"
-        a10.deadline = ts.toDateString()
+        a10.deadline = ts
         a10.scoreLimit = 90
         a10.order = 1
 
@@ -995,7 +996,8 @@ export class MockGrpcManager {
                     ID: BigInt(1),
                     SubmissionID: BigInt(1),
                     ExecTime: BigInt(1),
-                    BuildDate: new Date(2017, 6, 4).toISOString(),
+                    BuildDate: Timestamp.fromDate(new Date(2017, 6, 4)),
+                    SubmissionDate: Timestamp.fromDate(new Date(2017, 6, 4)),
                     BuildLog: "Build log for submission 1",
                 }),
                 score: 100,
@@ -1118,7 +1120,7 @@ export class MockGrpcManager {
                 status: Submission_Status.NONE,
                 BuildInfo: new BuildInfo({
                     ID: BigInt(3),
-                    BuildDate: new Date(2022, 6, 4).toISOString(),
+                    BuildDate: Timestamp.fromDate(new Date(2022, 6, 4)),
                     BuildLog: "Build log for test student",
                     ExecTime: BigInt(1),
                 }),

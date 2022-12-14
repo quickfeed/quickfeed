@@ -70,7 +70,7 @@ type Database interface {
 	// GetAssignment returns assignment matching the given query.
 	GetAssignment(query *qf.Assignment) (*qf.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
-	GetAssignmentsByCourse(uint64, bool) ([]*qf.Assignment, error)
+	GetAssignmentsByCourse(uint64) ([]*qf.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*qf.Assignment) error
 	// CreateBenchmark creates a new grading benchmark.
