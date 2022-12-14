@@ -1,6 +1,8 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
@@ -38,11 +40,12 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 
 // UpdateEnrollment changes status and display state of the given enrollment.
 func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
-	// TODO(vera): Omitting ID because a lot of old tests rely on passing a query with empty ID here
-	// which would set the ID of the Enrollment record to zero.This omission is no longer required
-	// outside the tests and can be safely removed when the tests are rewritten or updated.
+	// If enrol.ID is zero, Select("*").Updates() would update ID of the Enrollment record to zero.
+	if enrol.ID == 0 {
+		return errors.New("enrollment query missing primary key: ID")
+	}
 	return db.conn.Model(&qf.Enrollment{}).
-		Select("*").Omit("ID").
+		Select("*").
 		Where(&qf.Enrollment{
 			CourseID: enrol.CourseID,
 			UserID:   enrol.UserID,

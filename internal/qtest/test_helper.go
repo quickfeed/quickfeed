@@ -62,7 +62,7 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 		Name:         name,
 		Login:        name,
 		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
+		RefreshToken: "refresh_token",
 	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
@@ -79,11 +79,11 @@ func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.
 
 func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
+	query := &qf.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
 	}
-	query, err := db.GetEnrollmentByCourseAndUser(course.ID, student.ID)
-	if err != nil {
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_STUDENT
@@ -94,11 +94,11 @@ func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course 
 
 func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
+	query := &qf.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
 	}
-	query, err := db.GetEnrollmentByCourseAndUser(course.ID, student.ID)
-	if err != nil {
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_TEACHER

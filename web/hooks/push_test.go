@@ -142,6 +142,7 @@ func TestLastActivityDate(t *testing.T) {
 		}
 		// Remove updated date.
 		if err := db.UpdateEnrollment(&qf.Enrollment{
+			ID:               enrol.ID,
 			UserID:           admin.ID,
 			CourseID:         course.ID,
 			LastActivityDate: nil,

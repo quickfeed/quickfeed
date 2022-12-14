@@ -401,9 +401,10 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 	if err != nil {
 		return nil, errors.New("organization not found")
 	}
+	var repo *Repository
 	if opt.Status == qf.Enrollment_STUDENT {
 		id := generateID(s.Repositories)
-		repo := &Repository{
+		repo = &Repository{
 			ID:    id,
 			Path:  qf.StudentRepoName(opt.User),
 			Owner: org.Name,
@@ -411,7 +412,7 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 		}
 		s.Repositories[id] = repo
 	}
-	return nil, nil
+	return repo, nil
 }
 
 // RejectEnrollment removes user's repository and revokes user's membership in the course organization.
