@@ -2,12 +2,12 @@ package ci
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -67,8 +67,8 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 		Status:       previous.GetStatus(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
-			SubmissionDate: time.Now().Format(qf.TimeLayout),
-			BuildDate:      time.Now().Format(qf.TimeLayout),
+			SubmissionDate: timestamppb.Now(),
+			BuildDate:      timestamppb.Now(),
 			BuildLog:       "No automated tests for this assignment",
 			ExecTime:       1,
 		},
@@ -95,12 +95,6 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	submissionDate := submission.GetBuildInfo().GetSubmissionDate()
-	submissionTime, err := time.Parse(qf.TimeLayout, submissionDate)
-	if err != nil {
-		return fmt.Errorf("failed to parse time from submission date (%s): %w", submissionDate, err)
-	}
-
 	enrollments := make([]*qf.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
@@ -117,7 +111,7 @@ func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission)
 	}
 
 	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(submissionTime, r.Assignment, submission); err != nil {
+		if err := enrol.UpdateSlipDays(r.Assignment, submission); err != nil {
 			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enrol.UserID, r.Assignment.CourseID, err)
 		}
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {

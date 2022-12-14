@@ -413,6 +413,7 @@ type EnrollmentRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to FetchMode:
+	//
 	//	*EnrollmentRequest_CourseID
 	//	*EnrollmentRequest_UserID
 	FetchMode isEnrollmentRequest_FetchMode `protobuf_oneof:"FetchMode"`
@@ -503,6 +504,7 @@ type SubmissionRequest struct {
 	CourseID     uint64 `protobuf:"varint,1,opt,name=CourseID,proto3" json:"CourseID,omitempty"`
 	AssignmentID uint64 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"` // only used for user and group submissions
 	// Types that are assignable to FetchMode:
+	//
 	//	*SubmissionRequest_UserID
 	//	*SubmissionRequest_GroupID
 	//	*SubmissionRequest_SubmissionID
@@ -846,7 +848,7 @@ type Repositories struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	URLs map[uint32]string `protobuf:"bytes,1,rep,name=URLs,proto3" json:"URLs,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	URLs map[uint32]string `protobuf:"bytes,1,rep,name=URLs,proto3" json:"URLs,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // Map key is the Repository.Type
 }
 
 func (x *Repositories) Reset() {

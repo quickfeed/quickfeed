@@ -29,7 +29,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments := qtest.AssignmentsWithTasks(course.ID)
+	assignments := qtest.AssignmentsWithTasks(t, course.ID)
 	for _, assignment := range assignments {
 		assignment.CourseID = course.GetID()
 		if err := db.CreateAssignment(assignment); err != nil {

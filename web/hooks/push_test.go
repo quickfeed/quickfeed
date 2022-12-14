@@ -3,7 +3,6 @@ package hooks
 import (
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v45/github"
@@ -13,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestExtractAssignments(t *testing.T) {
@@ -110,7 +110,7 @@ func TestLastActivityDate(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
-	date := time.Now().Format("02 Jan")
+	date := timestamppb.Now()
 	tests := []struct {
 		name string
 		repo *qf.Repository
@@ -137,14 +137,14 @@ func TestLastActivityDate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if diff := cmp.Diff(enrol.LastActivityDate, date); diff != "" {
-			t.Errorf("expected last activity date: %s, got %s", date, enrol.LastActivityDate)
+		if diff := cmp.Diff(date.Seconds, enrol.LastActivityDate.Seconds); diff != "" {
+			t.Errorf("last activity date mismatch: (-want, +got):\n%s", diff)
 		}
 		// Remove updated date.
 		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:           admin.ID,
 			CourseID:         course.ID,
-			LastActivityDate: "none",
+			LastActivityDate: nil,
 		}); err != nil {
 			t.Fatal(err)
 		}

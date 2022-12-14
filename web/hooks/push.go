@@ -3,13 +3,13 @@ package hooks
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
@@ -161,7 +161,7 @@ func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repos
 		wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 		return
 	}
-	enrol.LastActivityDate = time.Now().Format("02 Jan")
+	enrol.LastActivityDate = timestamppb.Now()
 
 	if err := wh.db.UpdateEnrollment(enrol); err != nil {
 		wh.logger.Errorf("Failed to update the last activity date for user %d (%s): %v", userID, login, err)

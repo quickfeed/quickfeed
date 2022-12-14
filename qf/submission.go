@@ -1,30 +1,21 @@
 package qf
 
 import (
-	"errors"
 	"time"
 )
-
-var ErrMissingBuildInfo = errors.New("submission missing build information")
 
 func (s *Submission) IsApproved() bool {
 	return s.GetStatus() == Submission_APPROVED
 }
 
-// NewestSubmissionDate returns the submission's build date if newer than the provided submission date.
-// Otherwise, the provided submission date is returned, i.e., if it is newer.
-func (s *Submission) NewestSubmissionDate(submissionDate time.Time) (t time.Time, err error) {
-	if s == nil || s.BuildInfo == nil {
-		return t, ErrMissingBuildInfo
-	}
-	currentSubmissionDate, err := time.Parse(TimeLayout, s.BuildInfo.SubmissionDate)
-	if err != nil {
-		return t, err
-	}
+// NewestSubmissionDate returns the submission's submission date if newer than the provided date.
+// Otherwise, the provided date is returned, i.e., if it is newer.
+func (s *Submission) NewestSubmissionDate(submissionDate time.Time) time.Time {
+	currentSubmissionDate := s.GetBuildInfo().GetSubmissionDate().AsTime()
 	if currentSubmissionDate.After(submissionDate) {
-		submissionDate = currentSubmissionDate
+		return currentSubmissionDate
 	}
-	return submissionDate, nil
+	return submissionDate
 }
 
 func (s *Submission) ByUser(userID uint64) bool {

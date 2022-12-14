@@ -17,18 +17,15 @@ const SubmissionsTable = (): JSX.Element => {
             assignments.push(...state.assignments[courseID])
         }
         assignments.sort((a, b) => {
-            if (b.deadline > a.deadline) {
-                return -1
-            }
-            if (a.deadline > b.deadline) {
-                return 1
+            if (a.deadline && b.deadline) {
+                return a.deadline.toDate().getTime() - b.deadline.toDate().getTime()
             }
             return 0
         })
         return assignments
     }
 
-    const SubmissionsTable = (): JSX.Element[] => {
+    const NewSubmissionsTable = (): JSX.Element[] => {
         const table: JSX.Element[] = []
         sortedAssignments().forEach(assignment => {
             const courseID = assignment.CourseID
@@ -38,7 +35,7 @@ const SubmissionsTable = (): JSX.Element => {
             }
             // Submissions are indexed by the assignment order - 1.
             const submission = submissions[assignment.order - 1] ?? new Submission()
-            if (submission.status !== Submission_Status.APPROVED) {
+            if (submission.status !== Submission_Status.APPROVED && assignment.deadline) {
                 const deadline = timeFormatter(assignment.deadline)
                 if (deadline.daysUntil > 3 && submission.score >= assignment.scoreLimit) {
                     deadline.className = "table-success"
@@ -46,7 +43,7 @@ const SubmissionsTable = (): JSX.Element => {
                 if (!deadline.message) {
                     return
                 }
-                const course = state.courses.find(course => course.ID === courseID)
+                const course = state.courses.find(c => c.ID === courseID)
                 table.push(
                     <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
                         onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
@@ -83,7 +80,7 @@ const SubmissionsTable = (): JSX.Element => {
                     </tr>
                 </thead>
                 <tbody>
-                    {SubmissionsTable()}
+                    {NewSubmissionsTable()}
                 </tbody>
             </table>
         </div>
