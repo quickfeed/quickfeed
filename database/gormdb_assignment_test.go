@@ -138,7 +138,7 @@ func TestUpdateAssignment(t *testing.T) {
 	}
 }
 
-func TestGetAssignmentsWithSubmissions(t *testing.T) {
+func TestGetCourseSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -172,7 +172,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	wantAssignment := (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
 	if diff := cmp.Diff(wantAssignment.Submissions, submissions, protocmp.Transform()); diff != "" {
-		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+		t.Errorf("GetCourseSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Submission with Review
@@ -204,7 +204,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	wantAssignment = (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantReview)
 	if diff := cmp.Diff(wantAssignment.Submissions, submissions, protocmp.Transform()); diff != "" {
-		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+		t.Errorf("GetCourseSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 }
 

@@ -180,8 +180,7 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 	return nil
 }
 
-// GetAssignmentsWithSubmissions returns all course assignments
-// preloaded with submissions of the requested submission type.
+// GetCourseSubmissions returns the latest course submissions of the requested submission type.
 func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error) {
 	var assignmentIDs []uint64
 	a := db.conn.Model(&qf.Assignment{}).Where("course_id = ?", courseID)
@@ -205,7 +204,6 @@ func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.Submis
 		Find(&submissions).Error; err != nil {
 		return nil, err
 	}
-
 	return submissions, nil
 }
 
