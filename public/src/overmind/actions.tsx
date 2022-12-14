@@ -393,8 +393,8 @@ export const getOrganization = async ({ actions, effects }: Context, orgName: st
 export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, org: Organization }): Promise<boolean> => {
     const course = Object.assign({}, value.course)
     /* Fill in required fields */
-    course.organizationID = value.org.ID
-    course.organizationName = value.org.name
+    course.ScmOrganizationID = value.org.ID
+    course.ScmOrganizationName = value.org.name
     course.courseCreatorID = state.self.ID
     /* Send the course to the server */
     const response = await effects.grpcMan.createCourse(course)
