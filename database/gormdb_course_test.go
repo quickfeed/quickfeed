@@ -106,11 +106,11 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, c2.ID); err != nil {
 		t.Fatal(err)
 	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: c3.ID,
-		Status:   qf.Enrollment_STUDENT,
+	query, err := db.GetEnrollmentByCourseAndUser(c3.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
 	}
+	query.Status = qf.Enrollment_STUDENT
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}

@@ -1,6 +1,7 @@
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import { Timestamp } from "@bufbuild/protobuf"
 
 export enum Color {
     RED = "danger",
@@ -28,9 +29,14 @@ export enum ConnStatus {
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (deadline_string: string): string => {
-    const deadline = new Date(deadline_string)
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" : ""}${deadline.getMinutes()}`
+export const getFormattedTime = (timestamp: Timestamp | undefined): string => {
+    if (!timestamp) {
+        return "N/A"
+    }
+    const deadline = timestamp.toDate()
+    const minutes = deadline.getMinutes()
+    const zero = minutes < 10 ? "0" : ""
+    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
 export interface Deadline {
@@ -39,10 +45,14 @@ export interface Deadline {
     daysUntil: number,
 }
 
-/** Utility function for LandingPageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-// layoutTime = "2021-03-20T23:59:00"
-export const timeFormatter = (deadline: string): Deadline => {
-    const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()
+/**
+ * Utility function for LandingPageTable to format the output string and class/css
+ * depending on how far into the future the deadline is.
+ *
+ * layoutTime = "2021-03-20T23:59:00"
+ */
+export const timeFormatter = (deadline: Timestamp): Deadline => {
+    const timeToDeadline = deadline.toDate().getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -123,8 +133,8 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
 export const getPassedTestsCount = (score: Score[]): string => {
     let totalTests = 0
     let passedTests = 0
-    score.forEach(score => {
-        if (score.Score === score.MaxScore) {
+    score.forEach(s => {
+        if (s.Score === s.MaxScore) {
             passedTests++
         }
         totalTests++
@@ -339,7 +349,10 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
             return sortOrder * (emailA.localeCompare(emailB))
         }
         case EnrollmentSort.Activity:
-            return sortOrder * (new Date(a.lastActivityDate).getTime() - new Date(b.lastActivityDate).getTime())
+            if (a.lastActivityDate && b.lastActivityDate) {
+                return sortOrder * (a.lastActivityDate.toDate().getTime() - b.lastActivityDate.toDate().getTime())
+            }
+            return 0
         case EnrollmentSort.Slipdays:
             return sortOrder * (a.slipDaysRemaining - b.slipDaysRemaining)
         case EnrollmentSort.Approved:

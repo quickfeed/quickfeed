@@ -14,21 +14,6 @@ import (
 // and not because of some application error
 var ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
 
-// InitSCMs creates and saves SCM clients for each course without an active SCM client.
-func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
-	courses, err := q.db.GetCourses()
-	if err != nil {
-		return err
-	}
-	for _, course := range courses {
-		_, err := q.getSCM(ctx, course.GetScmOrganizationName())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // GetSCM returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
 	return q.scmMgr.GetOrCreateSCM(ctx, q.logger, organization)

@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
@@ -95,23 +94,16 @@ func TestNewCourseExistingRepos(t *testing.T) {
 }
 
 func TestEnrollmentProcess(t *testing.T) {
-	if os.Getenv("TODO") == "" {
-		t.Skip("See TODO description")
-	}
-	// TODO(meling): This test no longer passes since the enrollment process includes accepting invitations on behalf of the user.
-	// A fix would probably be to implement a fake SCMInvite that behaves appropriately.
-	// We should add manual SCM_TEST for the actual AcceptRepositoryInvites using qf101.
-	// TODO(meling) The main problem with this test is that the SCMManager and Config.ExchangeToken is not mocked.
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
 	client, tm, _ := MockClientWithUser(t, db)
 
 	ctx := context.Background()
 	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	stud1 := qtest.CreateNamedUser(t, db, 2, "student1")
@@ -129,9 +121,9 @@ func TestEnrollmentProcess(t *testing.T) {
 			qf.Enrollment_PENDING,
 		},
 	}
-	userEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, admin)))
+	userEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollStatusReq, Cookie(t, tm, stud1)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	var pendingUserEnrollment *qf.Enrollment
 	for _, enrollment := range userEnrollments.Msg.Enrollments {
@@ -202,9 +194,9 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// create another user and enroll as student
 
-	stud2 := qtest.CreateFakeUser(t, db, 3)
+	stud2 := qtest.CreateNamedUser(t, db, 3, "student2")
 	enrollStud2 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud2.ID}
-	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud1))); err != nil { // todo(meling) should be stud2 but checking that stud1 can't enroll stud2
+	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud2))); err != nil {
 		t.Error(err)
 	}
 	enrollStud2.Status = qf.Enrollment_STUDENT
@@ -212,7 +204,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
-	}, Cookie(t, tm, stud1))); err != nil { // todo(meling) should be admin but checking that stud1 can't enroll stud2
+	}, Cookie(t, tm, admin))); err != nil {
 		t.Error(err)
 	}
 	// verify that the stud2 was enrolled with student status.
@@ -235,7 +227,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
-	}, Cookie(t, tm, stud2))); err != nil {
+	}, Cookie(t, tm, admin))); err != nil {
 		t.Error(err)
 	}
 	// verify that the stud2 was promoted to teacher status.
@@ -280,20 +272,17 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[2].ID,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
+	query.Status = qf.Enrollment_STUDENT
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
@@ -351,10 +340,11 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[2].ID,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -362,11 +352,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
+	query.Status = qf.Enrollment_STUDENT
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
@@ -423,56 +409,16 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
+	teacher := qtest.CreateNamedUser(t, db, 1, "teacher")
 	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
 	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
 	ta := qtest.CreateNamedUser(t, db, 13, "TA")
 
 	course := qtest.MockCourses[0]
-	err := db.CreateCourse(teacher.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   ta.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-	query.UserID = student1.ID
-	query.Status = qf.Enrollment_STUDENT
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-	query.UserID = student2.ID
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-	query.UserID = ta.ID
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, teacher, course)
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, ta, course)
 
 	student1Enrollment := &qf.Enrollment{
 		UserID:   student1.ID,
@@ -555,8 +501,6 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	if _, err := db.GetEnrollmentByCourseAndUser(course.ID, student2.ID); err == nil {
 		t.Error("expected error 'record not found'")
 	}
-
-	// justice is served
 
 	// course creator attempts to demote himself, must fail as well
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
