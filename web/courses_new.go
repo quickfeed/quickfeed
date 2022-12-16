@@ -19,17 +19,17 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	}
 	repos, err := sc.CreateCourse(ctx, &scm.CourseOptions{
 		CourseCreator:  courseCreator.Login,
-		OrganizationID: request.OrganizationID,
+		OrganizationID: request.ScmOrganizationID,
 	})
 	if err != nil {
 		return nil, err
 	}
 	for _, repo := range repos {
 		dbRepo := qf.Repository{
-			OrganizationID: request.OrganizationID,
-			RepositoryID:   repo.ID,
-			HTMLURL:        repo.HTMLURL,
-			RepoType:       qf.RepoType(repo.Path),
+			ScmOrganizationID: request.ScmOrganizationID,
+			ScmRepositoryID:   repo.ID,
+			HTMLURL:           repo.HTMLURL,
+			RepoType:          qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {
 			dbRepo.UserID = courseCreator.ID

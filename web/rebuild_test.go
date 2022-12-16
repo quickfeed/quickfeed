@@ -74,10 +74,10 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	course := qf.Course{
-		Name:             "QuickFeed Test Course",
-		Code:             "qf101",
-		OrganizationID:   1,
-		OrganizationName: qtest.MockOrg,
+		Name:                "QuickFeed Test Course",
+		Code:                "qf101",
+		ScmOrganizationID:   1,
+		ScmOrganizationName: qtest.MockOrg,
 	}
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
@@ -88,22 +88,22 @@ func TestRebuildSubmissions(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db, 4)
 	qtest.EnrollStudent(t, db, student2, &course)
 
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.OrganizationName}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.ScmOrganizationName}
 	repo1 := qf.Repository{
-		OrganizationID: 1,
-		RepositoryID:   1,
-		UserID:         student1.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        repo.StudentRepoURL("user"),
+		ScmOrganizationID: 1,
+		ScmRepositoryID:   1,
+		UserID:            student1.ID,
+		RepoType:          qf.Repository_USER,
+		HTMLURL:           repo.StudentRepoURL("user"),
 	}
 	if err := db.CreateRepository(&repo1); err != nil {
 		t.Fatal(err)
 	}
 	repo2 := qf.Repository{
-		OrganizationID: 1,
-		RepositoryID:   2,
-		UserID:         student2.ID,
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: 1,
+		ScmRepositoryID:   2,
+		UserID:            student2.ID,
+		RepoType:          qf.Repository_USER,
 	}
 	if err := db.CreateRepository(&repo2); err != nil {
 		t.Fatal(err)

@@ -47,11 +47,11 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	course := &qf.Course{
-		Code:             "test101",
-		Year:             2022,
-		OrganizationID:   1,
-		OrganizationName: "test",
-		CourseCreatorID:  courseAdmin.ID,
+		Code:                "test101",
+		Year:                2022,
+		ScmOrganizationID:   1,
+		ScmOrganizationName: "test",
+		CourseCreatorID:     courseAdmin.ID,
 	}
 	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
 		t.Fatal(err)
@@ -285,7 +285,7 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, tt.cookie))
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.OrgRequest{OrgName: "test"}, tt.cookie))
+			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.OrgRequest{ScmOrganizationName: "test"}, tt.cookie))
 			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
 			_, err = client.CreateCourse(ctx, qtest.RequestWithCookie(course, tt.cookie))
 			checkAccess(t, "CreateCourse", err, tt.wantCode, tt.wantAccess)

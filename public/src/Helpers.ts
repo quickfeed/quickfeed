@@ -225,14 +225,14 @@ export const userRepoLink = (user: User, course?: Course): string => {
     if (!course) {
         return userLink(user)
     }
-    return `https://github.com/${course.organizationName}/${user.Login}-labs`
+    return `https://github.com/${course.ScmOrganizationName}/${user.Login}-labs`
 }
 
 export const groupRepoLink = (group: Group, course?: Course): string => {
     if (!course) {
         return ""
     }
-    return `https://github.com/${course.organizationName}/${group.name}`
+    return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
 export const getSubmissionCellColor = (submission: Submission): string => {

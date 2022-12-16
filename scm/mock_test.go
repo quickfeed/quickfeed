@@ -165,10 +165,10 @@ func TestMockOrganizations(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	for _, course := range qtest.MockCourses {
-		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: course.OrganizationID}); err != nil {
+		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: course.ScmOrganizationID}); err != nil {
 			t.Error(err)
 		}
-		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{Name: course.OrganizationName}); err != nil {
+		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{Name: course.ScmOrganizationName}); err != nil {
 			t.Error(err)
 		}
 	}
@@ -216,7 +216,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 	team := &scm.Team{
 		ID:           1,
 		Name:         "test-team",
-		Organization: course.OrganizationName,
+		Organization: course.ScmOrganizationName,
 	}
 	s.Teams[1] = team
 	tests := []struct {
@@ -227,7 +227,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 		{
 			name: "valid team and opts",
 			opt: &scm.UpdateTeamOptions{
-				OrganizationID: course.OrganizationID,
+				OrganizationID: course.ScmOrganizationID,
 				TeamID:         team.ID,
 			},
 			wantErr: false,
@@ -235,7 +235,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 		{
 			name: "missing team ID",
 			opt: &scm.UpdateTeamOptions{
-				OrganizationID: course.OrganizationID,
+				OrganizationID: course.ScmOrganizationID,
 			},
 			wantErr: true,
 		},
@@ -250,7 +250,7 @@ func TestUpdateMockTeamMembers(t *testing.T) {
 			name: "invalid team",
 			opt: &scm.UpdateTeamOptions{
 				TeamID:         123,
-				OrganizationID: course.OrganizationID,
+				OrganizationID: course.ScmOrganizationID,
 			},
 			wantErr: true,
 		},
@@ -629,7 +629,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			name: "delete all issues for 'user-labs' repo (issue 3)",
 			opt: &scm.RepositoryOptions{
 				Path:  qf.StudentRepoName(user),
-				Owner: course.OrganizationName,
+				Owner: course.ScmOrganizationName,
 			},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1]},
 			wantErr:    false,
@@ -638,7 +638,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			name: "delete all issues for 'test-labs' repo (issues 1 and 2)",
 			opt: &scm.RepositoryOptions{
 				Path:  "test-labs",
-				Owner: course.OrganizationName,
+				Owner: course.ScmOrganizationName,
 			},
 			wantIssues: map[uint64]*scm.Issue{3: mockIssues[2]},
 			wantErr:    false,
@@ -646,7 +646,7 @@ func TestMockDeleteIssues(t *testing.T) {
 		{
 			name: "missing repository, nothing deleted",
 			opt: &scm.RepositoryOptions{
-				Owner: course.OrganizationName,
+				Owner: course.ScmOrganizationName,
 				Path:  "some-labs",
 			},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},

@@ -328,7 +328,7 @@ export class GrpcManager {
 
     public getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
         const request = new OrgRequest({
-            orgName: orgName,
+            ScmOrganizationName: orgName,
         })
         return this.grpcSend<Organization>(this.agService.getOrganization, request)
     }

@@ -14,7 +14,7 @@ func (grp *Group) IsValid() bool {
 func (c *Course) IsValid() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
-		c.GetOrganizationID() != 0 &&
+		c.GetScmOrganizationID() != 0 &&
 		c.GetYear() != 0 &&
 		c.GetTag() != ""
 }
@@ -37,7 +37,7 @@ func (req *CourseRequest) IsValid() bool {
 
 // IsValid checks whether OrgRequest fields are valid
 func (req *OrgRequest) IsValid() bool {
-	return req.GetOrgName() != ""
+	return req.GetScmOrganizationName() != ""
 }
 
 // IsValid checks that the request has positive course ID

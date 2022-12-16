@@ -850,7 +850,7 @@ export class MockGrpcManager {
         course0.code = "DAT100"
         course0.tag = "Spring"
         course0.year = 2017
-        course0.organizationID = BigInt(23650610)
+        course0.ScmOrganizationID = BigInt(23650610)
         course0.courseCreatorID = BigInt(1)
 
         course1.ID = BigInt(2)
@@ -858,28 +858,28 @@ export class MockGrpcManager {
         course1.code = "DAT200"
         course1.tag = "Spring"
         course1.year = 2017
-        course1.organizationID = BigInt(23650611)
+        course1.ScmOrganizationID = BigInt(23650611)
 
         course2.ID = BigInt(3)
         course2.name = "Databases"
         course2.code = "DAT220"
         course2.tag = "Spring"
         course2.year = 2017
-        course2.organizationID = BigInt(23650612)
+        course2.ScmOrganizationID = BigInt(23650612)
 
         course3.ID = BigInt(4)
         course3.name = "Communication Technology"
         course3.code = "DAT230"
         course3.tag = "Spring"
         course3.year = 2017
-        course3.organizationID = BigInt(23650613)
+        course3.ScmOrganizationID = BigInt(23650613)
 
         course4.ID = BigInt(5)
         course4.name = "Operating Systems"
         course4.code = "DAT320"
         course4.tag = "Spring"
         course4.year = 2017
-        course4.organizationID = BigInt(23650614)
+        course4.ScmOrganizationID = BigInt(23650614)
 
         const tempCourses: Course[] = [course0, course1, course2, course3, course4]
         this.courses.courses = tempCourses

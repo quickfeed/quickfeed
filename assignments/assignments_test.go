@@ -18,13 +18,13 @@ func TestFetchAssignments(t *testing.T) {
 	s, _ := scm.GetTestSCM(t)
 
 	course := &qf.Course{
-		Name:             "QuickFeed Test Course",
-		Code:             "qf101",
-		OrganizationName: qfTestOrg,
+		Name:                "QuickFeed Test Course",
+		Code:                "qf101",
+		ScmOrganizationName: qfTestOrg,
 	}
 
 	clonedTestsRepo, err := s.Clone(context.Background(), &scm.CloneOptions{
-		Organization: course.GetOrganizationName(),
+		Organization: course.GetScmOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      course.CloneDir(),
 	})

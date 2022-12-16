@@ -63,15 +63,15 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		// cannot continue without repository information
 		return nil
 	}
-	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
 		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, user.Login, err)
 		// continue with other delete operations
 	}
 	// when deleting a user, remove github repository and organization membership as well
 	opt := &scm.RejectEnrollmentOptions{
 		User:           user.GetLogin(),
-		OrganizationID: repo.OrganizationID,
-		RepositoryID:   repo.RepositoryID,
+		OrganizationID: repo.ScmOrganizationID,
+		RepositoryID:   repo.ScmRepositoryID,
 	}
 	if err := sc.RejectEnrollment(ctx, opt); err != nil {
 		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
@@ -99,7 +99,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	}
 	// create user scmRepo, user team, and add user to students team
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
-		Organization: course.OrganizationName,
+		Organization: course.ScmOrganizationName,
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 	})
@@ -110,17 +110,17 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepositoryID:   scmRepo.ID,
-		UserID:         user.ID,
-		HTMLURL:        scmRepo.HTMLURL,
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		ScmRepositoryID:   scmRepo.ID,
+		UserID:            user.ID,
+		HTMLURL:           scmRepo.HTMLURL,
+		RepoType:          qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(&userRepo); err != nil {
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
 	}
 
-	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetOrganizationName()); err != nil {
+	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
 		// log error, but continue with enrollment; we can manually accept invitations later
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
@@ -134,7 +134,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, query 
 	query.Status = qf.Enrollment_TEACHER
 	// make owner, remove from students, add to teachers
 	if _, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
-		Organization: course.OrganizationName,
+		Organization: course.ScmOrganizationName,
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_TEACHER,
 	}); err != nil {
@@ -147,7 +147,7 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	// course and user are both preloaded, no need to query the database
 	course, user := query.GetCourse(), query.GetUser()
 	err := sc.DemoteTeacherToStudent(ctx, &scm.UpdateEnrollmentOptions{
-		Organization: course.GetOrganizationName(),
+		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 	})
@@ -301,11 +301,11 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 	// ensure the organization exists
-	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{ID: request.OrganizationID})
+	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{ID: request.ScmOrganizationID})
 	if err != nil {
 		return err
 	}
-	request.OrganizationName = org.GetName()
+	request.ScmOrganizationName = org.GetName()
 	return s.db.UpdateCourse(request)
 }
 

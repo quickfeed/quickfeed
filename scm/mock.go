@@ -32,9 +32,9 @@ func NewMockSCMClient() *MockSCM {
 	}
 	// initialize four test course organizations
 	for _, course := range qtest.MockCourses {
-		s.Organizations[course.OrganizationID] = &qf.Organization{
-			ID:   course.OrganizationID,
-			Name: course.OrganizationName,
+		s.Organizations[course.ScmOrganizationID] = &qf.Organization{
+			ID:   course.ScmOrganizationID,
+			Name: course.ScmOrganizationName,
 		}
 	}
 	return s

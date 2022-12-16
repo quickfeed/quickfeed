@@ -167,9 +167,9 @@ export class Group extends Message<Group> {
   courseID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 teamID = 4;
+   * @generated from field: uint64 ScmTeamID = 4;
    */
-  teamID = protoInt64.zero;
+  ScmTeamID = protoInt64.zero;
 
   /**
    * @generated from field: qf.Group.GroupStatus status = 5;
@@ -197,7 +197,7 @@ export class Group extends Message<Group> {
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 4, name: "teamID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 4, name: "ScmTeamID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(Group_GroupStatus) },
     { no: 6, name: "users", kind: "message", T: User, repeated: true },
     { no: 7, name: "enrollments", kind: "message", T: Enrollment, repeated: true },
@@ -312,16 +312,16 @@ export class Course extends Message<Course> {
   tag = "";
 
   /**
-   * @generated from field: uint64 organizationID = 8;
+   * @generated from field: uint64 ScmOrganizationID = 8;
    */
-  organizationID = protoInt64.zero;
+  ScmOrganizationID = protoInt64.zero;
 
   /**
    * The organization's SCM name, e.g. uis-dat520-2020.
    *
-   * @generated from field: string organizationName = 9;
+   * @generated from field: string ScmOrganizationName = 9;
    */
-  organizationName = "";
+  ScmOrganizationName = "";
 
   /**
    * @generated from field: uint32 slipDays = 10;
@@ -367,8 +367,8 @@ export class Course extends Message<Course> {
     { no: 4, name: "code", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "year", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 6, name: "tag", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 8, name: "organizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 9, name: "organizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "ScmOrganizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 9, name: "ScmOrganizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 10, name: "slipDays", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 11, name: "dockerfile", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 12, name: "enrolled", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
@@ -441,16 +441,16 @@ export class Repository extends Message<Repository> {
   ID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 organizationID = 2;
+   * @generated from field: uint64 ScmOrganizationID = 2;
    */
-  organizationID = protoInt64.zero;
+  ScmOrganizationID = protoInt64.zero;
 
   /**
    * ID of a github repository
    *
-   * @generated from field: uint64 repositoryID = 3;
+   * @generated from field: uint64 ScmRepositoryID = 3;
    */
-  repositoryID = protoInt64.zero;
+  ScmRepositoryID = protoInt64.zero;
 
   /**
    * @generated from field: uint64 userID = 4;
@@ -488,8 +488,8 @@ export class Repository extends Message<Repository> {
   static readonly typeName = "qf.Repository";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "organizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "repositoryID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "ScmOrganizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "ScmRepositoryID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 4, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 5, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 6, name: "HTMLURL", kind: "scalar", T: 9 /* ScalarType.STRING */ },
@@ -1049,9 +1049,9 @@ export class Issue extends Message<Issue> {
   /**
    * Issue number on scm. Needed for associating db issue with scm issue
    *
-   * @generated from field: uint64 issueNumber = 4;
+   * @generated from field: uint64 ScmIssueNumber = 4;
    */
-  issueNumber = protoInt64.zero;
+  ScmIssueNumber = protoInt64.zero;
 
   constructor(data?: PartialMessage<Issue>) {
     super();
@@ -1064,7 +1064,7 @@ export class Issue extends Message<Issue> {
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "repositoryID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "taskID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 4, name: "issueNumber", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 4, name: "ScmIssueNumber", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Issue {
@@ -1096,9 +1096,9 @@ export class PullRequest extends Message<PullRequest> {
   /**
    * Represents the scm repository ID
    *
-   * @generated from field: uint64 scmRepositoryID = 2;
+   * @generated from field: uint64 ScmRepositoryID = 2;
    */
-  scmRepositoryID = protoInt64.zero;
+  ScmRepositoryID = protoInt64.zero;
 
   /**
    * Foreign key
@@ -1124,9 +1124,9 @@ export class PullRequest extends Message<PullRequest> {
   /**
    * Scm ID of the comment used for automatic feedback
    *
-   * @generated from field: uint64 scmCommentID = 6;
+   * @generated from field: uint64 ScmCommentID = 6;
    */
-  scmCommentID = protoInt64.zero;
+  ScmCommentID = protoInt64.zero;
 
   /**
    * The source branch for this pull request
@@ -1156,11 +1156,11 @@ export class PullRequest extends Message<PullRequest> {
   static readonly typeName = "qf.PullRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "scmRepositoryID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "ScmRepositoryID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "taskID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 4, name: "issueID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 5, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 6, name: "scmCommentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 6, name: "ScmCommentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 7, name: "sourceBranch", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 8, name: "number", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 9, name: "stage", kind: "enum", T: proto3.getEnumType(PullRequest_Stage) },

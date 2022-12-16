@@ -55,7 +55,7 @@ message Group {
     uint64 ID          = 1;
     string name        = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:group"' }];
     uint64 courseID    = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:group"' }];
-    uint64 teamID      = 4;
+    uint64 ScmTeamID   = 4;
     GroupStatus status = 5;
 
     repeated User users             = 6 [(go.field) = { tags: 'gorm:"many2many:group_users;"' }];
@@ -75,8 +75,8 @@ message Course {
     string code                    = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:course"' }];
     uint32 year                    = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:course"' }];
     string tag                     = 6;
-    uint64 organizationID          = 8;
-    string organizationName        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
+    uint64 ScmOrganizationID       = 8;
+    string ScmOrganizationName     = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays                = 10;
     string dockerfile              = 11;
     Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];
@@ -99,14 +99,14 @@ message Repository {
         USER        = 4;
         GROUP       = 5;
     }
-    uint64 ID             = 1;
-    uint64 organizationID = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
-    uint64 repositoryID   = 3;  // ID of a github repository
-    uint64 userID         = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
-    uint64 groupID        = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
-    string HTMLURL        = 6;
-    Type repoType         = 7 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
-    repeated Issue issues = 8;  // Issues associated with this repository
+    uint64 ID                = 1;
+    uint64 ScmOrganizationID = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
+    uint64 ScmRepositoryID   = 3;  // ID of a github repository
+    uint64 userID            = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
+    uint64 groupID           = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
+    string HTMLURL           = 6;
+    Type repoType            = 7 [(go.field) = { tags: 'gorm:"uniqueIndex:repository"' }];
+    repeated Issue issues    = 8;  // Issues associated with this repository
 }
 
 message Enrollment {
@@ -177,10 +177,10 @@ message Task {
 }
 
 message Issue {
-    uint64 ID           = 1;
-    uint64 repositoryID = 2;  // Represents the internal ID of a repository
-    uint64 taskID       = 3;  // Task that this issue draws its content from
-    uint64 issueNumber  = 4;  // Issue number on scm. Needed for associating db issue with scm issue
+    uint64 ID             = 1;
+    uint64 repositoryID   = 2;  // Represents the internal ID of a repository
+    uint64 taskID         = 3;  // Task that this issue draws its content from
+    uint64 ScmIssueNumber = 4;  // Issue number on scm. Needed for associating db issue with scm issue
 }
 
 message PullRequest {
@@ -191,11 +191,11 @@ message PullRequest {
         APPROVED = 3;
     }
     uint64 ID              = 1;
-    uint64 scmRepositoryID = 2;  // Represents the scm repository ID
+    uint64 ScmRepositoryID = 2;  // Represents the scm repository ID
     uint64 taskID          = 3;  // Foreign key
     uint64 issueID         = 4;  // Foreign key
     uint64 userID          = 5;  // The user who owns this PR
-    uint64 scmCommentID    = 6;  // Scm ID of the comment used for automatic feedback
+    uint64 ScmCommentID    = 6;  // Scm ID of the comment used for automatic feedback
     string sourceBranch    = 7;  // The source branch for this pull request
     uint64 number          = 8;  // Pull request number
     Stage stage            = 9;
