@@ -164,16 +164,12 @@ func extractToken(cookieString string) (string, error) {
 	return "", errors.New("failed to extract authentication cookie from request header")
 }
 
-// Context returns the given context augmented with the claims' user ID.
-func (c Claims) Context(ctx context.Context) context.Context {
-	return context.WithValue(ctx, ContextKeyUserID, c.UserID)
-}
-
-func (c *Claims) ClaimsContext(ctx context.Context) context.Context {
-	ctx = c.Context(ctx) // Can be removed if tests are rewritten to be performed as gRPC calls with claims cookie in the request header.
+// Context returns a new context with the claims as value.
+func (c *Claims) Context(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ContextKeyClaims, c)
 }
 
+// ClaimsFromContext returns the claims value from the context.
 func ClaimsFromContext(ctx context.Context) (*Claims, bool) {
 	claims, ok := ctx.Value(ContextKeyClaims).(*Claims)
 	return claims, ok

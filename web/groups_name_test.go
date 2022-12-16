@@ -8,7 +8,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestBadGroupNames(t *testing.T) {
@@ -62,9 +61,7 @@ func TestBadGroupNames(t *testing.T) {
 				Name:     tt.name,
 				Users:    []*qf.User{user1, user2},
 			}
-			// current user1 (in context) must be in group being created
-			ctx := auth.WithUserContext(context.Background(), user1)
-			_, err := client.CreateGroup(ctx, connect.NewRequest(group))
+			_, err := client.CreateGroup(context.Background(), connect.NewRequest(group))
 			if connErr, ok := err.(*connect.Error); ok {
 				if connErr.Code() != tt.wantError.Code() {
 					t.Errorf("got error code %v, want %v", connErr.Code(), tt.wantError.Code())
