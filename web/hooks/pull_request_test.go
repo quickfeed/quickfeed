@@ -12,10 +12,10 @@ const (
 )
 
 func TestFindIssue(t *testing.T) {
-	wantIssue := &qf.Issue{IssueNumber: 30}
+	wantIssue := &qf.Issue{ScmIssueNumber: 30}
 	issues := []*qf.Issue{
-		{IssueNumber: 10},
-		{IssueNumber: 20},
+		{ScmIssueNumber: 10},
+		{ScmIssueNumber: 20},
 		wantIssue,
 	}
 	tests := map[string]struct {

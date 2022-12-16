@@ -17,9 +17,9 @@ func testRunData(qfTestOrg string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	runData := &RunData{
 		Course: &qf.Course{
-			ID:               1,
-			Code:             "DAT320",
-			OrganizationName: qfTestOrg,
+			ID:                  1,
+			Code:                "DAT320",
+			ScmOrganizationName: qfTestOrg,
 		},
 		Assignment: &qf.Assignment{
 			Name: "lab3",
@@ -38,9 +38,9 @@ func TestLoadRunScript(t *testing.T) {
 	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
 	runData := &RunData{
 		Course: &qf.Course{
-			ID:               1,
-			Code:             "qf104",
-			OrganizationName: "qf104-2022",
+			ID:                  1,
+			Code:                "qf104",
+			ScmOrganizationName: "qf104-2022",
 		},
 		Assignment: &qf.Assignment{
 			Name: "lab1",

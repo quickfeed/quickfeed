@@ -7,7 +7,7 @@ import (
 )
 
 func (wh GitHubWebHook) getRepository(repoID int64) (*qf.Repository, error) {
-	repos, err := wh.db.GetRepositories(&qf.Repository{RepositoryID: uint64(repoID)})
+	repos, err := wh.db.GetRepositories(&qf.Repository{ScmRepositoryID: uint64(repoID)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository by remote ID %d: %w", repoID, err)
 	}
@@ -18,7 +18,7 @@ func (wh GitHubWebHook) getRepository(repoID int64) (*qf.Repository, error) {
 }
 
 func (wh GitHubWebHook) getRepositoryWithIssues(repoID int64) (*qf.Repository, error) {
-	repos, err := wh.db.GetRepositoriesWithIssues(&qf.Repository{RepositoryID: uint64(repoID)})
+	repos, err := wh.db.GetRepositoriesWithIssues(&qf.Repository{ScmRepositoryID: uint64(repoID)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository by remote ID %d: %w", repoID, err)
 	}

@@ -20,7 +20,7 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 
 	var courses int64
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
-		OrganizationID: course.OrganizationID,
+		ScmOrganizationID: course.ScmOrganizationID,
 	}).Or(&qf.Course{
 		Code: course.Code,
 		Year: course.Year,
@@ -98,7 +98,7 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, 
 // GetCourseByOrganizationID fetches course by organization ID.
 func (db *GormDB) GetCourseByOrganizationID(did uint64) (*qf.Course, error) {
 	var course qf.Course
-	if err := db.conn.First(&course, &qf.Course{OrganizationID: did}).Error; err != nil {
+	if err := db.conn.First(&course, &qf.Course{ScmOrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
 	return &course, nil

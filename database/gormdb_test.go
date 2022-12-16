@@ -313,8 +313,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &qf.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
-	c2 := &qf.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
+	c1 := &qf.Course{ScmOrganizationID: 1, Code: "DAT101", Year: 1}
+	c2 := &qf.Course{ScmOrganizationID: 2, Code: "DAT101", Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 

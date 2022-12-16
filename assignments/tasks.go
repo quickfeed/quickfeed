@@ -68,7 +68,7 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 	}
 
 	repos, err := db.GetRepositoriesWithIssues(&qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
+		ScmOrganizationID: course.GetScmOrganizationID(),
 	})
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 	createdIssues := []*qf.Issue{}
 	for _, task := range tasks {
 		issueOptions := &scm.IssueOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
@@ -113,9 +113,9 @@ func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 			return nil, err
 		}
 		createdIssues = append(createdIssues, &qf.Issue{
-			RepositoryID: repo.ID,
-			TaskID:       task.ID,
-			IssueNumber:  uint64(scmIssue.Number),
+			RepositoryID:   repo.ID,
+			TaskID:         task.ID,
+			ScmIssueNumber: uint64(scmIssue.Number),
 		})
 	}
 	return createdIssues, nil
@@ -131,11 +131,11 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 			continue
 		}
 		issueOptions := &scm.IssueOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
-			Number:       int(issue.IssueNumber),
+			Number:       int(issue.ScmIssueNumber),
 		}
 		if task.IsDeleted() {
 			issueOptions.State = "closed"

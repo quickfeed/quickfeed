@@ -186,9 +186,9 @@ export class GroupRequest extends Message<GroupRequest> {
  */
 export class OrgRequest extends Message<OrgRequest> {
   /**
-   * @generated from field: string orgName = 1;
+   * @generated from field: string ScmOrganizationName = 1;
    */
-  orgName = "";
+  ScmOrganizationName = "";
 
   constructor(data?: PartialMessage<OrgRequest>) {
     super();
@@ -198,7 +198,7 @@ export class OrgRequest extends Message<OrgRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.OrgRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "orgName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "ScmOrganizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): OrgRequest {
