@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -12,6 +13,15 @@ import (
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
+
+func dockerClient(t *testing.T) (*ci.Docker, func()) {
+	t.Helper()
+	docker, err := ci.NewDockerCI(qtest.Logger(t))
+	if err != nil {
+		t.Fatalf("Failed to set up docker client: %v", err)
+	}
+	return docker, func() { _ = docker.Close() }
+}
 
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -40,9 +50,12 @@ func TestFetchAssignments(t *testing.T) {
 	for _, assignment := range assignments {
 		t.Logf("%+v", assignment)
 	}
+
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
 	course.UpdateDockerfile(dockerfile)
-	if err := buildDockerImage(context.Background(), qtest.Logger(t), course); err != nil {
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+	if err := buildDockerImage(context.Background(), qtest.Logger(t), docker, course); err != nil {
 		t.Fatal(err)
 	}
 }

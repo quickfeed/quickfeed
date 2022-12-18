@@ -31,7 +31,7 @@ var updateMutex = sync.Mutex{}
 // caller for an extended period, since it may involve cloning the tests repository,
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *qf.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
 	updateMutex.Lock()
 	defer updateMutex.Unlock()
 
@@ -59,7 +59,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 
 	if course.UpdateDockerfile(dockerfile) {
 		// Rebuild the Docker image for the course tagged with the course code
-		if err = buildDockerImage(ctx, logger, course); err != nil {
+		if err = buildDockerImage(ctx, logger, runner, course); err != nil {
 			logger.Error(err)
 			return
 		}
@@ -87,15 +87,9 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 }
 
 // buildDockerImage builds the Docker image for the given course.
-func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf.Course) error {
-	docker, err := ci.NewDockerCI(logger)
-	if err != nil {
-		return fmt.Errorf("failed to set up docker client: %w", err)
-	}
-	defer func() { _ = docker.Close() }()
-
+func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.Runner, course *qf.Course) error {
 	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
-	out, err := docker.Run(ctx, &ci.Job{
+	out, err := runner.Run(ctx, &ci.Job{
 		Name:       course.GetCode() + "-" + rand.String(),
 		Image:      strings.ToLower(course.GetCode()),
 		Dockerfile: course.GetDockerfile(),

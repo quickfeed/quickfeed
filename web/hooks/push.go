@@ -50,7 +50,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, scmClient, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
 
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
