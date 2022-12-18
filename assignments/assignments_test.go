@@ -41,7 +41,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Logf("%+v", assignment)
 	}
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
-	course.Dockerfile = dockerfile
+	course.UpdateDockerfile(dockerfile)
 	if err := buildDockerImage(context.Background(), qtest.Logger(t), course); err != nil {
 		t.Fatal(err)
 	}

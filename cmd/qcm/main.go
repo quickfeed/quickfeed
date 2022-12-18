@@ -60,14 +60,18 @@ func main() {
 
 func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	fmt.Printf("Running tests for %s\n", cli.Clone.Lab)
-	dockerfileContent := readFile(destDir, "Dockerfile")
+	dockerfile := readFile(destDir, "Dockerfile")
+
+	courseCode := cli.Clone.Course[:len(cli.Clone.Course)-5] // assume course has four digit year (-YYYY)
+	course := &qf.Course{
+		ID:                  1, // Must have an ID field to cache the dockerfile
+		Code:                courseCode,
+		ScmOrganizationName: cli.Clone.Course,
+	}
+	course.UpdateDockerfile(dockerfile)
 
 	runData := &ci.RunData{
-		Course: &qf.Course{
-			Code:                cli.Clone.Course[:len(cli.Clone.Course)-5], // assume course has four digit year (-YYYY)
-			ScmOrganizationName: cli.Clone.Course,
-			Dockerfile:          dockerfileContent,
-		},
+		Course: course,
 		Assignment: &qf.Assignment{
 			Name:             cli.Clone.Lab,
 			ContainerTimeout: 1, // minutes

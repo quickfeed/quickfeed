@@ -35,21 +35,21 @@ func loadDockerfile(t *testing.T) string {
 }
 
 func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
-	dockerfileContent := loadDockerfile(t)
-
+	dockerfile := loadDockerfile(t)
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
 	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
-	courseID := uint64(1)
+	course := &qf.Course{
+		ID:                  1,
+		Code:                "QF101",
+		ScmOrganizationName: qfTestOrg,
+	}
+	course.UpdateDockerfile(dockerfile)
+
 	runData := &ci.RunData{
-		Course: &qf.Course{
-			ID:                  courseID,
-			Code:                "QF101",
-			ScmOrganizationName: qfTestOrg,
-			Dockerfile:          dockerfileContent,
-		},
+		Course: course,
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
 			ContainerTimeout: 1, // minutes

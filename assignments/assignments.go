@@ -57,15 +57,13 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 		return
 	}
 
-	if course.HasUpdatedDockerfile(dockerfile) {
-		// The course's Dockerfile was added or updated in the tests repository
-		course.Dockerfile = dockerfile
+	if course.UpdateDockerfile(dockerfile) {
 		// Rebuild the Docker image for the course tagged with the course code
 		if err = buildDockerImage(ctx, logger, course); err != nil {
 			logger.Error(err)
 			return
 		}
-		// Update the course's Dockerfile in the database
+		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Errorf("Failed to update Dockerfile for course %s: %v", course.GetCode(), err)
 			return

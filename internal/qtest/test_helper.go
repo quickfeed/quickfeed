@@ -122,7 +122,7 @@ func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
 		{
 			CourseID:    courseID,
 			Name:        "lab1",
-			Deadline:    Timestamp(t, "12.01.2022"),
+			Deadline:    Timestamp(t, "2022-12-01T19:00:00"),
 			AutoApprove: false,
 			Order:       1,
 			IsGroupLab:  false,
@@ -134,7 +134,7 @@ func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
 		{
 			CourseID:    courseID,
 			Name:        "lab2",
-			Deadline:    Timestamp(t, "12.12.2021"),
+			Deadline:    Timestamp(t, "2022-12-12T19:00:00"),
 			AutoApprove: false,
 			Order:       2,
 			IsGroupLab:  false,
