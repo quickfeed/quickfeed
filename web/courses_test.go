@@ -42,6 +42,59 @@ func TestCreateAndGetCourse(t *testing.T) {
 	}
 }
 
+func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	client, tm, _ := MockClientWithUser(t, db)
+
+	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	cookie := Cookie(t, tm, admin)
+
+	wantCourse := qtest.MockCourses[0]
+	createdCourse, err := client.CreateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
+		CourseID: createdCourse.Msg.ID,
+	}, cookie))
+	if err != nil {
+		t.Error(err)
+	}
+
+	course := resp.Msg
+	if course.DockerfileDigest != "" {
+		t.Errorf("expected empty DockerfileDigest, got %s", course.DockerfileDigest)
+	}
+	dockerfile := "FROM golang:latest"
+	want := true
+	got := course.UpdateDockerfile(dockerfile)
+	if got != want {
+		t.Errorf("UpdateDockerfile(%q) = %t, want %t", dockerfile, got, want)
+	}
+	// Update the course's DockerfileDigest in the database
+	// To simulate the behavior in assignments.UpdateFromTestsRepo()
+	if err := db.UpdateCourse(course); err != nil {
+		t.Error(err)
+	}
+
+	// GetCourse again to check that the digest is not returned in the response.
+	resp, err = client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
+		CourseID: createdCourse.Msg.ID,
+	}, cookie))
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check that the digest is not returned in the response.
+	course = resp.Msg
+	if course.DockerfileDigest != "" {
+		t.Errorf("expected DockerfileDigest to be removed, got %s", course.DockerfileDigest)
+	}
+}
+
 func TestCreateAndGetCourses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
