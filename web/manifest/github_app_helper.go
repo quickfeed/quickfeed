@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"log"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -20,9 +19,9 @@ func SetupGitHubApp(t *testing.T) {
 		t.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
 	}
 	if err := ReadyForAppCreation(envFile); err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	if err := CreateNewQuickFeedApp(web.NewDevelopmentServer, ":443", envFile); err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 }
