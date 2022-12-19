@@ -4,8 +4,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/rand"
 )
 
 // Cached Dockerfile for each course.
@@ -33,6 +35,14 @@ func (course *Course) UpdateDockerfile(dockerfile string) bool {
 
 func (course *Course) GetDockerfile() string {
 	return courseDockerfileCache[course.ID]
+}
+
+func (course *Course) DockerImage() string {
+	return strings.ToLower(course.GetCode())
+}
+
+func (course *Course) JobName() string {
+	return course.GetCode() + "-" + rand.String()
 }
 
 // digest returns a SHA256 digest of the given file.

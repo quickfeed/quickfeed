@@ -48,7 +48,20 @@ func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	}
 	course.UpdateDockerfile(dockerfile)
 
-	runData := &ci.RunData{
+	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
+	t.Logf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
+	out, err := runner.Run(context.Background(), &ci.Job{
+		Name:       course.JobName(),
+		Image:      course.DockerImage(),
+		Dockerfile: course.GetDockerfile(),
+		Commands:   []string{`echo -n "Hello from Dockerfile"`},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(out)
+
+	return &ci.RunData{
 		Course: course,
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
@@ -61,20 +74,6 @@ func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 		JobOwner: "muggles",
 		CommitID: rand.String()[:7],
 	}
-	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
-	t.Logf("Building %s's Dockerfile:\n%v", runData.Course.GetCode(), runData.Course.GetDockerfile())
-	out, err := runner.Run(context.Background(), &ci.Job{
-		Name:       runData.Course.GetCode() + "-" + rand.String(),
-		Image:      strings.ToLower(runData.Course.GetCode()),
-		Dockerfile: runData.Course.GetDockerfile(),
-		Commands:   []string{`echo -n "Hello from Dockerfile"`},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(out)
-
-	return runData
 }
 
 func TestRunTests(t *testing.T) {

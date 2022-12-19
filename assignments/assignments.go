@@ -3,13 +3,11 @@ package assignments
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
@@ -90,8 +88,8 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.Runner, course *qf.Course) error {
 	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
 	out, err := runner.Run(ctx, &ci.Job{
-		Name:       course.GetCode() + "-" + rand.String(),
-		Image:      strings.ToLower(course.GetCode()),
+		Name:       course.JobName(),
+		Image:      course.DockerImage(),
 		Dockerfile: course.GetDockerfile(),
 		Commands:   []string{`echo -n "Hello from Dockerfile"`},
 	})
