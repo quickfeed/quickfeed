@@ -64,7 +64,6 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 
 	courseCode := cli.Clone.Course[:len(cli.Clone.Course)-5] // assume course has four digit year (-YYYY)
 	course := &qf.Course{
-		ID:                  1, // Must have an ID field to cache the dockerfile
 		Code:                courseCode,
 		ScmOrganizationName: cli.Clone.Course,
 	}
