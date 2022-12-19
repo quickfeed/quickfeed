@@ -27,16 +27,50 @@ const (
 	webhookSecret = "QUICKFEED_WEBHOOK_SECRET"
 )
 
+// ReadyForAppCreation returns nil if the environment configuration (envFile)
+// is ready for creating a new GitHub App. Otherwise, it returns an error,
+// e.g., if the envFile already contains App information or if the .env is
+// missing and there is a corresponding .env.bak file. The optional chkFn
+// functions are called to perform additional checks.
+func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
+	if env.HasAppID() {
+		return fmt.Errorf("%s already contains App information", envFile)
+	}
+	// Check for missing .env file and if .env.bak already exists
+	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
+		if err := env.Prepared(envFile); err != nil {
+			return err
+		}
+	}
+	for _, checker := range chkFns {
+		if err := checker(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error {
+	m := New(env.Domain(), envFile)
+	server, err := srvFn(httpAddr, m.Handler())
+	if err != nil {
+		return err
+	}
+	return m.StartAppCreationFlow(server)
+}
+
 type Manifest struct {
 	domain  string
+	envFile string
 	handler http.Handler
 	done    chan error
 }
 
-func New(domain string) *Manifest {
+func New(domain, envFile string) *Manifest {
 	m := &Manifest{
-		domain: domain,
-		done:   make(chan error),
+		domain:  domain,
+		envFile: envFile,
+		done:    make(chan error),
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -69,7 +103,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 		return err
 	}
 	// Refresh environment variables
-	return env.Load("")
+	return env.Load(env.RootEnv(m.envFile))
 }
 
 func (m *Manifest) conversion() http.HandlerFunc {
@@ -118,7 +152,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 			return
 		}
 
-		// Save the application configuration to the .env file
+		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
 			appID:         strconv.FormatInt(*config.ID, 10),
 			appKey:        appKeyFile,
@@ -126,7 +160,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 			clientSecret:  *config.ClientSecret,
 			webhookSecret: *config.WebhookSecret,
 		}
-		if err := env.Save(".env", envToUpdate); err != nil {
+		if err := env.Save(env.RootEnv(m.envFile), envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -134,7 +168,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Print success message, and redirect to main page
-		if err := success(w, config); err != nil {
+		if err := m.success(w, config); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -154,7 +188,7 @@ func (m *Manifest) createApp() http.HandlerFunc {
 	}
 }
 
-func success(w http.ResponseWriter, config *github.AppConfig) error {
+func (m *Manifest) success(w http.ResponseWriter, config *github.AppConfig) error {
 	const tpl = `<!DOCTYPE html>
 <html>
 <head>
@@ -207,12 +241,13 @@ body {
 	if err := t.Execute(w, data); err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	if err := env.Save("public/.env", map[string]string{
+	publicEnvFile := env.PublicEnv(m.envFile)
+	if err := env.Save(publicEnvFile, map[string]string{
 		"QUICKFEED_APP_URL": *config.HTMLURL,
 	}); err != nil {
 		return err
 	}
-	log.Printf("App URL saved in public/.env: %s", *config.HTMLURL)
+	log.Printf("App URL saved in %s: %s", publicEnvFile, *config.HTMLURL)
 	go runWebpack()
 	return nil
 }
