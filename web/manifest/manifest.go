@@ -338,7 +338,8 @@ func form(w http.ResponseWriter, domain string) error {
 
 	if strings.Contains(data.WebhookURL, "127.0.0.1") {
 		// Disable webhook for localhost
-		data.WebhookURL = ""
+		// However, GitHub still requires a valid URL
+		data.WebhookURL = auth.GetEventsURL("testing.itest.run")
 		data.WebhookActive = false
 	}
 	t := template.Must(template.New("form").Parse(tpl))
