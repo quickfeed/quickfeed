@@ -16,7 +16,7 @@ import (
 // behind newly created issues on the user repositories for manual inspection.
 func TestSynchronizeTasksWithIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, _ := scm.GetTestSCM(t)
+	s := scm.GetAppSCM(t)
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -42,6 +42,11 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// Deleting issues failed with:
+	// To resolve the issue I had to manually edit the organization's settings
+	// See these instructions:
+	// https://docs.github.com/en/organizations/managing-organization-settings/allowing-people-to-delete-issues-in-your-organization
 
 	// Delete all issues on student repositories
 	repoFn(repos, func(repo *scm.Repository) {

@@ -7,9 +7,9 @@ import (
 	"github.com/quickfeed/quickfeed/web/manifest"
 )
 
-func TestManifest(t *testing.T) {
+func TestCreateQuickFeedApp(t *testing.T) {
 	if os.Getenv("GITHUB_APP") == "" {
-		t.Skip("Skipping test; GITHUB_APP is not set")
+		t.Skipf("Skipping test. To run: GITHUB_APP=1 go test -v -run %s", t.Name())
 	}
-	manifest.SetupGitHubApp(t)
+	manifest.CreateQuickFeedApp(t)
 }
