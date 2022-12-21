@@ -450,7 +450,6 @@ func TestMockGetIssue(t *testing.T) {
 	s.Issues = map[uint64]*scm.Issue{
 		1: issue,
 	}
-
 	tests := []struct {
 		name      string
 		opt       *scm.RepositoryOptions
@@ -497,7 +496,6 @@ func TestMockGetIssue(t *testing.T) {
 		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
 			t.Errorf("%s mismatch issue (-want +got):\n%s", tt.name, diff)
 		}
-
 	}
 }
 
