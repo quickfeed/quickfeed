@@ -6,9 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/go-github/v45/github"
-	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -18,14 +16,9 @@ import (
 const (
 	qf101Org   = "qf101"
 	qf101OrdID = 77283363
-	secret     = "the-secret-quickfeed-test"
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
-
-// These tests only test listing existing hooks and creating a new one.
-// They do not cover processing push events on a server.
-// See web/hooks package for tests involving processing push events.
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -57,45 +50,6 @@ func TestCreateIssue(t *testing.T) {
 
 	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
 		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
-	}
-}
-
-func TestGetIssues(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: {
-			ID:    1,
-			OrgID: 1,
-			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName("test"),
-		},
-	}
-
-	ctx := context.Background()
-	opt := &scm.RepositoryOptions{
-		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("test"),
-	}
-
-	wantIssueIDs := []int{}
-	for i := 1; i <= 5; i++ {
-		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
-		defer cleanup()
-		wantIssueIDs = append(wantIssueIDs, issue.Number)
-	}
-
-	gotIssueIDs := []int{}
-	gotIssues, err := s.GetIssues(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, issue := range gotIssues {
-		gotIssueIDs = append(gotIssueIDs, issue.Number)
-	}
-
-	less := func(a, b int) bool { return a < b }
-	if equal := cmp.Equal(wantIssueIDs, gotIssueIDs, cmpopts.SortSlices(less)); !equal {
-		t.Errorf("scm.GetIssues() mismatch wantIssueIDs: %v, gotIssueIDs: %v", wantIssueIDs, gotIssueIDs)
 	}
 }
 
@@ -234,43 +188,6 @@ func TestCreateIssueComment(t *testing.T) {
 	opt.Number = issue.Number
 	_, err := s.CreateIssueComment(context.Background(), opt)
 	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestUpdateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	repo := &scm.Repository{
-		ID:    1,
-		OrgID: 1,
-		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("user"),
-	}
-	s.Repositories = map[uint64]*scm.Repository{
-		1: repo,
-	}
-
-	body := "Issue Comment"
-	opt := &scm.IssueCommentOptions{
-		Organization: repo.Owner,
-		Repository:   repo.Path,
-		Body:         body,
-	}
-
-	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
-	defer cleanup()
-
-	opt.Number = issue.Number
-	// The created comment will be deleted when the parent issue is deleted.
-	commentID, err := s.CreateIssueComment(context.Background(), opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// NOTE: We do not currently return the updated comment, so we cannot verify its content.
-	opt.Body = "Updated Issue Comment"
-	opt.CommentID = commentID
-	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
 		t.Fatal(err)
 	}
 }
