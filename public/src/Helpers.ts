@@ -3,6 +3,7 @@ import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submis
 import { Score } from "../proto/kit/score/score_pb"
 import { SubmissionOwner } from "./overmind/state"
 import { Timestamp } from "@bufbuild/protobuf"
+import { CourseSubmissions } from "../proto/qf/requests_pb"
 
 export enum Color {
     RED = "danger",
@@ -314,28 +315,60 @@ export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSor
 }
 
 export class SubmissionsForCourse {
-    userSubmissions: { [key: string]: Submissions } = {}
-    groupSubmissions: { [key: string]: Submissions } = {}
+    userSubmissions: Map<bigint, Submissions> = new Map()
+    groupSubmissions: Map<bigint, Submissions> = new Map()
 
     /** getSubmissionsForEnrollment returns user submissions for the given enrollment */
     getSubmissionsForEnrollment(enrollment: Enrollment): Submission[] {
-        return this.userSubmissions[enrollment.ID.toString()]?.submissions ?? []
+        return this.userSubmissions.get(enrollment.ID)?.submissions ?? []
     }
 
     /** getSubmissionsForGroup returns group submissions for the given group or enrollment */
     getSubmissionsForGroup(group: Group | Enrollment): Submission[] {
         if (group instanceof Group) {
-            return this.groupSubmissions[group.ID.toString()]?.submissions ?? []
+            return this.groupSubmissions.get(group.ID)?.submissions ?? []
         }
-        return this.groupSubmissions[group.groupID?.toString()]?.submissions ?? []
+        return this.groupSubmissions.get(group.groupID)?.submissions ?? []
     }
 
     /** getSubmissionsForOwner returns all submissions related to the passed in owner.
      * This is usually the currently selected group or user. */
     getSubmissionsForOwner(owner: SubmissionOwner): Submission[] {
         if (owner.type === "GROUP") {
-            return this.groupSubmissions[owner.id.toString()]?.submissions ?? []
+            return this.groupSubmissions.get(owner.id)?.submissions ?? []
         }
-        return this.userSubmissions[owner.id.toString()]?.submissions ?? []
+        return this.userSubmissions.get(owner.id)?.submissions ?? []
+    }
+
+    update(owner: SubmissionOwner, submission: Submission) {
+        const submissions = this.getSubmissionsForOwner(owner)
+        const index = submissions.findIndex(s => s.AssignmentID === submission.AssignmentID)
+        if (index === -1) {
+            return
+        } else {
+            submissions[index] = submission
+        }
+        if (owner.type === "GROUP") {
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+        } else {
+            const clone = new Map(this.userSubmissions)
+            this.userSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+        }
+    }
+
+    setSubmissions(type: "USER" | "GROUP", submissions: CourseSubmissions) {
+        const map = new Map<bigint, Submissions>()
+        for (const [key, value] of Object.entries(submissions.submissions)) {
+            map.set(BigInt(key), value)
+        }
+        switch (type) {
+            case "USER":
+                this.userSubmissions = map
+                break
+            case "GROUP":
+                this.groupSubmissions = map
+                break
+        }
     }
 }

@@ -243,7 +243,7 @@ export const state: State = {
             ? submissionsForCourse.groupSubmissions
             : submissionsForCourse.userSubmissions
 
-        if (Object.keys(submissions).length === 0) {
+        if (submissions.size === 0) {
             return []
         }
 
@@ -270,15 +270,15 @@ export const state: State = {
                     filtered = filtered.filter(el => {
                         if (assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
-                            const sub = submissions[el.ID.toString()].submissions?.find(s => s.AssignmentID === assignmentID)
+                            const sub = submissions.get(el.ID)?.submissions?.find(s => s.AssignmentID === assignmentID)
                             return sub !== undefined && !isApproved(sub)
                         }
-                        const numApproved = submissions[el.ID.toString()].submissions?.reduce((acc, cur) => {
+                        const numApproved = submissions.get(el.ID)?.submissions?.reduce((acc, cur) => {
                             return acc + ((cur &&
                                 isApproved(cur)) ? 1 : 0)
-                        }, 0) ?? 0
-                        return numApproved < numAssignments
-                    })
+                            }, 0) ?? 0
+                            return numApproved < numAssignments
+                        })
                     break
                 default:
                     break
@@ -291,12 +291,12 @@ export const state: State = {
             let subB: Submission | undefined
             if (assignmentID > 0) {
                 // If a specific assignment is selected, sort by that assignment
-                subA = submissions[a.ID.toString()]?.submissions.find(sub => sub.AssignmentID === assignmentID)
-                subB = submissions[b.ID.toString()]?.submissions.find(sub => sub.AssignmentID === assignmentID)
+                subA = submissions.get(a.ID)?.submissions.find(sub => sub.AssignmentID === assignmentID)
+                subB = submissions.get(b.ID)?.submissions.find(sub => sub.AssignmentID === assignmentID)
             }
-
-            const subsA = submissions[a.ID.toString()]?.submissions
-            const subsB = submissions[b.ID.toString()]?.submissions
+            
+            const subsA = submissions.get(a.ID)?.submissions
+            const subsB = submissions.get(b.ID)?.submissions
 
             switch (sortSubmissionsBy) {
                 case SubmissionSort.Score: {

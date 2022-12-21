@@ -173,6 +173,7 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
         state.currentSubmission.status = previousStatus
         return
     }
+    state.submissionsForCourse.update(state.submissionOwner, state.currentSubmission)
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
@@ -402,7 +403,7 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         return false
     }
     if (result.data) {
-        state.submissionsForCourse.userSubmissions = { ...state.submissionsForCourse.userSubmissions, ...result.data.submissions }
+        state.submissionsForCourse.setSubmissions("USER", result.data)
         for (const submissions of Object.values(result.data.submissions)) {
             for (const submission of submissions.submissions) {
                 state.review.reviews.set(submission.ID, submission.reviews)
@@ -410,7 +411,7 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         }
     }
     if (groups.data) {
-        state.submissionsForCourse.groupSubmissions = { ...state.submissionsForCourse.groupSubmissions, ...groups.data.submissions }
+        state.submissionsForCourse.setSubmissions("GROUP", groups.data)
     }
     state.isLoading = false
     state.loadedCourse[courseID.toString()] = true
