@@ -474,9 +474,7 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
     if (!response.data || !success(response)) {
         return
     }
-    if (state.currentSubmission) {
-        Object.assign(state.currentSubmission, response.data)
-    }
+    state.submissionsForCourse.update(state.submissionOwner, response.data)
 }
 
 /** Rebuilds the currently active submission */
