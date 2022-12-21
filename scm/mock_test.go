@@ -594,14 +594,14 @@ func TestMockGetIssues2(t *testing.T) {
 		Path:  qf.StudentRepoName("test"),
 	}
 
-	wantIssueIDs := []int{}
+	var wantIssueIDs []int
 	for i := 1; i <= 5; i++ {
 		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 		defer cleanup()
 		wantIssueIDs = append(wantIssueIDs, issue.Number)
 	}
 
-	gotIssueIDs := []int{}
+	var gotIssueIDs []int
 	gotIssues, err := s.GetIssues(ctx, opt)
 	if err != nil {
 		t.Fatal(err)

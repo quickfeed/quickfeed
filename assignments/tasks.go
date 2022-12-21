@@ -76,7 +76,7 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
 	// The created issues will be created by the QuickFeed user (the App owner).
-	createdIssues := []*qf.Issue{}
+	var createdIssues []*qf.Issue
 	for _, repo := range repos {
 		if !repo.IsGroupRepo() {
 			continue
@@ -96,7 +96,7 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 
 // createIssues creates issues on scm based on repository, course and tasks. Returns created issues.
 func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.Repository, tasks []*qf.Task) ([]*qf.Issue, error) {
-	createdIssues := []*qf.Issue{}
+	var createdIssues []*qf.Issue
 	for _, task := range tasks {
 		issueOptions := &scm.IssueOptions{
 			Organization: course.GetScmOrganizationName(),
