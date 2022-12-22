@@ -1154,7 +1154,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 	repo := &scm.Repository{
 		ID:    1,
 		Owner: qtest.MockOrg,
-		Path:  "testgrp",
+		Path:  "test-group",
 		OrgID: 1,
 	}
 	s.Repositories = map[uint64]*scm.Repository{

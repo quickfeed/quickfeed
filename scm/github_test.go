@@ -57,7 +57,6 @@ func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, qfTestUser := scm.GetTestSCM(t)
 
-	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
 		Path:  qf.StudentRepoName(qfTestUser),
@@ -66,7 +65,7 @@ func TestGetIssue(t *testing.T) {
 	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 	defer cleanup()
 
-	gotIssue, err := s.GetIssue(ctx, opt, wantIssue.Number)
+	gotIssue, err := s.GetIssue(context.Background(), opt, wantIssue.Number)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,8 +80,6 @@ func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, qfTestUser := scm.GetTestSCM(t)
 
-	ctx := context.Background()
-
 	opt := &scm.IssueOptions{
 		Organization: qfTestOrg,
 		Repository:   qf.StudentRepoName(qfTestUser),
@@ -94,13 +91,31 @@ func TestUpdateIssue(t *testing.T) {
 	defer cleanup()
 
 	opt.Number = issue.Number
-	gotIssue, err := s.UpdateIssue(ctx, opt)
+	gotIssue, err := s.UpdateIssue(context.Background(), opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if gotIssue.Title != opt.Title || gotIssue.Body != opt.Body {
-		t.Fatalf("scm.TestUpdateIssue() want (title: %s, body: %s), got (title: %s, body: %s)", opt.Title, opt.Body, gotIssue.Title, gotIssue.Body)
+		t.Errorf("scm.TestUpdateIssue() want (title: %s, body: %s), got (title: %s, body: %s)", opt.Title, opt.Body, gotIssue.Title, gotIssue.Body)
+	}
+}
+
+// This test will delete all open and closed issues for the test user and organization.
+// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestDeleteAllIssues
+func TestDeleteAllIssues(t *testing.T) {
+	if os.Getenv("SCM_TESTS") == "" {
+		t.SkipNow()
+	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	s, qfTestUser := scm.GetTestSCM(t)
+
+	opt := &scm.RepositoryOptions{
+		Owner: qfTestOrg,
+		Path:  qf.StudentRepoName(qfTestUser),
+	}
+	if err := s.DeleteIssues(context.Background(), opt); err != nil {
+		t.Fatal(err)
 	}
 }
 
