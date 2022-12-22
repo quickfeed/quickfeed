@@ -19,7 +19,7 @@ func GetTestOrganization(t *testing.T) string {
 	return qfTestOrg
 }
 
-func GetTestSCM(t *testing.T) (SCM, string) {
+func GetTestSCM(t *testing.T) (*GithubSCM, string) {
 	t.Helper()
 	accessToken := GetAccessToken(t)
 	scmClient := NewGithubSCMClient(qtest.Logger(t), accessToken)

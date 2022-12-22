@@ -10,7 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -138,9 +137,8 @@ func TestRequestReviewers(t *testing.T) {
 
 	testReqReviewersBranch := "test-request-reviewers"
 
-	client := githubTestClient(t)
 	ctx := context.Background()
-	pullReq, _, err := client.PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
+	pullReq, _, err := s.Client().PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
 		Title: github.String("Test Request Reviewers"),
 		Body:  github.String("Test Request Reviewers Body"),
 		Head:  github.String(testReqReviewersBranch),
@@ -171,19 +169,13 @@ func TestRequestReviewers(t *testing.T) {
 	}
 	t.Logf("PullRequest %d created with reviewer %v", *pullReq.Number, reviewer)
 
-	_, _, err = client.PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
+	_, _, err = s.Client().PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
 		State: github.String("closed"),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("PullRequest %d closed", *pullReq.Number)
-}
-
-func githubTestClient(t *testing.T) *github.Client {
-	t.Helper()
-	src := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: scm.GetAccessToken(t)})
-	return github.NewClient(oauth2.NewClient(context.Background(), src))
 }
 
 func TestCreateIssueComment(t *testing.T) {
