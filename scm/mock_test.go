@@ -623,7 +623,6 @@ func TestMockDeleteIssue(t *testing.T) {
 		1: mockRepos[0],
 		2: mockRepos[1],
 	}
-
 	for _, issue := range mockIssues {
 		issueOptions := &scm.IssueOptions{
 			Organization: qtest.MockOrg,
@@ -644,6 +643,54 @@ func TestMockDeleteIssue(t *testing.T) {
 		}
 		if _, err := s.GetIssue(ctx, opt, issue.Number); err == nil {
 			t.Error("expected error 'issue not found'")
+		}
+	}
+}
+
+func TestMockCreateGetDeleteIssueSequence(t *testing.T) {
+	s := scm.NewMockSCMClientWithCourse()
+	ctx := context.Background()
+
+	opt := &scm.IssueOptions{
+		Organization: qtest.MockOrg,
+		Repository:   qf.StudentRepoName("user"),
+		Title:        "Dummy Title",
+		Body:         "Dummy body of the issue",
+	}
+	issue, err := s.CreateIssue(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repoOpt := &scm.RepositoryOptions{
+		Owner: qtest.MockOrg,
+		Path:  opt.Repository,
+	}
+	issues, err := s.GetIssues(ctx, repoOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(issues) != 1 {
+		t.Errorf("expected 1 issue, got %d", len(issues))
+		if len(issues) > 1 {
+			for _, issue := range issues {
+				t.Logf("unexpected issue: %v", issue)
+			}
+		}
+	}
+
+	if err = s.DeleteIssue(ctx, repoOpt, issue.Number); err != nil {
+		t.Fatal(err)
+	}
+
+	issues, err = s.GetIssues(ctx, repoOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(issues) != 0 {
+		t.Errorf("expected 0 issues, got %d", len(issues))
+		for _, issue := range issues {
+			t.Logf("unexpected issue: %v", issue)
 		}
 	}
 }
