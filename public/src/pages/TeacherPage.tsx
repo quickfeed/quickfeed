@@ -3,7 +3,6 @@ import { Route, Switch, useHistory } from "react-router"
 import { Color, getCourseID, isManuallyGraded } from "../Helpers"
 import { useAppState, useGrpc } from "../overmind"
 import Card from "../components/Card"
-import CourseBanner from "../components/CourseBanner"
 import GroupPage from "./GroupPage"
 import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
@@ -39,9 +38,8 @@ const TeacherPage = (): JSX.Element => {
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
 
     return (
-        <div>
+        <div className="box">
             <RedirectButton to={root} />
-            <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
                 {courseHasManualGrading && <Card {...review} />}
