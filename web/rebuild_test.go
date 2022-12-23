@@ -17,7 +17,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
@@ -109,7 +108,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := auth.WithUserContext(context.Background(), teacher)
+	ctx := context.Background()
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab1",

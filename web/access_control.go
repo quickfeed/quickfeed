@@ -8,7 +8,11 @@ import (
 )
 
 func userID(ctx context.Context) uint64 {
-	return ctx.Value(auth.ContextKeyUserID).(uint64)
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return 0
+	}
+	return claims.UserID
 }
 
 // hasCourseAccess returns true if the given user has access to the given course,
