@@ -33,29 +33,27 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
     }
 
     const CourseEnrollmentStatus = (): JSX.Element | null => {
-        if (hasEnrolled(status)) {
-            return (
-                <>
-                    <CourseFavoriteButton enrollment={enrollment} style={{ "float": "right" }} />
-                    <p className="float-sm-right mr-2">{EnrollmentStatus[status]}</p>
-                </>
-            )
+        if (!hasEnrolled(status)) {
+            return null
         }
-        return null
+        return (
+            <>
+                <CourseFavoriteButton enrollment={enrollment} style={{ "float": "right" }} />
+                <p className="float-sm-right mr-2">{EnrollmentStatus[status]}</p>
+            </>
+        )
     }
 
     return (
-        <div className="col-sm-4">
-            <div className="card" style={{ maxWidth: "35rem", marginBottom: "10px", minHeight: "205px" }}>
-                <div className={`card-header bg-${CardColor[status]} text-white`}>
-                    {course.code}
-                    <CourseEnrollmentStatus />
-                </div>
+        <div className="card" style={{ width: "30rem", marginBottom: "10px", minHeight: "205px" }}>
+            <div className={`card-header bg-${CardColor[status]} text-white`}>
+                {course.code}
+                <CourseEnrollmentStatus />
+            </div>
 
-                <div className="card-body position-relative">
-                    <h5 className="card-title">{course.name} - {course.tag}/{course.year}</h5>
-                    <CourseEnrollmentButton />
-                </div>
+            <div className="card-body position-relative">
+                <h5 className="card-title">{course.name} - {course.tag}/{course.year}</h5>
+                <CourseEnrollmentButton />
             </div>
         </div>
     )
