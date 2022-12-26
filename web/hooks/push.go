@@ -42,7 +42,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	ctx := context.Background()
 	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetScmOrganizationName())
 	if err != nil {
-		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
+		wh.logger.Errorf("handlePush: could not create scm client for course %s: %v", course.GetScmOrganizationName(), err)
 		return
 	}
 

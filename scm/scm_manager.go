@@ -74,10 +74,9 @@ func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger,
 	if ok {
 		return client, nil
 	}
-
 	client, err := newSCMAppClient(ctx, logger, s.Config, organization)
 	if err != nil {
-		return nil, ErrMissingInstallation
+		return nil, fmt.Errorf("failed to create github application for %s: %w", organization, err)
 	}
 	s.mu.Lock()
 	s.scms[organization] = client
