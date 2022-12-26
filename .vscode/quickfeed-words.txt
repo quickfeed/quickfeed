@@ -182,6 +182,7 @@ structs
 Studentid
 subtest
 subtests
+swiftui
 testdata
 testdb
 Testersen
