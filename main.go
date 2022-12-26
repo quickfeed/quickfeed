@@ -72,7 +72,7 @@ func main() {
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
-		if err := manifest.ReadyForAppCreation(envFile, checkDomainForAppCreation); err != nil {
+		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
 		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
@@ -143,7 +143,7 @@ func main() {
 	log.Println("QuickFeed shut down gracefully")
 }
 
-func checkDomainForAppCreation() error {
+func checkDomain() error {
 	if env.Domain() == "127.0.0.1" {
 		msg := `
 WARNING: You are creating a GitHub app on "127.0.0.1".
