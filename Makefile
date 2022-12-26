@@ -62,18 +62,6 @@ proto: $(protopatch)
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
 
-# protoset is a file used as a server reflection to mock-testing of grpc methods via command line
-protoset:
-	@echo "Compiling protoset for grpcurl"
-	@protoc \
-	-I . \
-	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
-	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
-	--proto_path=qf \
-	--descriptor_set_out=qf/qf.protoset \
-	--include_imports \
-	qf/quickfeed.proto
-
 test:
 	@go clean -testcache ./...
 	@go test ./...
