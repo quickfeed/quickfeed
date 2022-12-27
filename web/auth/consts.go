@@ -1,17 +1,13 @@
 package auth
 
 import (
-	"context"
 	"time"
-
-	"github.com/quickfeed/quickfeed/qf"
 )
 
 type contextKey int
 
 const (
 	contextNone contextKey = iota
-	ContextKeyUserID
 	ContextKeyClaims
 )
 
@@ -34,9 +30,3 @@ const (
 	Assets   = "/assets/"
 	Static   = "/static/"
 )
-
-// WithUserContext returns the context augmented with the given user's ID.
-// This aims to mimic the claims.Context() method.
-func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	return context.WithValue(ctx, ContextKeyUserID, user.GetID())
-}

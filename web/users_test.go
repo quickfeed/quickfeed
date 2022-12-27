@@ -27,7 +27,6 @@ func TestGetUsers(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
 
-	ctx = auth.WithUserContext(ctx, admin)
 	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
 		t.Fatal(err)
@@ -74,8 +73,6 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-
-	ctx = auth.WithUserContext(ctx, admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
