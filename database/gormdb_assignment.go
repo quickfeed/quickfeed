@@ -183,12 +183,12 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 // GetCourseSubmissions returns the latest course submissions of the requested submission type.
 func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error) {
 	var assignmentIDs []uint64
-	a := db.conn.Model(&qf.Assignment{}).Where("course_id = ?", courseID)
+	a := db.conn.Model(&qf.Assignment{}).Where(&qf.Assignment{CourseID: courseID})
 	switch submissionType {
 	case qf.SubmissionRequest_USER:
-		a.Where("is_group_lab = ?", false)
+		a.Where(&qf.Assignment{IsGroupLab: false})
 	case qf.SubmissionRequest_GROUP:
-		a.Where("is_group_lab = ?", true)
+		a.Where(&qf.Assignment{IsGroupLab: true})
 	default: // all
 	}
 	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
