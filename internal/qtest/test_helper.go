@@ -111,37 +111,6 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-// AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
-func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
-	return []*qf.Assignment{
-		{
-			CourseID:    courseID,
-			Name:        "lab1",
-			Deadline:    Timestamp(t, "2022-12-01T19:00:00"),
-			AutoApprove: false,
-			Order:       1,
-			IsGroupLab:  false,
-			Tasks: []*qf.Task{
-				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
-				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
-			},
-		},
-		{
-			CourseID:    courseID,
-			Name:        "lab2",
-			Deadline:    Timestamp(t, "2022-12-12T19:00:00"),
-			AutoApprove: false,
-			Order:       2,
-			IsGroupLab:  false,
-			Tasks: []*qf.Task{
-				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
-				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
-				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
-			},
-		},
-	}
-}
-
 func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 	request := connect.NewRequest(message)
 	request.Header().Set("cookie", cookie)
