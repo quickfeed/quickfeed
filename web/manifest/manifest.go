@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -295,10 +294,12 @@ func form(w http.ResponseWriter, domain string) error {
 		input.value = JSON.stringify({
 			"name": "{{.Name}}",
 			"url": "{{.URL}}",
+{{if .WebhookActive}}
 			"hook_attributes": {
 				"active": {{.WebhookActive}},
 				"url": "{{.WebhookURL}}",
 			},
+{{end}}
 			"callback_urls": [
 				"{{.CallbackURL}}"
 			],
@@ -312,11 +313,13 @@ func form(w http.ResponseWriter, domain string) error {
 				"organization_administration": "write",
 				"pull_requests": "write",
 			},
+{{if .WebhookActive}}
 			"default_events": [
 				"push",
 				"pull_request",
 				"pull_request_review"
 			]
+{{end}}
 		})
 		document.getElementById('create').submit()
 	</script>
@@ -336,10 +339,9 @@ func form(w http.ResponseWriter, domain string) error {
 		WebhookActive: true,
 	}
 
-	if strings.Contains(data.WebhookURL, "127.0.0.1") {
-		// Disable webhook for localhost
-		// However, GitHub still requires a valid URL
-		data.WebhookURL = auth.GetEventsURL("testing.itest.run")
+	if env.IsLocal(domain) {
+		// Disable webhook for localhost, or any other non-public domain
+		data.WebhookURL = ""
 		data.WebhookActive = false
 	}
 	t := template.Must(template.New("form").Parse(tpl))
