@@ -43,11 +43,6 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Deleting issues failed with:
-	// To resolve the issue I had to manually edit the organization's settings
-	// See these instructions:
-	// https://docs.github.com/en/organizations/managing-organization-settings/allowing-people-to-delete-issues-in-your-organization
-
 	// Delete all issues on student repositories
 	repoFn(repos, func(repo *scm.Repository) {
 		if err := s.DeleteIssues(ctx, &scm.RepositoryOptions{
