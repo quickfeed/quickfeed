@@ -9,15 +9,13 @@ import (
 )
 
 func TestSCMManager(t *testing.T) {
-	scmConfig, err := scm.NewSCMConfig()
-	if err != nil {
-		t.Skip("Requires a valid SCM app")
-	}
-	mgr := scm.NewSCMManager(scmConfig)
+	const appName = "QuickFeed Testing App"
+	mgr := scm.GetSCMManager(t)
 	qfTestOrg := scm.GetTestOrganization(t)
 	ctx := context.Background()
 	createdSCM, err := mgr.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
 	if err != nil {
+		t.Logf(scm.InstallInstructions, appName, qfTestOrg, appName)
 		t.Fatal(err)
 	}
 	gotSCM, ok := mgr.GetSCM(qfTestOrg)

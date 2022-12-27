@@ -31,6 +31,16 @@ func Root() string {
 	return quickfeedRoot
 }
 
+// RootEnv returns the path $QUICKFEED/{envFile}.
+func RootEnv(envFile string) string {
+	return filepath.Join(quickfeedRoot, envFile)
+}
+
+// PublicEnv returns the path $QUICKFEED/public/{envFile}.
+func PublicEnv(envFile string) string {
+	return filepath.Join(quickfeedRoot, "public", envFile)
+}
+
 // Load loads environment variables from the given file, or from $QUICKFEED/.env.
 // The variable's values are expanded with existing variables from the environment.
 // It will not override a variable that already exists in the environment.

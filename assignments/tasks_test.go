@@ -16,7 +16,7 @@ import (
 // behind newly created issues on the user repositories for manual inspection.
 func TestSynchronizeTasksWithIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	s, _ := scm.GetTestSCM(t)
+	s := scm.GetAppSCM(t)
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
