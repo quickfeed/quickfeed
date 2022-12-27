@@ -2,6 +2,8 @@ package env
 
 import (
 	"errors"
+	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -31,9 +33,6 @@ func Whitelist() ([]string, error) {
 	if domains == "" {
 		return nil, errors.New("required whitelist is undefined")
 	}
-	if strings.Contains(domains, "localhost") {
-		return nil, errors.New("whitelist contains localhost")
-	}
 	if regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`).MatchString(domains) {
 		return nil, errors.New("whitelist contains IP addresses")
 	}
@@ -42,6 +41,9 @@ func Whitelist() ([]string, error) {
 	for _, domain := range strings.Split(strings.ReplaceAll(domains, " ", ""), ",") {
 		if domain == "" {
 			continue
+		}
+		if IsLocal(domain) {
+			return nil, fmt.Errorf("whitelist contains local/private domain: %s", domain)
 		}
 		domainList = append(domainList, domain)
 	}
@@ -79,4 +81,17 @@ func CertPath() string {
 		certPath = defaultCertPath
 	}
 	return certPath
+}
+
+func IsLocal(domain string) bool {
+	ips, err := net.LookupIP(domain)
+	if err != nil {
+		return false
+	}
+	for _, ip := range ips {
+		if ip.IsLoopback() || ip.IsPrivate() {
+			return true
+		}
+	}
+	return false
 }
