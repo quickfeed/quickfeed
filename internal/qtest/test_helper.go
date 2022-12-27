@@ -44,25 +44,20 @@ func TestDB(t *testing.T) (database.Database, func()) {
 
 // CreateFakeUser is a test helper to create a user in the database
 // with the given remote id and the fake scm provider.
-func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *qf.User {
+func CreateFakeUser(t *testing.T, db database.Database, _ uint64) *qf.User {
 	t.Helper()
-	user := &qf.User{
-		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
-	}
+	user := &qf.User{}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
 }
 
-func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *qf.User {
+func CreateNamedUser(t *testing.T, db database.Database, _ uint64, name string) *qf.User {
 	t.Helper()
 	user := &qf.User{
-		Name:         name,
-		Login:        name,
-		ScmRemoteID:  remoteID,
-		RefreshToken: "refresh_token",
+		Name:  name,
+		Login: name,
 	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)

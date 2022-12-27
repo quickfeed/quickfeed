@@ -49,6 +49,7 @@ func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connec
 	}
 
 	opts := connect.WithInterceptors(
+		interceptor.NewValidationInterceptor(logger),
 		interceptor.NewTokenAuthInterceptor(logger, tm, db),
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),

@@ -317,7 +317,7 @@ export class Course extends Message<Course> {
   ScmOrganizationID = protoInt64.zero;
 
   /**
-   * The organization's SCM name, e.g. uis-dat520-2020.
+   * The organization's SCM name, e.g., dat520-2020.
    *
    * @generated from field: string ScmOrganizationName = 9;
    */
@@ -329,9 +329,11 @@ export class Course extends Message<Course> {
   slipDays = 0;
 
   /**
-   * @generated from field: string dockerfile = 11;
+   * Digest of the dockerfile used to build the course's docker image.
+   *
+   * @generated from field: string DockerfileDigest = 11;
    */
-  dockerfile = "";
+  DockerfileDigest = "";
 
   /**
    * @generated from field: qf.Enrollment.UserStatus enrolled = 12;
@@ -370,7 +372,7 @@ export class Course extends Message<Course> {
     { no: 8, name: "ScmOrganizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 9, name: "ScmOrganizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 10, name: "slipDays", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 11, name: "dockerfile", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 11, name: "DockerfileDigest", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 12, name: "enrolled", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
     { no: 13, name: "enrollments", kind: "message", T: Enrollment, repeated: true },
     { no: 14, name: "assignments", kind: "message", T: Assignment, repeated: true },
