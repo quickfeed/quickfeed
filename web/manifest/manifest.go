@@ -294,12 +294,12 @@ func form(w http.ResponseWriter, domain string) error {
 		input.value = JSON.stringify({
 			"name": "{{.Name}}",
 			"url": "{{.URL}}",
-{{if .WebhookActive}}
+{{- if .WebhookActive}}
 			"hook_attributes": {
-				"active": {{.WebhookActive}},
+				"active": true,
 				"url": "{{.WebhookURL}}",
 			},
-{{end}}
+{{- end}}
 			"callback_urls": [
 				"{{.CallbackURL}}"
 			],
@@ -313,13 +313,13 @@ func form(w http.ResponseWriter, domain string) error {
 				"organization_administration": "write",
 				"pull_requests": "write",
 			},
-{{if .WebhookActive}}
+{{- if .WebhookActive}}
 			"default_events": [
 				"push",
 				"pull_request",
 				"pull_request_review"
 			]
-{{end}}
+{{- end}}
 		})
 		document.getElementById('create').submit()
 	</script>
@@ -341,7 +341,6 @@ func form(w http.ResponseWriter, domain string) error {
 
 	if env.IsLocal(domain) {
 		// Disable webhook for localhost, or any other non-public domain
-		data.WebhookURL = ""
 		data.WebhookActive = false
 	}
 	t := template.Must(template.New("form").Parse(tpl))
