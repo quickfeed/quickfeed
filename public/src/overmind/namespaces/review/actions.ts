@@ -17,23 +17,43 @@ export const setSelectedReview = ({ state }: Context, index: number): void => {
 
 /* Update the selected review */
 export const updateReview = async ({ state, actions, effects }: Context): Promise<boolean> => {
-    // If canUpdate is false, the review cannot be updated
-    if (state.review.canUpdate && state.review.currentReview) {
-        const review = state.review.currentReview
-        const response = await effects.grpcMan.updateReview(review, state.activeCourse)
-        if (success(response) && response.data) {
-            // Updates the currently selected review with the new data from the server
-            const reviews = new Map(state.review.reviews)
-            reviews.set(state.activeSubmission, state.review.reviews.get(state.activeSubmission)?.map(r => r.ID === review.ID ? response.data as Review : r) ?? [])
-            state.review.reviews = reviews;
 
-            (state.currentSubmission as Submission).score = response.data.score
-            return true
-        } else {
-            actions.alertHandler(response)
-        }
+    if (!(state.review.canUpdate && state.review.currentReview)) {
+        // If canUpdate is false, the review cannot be updated
+        return false
     }
-    return false
+
+
+    const reviews = state.review.reviews.get(state.activeSubmission)
+    if (!reviews) {
+        // If there are no reviews, the review cannot be updated
+        return false
+    }
+
+    const review = state.review.currentReview
+    const response = await effects.grpcMan.updateReview(review, state.activeCourse)
+    if (!(success(response) && response.data)) {
+        // If the update was not successful, alert the user and abort
+        actions.alertHandler(response)
+        return false
+    }
+
+    // Copy the review map and update the review
+    const reviewMap = new Map(state.review.reviews)
+
+    const idx = reviews.findIndex(r => r.ID === review.ID)
+    if (idx === -1) {
+        // If the review was not found, abort
+        return false
+    }
+
+    reviews[idx] = response.data
+    reviewMap.set(state.activeSubmission, reviews)
+    state.review.reviews = reviewMap;
+
+    (state.currentSubmission as Submission).score = response.data.score
+    return true
+
 }
 
 export const updateReady = async ({ state, actions }: Context, ready: boolean): Promise<void> => {
