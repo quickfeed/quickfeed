@@ -42,6 +42,10 @@ version-check:
 install:
 	@echo go install
 	@go install
+ifeq ($(OS),linux)
+	@echo "Setting priviledged ports capabilities for quickfeed"
+	@sudo setcap 'cap_net_bind_service=+ep' `which quickfeed`
+endif
 
 ui: version-check
 	@echo "Running npm ci and webpack"

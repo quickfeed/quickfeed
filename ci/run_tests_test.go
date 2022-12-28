@@ -35,21 +35,34 @@ func loadDockerfile(t *testing.T) string {
 }
 
 func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
-	dockerfileContent := loadDockerfile(t)
-
+	dockerfile := loadDockerfile(t)
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
 	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
-	courseID := uint64(1)
-	runData := &ci.RunData{
-		Course: &qf.Course{
-			ID:                  courseID,
-			Code:                "QF101",
-			ScmOrganizationName: qfTestOrg,
-			Dockerfile:          dockerfileContent,
-		},
+	course := &qf.Course{
+		ID:                  1,
+		Code:                "QF101",
+		ScmOrganizationName: qfTestOrg,
+	}
+	course.UpdateDockerfile(dockerfile)
+
+	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
+	t.Logf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
+	out, err := runner.Run(context.Background(), &ci.Job{
+		Name:       course.JobName(),
+		Image:      course.DockerImage(),
+		Dockerfile: course.GetDockerfile(),
+		Commands:   []string{`echo -n "Hello from Dockerfile"`},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(out)
+
+	return &ci.RunData{
+		Course: course,
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
 			ContainerTimeout: 1, // minutes
@@ -61,20 +74,6 @@ func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 		JobOwner: "muggles",
 		CommitID: rand.String()[:7],
 	}
-	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
-	t.Logf("Building %s's Dockerfile:\n%v", runData.Course.GetCode(), runData.Course.GetDockerfile())
-	out, err := runner.Run(context.Background(), &ci.Job{
-		Name:       runData.Course.GetCode() + "-" + rand.String(),
-		Image:      strings.ToLower(runData.Course.GetCode()),
-		Dockerfile: runData.Course.GetDockerfile(),
-		Commands:   []string{`echo -n "Hello from Dockerfile"`},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(out)
-
-	return runData
 }
 
 func TestRunTests(t *testing.T) {

@@ -15,37 +15,16 @@ import (
 // organization first, before synchronizing the tasks to issues. The test will leave
 // behind newly created issues on the user repositories for manual inspection.
 func TestSynchronizeTasksWithIssues(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, _ := scm.GetTestSCM(t)
-
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &qf.Course{
-		Name:                "QuickFeed Test Course",
-		ScmOrganizationName: qfTestOrg,
-	}
-	if err := PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
-		t.Fatal(err)
-	}
-
-	assignments := qtest.AssignmentsWithTasks(t, course.ID)
-	for _, assignment := range assignments {
-		assignment.CourseID = course.GetID()
-		if err := db.CreateAssignment(assignment); err != nil {
-			t.Error(err)
-		}
-	}
-
+	scmApp := scm.GetAppSCM(t)
+	course, assignments, repos := initDatabase(t, db, scmApp)
 	ctx := context.Background()
-	repos, err := s.GetRepositories(ctx, &qf.Organization{Name: course.ScmOrganizationName})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	// Delete all issues on student repositories
 	repoFn(repos, func(repo *scm.Repository) {
-		if err := s.DeleteIssues(ctx, &scm.RepositoryOptions{
+		if err := scmApp.DeleteIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.ScmOrganizationName,
 			Path:  repo.Path,
 		}); err != nil {
@@ -57,13 +36,13 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Create issues on student repositories for the first assignment's tasks
 	first := assignments[:1]
 	t.Logf("Synchronizing tasks with issues for assignment %d with %d tasks", first[0].GetOrder(), len(first[0].Tasks))
-	if err := synchronizeTasksWithIssues(ctx, db, s, course, first); err != nil {
+	if err := synchronizeTasksWithIssues(ctx, db, scmApp, course, first); err != nil {
 		t.Fatal(err)
 	}
 
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
-		scmIssues, err := s.GetIssues(ctx, &scm.RepositoryOptions{
+		scmIssues, err := scmApp.GetIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.ScmOrganizationName,
 			Path:  repo.Path,
 		})
@@ -85,13 +64,13 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Create issues on student repositories for the second assignment's tasks
 	second := assignments[1:]
 	t.Logf("Synchronizing tasks with issues for assignment %d with %d tasks", second[0].GetOrder(), len(second[0].Tasks))
-	if err := synchronizeTasksWithIssues(ctx, db, s, course, second); err != nil {
+	if err := synchronizeTasksWithIssues(ctx, db, scmApp, course, second); err != nil {
 		t.Fatal(err)
 	}
 
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
-		scmIssues, err := s.GetIssues(ctx, &scm.RepositoryOptions{
+		scmIssues, err := scmApp.GetIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.ScmOrganizationName,
 			Path:  repo.Path,
 		})
@@ -120,56 +99,92 @@ func repoFn(repos []*scm.Repository, fn func(repo *scm.Repository)) {
 	}
 }
 
-// PopulateDatabaseWithInitialData creates initial data-records based on organization
-// This function was created with the intent of being used for testing task and pull request related functionality.
-func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *qf.Course) error {
+// initDatabase creates initial data-records based on the QF_TEST_ORG organization.
+// This function is used for testing task and pull request related functionality.
+func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, []*qf.Assignment, []*scm.Repository) {
 	t.Helper()
 
+	qfTestOrg := scm.GetTestOrganization(t)
 	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{Name: course.ScmOrganizationName})
+	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{Name: qfTestOrg})
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
-	course.ScmOrganizationID = org.GetID()
+
+	course := &qf.Course{
+		Name:                "QuickFeed Test Course",
+		ScmOrganizationName: org.GetName(),
+		ScmOrganizationID:   org.GetID(),
+	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
 
-	// Create repositories
-	nxtRemoteID := uint64(2)
-	for _, repo := range repos {
-		dbRepo := &qf.Repository{
-			ScmRepositoryID:   repo.ID,
+	// Add repositories to the database
+	for _, scmRepo := range repos {
+		repo := &qf.Repository{
+			ScmRepositoryID:   scmRepo.ID,
 			ScmOrganizationID: org.GetID(),
-			HTMLURL:           repo.HTMLURL,
-			RepoType:          qf.RepoType(repo.Path),
+			HTMLURL:           scmRepo.HTMLURL,
+			RepoType:          qf.RepoType(scmRepo.Path),
 		}
-		if dbRepo.IsUserRepo() {
-			user := qtest.CreateFakeUser(t, db, nxtRemoteID)
-			nxtRemoteID++
+		if repo.IsUserRepo() {
+			user := qtest.CreateFakeUser(t, db, 0)
 			qtest.EnrollStudent(t, db, user, course)
 			group := &qf.Group{
-				Name:     dbRepo.UserName(),
+				Name:     repo.UserName(),
 				CourseID: course.GetID(),
 				Users:    []*qf.User{user},
 			}
 			if err := db.CreateGroup(group); err != nil {
-				return err
+				t.Fatal(err)
 			}
 			// For testing purposes, assume all student repositories are group repositories
 			// since tasks and pull requests are only supported for groups anyway.
-			dbRepo.RepoType = qf.Repository_GROUP
-			dbRepo.GroupID = group.GetID()
+			repo.RepoType = qf.Repository_GROUP
+			repo.GroupID = group.GetID()
 		}
-
-		t.Logf("create repo: %v", dbRepo)
-		if err = db.CreateRepository(dbRepo); err != nil {
-			return err
+		t.Logf("Creating repo in database: %v", scmRepo.Path)
+		if err = db.CreateRepository(repo); err != nil {
+			t.Fatal(err)
 		}
 	}
-	return nil
+
+	assignments := []*qf.Assignment{
+		{
+			CourseID:    course.GetID(),
+			Name:        "lab1",
+			Deadline:    qtest.Timestamp(t, "2022-12-01T19:00:00"),
+			AutoApprove: false,
+			Order:       1,
+			IsGroupLab:  false,
+			Tasks: []*qf.Task{
+				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
+				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
+			},
+		},
+		{
+			CourseID:    course.GetID(),
+			Name:        "lab2",
+			Deadline:    qtest.Timestamp(t, "2022-12-12T19:00:00"),
+			AutoApprove: false,
+			Order:       2,
+			IsGroupLab:  false,
+			Tasks: []*qf.Task{
+				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
+				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
+				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
+			},
+		},
+	}
+	for _, assignment := range assignments {
+		if err := db.CreateAssignment(assignment); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return course, assignments, repos
 }

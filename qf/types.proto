@@ -76,9 +76,9 @@ message Course {
     uint32 year                    = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:course"' }];
     string tag                     = 6;
     uint64 ScmOrganizationID       = 8;
-    string ScmOrganizationName     = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
+    string ScmOrganizationName     = 9;  // The organization's SCM name, e.g., dat520-2020.
     uint32 slipDays                = 10;
-    string dockerfile              = 11;
+    string DockerfileDigest        = 11;  // Digest of the dockerfile used to build the course's docker image.
     Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];
 
     repeated Enrollment enrollments = 13;

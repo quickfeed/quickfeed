@@ -236,7 +236,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Code:              "DAT100",
 		Year:              2017,
 		Tag:               "Spring",
-		Dockerfile:        "Dockerfile1",
+		DockerfileDigest:  "0x123abc",
 		ScmOrganizationID: 1234,
 	}
 	wantCourse := &qf.Course{
@@ -244,7 +244,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Code:              "DAT100-1",
 		Year:              2018,
 		Tag:               "Autumn",
-		Dockerfile:        "Another Dockerfile1",
+		DockerfileDigest:  "0x123def",
 		ScmOrganizationID: 12345,
 	}
 

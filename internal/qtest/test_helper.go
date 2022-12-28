@@ -44,25 +44,20 @@ func TestDB(t *testing.T) (database.Database, func()) {
 
 // CreateFakeUser is a test helper to create a user in the database
 // with the given remote id and the fake scm provider.
-func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *qf.User {
+func CreateFakeUser(t *testing.T, db database.Database, _ uint64) *qf.User {
 	t.Helper()
-	user := &qf.User{
-		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
-	}
+	user := &qf.User{}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
 }
 
-func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *qf.User {
+func CreateNamedUser(t *testing.T, db database.Database, _ uint64, name string) *qf.User {
 	t.Helper()
 	user := &qf.User{
-		Name:         name,
-		Login:        name,
-		ScmRemoteID:  remoteID,
-		RefreshToken: "refresh_token",
+		Name:  name,
+		Login: name,
 	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
@@ -130,37 +125,6 @@ func RandomString(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
-}
-
-// AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
-func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
-	return []*qf.Assignment{
-		{
-			CourseID:    courseID,
-			Name:        "lab1",
-			Deadline:    Timestamp(t, "12.01.2022"),
-			AutoApprove: false,
-			Order:       1,
-			IsGroupLab:  false,
-			Tasks: []*qf.Task{
-				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
-				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
-			},
-		},
-		{
-			CourseID:    courseID,
-			Name:        "lab2",
-			Deadline:    Timestamp(t, "12.12.2021"),
-			AutoApprove: false,
-			Order:       2,
-			IsGroupLab:  false,
-			Tasks: []*qf.Task{
-				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
-				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
-				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
-			},
-		},
-	}
 }
 
 func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {

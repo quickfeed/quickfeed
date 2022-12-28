@@ -74,13 +74,9 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 		return err
 	}
 
-	// TODO(espeland): Update this for GitHub web app.
-	// Currently this will create all tasks in the course creator's name.
-	// A possible workaround is to create a new scm client for every repo, and create the issues in one of the students name.
-	// See Espeland's report for discussion about these topics.
-
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
-	createdIssues := []*qf.Issue{}
+	// The created issues will be created by the QuickFeed user (the App owner).
+	var createdIssues []*qf.Issue
 	for _, repo := range repos {
 		if !repo.IsGroupRepo() {
 			continue
@@ -100,7 +96,7 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 
 // createIssues creates issues on scm based on repository, course and tasks. Returns created issues.
 func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.Repository, tasks []*qf.Task) ([]*qf.Issue, error) {
-	createdIssues := []*qf.Issue{}
+	var createdIssues []*qf.Issue
 	for _, task := range tasks {
 		issueOptions := &scm.IssueOptions{
 			Organization: course.GetScmOrganizationName(),
