@@ -89,9 +89,9 @@ func IsLocal(domain string) bool {
 		return false
 	}
 	for _, ip := range ips {
-		if ip.IsLoopback() || ip.IsPrivate() {
-			return true
+		if !(ip.IsLoopback() || ip.IsPrivate()) {
+			return false
 		}
 	}
-	return false
+	return true
 }
