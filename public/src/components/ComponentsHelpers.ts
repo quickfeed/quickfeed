@@ -33,9 +33,9 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
             return
         }
         if (isGroupLab) {
-            submission = submissions.getSubmissionsForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
         } else if (isEnrollment) {
-            submission = submissions.getSubmissionsForEnrollment(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
         }
         if (submission) {
             row.push(generator(submission, enrollment))

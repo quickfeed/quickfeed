@@ -319,12 +319,12 @@ export class SubmissionsForCourse {
     groupSubmissions: Map<bigint, Submissions> = new Map()
 
     /** getSubmissionsForEnrollment returns user submissions for the given enrollment */
-    getSubmissionsForEnrollment(enrollment: Enrollment): Submission[] {
+    ForUser(enrollment: Enrollment): Submission[] {
         return this.userSubmissions.get(enrollment.ID)?.submissions ?? []
     }
 
     /** getSubmissionsForGroup returns group submissions for the given group or enrollment */
-    getSubmissionsForGroup(group: Group | Enrollment): Submission[] {
+    ForGroup(group: Group | Enrollment): Submission[] {
         if (group instanceof Group) {
             return this.groupSubmissions.get(group.ID)?.submissions ?? []
         }
@@ -333,7 +333,7 @@ export class SubmissionsForCourse {
 
     /** getSubmissionsForOwner returns all submissions related to the passed in owner.
      * This is usually the currently selected group or user. */
-    getSubmissionsForOwner(owner: SubmissionOwner): Submission[] {
+    ForOwner(owner: SubmissionOwner): Submission[] {
         if (owner.type === "GROUP") {
             return this.groupSubmissions.get(owner.id)?.submissions ?? []
         }
@@ -341,7 +341,7 @@ export class SubmissionsForCourse {
     }
 
     update(owner: SubmissionOwner, submission: Submission) {
-        const submissions = this.getSubmissionsForOwner(owner)
+        const submissions = this.ForOwner(owner)
         const index = submissions.findIndex(s => s.AssignmentID === submission.AssignmentID)
         if (index === -1) {
             return

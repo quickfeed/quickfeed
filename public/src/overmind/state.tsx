@@ -276,9 +276,9 @@ export const state: State = {
                         const numApproved = submissions.get(el.ID)?.submissions?.reduce((acc, cur) => {
                             return acc + ((cur &&
                                 isApproved(cur)) ? 1 : 0)
-                            }, 0) ?? 0
-                            return numApproved < numAssignments
-                        })
+                        }, 0) ?? 0
+                        return numApproved < numAssignments
+                    })
                     break
                 default:
                     break
@@ -294,7 +294,7 @@ export const state: State = {
                 subA = submissions.get(a.ID)?.submissions.find(sub => sub.AssignmentID === assignmentID)
                 subB = submissions.get(b.ID)?.submissions.find(sub => sub.AssignmentID === assignmentID)
             }
-            
+
             const subsA = submissions.get(a.ID)?.submissions
             const subsB = submissions.get(b.ID)?.submissions
 
@@ -341,7 +341,7 @@ export const state: State = {
         if (activeSubmission === 0n) {
             return null
         }
-        const submissions = submissionsForCourse.getSubmissionsForOwner(submissionOwner)
+        const submissions = submissionsForCourse.ForOwner(submissionOwner)
         if (!submissions || submissions.length === 0) {
             return null
         }
