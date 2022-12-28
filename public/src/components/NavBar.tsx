@@ -24,9 +24,7 @@ const NavBar = (): JSX.Element => {
             </div>
             <NavBarActiveCourse />
             <NavBarUser />
-            {state.showFavorites &&
-                <NavFavorites />
-            }
+            <NavFavorites />
         </nav>
     )
 }

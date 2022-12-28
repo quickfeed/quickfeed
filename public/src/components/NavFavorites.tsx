@@ -14,7 +14,7 @@ const NavFavorites = (): JSX.Element => {
     })
 
     return (
-        <nav className="navigator">
+        <nav className={`navigator ${state.showFavorites ? "" : "hidden"}`}>
             <ul key="list" className="sidebarList">
                 {courses}
                 {state.isLoggedIn &&
