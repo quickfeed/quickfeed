@@ -53,7 +53,7 @@ const Lab = (): JSX.Element => {
             }
 
             return (
-                <div key={submission.ID.toString()}>
+                <div key={submission.ID.toString()} className="mb-4">
                     <LabResultTable submission={submission} assignment={assignment} />
 
                     {isManuallyGraded(assignment) && submission.released ? <ReviewResult review={review[0]} /> : null}
