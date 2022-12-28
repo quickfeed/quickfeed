@@ -45,7 +45,7 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
     }
 
     return (
-        <div className="card" style={{ width: "30rem", marginBottom: "10px", minHeight: "205px" }}>
+        <div className="card course-card">
             <div className={`card-header bg-${CardColor[status]} text-white`}>
                 {course.code}
                 <CourseEnrollmentStatus />
