@@ -81,7 +81,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				return err
 			}
 
-			assignment := qf.Assignment{}
+			var assignment qf.Assignment
 			if tx.Model(&qf.Assignment{}).FirstOrInit(&assignment,
 				&qf.Assignment{
 					CourseID: v.CourseID,
