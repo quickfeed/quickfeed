@@ -17,13 +17,10 @@ export const setSelectedReview = ({ state }: Context, index: number): void => {
 
 /* Update the selected review */
 export const updateReview = async ({ state, actions, effects }: Context): Promise<boolean> => {
-
     if (!(state.review.canUpdate && state.review.currentReview)) {
         // If canUpdate is false, the review cannot be updated
         return false
     }
-
-
     const reviews = state.review.reviews.get(state.activeSubmission)
     if (!reviews) {
         // If there are no reviews, the review cannot be updated
@@ -38,22 +35,20 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
         return false
     }
 
-    // Copy the review map and update the review
-    const reviewMap = new Map(state.review.reviews)
-
     const idx = reviews.findIndex(r => r.ID === review.ID)
     if (idx === -1) {
         // If the review was not found, abort
         return false
     }
-
     reviews[idx] = response.data
+
+    // Copy the review map and update the review
+    const reviewMap = new Map(state.review.reviews)
     reviewMap.set(state.activeSubmission, reviews)
     state.review.reviews = reviewMap;
 
     (state.currentSubmission as Submission).score = response.data.score
     return true
-
 }
 
 export const updateReady = async ({ state, actions }: Context, ready: boolean): Promise<void> => {
