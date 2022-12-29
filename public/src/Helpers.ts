@@ -318,12 +318,12 @@ export class SubmissionsForCourse {
     userSubmissions: Map<bigint, Submissions> = new Map()
     groupSubmissions: Map<bigint, Submissions> = new Map()
 
-    /** getSubmissionsForEnrollment returns user submissions for the given enrollment */
+    /** ForUser returns user submissions for the given enrollment */
     ForUser(enrollment: Enrollment): Submission[] {
         return this.userSubmissions.get(enrollment.ID)?.submissions ?? []
     }
 
-    /** getSubmissionsForGroup returns group submissions for the given group or enrollment */
+    /** ForGroup returns group submissions for the given group or enrollment */
     ForGroup(group: Group | Enrollment): Submission[] {
         if (group instanceof Group) {
             return this.groupSubmissions.get(group.ID)?.submissions ?? []
@@ -331,8 +331,8 @@ export class SubmissionsForCourse {
         return this.groupSubmissions.get(group.groupID)?.submissions ?? []
     }
 
-    /** getSubmissionsForOwner returns all submissions related to the passed in owner.
-     * This is usually the currently selected group or user. */
+    /** ForOwner returns all submissions related to the passed in owner.
+     * This is usually the selected group or user. */
     ForOwner(owner: SubmissionOwner): Submission[] {
         if (owner.type === "GROUP") {
             return this.groupSubmissions.get(owner.id)?.submissions ?? []
