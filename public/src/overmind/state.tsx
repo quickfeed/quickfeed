@@ -383,7 +383,7 @@ export const state: State = {
     }),
 
     getAssignmentsMap: derived(({ assignments }: State, { review: { assignmentID } }: Context["state"]) => courseID => {
-        const asgmts = assignments[courseID.toString()].filter(assignment => (assignmentID < 0) || assignment.ID === assignmentID)
+        const asgmts = assignments[courseID.toString()]?.filter(assignment => (assignmentID < 0) || assignment.ID === assignmentID) ?? []
         const assignmentsMap: AssignmentsMap = {}
         asgmts.forEach(assignment => {
             assignmentsMap[assignment.ID.toString()] = assignment.isGroupLab
