@@ -17,7 +17,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const courseID = getCourseID()
 
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
-    const assignments = useMemo(() => { 
+    const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
         return state.assignments[courseID.toString()].filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID)
     }, [state.assignments, courseID, state.review.assignmentID])
@@ -37,7 +37,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         return <h1>Fetching Submissions...</h1>
     }
 
-    const generateReviewCell = (submission: Submission, enrollment: Enrollment | Group): RowElement => {
+    const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
         if (!state.isManuallyGraded(submission)) {
             return { value: "N/A" }
         }
@@ -47,7 +47,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID)
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
-        const isSelected = state.activeSubmission === submission.ID
+        const isSelected = state.currentSubmission?.ID === submission.ID
         const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
         // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
         // Used to visually indicate that the submission will be released for the given minimum score
@@ -58,29 +58,29 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
             className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
-                actions.setActiveSubmission(submission.ID)
-                if (enrollment instanceof Enrollment) {
-                    actions.setActiveEnrollment(enrollment.clone())
+                actions.setCurrentSubmission(submission)
+                if (owner instanceof Enrollment) {
+                    actions.setActiveEnrollment(owner.clone())
                 }
-                actions.setSubmissionOwner({ submission, enrollment })
+                actions.setSubmissionOwner(owner)
                 actions.review.setSelectedReview(-1)
             }
         })
     }
 
-    const getSubmissionCell = (submission: Submission, enrollment: Enrollment | Group): CellElement => {
+    const getSubmissionCell = (submission: Submission, owner: Enrollment | Group): CellElement => {
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
-        const isSelected = state.activeSubmission === submission.ID
+        const isSelected = state.currentSubmission?.ID === submission.ID
         return ({
             value: `${submission.score} %`,
             className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
-                actions.setActiveSubmission(submission.ID)
-                if (enrollment instanceof Enrollment) {
-                    actions.setActiveEnrollment(enrollment.clone())
+                actions.setCurrentSubmission(submission)
+                if (owner instanceof Enrollment) {
+                    actions.setActiveEnrollment(owner.clone())
                 }
-                actions.setSubmissionOwner({ submission, enrollment })
+                actions.setSubmissionOwner(owner)
                 actions.getSubmission({ submissionID: submission.ID, courseID: state.activeCourse })
             }
         })

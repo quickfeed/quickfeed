@@ -105,9 +105,6 @@ export type State = {
     /* Contains all groups for a given course */
     groups: { [courseID: string]: Group[] },
 
-    /* Currently selected submission ID */
-    activeSubmission: bigint,
-
     /* Number of enrolled users */
     // derived from courseEnrollments
     numEnrolled: number,
@@ -335,18 +332,8 @@ export const state: State = {
         })
         return sortedSubmissions as Group[] | Enrollment[]
     }),
-    activeSubmission: 0n,
     activeEnrollment: null,
-    currentSubmission: derived(({ activeSubmission, submissionsForCourse, submissionOwner }: State) => {
-        if (activeSubmission === 0n) {
-            return null
-        }
-        const submissions = submissionsForCourse.ForOwner(submissionOwner)
-        if (!submissions || submissions.length === 0) {
-            return null
-        }
-        return submissions.find(submission => submission.ID === activeSubmission) ?? null
-    }),
+    currentSubmission: null,
     selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
         return assignments[activeCourse.toString()]?.find(a => a.ID === currentSubmission?.AssignmentID) ?? null
     }),

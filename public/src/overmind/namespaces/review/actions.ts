@@ -6,7 +6,7 @@ import { success } from '../../actions'
 
 /* Set the index of the selected review */
 export const setSelectedReview = ({ state }: Context, index: number): void => {
-    const reviews = state.review.reviews.get(state.activeSubmission)
+    const reviews = state.review.reviews.get(state.currentSubmission?.ID ?? -1n)
     if (index < 0) {
         const idx = reviews?.findIndex(r => isAuthor(state.self, r) || isCourseCreator(state.self, state.courses[Number(state.activeCourse)]))
         state.review.selectedReview = idx && idx >= 0 ? idx : -1
@@ -21,7 +21,8 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
         // If canUpdate is false, the review cannot be updated
         return false
     }
-    const reviews = state.review.reviews.get(state.activeSubmission)
+    const submissionID = state.currentSubmission?.ID ?? -1n
+    const reviews = state.review.reviews.get(submissionID)
     if (!reviews) {
         // If there are no reviews, the review cannot be updated
         return false
@@ -44,7 +45,7 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
 
     // Copy the review map and update the review
     const reviewMap = new Map(state.review.reviews)
-    reviewMap.set(state.activeSubmission, reviews)
+    reviewMap.set(submissionID, reviews)
     state.review.reviews = reviewMap;
 
     (state.currentSubmission as Submission).score = response.data.score
@@ -106,7 +107,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
         if (response.data) {
             // Adds the new review to the reviews list if the server responded with a review
             const reviews = new Map(state.review.reviews)
-            const length = reviews.get(state.activeSubmission)?.push(response.data as Review) ?? 0
+            const length = reviews.get(submission.ID)?.push(response.data as Review) ?? 0
             state.review.reviews = reviews
             actions.review.setSelectedReview(length - 1)
         }

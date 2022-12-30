@@ -465,8 +465,8 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
-export const setActiveSubmission = ({ state }: Context, submissionID: bigint): void => {
-    state.activeSubmission = submissionID
+export const setCurrentSubmission = ({ state }: Context, submission: Submission): void => {
+    state.currentSubmission = submission.clone()
 }
 
 export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
@@ -480,11 +480,11 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
     if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.activeSubmission, state.activeCourse)
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.currentSubmission.ID, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
-            await actions.getSubmission({ courseID: state.activeCourse, submissionID: BigInt(state.activeSubmission) })
+            await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.currentSubmission.ID })
             actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
             return true
         }
@@ -798,17 +798,15 @@ export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
 
 // setSubmissionOwner sets the owner of the currently selected submission.
 // The owner is either an enrollment or a group.
-export const setSubmissionOwner = ({ state }: Context, { submission, enrollment }: { submission: Submission, enrollment: Enrollment | Group }) => {
-    if (submission.groupID > 0) {
-        // If the submission has a groupID, it is a group submission,
-        // regardless of whether the enrollment object is of group or enrollment type.
-        state.submissionOwner = { type: "GROUP", id: submission.groupID }
-    } else if (enrollment instanceof Group) {
-        // If the enrollment object is a group, it is a group submission.
-        // However, the submission does not have a groupID.
-        // This should not happen, but we handle it anyway.
-        return
+export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group) => {
+    if (owner instanceof Group) {
+        state.submissionOwner = { type: "GROUP", id: owner.ID }
     } else {
-        state.submissionOwner = { type: "ENROLLMENT", id: enrollment.ID }
+        const groupID = state.currentSubmission?.groupID ?? 0n
+        if (groupID > 0) {
+            state.submissionOwner = { type: "GROUP", id: groupID }
+            return
+        }
+        state.submissionOwner = { type: "ENROLLMENT", id: owner.ID }
     }
 }
