@@ -648,7 +648,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
             results.push(actions.getUserSubmissions(courseID))
             results.push(actions.getGroupSubmissions(courseID))
             const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
-            results.push(actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses }))
+            results.push(actions.getEnrollmentsByCourse({ courseID, statuses }))
             if (enrollment.groupID > 0) {
                 results.push(actions.getGroupByUserAndCourse(courseID))
             }
