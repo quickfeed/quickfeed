@@ -364,8 +364,11 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 	return connect.NewResponse(submissions), nil
 }
 
-// GetSubmissionsByCourse returns all the latest submissions
-// for every individual or group course assignment for all course students/groups.
+// GetSubmissionsByCourse returns a map of submissions for the given course ID.
+// The map is keyed by either the group ID or enrollment ID depending on request type.
+// SubmissionRequest_GROUP returns a map keyed by group ID.
+// SubmissionRequest_ALL and SubmissionRequest_USER return a map keyed by enrollment ID.
+// The map values are lists of all submissions for the given group or enrollment.
 func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 

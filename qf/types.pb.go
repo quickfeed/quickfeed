@@ -2251,116 +2251,6 @@ func (x *Review) GetEdited() *timestamppb.Timestamp {
 	return nil
 }
 
-type SubmissionLink struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Assignment *Assignment `protobuf:"bytes,1,opt,name=assignment,proto3" json:"assignment,omitempty"`
-	Submission *Submission `protobuf:"bytes,2,opt,name=submission,proto3" json:"submission,omitempty"`
-}
-
-func (x *SubmissionLink) Reset() {
-	*x = SubmissionLink{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[21]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *SubmissionLink) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SubmissionLink) ProtoMessage() {}
-
-func (x *SubmissionLink) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[21]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SubmissionLink.ProtoReflect.Descriptor instead.
-func (*SubmissionLink) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *SubmissionLink) GetAssignment() *Assignment {
-	if x != nil {
-		return x.Assignment
-	}
-	return nil
-}
-
-func (x *SubmissionLink) GetSubmission() *Submission {
-	if x != nil {
-		return x.Submission
-	}
-	return nil
-}
-
-type EnrollmentLink struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Enrollment  *Enrollment       `protobuf:"bytes,2,opt,name=enrollment,proto3" json:"enrollment,omitempty"` // must have course and user/group preloaded
-	Submissions []*SubmissionLink `protobuf:"bytes,3,rep,name=submissions,proto3" json:"submissions,omitempty"`
-}
-
-func (x *EnrollmentLink) Reset() {
-	*x = EnrollmentLink{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[22]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *EnrollmentLink) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EnrollmentLink) ProtoMessage() {}
-
-func (x *EnrollmentLink) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[22]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EnrollmentLink.ProtoReflect.Descriptor instead.
-func (*EnrollmentLink) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{22}
-}
-
-func (x *EnrollmentLink) GetEnrollment() *Enrollment {
-	if x != nil {
-		return x.Enrollment
-	}
-	return nil
-}
-
-func (x *EnrollmentLink) GetSubmissions() []*SubmissionLink {
-	if x != nil {
-		return x.Submissions
-	}
-	return nil
-}
-
 var File_qf_types_proto protoreflect.FileDescriptor
 
 var file_qf_types_proto_rawDesc = []byte{
@@ -2730,25 +2620,10 @@ var file_qf_types_proto_rawDesc = []byte{
 	0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x2c, 0xca, 0xb5, 0x03, 0x28, 0xa2, 0x01, 0x25, 0x67, 0x6f,
 	0x72, 0x6d, 0x3a, 0x22, 0x73, 0x65, 0x72, 0x69, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x72, 0x3a, 0x74,
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x3b, 0x74, 0x79, 0x70, 0x65, 0x3a, 0x74, 0x69,
-	0x6d, 0x65, 0x22, 0x52, 0x06, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x22, 0x70, 0x0a, 0x0e, 0x53,
-	0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x4c, 0x69, 0x6e, 0x6b, 0x12, 0x2e, 0x0a,
-	0x0a, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x0e, 0x2e, 0x71, 0x66, 0x2e, 0x41, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e,
-	0x74, 0x52, 0x0a, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x2e, 0x0a,
-	0x0a, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x0e, 0x2e, 0x71, 0x66, 0x2e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f,
-	0x6e, 0x52, 0x0a, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x76, 0x0a,
-	0x0e, 0x45, 0x6e, 0x72, 0x6f, 0x6c, 0x6c, 0x6d, 0x65, 0x6e, 0x74, 0x4c, 0x69, 0x6e, 0x6b, 0x12,
-	0x2e, 0x0a, 0x0a, 0x65, 0x6e, 0x72, 0x6f, 0x6c, 0x6c, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x71, 0x66, 0x2e, 0x45, 0x6e, 0x72, 0x6f, 0x6c, 0x6c, 0x6d,
-	0x65, 0x6e, 0x74, 0x52, 0x0a, 0x65, 0x6e, 0x72, 0x6f, 0x6c, 0x6c, 0x6d, 0x65, 0x6e, 0x74, 0x12,
-	0x34, 0x0a, 0x0b, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x71, 0x66, 0x2e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x73,
-	0x73, 0x69, 0x6f, 0x6e, 0x4c, 0x69, 0x6e, 0x6b, 0x52, 0x0b, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73,
-	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x26, 0x5a, 0x21, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x75,
-	0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x66, 0xba, 0x02, 0x00, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6d, 0x65, 0x22, 0x52, 0x06, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x42, 0x26, 0x5a, 0x21, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66,
+	0x65, 0x65, 0x64, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x66,
+	0xba, 0x02, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2764,7 +2639,7 @@ func file_qf_types_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_qf_types_proto_goTypes = []interface{}{
 	(Group_GroupStatus)(0),        // 0: qf.Group.GroupStatus
 	(Repository_Type)(0),          // 1: qf.Repository.Type
@@ -2794,11 +2669,9 @@ var file_qf_types_proto_goTypes = []interface{}{
 	(*Benchmarks)(nil),            // 25: qf.Benchmarks
 	(*GradingCriterion)(nil),      // 26: qf.GradingCriterion
 	(*Review)(nil),                // 27: qf.Review
-	(*SubmissionLink)(nil),        // 28: qf.SubmissionLink
-	(*EnrollmentLink)(nil),        // 29: qf.EnrollmentLink
-	(*timestamppb.Timestamp)(nil), // 30: google.protobuf.Timestamp
-	(*score.BuildInfo)(nil),       // 31: score.BuildInfo
-	(*score.Score)(nil),           // 32: score.Score
+	(*timestamppb.Timestamp)(nil), // 28: google.protobuf.Timestamp
+	(*score.BuildInfo)(nil),       // 29: score.BuildInfo
+	(*score.Score)(nil),           // 30: score.Score
 }
 var file_qf_types_proto_depIdxs = []int32{
 	14, // 0: qf.User.Enrollments:type_name -> qf.Enrollment
@@ -2819,10 +2692,10 @@ var file_qf_types_proto_depIdxs = []int32{
 	9,  // 15: qf.Enrollment.group:type_name -> qf.Group
 	2,  // 16: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
 	3,  // 17: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
-	30, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
+	28, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
 	15, // 19: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
 	14, // 20: qf.Enrollments.enrollments:type_name -> qf.Enrollment
-	30, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
+	28, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
 	22, // 22: qf.Assignment.submissions:type_name -> qf.Submission
 	18, // 23: qf.Assignment.tasks:type_name -> qf.Task
 	24, // 24: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
@@ -2830,25 +2703,21 @@ var file_qf_types_proto_depIdxs = []int32{
 	4,  // 26: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
 	17, // 27: qf.Assignments.assignments:type_name -> qf.Assignment
 	5,  // 28: qf.Submission.status:type_name -> qf.Submission.Status
-	30, // 29: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
+	28, // 29: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
 	27, // 30: qf.Submission.reviews:type_name -> qf.Review
-	31, // 31: qf.Submission.BuildInfo:type_name -> score.BuildInfo
-	32, // 32: qf.Submission.Scores:type_name -> score.Score
+	29, // 31: qf.Submission.BuildInfo:type_name -> score.BuildInfo
+	30, // 32: qf.Submission.Scores:type_name -> score.Score
 	22, // 33: qf.Submissions.submissions:type_name -> qf.Submission
 	26, // 34: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
 	24, // 35: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
 	6,  // 36: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
 	24, // 37: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	30, // 38: qf.Review.edited:type_name -> google.protobuf.Timestamp
-	17, // 39: qf.SubmissionLink.assignment:type_name -> qf.Assignment
-	22, // 40: qf.SubmissionLink.submission:type_name -> qf.Submission
-	14, // 41: qf.EnrollmentLink.enrollment:type_name -> qf.Enrollment
-	28, // 42: qf.EnrollmentLink.submissions:type_name -> qf.SubmissionLink
-	43, // [43:43] is the sub-list for method output_type
-	43, // [43:43] is the sub-list for method input_type
-	43, // [43:43] is the sub-list for extension type_name
-	43, // [43:43] is the sub-list for extension extendee
-	0,  // [0:43] is the sub-list for field type_name
+	28, // 38: qf.Review.edited:type_name -> google.protobuf.Timestamp
+	39, // [39:39] is the sub-list for method output_type
+	39, // [39:39] is the sub-list for method input_type
+	39, // [39:39] is the sub-list for extension type_name
+	39, // [39:39] is the sub-list for extension extendee
+	0,  // [0:39] is the sub-list for field type_name
 }
 
 func init() { file_qf_types_proto_init() }
@@ -3109,30 +2978,6 @@ func file_qf_types_proto_init() {
 				return nil
 			}
 		}
-		file_qf_types_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SubmissionLink); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_qf_types_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EnrollmentLink); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3140,7 +2985,7 @@ func file_qf_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_qf_types_proto_rawDesc,
 			NumEnums:      7,
-			NumMessages:   23,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

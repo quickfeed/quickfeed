@@ -175,7 +175,7 @@ func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Su
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest) (*qf.CourseSubmissions, error) {
-	assignments, err := s.db.GetAssignmentsWithSubmissions(request)
+	submissions, err := s.db.GetCourseSubmissions(request.GetCourseID(), request.GetType())
 	if err != nil {
 		return nil, err
 	}
@@ -185,88 +185,86 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 		return nil, err
 	}
 
-	var enrolLinks []*qf.EnrollmentLink
+	var submissionsMap map[uint64]*qf.Submissions
 	switch request.GetType() {
 	case qf.SubmissionRequest_GROUP:
-		enrolLinks = makeGroupResults(course, assignments)
+		submissionsMap = makeGroupResults(course, submissions)
 	case qf.SubmissionRequest_USER:
-		enrolLinks = makeIndividualResults(course, assignments)
+		submissionsMap = makeUserResults(course, submissions)
 	case qf.SubmissionRequest_ALL:
-		enrolLinks = makeAllResults(course, assignments)
+		submissionsMap = makeAllResults(course, submissions)
 	}
-	return &qf.CourseSubmissions{Course: course, Links: enrolLinks}, nil
+	return &qf.CourseSubmissions{Submissions: submissionsMap}, nil
 }
 
-// makeGroupResults generates enrollment to assignment to submissions links
-// for all course groups and all group assignments
-func makeGroupResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
-	enrolLinks := make([]*qf.EnrollmentLink, 0)
-	seenGroup := make(map[uint64]bool)
+// makeGroupResults returns a map of group ID to Submissions
+// for all course groups and all group assignments.
+func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
+	submissionsMap := make(map[uint64]*qf.Submissions)
+	skipGroup := map[uint64]bool{0: true} // skip group ID 0 (no group)
+	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
-		if seenGroup[enrollment.GroupID] {
+		if skipGroup[enrollment.GroupID] {
 			continue // include group enrollment only once
 		}
-		seenGroup[enrollment.GroupID] = true
-		enrolLinks = append(enrolLinks, &qf.EnrollmentLink{
-			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
+		skipGroup[enrollment.GroupID] = true
+		// Note: we (intentionally) use enrollment.GroupID as the key to the map here.
+		// This is primarily a convenience for the frontend, which can then use
+		// the group ID as the key to the map.
+		submissionsMap[enrollment.GroupID] = &qf.Submissions{
+			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
 				// include group submissions for this enrollment
 				return submission.ByGroup(enrollment.GroupID)
 			}),
-		})
+		}
 	}
-	return enrolLinks
+	return submissionsMap
 }
 
-// makeIndividualResults returns enrollment links with submissions
-// for individual assignments for all students in the course.
-func makeIndividualResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
-	enrolLinks := make([]*qf.EnrollmentLink, 0)
+// makeUserResults returns a map of enrollment ID to Submissions
+// for all course enrollments (students) and all individual assignments.
+func makeUserResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
+	submissionsMap := make(map[uint64]*qf.Submissions)
+	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
-		enrolLinks = append(enrolLinks, &qf.EnrollmentLink{
-			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
+		submissionsMap[enrollment.ID] = &qf.Submissions{
+			Submissions: choose(submission, om, func(submission *qf.Submission) bool {
 				// include individual submissions for this enrollment
 				return submission.ByUser(enrollment.UserID)
 			}),
-		})
+		}
 	}
-	return enrolLinks
+	return submissionsMap
 }
 
-// makeAllResults returns enrollment links with submissions
-// for both individual and group assignments for all students/groups in the course.
-func makeAllResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
-	enrolLinks := make([]*qf.EnrollmentLink, len(course.Enrollments))
-	for i, enrollment := range course.Enrollments {
-		enrolLinks[i] = &qf.EnrollmentLink{
-			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
+// makeAllResults returns a map of enrollment ID to Submissions
+// for all course enrollments (students and groups) and all individual and group assignments.
+func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
+	submissionsMap := make(map[uint64]*qf.Submissions)
+	om := newOrderMap(course.GetAssignments())
+	for _, enrollment := range course.Enrollments {
+		submissionsMap[enrollment.ID] = &qf.Submissions{
+			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
 				// include individual and group submissions for this enrollment
 				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
 			}),
 		}
 	}
-	return enrolLinks
+	return submissionsMap
 }
 
-func makeSubmissionLinks(assignments []*qf.Assignment, include func(*qf.Submission) bool) []*qf.SubmissionLink {
-	subLinks := make([]*qf.SubmissionLink, len(assignments))
-	for i, assignment := range assignments {
-		subLinks[i] = &qf.SubmissionLink{
-			Assignment: assignment.CloneWithoutSubmissions(),
-		}
-		for _, submission := range assignment.Submissions {
-			if include(submission) {
-				subLinks[i].Submission = submission
-			}
+func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Submission) bool) []*qf.Submission {
+	var subs []*qf.Submission
+	for _, submission := range submissions {
+		if include(submission) {
+			subs = append(subs, submission)
 		}
 	}
-	// sort submission links by assignment order
-	sort.Slice(subLinks, func(i, j int) bool {
-		return subLinks[i].Assignment.Order < subLinks[j].Assignment.Order
+	// sort submissions by assignment order
+	sort.Slice(subs, func(i, j int) bool {
+		return order.Less(subs[i].AssignmentID, subs[j].AssignmentID)
 	})
-	return subLinks
+	return subs
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
@@ -316,7 +314,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
 func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
-	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
+	submissions, err := s.getAllCourseSubmissions(
 		&qf.SubmissionRequest{
 			CourseID: courseID,
 			FetchMode: &qf.SubmissionRequest_Type{
@@ -326,25 +324,29 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	if err != nil {
 		return nil, err
 	}
+	// fetch course record with all assignments and active enrollments
+	course, err := s.db.GetCourse(courseID, true)
+	if err != nil {
+		return nil, err
+	}
 	var enrollmentsWithActivity []*qf.Enrollment
-	for _, enrolLink := range allEnrollmentsWithSubmissions.Links {
-		enrol := enrolLink.Enrollment
+	for _, enrollment := range course.Enrollments {
 		var totalApproved uint64
 		var submissionDate time.Time
-		for _, submissionLink := range enrolLink.Submissions {
-			submission := submissionLink.Submission
+		for _, submission := range submissions.For(enrollment.ID) {
 			if submission.IsApproved() {
 				totalApproved++
 			}
-			if enrol.LastActivityDate == nil {
+			if enrollment.LastActivityDate == nil {
 				submissionDate = submission.NewestSubmissionDate(submissionDate)
 			}
 		}
-		enrol.TotalApproved = totalApproved
-		if enrol.LastActivityDate == nil && !submissionDate.IsZero() {
-			enrol.LastActivityDate = timestamppb.New(submissionDate)
+
+		enrollment.TotalApproved = totalApproved
+		if enrollment.LastActivityDate == nil && !submissionDate.IsZero() {
+			enrollment.LastActivityDate = timestamppb.New(submissionDate)
 		}
-		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
+		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
 	}
 	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
 	if err != nil {
@@ -372,4 +374,22 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 	// Save the user's new refresh token in the database.
 	user.RefreshToken = newRefreshToken
 	return s.db.UpdateUser(user)
+}
+
+type orderMap map[uint64]uint32
+
+// newOrderMap creates a new orderMap from a list of assignments.
+// The ID of each assignment is mapped to its order.
+// Useful for sorting submissions by assignment order
+// as the order is not stored in the submission themselves.
+func newOrderMap(assignments []*qf.Assignment) *orderMap {
+	om := make(orderMap)
+	for _, assignment := range assignments {
+		om[assignment.ID] = assignment.Order
+	}
+	return &om
+}
+
+func (om orderMap) Less(i, j uint64) bool {
+	return om[i] < om[j]
 }

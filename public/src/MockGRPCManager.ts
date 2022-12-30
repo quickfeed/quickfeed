@@ -15,8 +15,6 @@ import {
     User,
     Users,
     Assignment,
-    EnrollmentLink,
-    SubmissionLink,
     Enrollment_UserStatus,
     Group_GroupStatus,
     Submission_Status,
@@ -106,12 +104,8 @@ export class MockGrpcManager {
     }
 
     public setCurrentUser(id: number) {
-        const user = this.users.users.find(u => Number(u.ID) === id)
-        if (user) {
-            this.currentUser = user
-        } else {
-            this.currentUser = null
-        }
+        const user = this.users.users.find(u => Number(u.ID) === id) ?? null
+        this.currentUser = user
     }
 
     public getUser(): Promise<IGrpcResponse<User>> {
@@ -457,59 +451,51 @@ export class MockGrpcManager {
     }
 
     public getSubmissionsByCourse(courseID: bigint, type: SubmissionRequest_SubmissionType): Promise<IGrpcResponse<CourseSubmissions>> {
-        // TODO: Remove `.clone()` when done migrating to AsObject in state
-        const users = this.users.users
         const groups = this.groups.groups
-        const submissions = new CourseSubmissions()
-        const enrollmentLinks: EnrollmentLink[] = []
+        const submissions = new CourseSubmissions({ submissions: {} })
         const course = this.courses.courses.find(c => c.ID === courseID)
         if (!course) {
             return this.grpcSend<CourseSubmissions>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Course not found" }))
         }
-        submissions.course = course.clone()
 
-        const enrollments = this.enrollments.enrollments.filter(e => e.courseID === courseID)
+        let ids: Group[] | Enrollment[] = []
+        if (type === SubmissionRequest_SubmissionType.GROUP) {
+            // Get all group groups
+            ids = groups.filter(g => g.courseID === courseID)
+        } else {
+            // Get all enrollments
+            ids = this.enrollments.enrollments.filter(e => e.courseID === courseID)
+        }
+
         const aIDs = this.assignments.assignments.filter(a => a.CourseID === courseID).map(a => a.ID)
-        enrollments.forEach(enrollment => {
-            const link = new EnrollmentLink()
-            const enroll = enrollment.clone()
-            enroll.user = users.find(u => u.ID === enrollment.userID)?.clone()
-            enroll.group = groups.find(g => g.ID === enrollment.groupID)?.clone()
-            link.enrollment = enroll
-            const subs: SubmissionLink[] = []
-
+        ids.forEach((id) => {
+            submissions.submissions[id.ID.toString()] = new Submissions()
             this.assignments.assignments.forEach(assignment => {
                 if (!aIDs.includes(assignment.ID)) {
                     return
                 }
-                const subLink = new SubmissionLink()
-                subLink.assignment = assignment.clone()
                 let submission: Submission | undefined
                 switch (type) {
                     case SubmissionRequest_SubmissionType.ALL:
-                        submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && (s.userID === enrollment.userID || (s.groupID > 0 && s.groupID === enrollment.groupID)))
+                        submission = this.submissions.submissions.find(
+                            s => s.AssignmentID === assignment.ID &&
+                                (s.userID === id.ID || (s.groupID > 0 && s.groupID === (id as Enrollment).groupID)))
                         break
                     case SubmissionRequest_SubmissionType.USER:
-                        submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.userID === enrollment.userID)
+                        submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.userID === (id as Enrollment).userID)
                         break
                     case SubmissionRequest_SubmissionType.GROUP:
-                        submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.groupID > 0 && s.groupID === enrollment.groupID)
+                        submission = this.submissions.submissions.find(s => s.AssignmentID === assignment.ID && s.groupID > 0 && s.groupID === (id as Group).ID)
                         break
                 }
 
                 if (!submission) {
-                    subs.push(subLink)
                     return
                 }
 
-                subLink.submission = submission.clone()
-                subs.push(subLink)
+                submissions.submissions[id.ID.toString()].submissions.push(submission.clone())
             })
-            link.submissions = subs
-            enrollmentLinks.push(link)
         })
-        submissions.links = enrollmentLinks
-        // TODO
         return this.grpcSend<CourseSubmissions>(submissions)
     }
 

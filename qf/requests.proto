@@ -8,8 +8,7 @@ import "qf/types.proto";
 // Message types that are used as requests and responses in API calls.
 
 message CourseSubmissions {
-    Course course                 = 1;  // preloaded assignments
-    repeated EnrollmentLink links = 2;
+    map<uint64, Submissions> submissions = 1;
 }
 
 message ReviewRequest {

@@ -102,6 +102,22 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 	}
 }
 
+func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Course, status qf.Enrollment_UserStatus) *qf.Enrollment {
+	t.Helper()
+	enrollment := &qf.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}
+	if err := db.CreateEnrollment(enrollment); err != nil {
+		t.Fatal(err)
+	}
+	enrollment.Status = status
+	if err := db.UpdateEnrollment(enrollment); err != nil {
+		t.Fatal(err)
+	}
+	return enrollment
+}
+
 func RandomString(t *testing.T) string {
 	t.Helper()
 	randomness := make([]byte, 10)

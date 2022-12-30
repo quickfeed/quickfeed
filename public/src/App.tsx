@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { useAppState, useActions } from './overmind'
+import React from 'react'
+import { useAppState } from './overmind'
 import NavBar from "./components/NavBar"
 import { Switch, Route } from 'react-router-dom'
 import Profile from "./components/profile/Profile"
@@ -12,17 +12,6 @@ import AboutPage from './pages/AboutPage'
 
 const App = (): JSX.Element => {
     const state = useAppState()
-    const actions = useActions()
-
-    useEffect(() => {
-        async function setup() {
-            await actions.fetchUserData()
-        }
-        // If the user is not logged in, fetch user data to initialize the app state.
-        if (!state.isLoggedIn) {
-            setup()
-        }
-    }, [])
 
     const Main = () => {
         // Determine which routes are available to the user depending on the state

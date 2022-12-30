@@ -138,7 +138,7 @@ func TestUpdateAssignment(t *testing.T) {
 	}
 }
 
-func TestGetAssignmentsWithSubmissions(t *testing.T) {
+func TestGetCourseSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -164,21 +164,15 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-	req := &qf.SubmissionRequest{
-		CourseID: course.ID,
-		FetchMode: &qf.SubmissionRequest_Type{
-			Type: qf.SubmissionRequest_ALL,
-		},
-	}
-	assignments, err := db.GetAssignmentsWithSubmissions(req)
+	submissions, err := db.GetCourseSubmissions(course.ID, qf.SubmissionRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantStruct.BuildInfo = nil
 	wantAssignment := (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
-	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
-		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+	if diff := cmp.Diff(wantAssignment.Submissions, submissions, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourseSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Submission with Review
@@ -203,14 +197,14 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantReview); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err = db.GetAssignmentsWithSubmissions(req)
+	submissions, err = db.GetCourseSubmissions(course.ID, qf.SubmissionRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantAssignment = (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantReview)
-	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
-		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+	if diff := cmp.Diff(wantAssignment.Submissions, submissions, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourseSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 }
 

@@ -1,7 +1,9 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import { SubmissionOwner } from "./overmind/state"
 import { Timestamp } from "@bufbuild/protobuf"
+import { CourseSubmissions } from "../proto/qf/requests_pb"
 
 export enum Color {
     RED = "danger",
@@ -86,48 +88,6 @@ export const EnrollmentStatus = {
     3: "Teacher",
 }
 
-/*
-    arr: Any array, ex. Enrollment[], User[],
-    funcs: an array of functions that will be applied in order to reach the field to sort on
-    by: A function returning an element to sort on
-
-    Example:
-        To sort state.enrollmentsByCourseId[2].getUser().getName() by name, call like
-        (state.enrollmentsByCourseId[2], [Enrollment.prototype.getUser], User.prototype.getName)
-
-    Returns an array of the same type as arr, sorted by the by-function
-*/
-export const sortByField = (arr: any[], funcs: Function[], by: Function, descending?: boolean) => {
-    const unsortedArray = Object.assign([], arr)
-    const sortedArray = unsortedArray.sort((a, b) => {
-        let x: any
-        let y: any
-        if (!a || !b) {
-            return 0
-        }
-        if (funcs.length > 0) {
-            funcs.forEach(func => {
-                x = x ? func.call(x) : func.call(a)
-                y = y ? func.call(y) : func.call(b)
-            })
-        } else {
-            x = a
-            y = b
-        }
-        if (by.call(x) === by.call(y)) {
-            return 0
-        }
-        if (by.call(x) < by.call(y)) {
-            return descending ? 1 : -1
-        }
-        if (by.call(x) > by.call(y)) {
-            return descending ? -1 : 1
-        }
-        return -1
-    })
-    return sortedArray
-}
-
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
 /** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
 export const getPassedTestsCount = (score: Score[]): string => {
@@ -145,16 +105,6 @@ export const getPassedTestsCount = (score: Score[]): string => {
     return `${passedTests}/${totalTests}`
 }
 
-export const isValid = (elm: User | EnrollmentLink): boolean => {
-    if (elm instanceof User) {
-        return elm.Name.length > 0 && elm.Email.length > 0 && elm.StudentID.length > 0
-    }
-    if (elm instanceof EnrollmentLink) {
-        return elm.enrollment?.user !== undefined && elm.submissions.length > 0
-    }
-    return true
-}
-
 /** hasEnrollment returns true if any of the provided has been approved */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     return enrollments.some(enrollment => enrollment.status > Enrollment_UserStatus.PENDING)
@@ -169,11 +119,6 @@ export const isApprovedGroup = (group: Group): boolean => { return group.status 
 
 /** isEnrolled returns true if the user is enrolled in the course, and is no longer pending. */
 export const isEnrolled = (enrollment: Enrollment): boolean => { return enrollment.status >= Enrollment_UserStatus.STUDENT }
-
-/** toggleUserStatus switches between teacher and student status. */
-export const toggleUserStatus = (enrollment: Enrollment): Enrollment_UserStatus => {
-    return isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER
-}
 
 export const hasNone = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.NONE }
 export const hasPending = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.PENDING }
@@ -212,34 +157,24 @@ export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 
-/** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
-export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+/** getSubmissionsScore calculates the total score of all submissions */
+export const getSubmissionsScore = (submissions: Submission[]): number => {
     let score = 0
-    submissions.forEach(link => {
-        if (!link.submission) {
-            return
-        }
-        score += link.submission.score
+    submissions.forEach(submission => {
+        score += submission.score
     })
     return score
 }
 
-/** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
-export const getNumApproved = (submissions: SubmissionLink[]): number => {
+/** getNumApproved returns the number of approved submissions */
+export const getNumApproved = (submissions: Submission[]): number => {
     let num = 0
     submissions.forEach(submission => {
-        if (!submission.submission) {
-            return
-        }
-        if (isApproved(submission.submission)) {
+        if (isApproved(submission)) {
             num++
         }
     })
     return num
-}
-
-export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: bigint): Submission | undefined => {
-    return submissions?.find(submission => submission.assignment?.ID === assignmentID)?.submission
 }
 
 export const EnrollmentStatusBadge = {
@@ -287,11 +222,17 @@ export const userLink = (user: User): string => {
     return `https://github.com/${user.Login}`
 }
 
-export const userRepoLink = (course: Course, user: User): string => {
+export const userRepoLink = (user: User, course?: Course): string => {
+    if (!course) {
+        return userLink(user)
+    }
     return `https://github.com/${course.ScmOrganizationName}/${user.Login}-labs`
 }
 
-export const groupRepoLink = (course: Course, group: Group): string => {
+export const groupRepoLink = (group: Group, course?: Course): string => {
+    if (!course) {
+        return ""
+    }
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
@@ -371,4 +312,63 @@ export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSor
     return enrollments.sort((a, b) => {
         return enrollmentCompare(a, b, sortBy, descending)
     })
+}
+
+export class SubmissionsForCourse {
+    userSubmissions: Map<bigint, Submissions> = new Map()
+    groupSubmissions: Map<bigint, Submissions> = new Map()
+
+    /** ForUser returns user submissions for the given enrollment */
+    ForUser(enrollment: Enrollment): Submission[] {
+        return this.userSubmissions.get(enrollment.ID)?.submissions ?? []
+    }
+
+    /** ForGroup returns group submissions for the given group or enrollment */
+    ForGroup(group: Group | Enrollment): Submission[] {
+        if (group instanceof Group) {
+            return this.groupSubmissions.get(group.ID)?.submissions ?? []
+        }
+        return this.groupSubmissions.get(group.groupID)?.submissions ?? []
+    }
+
+    /** ForOwner returns all submissions related to the passed in owner.
+     * This is usually the selected group or user. */
+    ForOwner(owner: SubmissionOwner): Submission[] {
+        if (owner.type === "GROUP") {
+            return this.groupSubmissions.get(owner.id)?.submissions ?? []
+        }
+        return this.userSubmissions.get(owner.id)?.submissions ?? []
+    }
+
+    update(owner: SubmissionOwner, submission: Submission) {
+        const submissions = this.ForOwner(owner)
+        const index = submissions.findIndex(s => s.AssignmentID === submission.AssignmentID)
+        if (index === -1) {
+            return
+        } else {
+            submissions[index] = submission
+        }
+        if (owner.type === "GROUP") {
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+        } else {
+            const clone = new Map(this.userSubmissions)
+            this.userSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+        }
+    }
+
+    setSubmissions(type: "USER" | "GROUP", submissions: CourseSubmissions) {
+        const map = new Map<bigint, Submissions>()
+        for (const [key, value] of Object.entries(submissions.submissions)) {
+            map.set(BigInt(key), value)
+        }
+        switch (type) {
+            case "USER":
+                this.userSubmissions = map
+                break
+            case "GROUP":
+                this.groupSubmissions = map
+                break
+        }
+    }
 }

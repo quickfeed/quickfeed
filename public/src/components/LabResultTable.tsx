@@ -48,7 +48,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
 
     if (submission && assignment) {
-        const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.CourseID.toString()]
+        const enrollment = state.selectedEnrollment ?? state.enrollmentsByCourseID[assignment.CourseID.toString()]
         const buildInfo = submission.BuildInfo
         const delivered = getFormattedTime(buildInfo?.SubmissionDate)
         const built = getFormattedTime(buildInfo?.BuildDate)

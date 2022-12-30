@@ -271,13 +271,3 @@ message Review {
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
     google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
 }
-
-message SubmissionLink {
-    Assignment assignment = 1;
-    Submission submission = 2;
-}
-
-message EnrollmentLink {
-    Enrollment enrollment               = 2;  // must have course and user/group preloaded
-    repeated SubmissionLink submissions = 3;
-}

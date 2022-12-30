@@ -17,7 +17,7 @@ export const DevelopmentMode = () => {
 
     const setUser = async (id: string) => {
         (effects.grpcMan as unknown as MockGrpcManager).setCurrentUser(Number(id))
-        actions.resetState()
+        actions.internal.resetState()
         await actions.fetchUserData()
     }
 

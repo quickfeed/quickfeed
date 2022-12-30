@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react"
-import { Enrollment, SubmissionLink } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
+import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
+import { Color, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -15,78 +15,73 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const links = useMemo(() => { return state.sortedAndFilteredSubmissions }, [state.sortedAndFilteredSubmissions])
+
+    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
+    const assignments = useMemo(() => {
+        // Filter out all assignments that are not the selected assignment, if any assignment is selected
+        return state.assignments[courseID.toString()].filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID)
+    }, [state.assignments, courseID, state.review.assignmentID])
 
     useEffect(() => {
-        if (!state.courseSubmissions[courseID.toString()]) {
+        if (!state.loadedCourse[courseID.toString()]) {
             actions.getAllCourseSubmissions(courseID)
         }
         return () => {
-            actions.setActiveSubmissionLink(null)
             actions.setGroupView(false)
-            actions.review.setAssignmentID(BigInt(-1))
+            actions.review.setAssignmentID(-1n)
             actions.setActiveEnrollment(null)
         }
-    }, [state.courseSubmissions])
+    }, [state.loadedCourse])
 
-    if (!state.courseSubmissions[courseID.toString()]) {
+    if (!state.loadedCourse[courseID.toString()]) {
         return <h1>Fetching Submissions...</h1>
     }
 
-
-    const generateReviewCell = (submissionLink: SubmissionLink): RowElement => {
-        const submission = submissionLink.submission
-        const assignment = submissionLink.assignment
-        if (submission && assignment && isManuallyGraded(assignment)) {
-            const reviews = state.review.reviews[assignment.CourseID.toString()][Number(submission.ID)] ?? []
-            // Check if the current user has any pending reviews for this submission
-            // Used to give cell a box shadow to indicate that the user has a pending review
-            const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID)
-            // Check if the this submission is the currently selected submission
-            // Used to highlight the cell
-            const isSelected = state.activeSubmission === Number(submission.ID)
-            const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
-            // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
-            // Used to visually indicate that the submission will be released for the given minimum score
-            const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
-            return ({
-                // TODO: Figure out a better way to visualize released submissions than '(r)'
-                value: `${reviews.length}/${assignment.reviewers} ${submission.released ? "(r)" : ""}`,
-                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
-                onClick: () => {
-                    actions.setActiveSubmissionLink(submissionLink.clone())
-                    actions.review.setSelectedReview(-1)
-                }
-            })
+    const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
+        if (!state.isManuallyGraded(submission)) {
+            return { value: "N/A" }
         }
+        const reviews = state.review.reviews.get(submission.ID) ?? []
+        // Check if the current user has any pending reviews for this submission
+        // Used to give cell a box shadow to indicate that the user has a pending review
+        const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID)
+        // Check if the this submission is the currently selected submission
+        // Used to highlight the cell
+        const isSelected = state.selectedSubmission?.ID === submission.ID
+        const score = reviews.reduce((acc, theReview) => acc + theReview.score, 0) / reviews.length
+        // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
+        // Used to visually indicate that the submission will be released for the given minimum score
+        const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
+        const numReviewers = state.assignments[state.activeCourse.toString()]?.find((a) => a.ID === submission.AssignmentID)?.reviewers ?? 0
         return ({
-            value: "N/A",
+            // TODO: Figure out a better way to visualize released submissions than '(r)'
+            value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
+            className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
-                actions.setActiveSubmissionLink(null)
+                actions.setSelectedSubmission(submission)
+                if (owner instanceof Enrollment) {
+                    actions.setActiveEnrollment(owner.clone())
+                }
+                actions.setSubmissionOwner(owner)
+                actions.review.setSelectedReview(-1)
             }
         })
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink, enrollment: Enrollment): CellElement => {
-        const submission = submissionLink.submission
-        if (submission) {
-            // Check if the this submission is the currently selected submission
-            // Used to highlight the cell
-            const isSelected = BigInt(state.activeSubmission) === submission.ID
-            return ({
-                value: `${submission.score} %`,
-                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
-                onClick: () => {
-                    actions.setActiveSubmissionLink(submissionLink.clone())
-                    actions.setActiveEnrollment(enrollment.clone())
-                }
-            })
-        }
+    const getSubmissionCell = (submission: Submission, owner: Enrollment | Group): CellElement => {
+        // Check if the this submission is the currently selected submission
+        // Used to highlight the cell
+        const isSelected = state.selectedSubmission?.ID === submission.ID
         return ({
-            value: "N/A",
+            value: `${submission.score} %`,
+            className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
-                actions.setActiveSubmissionLink(null)
-                actions.setActiveEnrollment(null)
+                actions.setSelectedSubmission(submission)
+                if (owner instanceof Enrollment) {
+                    actions.setActiveEnrollment(owner.clone())
+                }
+                actions.setSubmissionOwner(owner)
+                actions.getSubmission({ submissionID: submission.ID, courseID: state.activeCourse })
             }
         })
     }
@@ -94,12 +89,10 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
     const groupView = state.groupView
     const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
-    const assignments = state.assignments[courseID.toString()].filter(assignment => (state.review.assignmentID < 0) || assignment.ID === state.review.assignmentID)
-    const assignmentIDs = assignments.filter(assignment => groupView ? assignment.isGroupLab : true).map(assignment => assignment.ID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const generator = review ? generateReviewCell : getSubmissionCell
-    const rows = generateSubmissionRows(links, review, generator, assignmentIDs, false)
+    const rows = generateSubmissionRows(members, generator)
 
 
     return (

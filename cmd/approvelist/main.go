@@ -52,7 +52,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	submissions, err := getSubmissions(*serverURL, *courseCode, uint32(*year))
+	submissions, enrollments, err := getSubmissions(*serverURL, *courseCode, uint32(*year))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,16 +65,15 @@ func main() {
 	quickfeedStudents := make(map[string]int)
 	approvedMap := make(map[string]string)
 	numPass, numIgnored := 0, 0
-	for _, el := range submissions.GetLinks() {
-		enroll := el.GetEnrollment()
+	for _, enroll := range enrollments {
 		// ignore course admins and teachers
 		if enroll.IsAdmin() || enroll.IsTeacher() {
 			continue
 		}
 		student := enroll.Name()
-		approved := make([]bool, len(el.Submissions))
-		for i, s := range el.Submissions {
-			approved[i] = s.GetSubmission().IsApproved()
+		approved := make([]bool, len(submissions.For(enroll.ID)))
+		for i, s := range submissions.For(enroll.ID) {
+			approved[i] = s.IsApproved()
 		}
 		quickfeedStudents[student] = 1
 
@@ -118,10 +117,10 @@ func main() {
 	}
 }
 
-func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmissions, error) {
+func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmissions, []*qf.Enrollment, error) {
 	token, err := env.GetAccessToken()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	client := NewQuickFeed(serverURL, token)
@@ -130,7 +129,7 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 
 	user, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var courseID uint64
 	for _, enrollment := range user.Msg.GetEnrollments() {
@@ -141,7 +140,7 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 		}
 	}
 	if courseID == 0 {
-		return nil, fmt.Errorf("course %s-%d not found", courseCode, year)
+		return nil, nil, fmt.Errorf("course %s-%d not found", courseCode, year)
 	}
 
 	submissionCourseRequest := &qf.SubmissionRequest{
@@ -152,9 +151,17 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 	}
 	submissions, err := client.GetSubmissionsByCourse(ctx, connect.NewRequest(submissionCourseRequest))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get submissions for course %s: %w", courseCode, err)
+		return nil, nil, fmt.Errorf("failed to get submissions for course %s: %w", courseCode, err)
 	}
-	return submissions.Msg, err
+	enrollments, err := client.GetEnrollments(ctx, connect.NewRequest(&qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_CourseID{
+			CourseID: courseID,
+		},
+	}))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get enrollments for course %s: %w", courseCode, err)
+	}
+	return submissions.Msg, enrollments.Msg.Enrollments, err
 }
 
 func lookupRow(name string, studentMap map[string]int) (int, error) {

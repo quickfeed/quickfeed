@@ -1,7 +1,7 @@
 import React from "react"
 import { Review } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
-import { Color, SubmissionStatus } from "../../Helpers"
+import { Color, getFormattedTime, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
@@ -16,8 +16,8 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
         return null
     }
 
-    const assignment = state.activeSubmissionLink?.assignment
-    const submission = state.activeSubmissionLink?.submission
+    const assignment = state.selectedAssignment
+    const submission = state.selectedSubmission
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
@@ -57,7 +57,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Updated: </span>
-                {review.edited}
+                {getFormattedTime(review.edited)}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Graded: </span>
