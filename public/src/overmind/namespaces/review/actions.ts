@@ -62,8 +62,8 @@ export const updateReady = async ({ state, actions }: Context, ready: boolean): 
 export const updateComment = async ({ actions }: Context, { grade, comment }: { grade: GradingBenchmark | GradingCriterion, comment: string }): Promise<void> => {
     const oldComment = grade.comment
     grade.comment = comment
-    const success = await actions.review.updateReview()
-    if (!success) {
+    const ok = await actions.review.updateReview()
+    if (!ok) {
         grade.comment = oldComment
     }
 }
@@ -72,8 +72,8 @@ export const updateFeedback = async ({ state, actions }: Context, { feedback }: 
     if (state.review.currentReview) {
         const oldFeedback = state.review.currentReview.feedback
         state.review.currentReview.feedback = feedback
-        const successful = await actions.review.updateReview()
-        if (!successful) {
+        const ok = await actions.review.updateReview()
+        if (!ok) {
             state.review.currentReview.feedback = oldFeedback
         }
     }
@@ -82,8 +82,8 @@ export const updateFeedback = async ({ state, actions }: Context, { feedback }: 
 export const setGrade = async ({ actions }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion_Grade }): Promise<void> => {
     const oldGrade = criterion.grade
     criterion.grade = grade
-    const successful = await actions.review.updateReview()
-    if (!successful) {
+    const ok = await actions.review.updateReview()
+    if (!ok) {
         criterion.grade = oldGrade
     }
 }

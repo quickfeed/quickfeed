@@ -48,7 +48,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
         const isSelected = state.selectedSubmission?.ID === submission.ID
-        const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
+        const score = reviews.reduce((acc, theReview) => acc + theReview.score, 0) / reviews.length
         // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
         // Used to visually indicate that the submission will be released for the given minimum score
         const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
