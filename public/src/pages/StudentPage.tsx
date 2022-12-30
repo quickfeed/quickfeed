@@ -1,7 +1,6 @@
 import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
-import CourseBanner from "../components/CourseBanner"
 import CourseLabs from "../components/CourseLabs"
 import CourseUtilityLinks from "../components/CourseUtilityLinks"
 import GroupPage from "./GroupPage"
@@ -16,9 +15,8 @@ const StudentPage = (): JSX.Element => {
     const root = `/course/${courseID}`
 
     return (
-        <>
+        <div className="box">
             <RedirectButton to={root} />
-            <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname !== root}>
                 <div className="col-md-9" >
@@ -30,7 +28,7 @@ const StudentPage = (): JSX.Element => {
                 <Route path="/course/:id/group" exact component={GroupPage} />
                 <Route path="/course/:id/lab/:lab" exact component={Lab} />
             </Switch>
-        </>
+        </div>
     )
 }
 

@@ -11,7 +11,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
     const [rebuilding, setRebuilding] = React.useState(false)
 
     const buttons: { text: string, status: Submission_Status, style: string, onClick?: () => void }[] = [
-        { text: "Approve", status: Submission_Status.APPROVED, style: "primary" },
+        { text: "Approve", status: Submission_Status.APPROVED, style: "success" },
         { text: "Revision", status: Submission_Status.REVISION, style: "warning" },
         { text: "Reject", status: Submission_Status.REJECTED, style: "danger" },
     ]
