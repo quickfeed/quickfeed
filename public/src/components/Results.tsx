@@ -19,7 +19,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
     const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
-        return state.assignments[courseID.toString()].filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID)
+        return state.assignments[courseID.toString()]?.filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID) ?? []
     }, [state.assignments, courseID, state.review.assignmentID])
 
     useEffect(() => {
