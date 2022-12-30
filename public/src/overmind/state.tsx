@@ -249,9 +249,9 @@ export const state: State = {
         if (assignmentID > 0) {
             numAssignments = 1
         } else if (groupView) {
-            numAssignments = assignments[activeCourse.toString()].filter(a => a.isGroupLab).length || 0
+            numAssignments = assignments[activeCourse.toString()]?.filter(a => a.isGroupLab).length || 0
         } else {
-            numAssignments = assignments[activeCourse.toString()].length || 0
+            numAssignments = assignments[activeCourse.toString()]?.length ?? 0
         }
 
         let filtered: GroupOrEnrollment[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
