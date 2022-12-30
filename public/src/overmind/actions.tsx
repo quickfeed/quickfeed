@@ -7,7 +7,7 @@ import { Alert } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
 import { Code } from "@bufbuild/connect-web"
-import * as internalActions from "./internalActions"
+import * as internalActions from "./internalActions" // skipcq: JS-C1003
 
 export const internal = internalActions
 
