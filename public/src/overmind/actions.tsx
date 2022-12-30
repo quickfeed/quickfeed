@@ -316,7 +316,7 @@ export const getOrganization = async ({ actions, effects }: Context, orgName: st
 }
 
 /* createCourse creates a new course */
-export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, org: Organization }): Promise<void> => {
+export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, org: Organization }): Promise<boolean> => {
     const course = Object.assign({}, value.course)
     /* Fill in required fields */
     course.ScmOrganizationID = value.org.ID
@@ -329,9 +329,10 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
         state.courses.push(response.data)
         /* User that created the course is automatically enrolled in the course. Refresh the enrollment list */
         actions.getEnrollmentsByUser()
-        return
+        return true
     }
     actions.alertHandler(response)
+    return false
 }
 
 /** Updates a given course and refreshes courses in state if successful  */
