@@ -145,12 +145,14 @@
 }
 
 #content {
+    transition: margin-left ease-in-out 0.2s;
     margin-left: 350px;
     margin-right: 100px;
     width: 100%;
 }
 
 #content-full {
+    transition: margin-left ease-in-out 0.2s;
     margin-left: 100px;
     margin-right: 100px;
     width: 100%;
