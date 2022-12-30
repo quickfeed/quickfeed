@@ -131,8 +131,8 @@ export type State = {
     /* The current course ID */
     activeCourse: bigint,
 
-    /* The current assignment ID */
-    activeAssignment: number,
+    /* The currently selected assignment ID */
+    selectedAssignmentID: number,
 
     /* The current assignment */
     selectedAssignment: Assignment | null,
@@ -146,11 +146,11 @@ export type State = {
     /* Current search query */
     query: string,
 
-    /* Current enrollment */
-    activeEnrollment: Enrollment | null,
+    /* Currently selected enrollment */
+    selectedEnrollment: Enrollment | null,
 
-    /* Current submission */
-    currentSubmission: Submission | null,
+    /* Currently selected submission */
+    selectedSubmission: Submission | null,
 
     /* The value to sort submissions by */
     sortSubmissionsBy: SubmissionSort,
@@ -332,10 +332,10 @@ export const state: State = {
         })
         return sortedSubmissions as Group[] | Enrollment[]
     }),
-    activeEnrollment: null,
-    currentSubmission: null,
-    selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
-        return assignments[activeCourse.toString()]?.find(a => a.ID === currentSubmission?.AssignmentID) ?? null
+    selectedEnrollment: null,
+    selectedSubmission: null,
+    selectedAssignment: derived(({ activeCourse, selectedSubmission, assignments }: State) => {
+        return assignments[activeCourse.toString()]?.find(a => a.ID === selectedSubmission?.AssignmentID) ?? null
     }),
     assignments: {},
     repositories: {},
@@ -344,7 +344,7 @@ export const state: State = {
     alerts: [],
     isLoading: true,
     activeCourse: BigInt(-1),
-    activeAssignment: -1,
+    selectedAssignmentID: -1,
     courseEnrollments: {},
     groups: {},
     pendingGroups: derived(({ activeCourse, groups }: State) => {

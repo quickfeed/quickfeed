@@ -39,11 +39,11 @@ export const state: ReviewState = {
 
     reviews: new Map(),
 
-    currentReview: derived(({ reviews, selectedReview }: ReviewState, { currentSubmission, activeCourse }: Context["state"]) => {
-        if (!(activeCourse > 0 && currentSubmission !== null)) {
+    currentReview: derived(({ reviews, selectedReview }: ReviewState, { selectedSubmission, activeCourse }: Context["state"]) => {
+        if (!(activeCourse > 0 && selectedSubmission !== null)) {
             return null
         }
-        const check = reviews.get(currentSubmission.ID)
+        const check = reviews.get(selectedSubmission.ID)
         return check ? check[selectedReview] : null
     }),
 
@@ -54,14 +54,14 @@ export const state: ReviewState = {
         return users[currentReview.ReviewerID.toString()]
     }),
 
-    canUpdate: derived(({ currentReview }: ReviewState, { activeCourse, currentSubmission }: Context["state"]) => {
-        return currentReview !== null && activeCourse > 0 && currentReview?.ID > 0 && currentSubmission !== null
+    canUpdate: derived(({ currentReview }: ReviewState, { activeCourse, selectedSubmission }: Context["state"]) => {
+        return currentReview !== null && activeCourse > 0 && currentReview?.ID > 0 && selectedSubmission !== null
     }),
 
     criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {
         let total = 0
-        if (rootState.currentSubmission && rootState.activeCourse) {
-            const assignment = rootState.assignments[rootState.activeCourse.toString()]?.find(a => a.ID === rootState.currentSubmission?.AssignmentID)
+        if (rootState.selectedSubmission && rootState.activeCourse) {
+            const assignment = rootState.assignments[rootState.activeCourse.toString()]?.find(a => a.ID === rootState.selectedSubmission?.AssignmentID)
             if (assignment) {
                 assignment.gradingBenchmarks.forEach(bm => {
                     bm.criteria.forEach(() => {

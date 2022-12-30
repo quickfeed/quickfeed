@@ -13,7 +13,7 @@ interface MatchProps {
 }
 
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
- *  If the user is a teacher, Lab displays a submission based on the submission in state.currentSubmission.
+ *  If the user is a teacher, Lab displays the currently selected submission.
  */
 const Lab = (): JSX.Element => {
 
@@ -25,7 +25,7 @@ const Lab = (): JSX.Element => {
 
     useEffect(() => {
         if (!state.isTeacher) {
-            actions.setActiveAssignment(Number(lab))
+            actions.setSelectedAssignmentID(Number(lab))
         }
     }, [lab])
 
@@ -34,8 +34,8 @@ const Lab = (): JSX.Element => {
         let assignment: Assignment | null
 
         if (state.isTeacher) {
-            // If used for grading purposes, retrieve submission from state.currentSubmission
-            submission = state.currentSubmission
+            // If used for grading purposes, retrieve the currently selected submission
+            submission = state.selectedSubmission
             assignment = state.assignments[courseID].find(a => a.ID === submission?.AssignmentID) ?? null
         } else {
             // Retrieve the student's submission

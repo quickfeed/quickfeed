@@ -25,11 +25,11 @@ const ManageSubmissionStatus = (): JSX.Element => {
 
 
     if (assignment && !isManuallyGraded(assignment)) {
-        buttons.push({ text: rebuilding ? "Rebuilding..." : "Rebuild", status: Submission_Status.NONE, style: rebuilding ? "secondary" : "primary", onClick: handleRebuild})
+        buttons.push({ text: rebuilding ? "Rebuilding..." : "Rebuild", status: Submission_Status.NONE, style: rebuilding ? "secondary" : "primary", onClick: handleRebuild })
     }
 
     const StatusButtons = buttons.map((button, index) => {
-        const style = state.currentSubmission?.status === button.status ? `col btn btn-${button.style} mr-2` : `col btn btn-outline-${button.style} mr-2`
+        const style = state.selectedSubmission?.status === button.status ? `col btn btn-${button.style} mr-2` : `col btn btn-outline-${button.style} mr-2`
         // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
             <div key={index} className={style} onClick={() => button.onClick ? button.onClick() : actions.updateSubmission(button.status)}>

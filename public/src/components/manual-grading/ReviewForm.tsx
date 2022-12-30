@@ -11,7 +11,7 @@ const ReviewForm = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
-    if (!state.currentSubmission) {
+    if (!state.selectedSubmission) {
         return <div>No submission selected</div>
     }
 
@@ -25,7 +25,7 @@ const ReviewForm = (): JSX.Element => {
     }
 
     const reviewers = assignment.reviewers ?? 0
-    const reviews = state.review.reviews.get(state.currentSubmission.ID) ?? []
+    const reviews = state.review.reviews.get(state.selectedSubmission.ID) ?? []
     const selectReviewButton: JSX.Element[] = []
 
     reviews.forEach((review, index) => {

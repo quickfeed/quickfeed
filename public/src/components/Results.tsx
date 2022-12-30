@@ -47,7 +47,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID)
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
-        const isSelected = state.currentSubmission?.ID === submission.ID
+        const isSelected = state.selectedSubmission?.ID === submission.ID
         const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
         // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
         // Used to visually indicate that the submission will be released for the given minimum score
@@ -58,7 +58,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
             className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
-                actions.setCurrentSubmission(submission)
+                actions.setSelectedSubmission(submission)
                 if (owner instanceof Enrollment) {
                     actions.setActiveEnrollment(owner.clone())
                 }
@@ -71,12 +71,12 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const getSubmissionCell = (submission: Submission, owner: Enrollment | Group): CellElement => {
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
-        const isSelected = state.currentSubmission?.ID === submission.ID
+        const isSelected = state.selectedSubmission?.ID === submission.ID
         return ({
             value: `${submission.score} %`,
             className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
-                actions.setCurrentSubmission(submission)
+                actions.setSelectedSubmission(submission)
                 if (owner instanceof Enrollment) {
                     actions.setActiveEnrollment(owner.clone())
                 }

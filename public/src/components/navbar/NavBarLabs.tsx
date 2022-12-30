@@ -26,7 +26,7 @@ const NavBarLabs = (): JSX.Element | null => {
     }
 
     const getLinkClass = (assignment: Assignment) => {
-        return BigInt(state.activeAssignment) === assignment.ID ? Status.Active : ""
+        return BigInt(state.selectedAssignmentID) === assignment.ID ? Status.Active : ""
     }
 
     const labLinks = state.assignments[state.activeCourse.toString()]?.map((assignment, index) => {

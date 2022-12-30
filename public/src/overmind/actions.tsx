@@ -152,8 +152,9 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
 export const updateSubmission = async ({ state, effects }: Context, status: Submission_Status): Promise<void> => {
+    const submission = state.selectedSubmission
     /* Do not update if the status is already the same or if there is no selected submission */
-    if (!state.currentSubmission || state.currentSubmission.status === status) {
+    if (!submission || submission.status === status) {
         return
     }
 
@@ -163,17 +164,17 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
     }
 
     /* Store the previous submission status */
-    const previousStatus = state.currentSubmission.status
+    const previousStatus = submission.status
 
     /* Update the submission status */
-    state.currentSubmission.status = status
-    const result = await effects.grpcMan.updateSubmission(state.activeCourse, state.currentSubmission)
+    submission.status = status
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
     if (!success(result)) {
         /* If the update failed, revert the submission status */
-        state.currentSubmission.status = previousStatus
+        submission.status = previousStatus
         return
     }
-    state.submissionsForCourse.update(state.submissionOwner, state.currentSubmission)
+    state.submissionsForCourse.update(state.submissionOwner, submission)
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
@@ -461,12 +462,12 @@ export const toggleFavorites = ({ state }: Context): void => {
     state.showFavorites = !state.showFavorites
 }
 
-export const setActiveAssignment = ({ state }: Context, assignmentID: number): void => {
-    state.activeAssignment = assignmentID
+export const setSelectedAssignmentID = ({ state }: Context, assignmentID: number): void => {
+    state.selectedAssignmentID = assignmentID
 }
 
-export const setCurrentSubmission = ({ state }: Context, submission: Submission): void => {
-    state.currentSubmission = submission.clone()
+export const setSelectedSubmission = ({ state }: Context, submission: Submission): void => {
+    state.selectedSubmission = submission.clone()
 }
 
 export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
@@ -479,12 +480,12 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
 
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
-    if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.currentSubmission.ID, state.activeCourse)
+    if (state.selectedSubmission && state.selectedAssignment && state.activeCourse) {
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.selectedSubmission.ID, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
-            await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.currentSubmission.ID })
+            await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.selectedSubmission.ID })
             actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
             return true
         }
@@ -635,7 +636,7 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
 }
 
 export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment | null): void => {
-    state.activeEnrollment = enrollment ? enrollment : null
+    state.selectedEnrollment = enrollment ? enrollment : null
 }
 
 export const startSubmissionStream = ({ actions, effects }: Context) => {
@@ -802,7 +803,7 @@ export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group
     if (owner instanceof Group) {
         state.submissionOwner = { type: "GROUP", id: owner.ID }
     } else {
-        const groupID = state.currentSubmission?.groupID ?? 0n
+        const groupID = state.selectedSubmission?.groupID ?? 0n
         if (groupID > 0) {
             state.submissionOwner = { type: "GROUP", id: groupID }
             return

@@ -6,7 +6,7 @@ import { success } from '../../actions'
 
 /* Set the index of the selected review */
 export const setSelectedReview = ({ state }: Context, index: number): void => {
-    const reviews = state.review.reviews.get(state.currentSubmission?.ID ?? -1n)
+    const reviews = state.review.reviews.get(state.selectedSubmission?.ID ?? -1n)
     if (index < 0) {
         const idx = reviews?.findIndex(r => isAuthor(state.self, r) || isCourseCreator(state.self, state.courses[Number(state.activeCourse)]))
         state.review.selectedReview = idx && idx >= 0 ? idx : -1
@@ -21,7 +21,7 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
         // If canUpdate is false, the review cannot be updated
         return false
     }
-    const submissionID = state.currentSubmission?.ID ?? -1n
+    const submissionID = state.selectedSubmission?.ID ?? -1n
     const reviews = state.review.reviews.get(submissionID)
     if (!reviews) {
         // If there are no reviews, the review cannot be updated
@@ -48,7 +48,7 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
     reviewMap.set(submissionID, reviews)
     state.review.reviews = reviewMap;
 
-    (state.currentSubmission as Submission).score = response.data.score
+    (state.selectedSubmission as Submission).score = response.data.score
     return true
 }
 
@@ -94,7 +94,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
         return
     }
 
-    const submission = state.currentSubmission
+    const submission = state.selectedSubmission
     // If there is no submission or active course, we cannot create a review
     if (submission && state.activeCourse) {
         // Set the current user as the reviewer
@@ -148,7 +148,7 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
 }
 
 export const release = async ({ state, actions, effects }: Context, released: boolean): Promise<void> => {
-    const submission = state.currentSubmission
+    const submission = state.selectedSubmission
     if (submission) {
         submission.released = released
         const response = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
