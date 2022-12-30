@@ -186,7 +186,8 @@ func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.Submis
 	a := db.conn.Model(&qf.Assignment{}).Where(&qf.Assignment{CourseID: courseID})
 	switch submissionType {
 	case qf.SubmissionRequest_USER:
-		a.Where("is_group_lab = ?", "false")
+		// Must use string-based query since GORM does not support boolean false in type-based Where clauses
+		a.Where("is_group_lab = ?", false)
 	case qf.SubmissionRequest_GROUP:
 		a.Where(&qf.Assignment{IsGroupLab: true})
 	default: // all
