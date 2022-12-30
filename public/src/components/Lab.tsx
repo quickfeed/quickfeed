@@ -29,7 +29,7 @@ const Lab = (): JSX.Element => {
         }
     }, [lab])
 
-    const Lab = () => {
+    const InternalLab = () => {
         let submission: Submission | null
         let assignment: Assignment | null
 
@@ -72,7 +72,7 @@ const Lab = (): JSX.Element => {
     return (
         <div className={state.isTeacher ? "" : "row"}>
             <div className={state.isTeacher ? "" : "col-md-9"}>
-                <Lab />
+                <InternalLab />
             </div>
             {state.isTeacher ? null : <CourseUtilityLinks />}
         </div>
