@@ -44,7 +44,8 @@
 .sidebarList {
     width: 100%;
     height: auto;
-    padding: 0;
+    padding: 0 !important; // override bootstrap
+    margin: 0 !important; // override bootstrap
 
     li {
         width: 100%;
@@ -381,6 +382,7 @@ input {
             display: flex;
             font-size: 1.5rem;
             padding: 0.5rem 1rem;
+            width: 15rem;
             & > * {
                 margin-right: 0.5rem;
             }
@@ -463,8 +465,8 @@ nav.flexbox {
 .flex-user {
     display: flex;
     flex-direction: row;
-    width: 7rem;
-    justify-content: left;
+    width: 15rem;
+    justify-content: center;
     align-items: center;
 }
 
