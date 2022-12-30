@@ -190,15 +190,15 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 	case qf.SubmissionRequest_GROUP:
 		submissionsMap = makeGroupResults(course, submissions)
 	case qf.SubmissionRequest_USER:
-		submissionsMap = makeIndividualResults(course, submissions)
+		submissionsMap = makeUserResults(course, submissions)
 	case qf.SubmissionRequest_ALL:
 		submissionsMap = makeAllResults(course, submissions)
 	}
 	return &qf.CourseSubmissions{Submissions: submissionsMap}, nil
 }
 
-// makeGroupResults generates enrollment to assignment to submissions links
-// for all course groups and all group assignments
+// makeGroupResults returns a map of group ID to Submissions
+// for all course groups and all group assignments.
 func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	skipGroup := map[uint64]bool{0: true} // skip group ID 0 (no group)
@@ -208,8 +208,11 @@ func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint6
 			continue // include group enrollment only once
 		}
 		skipGroup[enrollment.GroupID] = true
+		// Note: we (intentionally) use enrollment.GroupID as the key to the map here.
+		// This is primarily a convenience for the frontend, which can then use
+		// the group ID as the key to the map.
 		submissionsMap[enrollment.GroupID] = &qf.Submissions{
-			Submissions: makeSubmissionLinks(submissions, om, func(submission *qf.Submission) bool {
+			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
 				// include group submissions for this enrollment
 				return submission.ByGroup(enrollment.GroupID)
 			}),
@@ -218,14 +221,14 @@ func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint6
 	return submissionsMap
 }
 
-// makeIndividualResults returns enrollment links with submissions
-// for individual assignments for all students in the course.
-func makeIndividualResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
+// makeUserResults returns a map of enrollment ID to Submissions
+// for all course enrollments (students) and all individual assignments.
+func makeUserResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
 		submissionsMap[enrollment.ID] = &qf.Submissions{
-			Submissions: makeSubmissionLinks(submission, om, func(submission *qf.Submission) bool {
+			Submissions: choose(submission, om, func(submission *qf.Submission) bool {
 				// include individual submissions for this enrollment
 				return submission.ByUser(enrollment.UserID)
 			}),
@@ -234,14 +237,14 @@ func makeIndividualResults(course *qf.Course, submission []*qf.Submission) map[u
 	return submissionsMap
 }
 
-// makeAllResults returns enrollment links with submissions
-// for both individual and group assignments for all students/groups in the course.
+// makeAllResults returns a map of enrollment ID to Submissions
+// for all course enrollments (students and groups) and all individual and group assignments.
 func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	om := newOrderMap(course.GetAssignments())
 	for _, enrollment := range course.Enrollments {
 		submissionsMap[enrollment.ID] = &qf.Submissions{
-			Submissions: makeSubmissionLinks(submissions, om, func(submission *qf.Submission) bool {
+			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
 				// include individual and group submissions for this enrollment
 				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
 			}),
@@ -250,14 +253,14 @@ func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]
 	return submissionsMap
 }
 
-func makeSubmissionLinks(submissions []*qf.Submission, order *orderMap, include func(*qf.Submission) bool) []*qf.Submission {
+func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Submission) bool) []*qf.Submission {
 	var subs []*qf.Submission
 	for _, submission := range submissions {
 		if include(submission) {
 			subs = append(subs, submission)
 		}
 	}
-	// sort links by assignment order
+	// sort submissions by assignment order
 	sort.Slice(subs, func(i, j int) bool {
 		return order.Less(subs[i].AssignmentID, subs[j].AssignmentID)
 	})
