@@ -62,7 +62,9 @@ type QuickFeedServiceClient interface {
 	DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
 	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
+	// GetOrganization returns the organization with the given organization name.
+	// Note that organization ID is not used in the request, but it is populated in the response.
+	GetOrganization(context.Context, *connect_go.Request[qf.Organization]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error)
@@ -238,7 +240,7 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/UpdateReview",
 			opts...,
 		),
-		getOrganization: connect_go.NewClient[qf.OrgRequest, qf.Organization](
+		getOrganization: connect_go.NewClient[qf.Organization, qf.Organization](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/GetOrganization",
 			opts...,
@@ -295,7 +297,7 @@ type quickFeedServiceClient struct {
 	deleteCriterion        *connect_go.Client[qf.GradingCriterion, qf.Void]
 	createReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
 	updateReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
-	getOrganization        *connect_go.Client[qf.OrgRequest, qf.Organization]
+	getOrganization        *connect_go.Client[qf.Organization, qf.Organization]
 	getRepositories        *connect_go.Client[qf.CourseRequest, qf.Repositories]
 	isEmptyRepo            *connect_go.Client[qf.RepositoryRequest, qf.Void]
 	submissionStream       *connect_go.Client[qf.Void, qf.Submission]
@@ -462,7 +464,7 @@ func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *connect_
 }
 
 // GetOrganization calls qf.QuickFeedService.GetOrganization.
-func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error) {
+func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *connect_go.Request[qf.Organization]) (*connect_go.Response[qf.Organization], error) {
 	return c.getOrganization.CallUnary(ctx, req)
 }
 
@@ -518,7 +520,9 @@ type QuickFeedServiceHandler interface {
 	DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
 	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
+	// GetOrganization returns the organization with the given organization name.
+	// Note that organization ID is not used in the request, but it is populated in the response.
+	GetOrganization(context.Context, *connect_go.Request[qf.Organization]) (*connect_go.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error
@@ -845,7 +849,7 @@ func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *conne
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error) {
+func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *connect_go.Request[qf.Organization]) (*connect_go.Response[qf.Organization], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetOrganization is not implemented"))
 }
 

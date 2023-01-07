@@ -35,11 +35,6 @@ func (req *CourseRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid checks whether OrgRequest fields are valid
-func (req *OrgRequest) IsValid() bool {
-	return req.GetScmOrganizationName() != ""
-}
-
 // IsValid checks that the request has positive course ID
 // and either user ID or group ID is set
 func (req *RepositoryRequest) IsValid() bool {
@@ -102,8 +97,8 @@ func (req *RebuildRequest) IsValid() bool {
 
 // IsValid checks that either ID or path field is set
 func (org *Organization) IsValid() bool {
-	id, path := org.GetID(), org.GetName()
-	return id > 0 || path != ""
+	// only check the name; the ID is only used in the response
+	return org.GetScmOrganizationName() != ""
 }
 
 // IsValid ensures that a review always has a reviewer and a submission IDs.

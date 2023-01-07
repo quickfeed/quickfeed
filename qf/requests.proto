@@ -26,15 +26,9 @@ message GroupRequest {
     uint64 groupID  = 3;
 }
 
-message OrgRequest {
-    string ScmOrganizationName = 1;
-}
-
 message Organization {
-    uint64 ID          = 1;
-    string name        = 2;
-    string avatar      = 3;
-    string paymentPlan = 4;
+    uint64 ScmOrganizationID   = 1;
+    string ScmOrganizationName = 2;
 }
 
 message EnrollmentRequest {

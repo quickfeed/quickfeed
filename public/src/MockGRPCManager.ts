@@ -32,7 +32,7 @@ import {
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { Code } from "@bufbuild/connect-web"
-import {Timestamp} from "@bufbuild/protobuf";
+import { Timestamp } from "@bufbuild/protobuf"
 
 export interface IGrpcResponse<T> {
     status: Status
@@ -511,7 +511,7 @@ export class MockGrpcManager {
     }
 
     public updateSubmissions(assignmentID: bigint, courseID: bigint, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
-        const assignment = this.assignments.assignments.find(asgn => asgn.ID === assignmentID && asgn.CourseID === courseID)
+        const assignment = this.assignments.assignments.find(assign => assign.ID === assignmentID && assign.CourseID === courseID)
         if (!assignment) {
             return this.grpcSend<Void>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Assignment not found" }))
         }
@@ -614,7 +614,7 @@ export class MockGrpcManager {
             bm.AssignmentID === submission.AssignmentID
         )
         review.gradingBenchmarks = benchmarks
-        review.edited = new Timestamp() 
+        review.edited = new Timestamp()
         submission.reviews = submission.reviews.concat([review])
         return this.grpcSend<Review>(review)
     }
@@ -652,7 +652,7 @@ export class MockGrpcManager {
     // /* ORGANIZATIONS */ //
 
     public async getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const org = this.organizations.find(o => o.name === orgName)
+        const org = this.organizations.find(o => o.ScmOrganizationName === orgName)
         await delay(2000)
         if (!org) {
             return this.grpcSend<Organization>(null, new Status({ Code: BigInt(Code.Unknown), Error: "Organization not found" }))
@@ -955,9 +955,8 @@ export class MockGrpcManager {
     private initOrganizations(): Organization[] {
         const localOrgs: Organization[] = []
         const localOrg = new Organization()
-        localOrg.ID = BigInt(23650610)
-        localOrg.name = "test"
-        localOrg.avatar = "https://avatars2.githubusercontent.com/u/23650610?v=3"
+        localOrg.ScmOrganizationID = BigInt(23650610)
+        localOrg.ScmOrganizationName = "test"
         localOrgs.push(localOrg)
         this.organizations = localOrgs
         return localOrgs

@@ -22,7 +22,6 @@ import {
     EnrollmentRequest,
     GroupRequest,
     Organization,
-    OrgRequest,
     RebuildRequest,
     Repositories,
     RepositoryRequest,
@@ -327,7 +326,7 @@ export class GrpcManager {
     // /* ORGANIZATIONS */ //
 
     public getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const request = new OrgRequest({
+        const request = new Organization({
             ScmOrganizationName: orgName,
         })
         return this.grpcSend<Organization>(this.agService.getOrganization, request)

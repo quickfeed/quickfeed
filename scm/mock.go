@@ -33,8 +33,8 @@ func NewMockSCMClient() *MockSCM {
 	// initialize four test course organizations
 	for _, course := range qtest.MockCourses {
 		s.Organizations[course.ScmOrganizationID] = &qf.Organization{
-			ID:   course.ScmOrganizationID,
-			Name: course.ScmOrganizationName,
+			ScmOrganizationID:   course.ScmOrganizationID,
+			ScmOrganizationName: course.ScmOrganizationName,
 		}
 	}
 	return s
@@ -103,7 +103,7 @@ func (s *MockSCM) GetOrganization(ctx context.Context, opt *OrganizationOptions)
 	}
 	if opt.ID < 1 {
 		for _, org := range s.Organizations {
-			if org.Name == opt.Name {
+			if org.ScmOrganizationName == opt.Name {
 				return org, nil
 			}
 		}
@@ -128,7 +128,7 @@ func (s *MockSCM) GetOrganization(ctx context.Context, opt *OrganizationOptions)
 func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
-		if repo.OrgID == org.ID {
+		if repo.OrgID == org.ScmOrganizationID {
 			repos = append(repos, repo)
 		}
 	}
@@ -367,7 +367,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		repo := &Repository{
 			ID:    id,
 			Path:  path,
-			Owner: org.Name,
+			Owner: org.ScmOrganizationName,
 		}
 		s.Repositories[id] = repo
 		repositories = append(repositories, repo)
@@ -376,7 +376,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 	labRepo := &Repository{
 		ID:    id,
 		Path:  qf.StudentRepoName(opt.CourseCreator),
-		Owner: org.Name,
+		Owner: org.ScmOrganizationName,
 	}
 	s.Repositories[id] = labRepo
 	repositories = append(repositories, labRepo)
@@ -385,7 +385,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		1: {
 			ID:           1,
 			Name:         TeachersTeam,
-			Organization: org.Name,
+			Organization: org.ScmOrganizationName,
 		},
 	}
 	return repositories, nil
@@ -407,7 +407,7 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 		repo = &Repository{
 			ID:    id,
 			Path:  qf.StudentRepoName(opt.User),
-			Owner: org.Name,
+			Owner: org.ScmOrganizationName,
 			OrgID: 1,
 		}
 		s.Repositories[id] = repo

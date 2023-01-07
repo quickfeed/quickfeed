@@ -308,7 +308,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	request.ScmOrganizationName = org.GetName()
+	request.ScmOrganizationName = org.GetScmOrganizationName()
 	return s.db.UpdateCourse(request)
 }
 
