@@ -81,7 +81,7 @@ func NewMockSCMClientWithCourse() *MockSCM {
 }
 
 // Clone copies the repository in testdata to the given destination path.
-func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
+func (s *MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
 		Name: opt.Organization,
 	}); err != nil {
