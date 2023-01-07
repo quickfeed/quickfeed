@@ -16,7 +16,6 @@ const defaultAutoApproveScoreLimit = 80
 // Note that the struct can be private, but the fields must be
 // public to allow parsing.
 type assignmentData struct {
-	AssignmentID     uint   `yaml:"assignmentid"` // deprecated: use Order instead
 	Order            uint32 `yaml:"order"`
 	Deadline         string `yaml:"deadline"`
 	IsGroupLab       bool   `yaml:"isgrouplab"`
@@ -35,9 +34,6 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	// if no auto approve score limit is defined; use the default
 	if newAssignment.ScoreLimit < 1 {
 		newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
-	}
-	if newAssignment.AssignmentID > 0 && newAssignment.Order == 0 {
-		newAssignment.Order = uint32(newAssignment.AssignmentID)
 	}
 	deadline, err := FixDeadline(newAssignment.Deadline)
 	if err != nil {
