@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -32,6 +33,8 @@ func OAuth2Logout() http.HandlerFunc {
 		newCookie := &http.Cookie{
 			Name:     CookieName,
 			Value:    "",
+			Domain:   env.Domain(),
+			Path:     "/",
 			MaxAge:   -1,
 			Expires:  time.Unix(0, 0),
 			HttpOnly: true,
