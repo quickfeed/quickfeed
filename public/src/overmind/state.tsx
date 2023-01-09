@@ -296,6 +296,13 @@ export const state: State = {
             const subsB = submissions.get(b.ID)?.submissions
 
             switch (sortSubmissionsBy) {
+                case SubmissionSort.ID: {
+                    if (a instanceof Enrollment && b instanceof Enrollment) {
+                        return sortOrder * (Number(a.userID) - Number(b.userID))
+                    } else {
+                        return sortOrder * (Number(a.ID) - Number(b.ID))
+                    }
+                }
                 case SubmissionSort.Score: {
                     if (assignmentID > 0) {
                         const sA = subA?.score

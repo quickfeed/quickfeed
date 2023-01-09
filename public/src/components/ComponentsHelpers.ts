@@ -5,23 +5,29 @@ import { AssignmentsMap } from "../overmind/state"
 import { RowElement, Row } from "./DynamicTable"
 
 
-export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
+export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, withID: boolean): Row[] => {
     const state = useAppState()
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, course, withID)
     })
 }
 
-const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course): Row => {
+const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
 
     if (isEnrollment && enrollment.user) {
+        if (withID) {
+            row.push({ value: enrollment.user.ID.toString() })
+        }
         row.push({ value: enrollment.user.Name, link: userRepoLink(enrollment.user, course) })
     } else if (isGroup) {
+        if (withID) {
+            row.push({ value: enrollment.ID.toString() })
+        }
         row.push({ value: enrollment.name, link: groupRepoLink(enrollment, course) })
     }
 
