@@ -119,7 +119,7 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func FetchExternalUser(token *oauth2.Token) (*externalUser, error) {
+func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
 	req, err := http.NewRequest("GET", githubUserAPI, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
@@ -130,19 +130,26 @@ func FetchExternalUser(token *oauth2.Token) (*externalUser, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to send user request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		closeErr := resp.Body.Close()
+		if err == nil {
+			// only overwrite error if there was no error before
+			err = closeErr
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected OAuth provider response: %d (%s)", resp.StatusCode, resp.Status)
+		err = fmt.Errorf("unexpected OAuth provider response: %d (%s)", resp.StatusCode, resp.Status)
+		return
 	}
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read authentication response: %w", err)
+	responseBody, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		err = fmt.Errorf("failed to read authentication response: %w", readErr)
+		return
 	}
-	externalUser := &externalUser{}
-	if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&externalUser); err != nil {
-		return nil, fmt.Errorf("failed to decode user information: %w", err)
+	if jsonErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&user); jsonErr != nil {
+		err = fmt.Errorf("failed to decode user information: %w", jsonErr)
 	}
-	return externalUser, nil
+	return
 }
 
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
