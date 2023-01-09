@@ -283,7 +283,7 @@ export const state: State = {
         }
 
         const sortOrder = sortAscending ? -1 : 1
-        const sortedSubmissions = Object.values(filtered).sort((a, b) => {
+        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-0044
             let subA: Submission | undefined
             let subB: Submission | undefined
             if (assignmentID > 0) {
