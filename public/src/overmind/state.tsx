@@ -234,13 +234,12 @@ export const state: State = {
         if (!activeCourse || !courseEnrollments[activeCourse.toString()]) {
             return {}
         }
-        const teachers = courseEnrollments[activeCourse.toString()].filter(isTeacher)
         const teachersMap: { [userID: string]: User } = {}
-        for (const teacher of teachers) {
-            if (teacher.user) {
-                teachersMap[teacher.userID.toString()] = teacher.user
+        courseEnrollments[activeCourse.toString()].forEach(enrollment => {
+            if (isTeacher(enrollment) && enrollment.user) {
+                teachersMap[enrollment.userID.toString()] = enrollment.user
             }
-        }
+        })
         return teachersMap
     }),
     courseMembers: derived(({
