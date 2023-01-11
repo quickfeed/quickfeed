@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react"
 import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -86,19 +86,14 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         })
     }
 
-
-    const withID = assignments.some((a) => isManuallyGraded(a))
     const groupView = state.groupView
     const base: Row = [
         { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
     ]
-    if (withID) {
-        base.push({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
-    }
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const generator = review ? generateReviewCell : getSubmissionCell
-    const rows = generateSubmissionRows(members, generator, withID)
+    const rows = generateSubmissionRows(members, generator)
 
 
     return (

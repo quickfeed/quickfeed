@@ -1,16 +1,16 @@
 import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
-import { groupRepoLink, SubmissionsForCourse, userRepoLink } from "../Helpers"
+import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { AssignmentsMap } from "../overmind/state"
 import { RowElement, Row } from "./DynamicTable"
 
 
-export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, withID: boolean): Row[] => {
+export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
     const state = useAppState()
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course, withID)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, course, state.isCourseManuallyGraded)
     })
 }
 
@@ -18,16 +18,16 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
-
+    
+    if (withID) {
+        isEnrollment 
+            ? row.push({ value: enrollment.userID.toString() }) 
+            : row.push({ value: enrollment.ID.toString() })
+    }
+    
     if (isEnrollment && enrollment.user) {
-        if (withID) {
-            row.push({ value: enrollment.user.ID.toString() })
-        }
         row.push({ value: enrollment.user.Name, link: userRepoLink(enrollment.user, course) })
     } else if (isGroup) {
-        if (withID) {
-            row.push({ value: enrollment.ID.toString() })
-        }
         row.push({ value: enrollment.name, link: groupRepoLink(enrollment, course) })
     }
 
@@ -54,6 +54,10 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
 
 export const generateAssignmentsHeader = (base: RowElement[], assignments: Assignment[], group: boolean): Row => {
     const actions = useActions()
+    const state = useAppState()
+    if (state.isCourseManuallyGraded)  {
+        base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
+    }
     for (const assignment of assignments) {
         if (group && assignment.isGroupLab) {
             base.push({ value: `${assignment.name} (g)`, onClick: () => actions.review.setAssignmentID(assignment.ID) })

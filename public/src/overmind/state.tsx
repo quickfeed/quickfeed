@@ -120,6 +120,9 @@ export type State = {
     /* Contains all users with admins sorted first */
     allUsers: User[],
 
+    /* Indicates if the course has any assignment that is manually graded */
+    isCourseManuallyGraded: boolean
+
 
     /***************************************************************************
      *                             Frontend Activity State
@@ -371,6 +374,12 @@ export const state: State = {
             return courseEnrollments[activeCourse.toString()]?.filter(enrollment => !isPending(enrollment)).length
         }
         return 0
+    }),
+    isCourseManuallyGraded: derived(({ activeCourse, assignments }: State) => {
+        if (activeCourse > 0 && assignments[activeCourse.toString()]) {
+            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a))
+        }
+        return false
     }),
     query: "",
     sortSubmissionsBy: SubmissionSort.Approved,
