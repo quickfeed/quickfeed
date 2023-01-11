@@ -47,11 +47,11 @@ export const state: ReviewState = {
         return check ? check[selectedReview] : null
     }),
 
-    reviewer: derived(({ currentReview }: ReviewState, { users }: Context["state"]) => {
+    reviewer: derived(({ currentReview }: ReviewState, { courseTeachers }: Context["state"]) => {
         if (!currentReview) {
             return null
         }
-        return users[currentReview.ReviewerID.toString()]
+        return courseTeachers[currentReview.ReviewerID.toString()]
     }),
 
     canUpdate: derived(({ currentReview }: ReviewState, { activeCourse, selectedSubmission }: Context["state"]) => {
