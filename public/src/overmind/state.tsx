@@ -99,6 +99,10 @@ export type State = {
      *  values of sortSubmissionsBy, sortAscending, and submissionFilters */
     courseMembers: Enrollment[] | Group[],
 
+    /* Course teachers, indexed by user ID */
+    /* Derived from enrollments for selected course */
+    courseTeachers: { [userID: string]: User }
+
     /* Contains all enrollments for a given course */
     courseEnrollments: { [courseID: string]: Enrollment[] },
 
@@ -226,6 +230,18 @@ export const state: State = {
     users: {},
     allUsers: [],
     courses: [],
+    courseTeachers: derived(({ courseEnrollments, activeCourse }: State) => {
+        if (!activeCourse || !courseEnrollments[activeCourse.toString()]) {
+            return {}
+        }
+        const teachersMap: { [userID: string]: User } = {}
+        courseEnrollments[activeCourse.toString()].forEach(enrollment => {
+            if (isTeacher(enrollment) && enrollment.user) {
+                teachersMap[enrollment.userID.toString()] = enrollment.user
+            }
+        })
+        return teachersMap
+    }),
     courseMembers: derived(({
         activeCourse, groupView, submissionsForCourse, assignments, groups,
         courseEnrollments, submissionFilters, sortAscending, sortSubmissionsBy

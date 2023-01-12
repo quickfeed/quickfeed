@@ -21,7 +21,7 @@ const ReviewForm = (): JSX.Element => {
     }
 
     const isAuthor = (review: Review) => {
-        return review?.ID === state.self.ID
+        return review?.ReviewerID === state.self.ID
     }
 
     const reviewers = assignment.reviewers ?? 0
