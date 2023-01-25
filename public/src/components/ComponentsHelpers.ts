@@ -18,13 +18,13 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
-    
+
     if (withID) {
-        isEnrollment 
-            ? row.push({ value: enrollment.userID.toString() }) 
+        isEnrollment
+            ? row.push({ value: enrollment.userID.toString() })
             : row.push({ value: enrollment.ID.toString() })
     }
-    
+
     if (isEnrollment && enrollment.user) {
         row.push({ value: enrollment.user.Name, link: userRepoLink(enrollment.user, course) })
     } else if (isGroup) {
@@ -52,10 +52,13 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
     return row
 }
 
-export const generateAssignmentsHeader = (base: RowElement[], assignments: Assignment[], group: boolean): Row => {
+export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean): Row => {
+    const isCourseManuallyGraded = useAppState((state) => state.isCourseManuallyGraded)
     const actions = useActions()
-    const state = useAppState()
-    if (state.isCourseManuallyGraded)  {
+    const base: Row = [
+        { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
+    ]
+    if (isCourseManuallyGraded) {
         base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
     }
     for (const assignment of assignments) {

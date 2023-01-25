@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo } from "react"
 import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
-import DynamicTable, { CellElement, Row, RowElement } from "./DynamicTable"
+import DynamicTable, { CellElement, RowElement } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
@@ -87,10 +87,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     }
 
     const groupView = state.groupView
-    const base: Row = [
-        { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
-    ]
-    const header = generateAssignmentsHeader(base, assignments, groupView)
+    const header = generateAssignmentsHeader(assignments, groupView)
 
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(members, generator)
