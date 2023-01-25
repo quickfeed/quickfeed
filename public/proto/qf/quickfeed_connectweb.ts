@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {CourseRequest, CourseSubmissions, EnrollmentRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, EnrollmentRequest, GroupRequest, Organization, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -310,11 +310,14 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
+     * GetOrganization returns the organization with the given organization name.
+     * Note that organization ID is not used in the request, but it is populated in the response.
+     *
      * @generated from rpc qf.QuickFeedService.GetOrganization
      */
     getOrganization: {
       name: "GetOrganization",
-      I: OrgRequest,
+      I: Organization,
       O: Organization,
       kind: MethodKind.Unary,
     },

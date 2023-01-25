@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -66,10 +67,8 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	}
 
 	org := &qf.Organization{
-		ID:          uint64(gitOrg.GetID()),
-		Name:        gitOrg.GetLogin(),
-		Avatar:      gitOrg.GetAvatarURL(),
-		PaymentPlan: gitOrg.GetPlan().GetName(),
+		ScmOrganizationID:   uint64(gitOrg.GetID()),
+		ScmOrganizationName: gitOrg.GetLogin(),
 	}
 
 	// If getting organization for the purpose of creating a new course,
@@ -105,23 +104,10 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 
 // GetRepositories implements the SCM interface.
 func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
-	if !org.IsValid() {
-		return nil, fmt.Errorf("missing fields: %+v", org)
+	path := org.GetScmOrganizationName()
+	if path == "" {
+		return nil, errors.New("organization name must be provided")
 	}
-	var path string
-	if org.Name != "" {
-		path = org.Name
-	} else {
-		opt := &OrganizationOptions{
-			ID: org.ID,
-		}
-		org, err := s.GetOrganization(ctx, opt)
-		if err != nil {
-			return nil, err
-		}
-		path = org.Name
-	}
-
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
 	if err != nil {
 		return nil, ErrFailedSCM{
@@ -130,7 +116,6 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 			Message:  fmt.Sprintf("failed to access repositories for organization %s", path),
 		}
 	}
-
 	repositories := make([]*Repository, 0, len(repos))
 	for _, repo := range repos {
 		repositories = append(repositories, toRepository(repo))
@@ -356,11 +341,11 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	// to organization repositories. This will not affect organization owners (teachers).
 	defaultPermissions := OrgNone
 	createRepoPermissions := false
-	if _, _, err = s.client.Organizations.Edit(ctx, org.Name, &github.Organization{
+	if _, _, err = s.client.Organizations.Edit(ctx, org.ScmOrganizationName, &github.Organization{
 		DefaultRepoPermission: &defaultPermissions,
 		MembersCanCreateRepos: &createRepoPermissions,
 	}); err != nil {
-		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.Name, err)
+		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.ScmOrganizationName, err)
 	}
 
 	// Create course repositories
@@ -368,7 +353,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Path:         path,
-			Organization: org.Name,
+			Organization: org.ScmOrganizationName,
 			Private:      private,
 		}
 		repo, err := s.createRepository(ctx, repoOptions)
@@ -380,7 +365,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 
 	// Create teacher team with course creator
 	teamOpt := &TeamOptions{
-		Organization: org.Name,
+		Organization: org.ScmOrganizationName,
 		TeamName:     TeachersTeam,
 		Users:        []string{opt.CourseCreator},
 	}
@@ -389,7 +374,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create student repository for the course creator
-	repo, err := s.createStudentRepo(ctx, org.Name, opt.CourseCreator)
+	repo, err := s.createStudentRepo(ctx, org.ScmOrganizationName, opt.CourseCreator)
 	if err != nil {
 		return nil, err
 	}
@@ -411,18 +396,18 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
 		// Give access to the course's info and assignments repositories
-		if err := s.grantPullAccessToCourseRepos(ctx, org.Name, opt.User); err != nil {
+		if err := s.grantPullAccessToCourseRepos(ctx, org.ScmOrganizationName, opt.User); err != nil {
 			return nil, err
 		}
-		return s.createStudentRepo(ctx, org.Name, opt.User)
+		return s.createStudentRepo(ctx, org.ScmOrganizationName, opt.User)
 
 	case qf.Enrollment_TEACHER:
 		// Promote user to organization owner
 		role := OrgOwner
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.Name, &github.Membership{Role: &role}); err != nil {
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
 			return nil, err
 		}
-		err = s.promoteToTeacher(ctx, org.Name, opt.User)
+		err = s.promoteToTeacher(ctx, org.ScmOrganizationName, opt.User)
 	}
 	return nil, err
 }
@@ -436,7 +421,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if err != nil {
 		return err
 	}
-	if _, err := s.client.Organizations.RemoveMember(ctx, org.Name, opt.User); err != nil {
+	if _, err := s.client.Organizations.RemoveMember(ctx, org.ScmOrganizationName, opt.User); err != nil {
 		return err
 	}
 	return s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
@@ -482,7 +467,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Reposit
 	permissions := &github.TeamAddTeamRepoOptions{
 		Permission: RepoPush, // make sure users can pull and push
 	}
-	if _, err := s.client.Teams.AddTeamRepoByID(ctx, int64(org.ID), int64(team.ID), org.Name, repo.Path, permissions); err != nil {
+	if _, err := s.client.Teams.AddTeamRepoByID(ctx, int64(org.ScmOrganizationID), int64(team.ID), org.ScmOrganizationName, repo.Path, permissions); err != nil {
 		return nil, nil, err
 	}
 	return repo, team, nil

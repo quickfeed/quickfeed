@@ -30,8 +30,8 @@ func TestGetOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if qfTestOrg == qf101Org {
-		if org.ID != qf101OrdID {
-			t.Errorf("GetOrganization(%q) = %d, expected %d", qfTestOrg, org.ID, qf101OrdID)
+		if org.GetScmOrganizationID() != qf101OrdID {
+			t.Errorf("GetOrganization(%q) = %d, expected %d", qfTestOrg, org.GetScmOrganizationID(), qf101OrdID)
 		}
 	} else {
 		// Otherwise, we just print the organization result

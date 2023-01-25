@@ -536,7 +536,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 }
 
 // GetOrganization fetches a github organization by name.
-func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.OrgRequest]) (*connect.Response[qf.Organization], error) {
+func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
 	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
 		s.logger.Errorf("GetOrganization(userID=%d) failed: %v", userID(ctx), err)

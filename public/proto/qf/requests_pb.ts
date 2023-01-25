@@ -174,65 +174,18 @@ export class GroupRequest extends Message<GroupRequest> {
 }
 
 /**
- * @generated from message qf.OrgRequest
- */
-export class OrgRequest extends Message<OrgRequest> {
-  /**
-   * @generated from field: string ScmOrganizationName = 1;
-   */
-  ScmOrganizationName = "";
-
-  constructor(data?: PartialMessage<OrgRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.OrgRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "ScmOrganizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): OrgRequest {
-    return new OrgRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): OrgRequest {
-    return new OrgRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): OrgRequest {
-    return new OrgRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: OrgRequest | PlainMessage<OrgRequest> | undefined, b: OrgRequest | PlainMessage<OrgRequest> | undefined): boolean {
-    return proto3.util.equals(OrgRequest, a, b);
-  }
-}
-
-/**
  * @generated from message qf.Organization
  */
 export class Organization extends Message<Organization> {
   /**
-   * @generated from field: uint64 ID = 1;
+   * @generated from field: uint64 ScmOrganizationID = 1;
    */
-  ID = protoInt64.zero;
+  ScmOrganizationID = protoInt64.zero;
 
   /**
-   * @generated from field: string name = 2;
+   * @generated from field: string ScmOrganizationName = 2;
    */
-  name = "";
-
-  /**
-   * @generated from field: string avatar = 3;
-   */
-  avatar = "";
-
-  /**
-   * @generated from field: string paymentPlan = 4;
-   */
-  paymentPlan = "";
+  ScmOrganizationName = "";
 
   constructor(data?: PartialMessage<Organization>) {
     super();
@@ -242,10 +195,8 @@ export class Organization extends Message<Organization> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.Organization";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "avatar", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "paymentPlan", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "ScmOrganizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "ScmOrganizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Organization {

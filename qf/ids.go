@@ -122,6 +122,6 @@ func (r *GradingCriterion) IDFor(_ string) uint64 {
 }
 
 // IDFor returns 0, this request is only used by admins.
-func (*OrgRequest) IDFor(_ string) uint64 {
+func (*Organization) IDFor(_ string) uint64 {
 	return 0
 }

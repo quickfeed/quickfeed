@@ -113,8 +113,8 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 
 	course := &qf.Course{
 		Name:                "QuickFeed Test Course",
-		ScmOrganizationName: org.GetName(),
-		ScmOrganizationID:   org.GetID(),
+		ScmOrganizationName: org.GetScmOrganizationName(),
+		ScmOrganizationID:   org.GetScmOrganizationID(),
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
@@ -128,7 +128,7 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 	for _, scmRepo := range repos {
 		repo := &qf.Repository{
 			ScmRepositoryID:   scmRepo.ID,
-			ScmOrganizationID: org.GetID(),
+			ScmOrganizationID: org.GetScmOrganizationID(),
 			HTMLURL:           scmRepo.HTMLURL,
 			RepoType:          qf.RepoType(scmRepo.Path),
 		}

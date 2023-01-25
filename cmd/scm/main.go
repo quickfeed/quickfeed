@@ -208,7 +208,7 @@ func deleteRepositories(client *scm.GithubSCM) cli.ActionFunc {
 				return err
 			}
 
-			repos, err := (*client).GetRepositories(ctx, &qf.Organization{Name: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &qf.Organization{ScmOrganizationName: c.String("namespace")})
 			if err != nil {
 				return err
 			}
@@ -248,7 +248,7 @@ func getRepositories(client *scm.GithubSCM) cli.ActionFunc {
 			return cli.NewExitError("name and namespace must be provided", 3)
 		}
 		if c.Bool("all") {
-			repos, err := (*client).GetRepositories(ctx, &qf.Organization{Name: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &qf.Organization{ScmOrganizationName: c.String("namespace")})
 			if err != nil {
 				return err
 			}
