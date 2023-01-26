@@ -1,5 +1,5 @@
 import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
-import { groupRepoLink, SubmissionsForCourse, userRepoLink } from "../Helpers"
+import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { AssignmentsMap } from "../overmind/state"
 import { RowElement, Row } from "./DynamicTable"
@@ -10,14 +10,20 @@ export const generateSubmissionRows = (elements: Enrollment[] | Group[], generat
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, course, state.isCourseManuallyGraded)
     })
 }
 
-const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course): Row => {
+const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
+
+    if (withID) {
+        isEnrollment
+            ? row.push({ value: enrollment.userID.toString() })
+            : row.push({ value: enrollment.ID.toString() })
+    }
 
     if (isEnrollment && enrollment.user) {
         row.push({ value: enrollment.user.Name, link: userRepoLink(enrollment.user, course) })
@@ -46,8 +52,15 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
     return row
 }
 
-export const generateAssignmentsHeader = (base: RowElement[], assignments: Assignment[], group: boolean): Row => {
+export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean): Row => {
+    const isCourseManuallyGraded = useAppState((state) => state.isCourseManuallyGraded)
     const actions = useActions()
+    const base: Row = [
+        { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
+    ]
+    if (isCourseManuallyGraded) {
+        base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
+    }
     for (const assignment of assignments) {
         if (group && assignment.isGroupLab) {
             base.push({ value: `${assignment.name} (g)`, onClick: () => actions.review.setAssignmentID(assignment.ID) })

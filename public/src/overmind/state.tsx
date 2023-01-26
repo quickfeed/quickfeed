@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -123,6 +123,9 @@ export type State = {
 
     /* Contains all users with admins sorted first */
     allUsers: User[],
+
+    /* Indicates if the course has any assignment that is manually graded */
+    isCourseManuallyGraded: boolean
 
 
     /***************************************************************************
@@ -299,7 +302,7 @@ export const state: State = {
         }
 
         const sortOrder = sortAscending ? -1 : 1
-        const sortedSubmissions = Object.values(filtered).sort((a, b) => {
+        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-0044
             let subA: Submission | undefined
             let subB: Submission | undefined
             if (assignmentID > 0) {
@@ -312,6 +315,13 @@ export const state: State = {
             const subsB = submissions.get(b.ID)?.submissions
 
             switch (sortSubmissionsBy) {
+                case SubmissionSort.ID: {
+                    if (a instanceof Enrollment && b instanceof Enrollment) {
+                        return sortOrder * (Number(a.userID) - Number(b.userID))
+                    } else {
+                        return sortOrder * (Number(a.ID) - Number(b.ID))
+                    }
+                }
                 case SubmissionSort.Score: {
                     if (assignmentID > 0) {
                         const sA = subA?.score
@@ -380,6 +390,12 @@ export const state: State = {
             return courseEnrollments[activeCourse.toString()]?.filter(enrollment => !isPending(enrollment)).length
         }
         return 0
+    }),
+    isCourseManuallyGraded: derived(({ activeCourse, assignments }: State) => {
+        if (activeCourse > 0 && assignments[activeCourse.toString()]) {
+            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a))
+        }
+        return false
     }),
     query: "",
     sortSubmissionsBy: SubmissionSort.Approved,

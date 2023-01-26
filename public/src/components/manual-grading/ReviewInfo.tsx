@@ -24,7 +24,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
 
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { state.isCourseCreator && actions.review.release(!submission?.released) }}
+        <Button onclick={() => { actions.review.release(!submission?.released) }}
             classname={`float-right ${!state.isCourseCreator && "disabled"} `}
             text={submission?.released ? "Released" : "Release"}
             color={submission?.released ? Color.WHITE : Color.YELLOW}
