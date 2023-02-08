@@ -43,7 +43,7 @@ const GroupForm = (): JSX.Element | null => {
     const userEnrollmentStatus = hasTeacher(state.status[courseID.toString()]) ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
     const sortedAndFilteredEnrollments = enrollments
         // Filter enrollments where the user is not a student (or teacher), or the user is already in a group
-        .filter(enrollment => enrollment.status === userEnrollmentStatus && enrollment.groupID === BigInt(0))
+        .filter(enrollment => (enrollment.status === userEnrollmentStatus || enrollment.status === Enrollment_UserStatus.STUDENT) && enrollment.groupID === BigInt(0))
         // Sort by name
         .sort((a, b) => (a.user?.Name ?? "").localeCompare((b.user?.Name ?? "")))
 
