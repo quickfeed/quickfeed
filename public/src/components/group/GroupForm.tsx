@@ -94,6 +94,25 @@ const GroupForm = (): JSX.Element | null => {
         )
     })
 
+    const toggleEnrollmentType = () => {
+        if (hasTeacher(enrollmentType)) {
+            setEnrollmentType(Enrollment_UserStatus.STUDENT)
+        } else {
+            setEnrollmentType(Enrollment_UserStatus.TEACHER)
+        }
+    }
+
+    const EnrollmentTypeButton = () => {
+        if (!isTeacher) {
+            return <div>Students</div>
+        }
+        return (
+            <button className="btn btn-primary w-100" onClick={toggleEnrollmentType}>
+                {enrollmentType === Enrollment_UserStatus.STUDENT ? "Students" : "Teachers"}
+            </button>
+        )
+    }
+
     const GroupNameBanner = <div className="card-header" style={{ textAlign: "center" }}>{group.name}</div>
     const GroupNameInput = group && isApprovedGroup(group)
         ? null
@@ -104,7 +123,7 @@ const GroupForm = (): JSX.Element | null => {
             <div className="row">
                 <div className="card well col-md-offset-2">
                     <div className="card-header" style={{ textAlign: "center" }}>
-                        Students
+                        <EnrollmentTypeButton />
                     </div>
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
