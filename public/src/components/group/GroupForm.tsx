@@ -10,6 +10,7 @@ const GroupForm = (): JSX.Element | null => {
     const actions = useActions()
 
     const [query, setQuery] = useState<string>("")
+    const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
     const courseID = getCourseID()
 
     const group = state.activeGroup
@@ -40,10 +41,30 @@ const GroupForm = (): JSX.Element | null => {
     const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => enrollment.clone())
 
     // Determine the user's enrollment status (teacher or student)
-    const userEnrollmentStatus = hasTeacher(state.status[courseID.toString()]) ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
+    const isTeacher = hasTeacher(state.status[courseID.toString()])
+
+    const enrollmentFilter = (enrollment: Enrollment) => {
+        if (isTeacher) {
+            // If the user is a teacher, show all enrollments of the selected enrollment type
+            return enrollment.status === enrollmentType
+        }
+        // Show all students
+        return enrollment.status === Enrollment_UserStatus.STUDENT
+    }
+
+    const groupFilter = (enrollment: Enrollment) => {
+        if (group && group.ID) {
+            // If a group is being edited, show users that are in the group
+            // This is to allow users to be removed from the group, and to be re-added
+            return enrollment.groupID === group.ID
+        }
+        // Otherwise, show users that are not in a group
+        return enrollment.groupID === BigInt(0)
+    }
+
     const sortedAndFilteredEnrollments = enrollments
         // Filter enrollments where the user is not a student (or teacher), or the user is already in a group
-        .filter(enrollment => (enrollment.status === userEnrollmentStatus || enrollment.status === Enrollment_UserStatus.STUDENT) && enrollment.groupID === BigInt(0))
+        .filter(enrollment => enrollmentFilter(enrollment) && groupFilter(enrollment))
         // Sort by name
         .sort((a, b) => (a.user?.Name ?? "").localeCompare((b.user?.Name ?? "")))
 
