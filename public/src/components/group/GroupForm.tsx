@@ -107,7 +107,7 @@ const GroupForm = (): JSX.Element | null => {
             return <div>Students</div>
         }
         return (
-            <button className="btn btn-primary w-100" onClick={toggleEnrollmentType}>
+            <button className="btn btn-primary w-100" type="button" onClick={toggleEnrollmentType}>
                 {enrollmentType === Enrollment_UserStatus.STUDENT ? "Students" : "Teachers"}
             </button>
         )
