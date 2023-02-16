@@ -20,10 +20,10 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
     // handleChange saves the comment when clicking outside the text area, or when pressing enter.
     // Clicking outside, pressing enter, or pressing escape will set editing to false.
     // Changes are discarded if the user presses escape.
-    const handleChange = (event: React.FormEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
+    const handleChange = (event: React.FocusEvent<HTMLTextAreaElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
         // Handle if event is keyboard event
         if ("key" in event) {
-            if (event.key !== "Escape" && event.key !== "Enter") {
+            if (event.key !== "Escape") {
                 // Exit early if the key is not an escape or enter key
                 return
             }
@@ -45,7 +45,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
     return (
         <tr>
             <th colSpan={3}>
-                <input autoFocus onBlur={handleChange} onKeyUp={handleChange} defaultValue={grade.comment} className="form-control" type="text" />
+                <textarea rows={20} autoFocus onBlur={handleChange} onKeyUp={handleChange} defaultValue={grade.comment} className="form-control"></textarea>
             </th>
         </tr>
     )
