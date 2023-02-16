@@ -55,14 +55,14 @@ module.exports = {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: [".ts", ".tsx", ".js", ".json"],
         extensionAlias: {
-            '.js': ['.ts', '.js'],
+            '.js': ['.js', '.ts'],
         },
     },
 
 
     plugins: [
         new webpack.ProvidePlugin({
-            process: 'process/browser'
+            process: 'process/browser.js'
         }),
         new Dotenv(),
         new HtmlWebpackPlugin({
