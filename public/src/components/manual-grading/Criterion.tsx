@@ -3,6 +3,7 @@ import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/type
 import { useAppState } from "../../overmind"
 import GradeComment from "./GradeComment"
 import CriteriaStatus from "./CriteriaStatus"
+import CriterionComment from "./Comment"
 
 
 /* Criteria component for the manual grading page */
@@ -38,23 +39,30 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment
-        const content = criteria.comment.length > 0
-            ? criteria.comment
-            : <i style={{ opacity: "0.5" }} className="fa fa-pencil-square-o" aria-hidden="true" />
-        comment = <span className="clickable">{content}</span>
+        if (criteria.comment.length > 0) {
+            comment = <CriterionComment comment={criteria.comment} />
+        } else {
+            comment = <i style={{ opacity: "0.5" }} className="fa fa-pencil-square-o" aria-hidden="true" />
+        }
     } else {
-        comment = <span>{criteria.comment}</span>
+        comment = <CriterionComment comment={criteria.comment} />
     }
 
     return (
         <>
             <tr className="align-items-center">
                 <th className={className}>{criteria.description}</th>
-                <th>
+                <th colSpan={2}>
                     {criteriaStatusOrPassFailIcon}
                 </th>
-                <th onClick={() => setEditing(true)}>{comment}</th>
             </tr>
+            {isTeacher || (!isTeacher && criteria.comment.length > 0) ?
+            <tr className={`comment`}>
+                <td onClick={() => setEditing(true)} colSpan={3}>
+                    {comment}
+                </td>
+            </tr> : null
+            }
             <GradeComment grade={criteria} editing={editing} setEditing={setEditing} />
         </>
     )
