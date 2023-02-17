@@ -6,9 +6,7 @@ import { CodeProps } from "react-markdown/lib/ast-to-react";
 
 
 const CriterionComment = ({comment}: {comment: string}): JSX.Element | null => {
-    console.log(comment, comment.length)
     if (comment == "" || comment.length == 0) {
-        console.log("returning null")
         return null
     }
     return (
