@@ -4,6 +4,7 @@ import { useAppState } from "../../overmind"
 import GradeComment from "./GradeComment"
 import CriteriaStatus from "./CriteriaStatus"
 import CriterionComment from "./Comment"
+import UnstyledButton from "../UnstyledButton"
 
 
 /* Criteria component for the manual grading page */
@@ -11,6 +12,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
+    const [showComment, setShowComment] = React.useState<boolean>(true)
     const { isTeacher } = useAppState()
 
     // classname is used to style the first column of the row returned by this component
@@ -48,16 +50,21 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
         comment = <CriterionComment comment={criteria.comment} />
     }
 
+    // Only display the comment if the user is a teacher or if the comment is not empty
+    const displayComment = isTeacher ||  criteria.comment.length > 0
     return (
         <>
             <tr className="align-items-center">
-                <th className={className}>{criteria.description}</th>
-                <th colSpan={2}>
+                <td className={className}>{criteria.description}</td>
+                <td>
                     {criteriaStatusOrPassFailIcon}
-                </th>
+                </td>
+                <td>
+                    {displayComment ? <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton> : null}
+                </td>
             </tr>
-            {isTeacher || (!isTeacher && criteria.comment.length > 0) ?
-            <tr className={`comment`}>
+            {displayComment ?
+            <tr className={`comment comment-${className}${!showComment ? " hidden" : "" } `}>
                 <td onClick={() => setEditing(true)} colSpan={3}>
                     {comment}
                 </td>
