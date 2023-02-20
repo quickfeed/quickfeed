@@ -32,14 +32,14 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
         updateComment(value)
     }
 
-    // handleKeyUp saves the comment when pressing Ctrl+Enter or Ctrl+Q/q.
+    // handleKeyUp saves the comment when pressing Ctrl/Cmd+Enter or Ctrl/Cmd+Q/q.
     // It also cancels the edit when pressing Escape.
     const handleKeyUp = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.key === "Escape") {
             setEditing(false)
             return
         }
-        if ((event.key === "Enter" || event.key === "q" || event.key === "Q") && event.ctrlKey) {
+        if ((event.key === "Enter" || event.key === "q" || event.key === "Q") && (event.ctrlKey || event.metaKey)) {
             const { value } = event.currentTarget
             updateComment(value)
         }
