@@ -10,8 +10,11 @@
     "overmind": "^28.0.1",
     "overmind-react": "^29.0.1",
     "react": "^17.0.1",
+    "react-dom": "^17.0.2",
+    "react-markdown": "^8.0.5",
     "react-router": "^5.2.0",
-    "react-router-dom": "^5.3.0"
+    "react-router-dom": "^5.3.0",
+    "react-syntax-highlighter": "^15.5.0"
   },
   "scripts": {
     "tsc": "tsc",
@@ -25,6 +28,7 @@
     "@testing-library/react": "^12.1.5",
     "@types/jest": "^29.2.0",
     "@types/react-router-dom": "^5.1.7",
+    "@types/react-syntax-highlighter": "^15.5.6",
     "@types/selenium-webdriver": "^4.1.1",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",
@@ -37,7 +41,6 @@
     "jest-environment-jsdom": "^29.2.0",
     "jsdom": "^20.0.1",
     "process": "0.11.10",
-    "react-dom": "^17.0.2",
     "sass": "^1.56.1",
     "sass-loader": "^13.2.0",
     "selenium-webdriver": "^4.2.0",
@@ -47,7 +50,7 @@
     "ts-loader": "^9.4.1",
     "typescript": "^4.8.4",
     "webpack": "^5.75.0",
-    "webpack-cli": "^4.10.0",
+    "webpack-cli": "^5.0.1",
     "webpack-dev-middleware": "^5.3.3",
     "webpack-dev-server": "^4.11.1"
   },
