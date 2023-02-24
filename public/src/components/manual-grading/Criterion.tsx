@@ -3,6 +3,8 @@ import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/type
 import { useAppState } from "../../overmind"
 import GradeComment from "./GradeComment"
 import CriteriaStatus from "./CriteriaStatus"
+import CriterionComment from "./Comment"
+import UnstyledButton from "../UnstyledButton"
 
 
 /* Criteria component for the manual grading page */
@@ -10,6 +12,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
+    const [showComment, setShowComment] = React.useState<boolean>(true)
     const { isTeacher } = useAppState()
 
     // classname is used to style the first column of the row returned by this component
@@ -34,27 +37,42 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
         : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
 
 
-    let comment: JSX.Element
+    let comment: JSX.Element | null = null
+    let button: JSX.Element | null = null
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment
-        const content = criteria.comment.length > 0
-            ? criteria.comment
-            : <i style={{ opacity: "0.5" }} className="fa fa-pencil-square-o" aria-hidden="true" />
-        comment = <span className="clickable">{content}</span>
+        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton>
+        if (criteria.comment.length > 0) {
+            comment = <CriterionComment comment={criteria.comment} />
+        }
     } else {
-        comment = <span>{criteria.comment}</span>
+        comment = <CriterionComment comment={criteria.comment} />
+        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton>
     }
 
+    // Only display the comment if the comment is not empty
+    const displayComment = criteria.comment.length > 0
     return (
         <>
             <tr className="align-items-center">
-                <th className={className}>{criteria.description}</th>
-                <th>
+                <td className={className}>{criteria.description}</td>
+                <td>
                     {criteriaStatusOrPassFailIcon}
-                </th>
-                <th onClick={() => setEditing(true)}>{comment}</th>
+                </td>
+                <td>
+                    { // Only display the comment button if the comment is not empty, or if the user is a teacher
+                        (displayComment || isTeacher) ? button : null
+                    }
+                </td>
             </tr>
+            {displayComment ?
+                <tr className={`comment comment-${className}${!showComment ? " hidden" : ""} `}>
+                    <td onClick={() => setEditing(true)} colSpan={3}>
+                        {comment}
+                    </td>
+                </tr> : null
+            }
             <GradeComment grade={criteria} editing={editing} setEditing={setEditing} />
         </>
     )
