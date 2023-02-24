@@ -265,14 +265,19 @@ input {
 .reviewLab {
     position: sticky;
     top: 100px;
-    min-width: 50%;
     height: 90vh;
+    padding: 0;
 }
 
 .reviewLabResult {
     overflow: scroll;
     overflow-y: scroll;
     height: 90vh;
+}
+
+.results-table {
+    overflow-x: scroll;
+    padding: 0;
 }
 
 .pending-review {
