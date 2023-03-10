@@ -1,6 +1,6 @@
 import { Context } from '../..'
 import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
-import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
+import { Color, isAuthor } from '../../../Helpers'
 import { success } from '../../actions'
 
 
@@ -8,8 +8,8 @@ import { success } from '../../actions'
 export const setSelectedReview = ({ state }: Context, index: number): void => {
     const reviews = state.review.reviews.get(state.selectedSubmission?.ID ?? -1n)
     if (index < 0) {
-        const idx = reviews?.findIndex(r => isAuthor(state.self, r) || isCourseCreator(state.self, state.courses[Number(state.activeCourse)]))
-        state.review.selectedReview = idx && idx >= 0 ? idx : -1
+        const idx = reviews?.findIndex(r => isAuthor(state.self, r) || state.isCourseCreator)
+        state.review.selectedReview = idx && idx >= 0 ? idx : 0
     } else {
         state.review.selectedReview = index
     }
