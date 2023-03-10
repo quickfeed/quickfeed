@@ -22,6 +22,18 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
 
     const markReadyButton = <MarkReadyButton review={review} />
 
+    const user = state.selectedEnrollment?.user
+    let userLi = null
+    if (user) {
+        // List item for the user that submitted the selected submission
+        userLi = (
+            <li className="list-group-item">
+                <span className="w-25 mr-5 float-left">User: </span>
+                {user.Name}
+            </li>
+        )
+    }
+
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
         <Button onclick={() => { actions.review.release(!submission?.released) }}
@@ -38,6 +50,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
                     {releaseButton}
                 </span>
             </li>
+            {userLi}
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
                 {state.review.reviewer?.Name}
