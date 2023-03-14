@@ -8,6 +8,7 @@ import DynamicTable, { CellElement, RowElement } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
+import Release from "./Release"
 import Search from "./Search"
 
 
