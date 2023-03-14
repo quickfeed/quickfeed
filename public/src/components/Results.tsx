@@ -96,6 +96,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     return (
         <div className="row">
             <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-xl-6"}>
+                {review ? <Release /> : null}
                 <Search placeholder={"Search by name ..."} className="mb-2" >
                     <Button type={ButtonType.BUTTON}
                         classname="ml-2"

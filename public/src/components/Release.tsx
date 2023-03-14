@@ -17,20 +17,20 @@ const Release = (): JSX.Element => {
         actions.review.setMinimumScore(parseInt(event.currentTarget.value))
     }
 
+    if (!canRelease) {
+        return <></>
+    }
+
     return (
-        <div className="col">
-            {canRelease ?
-                <div className="input-group">
-                    <FormInput type="number" prepend="Set minimum score" name="score" onChange={handleMinimumScore}>
-                        <div className="input-group-append">
-                            <button className="btn btn-outline-secondary" onClick={() => actions.review.releaseAll({ approve: true, release: false })}>Approve all</button>
-                        </div>
-                        <div className="input-group-append">
-                            <button className="btn btn-outline-secondary" onClick={() => actions.review.releaseAll({ approve: false, release: true })}>Release all</button>
-                        </div>
-                    </FormInput>
+        <div className="input-group">
+            <FormInput type="number" prepend="Set minimum score" name="score" onChange={handleMinimumScore}>
+                <div className="input-group-append">
+                    <button className="btn btn-outline-secondary" onClick={() => actions.review.releaseAll({ approve: true, release: false })}>Approve all</button>
                 </div>
-                : "Select an assignment by clicking in the table header to release submissions."}
+                <div className="input-group-append">
+                    <button className="btn btn-outline-secondary" onClick={() => actions.review.releaseAll({ approve: false, release: true })}>Release all</button>
+                </div>
+            </FormInput>
         </div>
     )
 }
