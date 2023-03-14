@@ -3,7 +3,7 @@ import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert } from "./state"
+import { Alert, SubmissionOwner } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
 import { Code } from "@bufbuild/connect-web"
@@ -147,8 +147,7 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 }
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
-export const updateSubmission = async ({ state, effects }: Context, status: Submission_Status): Promise<void> => {
-    const submission = state.selectedSubmission
+export const updateSubmission = async ({ state, effects }: Context, { owner, submission, status }: { owner: SubmissionOwner, submission: Submission | null, status: Submission_Status }): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
     if (!submission || submission.status === status) {
         return
@@ -169,7 +168,7 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
         return
     }
     submission.status = status
-    state.submissionsForCourse.update(state.submissionOwner, submission)
+    state.submissionsForCourse.update(owner, submission)
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
