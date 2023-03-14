@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { Review } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, SubmissionStatus } from "../../Helpers"
@@ -34,9 +34,17 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
         )
     }
 
+    const handleRelease = useMemo(() => {
+        return () => {
+            if (submission) {
+                actions.review.release({ submission, owner: state.submissionOwner })
+            }
+        }
+    }, [review])
+
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { actions.review.release(!submission?.released) }}
+        <Button onclick={handleRelease}
             classname={`float-right ${!state.isCourseCreator && "disabled"} `}
             text={submission?.released ? "Released" : "Release"}
             color={submission?.released ? Color.WHITE : Color.YELLOW}
