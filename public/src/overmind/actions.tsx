@@ -454,11 +454,12 @@ export const setSelectedSubmission = ({ state }: Context, submission: Submission
     state.selectedSubmission = submission.clone()
 }
 
-export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
+export const getSubmission = async ({ state, actions, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
     const response = await effects.grpcMan.getSubmission(courseID, submissionID)
     if (!response.data || !success(response)) {
         return
     }
+    actions.setSelectedSubmission(response.data)
     state.submissionsForCourse.update(state.submissionOwner, response.data)
 }
 
