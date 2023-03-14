@@ -159,17 +159,16 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
         return
     }
 
-    /* Store the previous submission status */
-    const previousStatus = submission.status
 
+    const clone = submission.clone()
+    clone.status = status
     /* Update the submission status */
-    submission.status = status
-    const result = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, clone)
     if (!success(result)) {
         /* If the update failed, revert the submission status */
-        submission.status = previousStatus
         return
     }
+    submission.status = status
     state.submissionsForCourse.update(state.submissionOwner, submission)
 }
 
