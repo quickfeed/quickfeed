@@ -1,7 +1,9 @@
 import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import FormInput from "./forms/FormInput"
-
+import DynamicButton from "./DynamicButton"
+import { Color } from "../Helpers"
+import { ButtonType } from "./admin/Button"
 
 const Release = (): JSX.Element => {
     const state = useAppState()
@@ -25,10 +27,10 @@ const Release = (): JSX.Element => {
         <div className="input-group">
             <FormInput type="number" prepend="Set minimum score" name="score" onChange={handleMinimumScore}>
                 <div className="input-group-append">
-                    <button className="btn btn-outline-secondary" onClick={() => actions.review.releaseAll({ approve: true, release: false })}>Approve all</button>
+                    <DynamicButton text="Approve all" onClick={() => actions.review.releaseAll({ approve: true, release: false })} color={Color.GRAY} type={ButtonType.OUTLINE} />
                 </div>
                 <div className="input-group-append">
-                    <button className="btn btn-outline-secondary" onClick={() => actions.review.releaseAll({ approve: false, release: true })}>Release all</button>
+                    <DynamicButton text="Release all" onClick={() => actions.review.releaseAll({ approve: false, release: true })} color={Color.GRAY} type={ButtonType.OUTLINE} />
                 </div>
             </FormInput>
         </div>

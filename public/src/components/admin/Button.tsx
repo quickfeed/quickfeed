@@ -3,7 +3,8 @@ import { Color } from "../../Helpers"
 
 export enum ButtonType {
     BADGE = "badge badge",
-    BUTTON = "btn btn"
+    BUTTON = "btn btn",
+    OUTLINE = "btn btn-outline"
 }
 
 export type ButtonProps = {

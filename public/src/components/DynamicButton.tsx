@@ -11,11 +11,18 @@ export type DynamicButtonProps = {
     className?: string,
 }
 
-// DynamicButton will display a spinner while the onClick function is running.
+/** DynamicButton will display a spinner while the onClick function is running.
+ *  This is useful for buttons that perform an action that takes a while to complete.
+ *  The button will be disabled while the onClick function is running.
+ */
 const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonProps) => {
     const [isPending, setIsPending] = useState<boolean>(false)
 
     const handleClick = async () => {
+        if (isPending) {
+            // Disable double clicks
+            return
+        }
         setIsPending(true)
         await onClick()
         setIsPending(false)
