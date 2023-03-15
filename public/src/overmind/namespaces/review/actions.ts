@@ -142,7 +142,7 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const response = await effects.grpcMan.updateSubmissions(state.review.assignmentID, state.activeCourse, state.review.minimumScore, release, approve)
     if (success(response)) {
         // Refresh submissions in state for the active course
-        actions.getAllCourseSubmissions(state.activeCourse)
+        await actions.refreshCourseSubmissions(state.activeCourse)
     } else {
         actions.alertHandler(response)
     }

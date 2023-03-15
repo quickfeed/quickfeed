@@ -372,16 +372,23 @@ export const refreshSubmissions = async ({ state, effects }: Context, input: { c
     }
 }
 
-/** Fetches and stores all submissions of a given course into state */
-export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
+/** Fetches and stores all submissions of a given course into state. Triggers the loading spinner. */
+export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
     state.isLoading = true
+    await actions.refreshCourseSubmissions(courseID)
+    state.loadedCourse[courseID.toString()] = true
+    state.isLoading = false
+}
+
+/** Refreshes all submissions for a given course. Calling this action directly will not trigger the loading spinner.
+ *  Use `loadCourseSubmissions` instead if you want to trigger the loading spinner, such as on page load. */
+export const refreshCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
     // None of these should fail independently.
     const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.USER)
     const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)
-        state.isLoading = false
         return
     }
     if (result.data) {
@@ -395,8 +402,6 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     if (groups.data) {
         state.submissionsForCourse.setSubmissions("GROUP", groups.data)
     }
-    state.isLoading = false
-    state.loadedCourse[courseID.toString()] = true
 }
 
 export const getGroupsByCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {

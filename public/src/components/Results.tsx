@@ -25,7 +25,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
-            actions.getAllCourseSubmissions(courseID)
+            actions.loadCourseSubmissions(courseID)
         }
         return () => {
             actions.setGroupView(false)
