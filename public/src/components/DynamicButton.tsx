@@ -28,7 +28,7 @@ const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonP
         setIsPending(false)
     }
 
-    const buttonClass = isPending ? `${type}-${Color.GRAY} ${className ?? ""}` : `${type}-${color} ${className ?? ""}`
+    const buttonClass = `${type}-${isPending ? Color.GRAY : color} ${className ?? ""}`
     const content = isPending
         ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
         : text
