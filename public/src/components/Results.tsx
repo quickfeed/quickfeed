@@ -105,7 +105,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                         onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
                         color={groupView ? Color.BLUE : Color.GREEN} />
                 </Search>
-                <TableSort />
+                <TableSort review={review} />
                 <DynamicTable header={header} data={rows} />
             </div>
             <div className="col reviewLab">
