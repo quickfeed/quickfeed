@@ -1,7 +1,9 @@
 import React from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
-import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { Color, getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
+import Button, { ButtonType } from "./admin/Button"
+import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 
@@ -33,19 +35,15 @@ const Groups = (): JSX.Element => {
         return true
     }
 
-    const updateGroupStatus = (group: Group, status: Group_GroupStatus) => {
-        actions.updateGroupStatus({ group, status })
-    }
-
     const GroupButtons = ({ group }: { group: Group }) => {
         const buttons: JSX.Element[] = []
         if (isPendingGroup(group)) {
-            buttons.push(<span onClick={() => updateGroupStatus(group, Group_GroupStatus.APPROVED)} className="badge badge-primary clickable">Approve</span>)
+            buttons.push(<DynamicButton onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })} text={"Approve"} color={Color.BLUE} type={ButtonType.BADGE} />)
         }
-        buttons.push(<span className="badge badge-info clickable ml-2" onClick={() => actions.setActiveGroup(group)}>Edit</span>)
-        buttons.push(<span onClick={() => actions.deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>)
+        buttons.push(<Button classname="ml-2" onclick={() => actions.setActiveGroup(group)} text={"Edit"} type={ButtonType.BADGE} color={Color.YELLOW} />)
+        buttons.push(<DynamicButton onClick={() => actions.deleteGroup(group)} className="ml-2" text={"Delete"} type={ButtonType.BADGE} color={Color.RED} />)
 
-        return <td>{buttons}</td>
+        return <td className="d-flex">{buttons}</td>
     }
 
     const GroupMembers = ({ group }: { group: Group }) => {
