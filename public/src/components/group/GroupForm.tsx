@@ -77,7 +77,7 @@ const GroupForm = (): JSX.Element | null => {
             return (
                 <li hidden={search(enrollment)} key={id.toString()} className="list-group-item">
                     {enrollment.user?.Name}
-                    <i className="badge-pill badge-success ml-2 clickable float-right" onClick={() => actions.updateGroupUsers(enrollment.user)}>+</i>
+                    <Button classname="ml-2 float-right" onclick={() => actions.updateGroupUsers(enrollment.user)} type={ButtonType.BADGE} color={Color.GREEN} text={"+"} />
                 </li>
             )
         }
@@ -89,7 +89,7 @@ const GroupForm = (): JSX.Element | null => {
             <li key={user.ID.toString()} className="list-group-item">
                 <img id="group-image" src={user.AvatarURL} alt="" />
                 {user.Name}
-                <i className="badge-pill badge-danger rounded-circle clickable float-right" onClick={() => actions.updateGroupUsers(user)}>-</i>
+                <Button classname="float-right" onclick={() => actions.updateGroupUsers(user)} type={ButtonType.BADGE} color={Color.RED} text={"-"} />
             </li>
         )
     })
