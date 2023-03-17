@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
-import { getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
+import Button, { ButtonType } from "../admin/Button"
 import Search from "../Search"
 
 
@@ -56,7 +57,7 @@ const GroupForm = (): JSX.Element | null => {
         if (group && group.ID) {
             // If a group is being edited, show users that are in the group
             // This is to allow users to be removed from the group, and to be re-added
-            return enrollment.groupID === group.ID
+            return enrollment.groupID === group.ID || enrollment.groupID === BigInt(0)
         }
         // Otherwise, show users that are not in a group
         return enrollment.groupID === BigInt(0)
