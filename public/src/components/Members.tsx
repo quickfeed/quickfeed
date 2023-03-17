@@ -52,27 +52,35 @@ const Members = (): JSX.Element => {
 
         if (isPending(enrollment)) {
             data.push(
-                <div>
-                    <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => { actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT }) }}>
-                        Accept
-                    </i>
-                    <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}>
-                        Reject
-                    </i>
+                <div className="d-flex">
+                    <DynamicButton onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT })}
+                        className="mr-2"
+                        text={"Accept"}
+                        color={Color.GREEN}
+                        type={ButtonType.BADGE}
+                    />
+                    <DynamicButton onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
+                        text={"Reject"}
+                        color={Color.RED}
+                        type={ButtonType.BADGE}
+                    />
                 </div>)
         } else {
             data.push(edit ? (
-                <div>
-                    <i className={`badge badge-${isTeacher(enrollment) ? "warning" : "primary"} clickable`}
-                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}>
-                        {isTeacher(enrollment) ? "Demote" : "Promote"}
-                    </i>
-                    <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}>
-                        Reject
-                    </i>
+                <div className="d-flex">
+                    <DynamicButton
+                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}
+                        className="mr-2"
+                        text={isTeacher(enrollment) ? "Demote" : "Promote"}
+                        color={isTeacher(enrollment) ? Color.YELLOW : Color.BLUE}
+                        type={ButtonType.BADGE}
+                    />
+                    <DynamicButton
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
+                        text={"Reject"}
+                        color={Color.RED}
+                        type={ButtonType.BADGE}
+                    />
                 </div>) :
                 <i className={EnrollmentStatusBadge[enrollment.status]}>
                     {EnrollmentStatus[enrollment.status]}
