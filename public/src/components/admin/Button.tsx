@@ -4,10 +4,12 @@ import { Color } from "../../Helpers"
 export enum ButtonType {
     BADGE = "badge badge",
     BUTTON = "btn btn",
-    OUTLINE = "btn btn-outline"
+    OUTLINE = "btn btn-outline",
+    UNSTYLED = "btn btn-link p-0",
 }
 
 export type ButtonProps = {
+    children?: React.ReactNode,
     text: string,
     onclick: () => void,
     color: Color,
@@ -15,7 +17,7 @@ export type ButtonProps = {
     classname?: string,
 }
 
-const Button = ({ text, onclick, color, type, classname }: ButtonProps): JSX.Element => {
+const Button = ({ children, text, onclick, color, type, classname }: ButtonProps): JSX.Element => {
     return (
         <button className={`${type}-${color}` + `${classname ? " " + classname : ""}`} onClick={onclick}>
             {children}
