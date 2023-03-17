@@ -17,9 +17,10 @@ export type ButtonProps = {
 
 const Button = ({ text, onclick, color, type, classname }: ButtonProps): JSX.Element => {
     return (
-        <span className={`${type}-${color}` + " clickable " + classname} onClick={onclick}>
+        <button className={`${type}-${color}` + `${classname ? " " + classname : ""}`} onClick={onclick}>
+            {children}
             {text}
-        </span>
+        </button>
     )
 }
 
