@@ -3,6 +3,7 @@ import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/type
 import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
+import DynamicButton from "../DynamicButton"
 import Search from "../Search"
 
 
@@ -142,16 +143,16 @@ const GroupForm = (): JSX.Element | null => {
                         {groupMembers}
                         {group && group.ID ?
                             <div className="row justify-content-md-center">
-                                <div className="btn btn-primary ml-2" onClick={() => actions.updateGroup(group)}> Update </div>
-                                <div className="btn btn-danger ml-2" onClick={() => actions.setActiveGroup(null)}> Cancel </div>
+                                <DynamicButton className="ml-2" color={Color.BLUE} type={ButtonType.BUTTON} onClick={() => actions.updateGroup(group)} text={"Update"} />
+                                <Button classname="ml-2" color={Color.RED} type={ButtonType.OUTLINE} onclick={() => actions.setActiveGroup(null)} text={"Cancel"} />
                             </div>
                             :
-                            <div className="btn btn-primary" onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}> Create Group </div>
+                            <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })} text={"Create Group"} />
                         }
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
