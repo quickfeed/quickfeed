@@ -43,7 +43,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
                 // Show spinner while submission is being updated
                 return (
                     <button key={index} className={`col btn btn-secondary mr-2`}>
-                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
                         <span className="sr-only">Loading...</span>
                     </button>
                 )
