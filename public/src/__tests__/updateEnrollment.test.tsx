@@ -60,7 +60,6 @@ describe("UpdateEnrollment in webpage", () => {
         const history = createMemoryHistory()
         history.push("/course/1/members")
 
-        React.useState = jest.fn().mockReturnValue("True")
         render(
             <Provider value={mockedOvermind}>
                 <Router history={history} >
@@ -68,6 +67,10 @@ describe("UpdateEnrollment in webpage", () => {
                 </Router>
             </Provider>
         )
+
+        const editButton = screen.getByText("Edit")
+        editButton.click()
+
         expect(screen.getByText("Demote")).toBeTruthy()
         expect(screen.queryByText("Promote")).toBeFalsy()
     })
@@ -96,7 +99,6 @@ describe("UpdateEnrollment in webpage", () => {
         const history = createMemoryHistory()
         history.push("/course/1/members")
 
-        React.useState = jest.fn().mockReturnValue("True")
         render(
             <Provider value={mockedOvermind}>
                 <Router history={history} >
@@ -104,6 +106,10 @@ describe("UpdateEnrollment in webpage", () => {
                 </Router>
             </Provider>
         )
+
+        const editButton = screen.getByText("Edit")
+        editButton.click()
+
         expect(screen.getByText("Promote")).toBeTruthy()
         expect(screen.queryByText("Demote")).toBeFalsy()
     })
