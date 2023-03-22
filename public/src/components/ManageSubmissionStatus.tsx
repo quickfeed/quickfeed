@@ -40,21 +40,21 @@ const ManageSubmissionStatus = (): JSX.Element => {
             <DynamicButton
                 text="Approve"
                 onClick={() => handleSetStatus(Submission_Status.APPROVED)}
-                color={updating === Submission_Status.APPROVED ? Color.GRAY : Color.GREEN}
+                color={Color.GREEN}
                 type={getButtonType(Submission_Status.APPROVED)}
                 className="col mr-2"
             />
             <DynamicButton
                 text="Revision"
                 onClick={() => handleSetStatus(Submission_Status.REVISION)}
-                color={updating === Submission_Status.REVISION ? Color.GRAY : Color.YELLOW}
+                color={Color.YELLOW}
                 type={getButtonType(Submission_Status.REVISION)}
                 className="col mr-2"
             />
             <DynamicButton
                 text="Reject"
                 onClick={() => handleSetStatus(Submission_Status.REJECTED)}
-                color={updating === Submission_Status.REJECTED ? Color.GRAY : Color.RED}
+                color={Color.RED}
                 type={getButtonType(Submission_Status.REJECTED)}
                 className="col mr-2"
             />
@@ -62,7 +62,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
                 <DynamicButton
                     text={rebuilding ? "Rebuilding..." : "Rebuild"}
                     onClick={handleRebuild}
-                    color={rebuilding ? Color.GRAY : Color.BLUE}
+                    color={Color.BLUE}
                     type={ButtonType.OUTLINE}
                     className="col mr-2"
                 />
