@@ -79,7 +79,12 @@ const GroupForm = (): JSX.Element | null => {
             return (
                 <li hidden={search(enrollment)} key={id.toString()} className="list-group-item">
                     {enrollment.user?.Name}
-                    <Button classname="ml-2 float-right" onclick={() => actions.updateGroupUsers(enrollment.user)} type={ButtonType.BADGE} color={Color.GREEN} text={"+"} />
+                    <Button
+                        classname="ml-2 float-right"
+                        onclick={() => actions.updateGroupUsers(enrollment.user)}
+                        type={ButtonType.BADGE}
+                        color={Color.GREEN} text={"+"}
+                    />
                 </li>
             )
         }
@@ -91,7 +96,13 @@ const GroupForm = (): JSX.Element | null => {
             <li key={user.ID.toString()} className="list-group-item">
                 <img id="group-image" src={user.AvatarURL} alt="" />
                 {user.Name}
-                <Button classname="float-right" onclick={() => actions.updateGroupUsers(user)} type={ButtonType.BADGE} color={Color.RED} text={"-"} />
+                <Button
+                    classname="float-right"
+                    onclick={() => actions.updateGroupUsers(user)}
+                    type={ButtonType.BADGE}
+                    color={Color.RED}
+                    text={"-"}
+                />
             </li>
         )
     })
@@ -143,11 +154,28 @@ const GroupForm = (): JSX.Element | null => {
                         {groupMembers}
                         {group && group.ID ?
                             <div className="row justify-content-md-center">
-                                <DynamicButton className="ml-2" color={Color.BLUE} type={ButtonType.BUTTON} onClick={() => actions.updateGroup(group)} text={"Update"} />
-                                <Button classname="ml-2" color={Color.RED} type={ButtonType.OUTLINE} onclick={() => actions.setActiveGroup(null)} text={"Cancel"} />
+                                <DynamicButton
+                                    className="ml-2"
+                                    color={Color.BLUE}
+                                    type={ButtonType.BUTTON}
+                                    onClick={() => actions.updateGroup(group)}
+                                    text={"Update"}
+                                />
+                                <Button
+                                    classname="ml-2"
+                                    color={Color.RED}
+                                    type={ButtonType.OUTLINE}
+                                    onclick={() => actions.setActiveGroup(null)}
+                                    text={"Cancel"}
+                                />
                             </div>
                             :
-                            <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })} text={"Create Group"} />
+                            <DynamicButton
+                                color={Color.GREEN}
+                                type={ButtonType.BUTTON}
+                                onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}
+                                text={"Create Group"}
+                            />
                         }
                     </div>
                 </div>

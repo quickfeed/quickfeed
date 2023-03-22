@@ -38,10 +38,33 @@ const Groups = (): JSX.Element => {
     const GroupButtons = ({ group }: { group: Group }) => {
         const buttons: JSX.Element[] = []
         if (isPendingGroup(group)) {
-            buttons.push(<DynamicButton onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })} text={"Approve"} color={Color.BLUE} type={ButtonType.BADGE} />)
+            buttons.push(
+                <DynamicButton
+                    onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
+                    color={Color.BLUE}
+                    type={ButtonType.BADGE}
+                    text={"Approve"}
+                />
+            )
         }
-        buttons.push(<Button classname="ml-2" onclick={() => actions.setActiveGroup(group)} text={"Edit"} type={ButtonType.BADGE} color={Color.YELLOW} />)
-        buttons.push(<DynamicButton onClick={() => actions.deleteGroup(group)} className="ml-2" text={"Delete"} type={ButtonType.BADGE} color={Color.RED} />)
+        buttons.push(
+            <Button
+                classname="ml-2"
+                onclick={() => actions.setActiveGroup(group)}
+                color={Color.YELLOW}
+                type={ButtonType.BADGE}
+                text={"Edit"}
+            />
+        )
+        buttons.push(
+            <DynamicButton
+                className="ml-2"
+                onClick={() => actions.deleteGroup(group)}
+                color={Color.RED}
+                type={ButtonType.BADGE}
+                text={"Delete"}
+            />
+        )
 
         return <td className="d-flex">{buttons}</td>
     }

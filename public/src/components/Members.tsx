@@ -5,7 +5,7 @@ import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
-import { ButtonType } from "./admin/Button"
+import Button, { ButtonType } from "./admin/Button"
 
 const Members = (): JSX.Element => {
     const state = useAppState()
@@ -53,16 +53,18 @@ const Members = (): JSX.Element => {
         if (isPending(enrollment)) {
             data.push(
                 <div className="d-flex">
-                    <DynamicButton onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT })}
+                    <DynamicButton
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT })}
                         className="mr-2"
-                        text={"Accept"}
                         color={Color.GREEN}
                         type={ButtonType.BADGE}
+                        text={"Accept"}
                     />
-                    <DynamicButton onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
-                        text={"Reject"}
+                    <DynamicButton
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
                         color={Color.RED}
                         type={ButtonType.BADGE}
+                        text={"Reject"}
                     />
                 </div>)
         } else {
@@ -71,15 +73,15 @@ const Members = (): JSX.Element => {
                     <DynamicButton
                         onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}
                         className="mr-2"
-                        text={isTeacher(enrollment) ? "Demote" : "Promote"}
                         color={isTeacher(enrollment) ? Color.YELLOW : Color.BLUE}
                         type={ButtonType.BADGE}
+                        text={isTeacher(enrollment) ? "Demote" : "Promote"}
                     />
                     <DynamicButton
                         onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
-                        text={"Reject"}
                         color={Color.RED}
                         type={ButtonType.BADGE}
+                        text={"Reject"}
                     />
                 </div>) :
                 <i className={EnrollmentStatusBadge[enrollment.status]}>
@@ -97,9 +99,12 @@ const Members = (): JSX.Element => {
                     <Search />
                 </div>
                 <div className="ml-auto">
-                    <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>
-                        {edit ? "Done" : "Edit"}
-                    </div>
+                    <Button
+                        onclick={() => setEditing(!edit)}
+                        color={edit ? Color.RED : Color.BLUE}
+                        type={ButtonType.BUTTON}
+                        text={edit ? "Done" : "Edit"}
+                    />
                 </div>
                 {pending?.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
