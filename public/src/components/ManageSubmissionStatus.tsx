@@ -17,7 +17,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
     const handleRebuild = async () => {
         if (rebuilding) { return } // Don't allow multiple rebuilds at once
         setRebuilding(true)
-        await actions.rebuildSubmission()
+        await actions.rebuildSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission })
         setRebuilding(false)
     }
 

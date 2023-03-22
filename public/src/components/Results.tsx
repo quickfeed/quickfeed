@@ -82,7 +82,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                     actions.setActiveEnrollment(owner.clone())
                 }
                 actions.setSubmissionOwner(owner)
-                actions.getSubmission({ submissionID: submission.ID, courseID: state.activeCourse })
+                actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
             }
         })
     }

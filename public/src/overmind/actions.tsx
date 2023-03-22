@@ -458,25 +458,31 @@ export const setSelectedSubmission = ({ state }: Context, submission: Submission
     state.selectedSubmission = submission.clone()
 }
 
-export const getSubmission = async ({ state, actions, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
-    const response = await effects.grpcMan.getSubmission(courseID, submissionID)
+export const getSubmission = async ({ state, effects }: Context, { courseID, owner, submission }: { courseID: bigint, owner: SubmissionOwner, submission: Submission }): Promise<void> => {
+    const response = await effects.grpcMan.getSubmission(courseID, submission.ID)
     if (!response.data || !success(response)) {
         return
     }
-    actions.setSelectedSubmission(response.data)
-    state.submissionsForCourse.update(state.submissionOwner, response.data)
+    state.submissionsForCourse.update(owner, response.data)
+    if (state.selectedSubmission && state.selectedSubmission.ID === submission.ID) {
+        // Only update the selected submission if it is the same as the one we just fetched.
+        // This is to avoid overwriting the selected submission with a different one.
+        // This can happen when the user clicks on a submission in the submission list, and then
+        // selects a different submission in the submission list before the first request has finished.
+        state.selectedSubmission = response.data
+    }
 }
 
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
-    if (!(state.selectedSubmission && state.selectedAssignment && state.activeCourse)) {
+export const rebuildSubmission = async ({ state, actions, effects }: Context, { owner, submission }: { owner: SubmissionOwner, submission: Submission | null }): Promise<void> => {
+    if (!(submission && state.selectedAssignment && state.activeCourse)) {
         return
     }
-    const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.selectedSubmission.ID, state.activeCourse)
+    const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, submission.ID, state.activeCourse)
     if (success(response)) {
         // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
         // TODO: gRPC streaming should be implemented to send the updated submission to the client.
-        await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.selectedSubmission.ID })
+        await actions.getSubmission({ courseID: state.activeCourse, submission, owner })
         actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
     }
 
