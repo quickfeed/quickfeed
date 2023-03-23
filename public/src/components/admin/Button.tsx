@@ -11,15 +11,15 @@ export enum ButtonType {
 export type ButtonProps = {
     children?: React.ReactNode,
     text: string,
-    onclick: () => void,
     color: Color,
     type: ButtonType,
-    classname?: string,
+    className?: string,
+    onClick: () => void,
 }
 
-const Button = ({ children, text, onclick, color, type, classname }: ButtonProps): JSX.Element => {
+const Button = ({ children, text, color, type, className, onClick }: ButtonProps): JSX.Element => {
     return (
-        <button className={`${type}-${color}${classname ? " " + classname : ""}`} onClick={onclick}>
+        <button className={`${type}-${color}${className ? " " + className : ""}`} onClick={onClick}>
             {children}
             {text}
         </button>

@@ -99,11 +99,13 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-xl-6"}>
                 {review ? <Release /> : null}
                 <Search placeholder={"Search by name ..."} className="mb-2" >
-                    <Button type={ButtonType.BUTTON}
-                        classname="ml-2"
+                    <Button
                         text={`View by ${groupView ? "student" : "group"}`}
-                        onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
-                        color={groupView ? Color.BLUE : Color.GREEN} />
+                        color={groupView ? Color.BLUE : Color.GREEN}
+                        type={ButtonType.BUTTON}
+                        className="ml-2"
+                        onClick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
+                    />
                 </Search>
                 <TableSort review={review} />
                 <DynamicTable header={header} data={rows} />

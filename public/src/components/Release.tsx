@@ -27,10 +27,20 @@ const Release = (): JSX.Element | null => {
         <div className="input-group">
             <FormInput type="number" prepend="Set minimum score" name="score" onChange={handleMinimumScore}>
                 <div className="input-group-append">
-                    <DynamicButton text="Approve all" onClick={() => actions.review.releaseAll({ approve: true, release: false })} color={Color.GRAY} type={ButtonType.OUTLINE} />
+                    <DynamicButton
+                        text="Approve all"
+                        color={Color.GRAY}
+                        type={ButtonType.OUTLINE}
+                        onClick={() => actions.review.releaseAll({ approve: true, release: false })}
+                    />
                 </div>
                 <div className="input-group-append">
-                    <DynamicButton text="Release all" onClick={() => actions.review.releaseAll({ approve: false, release: true })} color={Color.GRAY} type={ButtonType.OUTLINE} />
+                    <DynamicButton
+                        text="Release all"
+                        color={Color.GRAY}
+                        type={ButtonType.OUTLINE}
+                        onClick={() => actions.review.releaseAll({ approve: false, release: true })}
+                    />
                 </div>
             </FormInput>
         </div>

@@ -29,21 +29,28 @@ const ReviewForm = (): JSX.Element => {
     const selectReviewButton: JSX.Element[] = []
 
     reviews.forEach((review, index) => {
-            selectReviewButton.push(
-                <Button key={review.ID.toString()} onclick={() => { actions.review.setSelectedReview(index) }}
-                    classname={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
-                    text={review.ready ? "Ready" : "In Progress"}
-                    color={review.ready ? Color.GREEN : Color.YELLOW}
-                    type={ButtonType.BUTTON} />
-            )
+        selectReviewButton.push(
+            <Button key={review.ID.toString()}
+                text={review.ready ? "Ready" : "In Progress"}
+                color={review.ready ? Color.GREEN : Color.YELLOW}
+                type={ButtonType.BUTTON}
+                className={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
+                onClick={() => { actions.review.setSelectedReview(index) }}
+            />
+        )
     })
 
     if ((reviews.length === 0 || reviews.some(review => !isAuthor(review))) && (reviewers - reviews.length) > 0) {
         // Display a button to create a new review if:
         // there are no reviews or the current user is not the author of the review, and there are still available review slots
         selectReviewButton.push(
-            <Button key="add" onclick={async () => { await actions.review.createReview() }}
-                classname="mr-1" text="Add Review" color={Color.BLUE} type={ButtonType.BUTTON} />
+            <Button key="add"
+                text="Add Review"
+                color={Color.BLUE}
+                type={ButtonType.BUTTON}
+                className="mr-1"
+                onClick={async () => { await actions.review.createReview() }}
+            />
         )
     }
 

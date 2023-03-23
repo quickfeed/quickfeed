@@ -37,11 +37,13 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
 
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <DynamicButton onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
-            className={`float-right ${!state.isCourseCreator && "disabled"} `}
+        <DynamicButton
             text={submission?.released ? "Released" : "Release"}
             color={submission?.released ? Color.WHITE : Color.YELLOW}
-            type={ButtonType.BUTTON} />
+            type={ButtonType.BUTTON}
+            className={`float-right ${!state.isCourseCreator && "disabled"} `}
+            onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
+        />
     )
     return (
         <ul className="list-group">

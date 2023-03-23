@@ -25,9 +25,9 @@ const Users = (): JSX.Element => {
         data.push(user.StudentID)
         data.push(
             <DynamicButton
+                text={user.IsAdmin ? "Demote" : "Promote"}
                 color={user.IsAdmin ? Color.RED : Color.BLUE}
                 type={ButtonType.BADGE}
-                text={user.IsAdmin ? "Demote" : "Promote"}
                 onClick={() => actions.updateAdmin(user)}
             />
         )

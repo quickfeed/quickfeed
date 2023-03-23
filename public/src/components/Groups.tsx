@@ -40,29 +40,29 @@ const Groups = (): JSX.Element => {
         if (isPendingGroup(group)) {
             buttons.push(
                 <DynamicButton
-                    onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
+                    text={"Approve"}
                     color={Color.BLUE}
                     type={ButtonType.BADGE}
-                    text={"Approve"}
+                    onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
                 />
             )
         }
         buttons.push(
             <Button
-                classname="ml-2"
-                onclick={() => actions.setActiveGroup(group)}
+                text={"Edit"}
                 color={Color.YELLOW}
                 type={ButtonType.BADGE}
-                text={"Edit"}
+                className="ml-2"
+                onClick={() => actions.setActiveGroup(group)}
             />
         )
         buttons.push(
             <DynamicButton
-                className="ml-2"
-                onClick={() => actions.deleteGroup(group)}
+                text={"Delete"}
                 color={Color.RED}
                 type={ButtonType.BADGE}
-                text={"Delete"}
+                className="ml-2"
+                onClick={() => actions.deleteGroup(group)}
             />
         )
 
