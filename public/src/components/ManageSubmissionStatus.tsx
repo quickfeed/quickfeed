@@ -39,32 +39,32 @@ const ManageSubmissionStatus = (): JSX.Element => {
         <div className="row m-auto">
             <DynamicButton
                 text="Approve"
-                onClick={() => handleSetStatus(Submission_Status.APPROVED)}
                 color={Color.GREEN}
                 type={getButtonType(Submission_Status.APPROVED)}
                 className="col mr-2"
+                onClick={() => handleSetStatus(Submission_Status.APPROVED)}
             />
             <DynamicButton
                 text="Revision"
-                onClick={() => handleSetStatus(Submission_Status.REVISION)}
                 color={Color.YELLOW}
                 type={getButtonType(Submission_Status.REVISION)}
                 className="col mr-2"
+                onClick={() => handleSetStatus(Submission_Status.REVISION)}
             />
             <DynamicButton
                 text="Reject"
-                onClick={() => handleSetStatus(Submission_Status.REJECTED)}
                 color={Color.RED}
                 type={getButtonType(Submission_Status.REJECTED)}
                 className="col mr-2"
+                onClick={() => handleSetStatus(Submission_Status.REJECTED)}
             />
             {assignment && !isManuallyGraded(assignment) && (
                 <DynamicButton
                     text={rebuilding ? "Rebuilding..." : "Rebuild"}
-                    onClick={handleRebuild}
                     color={Color.BLUE}
                     type={ButtonType.OUTLINE}
                     className="col mr-2"
+                    onClick={handleRebuild}
                 />
             )}
         </div>
