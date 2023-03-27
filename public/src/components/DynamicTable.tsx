@@ -22,16 +22,15 @@ const isJSXElement = (element: RowElement): element is JSX.Element => {
 
 const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Element | null => {
 
-    const [isScrolling, setIsScrolling] = React.useState(false)
     const [isMouseDown, setIsMouseDown] = React.useState(false)
     const container = React.useRef<HTMLTableElement>(null)
+    const searchQuery = useAppState().query
 
     if (!data || data.length === 0) {
         // Nothing to render
         return null
     }
 
-    const searchQuery = useAppState().query
 
     const isRowHidden = (row: Row) => {
         if (searchQuery.length === 0) {
@@ -80,7 +79,6 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Eleme
     })
 
     const onMouseDown = () => {
-        setIsScrolling(true)
         setIsMouseDown(true)
     }
 
@@ -89,15 +87,12 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Eleme
         if (!isMouseDown) {
             return
         }
-        if (isScrolling) {
-            if (container.current) {
-                container.current.scrollLeft = container.current.scrollLeft - e.movementX
-            }
+        if (container.current) {
+            container.current.scrollLeft = container.current.scrollLeft - e.movementX
         }
     }
 
     const onMouseUp = () => {
-        setIsScrolling(false)
         setIsMouseDown(false)
     }
 
