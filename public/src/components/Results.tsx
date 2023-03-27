@@ -8,6 +8,7 @@ import DynamicTable, { CellElement, RowElement } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
+import Release from "./Release"
 import Search from "./Search"
 
 
@@ -24,7 +25,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
-            actions.getAllCourseSubmissions(courseID)
+            actions.loadCourseSubmissions(courseID)
         }
         return () => {
             actions.setGroupView(false)
@@ -81,7 +82,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                     actions.setActiveEnrollment(owner.clone())
                 }
                 actions.setSubmissionOwner(owner)
-                actions.getSubmission({ submissionID: submission.ID, courseID: state.activeCourse })
+                actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
             }
         })
     }
@@ -96,14 +97,17 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     return (
         <div className="row">
             <div className={`p-0 ${state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}`}>
+                {review ? <Release /> : null}
                 <Search placeholder={"Search by name ..."} className="mb-2" >
-                    <Button type={ButtonType.BUTTON}
-                        classname="ml-2"
+                    <Button
                         text={`View by ${groupView ? "student" : "group"}`}
-                        onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
-                        color={groupView ? Color.BLUE : Color.GREEN} />
+                        color={groupView ? Color.BLUE : Color.GREEN}
+                        type={ButtonType.BUTTON}
+                        className="ml-2"
+                        onClick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
+                    />
                 </Search>
-                <TableSort />
+                <TableSort review={review} />
                 <DynamicTable header={header} data={rows} />
             </div>
             <div className="col">

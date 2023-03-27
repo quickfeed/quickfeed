@@ -131,7 +131,6 @@ export const hasEnrolled = (status: Enrollment_UserStatus): boolean => { return 
 export const isVisible = (enrollment: Enrollment): boolean => { return enrollment.state === Enrollment_DisplayState.VISIBLE }
 export const isFavorite = (enrollment: Enrollment): boolean => { return enrollment.state === Enrollment_DisplayState.FAVORITE }
 
-export const isCourseCreator = (user: User, course: Course): boolean => { return user.ID === course.courseCreatorID }
 export const isAuthor = (user: User, review: Review): boolean => { return user.ID === review.ReviewerID }
 
 export const isManuallyGraded = (assignment: Assignment): boolean => {

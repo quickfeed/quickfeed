@@ -3,7 +3,8 @@ import { Review } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType } from "../admin/Button"
+import { ButtonType } from "../admin/Button"
+import DynamicButton from "../DynamicButton"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 import MarkReadyButton from "./MarkReadyButton"
 
@@ -22,13 +23,27 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
 
     const markReadyButton = <MarkReadyButton review={review} />
 
+    const user = state.selectedEnrollment?.user
+    let userLi = null
+    if (user) {
+        // List item for the user that submitted the selected submission
+        userLi = (
+            <li className="list-group-item">
+                <span className="w-25 mr-5 float-left">User: </span>
+                {user.Name}
+            </li>
+        )
+    }
+
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { actions.review.release(!submission?.released) }}
-            classname={`float-right ${!state.isCourseCreator && "disabled"} `}
+        <DynamicButton
             text={submission?.released ? "Released" : "Release"}
             color={submission?.released ? Color.WHITE : Color.YELLOW}
-            type={ButtonType.BUTTON} />
+            type={ButtonType.BUTTON}
+            className={`float-right ${!state.isCourseCreator && "disabled"} `}
+            onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
+        />
     )
     return (
         <ul className="list-group">
@@ -38,6 +53,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
                     {releaseButton}
                 </span>
             </li>
+            {userLi}
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
                 {state.review.reviewer?.Name}

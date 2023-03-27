@@ -1,9 +1,10 @@
 import React, { useEffect } from "react"
 import { isHidden, Color, userLink } from "../../Helpers"
 import { useAppState, useActions } from "../../overmind"
+import DynamicButton from "../DynamicButton"
 import DynamicTable, { Row } from "../DynamicTable"
 import Search from "../Search"
-import Button, { ButtonType } from "./Button"
+import { ButtonType } from "./Button"
 import User from "./User"
 
 
@@ -23,11 +24,11 @@ const Users = (): JSX.Element => {
         data.push(user.Email)
         data.push(user.StudentID)
         data.push(
-            <Button
+            <DynamicButton
+                text={user.IsAdmin ? "Demote" : "Promote"}
                 color={user.IsAdmin ? Color.RED : Color.BLUE}
                 type={ButtonType.BADGE}
-                text={user.IsAdmin ? "Demote" : "Promote"}
-                onclick={() => actions.updateAdmin(user)}
+                onClick={() => actions.updateAdmin(user)}
             />
         )
         return data
