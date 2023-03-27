@@ -3,7 +3,7 @@ import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert } from "./state"
+import { Alert, SubmissionOwner } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
 import { Code } from "@bufbuild/connect-web"
@@ -147,8 +147,7 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 }
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
-export const updateSubmission = async ({ state, effects }: Context, status: Submission_Status): Promise<void> => {
-    const submission = state.selectedSubmission
+export const updateSubmission = async ({ state, effects }: Context, { owner, submission, status }: { owner: SubmissionOwner, submission: Submission | null, status: Submission_Status }): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
     if (!submission || submission.status === status) {
         return
@@ -159,18 +158,17 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
         return
     }
 
-    /* Store the previous submission status */
-    const previousStatus = submission.status
 
+    const clone = submission.clone()
+    clone.status = status
     /* Update the submission status */
-    submission.status = status
-    const result = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, clone)
     if (!success(result)) {
         /* If the update failed, revert the submission status */
-        submission.status = previousStatus
         return
     }
-    state.submissionsForCourse.update(state.submissionOwner, submission)
+    submission.status = status
+    state.submissionsForCourse.update(owner, submission)
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
@@ -374,16 +372,23 @@ export const refreshSubmissions = async ({ state, effects }: Context, input: { c
     }
 }
 
-/** Fetches and stores all submissions of a given course into state */
-export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
+/** Fetches and stores all submissions of a given course into state. Triggers the loading spinner. */
+export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
     state.isLoading = true
+    await actions.refreshCourseSubmissions(courseID)
+    state.loadedCourse[courseID.toString()] = true
+    state.isLoading = false
+}
+
+/** Refreshes all submissions for a given course. Calling this action directly will not trigger the loading spinner.
+ *  Use `loadCourseSubmissions` instead if you want to trigger the loading spinner, such as on page load. */
+export const refreshCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
     // None of these should fail independently.
     const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.USER)
     const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionRequest_SubmissionType.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)
-        state.isLoading = false
         return
     }
     if (result.data) {
@@ -397,8 +402,6 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     if (groups.data) {
         state.submissionsForCourse.setSubmissions("GROUP", groups.data)
     }
-    state.isLoading = false
-    state.loadedCourse[courseID.toString()] = true
 }
 
 export const getGroupsByCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
@@ -455,24 +458,31 @@ export const setSelectedSubmission = ({ state }: Context, submission: Submission
     state.selectedSubmission = submission.clone()
 }
 
-export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: bigint, submissionID: bigint }): Promise<void> => {
-    const response = await effects.grpcMan.getSubmission(courseID, submissionID)
+export const getSubmission = async ({ state, effects }: Context, { courseID, owner, submission }: { courseID: bigint, owner: SubmissionOwner, submission: Submission }): Promise<void> => {
+    const response = await effects.grpcMan.getSubmission(courseID, submission.ID)
     if (!response.data || !success(response)) {
         return
     }
-    state.submissionsForCourse.update(state.submissionOwner, response.data)
+    state.submissionsForCourse.update(owner, response.data)
+    if (state.selectedSubmission && state.selectedSubmission.ID === submission.ID) {
+        // Only update the selected submission if it is the same as the one we just fetched.
+        // This is to avoid overwriting the selected submission with a different one.
+        // This can happen when the user clicks on a submission in the submission list, and then
+        // selects a different submission in the submission list before the first request has finished.
+        state.selectedSubmission = response.data
+    }
 }
 
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
-    if (!(state.selectedSubmission && state.selectedAssignment && state.activeCourse)) {
+export const rebuildSubmission = async ({ state, actions, effects }: Context, { owner, submission }: { owner: SubmissionOwner, submission: Submission | null }): Promise<void> => {
+    if (!(submission && state.selectedAssignment && state.activeCourse)) {
         return
     }
-    const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, state.selectedSubmission.ID, state.activeCourse)
+    const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.ID, submission.ID, state.activeCourse)
     if (success(response)) {
         // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
         // TODO: gRPC streaming should be implemented to send the updated submission to the client.
-        await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.selectedSubmission.ID })
+        await actions.getSubmission({ courseID: state.activeCourse, submission, owner })
         actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
     }
 

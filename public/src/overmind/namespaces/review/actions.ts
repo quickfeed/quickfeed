@@ -1,15 +1,16 @@
 import { Context } from '../..'
 import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
-import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
+import { Color, isAuthor } from '../../../Helpers'
 import { success } from '../../actions'
+import { SubmissionOwner } from '../../state'
 
 
 /* Set the index of the selected review */
 export const setSelectedReview = ({ state }: Context, index: number): void => {
     const reviews = state.review.reviews.get(state.selectedSubmission?.ID ?? -1n)
     if (index < 0) {
-        const idx = reviews?.findIndex(r => isAuthor(state.self, r) || isCourseCreator(state.self, state.courses[Number(state.activeCourse)]))
-        state.review.selectedReview = idx && idx >= 0 ? idx : -1
+        const idx = reviews?.findIndex(r => isAuthor(state.self, r) || state.isCourseCreator)
+        state.review.selectedReview = idx && idx >= 0 ? idx : 0
     } else {
         state.review.selectedReview = index
     }
@@ -141,20 +142,22 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const response = await effects.grpcMan.updateSubmissions(state.review.assignmentID, state.activeCourse, state.review.minimumScore, release, approve)
     if (success(response)) {
         // Refresh submissions in state for the active course
-        actions.getAllCourseSubmissions(state.activeCourse)
+        await actions.refreshCourseSubmissions(state.activeCourse)
     } else {
         actions.alertHandler(response)
     }
 }
 
-export const release = async ({ state, actions, effects }: Context, released: boolean): Promise<void> => {
-    const submission = state.selectedSubmission
-    if (submission) {
-        submission.released = released
-        const response = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
-        if (!success(response)) {
-            submission.released = !released
-            actions.alertHandler(response)
-        }
+export const release = async ({ state, actions, effects }: Context, { submission, owner }: { submission: Submission | null, owner: SubmissionOwner }): Promise<void> => {
+    if (!submission) {
+        return
     }
+    const clone = submission.clone()
+    clone.released = !submission.released
+    const response = await effects.grpcMan.updateSubmission(state.activeCourse, clone)
+    if (!success(response)) {
+        actions.alertHandler(response)
+    }
+    submission.released = clone.released
+    state.submissionsForCourse.update(owner, submission)
 }

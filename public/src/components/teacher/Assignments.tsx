@@ -63,7 +63,7 @@ const Assignments = (): JSX.Element => {
                         {/* Only show the rebuild button if the assignment is not manually graded */}
                         {isManuallyGraded(assignment)
                             ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
-                            : <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} />
+                            : <Button text={buttonText} color={Color.BLUE} type={ButtonType.BUTTON} onClick={rebuild} />
                         }
                     </li>
                 )}
