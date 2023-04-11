@@ -97,7 +97,7 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Eleme
     }
 
     return (
-        <div className="table-fix" ref={container}>
+        <div className="table-overflow" ref={container}>
             <table className="table table-striped table-grp" onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
                 <thead className="thead-dark">
                     <tr>
