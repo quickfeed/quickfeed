@@ -286,10 +286,10 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
     }))
 }
 
-export const getGroupByUserAndCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const response = await effects.grpcMan.getGroupByUserAndCourse(courseID, state.self.ID)
+export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
+    const response = await effects.grpcMan.getGroup(enrollment.courseID, enrollment.groupID)
     if (response.data) {
-        state.userGroup[courseID.toString()] = response.data
+        state.userGroup[enrollment.courseID.toString()] = response.data
     }
 }
 
@@ -661,7 +661,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
             const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
             results.push(actions.getEnrollmentsByCourse({ courseID, statuses }))
             if (enrollment.groupID > 0) {
-                results.push(actions.getGroupByUserAndCourse(courseID))
+                results.push(actions.getGroup(enrollment))
             }
         }
         if (isTeacher(enrollment)) {
