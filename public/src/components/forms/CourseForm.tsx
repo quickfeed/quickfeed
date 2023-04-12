@@ -78,7 +78,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null
 
     // Trigger grpc call to check if org exists
     const getOrganization = async () => {
-        const org = (await actions.getOrganization(orgName)).data
+        const org = (await actions.getOrganization(orgName)).message
         if (org) {
             setOrg(org)
             setOrgFound(true)
@@ -97,7 +97,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null
                     </div>
                     <input className="form-control" disabled={orgFound ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
                     <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => { return }}>
-                        {orgFound ? <i className="fa fa-check" />: "Find"}
+                        {orgFound ? <i className="fa fa-check" /> : "Find"}
                     </span>
                 </div>
             </div>
