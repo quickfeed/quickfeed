@@ -1,7 +1,13 @@
-import { MockGrpcManager } from "../MockGRPCManager"
-import { GrpcManager } from "../GRPCManager"
+import { createConnectTransport } from "@bufbuild/connect-web"
+import { QuickFeedService } from "../../proto/qf/quickfeed_connectweb"
 import { StreamService } from "../streamService"
+import { ResponseClient, createResponseClient } from "../client"
 
+export const client: ResponseClient<typeof QuickFeedService> = (() => {
+    return createResponseClient(QuickFeedService, createConnectTransport({
+        baseUrl: `https://${window.location.host}`,
+    }))
+})()
 
 // Effects should contain all impure functions used to manage state.
 export const grpcMan: GrpcManager | MockGrpcManager = (() => {
