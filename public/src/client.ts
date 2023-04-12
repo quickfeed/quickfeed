@@ -14,9 +14,7 @@ import {
 export type Response<T extends AnyMessage> = {
     error: ConnectError | null
     message: T
-} & {
-        [K in keyof T]: T[K]
-    }
+}
 
 /**
  * ResponseClient is a simple client that supports unary and server-streaming
