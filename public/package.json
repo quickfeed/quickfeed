@@ -74,7 +74,8 @@
     "testMatch": [
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)",
-      "!**/__tests__/TestHelpers.ts"
+      "!**/__tests__/TestHelpers.ts",
+      "!**/__tests__/mock_data/**"
     ],
     "moduleNameMapper": {
       "./types_pb.js": "<rootDir>/proto/qf/types_pb.ts",
