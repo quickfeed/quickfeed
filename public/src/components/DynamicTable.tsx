@@ -21,12 +21,16 @@ const isJSXElement = (element: RowElement): element is JSX.Element => {
 }
 
 const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Element | null => {
+
+    const [isMouseDown, setIsMouseDown] = React.useState(false)
+    const container = React.useRef<HTMLTableElement>(null)
+    const searchQuery = useAppState().query
+
     if (!data || data.length === 0) {
         // Nothing to render
         return null
     }
 
-    const searchQuery = useAppState().query
 
     const isRowHidden = (row: Row) => {
         if (searchQuery.length === 0) {
@@ -74,17 +78,37 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Eleme
         return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr>
     })
 
+    const onMouseDown = () => {
+        setIsMouseDown(true)
+    }
+
+    const onMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault()
+        if (!isMouseDown) {
+            return
+        }
+        if (container.current) {
+            container.current.scrollLeft = container.current.scrollLeft - e.movementX
+        }
+    }
+
+    const onMouseUp = () => {
+        setIsMouseDown(false)
+    }
+
     return (
-        <table className="table table-striped table-grp">
-            <thead className="thead-dark">
-                <tr>
-                    {head}
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
+        <div className="table-overflow" ref={container}>
+            <table className="table table-striped table-grp" onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
+                <thead className="thead-dark">
+                    <tr>
+                        {head}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </div>
     )
 }
 

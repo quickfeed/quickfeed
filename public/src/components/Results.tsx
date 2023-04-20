@@ -96,7 +96,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
     return (
         <div className="row">
-            <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-xl-6"}>
+            <div className={`p-0 ${state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}`}>
                 {review ? <Release /> : null}
                 <Search placeholder={"Search by name ..."} className="mb-2" >
                     <Button
@@ -110,7 +110,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 <TableSort review={review} />
                 <DynamicTable header={header} data={rows} />
             </div>
-            <div className="col reviewLab">
+            <div className="col">
                 {review ? <ReviewForm /> : <LabResult />}
             </div>
         </div>
