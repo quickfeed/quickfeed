@@ -1,4 +1,4 @@
-import { Enrollment, Enrollment_UserStatus, User } from "../../proto/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus, Enrollments, User } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
@@ -6,13 +6,48 @@ import React from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
-import { initializeOvermind } from "./TestHelpers"
 import { render, screen } from "@testing-library/react"
-import { Timestamp } from "@bufbuild/protobuf";
+import { PartialMessage, Timestamp } from "@bufbuild/protobuf";
+import { MockData } from "./mock_data/mockData"
+import { EnrollmentRequest, Void } from "../../proto/qf/requests_pb"
+import { CallOptions } from "@bufbuild/connect"
+import { Response } from "../client"
+import { initializeOvermind } from "./TestHelpers"
 
 
 describe("UpdateEnrollment", () => {
-    const mockedOvermind = initializeOvermind({})
+    const mockedOvermind = initializeOvermind({}, {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        getEnrollments: jest.fn(async (request: PartialMessage<EnrollmentRequest>, _?: CallOptions | undefined): Promise<Response<Enrollments>> => {
+            const enrollments = MockData.mockedEnrollments().enrollments.filter(e => {
+                switch (request.FetchMode?.case) {
+                    case "courseID":
+                        return e.courseID === request.FetchMode.value
+                    case "userID":
+                        return e.userID === request.FetchMode.value
+                    default:
+                        return false
+                }
+            })
+            return { message: new Enrollments({ enrollments: enrollments }), error: null }
+        }),
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        updateEnrollments: jest.fn(async (request: PartialMessage<Enrollments>, _?: CallOptions | undefined): Promise<Response<Void>> => {
+            const enrollments = request.enrollments
+            if (!enrollments) {
+                throw new Error("No enrollments to update")
+            }
+            enrollments.forEach(e => {
+                const enrollment = MockData.mockedEnrollments().enrollments.find(en => en.ID === e.ID)
+                if (!enrollment || e.status === undefined) {
+                    throw new Error(`No enrollment found with ID ${e.ID}`)
+                }
+                enrollment.status = e.status
+            })
+            return { message: new Void(), error: null }
+        })
+
+    })
 
     const updateEnrollmentTests: { desc: string, courseID: bigint, userID: bigint, want: Enrollment_UserStatus }[] = [
         // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments
@@ -21,7 +56,10 @@ describe("UpdateEnrollment", () => {
         { desc: "Promote student to teacher", courseID: BigInt(1), userID: BigInt(2), want: Enrollment_UserStatus.TEACHER },
     ]
 
+
+
     beforeAll(async () => {
+        // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(2), statuses: [] })
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(1), statuses: [] })
