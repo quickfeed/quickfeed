@@ -556,8 +556,8 @@ export const rebuildSubmission = async ({ state, actions, effects }: Context, { 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */
 export const rebuildAllSubmissions = async ({ effects }: Context, { courseID, assignmentID }: { courseID: bigint, assignmentID: bigint }): Promise<boolean> => {
     const response = await effects.client.rebuildSubmissions({
-        courseID: courseID,
-        assignmentID: assignmentID,
+        courseID,
+        assignmentID,
     })
     return success(response)
 }
@@ -565,7 +565,7 @@ export const rebuildAllSubmissions = async ({ effects }: Context, { courseID, as
 /** Enrolls a user (self) in a course given by courseID. Refreshes enrollments in state if enroll is successful. */
 export const enroll = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     const response = await effects.client.createEnrollment({
-        courseID: courseID,
+        courseID,
         userID: state.self.ID,
     })
     if (!success(response)) {

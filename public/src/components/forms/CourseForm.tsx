@@ -62,10 +62,10 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (editCourse) {
-            actions.editCourse({ course: course })
+            actions.editCourse({ course })
         } else {
             if (org) {
-                const success = await actions.createCourse({ course: course, org: org })
+                const success = await actions.createCourse({ course, org })
                 // If course creation was successful, redirect to the course page
                 if (success) {
                     history.push("/courses")

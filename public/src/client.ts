@@ -49,8 +49,8 @@ export function createResponseClient<T extends ServiceType>(
 }
 
 /**
-  * UnaryFn is the method signature for a unary method of a ResponseClient.
-  */
+ * UnaryFn is the method signature for a unary method of a ResponseClient.
+ */
 type UnaryFn<I extends Message<I>, O extends Message<O>> = (
     request: PartialMessage<I>,
     options?: CallOptions
@@ -80,7 +80,7 @@ function createUnaryFn<I extends Message<I>, O extends Message<O>>(
         }
         catch (error) {
             return {
-                error: error,
+                error,
             } as Response<O>;
         }
     }

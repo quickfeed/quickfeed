@@ -32,7 +32,7 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
     const review = state.review.currentReview
     const response = await effects.client.updateReview({
         courseID: state.activeCourse,
-        review: review
+        review
     })
     if (!success(response)) {
         // If the update was not successful, alert the user and abort
@@ -109,7 +109,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
 
         const response = await effects.client.createReview({
             courseID: state.activeCourse,
-            review: review,
+            review,
         })
         if (response.error) {
             // If the server responded with an error, alert the user
@@ -153,8 +153,8 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
         scoreLimit: state.review.minimumScore,
-        release: release,
-        approve: approve,
+        release,
+        approve,
     })
     if (success(response)) {
         // Refresh submissions in state for the active course

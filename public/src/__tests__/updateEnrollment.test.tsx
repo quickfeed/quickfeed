@@ -29,7 +29,7 @@ describe("UpdateEnrollment", () => {
                         return false
                 }
             })
-            return { message: new Enrollments({ enrollments: enrollments }), error: null }
+            return { message: new Enrollments({ enrollments }), error: null }
         }),
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         updateEnrollments: jest.fn(async (request: PartialMessage<Enrollments>, _?: CallOptions | undefined): Promise<Response<Void>> => {
