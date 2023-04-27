@@ -6,7 +6,7 @@ import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/
 import { Alert, SubmissionOwner } from "./state"
 import { Context } from "."
 import { Response } from "../client"
-import { Code } from "@bufbuild/connect"
+import { Code, ConnectError } from "@bufbuild/connect"
 import * as internalActions from "./internalActions" // skipcq: JS-C1003
 import { AnyMessage, PartialMessage } from "@bufbuild/protobuf"
 
@@ -15,7 +15,9 @@ export const internal = internalActions
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: Response<AnyMessage>): boolean => { return response.error === null }
 
-export const onInitializeOvermind = async ({ actions }: Context) => {
+export const onInitializeOvermind = async ({ actions, effects }: Context) => {
+    // Initialize the API client. *Must* be done before accessing the client.
+    effects.api.init(actions.alertHandler)
     await actions.fetchUserData()
     // Currently this only alerts the user if they are not logged in after a page refresh
     const alert = localStorage.getItem("alert")
@@ -819,18 +821,30 @@ export const setQuery = ({ state }: Context, query: string): void => {
     state.query = query
 }
 
-export const alertHandler = (context: Context, { response }: { response: Response<AnyMessage> }): void => {
-    if (!response.error) {
+export const alertHandler = (context: Context, { method, error }: { method: string, error: ConnectError }): void => {
+    if (!error) {
         return
     }
-    if (response.error.code === Code.Unauthenticated) {
+
+    // TODO(jostein): Currently all errors are handled the same way.
+    // We could handle each method individually, and assign a log level to each method.
+    // The log level could be determined based on user role.
+
+    if (error.code === Code.Unauthenticated) {
         // If we end up here, the user session has expired.
         // Store an alert message in localStorage that will be displayed after reloading the page.
         localStorage.setItem("alert", "Your session has expired. Please log in again.")
-        window.location.reload()
     } else {
+        // The error message includes the error code, while the rawMessage only includes the error message.
+        //
+        // error.message:     "[not_found] failed to create github application: ..."
+        // error.rawMessage:  "failed to create github application: ..."
+        //
+        // If the current user is an admin, the method name is included along with the error code.
+        // e.g. "GetOrganization: [not_found] failed to create github application: ..."
+        const message = context.state.self.IsAdmin ? `${method}: ${error.message}` : error.rawMessage
         context.actions.alert({
-            text: response.error.message,
+            text: message,
             color: Color.RED
         })
     }
