@@ -6,7 +6,6 @@ import { Provider } from 'overmind-react'
 import { config } from './overmind'
 import App from './App'
 import { BrowserRouter } from 'react-router-dom'
-import DevelopmentMode from './DevelopmentMode'
 import './style.scss'
 
 (BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
@@ -20,12 +19,9 @@ const overmind = createOvermind(config, {
 })
 
 
-const DEVELOPMENT_MODE = (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && window.location.hostname === 'localhost'
-
 render((
     <Provider value={overmind}>
         <BrowserRouter>
-            {DEVELOPMENT_MODE && <DevelopmentMode />}
             <App />
         </BrowserRouter>
     </Provider>

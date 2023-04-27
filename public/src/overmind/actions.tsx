@@ -310,7 +310,6 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
             return
         }
         state.repositories[courseID.toString()] = response.message.URLs
-
     }))
 }
 
