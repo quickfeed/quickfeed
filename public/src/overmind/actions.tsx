@@ -57,7 +57,7 @@ export const receiveSubmission = ({ state }: Context, submission: Submission): v
 
 /** Fetches and stores an authenticated user in state */
 export const getSelf = async ({ state, effects }: Context): Promise<boolean> => {
-    const response = await effects.client.getUser({})
+    const response = await effects.api.client.getUser({})
     if (response.error) {
         return false
     }
@@ -67,7 +67,7 @@ export const getSelf = async ({ state, effects }: Context): Promise<boolean> => 
 
 /** Gets all enrollments for the current user and stores them in state */
 export const getEnrollmentsByUser = async ({ state, effects }: Context): Promise<void> => {
-    const response = await effects.client.getEnrollments({
+    const response = await effects.api.client.getEnrollments({
         FetchMode: {
             case: "userID",
             value: state.self.ID,
@@ -85,7 +85,7 @@ export const getEnrollmentsByUser = async ({ state, effects }: Context): Promise
 
 /** Fetches all users (requires admin privileges) */
 export const getUsers = async ({ state, effects }: Context): Promise<void> => {
-    const response = await effects.client.getUsers({})
+    const response = await effects.api.client.getUsers({})
     if (response.error) {
         return
     }
@@ -102,7 +102,7 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
 
 /** Changes user information server-side */
 export const updateUser = async ({ actions, effects }: Context, user: User): Promise<void> => {
-    const response = await effects.client.updateUser(user)
+    const response = await effects.api.client.updateUser(user)
     if (success(response)) {
         await actions.getSelf()
     }
@@ -115,7 +115,7 @@ export const updateUser = async ({ actions, effects }: Context, user: User): Pro
 /** Fetches all courses */
 export const getCourses = async ({ state, effects }: Context): Promise<void> => {
     state.courses = []
-    const response = await effects.client.getCourses({})
+    const response = await effects.api.client.getCourses({})
     if (response.error) {
         return
     }
@@ -130,7 +130,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
         const req = new User(user)
         req.IsAdmin = !user.IsAdmin
         // Send updated user to server
-        const response = await effects.client.updateUser(req)
+        const response = await effects.api.client.updateUser(req)
         if (response.error) {
             return
         }
@@ -143,7 +143,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
 }
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: bigint, statuses: Enrollment_UserStatus[] }): Promise<void> => {
-    const response = await effects.client.getEnrollments({
+    const response = await effects.api.client.getEnrollments({
         FetchMode: {
             case: "courseID",
             value: value.courseID,
@@ -157,15 +157,12 @@ export const getEnrollmentsByCourse = async ({ state, effects }: Context, value:
 }
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
-export const setEnrollmentState = async ({ actions, effects }: Context, enrollment: Enrollment): Promise<void> => {
+export const setEnrollmentState = async ({ effects }: Context, enrollment: Enrollment): Promise<void> => {
     enrollment.state = isVisible(enrollment)
         ? Enrollment_DisplayState.HIDDEN
         : Enrollment_DisplayState.VISIBLE
 
-    const response = await effects.client.updateCourseVisibility(enrollment)
-    if (!success(response)) {
-        actions.alertHandler({ response })
-    }
+    await effects.api.client.updateCourseVisibility(enrollment)
 }
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
@@ -183,7 +180,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     const clone = submission.clone()
     clone.status = status
     /* Update the submission status */
-    const response = await effects.client.updateSubmission({
+    const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
         status: submission.status,
@@ -218,6 +215,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
         case Enrollment_UserStatus.TEACHER:
             confirmed = confirm(`Are you sure you want to promote ${enrollment.user.Name} to teacher status?`)
             break
+        case Enrollment_UserStatus.PENDING:
+            // Status pending should never be set by this function.
+            // If the intent is to accept a pending enrollment, status should be set to student.
+            return
     }
     if (!confirmed) {
         return
@@ -236,7 +237,7 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
     temp.status = status
 
     // Send updated enrollment to server
-    const response = await effects.client.updateEnrollments({ enrollments: [temp] })
+    const response = await effects.api.client.updateEnrollments({ enrollments: [temp] })
     if (success(response)) {
         // If successful, update enrollment in state with new status
         if (status === Enrollment_UserStatus.NONE) {
@@ -265,7 +266,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
     })
 
     // Send updated enrollments to server
-    const response = await effects.client.updateEnrollments({ enrollments })
+    const response = await effects.api.client.updateEnrollments({ enrollments })
     if (success(response)) {
         for (const enrollment of state.pendingEnrollments) {
             enrollment.status = Enrollment_UserStatus.STUDENT
@@ -273,7 +274,6 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
     } else {
         // Fetch enrollments again if update failed in case the user was able to approve some enrollments
         await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment_UserStatus.PENDING] })
-        actions.alertHandler({ response })
     }
 }
 
@@ -290,7 +290,7 @@ export const getAssignments = async ({ state, actions }: Context): Promise<void>
 
 /** Get assignments for a single course, given by courseID */
 export const getAssignmentsByCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const response = await effects.client.getAssignments({ courseID })
+    const response = await effects.api.client.getAssignments({ courseID })
     if (response.error) {
         return
     }
@@ -305,8 +305,7 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
         }
         const courseID = enrollment.courseID
         state.repositories[courseID.toString()] = {}
-
-        const response = await effects.client.getRepositories({ courseID })
+        const response = await effects.api.client.getRepositories({ courseID })
         if (response.error) {
             return
         }
@@ -315,14 +314,13 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
     }))
 }
 
-export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
-    const response = await effects.client.createGroup({
+export const createGroup = async ({ state, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
+    const response = await effects.api.client.createGroup({
         courseID: group.courseID,
         name: group.name,
         users: group.users.map(userID => new User({ ID: userID })),
     })
     if (response.error) {
-        actions.alertHandler({ response })
         return
     }
     state.userGroup[group.courseID.toString()] = response.message
@@ -330,12 +328,8 @@ export const createGroup = async ({ state, actions, effects }: Context, group: {
 }
 
 /** getOrganization returns the organization object for orgName retrieved from the server. */
-export const getOrganization = async ({ actions, effects }: Context, orgName: string): Promise<Response<Organization>> => {
-    const response = await effects.client.getOrganization({ ScmOrganizationName: orgName })
-    if (!success(response)) {
-        actions.alertHandler({ response })
-    }
-    return response
+export const getOrganization = async ({ effects }: Context, orgName: string): Promise<Response<Organization>> => {
+    return await effects.api.client.getOrganization({ ScmOrganizationName: orgName })
 }
 
 /* createCourse creates a new course */
@@ -346,9 +340,8 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     course.ScmOrganizationName = value.org.ScmOrganizationName
     course.courseCreatorID = state.self.ID
     /* Send the course to the server */
-    const response = await effects.client.createCourse(course)
+    const response = await effects.api.client.createCourse(course)
     if (response.error) {
-        actions.alertHandler({ response })
         return false
     }
     /* If successful, add the course to the state */
@@ -360,25 +353,26 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
 
 /** Updates a given course and refreshes courses in state if successful  */
 export const editCourse = async ({ actions, effects }: Context, { course }: { course: Course }): Promise<void> => {
-    const response = await effects.client.updateCourse(course)
-    if (success(response)) {
-        await actions.getCourses()
-    } else {
-        actions.alertHandler({ response })
+    const response = await effects.api.client.updateCourse(course)
+    if (response.error) {
+        return
     }
+    await actions.getCourses()
 }
 
 /** getSubmissions fetches all submission for the current user by Course ID and stores them in state */
 // TODO: Currently not used, see refreshSubmissions.
 export const getSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const result = await effects.client.getSubmissions({
+    const result = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
             case: "UserID",
             value: state.self.ID,
         },
     })
-    if (result.error) { return }
+    if (result.error) {
+        return
+    }
     state.submissions[courseID.toString()] = result.message.submissions
 }
 
@@ -386,7 +380,7 @@ export const getSubmissions = async ({ state, effects }: Context, courseID: bigi
 // TODO: A workaround to not use gRPC streaming is to ping the server at set intervals to check for new commits. This functionality was removed pending gRPC streaming implementation.
 /** Updates all submissions in state where the fetched submission commit hash differs from the one in state. */
 export const refreshSubmissions = async ({ state, effects }: Context, input: { courseID: number, submissionID: number }): Promise<void> => {
-    const response = await effects.client.getSubmissions({
+    const response = await effects.api.client.getSubmissions({
         CourseID: BigInt(input.courseID),
         FetchMode: {
             case: "UserID",
@@ -417,25 +411,23 @@ export const loadCourseSubmissions = async ({ state, actions }: Context, courseI
 
 /** Refreshes all submissions for a given course. Calling this action directly will not trigger the loading spinner.
  *  Use `loadCourseSubmissions` instead if you want to trigger the loading spinner, such as on page load. */
-export const refreshCourseSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
+export const refreshCourseSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     // None of these should fail independently.
-    const userResponse = await effects.client.getSubmissionsByCourse({
+    const userResponse = await effects.api.client.getSubmissionsByCourse({
         CourseID: courseID,
         FetchMode: {
             case: "Type",
             value: SubmissionRequest_SubmissionType.USER
         }
     })
-    const groupResponse = await effects.client.getSubmissionsByCourse({
+    const groupResponse = await effects.api.client.getSubmissionsByCourse({
         CourseID: courseID,
         FetchMode: {
             case: "Type",
             value: SubmissionRequest_SubmissionType.GROUP
         }
     })
-    if (!success(userResponse) || !success(groupResponse)) {
-        const failed = !success(userResponse) ? userResponse : groupResponse
-        actions.alertHandler({ response: failed })
+    if (userResponse.error || groupResponse.error) {
         return
     }
 
@@ -451,27 +443,26 @@ export const refreshCourseSubmissions = async ({ state, actions, effects }: Cont
 
 export const getGroupsByCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     state.groups[courseID.toString()] = []
-    const response = await effects.client.getGroupsByCourse({ courseID })
+    const response = await effects.api.client.getGroupsByCourse({ courseID })
     if (response.error) { return }
     state.groups[courseID.toString()] = response.message.groups
-
 }
 
 export const getUserSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     state.submissions[courseID.toString()] = []
-    const { message, error } = await effects.client.getSubmissions({
+    const response = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
             case: "UserID",
             value: state.self.ID,
         },
     })
-    if (error) {
+    if (response.error) {
         return
     }
     // Insert submissions into state.submissions by the assignment order
     state.assignments[courseID.toString()]?.forEach(assignment => {
-        const submission = message.submissions.find(s => s.AssignmentID === assignment.ID)
+        const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
         state.submissions[courseID.toString()][assignment.order - 1] = submission ? submission : new Submission()
     })
 }
@@ -481,7 +472,7 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
     if (!(enrollment && enrollment.group)) {
         return
     }
-    const response = await effects.client.getSubmissions({
+    const response = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
             case: "GroupID",
@@ -516,7 +507,7 @@ export const setSelectedSubmission = ({ state }: Context, submission: Submission
 }
 
 export const getSubmission = async ({ state, effects }: Context, { courseID, owner, submission }: { courseID: bigint, owner: SubmissionOwner, submission: Submission }): Promise<void> => {
-    const response = await effects.client.getSubmission({
+    const response = await effects.api.client.getSubmission({
         CourseID: courseID,
         FetchMode: {
             case: "SubmissionID",
@@ -541,14 +532,14 @@ export const rebuildSubmission = async ({ state, actions, effects }: Context, { 
     if (!(submission && state.selectedAssignment && state.activeCourse)) {
         return
     }
-    const response = await effects.client.rebuildSubmissions({
+    const response = await effects.api.client.rebuildSubmissions({
         courseID: state.activeCourse,
         assignmentID: state.selectedAssignment.ID,
         submissionID: submission.ID,
     })
     if (success(response)) {
         // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
-        // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+        // TODO: gRPC streaming should be implemented to send the updated submission to the api.client.
         await actions.getSubmission({ courseID: state.activeCourse, submission, owner })
         actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
     }
@@ -557,7 +548,7 @@ export const rebuildSubmission = async ({ state, actions, effects }: Context, { 
 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */
 export const rebuildAllSubmissions = async ({ effects }: Context, { courseID, assignmentID }: { courseID: bigint, assignmentID: bigint }): Promise<boolean> => {
-    const response = await effects.client.rebuildSubmissions({
+    const response = await effects.api.client.rebuildSubmissions({
         courseID,
         assignmentID,
     })
@@ -566,15 +557,14 @@ export const rebuildAllSubmissions = async ({ effects }: Context, { courseID, as
 
 /** Enrolls a user (self) in a course given by courseID. Refreshes enrollments in state if enroll is successful. */
 export const enroll = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const response = await effects.client.createEnrollment({
+    const response = await effects.api.client.createEnrollment({
         courseID,
         userID: state.self.ID,
     })
     if (!success(response)) {
-        // Alert user that enrollment failed
         return
     }
-    const enrollments = await effects.client.getEnrollments({
+    const enrollments = await effects.api.client.getEnrollments({
         FetchMode: {
             case: "userID",
             value: state.self.ID,
@@ -589,7 +579,7 @@ export const enroll = async ({ state, effects }: Context, courseID: bigint): Pro
 export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group, status: Group_GroupStatus }): Promise<void> => {
     const oldStatus = group.status
     group.status = status
-    const response = await effects.client.updateGroup(group)
+    const response = await effects.api.client.updateGroup(group)
     if (!success(response)) {
         group.status = oldStatus
     }
@@ -599,7 +589,7 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group): Pr
     if (!confirm("Deleting a group is an irreversible action. Are you sure?")) {
         return
     }
-    const isEmptyResponse = await effects.client.isEmptyRepo({
+    const isEmptyResponse = await effects.api.client.isEmptyRepo({
         courseID: group.courseID,
         groupID: group.ID,
     })
@@ -610,26 +600,24 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group): Pr
     if (!confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
         return
     }
-    const deleteResponse = await effects.client.deleteGroup({
+    const deleteResponse = await effects.api.client.deleteGroup({
         courseID: group.courseID,
         groupID: group.ID,
     })
     if (success(deleteResponse)) {
         state.groups[group.courseID.toString()] = state.groups[group.courseID.toString()].filter(g => g.ID !== group.ID)
     }
-
 }
 
 export const updateGroup = async ({ state, actions, effects }: Context, group: Group): Promise<void> => {
-    const response = await effects.client.updateGroup(group)
-    if (success(response)) {
-        const found = state.groups[group.courseID.toString()].find(g => g.ID === group.ID)
-        if (found && response.message) {
-            Object.assign(found, response.message)
-            actions.setActiveGroup(null)
-        }
-    } else {
-        actions.alertHandler({ response })
+    const response = await effects.api.client.updateGroup(group)
+    if (response.error) {
+        return
+    }
+    const found = state.groups[group.courseID.toString()].find(g => g.ID === group.ID)
+    if (found && response.message) {
+        Object.assign(found, response.message)
+        actions.setActiveGroup(null)
     }
 }
 
@@ -641,13 +629,13 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     }
 
     // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
-    if (criterion.ID && success(await effects.client.updateCriterion(criterion))) {
+    if (criterion.ID && success(await effects.api.client.updateCriterion(criterion))) {
         const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
         if (index > -1) {
             benchmark.criteria[index] = criterion
         }
     } else {
-        const response = await effects.client.createCriterion(criterion)
+        const response = await effects.api.client.createCriterion(criterion)
         if (success(response)) {
             benchmark.criteria.push(response.message)
         }
@@ -657,13 +645,13 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
 export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     // Check if this need cloning
     const bm = benchmark.clone()
-    if (benchmark.ID && success(await effects.client.updateBenchmark(bm))) {
+    if (benchmark.ID && success(await effects.api.client.updateBenchmark(bm))) {
         const index = assignment.gradingBenchmarks.indexOf(benchmark)
         if (index > -1) {
             assignment.gradingBenchmarks[index] = benchmark
         }
     } else {
-        const response = await effects.client.createBenchmark(benchmark)
+        const response = await effects.api.client.createBenchmark(benchmark)
         if (success(response)) {
             assignment.gradingBenchmarks.push(response.message)
         }
@@ -672,13 +660,13 @@ export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark,
 
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     benchmark.AssignmentID = assignment.ID
-    const response = await effects.client.createBenchmark(benchmark)
+    const response = await effects.api.client.createBenchmark(benchmark)
     if (success(response)) {
         assignment.gradingBenchmarks.push(benchmark)
     }
 }
 
-export const deleteCriterion = async ({ actions, effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
+export const deleteCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
     if (!criterion) {
         // Criterion is invalid
         return
@@ -696,10 +684,9 @@ export const deleteCriterion = async ({ actions, effects }: Context, { criterion
     }
 
     // Delete criterion
-    const response = await effects.client.deleteCriterion(criterion)
-    if (!success(response)) {
-        // Alert user if deletion failed
-        actions.alertHandler({ response })
+    const response = await effects.api.client.deleteCriterion(criterion)
+    if (response.error) {
+        return
     }
 
     // Remove criterion from benchmark in state if request was successful
@@ -710,16 +697,15 @@ export const deleteCriterion = async ({ actions, effects }: Context, { criterion
 
 }
 
-export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
+export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     if (benchmark && confirm("Do you really want to delete this benchmark?")) {
-        const response = await effects.client.deleteBenchmark(benchmark)
-        if (success(response)) {
-            const index = assignment.gradingBenchmarks.indexOf(benchmark)
-            if (index > -1) {
-                assignment.gradingBenchmarks.splice(index, 1)
-            }
-        } else {
-            actions.alertHandler({ response })
+        const response = await effects.api.client.deleteBenchmark(benchmark)
+        if (response.error) {
+            return
+        }
+        const index = assignment.gradingBenchmarks.indexOf(benchmark)
+        if (index > -1) {
+            assignment.gradingBenchmarks.splice(index, 1)
         }
     }
 }
@@ -737,7 +723,7 @@ export const startSubmissionStream = ({ actions, effects }: Context) => {
 }
 
 export const updateAssignments = async ({ effects }: Context, courseID: bigint): Promise<void> => {
-    const response = await effects.client.updateAssignments({ courseID })
+    const response = await effects.api.client.updateAssignments({ courseID })
     if (success(response)) {
         // alert user if update was successful
     } else {
@@ -746,7 +732,7 @@ export const updateAssignments = async ({ effects }: Context, courseID: bigint):
 }
 
 export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    const response = await effects.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
+    const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
     if (success(response)) {
         state.userGroup[enrollment.courseID.toString()] = response.message
     }
@@ -796,7 +782,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 export const changeView = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     if (hasStudent(enrollment.status)) {
-        const response = await effects.client.getEnrollments({
+        const response = await effects.api.client.getEnrollments({
             FetchMode: {
                 case: "userID",
                 value: state.self.ID,
