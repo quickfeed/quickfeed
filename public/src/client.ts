@@ -34,12 +34,13 @@ export type ResponseClient<T extends ServiceType> = {
  */
 export function createResponseClient<T extends ServiceType>(
     service: T,
-    transport: Transport
+    transport: Transport,
+    errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void
 ) {
     return makeAnyClient(service, (method) => {
         switch (method.kind) {
             case MethodKind.Unary:
-                return createUnaryFn(transport, service, method);
+                return createUnaryFn(transport, service, method, errorHandler);
             case MethodKind.ServerStreaming:
                 return createServerStreamingFn(transport, service, method);
             default:
@@ -59,7 +60,8 @@ type UnaryFn<I extends Message<I>, O extends Message<O>> = (
 function createUnaryFn<I extends Message<I>, O extends Message<O>>(
     transport: Transport,
     service: ServiceType,
-    method: MethodInfo<I, O>
+    method: MethodInfo<I, O>,
+    errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void
 ): UnaryFn<I, O> {
     return async function (input, options) {
         try {
@@ -79,6 +81,7 @@ function createUnaryFn<I extends Message<I>, O extends Message<O>>(
             } as Response<O>;
         }
         catch (error) {
+            errorHandler({ method: method.name, error });
             return {
                 error,
             } as Response<O>;
