@@ -360,47 +360,6 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
     await actions.getCourses()
 }
 
-/** getSubmissions fetches all submission for the current user by Course ID and stores them in state */
-// TODO: Currently not used, see refreshSubmissions.
-export const getSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const result = await effects.api.client.getSubmissions({
-        CourseID: courseID,
-        FetchMode: {
-            case: "UserID",
-            value: state.self.ID,
-        },
-    })
-    if (result.error) {
-        return
-    }
-    state.submissions[courseID.toString()] = result.message.submissions
-}
-
-// TODO: Currently not in use. Requires gRPC streaming to be implemented. Intended to be used to update submissions in state when a new commit is pushed to a repository.
-// TODO: A workaround to not use gRPC streaming is to ping the server at set intervals to check for new commits. This functionality was removed pending gRPC streaming implementation.
-/** Updates all submissions in state where the fetched submission commit hash differs from the one in state. */
-export const refreshSubmissions = async ({ state, effects }: Context, input: { courseID: number, submissionID: number }): Promise<void> => {
-    const response = await effects.api.client.getSubmissions({
-        CourseID: BigInt(input.courseID),
-        FetchMode: {
-            case: "UserID",
-            value: state.self.ID,
-        },
-    })
-    if (!success(response)) { return }
-
-    const submissions = response.message.submissions
-    for (const submission of submissions) {
-        const assignment = state.assignments[input.courseID].find(a => a.ID === submission.AssignmentID)
-        if (!assignment) {
-            continue
-        }
-        if (state.submissions[input.courseID][assignment.order - 1].commitHash !== submission.commitHash) {
-            state.submissions[input.courseID][assignment.order - 1] = submission
-        }
-    }
-}
-
 /** Fetches and stores all submissions of a given course into state. Triggers the loading spinner. */
 export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
     state.isLoading = true
