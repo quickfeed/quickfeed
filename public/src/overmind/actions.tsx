@@ -294,6 +294,12 @@ export const getGroup = async ({ state, effects }: Context, enrollment: Enrollme
 }
 
 export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
+    const check = validateGroup(group)
+    if (!check.valid) {
+        actions.alert({ text: check.message, color: Color.RED })
+        return
+    }
+
     const response = await effects.grpcMan.createGroup(group.courseID, group.name, group.users)
     if (success(response) && response.data) {
         state.userGroup[group.courseID.toString()] = response.data

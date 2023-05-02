@@ -248,6 +248,26 @@ export const getSubmissionCellColor = (submission: Submission): string => {
     return "clickable"
 }
 
+// pattern for group name validation. Only letters, numbers, underscores and dashes are allowed.
+const pattern = /^[a-zA-Z0-9_-]+$/;
+export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
+    if (group.name.length === 0) {
+        return { valid: false, message: "Group name cannot be empty" }
+    }
+    if (group.name.includes(" ")) {
+        // Explicitly warn the user that spaces are not allowed.
+        // Common mistake is to use spaces instead of underscores.
+        return { valid: false, message: "Group name cannot contain spaces" }
+    }
+    if (!pattern.test(group.name)) {
+        return { valid: false, message: "Group name can only contain letters (a-z, A-Z), numbers, underscores and dashes" }
+    }
+    if (group.users.length === 0) {
+        return { valid: false, message: "Group must have at least one user" }
+    }
+    return { valid: true, message: "" }
+}
+
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 export const delay = (ms: number) => {
