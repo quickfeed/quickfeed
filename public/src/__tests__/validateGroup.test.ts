@@ -16,8 +16,9 @@ describe('validateGroup', () => {
         { valid: T, users: [1n, 2n], name: 'Group' },
         { valid: T, users: [1n, 2n], name: '1' },
         { valid: T, users: [1n, 2n], name: '123456789' },
-        { valid: T, users: [1n, 2n], name: 'abcdefghijklmnopqrstuvwxyz' },
-        { valid: T, users: [1n, 2n], name: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' },
+        { valid: F, users: [1n, 2n], name: 'abcdefghijklmnopqrstuvwxyz' }, // too long
+        { valid: F, users: [1n, 2n], name: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' }, // too long
+        { valid: T, users: [1n, 2n], name: '0123456789abcdefghij' },  // max length, valid
         { valid: F, users: [1n, 2n], name: 'Group Name' }, // space in name
         { valid: F, users: [1n, 2n], name: 'Group Name 1' }, // space in name
         { valid: T, users: [1n, 2n], name: 'GroupName' },

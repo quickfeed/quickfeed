@@ -254,6 +254,9 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     if (group.name.length === 0) {
         return { valid: false, message: "Group name cannot be empty" }
     }
+    if (group.name.length > 20) {
+        return { valid: false, message: "Group name cannot be longer than 20 characters" }
+    }
     if (group.name.includes(" ")) {
         // Explicitly warn the user that spaces are not allowed.
         // Common mistake is to use spaces instead of underscores.
