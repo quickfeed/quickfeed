@@ -8,7 +8,7 @@ import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
-import Alert from "../components/Alert"
+import Alerts from "../components/alerts/Alerts"
 
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
@@ -40,7 +40,7 @@ const TeacherPage = (): JSX.Element => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alert />
+            <Alerts />
             <div className="row" hidden={history.location.pathname != root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
