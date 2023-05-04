@@ -716,16 +716,16 @@ export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown
         localStorage.setItem("alert", "Your session has expired. Please log in again.")
         window.location.reload()
     } else if (response.status.Code >= BigInt(0)) {
-        state.alerts.push({ text: response.status.Error, color: Color.RED })
+        state.alerts.push({ id: newID(), text: response.status.Error, color: Color.RED })
     }
 }
 
-export const alert = ({ state }: Context, a: Alert): void => {
-    state.alerts.push(a)
+export const alert = ({ state }: Context, a: Pick<Alert, "text" | "color" | "delay">): void => {
+    state.alerts.push({ id: newID(), ...a })
 }
 
-export const popAlert = ({ state }: Context, index: number): void => {
-    state.alerts = state.alerts.filter((_, i) => i !== index)
+export const popAlert = ({ state }: Context, alert: Alert): void => {
+    state.alerts = state.alerts.filter(a => a.id !== alert.id)
 }
 
 export const logout = ({ state }: Context): void => {
