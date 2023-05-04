@@ -3,7 +3,7 @@ import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert, CourseGroup, SubmissionOwner } from "./state"
+import { Alert, SubmissionOwner } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { Context } from "."
 import { Code } from "@bufbuild/connect-web"
