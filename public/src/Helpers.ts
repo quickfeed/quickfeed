@@ -271,6 +271,10 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     return { valid: true, message: "" }
 }
 
+export const newID = (): number => {
+    return Math.floor(Math.random() * 1000000000)
+}
+
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 export const delay = (ms: number) => {
