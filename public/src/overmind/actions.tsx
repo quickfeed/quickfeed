@@ -1,4 +1,4 @@
-import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
@@ -293,10 +293,10 @@ export const getGroup = async ({ state, effects }: Context, enrollment: Enrollme
     }
 }
 
-export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
+export const createGroup = async ({ state, actions, effects }: Context, group: CourseGroup): Promise<void> => {
     const check = validateGroup(group)
     if (!check.valid) {
-        actions.alert({ text: check.message, color: Color.RED })
+        actions.alert({ text: check.message, color: Color.RED, delay: 10000 })
         return
     }
 
