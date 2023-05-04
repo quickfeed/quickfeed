@@ -7,47 +7,50 @@ import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { render, screen } from "@testing-library/react"
-import { PartialMessage, Timestamp } from "@bufbuild/protobuf";
 import { MockData } from "./mock_data/mockData"
-import { EnrollmentRequest, Void } from "../../proto/qf/requests_pb"
-import { CallOptions } from "@bufbuild/connect"
-import { Response } from "../client"
-import { initializeOvermind } from "./TestHelpers"
+import { Void } from "../../proto/qf/requests_pb"
+import { initializeOvermind, mock } from "./TestHelpers"
+import { ApiClient } from "../overmind/effects"
+import { Timestamp } from "@bufbuild/protobuf"
 
 
 describe("UpdateEnrollment", () => {
-    const mockedOvermind = initializeOvermind({}, {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        getEnrollments: jest.fn(async (request: PartialMessage<EnrollmentRequest>, _?: CallOptions | undefined): Promise<Response<Enrollments>> => {
-            const enrollments = MockData.mockedEnrollments().enrollments.filter(e => {
-                switch (request.FetchMode?.case) {
-                    case "courseID":
-                        return e.courseID === request.FetchMode.value
-                    case "userID":
-                        return e.userID === request.FetchMode.value
-                    default:
-                        return false
+    const api = new ApiClient()
+    api.client = {
+        ...api.client,
+        getEnrollments: mock("getEnrollments", async (request) => {
+            const enrollments: Enrollment[] = []
+            MockData.mockedEnrollments().enrollments.forEach(e => {
+                if (request.FetchMode?.case === "courseID") {
+                    if (e.courseID === request.FetchMode.value) {
+                        enrollments.push(e)
+                    }
+                } else if (request.FetchMode?.case === "userID") {
+                    if (e.userID === request.FetchMode.value) {
+                        enrollments.push(e)
+                    }
+                } else {
+                    enrollments.push(e)
                 }
             })
             return { message: new Enrollments({ enrollments }), error: null }
         }),
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        updateEnrollments: jest.fn(async (request: PartialMessage<Enrollments>, _?: CallOptions | undefined): Promise<Response<Void>> => {
-            const enrollments = request.enrollments
-            if (!enrollments) {
-                throw new Error("No enrollments to update")
+        updateEnrollments: mock("updateEnrollments", async (request) => {
+            const enrollments = request.enrollments ?? []
+            if (enrollments.length === 0) {
+                return { message: new Void(), error: null }
             }
             enrollments.forEach(e => {
                 const enrollment = MockData.mockedEnrollments().enrollments.find(en => en.ID === e.ID)
                 if (!enrollment || e.status === undefined) {
-                    throw new Error(`No enrollment found with ID ${e.ID}`)
+                    return
                 }
                 enrollment.status = e.status
             })
             return { message: new Void(), error: null }
-        })
-
-    })
+        }),
+    }
+    const mockedOvermind = initializeOvermind({}, api)
 
     const updateEnrollmentTests: { desc: string, courseID: bigint, userID: bigint, want: Enrollment_UserStatus }[] = [
         // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments

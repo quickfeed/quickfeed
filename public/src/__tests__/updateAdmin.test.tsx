@@ -1,9 +1,7 @@
 import { User } from "../../proto/qf/types_pb"
-import { PartialMessage } from "@bufbuild/protobuf"
-import { CallOptions } from "@bufbuild/connect"
 import { Void } from "../../proto/qf/requests_pb"
-import { Response } from "../client"
-import { initializeOvermind } from "./TestHelpers"
+import { initializeOvermind, mock } from "./TestHelpers"
+import { ApiClient } from "../overmind/effects"
 
 
 
@@ -39,12 +37,15 @@ describe("Correct permission status should be set", () => {
         }
     ]
     test.each(updateAdminTests)(`$desc`, async (test) => {
-        const { state, actions } = initializeOvermind({ allUsers: [test.user], review: { reviewer: new User() } }, {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            updateUser: jest.fn(async (_request: PartialMessage<User>, _?: CallOptions | undefined): Promise<Response<Void>> => {
+            updateUser: mock("updateUser", async (_request) => {
                 return { message: new Void(), error: null }
-            })
-        })
+            }),
+        }
+        const { state, actions } = initializeOvermind({ allUsers: [test.user], review: { reviewer: new User() } }, api)
         window.confirm = jest.fn(() => test.confirm)
         await actions.updateAdmin(test.user)
         expect(state.allUsers[0].IsAdmin).toEqual(test.want)
