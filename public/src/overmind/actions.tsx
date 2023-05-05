@@ -8,12 +8,9 @@ import { Context } from "."
 import { Response } from "../client"
 import { Code, ConnectError } from "@bufbuild/connect"
 import * as internalActions from "./internalActions" // skipcq: JS-C1003
-import { AnyMessage, PartialMessage } from "@bufbuild/protobuf"
+import { PartialMessage } from "@bufbuild/protobuf"
 
 export const internal = internalActions
-
-/** Use this to verify that a gRPC request completed without an error code */
-export const success = (response: Response<AnyMessage>): boolean => { return response.error === null }
 
 export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
@@ -76,7 +73,6 @@ export const getEnrollmentsByUser = async ({ state, effects }: Context): Promise
     if (response.error) {
         return
     }
-
     state.enrollments = response.message.enrollments
     for (const enrollment of state.enrollments) {
         state.status[enrollment.courseID.toString()] = enrollment.status
@@ -103,9 +99,10 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
 /** Changes user information server-side */
 export const updateUser = async ({ actions, effects }: Context, user: User): Promise<void> => {
     const response = await effects.api.client.updateUser(user)
-    if (success(response)) {
-        await actions.getSelf()
+    if (response.error) {
+        return
     }
+    await actions.getSelf()
 }
 
 /**
@@ -238,15 +235,16 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
 
     // Send updated enrollment to server
     const response = await effects.api.client.updateEnrollments({ enrollments: [temp] })
-    if (success(response)) {
-        // If successful, update enrollment in state with new status
-        if (status === Enrollment_UserStatus.NONE) {
-            // If the enrollment is rejected, remove it from state
-            enrollments.splice(found, 1)
-        } else {
-            // If the enrollment is accepted, update the enrollment in state
-            enrollments[found].status = status
-        }
+    if (response.error) {
+        return
+    }
+    // If successful, update enrollment in state with new status
+    if (status === Enrollment_UserStatus.NONE) {
+        // If the enrollment is rejected, remove it from state
+        enrollments.splice(found, 1)
+    } else {
+        // If the enrollment is accepted, update the enrollment in state
+        enrollments[found].status = status
     }
 }
 
@@ -267,13 +265,13 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
 
     // Send updated enrollments to server
     const response = await effects.api.client.updateEnrollments({ enrollments })
-    if (success(response)) {
-        for (const enrollment of state.pendingEnrollments) {
-            enrollment.status = Enrollment_UserStatus.STUDENT
-        }
-    } else {
+    if (response.error) {
         // Fetch enrollments again if update failed in case the user was able to approve some enrollments
         await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment_UserStatus.PENDING] })
+        return
+    }
+    for (const enrollment of state.pendingEnrollments) {
+        enrollment.status = Enrollment_UserStatus.STUDENT
     }
 }
 
@@ -402,7 +400,9 @@ export const refreshCourseSubmissions = async ({ state, effects }: Context, cour
 export const getGroupsByCourse = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     state.groups[courseID.toString()] = []
     const response = await effects.api.client.getGroupsByCourse({ courseID })
-    if (response.error) { return }
+    if (response.error) {
+        return
+    }
     state.groups[courseID.toString()] = response.message.groups
 }
 
@@ -472,7 +472,7 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, own
             value: submission.ID,
         },
     })
-    if (!success(response)) {
+    if (response.error) {
         return
     }
     state.submissionsForCourse.update(owner, response.message)
@@ -495,13 +495,13 @@ export const rebuildSubmission = async ({ state, actions, effects }: Context, { 
         assignmentID: state.selectedAssignment.ID,
         submissionID: submission.ID,
     })
-    if (success(response)) {
-        // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
-        // TODO: gRPC streaming should be implemented to send the updated submission to the api.client.
-        await actions.getSubmission({ courseID: state.activeCourse, submission, owner })
-        actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
+    if (response.error) {
+        return
     }
-
+    // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
+    // TODO: gRPC streaming should be implemented to send the updated submission to the api.client.
+    await actions.getSubmission({ courseID: state.activeCourse, submission, owner })
+    actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
 }
 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */
@@ -510,7 +510,7 @@ export const rebuildAllSubmissions = async ({ effects }: Context, { courseID, as
         courseID,
         assignmentID,
     })
-    return success(response)
+    return !response.error
 }
 
 /** Enrolls a user (self) in a course given by courseID. Refreshes enrollments in state if enroll is successful. */
@@ -519,18 +519,20 @@ export const enroll = async ({ state, effects }: Context, courseID: bigint): Pro
         courseID,
         userID: state.self.ID,
     })
-    if (!success(response)) {
+    if (response.error) {
         return
     }
-    const enrollments = await effects.api.client.getEnrollments({
+    const enrolsResponse = await effects.api.client.getEnrollments({
         FetchMode: {
             case: "userID",
             value: state.self.ID,
         }
     })
 
-    if (enrollments.error) { return }
-    state.enrollments = enrollments.message.enrollments
+    if (enrolsResponse.error) {
+        return
+    }
+    state.enrollments = enrolsResponse.message.enrollments
 
 }
 
@@ -538,7 +540,7 @@ export const updateGroupStatus = async ({ effects }: Context, { group, status }:
     const oldStatus = group.status
     group.status = status
     const response = await effects.api.client.updateGroup(group)
-    if (!success(response)) {
+    if (response.error) {
         group.status = oldStatus
     }
 }
@@ -562,9 +564,10 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group): Pr
         courseID: group.courseID,
         groupID: group.ID,
     })
-    if (success(deleteResponse)) {
-        state.groups[group.courseID.toString()] = state.groups[group.courseID.toString()].filter(g => g.ID !== group.ID)
+    if (deleteResponse.error) {
+        return
     }
+    state.groups[group.courseID.toString()] = state.groups[group.courseID.toString()].filter(g => g.ID !== group.ID)
 }
 
 export const updateGroup = async ({ state, actions, effects }: Context, group: Group): Promise<void> => {
@@ -587,41 +590,52 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     }
 
     // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
-    if (criterion.ID && success(await effects.api.client.updateCriterion(criterion))) {
+    if (criterion.ID) {
+        const response = await effects.api.client.updateCriterion(criterion)
+        if (response.error) {
+            return
+        }
         const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
         if (index > -1) {
             benchmark.criteria[index] = criterion
         }
     } else {
         const response = await effects.api.client.createCriterion(criterion)
-        if (success(response)) {
-            benchmark.criteria.push(response.message)
+        if (response.error) {
+            return
         }
+        benchmark.criteria.push(response.message)
     }
 }
 
 export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     // Check if this need cloning
     const bm = benchmark.clone()
-    if (benchmark.ID && success(await effects.api.client.updateBenchmark(bm))) {
+    if (benchmark.ID) {
+        const response = await effects.api.client.updateBenchmark(bm)
+        if (response.error) {
+            return
+        }
         const index = assignment.gradingBenchmarks.indexOf(benchmark)
         if (index > -1) {
             assignment.gradingBenchmarks[index] = benchmark
         }
     } else {
         const response = await effects.api.client.createBenchmark(benchmark)
-        if (success(response)) {
-            assignment.gradingBenchmarks.push(response.message)
+        if (response.error) {
+            return
         }
+        assignment.gradingBenchmarks.push(response.message)
     }
 }
 
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     benchmark.AssignmentID = assignment.ID
     const response = await effects.api.client.createBenchmark(benchmark)
-    if (success(response)) {
-        assignment.gradingBenchmarks.push(benchmark)
+    if (response.error) {
+        return
     }
+    assignment.gradingBenchmarks.push(benchmark)
 }
 
 export const deleteCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
@@ -680,20 +694,20 @@ export const startSubmissionStream = ({ actions, effects }: Context) => {
     })
 }
 
-export const updateAssignments = async ({ effects }: Context, courseID: bigint): Promise<void> => {
+export const updateAssignments = async ({ actions, effects }: Context, courseID: bigint): Promise<void> => {
     const response = await effects.api.client.updateAssignments({ courseID })
-    if (success(response)) {
-        // alert user if update was successful
-    } else {
-        // alert user if update failed
+    if (response.error) {
+        return
     }
+    actions.alert({ text: "Assignments updated", color: Color.GREEN })
 }
 
 export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
     const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
-    if (success(response)) {
-        state.userGroup[enrollment.courseID.toString()] = response.message
+    if (response.error) {
+        return
     }
+    state.userGroup[enrollment.courseID.toString()] = response.message
 }
 
 
@@ -702,7 +716,10 @@ export const getGroup = async ({ state, effects }: Context, enrollment: Enrollme
 export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     const successful = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
-    if (!successful) { state.isLoading = false; return false }
+    if (!successful) {
+        state.isLoading = false
+        return false
+    }
     // Order matters here. Some data is dependent on other data. Ex. fetching submissions depends on enrollments.
     await actions.getEnrollmentsByUser()
     await actions.getAssignments()
@@ -747,7 +764,9 @@ export const changeView = async ({ state, effects }: Context, courseID: bigint):
             },
             statuses: [Enrollment_UserStatus.TEACHER],
         })
-        if (response.error) { return }
+        if (response.error) {
+            return
+        }
         if (response.message.enrollments.find(enrol => enrol.courseID === courseID && hasTeacher(enrol.status))) {
             enrollment.status = Enrollment_UserStatus.TEACHER
         }
