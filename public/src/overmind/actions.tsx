@@ -795,6 +795,13 @@ export const alertHandler = (context: Context, { method, error }: { method: stri
 
     if (error.code === Code.Unauthenticated) {
         // If we end up here, the user session has expired.
+        if (method === "GetUser") {
+            return // Do not show alert if the user is not logged in.
+        }
+        context.actions.alert({
+            text: "Your session has expired. Please log in again.",
+            color: Color.RED
+        })
         // Store an alert message in localStorage that will be displayed after reloading the page.
         localStorage.setItem("alert", "Your session has expired. Please log in again.")
     } else {
