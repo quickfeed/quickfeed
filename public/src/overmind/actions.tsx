@@ -184,9 +184,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
         released: submission.released,
         score: submission.score,
     })
-
     if (response.error) {
-        /* If the update failed, revert the submission status */
         return
     }
     submission.status = status
