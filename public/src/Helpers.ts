@@ -1,7 +1,7 @@
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
-import { SubmissionOwner } from "./overmind/state"
+import { CourseGroup, SubmissionOwner } from "./overmind/state"
 import { Timestamp } from "@bufbuild/protobuf"
 import { CourseSubmissions } from "../proto/qf/requests_pb"
 
@@ -246,6 +246,29 @@ export const getSubmissionCellColor = (submission: Submission): string => {
         return "result-rejected"
     }
     return "clickable"
+}
+
+// pattern for group name validation. Only letters, numbers, underscores and dashes are allowed.
+const pattern = /^[a-zA-Z0-9_-]+$/;
+export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
+    if (group.name.length === 0) {
+        return { valid: false, message: "Group name cannot be empty" }
+    }
+    if (group.name.length > 20) {
+        return { valid: false, message: "Group name cannot be longer than 20 characters" }
+    }
+    if (group.name.includes(" ")) {
+        // Explicitly warn the user that spaces are not allowed.
+        // Common mistake is to use spaces instead of underscores.
+        return { valid: false, message: "Group name cannot contain spaces" }
+    }
+    if (!pattern.test(group.name)) {
+        return { valid: false, message: "Group name can only contain letters (a-z, A-Z), numbers, underscores and dashes" }
+    }
+    if (group.users.length === 0) {
+        return { valid: false, message: "Group must have at least one user" }
+    }
+    return { valid: true, message: "" }
 }
 
 /* Use this function to simulate a delay in the loading of data */
