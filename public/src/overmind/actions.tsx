@@ -14,7 +14,7 @@ export const internal = internalActions
 
 export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
-    effects.api.init(actions.alertHandler)
+    effects.api.init(actions.errorHandler)
     await actions.fetchUserData()
     // Currently this only alerts the user if they are not logged in after a page refresh
     const alert = localStorage.getItem("alert")
@@ -788,7 +788,7 @@ export const setQuery = ({ state }: Context, query: string): void => {
     state.query = query
 }
 
-export const alertHandler = (context: Context, { method, error }: { method: string, error: ConnectError }): void => {
+export const errorHandler = (context: Context, { method, error }: { method: string, error: ConnectError }): void => {
     if (!error) {
         return
     }
