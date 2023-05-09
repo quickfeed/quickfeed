@@ -1,4 +1,4 @@
-import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
@@ -309,15 +309,30 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
     }))
 }
 
-export const createGroup = async ({ state, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
+export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
+    const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
+    if (response.error) {
+        state.userGroup[enrollment.courseID.toString()] = response.message
+    }
+}
+
+export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
+    const check = validateGroup(group)
+    if (!check.valid) {
+        actions.alert({ text: check.message, color: Color.RED })
+        return
+    }
+
     const response = await effects.api.client.createGroup({
         courseID: group.courseID,
         name: group.name,
-        users: group.users.map(userID => new User({ ID: userID })),
+        users: group.users.map(userID => new User({ ID: userID }))
     })
+
     if (response.error) {
         return
     }
+
     state.userGroup[group.courseID.toString()] = response.message
     state.activeGroup = null
 }
@@ -699,15 +714,6 @@ export const updateAssignments = async ({ actions, effects }: Context, courseID:
     }
     actions.alert({ text: "Assignments updated", color: Color.GREEN })
 }
-
-export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
-    if (response.error) {
-        return
-    }
-    state.userGroup[enrollment.courseID.toString()] = response.message
-}
-
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
