@@ -1,19 +1,24 @@
-import { MockGrpcManager } from "../MockGRPCManager"
-import { GrpcManager } from "../GRPCManager"
+import { ConnectError, createConnectTransport } from "@bufbuild/connect-web"
+import { QuickFeedService } from "../../proto/qf/quickfeed_connectweb"
 import { StreamService } from "../streamService"
+import { ResponseClient, createResponseClient } from "../client"
 
 
-// Effects should contain all impure functions used to manage state.
-export const grpcMan: GrpcManager | MockGrpcManager = (() => {
-    let grpcMan: GrpcManager | MockGrpcManager
-    if ((process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") && window.location.hostname === "localhost") {
-        // If in development or test mode, and the hostname is localhost, use the MockGrpcManager.
-        grpcMan = new MockGrpcManager()
-    } else {
-        // Otherwise, use the real gRPC manager.
-        grpcMan = new GrpcManager()
+export class ApiClient {
+    client: ResponseClient<typeof QuickFeedService>
+
+    /**
+     * init initializes a client with the provided error handler.
+     * Must be called before accessing the client.
+     * @param errorHandler A function that is called when an error occurs.
+     */
+    public init(errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void) {
+        this.client = createResponseClient(QuickFeedService, createConnectTransport({
+            baseUrl: `https://${window.location.host}`
+        }), errorHandler)
     }
-    return grpcMan
-})()
+}
+
+export const api = new ApiClient()
 
 export const streamService = new StreamService()
