@@ -19,8 +19,6 @@ const Alert = ({ alert }: { alert: AlertType }): JSX.Element => {
     useEffect(() => {
         let id: ReturnType<typeof setTimeout>;
         if (alert.delay) {
-            // If the optional delay property is set, the alert will be removed after the delay
-            // An animated circle will be displayed to indicate the time remaining before the alert is removed
             const circle = circleRef.current;
 
             // Remove the alert after the delay
@@ -38,9 +36,9 @@ const Alert = ({ alert }: { alert: AlertType }): JSX.Element => {
                 const start = Date.now();
                 const animate = () => {
                     const elapsed = Date.now() - start;
-                    const strokeDashoffset = (elapsed / (delay)) * circumference;
+                    const strokeDashoffset = (elapsed / delay) * circumference;
                     circle.style.strokeDashoffset = `${strokeDashoffset}px`;
-                    if (elapsed < (delay)) {
+                    if (elapsed < delay) {
                         requestAnimationFrame(animate);
                     }
                 };
