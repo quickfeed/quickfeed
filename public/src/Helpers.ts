@@ -271,9 +271,15 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     return { valid: true, message: "" }
 }
 
-export const newID = (): number => {
-    return Math.floor(Math.random() * 1000000000)
-}
+// newID returns a new auto-incrementing ID
+// Can be used to generate IDs for client-only objects
+// such as the Alert object
+export const newID = (() => {
+    let id: number = 0
+    return () => {
+        return id++
+    }
+})()
 
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
