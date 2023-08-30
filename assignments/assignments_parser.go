@@ -31,6 +31,9 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
 	}
+	if newAssignment.Order < 1 {
+		return nil, fmt.Errorf("assignment order must be greater than 0")
+	}
 	// if no auto approve score limit is defined; use the default
 	if newAssignment.ScoreLimit < 1 {
 		newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
