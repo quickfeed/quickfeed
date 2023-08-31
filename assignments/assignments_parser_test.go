@@ -32,7 +32,6 @@ name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
-
 	yUnknownFields = `order: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
@@ -88,29 +87,22 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o600)
-	if err != nil {
-		t.Fatal(err)
+	writeFile := func(path, filename, content string) {
+		if err := os.WriteFile(filepath.Join(testsDir, path, filename), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
 	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o600)
-	if err != nil {
-		t.Fatal(err)
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yaml", y1},
+		{"lab2", "assignment.yaml", y2},
+		{"scripts", "run.sh", script},
+		{"lab1", "run.sh", script1},
+		{"scripts", "Dockerfile", df},
+		{"lab2", "criteria.json", criteria},
+	} {
+		writeFile(c.path, c.filename, c.content)
 	}
 
 	wantCriteria := []*qf.GradingBenchmark{
