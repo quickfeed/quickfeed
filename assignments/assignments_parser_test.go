@@ -32,7 +32,7 @@ name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
-	y3 = `assignmentid: 3
+	yOldAssignmentIDField = `assignmentid: 3
 name: "Big salary"
 deadline: "27-08-2019 12:00"
 autoapprove: false
@@ -179,7 +179,7 @@ func TestParse(t *testing.T) {
 	for _, c := range []struct {
 		path, filename, content string
 	}{
-		{"lab3", "assignment.yaml", y3},
+		{"lab3", "assignment.yaml", yOldAssignmentIDField},
 	} {
 		writeFile(c.path, c.filename, c.content)
 	}
