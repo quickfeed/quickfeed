@@ -164,6 +164,10 @@ func TestParse(t *testing.T) {
 	if diff := cmp.Diff(assignments[1].GradingBenchmarks, wantCriteria, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch when parsing criteria (-want +got):\n%s", diff)
 	}
+}
+
+func TestParseOldAssignmentIDFields(t *testing.T) {
+	testsDir := t.TempDir()
 
 	// test for use of assignmentid: 3 instead of order
 	for _, c := range []struct {
@@ -173,8 +177,7 @@ func TestParse(t *testing.T) {
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
-
-	_, _, err = readTestsRepositoryContent(testsDir, 0)
+	_, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err == nil {
 		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
 	}
