@@ -1,13 +1,11 @@
 package assignments
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -76,28 +74,20 @@ autoapprove: false
 	]`
 )
 
+func writeFile(t *testing.T, testsDir, path, filename, content string) {
+	t.Helper()
+	dir := filepath.Join(testsDir, path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, filename), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParse(t *testing.T) {
 	testsDir := t.TempDir()
 
-	job := &ci.Job{
-		Commands: []string{
-			"cd " + testsDir,
-			"mkdir lab1",
-			"mkdir lab2",
-			"mkdir lab3",
-			"mkdir scripts",
-		},
-	}
-	runner := ci.Local{}
-	_, err := runner.Run(context.Background(), job)
-	if err != nil {
-		t.Fatal(err)
-	}
-	writeFile := func(path, filename, content string) {
-		if err := os.WriteFile(filepath.Join(testsDir, path, filename), []byte(content), 0o600); err != nil {
-			t.Fatal(err)
-		}
-	}
 	for _, c := range []struct {
 		path, filename, content string
 	}{
@@ -108,7 +98,7 @@ func TestParse(t *testing.T) {
 		{"scripts", "Dockerfile", df},
 		{"lab2", "criteria.json", criteria},
 	} {
-		writeFile(c.path, c.filename, c.content)
+		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
 	wantCriteria := []*qf.GradingBenchmark{
@@ -181,7 +171,7 @@ func TestParse(t *testing.T) {
 	}{
 		{"lab3", "assignment.yaml", yOldAssignmentIDField},
 	} {
-		writeFile(c.path, c.filename, c.content)
+		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
 	_, _, err = readTestsRepositoryContent(testsDir, 0)
@@ -193,20 +183,12 @@ func TestParse(t *testing.T) {
 func TestParseUnknownFields(t *testing.T) {
 	testsDir := t.TempDir()
 
-	job := &ci.Job{
-		Commands: []string{
-			"cd " + testsDir,
-			"mkdir lab1",
-		},
-	}
-	runner := ci.Local{}
-	_, err := runner.Run(context.Background(), job)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o600)
-	if err != nil {
-		t.Fatal(err)
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yaml", yUnknownFields},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
 	// We expect assignment names to be set based on
