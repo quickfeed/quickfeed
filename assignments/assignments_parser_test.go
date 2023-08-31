@@ -32,6 +32,11 @@ name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
+	y3 = `assignmentid: 3
+name: "Big salary"
+deadline: "27-08-2019 12:00"
+autoapprove: false
+`
 	yUnknownFields = `order: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
@@ -79,6 +84,7 @@ func TestParse(t *testing.T) {
 			"cd " + testsDir,
 			"mkdir lab1",
 			"mkdir lab2",
+			"mkdir lab3",
 			"mkdir scripts",
 		},
 	}
@@ -167,6 +173,20 @@ func TestParse(t *testing.T) {
 	}
 	if diff := cmp.Diff(assignments[1].GradingBenchmarks, wantCriteria, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch when parsing criteria (-want +got):\n%s", diff)
+	}
+
+	// test for use of assignmentid: 3 instead of order
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab3", "assignment.yaml", y3},
+	} {
+		writeFile(c.path, c.filename, c.content)
+	}
+
+	_, _, err = readTestsRepositoryContent(testsDir, 0)
+	if err == nil {
+		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
 	}
 }
 
