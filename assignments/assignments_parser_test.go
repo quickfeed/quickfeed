@@ -166,7 +166,7 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestParseOldAssignmentIDFields(t *testing.T) {
+func TestParseOldAssignmentIDField(t *testing.T) {
 	testsDir := t.TempDir()
 
 	// test for use of assignmentid: 3 instead of order
