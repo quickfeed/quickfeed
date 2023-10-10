@@ -30,6 +30,11 @@ name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
+	y3 = `order: 3
+name: "Nested loops"
+deadline: "27-08-2018 12:00"
+autoapprove: false
+`
 	yOldAssignmentIDField = `assignmentid: 3
 name: "Big salary"
 deadline: "27-08-2019 12:00"
@@ -214,6 +219,93 @@ func TestParseUnknownFields(t *testing.T) {
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestParseAndSaveAssignment(t *testing.T) {
+	testsDir := t.TempDir()
+
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yml", y1},
+		{"lab2", "assignment.yml", y2},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+	course := &qf.Course{
+		ID:   1,
+		Name: "Test course",
+	}
+
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateNamedUser(t, db, 1, "test")
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		t.Fatal(err)
+	}
+
+	assignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 2 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
+	}
+
+	// Save the assignments to the database
+	if err := db.UpdateAssignments(assignments); err != nil {
+		t.Fatal(err)
+	}
+
+	// Read the assignments from the database
+	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(assignments, gotAssignments, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Add a new assignment to the list of assignments we expect to get from the database
+	writeFile(t, testsDir, "lab3", "assignment.yml", y3)
+
+	// Parse the new assignment
+	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should be 3 assignments now
+	if len(newAssignments) != 3 {
+		t.Errorf("len(assignments) = %d, want %d", len(newAssignments), 3)
+	}
+
+	// Save the new assignments to the database
+	if err := db.UpdateAssignments(newAssignments); err != nil {
+		t.Fatal(err)
+	}
+
+	// Read the assignments from the database
+	gotNewAssignments, err := db.GetAssignmentsByCourse(course.ID)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should be 3 assignments now
+	if len(gotNewAssignments) != 3 {
+		t.Errorf("len(assignments) = %d, want %d", len(gotNewAssignments), 3)
+	}
+
+	// Check that the new assignments are the same as the ones we parsed
+	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+
 }
 
 func TestFixDeadline(t *testing.T) {
