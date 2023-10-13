@@ -277,7 +277,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Should be 3 assignments now
+	// Should be 3 assignments in the database now
 	if len(newAssignments) != 3 {
 		t.Errorf("len(assignments) = %d, want %d", len(newAssignments), 3)
 	}
