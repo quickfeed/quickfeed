@@ -260,7 +260,6 @@ func TestParseAndSaveAssignment(t *testing.T) {
 
 	// Read the assignments from the database
 	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -274,7 +273,6 @@ func TestParseAndSaveAssignment(t *testing.T) {
 
 	// Parse the new assignment
 	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -291,7 +289,6 @@ func TestParseAndSaveAssignment(t *testing.T) {
 
 	// Read the assignments from the database
 	gotNewAssignments, err := db.GetAssignmentsByCourse(course.ID)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,7 +302,6 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
-
 }
 
 func TestFixDeadline(t *testing.T) {
