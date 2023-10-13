@@ -62,7 +62,7 @@
 		],
 		"go.useLanguageServer": true,
 		"gopls": {
-			"gofumpt": true,
+			"formatting.gofumpt": true,
 			"build.directoryFilters": [
 				"-public",
 				"-doc",
