@@ -188,6 +188,28 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 	}
 }
 
+func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
+	testsDir := t.TempDir()
+
+	// lab1 and lab2 are correct
+	// lab3 contains an old assignmentid field
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yml", y1},
+		{"lab2", "assignment.yml", y2},
+		{"lab3", "assignment.yml", yOldAssignmentIDField},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+
+	// Since lab3 contains an old assignmentid field, this will return an error
+	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	if err == nil {
+		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
+	}
+}
+
 func TestParseUnknownFields(t *testing.T) {
 	testsDir := t.TempDir()
 
