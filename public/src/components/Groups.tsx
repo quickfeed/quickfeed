@@ -1,6 +1,6 @@
 import React from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
-import { Color, getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { Color, getCourseID, groupRepoLink, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
@@ -13,6 +13,7 @@ const Groups = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
+    const course = state.courses.find(course => course.ID === courseID)
 
     const groupSearch = (group: Group) => {
         // Show all groups if query is empty
@@ -89,7 +90,9 @@ const Groups = (): JSX.Element => {
         return (
             <tr hidden={groupSearch(group)}>
                 <td key={group.ID.toString()}>
-                    {group.name}
+                    <a href={groupRepoLink(group, course)} target="_blank" rel="noopener noreferrer">
+                        {group.name}
+                    </a>
                     <span className="badge badge-warning ml-2">{isPendingGroup(group) ? "Pending" : null}</span>
                 </td>
                 <GroupMembers group={group} />
