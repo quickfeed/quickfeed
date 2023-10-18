@@ -177,7 +177,7 @@ export type State = {
     /* Contains either an existing group to edit, or a new group to create */
     activeGroup: Group | null,
 
-    hasGroup: (courseID: number) => boolean,
+    hasGroup: (courseID: bigint) => boolean,
 
     connectionStatus: ConnStatus,
 
@@ -414,7 +414,7 @@ export const state: State = {
     groupView: false,
     activeGroup: null,
     hasGroup: derived(({ userGroup }: State) => courseID => {
-        return userGroup[courseID] !== undefined
+        return userGroup[courseID.toString()] !== undefined
     }),
     showFavorites: false,
 
