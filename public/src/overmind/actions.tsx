@@ -419,8 +419,7 @@ export const getGroupsByCourse = async ({ state, effects }: Context, courseID: b
     state.groups[courseID.toString()] = response.message.groups
 }
 
-export const getUserSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    state.submissions[courseID.toString()] = []
+export const getUserSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
     const response = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
@@ -431,15 +430,21 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
     if (response.error) {
         return
     }
+    const id = courseID.toString()
+    // We do not include any individual submissions for group labs, although they may exist.
+    // The group submissions will be fetched separately in getGroupSubmissions.
+    const assignments = state.assignments[id]?.filter(a => !a.isGroupLab)
     // Insert submissions into state.submissions by the assignment order
-    state.assignments[courseID.toString()]?.forEach(assignment => {
-        const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
-        state.submissions[courseID.toString()][assignment.order - 1] = submission ? submission : new Submission()
+    actions.internal.storeSubmissions({
+        courseID: id,
+        submissions: response.message.submissions,
+        assignments
     })
 }
 
-export const getGroupSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const enrollment = state.enrollmentsByCourseID[courseID.toString()]
+export const getGroupSubmissions = async ({ state, actions, effects }: Context, courseID: bigint): Promise<void> => {
+    const id = courseID.toString()
+    const enrollment = state.enrollmentsByCourseID[id]
     if (!(enrollment && enrollment.group)) {
         return
     }
@@ -453,11 +458,11 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
     if (response.error) {
         return
     }
-    state.assignments[courseID.toString()]?.forEach(assignment => {
-        const submission = response.message.submissions.find(sbm => sbm.AssignmentID === assignment.ID)
-        if (submission && assignment.isGroupLab) {
-            state.submissions[courseID.toString()][assignment.order - 1] = submission
-        }
+    const assignments = state.assignments[id]?.filter(a => a.isGroupLab)
+    actions.internal.storeSubmissions({
+        courseID: id,
+        submissions: response.message.submissions,
+        assignments
     })
 }
 
