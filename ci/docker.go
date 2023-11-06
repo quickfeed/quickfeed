@@ -107,7 +107,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 }
 
 // createImage creates an image for the given job.
-func (d *Docker) createImage(ctx context.Context, job *Job) (*container.ContainerCreateCreatedBody, error) {
+func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateResponse, error) {
 	if job.Image == "" {
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
@@ -144,7 +144,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		}
 	}
 
-	create := func() (container.ContainerCreateCreatedBody, error) {
+	create := func() (container.CreateResponse, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
 			User:  fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), // Run the image as the current user, e.g., quickfeed
@@ -177,8 +177,8 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 				return "", err
 			}
 			// stop runaway container whose deadline was exceeded
-			timeout := time.Duration(1 * time.Second)
-			stopErr := d.client.ContainerStop(context.Background(), respID, &timeout)
+			timeout := 1 // seconds to wait before forcefully killing the container
+			stopErr := d.client.ContainerStop(context.Background(), respID, container.StopOptions{Timeout: &timeout})
 			if stopErr != nil {
 				return "", stopErr
 			}
