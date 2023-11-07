@@ -70,7 +70,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 	d.logger.Infof("Created container image '%s' for %s", job.Image, job.Name)
-	if err := d.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err = d.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return "", err
 	}
 
@@ -190,7 +190,8 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 			// return message to user to be shown in the results log
 			return "Container timeout. Please check for infinite loops or other slowness.", err
 		}
-	case <-statusCh:
+	case status := <-statusCh:
+		d.logger.Infof("Container: '%s' for %s: exited with status: %v", job.Image, job.Name, status.StatusCode)
 	}
 	return "", nil
 }
