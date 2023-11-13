@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/rand"
@@ -34,10 +35,11 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, public+"/assets/index.html")
 	}))
-	router.Handle(s.NewQuickFeedHandler(tm))
+	paths, handler := s.NewQuickFeedHandler(tm)
+	router.Handle(paths, controller(handler))
+
 	router.Handle(auth.Assets, http.StripPrefix(auth.Assets, assets))
 	router.Handle(auth.Static, http.StripPrefix(auth.Static, dist))
-
 	// Register auth endpoints.
 	callbackSecret := rand.String()
 	router.HandleFunc(auth.Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
@@ -49,4 +51,17 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	router.HandleFunc(auth.Hook, ghHook.Handle())
 
 	return router
+}
+
+// controller is a wrapper for the QuickFeedService handler that sets a write deadline for the submission stream.
+// TODO: Remove this when connect-go finally supports deadlines.
+func controller(h http.Handler) http.Handler {
+	timeout := 15 * time.Minute
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/qf.QuickFeedService/SubmissionStream" {
+			control := http.NewResponseController(w)
+			control.SetWriteDeadline(time.Now().Add(timeout))
+		}
+		h.ServeHTTP(w, r)
+	})
 }
