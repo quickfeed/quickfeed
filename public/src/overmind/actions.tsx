@@ -312,8 +312,9 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
 export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
     const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
     if (response.error) {
-        state.userGroup[enrollment.courseID.toString()] = response.message
+        return
     }
+    state.userGroup[enrollment.courseID.toString()] = response.message
 }
 
 export const createGroup = async ({ state, actions, effects }: Context, group: CourseGroup): Promise<void> => {
