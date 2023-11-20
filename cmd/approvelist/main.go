@@ -20,10 +20,11 @@ import (
 )
 
 const (
-	srcSuffix = "-original.xlsx"
-	dstSuffix = "-approve-list.xlsx"
-	pass      = "Godkjent"
-	fail      = "Ikke godkjent"
+	srcSuffix      = "-original.xlsx"
+	dstSuffix      = "-approve-list.xlsx"
+	pass           = "Godkjent"
+	fail           = "Ikke godkjent"
+	approvalColumn = "E"
 )
 
 func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
@@ -92,7 +93,7 @@ func main() {
 			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\t%s\n", student, numApproved(approved), approvedValue)
 			continue
 		}
-		cell := fmt.Sprintf("B%d", rowNum)
+		cell := fmt.Sprintf("%s%d", approvalColumn, rowNum)
 		approvedMap[cell] = approvedValue
 		if *showAll {
 			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\t%s\n", student, rowNum, numApproved(approved), approvedValue)
@@ -105,7 +106,7 @@ func main() {
 		if err != nil {
 			// not found in QuickFeed, but is signed up in FS
 			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\t\n", student, rowNum)
-			cell := fmt.Sprintf("B%d", rowNum)
+			cell := fmt.Sprintf("%s%d", approvalColumn, rowNum)
 			approvedMap[cell] = fail
 		}
 	}
