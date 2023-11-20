@@ -26,7 +26,7 @@ export const onInitializeOvermind = async ({ actions, effects }: Context) => {
 
 export const handleStreamError = (context: Context, error: Error): void => {
     context.state.connectionStatus = ConnStatus.DISCONNECTED
-    context.actions.alert({ text: error.message, color: Color.RED })
+    context.actions.alert({ text: error.message, color: Color.RED, delay: 10000 })
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
