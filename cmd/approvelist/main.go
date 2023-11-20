@@ -223,6 +223,17 @@ func fileName(courseCode, suffix string) string {
 }
 
 func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName string, err error) {
+	// The approve sheet is a single sheet Excel file with five columns:
+	//
+	// 		First name | Last name | Student number    | Candidate number | Approval
+	// 		-----------+-----------+-------------------+------------------+----------
+	// 		<first>    | <last>    | <student_no>      | <candidate_no>   | <approved>
+	//      John       | Doe       | 123456            |                  |
+	//
+	// Approval and candidate number columns are empty by default.
+	// The approval column should be filled with either "Godkjent" or "Ikke godkjent".
+	// The candidate number column is irrelevant for approval and can be ignored.
+	//
 	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
 		return nil, "", err
@@ -234,8 +245,9 @@ func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName s
 	sheetName = f.GetSheetName(f.GetActiveSheetIndex())
 	approveMap = make(map[string]int)
 	for i, row := range f.GetRows(sheetName) {
-		if i > 0 && row[0] != "" {
-			approveMap[row[0]] = i + 1
+		if i > 0 && row[0] != "" && row[1] != "" {
+			fullName := fmt.Sprintf("%s %s", row[0], row[1])
+			approveMap[fullName] = i + 1
 		}
 	}
 	return approveMap, sheetName, nil
