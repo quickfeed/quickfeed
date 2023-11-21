@@ -20,11 +20,10 @@ import (
 )
 
 const (
-	srcSuffix      = "-original.xlsx"
-	dstSuffix      = "-approve-list.xlsx"
-	pass           = "Godkjent"
-	fail           = "Ikke godkjent"
-	approvalColumn = "E"
+	srcSuffix = "-original.xlsx"
+	dstSuffix = "-approve-list.xlsx"
+	pass      = "Godkjent"
+	fail      = "Ikke godkjent"
 )
 
 func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
@@ -39,16 +38,17 @@ func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
 
 func main() {
 	var (
-		serverURL  = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
-		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
-		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
-		showAll    = flag.Bool("all", false, "show all students")
-		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
-		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
+		serverURL    = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
+		passLimit    = flag.Int("limit", 6, "number of assignments required to pass")
+		ignorePass   = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
+		showAll      = flag.Bool("all", false, "show all students")
+		courseCode   = flag.String("course", "DAT320", "course code to query (case sensitive)")
+		year         = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
+		approvalName = flag.String("approval", "Godkjenning", "name of approval column in approve sheet")
 	)
 	flag.Parse()
 
-	studentRowMap, sheetName, err := loadApproveSheet(*courseCode)
+	studentRowMap, sheetName, col, err := loadApproveSheet(*courseCode, *approvalName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func main() {
 			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\t%s\n", student, numApproved(approved), approvedValue)
 			continue
 		}
-		cell := fmt.Sprintf("%s%d", approvalColumn, rowNum)
+		cell := fmt.Sprintf("%s%d", col, rowNum)
 		approvedMap[cell] = approvedValue
 		if *showAll {
 			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\t%s\n", student, rowNum, numApproved(approved), approvedValue)
@@ -106,7 +106,7 @@ func main() {
 		if err != nil {
 			// not found in QuickFeed, but is signed up in FS
 			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\t\n", student, rowNum)
-			cell := fmt.Sprintf("%s%d", approvalColumn, rowNum)
+			cell := fmt.Sprintf("%s%d", col, rowNum)
 			approvedMap[cell] = fail
 		}
 	}
@@ -223,13 +223,13 @@ func fileName(courseCode, suffix string) string {
 	return strings.ToLower(courseCode) + suffix
 }
 
-func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName string, err error) {
+func loadApproveSheet(courseCode, approvalName string) (approveMap map[string]int, sheetName, approvalCol string, err error) {
 	// The approve sheet is a single sheet Excel file with five columns:
 	//
-	// 		First name | Last name | Student number    | Candidate number | Approval
+	//		First name | Last name | Student number    | Candidate number | Approval
 	// 		-----------+-----------+-------------------+------------------+----------
 	// 		<first>    | <last>    | <student_no>      | <candidate_no>   | <approved>
-	//      John       | Doe       | 123456            |                  |
+	//		John       | Doe       | 123456            |                  |
 	//
 	// Approval and candidate number columns are empty by default.
 	// The approval column should be filled with either "Godkjent" or "Ikke godkjent".
@@ -237,21 +237,33 @@ func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName s
 	//
 	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 	if f.SheetCount != 1 {
-		return nil, "", fmt.Errorf("expected a single sheet in %s, got %d", fileName(courseCode, srcSuffix), f.SheetCount)
+		return nil, "", "", fmt.Errorf("expected a single sheet in %s, got %d", fileName(courseCode, srcSuffix), f.SheetCount)
 	}
 	// we expect only a single sheet; assume that is the active sheet
 	sheetName = f.GetSheetName(f.GetActiveSheetIndex())
 	approveMap = make(map[string]int)
-	for i, row := range f.GetRows(sheetName) {
-		if i > 0 && row[0] != "" && row[1] != "" {
+	rows := f.GetRows(sheetName)
+	// find the approval column
+	for j, cell := range rows[0] {
+		if cell == approvalName {
+			approvalCol = excelize.ToAlphaString(j)
+			break
+		}
+	}
+
+	for i, row := range rows {
+		if i == 0 {
+			continue
+		}
+		if row[0] != "" && row[1] != "" {
 			fullName := fmt.Sprintf("%s %s", row[0], row[1])
 			approveMap[fullName] = i + 1
 		}
 	}
-	return approveMap, sheetName, nil
+	return approveMap, sheetName, approvalCol, nil
 }
 
 func saveApproveSheet(courseCode, sheetName string, approveMap map[string]string) error {
