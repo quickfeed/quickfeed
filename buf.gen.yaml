@@ -2,9 +2,9 @@
 # For details, see https://docs.buf.build/configuration/v1/buf-gen-yaml
 version: v1
 plugins:
-  - name: go-patch
+  - plugin: go-patch
     out: ./
     opt: plugin=go,paths=source_relative
-  - name: connect-go
+  - plugin: connect-go
     out: ./
     opt: paths=source_relative
