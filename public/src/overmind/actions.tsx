@@ -180,7 +180,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
-        status: submission.status,
+        status: clone.status,
         released: submission.released,
         score: submission.score,
     })
