@@ -11,8 +11,11 @@ export interface CourseGroup {
 }
 
 export interface Alert {
+    id: number
     text: string
     color: Color
+    // The delay in milliseconds before the alert is removed
+    delay?: number
 }
 
 interface GroupOrEnrollment {
