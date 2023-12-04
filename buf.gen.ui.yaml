@@ -2,9 +2,9 @@
 # For details, see https://docs.buf.build/configuration/v1/buf-gen-yaml
 version: v1
 plugins:
-  - remote: buf.build/bufbuild/plugins/es
+  - plugin: buf.build/bufbuild/es
     out: public/proto
     opt: target=ts
-  - remote: buf.build/bufbuild/plugins/connect-web
+  - plugin: buf.build/bufbuild/connect-web
     out: public/proto
     opt: target=ts
