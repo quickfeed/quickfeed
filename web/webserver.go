@@ -58,7 +58,7 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 func controller(h http.Handler) http.Handler {
 	timeout := 15 * time.Minute
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/qf.QuickFeedService/SubmissionStream" {
+		if r.URL.Path == qfconnect.QuickFeedServiceSubmissionStreamProcedure {
 			control := http.NewResponseController(w)
 			control.SetWriteDeadline(time.Now().Add(timeout))
 		}
