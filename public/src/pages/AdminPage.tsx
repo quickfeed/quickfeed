@@ -6,7 +6,7 @@ import Users from "../components/admin/Users"
 import Card from "../components/Card"
 import CourseForm from "../components/forms/CourseForm"
 import RedirectButton from "../components/RedirectButton"
-import Alert from "../components/Alert"
+import Alerts from "../components/alerts/Alerts"
 
 
 // AdminPage is the page containing the admin-only components.
@@ -29,7 +29,7 @@ const AdminPage = (): JSX.Element => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alert />
+            <Alerts />
             <div className="row" hidden={history.location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
