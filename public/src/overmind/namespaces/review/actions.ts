@@ -168,7 +168,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
         courseID: state.activeCourse,
         submissionID: submission.ID,
         status: submission.status,
-        released: submission.released,
+        released: clone.released,
         score: submission.score,
     })
     if (response.error) {

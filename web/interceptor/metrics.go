@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

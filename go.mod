@@ -3,11 +3,11 @@ module github.com/quickfeed/quickfeed
 go 1.20
 
 require (
+	connectrpc.com/connect v1.13.0
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/alecthomas/kong v0.6.1
 	github.com/alta/protopatch v0.5.0
 	github.com/beatlabs/github-auth v0.0.0-20220721134423-2b8d98e205d1
-	github.com/bufbuild/connect-go v0.3.0
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -23,7 +23,7 @@ require (
 	golang.org/x/crypto v0.14.0
 	golang.org/x/net v0.17.0
 	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
-	google.golang.org/protobuf v1.28.1
+	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.8
