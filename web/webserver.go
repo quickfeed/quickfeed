@@ -55,6 +55,7 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 
 // controller is a wrapper for the QuickFeedService handler that sets a write deadline for the submission stream.
 // TODO: Remove this when connect-go finally supports deadlines.
+// TODO: https://github.com/connectrpc/connect-go/issues/604
 func controller(h http.Handler) http.Handler {
 	timeout := 15 * time.Minute
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
