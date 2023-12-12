@@ -3,7 +3,7 @@ package interceptor
 import (
 	"context"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 )
 
 // NewTokenAuthClientInterceptor returns a client interceptor that will add the given token in the Authorization header.
