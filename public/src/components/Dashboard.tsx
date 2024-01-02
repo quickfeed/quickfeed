@@ -2,7 +2,7 @@ import React from "react"
 import { Redirect } from "react-router"
 import { hasEnrollment } from "../Helpers"
 import { useAppState } from "../overmind"
-import Alert from "./Alert"
+import Alerts from "./alerts/Alerts"
 import Courses from "./Courses"
 import SubmissionsTable from "./dashboard/SubmissionsTable"
 
@@ -18,7 +18,7 @@ const Dashboard = (): JSX.Element => {
 
     return (
         <div className='box'>
-            <Alert />
+            <Alerts />
             <div>
                 <h1>Welcome, {state.self.Name}!</h1>
             </div>
