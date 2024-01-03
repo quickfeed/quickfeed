@@ -1,9 +1,9 @@
 package web_test
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 
@@ -24,13 +24,15 @@ func TestRegisterRouter(t *testing.T) {
 	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
 
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
-	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, "../public")
+	public := createTempPublicDir(t)
+	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, public)
 
 	apitest.New("Index").
 		Handler(mux).
 		Get("/").
 		Expect(t).
 		Status(http.StatusOK).
+		Body("hello, world!").
 		End()
 
 	partialUrl := "/" + qfconnect.QuickFeedServiceName + "/"
@@ -50,7 +52,7 @@ func TestRegisterRouter(t *testing.T) {
 			// 401 (Unauthorized) is returned if the user is not authenticated
 			// 		- this applies to all methods where "{}" is a valid request, but the user is not authenticated
 			if !(resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnsupportedMediaType) {
-				return errors.New(fmt.Sprintf("%s: expected status code 401, 400 or 415, got %d", method.Name, resp.StatusCode))
+				return fmt.Errorf("%s: expected status code 401, 400 or 415, got %d", method.Name, resp.StatusCode)
 			}
 			return nil
 		}).End()
@@ -65,4 +67,23 @@ func TestRegisterRouter(t *testing.T) {
 		Expect(t).
 		Status(http.StatusNotFound).
 		End()
+}
+
+func createTempPublicDir(t *testing.T) string {
+	t.Helper()
+	publicDir := t.TempDir() + "/public"
+	if err := os.MkdirAll(publicDir+"/assets", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	file, err := os.Create(publicDir + "/assets/index.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := file.WriteString("hello, world!"); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return publicDir
 }
