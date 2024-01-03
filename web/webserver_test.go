@@ -17,8 +17,8 @@ import (
 
 func TestRegisterRouter(t *testing.T) {
 	logger := qtest.Logger(t).Desugar()
-	db, close := qtest.TestDB(t)
-	defer close()
+	db, stop := qtest.TestDB(t)
+	defer stop()
 
 	_, mgr := scm.MockSCMManager(t)
 	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
@@ -72,7 +72,7 @@ func TestRegisterRouter(t *testing.T) {
 func createTempPublicDir(t *testing.T) string {
 	t.Helper()
 	publicDir := t.TempDir() + "/public"
-	if err := os.MkdirAll(publicDir+"/assets", 0o755); err != nil {
+	if err := os.MkdirAll(publicDir+"/assets", 0o700); err != nil {
 		t.Fatal(err)
 	}
 	file, err := os.Create(publicDir + "/assets/index.html")
