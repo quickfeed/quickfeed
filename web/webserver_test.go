@@ -1,8 +1,9 @@
 package web_test
 
 import (
-	"bytes"
-	"net/http/httptest"
+	"errors"
+	"fmt"
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/steinfletcher/apitest"
 )
 
 func TestRegisterRouter(t *testing.T) {
@@ -24,37 +26,43 @@ func TestRegisterRouter(t *testing.T) {
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, "../public")
 
-	server := httptest.NewTLSServer(mux)
-	defer server.Close()
+	apitest.New("Index").
+		Handler(mux).
+		Get("/").
+		Expect(t).
+		Status(http.StatusOK).
+		End()
 
-	resp, err := server.Client().Get(server.URL + "/")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		t.Errorf("'/': expected code 200, got %d", resp.StatusCode)
-	}
-
-	body := bytes.NewReader([]byte("{}"))
-	partialUrl := server.URL + "/" + qfconnect.QuickFeedServiceName + "/"
+	partialUrl := "/" + qfconnect.QuickFeedServiceName + "/"
 	qfType := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
 	for i := 0; i < qfType.NumMethod(); i++ {
 		method := qfType.Method(i)
-		resp, err = server.Client().Post(partialUrl+method.Name, "application/json", body)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !(resp.StatusCode == 401 || resp.StatusCode == 400 || resp.StatusCode == 415) {
-			t.Errorf("'%s': expected code 401, 400 or 415, got %d\n", method.Name, resp.StatusCode)
-		}
+		apitest.New(method.Name).
+			Handler(mux).
+			Post(partialUrl+method.Name).
+			Header("Content-Type", "application/json").
+			Body("{}").
+			Expect(t).Assert(func(resp *http.Response, req *http.Request) error {
+			// 415 (Unsupported Media Type) is returned for requests with unsupported content type
+			// 		- this applies to all streaming methods
+			// 400 (Bad Request) is returned if the request is malformed, e.g. missing required fields
+			// 		- for a majority of the unary methods, "{}" is considered a malformed request
+			// 401 (Unauthorized) is returned if the user is not authenticated
+			// 		- this applies to all methods where "{}" is a valid request, but the user is not authenticated
+			if !(resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnsupportedMediaType) {
+				return errors.New(fmt.Sprintf("%s: expected status code 401, 400 or 415, got %d", method.Name, resp.StatusCode))
+			}
+			return nil
+		}).End()
 	}
 
-	resp, err = server.Client().Post(partialUrl+"NonExistingMethod", "application/json", body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if resp.StatusCode != 404 {
-		t.Errorf("expected 404, got %d\n", resp.StatusCode)
-	}
+	// Invalid (non-existing) RPC request should return 404 (Not Found)
+	apitest.New("Invalid method").
+		Handler(mux).
+		Post(partialUrl+"NonExistingMethod").
+		Header("Content-Type", "application/json").
+		Body("{}").
+		Expect(t).
+		Status(http.StatusNotFound).
+		End()
 }
