@@ -13,6 +13,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	// streamTimeout is the timeout for the submission stream.
+	streamTimeout = 15 * time.Minute
+)
+
 func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, http.Handler) {
 	interceptors := connect.WithInterceptors(
 		interceptor.NewMetricsInterceptor(),
@@ -36,7 +41,7 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 		http.ServeFile(w, r, public+"/assets/index.html")
 	}))
 	paths, handler := s.NewQuickFeedHandler(tm)
-	router.Handle(paths, controller(handler))
+	router.Handle(paths, controller(handler, streamTimeout))
 
 	router.Handle(auth.Assets, http.StripPrefix(auth.Assets, assets))
 	router.Handle(auth.Static, http.StripPrefix(auth.Static, dist))
@@ -56,12 +61,11 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 // controller is a wrapper for the QuickFeedService handler that sets a write deadline for the submission stream.
 // TODO: Remove this when connect-go finally supports deadlines.
 // TODO: https://github.com/connectrpc/connect-go/issues/604
-func controller(h http.Handler) http.Handler {
-	timeout := 15 * time.Minute
+func controller(h http.Handler, timeout time.Duration) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == qfconnect.QuickFeedServiceSubmissionStreamProcedure {
 			control := http.NewResponseController(w)
-			control.SetWriteDeadline(time.Now().Add(timeout))
+			_ = control.SetWriteDeadline(time.Now().Add(timeout))
 		}
 		h.ServeHTTP(w, r)
 	})
