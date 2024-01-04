@@ -420,7 +420,10 @@ export const getGroupsByCourse = async ({ state, effects }: Context, courseID: b
 }
 
 export const getUserSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    state.submissions[courseID.toString()] = []
+    const id = courseID.toString()
+    if (!state.submissions[id]) {
+        state.submissions[id] = []
+    }
     const response = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
@@ -432,9 +435,11 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
         return
     }
     // Insert submissions into state.submissions by the assignment order
-    state.assignments[courseID.toString()]?.forEach(assignment => {
+    state.assignments[id]?.forEach(assignment => {
         const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
-        state.submissions[courseID.toString()][assignment.order - 1] = submission ? submission : new Submission()
+        if (!state.submissions[id][assignment.order - 1]) {
+	    state.submissions[id][assignment.order - 1] = submission ? submission : new Submission()
+        }
     })
 }
 
