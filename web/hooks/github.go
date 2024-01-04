@@ -94,6 +94,19 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		case *github.PullRequestReviewEvent:
 			wh.handlePullRequestReview(e)
 
+		case *github.InstallationEvent:
+			switch e.GetAction() {
+			case "created":
+				wh.handleInstallationCreated(e)
+			default:
+				// Other event actions include:
+				//	- "deleted"
+				//	- "suspend"
+				// 	- "unsuspend"
+				//	- "new_permissions_accepted"
+				// These events are currently ignored.
+			}
+
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 		}
