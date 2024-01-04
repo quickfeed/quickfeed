@@ -15,7 +15,7 @@ require (
 	github.com/google/go-github/v45 v45.2.0
 	github.com/gosimple/slug v1.12.0
 	github.com/prometheus/client_golang v1.13.0
-	github.com/quickfeed/quickfeed/kit v0.7.0
+	github.com/quickfeed/quickfeed/kit v0.9.0
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
 	github.com/steinfletcher/apitest v1.5.12
 	github.com/urfave/cli v1.22.9
