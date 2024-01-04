@@ -59,7 +59,7 @@ const Lab = (): JSX.Element => {
                     {isManuallyGraded(assignment) && submission.released ? <ReviewResult review={review[0]} /> : null}
 
                     <div className="card bg-light">
-                        <code className="card-body" style={{ color: "#c7254e" }}>{buildLog}</code>
+                        <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}>{buildLog}</code>
                     </div>
                 </div>
             )
