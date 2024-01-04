@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"

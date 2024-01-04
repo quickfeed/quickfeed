@@ -51,15 +51,13 @@ if ! git pull; then
 fi
 
 echo "Running webpack"
-cd $QUICKFEED/public
-if ! webpack; then
+if ! make ui-update; then
 	echo "Failed to compile the client"
 	exit 1
 fi
 
 echo "Running go install"
-cd $QUICKFEED
-if ! go install; then
+if ! make install; then
 	echo "Failed to compile the server"
 	exit 1
 fi
@@ -72,8 +70,7 @@ if pgrep quickfeed &> /dev/null; then
 fi
 
 echo "Starting the QuickFeed server"
-source quickfeed-env.sh
-quickfeed -service.url uis.itest.run &> $HOME/logs/$LOGFILE &
+quickfeed &> $HOME/logs/$LOGFILE &
 
 if ! pgrep quickfeed &> /dev/null; then
     echo "Failed to start the server"

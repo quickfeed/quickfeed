@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/google/go-cmp/cmp"
@@ -75,8 +76,9 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, e
 
 // UpdateAssignments updates assignment information.
 func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
-	return db.conn.Transaction(func(tx *gorm.DB) error {
-		for _, v := range assignments {
+	var errs error
+	for _, v := range assignments {
+		err := db.conn.Transaction(func(tx *gorm.DB) error {
 			if err := check(tx, v); err != nil {
 				return err
 			}
@@ -117,9 +119,13 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			}).Error; err != nil {
 				return err
 			}
+			return nil
+		})
+		if err != nil {
+			errs = errors.Join(errs, err)
 		}
-		return nil
-	})
+	}
+	return errs
 }
 
 func check(tx *gorm.DB, assignment *qf.Assignment) error {

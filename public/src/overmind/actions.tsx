@@ -1,9 +1,9 @@
-import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import {
     User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert, SubmissionOwner } from "./state"
+import { Alert, CourseGroup, SubmissionOwner } from "./state"
 import { Context } from "."
 import { Response } from "../client"
 import { Code, ConnectError } from "@bufbuild/connect"
@@ -26,7 +26,7 @@ export const onInitializeOvermind = async ({ actions, effects }: Context) => {
 
 export const handleStreamError = (context: Context, error: Error): void => {
     context.state.connectionStatus = ConnStatus.DISCONNECTED
-    context.actions.alert({ text: error.message, color: Color.RED })
+    context.actions.alert({ text: error.message, color: Color.RED, delay: 10000 })
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
@@ -317,10 +317,10 @@ export const getGroup = async ({ state, effects }: Context, enrollment: Enrollme
     state.userGroup[enrollment.courseID.toString()] = response.message
 }
 
-export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: bigint, users: bigint[], name: string }): Promise<void> => {
+export const createGroup = async ({ state, actions, effects }: Context, group: CourseGroup): Promise<void> => {
     const check = validateGroup(group)
     if (!check.valid) {
-        actions.alert({ text: check.message, color: Color.RED })
+        actions.alert({ text: check.message, color: Color.RED, delay: 10000 })
         return
     }
 
@@ -830,12 +830,12 @@ export const errorHandler = (context: Context, { method, error }: { method: stri
     }
 }
 
-export const alert = ({ state }: Context, a: Alert): void => {
-    state.alerts.push(a)
+export const alert = ({ state }: Context, a: Pick<Alert, "text" | "color" | "delay">): void => {
+    state.alerts.push({ id: newID(), ...a })
 }
 
-export const popAlert = ({ state }: Context, index: number): void => {
-    state.alerts = state.alerts.filter((_, i) => i !== index)
+export const popAlert = ({ state }: Context, alert: Alert): void => {
+    state.alerts = state.alerts.filter(a => a.id !== alert.id)
 }
 
 export const logout = ({ state }: Context): void => {
