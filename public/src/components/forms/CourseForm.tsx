@@ -62,10 +62,10 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (editCourse) {
-            actions.editCourse({ course: course })
+            actions.editCourse({ course })
         } else {
             if (org) {
-                const success = await actions.createCourse({ course: course, org: org })
+                const success = await actions.createCourse({ course, org })
                 // If course creation was successful, redirect to the course page
                 if (success) {
                     history.push("/courses")
@@ -78,7 +78,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null
 
     // Trigger grpc call to check if org exists
     const getOrganization = async () => {
-        const org = (await actions.getOrganization(orgName)).data
+        const org = (await actions.getOrganization(orgName)).message
         if (org) {
             setOrg(org)
             setOrgFound(true)
@@ -97,7 +97,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element | null
                     </div>
                     <input className="form-control" disabled={orgFound ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
                     <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => { return }}>
-                        {orgFound ? <i className="fa fa-check" />: "Find"}
+                        {orgFound ? <i className="fa fa-check" /> : "Find"}
                     </span>
                 </div>
             </div>

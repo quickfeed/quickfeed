@@ -1,4 +1,4 @@
-import { Enrollment, Enrollment_UserStatus, User } from "../../proto/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus, Enrollments, User } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
@@ -6,13 +6,51 @@ import React from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
-import { initializeOvermind } from "./TestHelpers"
 import { render, screen } from "@testing-library/react"
-import { Timestamp } from "@bufbuild/protobuf";
+import { MockData } from "./mock_data/mockData"
+import { Void } from "../../proto/qf/requests_pb"
+import { initializeOvermind, mock } from "./TestHelpers"
+import { ApiClient } from "../overmind/effects"
+import { Timestamp } from "@bufbuild/protobuf"
 
 
 describe("UpdateEnrollment", () => {
-    const mockedOvermind = initializeOvermind({})
+    const api = new ApiClient()
+    api.client = {
+        ...api.client,
+        getEnrollments: mock("getEnrollments", async (request) => {
+            const enrollments: Enrollment[] = []
+            MockData.mockedEnrollments().enrollments.forEach(e => {
+                if (request.FetchMode?.case === "courseID") {
+                    if (e.courseID === request.FetchMode.value) {
+                        enrollments.push(e)
+                    }
+                } else if (request.FetchMode?.case === "userID") {
+                    if (e.userID === request.FetchMode.value) {
+                        enrollments.push(e)
+                    }
+                } else {
+                    enrollments.push(e)
+                }
+            })
+            return { message: new Enrollments({ enrollments }), error: null }
+        }),
+        updateEnrollments: mock("updateEnrollments", async (request) => {
+            const enrollments = request.enrollments ?? []
+            if (enrollments.length === 0) {
+                return { message: new Void(), error: null }
+            }
+            enrollments.forEach(e => {
+                const enrollment = MockData.mockedEnrollments().enrollments.find(en => en.ID === e.ID)
+                if (!enrollment || e.status === undefined) {
+                    return
+                }
+                enrollment.status = e.status
+            })
+            return { message: new Void(), error: null }
+        }),
+    }
+    const mockedOvermind = initializeOvermind({}, api)
 
     const updateEnrollmentTests: { desc: string, courseID: bigint, userID: bigint, want: Enrollment_UserStatus }[] = [
         // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments
@@ -21,7 +59,10 @@ describe("UpdateEnrollment", () => {
         { desc: "Promote student to teacher", courseID: BigInt(1), userID: BigInt(2), want: Enrollment_UserStatus.TEACHER },
     ]
 
+
+
     beforeAll(async () => {
+        // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(2), statuses: [] })
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(1), statuses: [] })

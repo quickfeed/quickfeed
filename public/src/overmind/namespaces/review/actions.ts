@@ -1,7 +1,6 @@
 import { Context } from '../..'
 import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor } from '../../../Helpers'
-import { success } from '../../actions'
 import { SubmissionOwner } from '../../state'
 
 
@@ -17,7 +16,7 @@ export const setSelectedReview = ({ state }: Context, index: number): void => {
 }
 
 /* Update the selected review */
-export const updateReview = async ({ state, actions, effects }: Context): Promise<boolean> => {
+export const updateReview = async ({ state, effects }: Context): Promise<boolean> => {
     if (!(state.review.canUpdate && state.review.currentReview)) {
         // If canUpdate is false, the review cannot be updated
         return false
@@ -30,10 +29,11 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
     }
 
     const review = state.review.currentReview
-    const response = await effects.grpcMan.updateReview(review, state.activeCourse)
-    if (!(success(response) && response.data)) {
-        // If the update was not successful, alert the user and abort
-        actions.alertHandler(response)
+    const response = await effects.api.client.updateReview({
+        courseID: state.activeCourse,
+        review
+    })
+    if (response.error) {
         return false
     }
 
@@ -42,14 +42,14 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
         // If the review was not found, abort
         return false
     }
-    reviews[idx] = response.data
+    reviews[idx] = response.message
 
     // Copy the review map and update the review
     const reviewMap = new Map(state.review.reviews)
     reviewMap.set(submissionID, reviews)
     state.review.reviews = reviewMap;
 
-    (state.selectedSubmission as Submission).score = response.data.score
+    (state.selectedSubmission as Submission).score = response.message.score
     return true
 }
 
@@ -104,16 +104,21 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
             SubmissionID: submission.ID,
         })
 
-        const response = await effects.grpcMan.createReview(review, state.activeCourse)
-        if (response.data) {
-            // Adds the new review to the reviews list if the server responded with a review
-            const reviews = new Map(state.review.reviews)
-            const length = reviews.get(submission.ID)?.push(response.data as Review) ?? 0
-            state.review.reviews = reviews
-            actions.review.setSelectedReview(length - 1)
+        const response = await effects.api.client.createReview({
+            courseID: state.activeCourse,
+            review,
+        })
+        if (response.error) {
+            return
         }
+        // Adds the new review to the reviews list if the server responded with a review
+        const reviews = new Map(state.review.reviews)
+        const length = reviews.get(submission.ID)?.push(response.message) ?? 0
+        state.review.reviews = reviews
+        actions.review.setSelectedReview(length - 1)
     }
 }
+
 
 export const setAssignmentID = ({ state }: Context, aid: bigint): void => {
     const id = state.review.assignmentID > 0 ? BigInt(-1) : aid
@@ -139,24 +144,35 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         return
     }
 
-    const response = await effects.grpcMan.updateSubmissions(state.review.assignmentID, state.activeCourse, state.review.minimumScore, release, approve)
-    if (success(response)) {
-        // Refresh submissions in state for the active course
-        await actions.refreshCourseSubmissions(state.activeCourse)
-    } else {
-        actions.alertHandler(response)
+    const response = await effects.api.client.updateSubmissions({
+        courseID: state.activeCourse,
+        assignmentID: state.review.assignmentID,
+        scoreLimit: state.review.minimumScore,
+        release,
+        approve,
+    })
+    if (response.error) {
+        return
     }
+    // Refresh submissions in state for the active course
+    await actions.refreshCourseSubmissions(state.activeCourse)
 }
 
-export const release = async ({ state, actions, effects }: Context, { submission, owner }: { submission: Submission | null, owner: SubmissionOwner }): Promise<void> => {
+export const release = async ({ state, effects }: Context, { submission, owner }: { submission: Submission | null, owner: SubmissionOwner }): Promise<void> => {
     if (!submission) {
         return
     }
     const clone = submission.clone()
     clone.released = !submission.released
-    const response = await effects.grpcMan.updateSubmission(state.activeCourse, clone)
-    if (!success(response)) {
-        actions.alertHandler(response)
+    const response = await effects.api.client.updateSubmission({
+        courseID: state.activeCourse,
+        submissionID: submission.ID,
+        status: submission.status,
+        released: clone.released,
+        score: submission.score,
+    })
+    if (response.error) {
+        return
     }
     submission.released = clone.released
     state.submissionsForCourse.update(owner, submission)

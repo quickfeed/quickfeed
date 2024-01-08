@@ -4,15 +4,18 @@ import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_Gro
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
-    courseID: number
-    enrollments: number[]
-    users: User[]
-    groupName: string
+    courseID: bigint
+    // User IDs of all members of the group
+    users: bigint[]
+    name: string
 }
 
 export interface Alert {
+    id: number
     text: string
     color: Color
+    // The delay in milliseconds before the alert is removed
+    delay?: number
 }
 
 interface GroupOrEnrollment {
@@ -177,7 +180,7 @@ export type State = {
     /* Contains either an existing group to edit, or a new group to create */
     activeGroup: Group | null,
 
-    hasGroup: (courseID: number) => boolean,
+    hasGroup: (courseID: string) => boolean,
 
     connectionStatus: ConnStatus,
 
@@ -376,7 +379,7 @@ export const state: State = {
     assignments: {},
     repositories: {},
 
-    courseGroup: { courseID: 0, enrollments: [], users: [], groupName: "" },
+    courseGroup: { courseID: 0n, users: [], name: "" },
     alerts: [],
     isLoading: true,
     activeCourse: BigInt(-1),
