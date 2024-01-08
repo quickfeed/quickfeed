@@ -97,6 +97,7 @@ func (r *Results) addScore(sc *Score) {
 			// We reach here only if a second non-zero score is found
 			// Mark it as faulty with -1.
 			sc.Score = -1
+			sc.TestDetails = "(duplicate)"
 		}
 	} else {
 		// New test: record in r.testNames
@@ -152,7 +153,6 @@ func (r *Results) internalSum(taskName string) (float64, float64) {
 			// would end up being uint32(-1) = 4294967295. See #975
 			testScore = 0
 		}
-
 		totalWeight += float64(ts.Weight)
 		weight = append(weight, float64(ts.Weight))
 		score = append(score, float64(testScore))
