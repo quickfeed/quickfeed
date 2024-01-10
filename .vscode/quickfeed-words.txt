@@ -29,6 +29,7 @@ classname
 cmds
 cmpopts
 codecov
+connectrpc
 connectweb
 consts
 containertimeout

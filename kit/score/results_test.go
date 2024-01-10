@@ -529,6 +529,22 @@ func TestTaskSum(t *testing.T) {
 				"":       48,
 			},
 		},
+		{
+			scores: []*score.Score{
+				{TestName: "A", TaskName: "task-1", Score: 6, MaxScore: 12, Weight: 1},
+				{TestName: "A", TaskName: "task-1", Score: 6, MaxScore: 12, Weight: 1},
+				{TestName: "B", TaskName: "task-2", Score: 0, MaxScore: 12, Weight: 1},
+				{TestName: "C", TaskName: "task-3", Score: 0, MaxScore: 12, Weight: 1},
+				{TestName: "D", TaskName: "task-4", Score: 0, MaxScore: 12, Weight: 7},
+			},
+			wantSums: map[string]uint32{
+				"task-1": 0, // duplicate test, should be ignored
+				"task-2": 0,
+				"task-3": 0,
+				"task-4": 0,
+				"":       0,
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -39,7 +39,7 @@ const CourseUtilityLinks = (): JSX.Element => {
                     Course Info
                 </a>
 
-                {state.hasGroup(Number(courseID)) ?
+                {state.hasGroup(courseID.toString()) ?
                     <Link to={`/course/${courseID}/group`} className="list-group-item list-group-item-action">
                         View Group
                     </Link>
