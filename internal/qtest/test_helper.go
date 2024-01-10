@@ -53,6 +53,15 @@ func CreateFakeUser(t *testing.T, db database.Database, _ uint64) *qf.User {
 	return user
 }
 
+func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf.User {
+	t.Helper()
+
+	if err := db.CreateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	return user
+}
+
 func CreateNamedUser(t *testing.T, db database.Database, _ uint64, name string) *qf.User {
 	t.Helper()
 	user := &qf.User{
