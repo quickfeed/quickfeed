@@ -95,8 +95,7 @@ func TestNonExistingOrganization(t *testing.T) {
 		UserScmID:         int(admin.ScmRemoteID),
 	}, server)
 
-	_, err := wh.db.GetCourseByOrganizationID(uint64(invalidOrgID))
-	if err != nil {
+	if _, err := wh.db.GetCourseByOrganizationID(uint64(invalidOrgID)); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -123,8 +122,7 @@ func TestInvalidAction(t *testing.T) {
 		UserScmID:         int(admin.ScmRemoteID),
 	}, server)
 
-	_, err := wh.db.GetCourseByOrganizationID(uint64(invalidOrgID))
-	if err == nil {
+	if _, err := wh.db.GetCourseByOrganizationID(uint64(invalidOrgID)); err == nil {
 		t.Fatal(err)
 	}
 }
