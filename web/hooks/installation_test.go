@@ -113,16 +113,17 @@ func TestInvalidAction(t *testing.T) {
 	wh, server := setupWebhook(t, db)
 	defer server.Close()
 
-	invalidOrgID := 1000
+	// Send an event with an invalid (not being listened for) action.
+	// This should not create a course, rather it should simply return.
 	_ = sendEvent(t, event{
 		Action:            "deleted",
 		OrganizationLogin: "qf102-2022",
-		OrganizationScmID: invalidOrgID,
+		OrganizationScmID: 1,
 		UserLogin:         "quickfeed",
 		UserScmID:         int(admin.ScmRemoteID),
 	}, server)
 
-	if _, err := wh.db.GetCourseByOrganizationID(uint64(invalidOrgID)); err == nil {
+	if _, err := wh.db.GetCourseByOrganizationID(1); err == nil {
 		t.Fatal(err)
 	}
 }
