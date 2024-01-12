@@ -16,6 +16,11 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		return
 	}
 
+	if !user.GetIsAdmin() {
+		wh.logger.Errorf("User %s is not an admin", user.Login)
+		return
+	}
+
 	orgName := event.GetInstallation().GetAccount().GetLogin()
 	orgID := uint64(event.GetInstallation().GetAccount().GetID())
 	course := &qf.Course{
