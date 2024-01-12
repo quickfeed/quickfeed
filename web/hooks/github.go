@@ -101,6 +101,7 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			default:
 				// either "deleted", "suspend", "unsuspend", "new_permissions_accepted"
 			}
+
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 		}
