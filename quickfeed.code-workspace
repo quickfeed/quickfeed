@@ -12,7 +12,7 @@
 		"editor.formatOnSave": true,
 		"editor.inlineSuggest.enabled": true,
 		"editor.codeActionsOnSave": {
-			"source.fixAll": true
+			"source.fixAll": "explicit"
 		},
 		"protoc": {
 			"compile_on_save": false,
