@@ -12,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -125,6 +126,74 @@ func TestInvalidAction(t *testing.T) {
 
 	if _, err := wh.db.GetCourseByOrganizationID(1); err == nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCheckUserClaims(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	wh, server := setupWebhook(t, db)
+	defer server.Close()
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{
+		Name:        "admin",
+		Login:       "quickfeed",
+		ScmRemoteID: 1,
+	})
+
+	token, err := wh.tm.NewAuthCookie(admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims, err := wh.tm.GetClaims(token.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(claims.Courses) != 0 {
+		t.Errorf("got %d courses, want 0", len(claims.Courses))
+	}
+
+	response := sendEvent(t, event{
+		OrganizationLogin: "qf102-2022",
+		OrganizationScmID: 1,
+		UserLogin:         "quickfeed",
+		UserScmID:         1,
+	}, server)
+
+	if response.StatusCode != 200 {
+		t.Errorf("got status %d, want 200", response.StatusCode)
+	}
+
+	course, err := wh.db.GetCourseByOrganizationID(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if course.Name != "qf102-2022" {
+		t.Errorf("got course name %s, want qf102-2022", course.Name)
+	}
+
+	if course.CourseCreatorID != admin.ID {
+		t.Errorf("got course creator id %d, want 1", course.CourseCreatorID)
+	}
+
+	// Check successful course creation queued the users claims to be updated.
+	token, err = wh.tm.UpdateCookie(claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	claims, err = wh.tm.GetClaims(token.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(claims.Courses) != 1 {
+		t.Errorf("got %d courses, want 0", len(claims.Courses))
+	}
+
+	if claims.Courses[course.ID] != qf.Enrollment_TEACHER {
+		t.Errorf("got %d status, want %d", claims.Courses[course.ID], qf.Enrollment_TEACHER)
 	}
 }
 
