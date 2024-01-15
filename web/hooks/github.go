@@ -8,6 +8,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"go.uber.org/zap"
 )
@@ -25,10 +26,11 @@ type GitHubWebHook struct {
 	streams *stream.StreamServices
 	sem     chan struct{} // counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
 	dup     *Duplicates
+	tm      *auth.TokenManager
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string, streams *stream.StreamServices) *GitHubWebHook {
+func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string, streams *stream.StreamServices, tm *auth.TokenManager) *GitHubWebHook {
 	return &GitHubWebHook{
 		logger:  logger,
 		db:      db,
@@ -38,6 +40,7 @@ func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.
 		streams: streams,
 		sem:     make(chan struct{}, maxConcurrentTestRuns),
 		dup:     NewDuplicateMap(),
+		tm:      tm,
 	}
 }
 

@@ -130,8 +130,11 @@ func TestInvalidAction(t *testing.T) {
 
 func setupWebhook(t *testing.T, db database.Database) (*GitHubWebHook, *httptest.Server) {
 	_, manager := scm.MockSCMManager(t)
-
-	wh := NewGitHubWebHook(qtest.Logger(t), db, manager, &ci.Local{}, "", stream.NewStreamServices())
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wh := NewGitHubWebHook(qtest.Logger(t), db, manager, &ci.Local{}, "", stream.NewStreamServices(), tm)
 
 	router := http.NewServeMux()
 	router.HandleFunc("/hook/", wh.Handle())
