@@ -15,10 +15,10 @@ The system has three **user** roles.
 
   The administrator that creates a new course becomes teacher for that course.
   The teacher status of a **course creator** can never be revoked.
-  The teacher that created the course can promote users to teacher status and demote them back to the student role.
 
   Teachers can view all course related data, such as student enrollments, student groups, lab submissions, and results.
-  A teacher can also accept, reject and update student enrollments and groups.
+  A teacher can accept, reject and update student enrollments and groups.
+  A teacher can also promote users to teacher status and demote them back to the student role.
 
 - **Students** are associated with one or more courses.
   A student can view his own results and progress on individual assignments.
