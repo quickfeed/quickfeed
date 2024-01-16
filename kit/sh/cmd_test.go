@@ -2,6 +2,7 @@ package sh_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/kit/sh"
@@ -47,5 +48,24 @@ func TestLintAG(t *testing.T) {
 	}
 	if s != "" {
 		fmt.Println(s)
+	}
+}
+
+func TestRunRaceTest(t *testing.T) {
+	tName := "TestWithDataRace"
+	s, race := sh.RunRaceTest(tName)
+	if !race {
+		t.Errorf("expected data race warning from %s", tName)
+	}
+	if !strings.Contains(s, "WARNING: DATA RACE") {
+		t.Errorf("expected output with data race warning from %s", tName)
+	}
+	tName = "TestWithoutDataRace"
+	s, race = sh.RunRaceTest(tName)
+	if race {
+		t.Errorf("unexpected data race warning from %s", tName)
+	}
+	if strings.Contains(s, "WARNING: DATA RACE") {
+		t.Error("expected output without data race warning from test")
 	}
 }
