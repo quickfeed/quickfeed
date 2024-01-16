@@ -8,9 +8,8 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	err := sh.Run("cat doesnotexist.txt")
-	if err == nil {
-		t.Error(err)
+	if err := sh.Run("cat doesnotexist.txt"); err == nil {
+		t.Error("expected: exit status 1")
 	}
 }
 
