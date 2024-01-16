@@ -40,12 +40,6 @@ Each course in QuickFeed is based on a separate GitHub organization.
 
 ### A Course Organization Has Several Requirements
 
-- Third-party access must not be restricted.
-  This is necessary so that QuickFeed can access the organization on your behalf.
-  To enable third-party access, go to your organization's main page and select **Settings > Third-party access**, and remove restrictions or go to
-
-  <https://github.com/organizations/{organization_name}/settings/oauth_application_policy>.
-
 - You must be able to create private repositories in your organization.
   If you are associated with University of Stavanger, you can create such organizations under the [UiS Campus Enterprise account](https://github.com/enterprises/university-of-stavanger).
 
