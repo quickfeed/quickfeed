@@ -96,31 +96,35 @@ Please make sure to check your operating system's documentation for the necessar
 
 ## Errors and logging
 
-Application errors can be classified into several groups and handled in different ways.
+Application errors can be classified into several groups and handled in different ways:
 
-1. Database errors
-Return generic "not found/failed" error message to user, log the original error.
+**Database errors**:
+  - Return generic "not found/failed" error message to the user, log the original error.
 
-2. SCM errors
-Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
+**SCM errors**:
 
-Examples: 
-- If a GitHub organization cannot be found, one of the possible issues causing this behavior not having installed the GitHub application on the organization. As a result, the requested organization cannot be seen by QuickFeed. 
-- If a GitHub repository or team cannot be found, they could have been manually deleted from GitHub. Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
+- Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 
-Sometimes GitHub interactions take too long and the request times out, or is otherwise cancelled by GitHub.
+  **Examples**: 
+  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization. As a result, the requested organization cannot be seen by QuickFeed. 
+  - If a GitHub repository or team cannot be found, they could have been manually deleted from GitHub. Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
+
+- Sometimes GitHub interactions take too long and the request times out, or is otherwise cancelled by GitHub.
 In these cases the error is usually ephemeral in nature, and the action should be repeated at later time. This should be communicated to the end user.
 
-Return a custom error with detailed information for logging, and a custom error message to user.
+- Return a custom error with detailed information for logging, and a custom error message to the user.
 
-3. Access control errors
-Return generic "access denied" error message to user.
+**Access control errors**:
 
-4. API errors (invalid requests)
-Return generic "malformed request" message to user.
+- Return generic "access denied" error message to the user.
 
-5. GitHub API errors (request struct has missing/malformed fields)
-Return a custom error with detailed information for logging and generic "failed precondition" message to user.
+**API errors (invalid requests)**:
+
+- Return generic "malformed request" message to the user.
+
+**GitHub API errors (request struct has missing/malformed fields)**
+
+- Return a custom error with detailed information for logging and generic "failed precondition" message to the user.
 
 
 [Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
@@ -144,8 +148,11 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 ### Webhooks
 
 - GitHub [Webhooks API](https://docs.github.com/en/webhooks) is used for building and testing of code submitted by students.
-- A webhook is created automatically when installing the GitHub App on a course organization. It will react to every push event to any of course organization's repositories.
-- depending on the repository the push event is coming from, assignment information will be updated in the QuickFeed's database, or a docker container with a student solution code will be built and tested.
+- A webhook is created automatically when installing the GitHub App on a course organization. The webhook will be triggered by pushes to repositories in the organization.
+- Push events from the `tests` repository may update
+  - The assignment information in QuickFeed's database.
+  - The Docker container and run.sh script used for building and testing student submitted code.
+- Push events from the `username-labs` repositories may trigger text execution.
 - The webhook will POST events to `$DOMAIN/hook/`, where `$DOMAIN` is the domain name of the server, as defined in your `.env` file.
 
 ### User roles/access levels for organization / team / repository
