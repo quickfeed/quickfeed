@@ -78,13 +78,20 @@ QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHoo
 
 TODO(meling) Update and improve this part. It is not correct anymore, I think.
 
-- **Primary Server Port:** By default, the server runs on port **:443**, the standard port for HTTPS traffic. This ensures secure communication right out of the box.
-- **Custom Port Configuration:** If you need to use a different port, you can easily change this by using the `-http.addr` flag when launching the server.
-- **HTTP to HTTPS Redirection:** Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS. This ensures that even if someone attempts to connect via the unsecured HTTP protocol, their request will be automatically upgraded to a secure connection.
+- **Primary Server Port:** 
+By default, the server runs on port **:443**, the standard port for HTTPS traffic. This ensures secure communication right out of the box.
+- **Custom Port Configuration:** 
+If you need to use a different port, you can easily change this by using the `-http.addr` flag when launching the server.
+- **HTTP to HTTPS Redirection:** 
+Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS. 
+This ensures that even if someone attempts to connect via the unsecured HTTP protocol, their request will be automatically upgraded to a secure connection.
 
-**Important Note:** When running servers on ports like **:80** or **:443**, some operating systems may require elevated permissions or specific configurations. This is because ports below 1024 are considered privileged ports, and running services on these ports might need administrative rights or special configurations.
+**Important Note:** 
+When running servers on ports like **:80** or **:443**, some operating systems may require elevated permissions or specific configurations. 
+This is because ports below 1024 are considered privileged ports, and running services on these ports might need administrative rights or special configurations.
 
-In Linux, you can use the `setcap` command to allow a binary to bind to privileged ports without elevated permissions. For example, to allow the `quickfeed` binary to bind to port **:443**, you can run the following command:
+In Linux, you can use the `setcap` command to allow a binary to bind to privileged ports without elevated permissions. 
+For example, to allow the `quickfeed` binary to bind to port **:443**, you can run the following command:
 
 ```sh
 sudo setcap CAP_NET_BIND_SERVICE=+eip /path/to/binary/quickfeed
@@ -106,8 +113,10 @@ Application errors can be classified into several groups and handled in differen
 - Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 
   **Examples**: 
-  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization. As a result, the requested organization cannot be seen by QuickFeed. 
-  - If a GitHub repository or team cannot be found, they could have been manually deleted from GitHub. Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
+  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization. 
+  As a result, the requested organization cannot be seen by QuickFeed. 
+  - If a GitHub repository or team cannot be found, they could have been manually deleted from GitHub. 
+  Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
 
 - Sometimes GitHub interactions take too long and the request times out, or is otherwise cancelled by GitHub.
 In these cases the error is usually ephemeral in nature, and the action should be repeated at later time. This should be communicated to the end user.
@@ -131,13 +140,18 @@ In these cases the error is usually ephemeral in nature, and the action should b
 
 ### Backend
 
-Errors are being logged at `QuickFeed Service` level. All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
+Errors are being logged at `QuickFeed Service` level. 
+All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly. 
+Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
 
-Errors returned to a user should be few and informative. They should not reveal internal details of the application.
+Errors returned to a user should be few and informative. 
+They should not reveal internal details of the application.
 
 ### Frontend
 
-When receiving a response from the server, the response status code is checked on the frontend. Any message with code different from 0 (0 is status code `OK`) will be logged to console. Error messages will be displayed to user where relevant, e.g. on course and group creation, and user and group enrollment updates.
+When receiving a response from the server, the response status code is checked on the frontend. 
+Any message with code different from 0 (0 is status code `OK`) will be logged to console. 
+Error messages will be displayed to user where relevant, e.g. on course and group creation, and user and group enrollment updates.
 
 [Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes)
 
@@ -177,7 +191,9 @@ For example, organization with a name like `QuickFeed Test Org` will have slugif
 
 ### Teams
 
-QuickFeed will create a team for each group in a course organization. The team name will be the same as the group name. Members of a group will be added to the corresponding team, and will have write/push access to the group repository.
+QuickFeed will create a team for each group in a course organization. 
+The team name will be the same as the group name. 
+Members of a group will be added to the corresponding team, and will have write/push access to the group repository.
 
 Group records in the database will have references to the corresponding GitHub team ID's.
 
@@ -199,7 +215,8 @@ One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/defau
 
 ## npm
 
-`npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.
+`npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. 
+If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.
 
 ## Repairing database from backups
 
