@@ -15,10 +15,10 @@ The system has three **user** roles.
 
   The administrator that creates a new course becomes teacher for that course.
   The teacher status of a **course creator** can never be revoked.
-  The teacher that created the course can promote users to teacher status and demote them back to the student role.
 
   Teachers can view all course related data, such as student enrollments, student groups, lab submissions, and results.
-  A teacher can also accept, reject and update student enrollments and groups.
+  A teacher can accept, reject and update student enrollments and groups.
+  A teacher can also promote users to teacher status and demote them back to the student role.
 
 - **Students** are associated with one or more courses.
   A student can view his own results and progress on individual assignments.
@@ -39,12 +39,6 @@ To use QuickFeed, both teachers and students must have a [GitHub](https://github
 Each course in QuickFeed is based on a separate GitHub organization.
 
 ### A Course Organization Has Several Requirements
-
-- Third-party access must not be restricted.
-  This is necessary so that QuickFeed can access the organization on your behalf.
-  To enable third-party access, go to your organization's main page and select **Settings > Third-party access**, and remove restrictions or go to
-
-  <https://github.com/organizations/{organization_name}/settings/oauth_application_policy>.
 
 - You must be able to create private repositories in your organization.
   If you are associated with University of Stavanger, you can create such organizations under the [UiS Campus Enterprise account](https://github.com/enterprises/university-of-stavanger).
