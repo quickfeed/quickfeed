@@ -9,6 +9,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// Results contains the score objects, build info, and errors.
+type Results struct {
+	BuildInfo *BuildInfo // build info for tests
+	Scores    []*Score   // list of scores for different tests
+	testNames []string   // defines the order
+	scoreMap  map[string]*Score
+}
+
 func newResults(scores ...*Score) *Results {
 	r := &Results{
 		testNames: make([]string, 0),
@@ -28,64 +36,6 @@ func (r *Results) toScoreSlice() []*Score {
 		scores[i] = r.scoreMap[name]
 	}
 	return scores
-}
-
-// Results contains the score objects, build info, and errors.
-type Results struct {
-	BuildInfo *BuildInfo // build info for tests
-	Scores    []*Score   // list of scores for different tests
-	testNames []string   // defines the order
-	scoreMap  map[string]*Score
-}
-
-// parseErrors encountered during test execution.
-type parseErrors []error
-
-// Error prints a newline separated list of errors that occurred during parsing.
-func (pe parseErrors) Error() string {
-	if len(pe) == 0 {
-		return ""
-	}
-	sErr := make([]string, 0, len(pe)+1)
-	sErr = append(sErr, fmt.Sprintf("failed to parse score; %d occurrences", len(pe)))
-	for _, err := range pe {
-		sErr = append(sErr, err.Error())
-	}
-	return strings.Join(sErr, "\n")
-}
-
-// ExtractResults returns the results from a test execution extracted from the given out string.
-func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
-	var filteredLog []string
-	errs := make(parseErrors, 0)
-	results := newResults()
-	for _, line := range strings.Split(out, "\n") {
-		// check if line has expected JSON score string
-		if HasPrefix(line) {
-			sc, err := parse(line, secret)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
-				continue
-			}
-			results.addScore(sc)
-		} else if line != "" { // include only non-empty lines
-			// the filtered log without JSON score strings
-			filteredLog = append(filteredLog, line)
-		}
-	}
-	res := &Results{
-		BuildInfo: &BuildInfo{
-			BuildDate:      timestamppb.Now(),
-			SubmissionDate: timestamppb.Now(),
-			BuildLog:       strings.Join(filteredLog, "\n"),
-			ExecTime:       execTime.Milliseconds(),
-		},
-		Scores: results.toScoreSlice(),
-	}
-	if len(errs) > 0 {
-		return res, errs
-	}
-	return res, nil
 }
 
 // addScore adds the given score to the set of scores.
@@ -174,4 +124,54 @@ func (r *Results) internalSum(taskName string) (float64, float64) {
 // weightedScore returns the weighted score of a given test.
 func weightedScore(score, maxScore, weight, totalWeight float64) float64 {
 	return (score / maxScore) * (weight / totalWeight)
+}
+
+// parseErrors encountered during test execution.
+type parseErrors []error
+
+// Error prints a newline separated list of errors that occurred during parsing.
+func (pe parseErrors) Error() string {
+	if len(pe) == 0 {
+		return ""
+	}
+	sErr := make([]string, 0, len(pe)+1)
+	sErr = append(sErr, fmt.Sprintf("failed to parse score; %d occurrences", len(pe)))
+	for _, err := range pe {
+		sErr = append(sErr, err.Error())
+	}
+	return strings.Join(sErr, "\n")
+}
+
+// ExtractResults returns the results from a test execution extracted from the given out string.
+func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
+	var filteredLog []string
+	errs := make(parseErrors, 0)
+	results := newResults()
+	for _, line := range strings.Split(out, "\n") {
+		// check if line has expected JSON score string
+		if HasPrefix(line) {
+			sc, err := parse(line, secret)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
+				continue
+			}
+			results.addScore(sc)
+		} else if line != "" { // include only non-empty lines
+			// the filtered log without JSON score strings
+			filteredLog = append(filteredLog, line)
+		}
+	}
+	res := &Results{
+		BuildInfo: &BuildInfo{
+			BuildDate:      timestamppb.Now(),
+			SubmissionDate: timestamppb.Now(),
+			BuildLog:       strings.Join(filteredLog, "\n"),
+			ExecTime:       execTime.Milliseconds(),
+		},
+		Scores: results.toScoreSlice(),
+	}
+	if len(errs) > 0 {
+		return res, errs
+	}
+	return res, nil
 }
