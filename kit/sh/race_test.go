@@ -7,6 +7,9 @@ import (
 	"testing"
 )
 
+// These tests are not meant to test the kit package for data races.
+// They are meant to test the RunRaceTest function.
+
 // TestWithDataRace is intended to fail with a data race if the data race detector is enabled.
 func TestWithDataRace(t *testing.T) {
 	c := make(chan bool)
