@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewResults(scores ...*Score) *Results {
+func newResults(scores ...*Score) *Results {
 	r := &Results{
 		testNames: make([]string, 0),
 		scoreMap:  make(map[string]*Score),
@@ -58,7 +58,7 @@ func (pe parseErrors) Error() string {
 func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
 	var filteredLog []string
 	errs := make(parseErrors, 0)
-	results := NewResults()
+	results := newResults()
 	for _, line := range strings.Split(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
@@ -94,7 +94,7 @@ func (r *Results) addScore(sc *Score) {
 	testName := sc.GetTestName()
 	if current, found := r.scoreMap[testName]; found {
 		if current.GetScore() != 0 {
-			// We reach here only if a second non-zero score is found
+			// We reach here only if a second non-zero score is found for the same test.
 			// Mark it as faulty with -1.
 			sc.Score = -1
 			sc.TestDetails = "(duplicate)"
@@ -110,9 +110,12 @@ func (r *Results) addScore(sc *Score) {
 	r.scoreMap[testName] = sc
 }
 
-// Validate returns an error if one of the recorded score objects are invalid.
+// validate returns an error if one of the recorded score objects are invalid.
 // Otherwise, nil is returned.
-func (r *Results) Validate(secret string) error {
+//
+// This method is only used for testing. The actual validation is done in the
+// ExtractResults method when parsing the output of a test execution.
+func (r *Results) validate(secret string) error {
 	for _, sc := range r.Scores {
 		if err := sc.isValid(secret); err != nil {
 			return err
