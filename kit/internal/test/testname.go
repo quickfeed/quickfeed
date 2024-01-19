@@ -44,6 +44,7 @@ func CallerName() string {
 	return lastElem(frame.Function)
 }
 
+// ErrMsg returns an error message with the file name and line number of the calling function.
 func ErrMsg(testFn interface{}, msg string) error {
 	frame := CallFrame()
 	return fmt.Errorf("%s:%d: %s: %v", filepath.Base(frame.File), frame.Line, msg, testFn)
