@@ -155,22 +155,39 @@ func TestStudentAttackCode(t *testing.T) {
 		{id: "3", name: "MinByName", test: "TestFibonacciSubTest", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciSubTest"},
 		{id: "4", name: "MinByName", test: "TestStudentAttackCode", fn: scoreRegistry.MinByName, want: "unknown score test: TestStudentAttackCode"},
 	}
-	for _, test := range tests {
-		t.Run(test.name+"/"+test.id, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name+"/"+tc.id, func(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					out := strings.TrimSpace(fmt.Sprintln(r))
 					// ignore the file name and line number in the prefix of out
-					if !strings.HasSuffix(out, test.want) {
-						t.Errorf("%s('%s')='%s', expected '%s'", test.name, test.test, out, test.want)
+					if !strings.HasSuffix(out, tc.want) {
+						t.Errorf("%s('%s')='%s', expected '%s'", tc.name, tc.test, out, tc.want)
 					}
-					if test.want == "" {
-						t.Errorf("%s('%s')='%s', not expected to fail", test.name, test.test, out)
+					if tc.want == "" {
+						t.Errorf("%s('%s')='%s', not expected to fail", tc.name, tc.test, out)
 					}
+				} else {
+					t.Errorf("%s('%s') did not panic", tc.name, tc.test)
 				}
 			}()
-			sc := test.fn(test.test)
+			sc := tc.fn(tc.test)
 			t.Fatalf("Should never be reached: %v", sc)
 		})
 	}
+}
+
+func TestDuplicateAdd(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			out := strings.TrimSpace(fmt.Sprintln(r))
+			if !strings.HasSuffix(out, "duplicate score test: TestDuplicateAdd") {
+				t.Errorf("Add() unexpected panic: %v", r)
+			}
+		} else {
+			t.Errorf("Add() did not panic")
+		}
+	}()
+	scores.Add(TestDuplicateAdd, 1, 1)
+	scores.Add(TestDuplicateAdd, 1, 1) // should panic with duplicate score test
 }
