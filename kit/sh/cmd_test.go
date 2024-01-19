@@ -87,13 +87,11 @@ func TestRunRaceTest(t *testing.T) {
 				}
 				t.Errorf("%s data race warning from %s", prefix, tt.testName)
 			}
-			expectedContains := strings.Contains(output, tt.expectedOutput)
-			unexpectedContains := strings.Contains(output, tt.unexpectedOutput)
-			if !expectedContains {
+			if !strings.Contains(output, tt.expectedOutput) {
 				t.Errorf("Expected output with '%s' from %s", tt.expectedOutput, tt.testName)
 				t.Log(output)
 			}
-			if unexpectedContains {
+			if strings.Contains(output, tt.unexpectedOutput) {
 				t.Errorf("Unexpected output with '%s' from %s", tt.unexpectedOutput, tt.testName)
 				t.Log(output)
 			}
