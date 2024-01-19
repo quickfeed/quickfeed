@@ -52,20 +52,51 @@ func TestLintAG(t *testing.T) {
 }
 
 func TestRunRaceTest(t *testing.T) {
-	tName := "TestWithDataRace"
-	s, race := sh.RunRaceTest(tName)
-	if !race {
-		t.Errorf("expected data race warning from %s", tName)
+	tests := []struct {
+		testName         string
+		expectedRace     bool
+		expectedOutput   string
+		unexpectedOutput string
+	}{
+		{
+			testName:         "TestWithDataRace",
+			expectedRace:     true,
+			expectedOutput:   "WARNING: DATA RACE",
+			unexpectedOutput: "PASS",
+		},
+		{
+			testName:         "TestWithoutDataRace",
+			expectedRace:     false,
+			expectedOutput:   "PASS",
+			unexpectedOutput: "WARNING: DATA RACE",
+		},
+		{
+			testName:         "TestThatDoesNotExist",
+			expectedRace:     false,
+			expectedOutput:   "warning: no tests to run",
+			unexpectedOutput: "WARNING: DATA RACE",
+		},
 	}
-	if !strings.Contains(s, "WARNING: DATA RACE") {
-		t.Errorf("expected output with data race warning from %s", tName)
-	}
-	tName = "TestWithoutDataRace"
-	s, race = sh.RunRaceTest(tName)
-	if race {
-		t.Errorf("unexpected data race warning from %s", tName)
-	}
-	if strings.Contains(s, "WARNING: DATA RACE") {
-		t.Error("expected output without data race warning from test")
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			output, race := sh.RunRaceTest(tt.testName)
+			if (race && !tt.expectedRace) || (!race && tt.expectedRace) {
+				prefix := "Expected"
+				if race {
+					prefix = "Unexpected"
+				}
+				t.Errorf("%s data race warning from %s", prefix, tt.testName)
+			}
+			expectedContains := strings.Contains(output, tt.expectedOutput)
+			unexpectedContains := strings.Contains(output, tt.unexpectedOutput)
+			if !expectedContains {
+				t.Errorf("Expected output with '%s' from %s", tt.expectedOutput, tt.testName)
+				t.Log(output)
+			}
+			if unexpectedContains {
+				t.Errorf("Unexpected output with '%s' from %s", tt.unexpectedOutput, tt.testName)
+				t.Log(output)
+			}
+		})
 	}
 }
