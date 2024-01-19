@@ -83,5 +83,5 @@ func Load(filename string) error {
 
 func ignore(line string) bool {
 	trimmedLine := strings.TrimSpace(line)
-	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
+	return trimmedLine == "" || strings.HasPrefix(trimmedLine, "#")
 }
