@@ -53,3 +53,56 @@ func TestTestNamePanic(t *testing.T) {
 		})
 	}
 }
+
+// isCallerShouldBeFalse returns false since IsCaller is not called from within TestIsCaller.
+func isCallerShouldBeFalse() bool {
+	return test.IsCaller("TestIsCaller")
+}
+
+func TestIsCaller(t *testing.T) {
+	if isCallerShouldBeFalse() {
+		t.Errorf("IsCaller incorrectly identified a non-test function as the calling function")
+	}
+	tt := []struct {
+		funcName string
+		want     bool
+	}{
+		{"TestIsCaller", true},
+		{"TestTestNamePanic", false}, // TestTestNamePanic exists but is not the calling function
+		{"TestNonExistentTest", false},
+		{"NotATestFunc", false},
+	}
+	for _, tc := range tt {
+		t.Run(tc.funcName, func(t *testing.T) {
+			if test.IsCaller(tc.funcName) != tc.want {
+				t.Errorf("IsCaller('%s')=%v, want %v", tc.funcName, !tc.want, tc.want)
+			}
+		})
+	}
+}
+
+func callerName() string {
+	return test.CallerName()
+}
+
+func TestCallerName(t *testing.T) {
+	if callerName() != "callerName" {
+		t.Errorf("callerName()=%s, want callerName", callerName())
+	}
+	if test.CallerName() != "TestCallerName" {
+		t.Errorf("CallerName()=%s, want TestCallerName", test.CallerName())
+	}
+	tt := []struct {
+		funcName string
+		want     string
+	}{
+		{"SubtestCaller", "func1"},
+	}
+	for _, tc := range tt {
+		t.Run(tc.funcName, func(t *testing.T) {
+			if got := test.CallerName(); got != tc.want {
+				t.Errorf("CallerName()=%s, want %s", got, tc.want)
+			}
+		})
+	}
+}
