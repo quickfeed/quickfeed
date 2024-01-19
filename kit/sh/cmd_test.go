@@ -2,6 +2,7 @@ package sh_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -23,6 +24,11 @@ func TestOutput(t *testing.T) {
 }
 
 func TestLintAG(t *testing.T) {
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		// since we don't have golangci-lint installed in the GitHub Actions runner
+		t.Skip("Skipping test since it is running in GitHub Actions")
+	}
+
 	// check formatting using goimports
 	s, err := sh.Output("golangci-lint run --tests=false --disable-all --enable goimports")
 	if err != nil {
