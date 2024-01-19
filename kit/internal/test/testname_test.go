@@ -20,7 +20,7 @@ func TestTestNamePanic(t *testing.T) {
 	tests := []struct {
 		typ    string
 		inName string
-		in     interface{}
+		in     any
 		want   string
 	}{
 		{"____NotFunc", "TestHurricane", "TestHurricane", notFunc + "TestHurricane"},

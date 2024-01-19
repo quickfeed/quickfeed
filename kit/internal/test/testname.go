@@ -11,7 +11,7 @@ import (
 
 // Name returns the name of the test function that called it.
 // Only functions with a single *testing.T argument are considered test functions.
-func Name(testFn interface{}) string {
+func Name(testFn any) string {
 	typ := reflect.TypeOf(testFn)
 	if typ.Kind() != reflect.Func {
 		panic(ErrMsg(reflect.ValueOf(testFn), "not a function"))
@@ -45,7 +45,7 @@ func CallerName() string {
 }
 
 // ErrMsg returns an error message with the file name and line number of the calling function.
-func ErrMsg(testFn interface{}, msg string) error {
+func ErrMsg(testFn any, msg string) error {
 	frame := CallFrame()
 	return fmt.Errorf("%s:%d: %s: %v", filepath.Base(frame.File), frame.Line, msg, testFn)
 }

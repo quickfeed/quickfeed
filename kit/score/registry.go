@@ -68,7 +68,7 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 // Add test with given max score and weight to the registry.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) Add(testFn interface{}, max, weight int) {
+func (s *registry) Add(testFn any, max, weight int) {
 	s.internalAdd(test.Name(testFn), "", max, weight)
 }
 
@@ -76,7 +76,7 @@ func (s *registry) Add(testFn interface{}, max, weight int) {
 // This function is identical to Add, with the addition of assigning a task name.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddWithTask(testFn interface{}, taskName string, max, weight int) {
+func (s *registry) AddWithTask(testFn any, taskName string, max, weight int) {
 	s.internalAdd(test.Name(testFn), taskName, max, weight)
 }
 
@@ -85,7 +85,7 @@ func (s *registry) AddWithTask(testFn interface{}, taskName string, max, weight 
 // conjunction with MaxByName and MinByName called from within a subtest.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSub(testFn interface{}, subTestName string, max, weight int) {
+func (s *registry) AddSub(testFn any, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", test.Name(testFn), subTestName)
 	s.internalAdd(tstName, "", max, weight)
 }
@@ -96,7 +96,7 @@ func (s *registry) AddSub(testFn interface{}, subTestName string, max, weight in
 // This function is identical to AddSub, with the addition of assigning a task name.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSubWithTask(testFn interface{}, subTestName, taskName string, max, weight int) {
+func (s *registry) AddSubWithTask(testFn any, subTestName, taskName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", test.Name(testFn), subTestName)
 	s.internalAdd(tstName, taskName, max, weight)
 }
