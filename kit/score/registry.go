@@ -1,6 +1,7 @@
 package score
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -140,9 +141,15 @@ func (s *registry) MinByName(testName string) *Score {
 	return s.get(testName)
 }
 
+var (
+	ErrDuplicateScoreTest = errors.New("duplicate score test")
+	ErrUnauthorizedLookup = errors.New("unauthorized lookup")
+	ErrUnknownScoreTest   = errors.New("unknown score test")
+)
+
 func (s *registry) internalAdd(testName, taskName string, max, weight int) {
 	if _, found := s.scores[testName]; found {
-		panic(test.ErrMsg(testName, "Duplicate score test"))
+		panic(test.ErrMsg(testName, ErrDuplicateScoreTest.Error()))
 	}
 	if max < 1 {
 		panic(test.ErrMsg(testName, ErrMaxScore.Error()))
@@ -165,10 +172,10 @@ func (s *registry) internalAdd(testName, taskName string, max, weight int) {
 func (s *registry) get(testName string) *Score {
 	if !test.IsCaller(testName) {
 		// Only the registered Test function can call the lookup functions
-		panic(test.ErrMsg(testName, "unauthorized lookup"))
+		panic(test.ErrMsg(testName, ErrUnauthorizedLookup.Error()))
 	}
 	if sc, ok := s.scores[testName]; ok {
 		return sc
 	}
-	panic(test.ErrMsg(testName, "unknown score test"))
+	panic(test.ErrMsg(testName, ErrUnknownScoreTest.Error()))
 }
