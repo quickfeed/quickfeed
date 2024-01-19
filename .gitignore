@@ -37,3 +37,4 @@ dat320-approve-list.xlsx
 patch/go.pb.go
 oldbackups/*
 backup.sh
+go.work.sum

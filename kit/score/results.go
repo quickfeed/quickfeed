@@ -9,7 +9,15 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewResults(scores ...*Score) *Results {
+// Results contains the score objects, build info, and errors.
+type Results struct {
+	BuildInfo *BuildInfo // build info for tests
+	Scores    []*Score   // list of scores for different tests
+	testNames []string   // defines the order
+	scoreMap  map[string]*Score
+}
+
+func newResults(scores ...*Score) *Results {
 	r := &Results{
 		testNames: make([]string, 0),
 		scoreMap:  make(map[string]*Score),
@@ -30,71 +38,13 @@ func (r *Results) toScoreSlice() []*Score {
 	return scores
 }
 
-// Results contains the score objects, build info, and errors.
-type Results struct {
-	BuildInfo *BuildInfo // build info for tests
-	Scores    []*Score   // list of scores for different tests
-	testNames []string   // defines the order
-	scoreMap  map[string]*Score
-}
-
-// parseErrors encountered during test execution.
-type parseErrors []error
-
-// Error prints a newline separated list of errors that occurred during parsing.
-func (pe parseErrors) Error() string {
-	if len(pe) == 0 {
-		return ""
-	}
-	sErr := make([]string, 0, len(pe)+1)
-	sErr = append(sErr, fmt.Sprintf("failed to parse score; %d occurrences", len(pe)))
-	for _, err := range pe {
-		sErr = append(sErr, err.Error())
-	}
-	return strings.Join(sErr, "\n")
-}
-
-// ExtractResults returns the results from a test execution extracted from the given out string.
-func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
-	var filteredLog []string
-	errs := make(parseErrors, 0)
-	results := NewResults()
-	for _, line := range strings.Split(out, "\n") {
-		// check if line has expected JSON score string
-		if HasPrefix(line) {
-			sc, err := parse(line, secret)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
-				continue
-			}
-			results.addScore(sc)
-		} else if line != "" { // include only non-empty lines
-			// the filtered log without JSON score strings
-			filteredLog = append(filteredLog, line)
-		}
-	}
-	res := &Results{
-		BuildInfo: &BuildInfo{
-			BuildDate:      timestamppb.Now(),
-			SubmissionDate: timestamppb.Now(),
-			BuildLog:       strings.Join(filteredLog, "\n"),
-			ExecTime:       execTime.Milliseconds(),
-		},
-		Scores: results.toScoreSlice(),
-	}
-	if len(errs) > 0 {
-		return res, errs
-	}
-	return res, nil
-}
-
 // addScore adds the given score to the set of scores.
 // This method assumes that the provided score object is valid.
 func (r *Results) addScore(sc *Score) {
 	testName := sc.GetTestName()
 	if current, found := r.scoreMap[testName]; found {
 		if current.GetScore() != 0 {
-			// We reach here only if a second non-zero score is found
+			// We reach here only if a second non-zero score is found for the same test.
 			// Mark it as faulty with -1.
 			sc.Score = -1
 			sc.TestDetails = "(duplicate)"
@@ -110,9 +60,12 @@ func (r *Results) addScore(sc *Score) {
 	r.scoreMap[testName] = sc
 }
 
-// Validate returns an error if one of the recorded score objects are invalid.
+// validate returns an error if one of the recorded score objects are invalid.
 // Otherwise, nil is returned.
-func (r *Results) Validate(secret string) error {
+//
+// This method is only used for testing. The actual validation is done in the
+// ExtractResults method when parsing the output of a test execution.
+func (r *Results) validate(secret string) error {
 	for _, sc := range r.Scores {
 		if err := sc.isValid(secret); err != nil {
 			return err
@@ -171,4 +124,54 @@ func (r *Results) internalSum(taskName string) (float64, float64) {
 // weightedScore returns the weighted score of a given test.
 func weightedScore(score, maxScore, weight, totalWeight float64) float64 {
 	return (score / maxScore) * (weight / totalWeight)
+}
+
+// parseErrors encountered during test execution.
+type parseErrors []error
+
+// Error prints a newline separated list of errors that occurred during parsing.
+func (pe parseErrors) Error() string {
+	if len(pe) == 0 {
+		return ""
+	}
+	sErr := make([]string, 0, len(pe)+1)
+	sErr = append(sErr, fmt.Sprintf("failed to parse score; %d occurrences", len(pe)))
+	for _, err := range pe {
+		sErr = append(sErr, err.Error())
+	}
+	return strings.Join(sErr, "\n")
+}
+
+// ExtractResults returns the results from a test execution extracted from the given out string.
+func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
+	var filteredLog []string
+	errs := make(parseErrors, 0)
+	results := newResults()
+	for _, line := range strings.Split(out, "\n") {
+		// check if line has expected JSON score string
+		if HasPrefix(line) {
+			sc, err := parse(line, secret)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
+				continue
+			}
+			results.addScore(sc)
+		} else if line != "" { // include only non-empty lines
+			// the filtered log without JSON score strings
+			filteredLog = append(filteredLog, line)
+		}
+	}
+	res := &Results{
+		BuildInfo: &BuildInfo{
+			BuildDate:      timestamppb.Now(),
+			SubmissionDate: timestamppb.Now(),
+			BuildLog:       strings.Join(filteredLog, "\n"),
+			ExecTime:       execTime.Milliseconds(),
+		},
+		Scores: results.toScoreSlice(),
+	}
+	if len(errs) > 0 {
+		return res, errs
+	}
+	return res, nil
 }
