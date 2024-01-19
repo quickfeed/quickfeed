@@ -77,15 +77,22 @@ func TestRunRaceTest(t *testing.T) {
 			unexpectedOutput: "WARNING: DATA RACE",
 		},
 	}
+
+	// unexpected returns Unexpected if race is true, otherwise Expected.
+	// This is used to make the test output more readable.
+	// It should only be used together with race != expectedRace.
+	unexpected := func(race bool) string {
+		if race {
+			return "Unexpected"
+		}
+		return "Expected"
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			output, race := sh.RunRaceTest(tt.testName)
-			if (race && !tt.expectedRace) || (!race && tt.expectedRace) {
-				prefix := "Expected"
-				if race {
-					prefix = "Unexpected"
-				}
-				t.Errorf("%s data race warning from %s", prefix, tt.testName)
+			if race != tt.expectedRace {
+				t.Errorf("%s data race warning from %s", unexpected(race), tt.testName)
 			}
 			if !strings.Contains(output, tt.expectedOutput) {
 				t.Errorf("Expected output with '%s' from %s", tt.expectedOutput, tt.testName)
