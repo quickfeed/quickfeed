@@ -15,7 +15,7 @@ import (
 
 const theSecret = "my secret code"
 
-func TestExtractResult(t *testing.T) {
+func TestExtractResults(t *testing.T) {
 	out := `here is some output in the log.
 
 {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":100,"MaxScore":100,"Weight":1}
@@ -34,7 +34,7 @@ Here are some more logs for the student.
 	}
 }
 
-func TestExtractResultWithWhitespace(t *testing.T) {
+func TestExtractResultsWithWhitespace(t *testing.T) {
 	out := `here is some output in the log with whitespace before the JSON string below.
 
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":100,"MaxScore":100,"Weight":1}
@@ -53,7 +53,7 @@ Here are some more logs for the student.
 	}
 }
 
-func TestExtractResultWithTwoScoreLines(t *testing.T) {
+func TestExtractResultsWithTwoScoreLines(t *testing.T) {
 	out := `here is some output in the log with whitespace before the JSON string below.
 
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
@@ -76,7 +76,7 @@ Here are some more logs for the student.
 	}
 }
 
-func TestExtractResultWithMultipleZeroScoreLines(t *testing.T) {
+func TestExtractResultsWithMultipleZeroScoreLines(t *testing.T) {
 	out := `
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
@@ -102,7 +102,7 @@ func TestExtractResultWithMultipleZeroScoreLines(t *testing.T) {
 	}
 }
 
-func TestExtractResultWithMultipleNonZeroScoreLines(t *testing.T) {
+func TestExtractResultsWithMultipleNonZeroScoreLines(t *testing.T) {
 	out := `
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
@@ -129,7 +129,7 @@ func TestExtractResultWithMultipleNonZeroScoreLines(t *testing.T) {
 	}
 }
 
-func TestExtractResultWithPanickedAndMaliciousScoreLines(t *testing.T) {
+func TestExtractResultsWithPanickedAndMaliciousScoreLines(t *testing.T) {
 	out := `
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest1","Score":0,"MaxScore":100,"Weight":1}
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest1","Score":100,"MaxScore":100,"Weight":1}
