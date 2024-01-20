@@ -70,7 +70,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 	d.logger.Infof("Created container image '%s' for %s", job.Image, job.Name)
-	if err = d.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return "", err
 	}
 
@@ -82,7 +82,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	d.logger.Infof("Done waiting for container image '%s' for %s", job.Image, job.Name)
 	// extract the logs before removing the container below
-	logReader, err := d.client.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+	logReader, err := d.client.ContainerLogs(ctx, resp.ID, container.LogsOptions{
 		ShowStdout: true,
 	})
 	if err != nil {
@@ -91,7 +91,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	d.logger.Infof("Removing container image '%s' for %s", job.Image, job.Name)
 	// remove the container when finished to prevent too many open files
-	err = d.client.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	err = d.client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +183,7 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 				return "", stopErr
 			}
 			// remove the docker container (when stopped due to timeout) to prevent too many open files
-			rmErr := d.client.ContainerRemove(context.Background(), respID, types.ContainerRemoveOptions{})
+			rmErr := d.client.ContainerRemove(context.Background(), respID, container.RemoveOptions{})
 			if rmErr != nil {
 				return "", rmErr
 			}
