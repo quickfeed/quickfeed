@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/kit/internal/test"
 )
 
 var (
@@ -45,19 +47,19 @@ func parse(s, secret string) (*Score, error) {
 func (sc *Score) isValid(secret string) error {
 	tName := sc.GetTestName()
 	if tName == "" {
-		return errMsg("", ErrEmptyTestName.Error())
+		return test.ErrMsg("", ErrEmptyTestName.Error())
 	}
 	if sc.MaxScore <= 0 {
-		return errMsg(tName, ErrMaxScore.Error())
+		return test.ErrMsg(tName, ErrMaxScore.Error())
 	}
 	if sc.Weight <= 0 {
-		return errMsg(tName, ErrWeight.Error())
+		return test.ErrMsg(tName, ErrWeight.Error())
 	}
 	if sc.Score < 0 || sc.Score > sc.MaxScore {
-		return errMsg(tName, ErrScoreInterval.Error())
+		return test.ErrMsg(tName, ErrScoreInterval.Error())
 	}
 	if sc.Secret != secret {
-		return errMsg(tName, ErrSecret.Error())
+		return test.ErrMsg(tName, ErrSecret.Error())
 	}
 	sc.Secret = "" // redact the secret session key
 	return nil

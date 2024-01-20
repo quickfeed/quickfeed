@@ -180,7 +180,7 @@ export type State = {
     /* Contains either an existing group to edit, or a new group to create */
     activeGroup: Group | null,
 
-    hasGroup: (courseID: number) => boolean,
+    hasGroup: (courseID: string) => boolean,
 
     connectionStatus: ConnStatus,
 
