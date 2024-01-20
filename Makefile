@@ -67,7 +67,7 @@ proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
 
 test:
-	@go clean -testcache ./...
+	@go clean -testcache
 	@go test ./...
 
 webpack-dev-server:
