@@ -132,7 +132,7 @@ message Enrollment {
     UserStatus status                          = 8;
     DisplayState state                         = 9;
     uint32 slipDaysRemaining                   = 10 [(go.field) = { tags: 'gorm:"-"' }];
-    google.protobuf.Timestamp lastActivityDate = 11 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
+    google.protobuf.Timestamp lastActivityDate = 11 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     uint64 totalApproved                       = 12;
     repeated UsedSlipDays usedSlipDays         = 13;
 }
@@ -154,7 +154,7 @@ message Assignment {
     uint64 ID                          = 1;
     uint64 CourseID                    = 2;  // foreign key
     string name                        = 3;
-    google.protobuf.Timestamp deadline = 4 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
+    google.protobuf.Timestamp deadline = 4 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     bool autoApprove                   = 5;
     uint32 order                       = 6;
     bool isGroupLab                    = 7;
@@ -220,7 +220,7 @@ message Submission {
     string commitHash                      = 6;
     bool released                          = 7;  // true => feedback is visible to the student or group members
     Status status                          = 8;
-    google.protobuf.Timestamp approvedDate = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
+    google.protobuf.Timestamp approvedDate = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     repeated Review reviews                = 10;  // reviews produced for this submission
     score.BuildInfo BuildInfo              = 11;  // build info for tests
     repeated score.Score Scores            = 12;  // list of scores for different tests
@@ -269,5 +269,5 @@ message Review {
     bool ready                                  = 5;
     uint32 score                                = 6;
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
-    google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
+    google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }

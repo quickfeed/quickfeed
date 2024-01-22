@@ -36,6 +36,6 @@ message BuildInfo {
     string BuildLog     = 3;
     int64 ExecTime      = 4;
 
-    google.protobuf.Timestamp BuildDate      = 5 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
-    google.protobuf.Timestamp SubmissionDate = 6 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }];
+    google.protobuf.Timestamp BuildDate      = 5 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    google.protobuf.Timestamp SubmissionDate = 6 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }
