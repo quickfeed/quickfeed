@@ -11,7 +11,7 @@ import "patch/go.proto";
 // To define a field that must be stored in the database as a specific type, use:
 // [(go.field) = {tags: 'gorm:"type:<type>"'}]
 //
-// The tag [(go.field) = { tags: 'gorm:"serializer:timestamp;type:time"' }] instructs gorm to use
+// The tag [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }] instructs gorm to use
 // the custom serializer for timestamp because timestamppb.Timestamp is not supported.
 // The serializer converts timestamp fields to time.Time which will be saved in the database as "datetime".
 
