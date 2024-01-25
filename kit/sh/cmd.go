@@ -58,8 +58,14 @@ func OutputErrA(cmd string, args ...string) (string, string, error) {
 //
 // The test to be run with the race detector should be in a separate file with
 // the race build tag. See the race_test.go file in this package for an example.
-func RunRaceTest(testName string) (string, bool) {
-	s, _ := OutputA("go", "test", "-v", "-race", "-run", testName)
+//
+// If the tags argument is non-zero, it is passed to the go test command.
+func RunRaceTest(testName, tags string) (s string, race bool) {
+	if tags != "" {
+		s, _ = OutputA("go", "test", "-v", "-race", "-run", testName, "-tags", tags)
+	} else {
+		s, _ = OutputA("go", "test", "-v", "-race", "-run", testName)
+	}
 	return s, strings.Contains(s, "WARNING: DATA RACE")
 }
 
