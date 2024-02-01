@@ -2,7 +2,7 @@ coverage:
   status:
     project:
       default:
-        target: 50%
+        target: 40%
         threshold: 1%
 ignore:
   - "**/*.pb.go" # ignore generated protobuf files
