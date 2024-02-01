@@ -819,61 +819,6 @@ func (x *Repositories) GetURLs() map[uint32]string {
 	return nil
 }
 
-type Status struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Code  uint64 `protobuf:"varint,1,opt,name=Code,proto3" json:"Code,omitempty"`
-	Error string `protobuf:"bytes,2,opt,name=Error,proto3" json:"Error,omitempty"`
-}
-
-func (x *Status) Reset() {
-	*x = Status{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_requests_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Status) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Status) ProtoMessage() {}
-
-func (x *Status) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Status.ProtoReflect.Descriptor instead.
-func (*Status) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *Status) GetCode() uint64 {
-	if x != nil {
-		return x.Code
-	}
-	return 0
-}
-
-func (x *Status) GetError() string {
-	if x != nil {
-		return x.Error
-	}
-	return ""
-}
-
 type RebuildRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -887,7 +832,7 @@ type RebuildRequest struct {
 func (x *RebuildRequest) Reset() {
 	*x = RebuildRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_requests_proto_msgTypes[12]
+		mi := &file_qf_requests_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -900,7 +845,7 @@ func (x *RebuildRequest) String() string {
 func (*RebuildRequest) ProtoMessage() {}
 
 func (x *RebuildRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[12]
+	mi := &file_qf_requests_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -913,7 +858,7 @@ func (x *RebuildRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RebuildRequest.ProtoReflect.Descriptor instead.
 func (*RebuildRequest) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{12}
+	return file_qf_requests_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *RebuildRequest) GetCourseID() uint64 {
@@ -950,7 +895,7 @@ type Void struct {
 func (x *Void) Reset() {
 	*x = Void{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_requests_proto_msgTypes[13]
+		mi := &file_qf_requests_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -963,7 +908,7 @@ func (x *Void) String() string {
 func (*Void) ProtoMessage() {}
 
 func (x *Void) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[13]
+	mi := &file_qf_requests_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -976,7 +921,7 @@ func (x *Void) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Void.ProtoReflect.Descriptor instead.
 func (*Void) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{13}
+	return file_qf_requests_proto_rawDescGZIP(), []int{12}
 }
 
 var File_qf_requests_proto protoreflect.FileDescriptor
@@ -1080,21 +1025,18 @@ var file_qf_requests_proto_rawDesc = []byte{
 	0x4c, 0x73, 0x1a, 0x37, 0x0a, 0x09, 0x55, 0x52, 0x4c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12,
 	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65,
 	0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x32, 0x0a, 0x06, 0x53,
-	0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x43, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x04, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x45, 0x72, 0x72,
-	0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x22,
-	0x74, 0x0a, 0x0e, 0x52, 0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x12, 0x22, 0x0a,
-	0x0c, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x0c, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49,
-	0x44, 0x12, 0x22, 0x0a, 0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49,
-	0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73,
-	0x69, 0x6f, 0x6e, 0x49, 0x44, 0x22, 0x06, 0x0a, 0x04, 0x56, 0x6f, 0x69, 0x64, 0x42, 0x26, 0x5a,
-	0x21, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x71, 0x75, 0x69, 0x63,
-	0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f,
-	0x71, 0x66, 0xba, 0x02, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x74, 0x0a, 0x0e, 0x52,
+	0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a,
+	0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x12, 0x22, 0x0a, 0x0c, 0x61, 0x73, 0x73,
+	0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0c, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x12, 0x22, 0x0a,
+	0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49,
+	0x44, 0x22, 0x06, 0x0a, 0x04, 0x56, 0x6f, 0x69, 0x64, 0x42, 0x26, 0x5a, 0x21, 0x67, 0x69, 0x74,
+	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65,
+	0x64, 0x2f, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x66, 0x65, 0x65, 0x64, 0x2f, 0x71, 0x66, 0xba, 0x02,
+	0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1110,7 +1052,7 @@ func file_qf_requests_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_qf_requests_proto_goTypes = []interface{}{
 	(SubmissionRequest_SubmissionType)(0), // 0: qf.SubmissionRequest.SubmissionType
 	(*CourseSubmissions)(nil),             // 1: qf.CourseSubmissions
@@ -1124,24 +1066,23 @@ var file_qf_requests_proto_goTypes = []interface{}{
 	(*UpdateSubmissionsRequest)(nil),      // 9: qf.UpdateSubmissionsRequest
 	(*RepositoryRequest)(nil),             // 10: qf.RepositoryRequest
 	(*Repositories)(nil),                  // 11: qf.Repositories
-	(*Status)(nil),                        // 12: qf.Status
-	(*RebuildRequest)(nil),                // 13: qf.RebuildRequest
-	(*Void)(nil),                          // 14: qf.Void
-	nil,                                   // 15: qf.CourseSubmissions.SubmissionsEntry
-	nil,                                   // 16: qf.Repositories.URLsEntry
-	(*Review)(nil),                        // 17: qf.Review
-	(Enrollment_UserStatus)(0),            // 18: qf.Enrollment.UserStatus
-	(Submission_Status)(0),                // 19: qf.Submission.Status
-	(*Submissions)(nil),                   // 20: qf.Submissions
+	(*RebuildRequest)(nil),                // 12: qf.RebuildRequest
+	(*Void)(nil),                          // 13: qf.Void
+	nil,                                   // 14: qf.CourseSubmissions.SubmissionsEntry
+	nil,                                   // 15: qf.Repositories.URLsEntry
+	(*Review)(nil),                        // 16: qf.Review
+	(Enrollment_UserStatus)(0),            // 17: qf.Enrollment.UserStatus
+	(Submission_Status)(0),                // 18: qf.Submission.Status
+	(*Submissions)(nil),                   // 19: qf.Submissions
 }
 var file_qf_requests_proto_depIdxs = []int32{
-	15, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
-	17, // 1: qf.ReviewRequest.review:type_name -> qf.Review
-	18, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
+	14, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
+	16, // 1: qf.ReviewRequest.review:type_name -> qf.Review
+	17, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
 	0,  // 3: qf.SubmissionRequest.Type:type_name -> qf.SubmissionRequest.SubmissionType
-	19, // 4: qf.UpdateSubmissionRequest.status:type_name -> qf.Submission.Status
-	16, // 5: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
-	20, // 6: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
+	18, // 4: qf.UpdateSubmissionRequest.status:type_name -> qf.Submission.Status
+	15, // 5: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
+	19, // 6: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
 	7,  // [7:7] is the sub-list for method output_type
 	7,  // [7:7] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -1289,18 +1230,6 @@ func file_qf_requests_proto_init() {
 			}
 		}
 		file_qf_requests_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Status); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_qf_requests_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RebuildRequest); i {
 			case 0:
 				return &v.state
@@ -1312,7 +1241,7 @@ func file_qf_requests_proto_init() {
 				return nil
 			}
 		}
-		file_qf_requests_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_qf_requests_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Void); i {
 			case 0:
 				return &v.state
@@ -1341,7 +1270,7 @@ func file_qf_requests_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_qf_requests_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   16,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
