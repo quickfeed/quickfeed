@@ -1,20 +1,43 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Enrollment_UserStatus } from '../../../proto/qf/types_pb'
-import { useAppState } from '../../overmind'
+import { useActions, useAppState } from '../../overmind'
+import { hasTeacher } from '../../Helpers'
 
-const ToggleSwitch = ({ click}: {click: () => void}) => {
-    const {activeCourse, enrollmentsByCourseID} = useAppState()
+const ToggleSwitch = () => {
+    const {activeCourse, enrollmentsByCourseID, status} = useAppState()
+    const actions = useActions()
+    const [enrollmentStatus, setEnrollmentStatus] = React.useState<boolean>(false)
+    const [text, setText] = React.useState<string>("")
 
-    const isTeacher = React.useMemo(() => {
-        return enrollmentsByCourseID[activeCourse?.toString() ?? ""]?.status === Enrollment_UserStatus.TEACHER ?? false
-    }, [activeCourse, enrollmentsByCourseID])
+    useEffect(() => {
+        if (activeCourse && enrollmentsByCourseID[activeCourse.toString()]) {
+            updateStatus(isTeacher());
+        }
+    });
 
-    const text = isTeacher ? "T" : "S"
+    const isTeacher = () => {
+        return enrollmentsByCourseID[activeCourse.toString()].status === Enrollment_UserStatus.TEACHER;
+    }
+
+    const updateStatus = (isTeacher: boolean) => {
+        setEnrollmentStatus(isTeacher);
+        setText(isTeacher ? "T" : "S");
+    }
+
+    const switchView = () => {
+        actions.changeView(activeCourse).then(() => {
+            updateStatus(isTeacher());
+        })
+    }
+    
+    if  (!hasTeacher(status[activeCourse.toString()])) {
+        return null
+    }
 
     return (
         <label className="switch">
-            <input type="checkbox" readOnly checked={isTeacher} />
-            <span className="slider round" onClick={click} >
+            <input type="checkbox" readOnly checked={enrollmentStatus} />
+            <span className="slider round" onClick={switchView} >
                 <span className="toggle">{text}</span>
             </span>
         </label>
