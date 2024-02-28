@@ -349,7 +349,7 @@ input {
 }
 
 .table td {
-    padding: 0.5rem !important;
+    padding: 0.5rem;
 }
 
 .table th {
@@ -357,11 +357,13 @@ input {
 }
 
 .passed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--passed-color) var(--bar-width) 0px 0px inset;
+    padding-left: calc(var(--bar-width) + 10px) !important;
 }
 
 .failed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, red 5px 0px 0px inset;
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--failed-color) var(--bar-width) 0px 0px inset;
+    padding-left: calc(var(--bar-width) + 10px) !important;
 }
 
 .not-graded {
@@ -626,4 +628,15 @@ nav.flexbox {
     &.hidden {
         display: none;
     }
+}
+
+.uniform-button {
+    display: inline-block;
+    width: 150px;
+    height: 100px;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
 }
