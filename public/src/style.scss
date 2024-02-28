@@ -301,17 +301,17 @@ input {
 }
 
 .result-approved {
-    background-color: #ccffcc;
+    background-color: var(--approved-color);
     cursor: pointer;
 }
 
 .result-rejected {
-    background-color: #ffcccc;
+    background-color: var(--rejected-color);
     cursor: pointer;
 }
 
 .result-revision {
-    background-color: #ffffcc;
+    background-color: var(--revision-color);
     cursor: pointer;
 }
 

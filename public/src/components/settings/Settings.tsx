@@ -1,6 +1,7 @@
 import React from 'react'
 import { useActions, useAppState } from '../../overmind'
 import ResultsColorPicker from './ResultsColorPicker'
+import TableColorPicker from './TableColorPicker'
 
 
 const Settings = () => {
@@ -44,6 +45,39 @@ const Settings = () => {
             <div className="card bg-light">
                 <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}></code>
             </div>
+
+            <TableColorPicker />
+            <table className="table">
+                <tbody>
+                    <tr>
+                        <td className="result-approved ">100 %</td>
+                        <td className="result-approved ">100 %</td>
+                        <td className="result-approved ">95 %</td>
+                        <td className="result-approved ">99 %</td>
+                        <td className="result-approved ">100 %</td>
+                        <td className="clickable ">38 %</td>
+                        <td className="clickable ">0 %</td>
+                    </tr>
+                    <tr>
+                        <td className="result-approved ">100 %</td>
+                        <td className="result-approved ">100 %</td>
+                        <td className="result-approved ">97 %</td>
+                        <td className="result-approved ">99 %</td>
+                        <td className="result-rejected ">98 %</td>
+                        <td className="result-rejected ">100 %</td>
+                        <td className="clickable ">0 %</td>
+                    </tr>
+                    <tr>
+                        <td className="result-revision ">100 %</td>
+                        <td className="result-rejected ">100 %</td>
+                        <td className="result-approved ">97 %</td>
+                        <td className="result-revision ">99 %</td>
+                        <td className="result-approved ">98 %</td>
+                        <td className="result-rejected ">100 %</td>
+                        <td className="clickable ">0 %</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
     )

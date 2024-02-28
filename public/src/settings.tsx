@@ -15,7 +15,10 @@ export const ThemeProvider: React.FC<ThemeContextProps> = ({ children }) => {
         document.documentElement.style.setProperty('--passed-color', settings.settings.passedColor)
         document.documentElement.style.setProperty('--failed-color', settings.settings.failedColor)
         document.documentElement.style.setProperty('--bar-width', settings.settings.barWidth + 'px')
-    }, [settings.settings.passedColor, settings.settings.failedColor, settings.settings.barWidth])
+        document.documentElement.style.setProperty('--approved-color', settings.settings.approvedColor)
+        document.documentElement.style.setProperty('--revision-color', settings.settings.revisionColor)
+        document.documentElement.style.setProperty('--rejected-color', settings.settings.rejectedColor)
+    }, [settings.settings.passedColor, settings.settings.failedColor, settings.settings.barWidth, settings.settings.approvedColor, settings.settings.revisionColor, settings.settings.rejectedColor])
 
     return <ThemeContext.Provider value={{}}>{children}</ThemeContext.Provider>
 };
