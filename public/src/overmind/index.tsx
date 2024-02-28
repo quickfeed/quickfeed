@@ -3,6 +3,7 @@ import { state } from './state'
 import * as actions from './actions'
 import * as effects from './effects'
 import * as review from './namespaces/review'
+import * as settings from './namespaces/settings'
 import { IContext } from 'overmind'
 import { merge, namespaced } from 'overmind/config';
 
@@ -16,7 +17,8 @@ export const config = merge(
         effects,
     },
     namespaced({
-        review
+        review,
+        settings
     })
 )
 
