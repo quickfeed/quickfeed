@@ -9,6 +9,7 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
+import Settings from './components/settings/Settings'
 
 const App = (): JSX.Element => {
     const state = useAppState()
@@ -32,6 +33,7 @@ const App = (): JSX.Element => {
                     <Route path="/" exact component={Dashboard} />
                     <Route path="/about" component={AboutPage} />
                     <Route path="/profile" component={Profile} />
+                    <Route path="/settings" component={Settings} />
                     <Route path="/course/:id" component={CoursePage} />
                     <Route path="/courses" exact component={Courses} />
                     <Route path="/admin" component={AdminPage} />
