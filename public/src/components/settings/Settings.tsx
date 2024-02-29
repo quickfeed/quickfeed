@@ -2,11 +2,15 @@ import React from 'react'
 import { useActions, useAppState } from '../../overmind'
 import ResultsColorPicker from './ResultsColorPicker'
 import TableColorPicker from './TableColorPicker'
+import { hasTeacher } from '../../Helpers'
 
 
 const Settings = () => {
-    const { settings } = useAppState()
+    const { settings, enrollments } = useAppState()
     const actions = useActions()
+
+    // Some settings are only relevant for teachers
+    const isTeacher = enrollments.some(enrollment => hasTeacher(enrollment.status))
 
     const handleRangeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         actions.settings.updateSettings({ barWidth: parseInt(event.target.value) })
@@ -46,38 +50,42 @@ const Settings = () => {
                 <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}></code>
             </div>
 
-            <TableColorPicker />
-            <table className="table">
-                <tbody>
-                    <tr>
-                        <td className="result-approved ">100 %</td>
-                        <td className="result-approved ">100 %</td>
-                        <td className="result-approved ">95 %</td>
-                        <td className="result-approved ">99 %</td>
-                        <td className="result-approved ">100 %</td>
-                        <td className="clickable ">38 %</td>
-                        <td className="clickable ">0 %</td>
-                    </tr>
-                    <tr>
-                        <td className="result-approved ">100 %</td>
-                        <td className="result-approved ">100 %</td>
-                        <td className="result-approved ">97 %</td>
-                        <td className="result-approved ">99 %</td>
-                        <td className="result-rejected ">98 %</td>
-                        <td className="result-rejected ">100 %</td>
-                        <td className="clickable ">0 %</td>
-                    </tr>
-                    <tr>
-                        <td className="result-revision ">100 %</td>
-                        <td className="result-rejected ">100 %</td>
-                        <td className="result-approved ">97 %</td>
-                        <td className="result-revision ">99 %</td>
-                        <td className="result-approved ">98 %</td>
-                        <td className="result-rejected ">100 %</td>
-                        <td className="clickable ">0 %</td>
-                    </tr>
-                </tbody>
-            </table>
+            {isTeacher ? (
+                <>
+                    <TableColorPicker />
+                    <table className="table">
+                        <tbody>
+                            <tr>
+                                <td className="result-approved ">100 %</td>
+                                <td className="result-approved ">100 %</td>
+                                <td className="result-approved ">95 %</td>
+                                <td className="result-approved ">99 %</td>
+                                <td className="result-approved ">100 %</td>
+                                <td className="clickable ">38 %</td>
+                                <td className="clickable ">0 %</td>
+                            </tr>
+                            <tr>
+                                <td className="result-approved ">100 %</td>
+                                <td className="result-approved ">100 %</td>
+                                <td className="result-approved ">97 %</td>
+                                <td className="result-approved ">99 %</td>
+                                <td className="result-rejected ">98 %</td>
+                                <td className="result-rejected ">100 %</td>
+                                <td className="clickable ">0 %</td>
+                            </tr>
+                            <tr>
+                                <td className="result-revision ">100 %</td>
+                                <td className="result-rejected ">100 %</td>
+                                <td className="result-approved ">97 %</td>
+                                <td className="result-revision ">99 %</td>
+                                <td className="result-approved ">98 %</td>
+                                <td className="result-rejected ">100 %</td>
+                                <td className="clickable ">0 %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </>
+            ) : null}
         </div>
 
     )
