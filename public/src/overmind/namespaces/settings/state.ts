@@ -18,7 +18,7 @@ export const defaultSettings: UserSettings = {
     passedColor: '#006F00',
     failedColor: '#FF0000',
     /* Default width (px) for the criterion/test bar indicator */
-    barWidth: 5,
+    barWidth: 8,
     /* Default colors for the review/results table */
     approvedColor: '#ccffcc',
     revisionColor: '#ffc',
