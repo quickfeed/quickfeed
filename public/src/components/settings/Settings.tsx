@@ -1,9 +1,60 @@
 import React from 'react'
 import { useActions, useAppState } from '../../overmind'
-import ResultsColorPicker from './ResultsColorPicker'
-import TableColorPicker from './TableColorPicker'
 import { hasTeacher } from '../../Helpers'
+import ColorPicker, { ColorOption } from './ColorPicker'
 
+
+const tableColors: ColorOption[] = [
+    {
+        name: 'Default',
+        colors: {
+            "approved-color": '#CCFFCC', // Light Green
+            "revision-color": '#FFFFCC', // Light Yellow
+            "rejected-color": '#FFCCCC', // Light Red
+        }
+    },
+    {
+        name: 'Color Blind Friendly 1',
+        colors: {
+            "approved-color": '#56B4E9', // Sky Blue
+            "revision-color": '#E69F00', // Orange
+            "rejected-color": '#D41159', // Pink
+        }
+    },
+    {
+        name: 'Color Blind Friendly 2',
+        colors: {
+            "approved-color": '#009E73',
+            "revision-color": '#F0E442',
+            "rejected-color": '#CC79A7',
+        }
+    }
+]
+
+const resultsColors: ColorOption[] = [
+    {
+        name: 'Default',
+        colors: {
+            "passed-color": '#006F00', // Green
+            "failed-color": '#FF0000', // Red
+        }
+    },
+    {
+        name: 'Color Blind Friendly 1',
+        colors: {
+            "passed-color": '#56B4E9', // Sky Blue
+            "failed-color": '#E69F00', // Orange
+        }
+    },
+    {
+        name: 'Color Blind Friendly 2',
+        colors: {
+            "passed-color": '#1A85FF', // Blue
+            "failed-color": '#D41159', // Pink
+        }
+    }
+    // Add more pairs as needed
+]
 
 const Settings = () => {
     const { settings, enrollments } = useAppState()
@@ -13,7 +64,7 @@ const Settings = () => {
     const isTeacher = enrollments.some(enrollment => hasTeacher(enrollment.status))
 
     const handleRangeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        actions.settings.updateSettings({ barWidth: parseInt(event.target.value) })
+        actions.settings.updateSettings({ 'bar-width': event.target.value + 'px' })
     }
 
     return (
@@ -21,14 +72,14 @@ const Settings = () => {
             <h1>Settings</h1>
             <p>Change the colors and width of the bar</p>
 
-            <form className='mb-3'>
-                <ResultsColorPicker />
+            <div className='mb-3'>
+                <ColorPicker colorOptions={resultsColors} />
                 <div className="form-group mb-3">
                     <label htmlFor='barWidth' className='form-label'>Bar Width</label>
-                    <input type='range' className='custom-range' id='barWidth' onChange={handleRangeChange} value={settings.settings.barWidth} min='0' max='20' step={1} />
+                    <input type='range' className='custom-range' id='barWidth' onChange={handleRangeChange} defaultValue={settings.settings['bar-width']} min='0' max='20' step='1' />
                 </div>
                 <button type='button' className='btn btn-primary m-2' onClick={() => actions.settings.resetSettings()}>Reset to Default</button>
-            </form>
+            </div>
 
             <table className="table">
                 <thead className="thead-dark">
@@ -52,7 +103,7 @@ const Settings = () => {
 
             {isTeacher ? (
                 <>
-                    <TableColorPicker />
+                    <ColorPicker colorOptions={tableColors} />
                     <table className="table">
                         <tbody>
                             <tr>
