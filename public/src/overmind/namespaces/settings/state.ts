@@ -1,28 +1,30 @@
 export interface UserSettings {
-    selectedColor: string
+    [key: string]: string | undefined | UserSettings[keyof UserSettings]
+
+    'selected-color'?: string
     /* Colors for the criterion/test bar indicator */
-    passedColor: string
-    failedColor: string
-    barWidth: number;
+    'passed-color'?: string
+    'failed-color'?: string
+    'bar-width'?: string;
     /* Colors for the review/results table */
-    approvedColor: string
-    revisionColor: string
-    rejectedColor: string
+    'approved-color'?: string
+    'revision-color'?: string
+    'rejected-color'?: string
 
     // Add other settings as needed
 }
 
 export const defaultSettings: UserSettings = {
     /* Default colors for the criterion/test bar indicator */
-    selectedColor: '#FFFFFF',
-    passedColor: '#006F00',
-    failedColor: '#FF0000',
+    'selected-color': '#FFFFFF',
+    'passed-color': '#006F00',
+    'failed-color': '#FF0000',
     /* Default width (px) for the criterion/test bar indicator */
-    barWidth: 8,
+    'bar-width': '8px',
     /* Default colors for the review/results table */
-    approvedColor: '#ccffcc',
-    revisionColor: '#ffc',
-    rejectedColor: '#fcc',
+    'approved-color': '#ccffcc',
+    'revision-color': '#ffc',
+    'rejected-color': '#fcc',
 }
 
 export const state = {
