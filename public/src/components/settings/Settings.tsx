@@ -69,7 +69,10 @@ const Settings = () => {
 
     return (
         <div className='container mt-3'>
-            <h1>Settings</h1>
+            <div className='d-flex justify-content-between align-items-center'>
+                <h1>Settings</h1>
+                <button type='button' className='btn btn-primary m-2' onClick={() => actions.settings.resetSettings()}>Restore Default Settings</button>
+            </div>
             <p>Change the colors and width of the bar</p>
 
             <div className='mb-3'>
@@ -78,7 +81,6 @@ const Settings = () => {
                     <label htmlFor='barWidth' className='form-label'>Bar Width</label>
                     <input type='range' className='custom-range' id='barWidth' onChange={handleRangeChange} defaultValue={settings.settings['bar-width']} min='0' max='20' step='1' />
                 </div>
-                <button type='button' className='btn btn-primary m-2' onClick={() => actions.settings.resetSettings()}>Reset to Default</button>
             </div>
 
             <table className="table">
