@@ -69,7 +69,6 @@ func TestDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	const (
 		newAccessToken = "123"
 		anotherToken   = "456"
-		remoteID       = 10
 	)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
