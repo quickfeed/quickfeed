@@ -60,11 +60,12 @@ const ReviewForm = (): JSX.Element => {
         return (
             <div className="col lab-sticky reviewLabResult">
                 <div className="mb-1">{selectReviewButton}</div>
+                {state.review.currentReview ? (
                     <>
                         <ReviewInfo review={state.review.currentReview} />
                         <ReviewResult review={state.review.currentReview} />
-                    </> : null
-                }
+                    </>
+                ) : null}
             </div>
         )
     }
