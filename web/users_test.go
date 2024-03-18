@@ -40,21 +40,6 @@ func TestGetUsers(t *testing.T) {
 	}
 }
 
-var allUsers = []struct {
-	remoteID uint64
-	secret   string
-}{
-	{1, "123"},
-	{2, "123"},
-	{3, "456"},
-	{4, "789"},
-	{5, "012"},
-	{6, "345"},
-	{7, "678"},
-	{8, "901"},
-	{9, "234"},
-}
-
 func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -62,7 +47,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	ctx := context.Background()
 
 	var users []*qf.User
-	for range allUsers {
+	for i := 0; i < 10; i++ {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
@@ -76,7 +61,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
-	wantUsers := users[0 : len(allUsers)-3]
+	wantUsers := users[0:6]
 	for i, user := range wantUsers {
 		if i == 0 {
 			// skip enrolling admin as student

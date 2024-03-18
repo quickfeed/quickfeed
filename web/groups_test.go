@@ -635,7 +635,7 @@ func TestGetGroups(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	var users []*qf.User
-	for range allUsers {
+	for i := 0; i < 10; i++ {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
