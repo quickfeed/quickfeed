@@ -367,20 +367,17 @@ func TestGetCourseTeachers(t *testing.T) {
 			admin := qtest.CreateFakeUser(t, db)
 			course := &qf.Course{}
 			qtest.CreateCourse(t, db, admin, course)
-			nextRemoteID := uint64(2)
 			for _, teacher := range tt.wantTeachers {
 				if err := db.CreateUser(teacher); err != nil {
 					t.Error(err)
 				}
 				qtest.EnrollTeacher(t, db, teacher, course)
-				nextRemoteID++
 			}
 			for _, student := range tt.students {
 				if err := db.CreateUser(student); err != nil {
 					t.Error(err)
 				}
 				qtest.EnrollStudent(t, db, student, course)
-				nextRemoteID++
 			}
 			// We add the admin to the list of wantTeachers,
 			// since the admin is always registered as a teacher when the course is created.
