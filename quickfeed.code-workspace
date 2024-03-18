@@ -72,6 +72,7 @@
 			// Add parameter placeholders when completing a function.
 			"usePlaceholders": true,
 			"staticcheck": false,
+		    "buildFlags": ["-tags=race"]
 		},
 		"breadcrumbs.enabled": true,
 		"clang-format.executable": "/usr/bin/clang-format",

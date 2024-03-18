@@ -14,12 +14,11 @@ See [cmd/scm/README.md](cmd/scm/README.md) for documentation of the SCM tool.
 
 ## Makefile
 
-The Makefile provides various targets that aims to simplify running various tasks, such as compiling, updating and starting the server.
-The Makefile defines variables, that can be altered depending on your environment, such as port numbers, organization name, and URIs.
+The Makefile in QuickFeed simplifies various tasks like compiling, updating, and launching the server.
 
 ### Compiling Targets
 
-Following changes to `ag/ag.proto`, you need to recompile both the frontend and backend code by running:
+After modifying qf/qf.proto, you need to recompile both frontend and backend. Use the following commands:
 
 ```sh
 make proto
@@ -31,7 +30,7 @@ To recompile and install the QuickFeed server, run:
 make install
 ```
 
-To recompile a new `bundle.js` for the QuickFeed browser-based client, run:
+To compile the browser client bundles:
 
 ```sh
 make ui
@@ -73,74 +72,102 @@ cd web/hooks
 QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHook
 ```
 
-### Utility
-
-`make local` and `make remote` will switch where and how the gRPC client is being run, then will recompile the frontend. Use `make local` when running server on localhost with port forwarding, otherwise use `make remote`.
-
-**Warning:** never push code with local gRPC client settings to the `quickfeed` repository, it will cause the server to stop responding to client requests. If this happens, just run `make remote` on the server location.
-
 ## Server architecture
 
-### Default setup
+### Default Configuration
 
 TODO(meling) Update and improve this part. It is not correct anymore, I think.
 
-By default, the gRPC server will be started at port **:9090**.
-Webserver is running on one of internal ports serving the static content, is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** (same port Envoy proxy is listening on).
-Envoy take care of all the relevant headers for gRPC traffic.
+- **Primary Server Port:** 
+By default, the server runs on port **:443**, the standard port for HTTPS traffic. This ensures secure communication right out of the box.
+- **Custom Port Configuration:** 
+If you need to use a different port, you can easily change this by using the `-http.addr` flag when launching the server.
+- **HTTP to HTTPS Redirection:** 
+Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS. 
+This ensures that even if someone attempts to connect via the unsecured HTTP protocol, their request will be automatically upgraded to a secure connection.
+
+**Important Note:** 
+When running servers on ports like **:80** or **:443**, some operating systems may require elevated permissions or specific configurations. 
+This is because ports below 1024 are considered privileged ports, and running services on these ports might need administrative rights or special configurations.
+
+In Linux, you can use the `setcap` command to allow a binary to bind to privileged ports without elevated permissions. 
+For example, to allow the `quickfeed` binary to bind to port **:443**, you can run the following command:
+
+```sh
+sudo setcap CAP_NET_BIND_SERVICE=+eip /path/to/binary/quickfeed
+```
+
+Note that you will need to repeat this step each time you recompile the server.
+
+Please make sure to check your operating system's documentation for the necessary steps to run services on these ports.
 
 ## Errors and logging
 
-Application errors can be classified into several groups and handled in different ways.
+Application errors can be classified into several groups and handled in different ways:
 
-1. Database errors
-Return generic "not found/failed" error message to user, log the original error.
+**Database errors**:
+  - Return generic "not found/failed" error message to the user, log the original error.
 
-2. SCM errors
-Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
-Example: if a github organization cannot be found, one of the possible issues causing this behavior is disabled third party access. As a result, the requested organization cannot be seen by the application. If a GitHub repo or team cannot be found, they could have been manually deleted from GitHub. Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
-Another example: sometimes GitHub interactions take too long and the request context can be canceled by GitHub. This is not an application failure, and neither developer team, nor user can actively do anything to correct it. But it is still useful to inform the user that the action must be repeated at later time to succeed.
-Return a custom error with method name and original error for logging, and a custom message string to be displayed to user.
+**SCM errors**:
 
-3. Access control errors
-Return generic "access denied" error message to user.
+- Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 
-4. API errors (invalid requests)
-Return generic "malformed request" message to user.
+  **Examples**: 
+  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization. 
+  As a result, the requested organization cannot be seen by QuickFeed. 
+  - If a GitHub repository or team cannot be found, they could have been manually deleted from GitHub. 
+  Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
 
-5. GitHub API errors (request struct has missing/malformed fields)
-Return a custom error with detailed information for logging and generic "action failed" message to user.
+- Sometimes GitHub interactions take too long and the request times out, or is otherwise cancelled by GitHub.
+In these cases the error is usually ephemeral in nature, and the action should be repeated at later time. This should be communicated to the end user.
 
-6. GitHub Cancelled Context errors
-A sporadic error happening on the GitHub side, known to disappear on its own. The only solution is to wait and repeat the action later. Check for this type of errors and inform the user.
+- Return a custom error with detailed information for logging, and a custom error message to the user.
 
-[GRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
+**Access control errors**:
 
-When the client is supposed to show error message to the user, error from the server will have status 9 (gRPC status "failed precondition")
+- Return generic "access denied" error message to the user.
+
+**API errors (invalid requests)**:
+
+- Return generic "malformed request" message to the user.
+
+**GitHub API errors (request struct has missing/malformed fields)**
+
+- Return a custom error with detailed information for logging and generic "failed precondition" message to the user.
+
+
+[Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
 
 ### Backend
 
-Errors are being logged at `QuickFeed Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
+Errors are being logged at `QuickFeed Service` level. 
+All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly. 
+Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
 
-Errors returned to user interface must be few and informative, yet should not provide too many information about server routines. User must only be informed about details he or she can do something about.
+Errors returned to a user should be few and informative. 
+They should not reveal internal details of the application.
 
 ### Frontend
 
-When receiving response from the server, response status code is checked on the frontend. Any message with code different from 0 (0 is gRPC status code `OK`) will be logged to console. Relevant error messages will be displayed to user on course and group creation, and user and group enrollment updates.
+When receiving a response from the server, the response status code is checked on the frontend. 
+Any message with code different from 0 (0 is status code `OK`) will be logged to console. 
+Error messages will be displayed to user where relevant, e.g. on course and group creation, and user and group enrollment updates.
 
-[gRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md)
+[Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes)
 
 ## GitHub API
 
-For GitHub integration we are using [Go implementation](https://github.com/google/go-github/tree/master/github) of [GitHub API](https://developer.github.com/v3/)
+For GitHub integration we are using [Go implementation](https://github.com/google/go-github) of [GitHub API](https://docs.github.com/en/rest)
 
 ### Webhooks
 
-- GitHub [Webhooks API](https://developer.github.com/webhooks/) is used for building and testing of code submitted by students.
-- webhook is created automatically on course creation. It will react to every push event to any of course organization's repositories.
-- depending on the repository the push event is coming from, assignment information will be updated in the QuickFeed's database, or a docker container with a student solution code will be built
-- `name` field for any GitHub webhook is always "web"
-- webhook will be using the same callback URL you have provided to the QuickFeed OAuth2 application and in the server startup command
+- GitHub [Webhooks API](https://docs.github.com/en/webhooks) is used for building and testing of code submitted by students.
+- A webhook is created automatically when installing the GitHub App on a course organization. The webhook will be triggered by pushes to repositories in the organization.
+- Push events from the `tests` repository may update
+  - The assignment information in QuickFeed's database.
+  - The Docker container and run.sh script used for building and testing student submitted code.
+- Push events from the `username-labs` repositories may trigger text execution.
+- The webhook will POST events to `$DOMAIN/hook/`, where `$DOMAIN` is the domain name of the server, as defined in your `.env` file.
 
 ### User roles/access levels for organization / team / repository
 
@@ -164,17 +191,15 @@ For example, organization with a name like `QuickFeed Test Org` will have slugif
 
 ### Teams
 
-Student groups will have GitHub teams with the same name created in the course organization.
-Group records in the QuickFeed's database will have references to the corresponding GitHub team ID's.
+QuickFeed will create a team for each group in a course organization. 
+The team name will be the same as the group name. 
+Members of a group will be added to the corresponding team, and will have write/push access to the group repository.
 
-## Simple testing of UI with dummy data
-
-Since this is a single page application, then you would only be able to navigate to the default index page, every other navigation is handle by javascript. The way this works at the server, is that every request to /app/ returns the index.html page.
-Now to get around the problem, we have to use the built in navigation manager, navMan. To do this, go to the main page of the application and open developer tools in the browser. In the command line type in the following command debugData.navMan.navigateTo("/app/admin/courses/new"). You could replace the url with any other url as you like.
+Group records in the database will have references to the corresponding GitHub team ID's.
 
 ## Docker
 
-QuickFeed application will build code submitted by students, and run tests provided by teachers inside docker containers.
+QuickFeed will build code submitted by students, and run tests provided by teachers inside docker containers.
 An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
 If you get a build error like that:
 
@@ -190,15 +215,16 @@ One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/defau
 
 ## npm
 
-`npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.
+`npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. 
+If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.
 
 ## Repairing database from backups
 
-Given a current database `ag.db` and a backup `bak.db`, and we want to replace records in a table `users` of the `ag.db` with entries from the same table in `bak.db`.
+Given a current database `qf.db` and a backup `bak.db`, and we want to replace records in a table `users` of the `qf.db` with entries from the same table in `bak.db`.
 The database you open first will be under the alias `main`.
 
 ```sql
-sqlite3 ag.db
+sqlite3 qf.db
 delete from users;
 attach database '/full/path/bak.db' as backup;
 insert into main.users select * from backup.users;

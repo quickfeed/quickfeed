@@ -2,7 +2,7 @@ package exercise
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -21,7 +21,7 @@ var (
 // ParseMarkdownAnswers returns a map of the answers found in the given answer file.
 // Only a single answer is allowed per question
 func ParseMarkdownAnswers(answerFile string) (map[int]string, error) {
-	md, err := ioutil.ReadFile(answerFile)
+	md, err := os.ReadFile(answerFile)
 	if err != nil {
 		return nil, err
 	}

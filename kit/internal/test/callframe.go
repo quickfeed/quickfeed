@@ -1,4 +1,4 @@
-package score
+package test
 
 import (
 	"fmt"
@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	pkg = "github.com/quickfeed/quickfeed/kit/score."
+	testPkg  = "github.com/quickfeed/quickfeed/kit/internal/test."
+	scorePkg = "github.com/quickfeed/quickfeed/kit/score."
 )
 
-// callFrame returns the call frame of the Test function that
+// CallFrame returns the call frame of the Test function that
 // called one of the registry functions.
-func callFrame() (frame runtime.Frame) {
+func CallFrame() (frame runtime.Frame) {
 	frames := unwindCallFrames()
 	for _, f := range frames {
 		// The call frame must be in a _test.go file
@@ -21,14 +22,14 @@ func callFrame() (frame runtime.Frame) {
 			return f
 		}
 		// Special case handling for TestCallFrame
-		if strings.HasPrefix(f.Function, pkg+"TestCallFrame") {
+		if strings.HasPrefix(f.Function, testPkg+"TestCallFrame") {
 			return f
 		}
-		// Ignore functions in the kit/score library
-		if strings.HasPrefix(f.Function, pkg) {
+		// Ignore functions in kit/score and kit/internal/test packages
+		if strings.HasPrefix(f.Function, testPkg) || strings.HasPrefix(f.Function, scorePkg) {
 			continue
 		}
-		// Only Test functions can call the callFrame functions
+		// Only Test functions can call the CallFrame function
 		panic(fmt.Errorf("%s:%d: %s: %s", filepath.Base(f.File), f.Line, stripPkg(f.Function), "unauthorized lookup"))
 	}
 	return

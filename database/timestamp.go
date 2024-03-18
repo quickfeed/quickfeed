@@ -27,6 +27,10 @@ func (TimestampSerializer) Value(_ context.Context, _ *schema.Field, _ reflect.V
 	if !ok {
 		return nil, ErrUnsupportedType
 	}
+	if t == nil {
+		// explicitly return nil to avoid saving empty timestamp as "0001-01-01T00:00:00Z"
+		return nil, nil
+	}
 	return t.AsTime(), nil
 }
 
