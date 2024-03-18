@@ -73,7 +73,7 @@ func TestDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	wantUser := qtest.CreateFakeUser(t, db, remoteID)
+	wantUser := qtest.CreateFakeUser(t, db)
 
 	cachedAccessToken := wantUser.GetRefreshToken()
 

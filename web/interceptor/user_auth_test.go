@@ -28,8 +28,8 @@ func TestUserVerifier(t *testing.T) {
 	))
 	ctx := context.Background()
 
-	adminUser := qtest.CreateFakeUser(t, db, 1)
-	student := qtest.CreateFakeUser(t, db, 56)
+	adminUser := qtest.CreateFakeUser(t, db)
+	student := qtest.CreateFakeUser(t, db)
 
 	adminCookie, err := tm.NewAuthCookie(adminUser.ID)
 	if err != nil {

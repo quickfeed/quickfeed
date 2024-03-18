@@ -17,7 +17,7 @@ func TestNewGroup(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.ScmOrganizationID = 1
@@ -25,7 +25,7 @@ func TestNewGroup(t *testing.T) {
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	user := qtest.CreateFakeUser(t, db, 2)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &course)
 
 	ctx := context.Background()
@@ -50,14 +50,14 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.ScmOrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	user := qtest.CreateFakeUser(t, db, 2)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &course)
 
 	users := []*qf.User{{ID: user.ID}}
@@ -88,7 +88,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.ScmOrganizationID = 1
@@ -96,10 +96,10 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
+	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user := qtest.CreateFakeUser(t, db, 3)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &course)
 
 	users := []*qf.User{{ID: user.ID}}
@@ -138,7 +138,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.ScmOrganizationID = 1
@@ -146,10 +146,10 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
+	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user := qtest.CreateFakeUser(t, db, 3)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &course)
 
 	// current user must be in the group being created
@@ -172,22 +172,22 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := qf.Course{ScmOrganizationID: 1, ScmOrganizationName: qtest.MockOrg}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
+	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user1 := qtest.CreateFakeUser(t, db, 3)
+	user1 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user1, &course)
 
-	user2 := qtest.CreateFakeUser(t, db, 4)
+	user2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user2, &course)
 
-	user3 := qtest.CreateFakeUser(t, db, 5)
+	user3 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user3, &course)
 
 	// set user1 in cookie, which is a group member
@@ -301,7 +301,7 @@ func TestDeleteGroup(t *testing.T) {
 	defer cleanup()
 
 	client, tm, _ := MockClientWithUser(t, db)
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 
 	ctx := context.Background()
 	testCourse, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
@@ -311,7 +311,7 @@ func TestDeleteGroup(t *testing.T) {
 	course := testCourse.Msg
 
 	// create user and enroll as pending (teacher)
-	teacher := qtest.CreateNamedUser(t, db, 3, "teacher")
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: course.ID,
@@ -346,7 +346,7 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create user and enroll as pending (student)
-	user := qtest.CreateNamedUser(t, db, 2, "student")
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -397,13 +397,13 @@ func TestGetGroup(t *testing.T) {
 		Tag:               "Spring",
 		ScmOrganizationID: 1,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 2)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &testCourse)
 
 	ctx := context.Background()
@@ -442,13 +442,13 @@ func TestPatchGroupStatus(t *testing.T) {
 		ID:                  1,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	err := db.CreateCourse(admin.ID, &course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
+	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
 	if err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true}); err != nil {
@@ -457,8 +457,8 @@ func TestPatchGroupStatus(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1 := qtest.CreateFakeUser(t, db, 3)
-	user2 := qtest.CreateFakeUser(t, db, 4)
+	user1 := qtest.CreateFakeUser(t, db)
+	user2 := qtest.CreateFakeUser(t, db)
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, &course)
@@ -507,7 +507,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		ID:                1,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	err := db.CreateCourse(admin.ID, &course)
 	if err != nil {
 		t.Fatal(err)
@@ -515,8 +515,8 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1 := qtest.CreateFakeUser(t, db, 2)
-	user2 := qtest.CreateFakeUser(t, db, 3)
+	user1 := qtest.CreateFakeUser(t, db)
+	user2 := qtest.CreateFakeUser(t, db)
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, &course)
@@ -556,12 +556,12 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, admin, course)
 
-	user1 := qtest.CreateFakeUser(t, db, 2)
-	user2 := qtest.CreateFakeUser(t, db, 3)
+	user1 := qtest.CreateFakeUser(t, db)
+	user2 := qtest.CreateFakeUser(t, db)
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, course)
@@ -635,8 +635,8 @@ func TestGetGroups(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 
 	var users []*qf.User
-	for _, u := range allUsers {
-		user := qtest.CreateFakeUser(t, db, u.remoteID)
+	for range allUsers {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	admin := users[0]

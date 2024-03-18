@@ -24,8 +24,8 @@ func TestGetUsers(t *testing.T) {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
-	user2 := qtest.CreateFakeUser(t, db, 2)
+	admin := qtest.CreateFakeUser(t, db)
+	user2 := qtest.CreateFakeUser(t, db)
 
 	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
@@ -62,8 +62,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	ctx := context.Background()
 
 	var users []*qf.User
-	for _, u := range allUsers {
-		user := qtest.CreateFakeUser(t, db, u.remoteID)
+	for range allUsers {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	admin := users[0]
@@ -126,8 +126,8 @@ func TestUpdateUser(t *testing.T) {
 	))
 	ctx := context.Background()
 
-	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
-	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
+	firstAdminUser := qtest.CreateFakeUser(t, db)
+	nonAdminUser := qtest.CreateFakeUser(t, db)
 
 	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.ID)
 	if err != nil {
@@ -189,11 +189,11 @@ func TestUpdateUserFailures(t *testing.T) {
 	client, tm, _ := MockClientWithUser(t, db)
 	ctx := context.Background()
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	if !admin.IsAdmin {
 		t.Fatalf("expected user %v to be admin", admin)
 	}
-	user := qtest.CreateNamedUser(t, db, 2, "user")
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
 	if user.IsAdmin {
 		t.Fatalf("expected user %v to be non-admin", user)
 	}

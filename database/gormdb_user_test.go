@@ -12,7 +12,7 @@ func TestGetUserByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		ID:              1,
 		CourseCreatorID: admin.ID,

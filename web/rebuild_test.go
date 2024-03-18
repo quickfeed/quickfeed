@@ -67,7 +67,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	defer cleanup()
 	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
-	teacher := qtest.CreateFakeUser(t, db, 1)
+	teacher := qtest.CreateFakeUser(t, db)
 	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
@@ -81,10 +81,10 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	student1 := qtest.CreateFakeUser(t, db, 2)
+	student1 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student1, &course)
 
-	student2 := qtest.CreateFakeUser(t, db, 4)
+	student2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student2, &course)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.ScmOrganizationName}
