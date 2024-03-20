@@ -8,7 +8,7 @@ import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
-import Alert from "../components/Alert"
+import Alerts from "../components/alerts/Alerts"
 
 const ReviewResults = () => <Results review={true} />;
 const RegularResults = () => <Results review={false} />;
@@ -42,7 +42,7 @@ const TeacherPage = (): JSX.Element => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alert />
+            <Alerts />
             <div className="row" hidden={history.location.pathname != root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />

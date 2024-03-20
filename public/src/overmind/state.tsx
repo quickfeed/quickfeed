@@ -11,8 +11,11 @@ export interface CourseGroup {
 }
 
 export interface Alert {
+    id: number
     text: string
     color: Color
+    // The delay in milliseconds before the alert is removed
+    delay?: number
 }
 
 interface GroupOrEnrollment {
@@ -177,7 +180,7 @@ export type State = {
     /* Contains either an existing group to edit, or a new group to create */
     activeGroup: Group | null,
 
-    hasGroup: (courseID: number) => boolean,
+    hasGroup: (courseID: string) => boolean,
 
     connectionStatus: ConnStatus,
 

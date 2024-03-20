@@ -52,6 +52,23 @@ func OutputErrA(cmd string, args ...string) (string, string, error) {
 	return strings.TrimSuffix(stdout.String(), "\n"), strings.TrimSuffix(stderr.String(), "\n"), err
 }
 
+// RunRaceTest runs the given test with the race detector enabled.
+// It returns the test output and false if there weren't any data races.
+// Otherwise, it returns the stack trace and true if there was a data race.
+//
+// The test to be run with the race detector should be in a separate file with
+// the race build tag. See the race_test.go file in this package for an example.
+//
+// If the tags argument is non-zero, it is passed to the go test command.
+func RunRaceTest(testName, tags string) (s string, race bool) {
+	if tags != "" {
+		s, _ = OutputA("go", "test", "-v", "-race", "-run", testName, "-tags", tags)
+	} else {
+		s, _ = OutputA("go", "test", "-v", "-race", "-run", testName)
+	}
+	return s, strings.Contains(s, "WARNING: DATA RACE")
+}
+
 func internalRun(stdout, stderr io.Writer, cmd string, args ...string) (ran bool, err error) {
 	c := exec.Command(cmd, args...)
 	c.Stderr = stderr

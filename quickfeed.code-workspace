@@ -12,7 +12,7 @@
 		"editor.formatOnSave": true,
 		"editor.inlineSuggest.enabled": true,
 		"editor.codeActionsOnSave": {
-			"source.fixAll": true
+			"source.fixAll": "explicit"
 		},
 		"protoc": {
 			"compile_on_save": false,
@@ -72,6 +72,7 @@
 			// Add parameter placeholders when completing a function.
 			"usePlaceholders": true,
 			"staticcheck": false,
+		    "buildFlags": ["-tags=race"]
 		},
 		"breadcrumbs.enabled": true,
 		"clang-format.executable": "/usr/bin/clang-format",

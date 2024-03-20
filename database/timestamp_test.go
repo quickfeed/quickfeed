@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm/schema"
 )
@@ -63,6 +64,20 @@ func TestTimestampSerializer_Value(t *testing.T) {
 				t.Errorf("mismatch timestamp (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestTimestampSerializer_Nil_Value(t *testing.T) {
+	ctx := context.Background()
+	assignment := &qf.Assignment{
+		Order:    1,
+		CourseID: 1,
+		// Deadline is nil
+	}
+	ts := database.TimestampSerializer{}
+	got, _ := ts.Value(ctx, &schema.Field{}, reflect.Value{}, assignment.Deadline)
+	if got != nil {
+		t.Errorf("expected nil, got = %v, ", got)
 	}
 }
 
