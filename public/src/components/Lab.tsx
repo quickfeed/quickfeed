@@ -3,8 +3,8 @@ import { useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useAppState, useActions } from '../overmind'
-import CourseUtilityLinks from './CourseUtilityLinks'
-import LabResultTable from './LabResultTable'
+import CourseLinks from "./CourseLinks"
+import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
 
 interface MatchProps {
@@ -74,7 +74,7 @@ const Lab = (): JSX.Element => {
             <div className={state.isTeacher ? "" : "col-md-9"}>
                 <InternalLab />
             </div>
-            {state.isTeacher ? null : <CourseUtilityLinks />}
+            {state.isTeacher ? null : <CourseLinks />}
         </div>
     )
 }
