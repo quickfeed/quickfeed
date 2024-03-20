@@ -363,6 +363,41 @@ export class SubmissionsForCourse {
         return this.userSubmissions.get(owner.id)?.submissions ?? []
     }
 
+    ByID(id: bigint): Submission | undefined {
+        for (const submissions of this.userSubmissions.values()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return submission
+            }
+        }
+        for (const submissions of this.groupSubmissions.values()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return submission
+            }
+        }
+        return undefined
+    }
+
+    OwnerByID(id: bigint): SubmissionOwner | undefined {
+        for (const [key, submissions] of this.userSubmissions.entries()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                if (submission.groupID > 0) {
+                    return { type: "GROUP", id: submission.groupID }
+                }
+                return { type: "ENROLLMENT", id: key }
+            }
+        }
+        for (const [key, submissions] of this.groupSubmissions.entries()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return { type: "GROUP", id: key }
+            }
+        }
+        return undefined
+    }
+
     update(owner: SubmissionOwner, submission: Submission) {
         const submissions = this.ForOwner(owner)
         const index = submissions.findIndex(s => s.AssignmentID === submission.AssignmentID)
