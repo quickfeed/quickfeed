@@ -16,14 +16,14 @@ func TestGetRepositories(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
+	teacher := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
 	// student, not in a group
-	student := qtest.CreateFakeUser(t, db, 2)
+	student := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student, course)
 	// student, in a group
-	groupStudent := qtest.CreateFakeUser(t, db, 3)
+	groupStudent := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, groupStudent, course)
 	group := &qf.Group{
 		Name:     "1001 Hacking Crew",
@@ -34,7 +34,7 @@ func TestGetRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 	// user, not enrolled in the course
-	notEnrolledUser := qtest.CreateFakeUser(t, db, 5)
+	notEnrolledUser := qtest.CreateFakeUser(t, db)
 
 	// create repositories for users and group
 	teacherRepo := &qf.Repository{
