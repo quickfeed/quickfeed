@@ -10,15 +10,14 @@ const Breadcrumbs = () => {
     const [assignmentName, setAssignmentName] = useState<string | null>(null);
     const pathnames = location.pathname.split('/').filter(x => x);
 
-    const getCourseNameById = async (id: string): Promise<string | null> => {
+    const getCourseNameById = (id: string): string | null => {
         const course = state.courses.find(course => course.ID.toString() === id);
         return course ? course.name : null
     };
 
-    const getAssignmentNameById = async (id: string): Promise<string | null> => {
+    const getAssignmentNameById = (id: string): string | null => {
         if (pathnames[0] === 'course' && pathnames[1]) {
             const assignment = state.assignments[pathnames[1]].find(assignment => assignment.ID.toString() === id);
-            console.log(assignment)
             return assignment ? assignment.name : null
         }
         return null
@@ -26,12 +25,11 @@ const Breadcrumbs = () => {
 
     useEffect(() => {
         if (pathnames[0] === 'course' && pathnames[1]) {
-            getCourseNameById(pathnames[1]).then(setCourseName);
+            setCourseName(getCourseNameById(pathnames[1]))
         }
         if (pathnames[2] === 'lab' && pathnames[3]) {
-            getAssignmentNameById(pathnames[3]).then(setAssignmentName);
+            setAssignmentName(getAssignmentNameById(pathnames[3]))
         }
-        console.log(pathnames)
     }, [pathnames]);
 
     return (
