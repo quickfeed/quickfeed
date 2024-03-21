@@ -94,6 +94,14 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 		case *github.PullRequestReviewEvent:
 			wh.handlePullRequestReview(e)
 
+		case *github.OrganizationEvent:
+			switch e.GetAction() {
+			case "member_invited":
+				wh.handleOrgInvite(e)
+			default:
+				// either "deleted", "renamed", "member_added", "member_removed"
+			}
+
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 		}
