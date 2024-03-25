@@ -356,6 +356,27 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 		})
 	}
+
+	adminGetEnrollmentsTests := map[string]accessTest{
+		"admin, not enrolled in the course": {cookie: adminCookie, courseID: course.ID, userID: student.ID, wantAccess: true, wantCode: connect.CodePermissionDenied},
+	}
+
+	for name, tt := range adminGetEnrollmentsTests {
+		t.Run("AdminGetEnrollments/"+name, func(t *testing.T) {
+			_, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_CourseID{
+					CourseID: tt.courseID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
+			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_UserID{
+					UserID: tt.userID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
+		})
+	}
 }
 
 func checkAccess(t *testing.T, method string, err error, wantCode connect.Code, wantAccess bool) {
