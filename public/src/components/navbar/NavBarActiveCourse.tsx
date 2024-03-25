@@ -1,8 +1,8 @@
 import React from "react"
-import { Link } from "react-router-dom"
 import { useAppState } from "../../overmind"
 import CourseFavoriteButton from "../CourseFavoriteButton"
 import ToggleSwitch from "./ToggleSwitch"
+import Breadcrumbs from "./Breadcrumbs"
 
 
 
@@ -17,7 +17,7 @@ const NavBarActiveCourse = (): JSX.Element | null => {
 
     return (
         <div className="nav-child course">
-            <Link to={`/course/${activeCourse?.ID}`} className="nav-link">{activeCourse?.name}</Link>
+            <Breadcrumbs />
             <CourseFavoriteButton enrollment={enrollment} style={{ "paddingRight": "20px" }} />
             <ToggleSwitch />
         </div>

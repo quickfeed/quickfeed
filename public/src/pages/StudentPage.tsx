@@ -2,7 +2,7 @@ import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
 import CourseLabs from "../components/CourseLabs"
-import CourseUtilityLinks from "../components/CourseUtilityLinks"
+import CourseLinks from "../components/CourseLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
@@ -22,7 +22,7 @@ const StudentPage = (): JSX.Element => {
                 <div className="col-md-9" >
                     <CourseLabs />
                 </div>
-                <CourseUtilityLinks />
+                <CourseLinks />
             </div>
             <Switch>
                 <Route path="/course/:id/group" exact component={GroupPage} />
