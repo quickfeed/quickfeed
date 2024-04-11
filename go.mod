@@ -8,7 +8,7 @@ require (
 	github.com/alecthomas/kong v0.6.1
 	github.com/alta/protopatch v0.5.3
 	github.com/beatlabs/github-auth v0.0.0-20231208231443-3b7665fb4bb8
-	github.com/docker/docker v25.0.0+incompatible
+	github.com/docker/docker v25.0.5+incompatible
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.6.0
@@ -23,7 +23,7 @@ require (
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
 	golang.org/x/oauth2 v0.16.0
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5

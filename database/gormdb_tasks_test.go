@@ -15,7 +15,7 @@ import (
 func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db, uint64(1))
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
@@ -188,7 +188,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 			defer cleanup()
-			admin := qtest.CreateFakeUser(t, db, 1)
+			admin := qtest.CreateFakeUser(t, db)
 			course := &qf.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 
