@@ -46,7 +46,7 @@ func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request 
 		return err
 	}
 	if len(repos) < 1 {
-		return fmt.Errorf("no repositories found")
+		return nil
 	}
 	return isEmpty(ctx, sc, repos)
 }
