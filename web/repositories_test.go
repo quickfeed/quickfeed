@@ -198,15 +198,15 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 	defer cleanup()
 	client := web.MockClient(t, db, nil)
 
-	user := qtest.CreateFakeUser(t, db, 1)
+	user := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, user, course)
 
-	student := qtest.CreateFakeUser(t, db, 2)
+	student := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student, course)
 
 	// student, in a group
-	groupStudent := qtest.CreateFakeUser(t, db, 3)
+	groupStudent := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, groupStudent, course)
 
 	group := &qf.Group{
