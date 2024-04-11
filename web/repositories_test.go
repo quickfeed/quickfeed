@@ -232,14 +232,12 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		ctx     context.Context
 		request *qf.RepositoryRequest
 		wantErr bool
 	}{
 		{
 			// cannot distinguish between empty and non-existing repositories
 			name: "empty repositories",
-			ctx:  context.Background(),
 			request: &qf.RepositoryRequest{
 				CourseID: course.ID, // 1
 				GroupID:  group.ID,  // 1
@@ -248,7 +246,6 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 		},
 		{
 			name: "no repositories",
-			ctx:  context.Background(),
 			request: &qf.RepositoryRequest{
 				CourseID: course.ID,
 				GroupID:  group.ID, // 1
@@ -257,7 +254,6 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 		},
 		{
 			name: "course not found",
-			ctx:  context.Background(),
 			request: &qf.RepositoryRequest{
 				CourseID: 123,
 				UserID:   user.ID, // 1
@@ -267,7 +263,6 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 		},
 		{
 			name: "user not found",
-			ctx:  context.Background(),
 			request: &qf.RepositoryRequest{
 				CourseID: course.ID, // 1
 				UserID:   123,
@@ -277,7 +272,6 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 		},
 		{
 			name: "user has no repositories",
-			ctx:  context.Background(),
 			request: &qf.RepositoryRequest{
 				CourseID: 1,
 				UserID:   student.ID, // 2
@@ -289,7 +283,7 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := client.IsEmptyRepo(tt.ctx, qtest.RequestWithCookie(tt.request, "cookie")); (err != nil) != tt.wantErr {
+			if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tt.request, "cookie")); (err != nil) != tt.wantErr {
 				t.Errorf("IsEmptyRepo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
