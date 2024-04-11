@@ -572,12 +572,17 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group): Pr
         courseID: group.courseID,
         groupID: group.ID,
     })
-    if (isEmptyResponse.error) {
-        return
-    }
 
-    if (!confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
-        return
+    if (isEmptyResponse.error) {
+        // If the error code is not FailedPrecondition, the request failed.
+        if (isEmptyResponse.error.code !== Code.FailedPrecondition) {
+            return
+        }
+        // Otherwise, the repository does not exist or is not empty.
+        // We can still delete the group, but prompt the user with a warning.
+        if (!confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
+            return
+        }
     }
     const deleteResponse = await effects.api.client.deleteGroup({
         courseID: group.courseID,
