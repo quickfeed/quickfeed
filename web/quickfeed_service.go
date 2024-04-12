@@ -597,13 +597,29 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted.
 func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
+	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
+	}
+	repos, err := s.db.GetRepositories(&qf.Repository{
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		UserID:            in.Msg.GetUserID(),
+		GroupID:           in.Msg.GetGroupID(),
+	})
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get database repositories"))
+	}
+	if len(repos) < 1 {
+		// No repository found, nothing to delete
+		return &connect.Response[qf.Void]{}, nil
+	}
+	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 
-	if err := s.isEmptyRepo(ctx, scmClient, in.Msg); err != nil {
+	if err := isEmpty(ctx, scmClient, repos); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
 			s.logger.Error(ctxErr)
