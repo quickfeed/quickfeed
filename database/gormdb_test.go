@@ -34,11 +34,11 @@ func TestDBGetUserWithEnrollments(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 11)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	student := qtest.CreateFakeUser(t, db, 13)
+	student := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student, course)
 
 	// user entries from the database will have to be enrolled as
@@ -162,11 +162,11 @@ func TestDBCreateEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 10)
+	user := qtest.CreateFakeUser(t, db)
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -186,11 +186,11 @@ func TestDBAcceptRejectEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 10)
+	user := qtest.CreateFakeUser(t, db)
 	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -312,7 +312,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	c1 := &qf.Course{ScmOrganizationID: 1, Code: "DAT101", Year: 1}
 	c2 := &qf.Course{ScmOrganizationID: 2, Code: "DAT101", Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
@@ -321,8 +321,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	var users []*qf.User
 	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
-	for i := 0; i < len(enrollments); i++ {
-		user := qtest.CreateFakeUser(t, db, uint64(i))
+	for range enrollments {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	// enroll users in course
@@ -450,15 +450,15 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
 	var users []*qf.User
 	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
-	for i := 0; i < len(enrollments); i++ {
-		user := qtest.CreateFakeUser(t, db, uint64(i))
+	for range enrollments {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	// enroll users in course

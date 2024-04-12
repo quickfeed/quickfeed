@@ -439,7 +439,7 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
     state.assignments[id]?.forEach(assignment => {
         const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
         if (!state.submissions[id][assignment.order - 1]) {
-	    state.submissions[id][assignment.order - 1] = submission ? submission : new Submission()
+            state.submissions[id][assignment.order - 1] = submission ? submission : new Submission()
         }
     })
 }

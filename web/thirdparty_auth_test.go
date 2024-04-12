@@ -38,7 +38,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 func fillDatabase(t *testing.T, db database.Database, token string) *qf.User {
 	t.Helper()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		Code: "DAT320",
 		Name: "Operating Systems and Systems Programming",

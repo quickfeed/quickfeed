@@ -14,7 +14,7 @@ func TestBadGroupNames(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		Name: "Distributed Systems",
 		Code: "DAT520",
@@ -48,11 +48,10 @@ func TestBadGroupNames(t *testing.T) {
 		{"DuplicateGroupName", nil},
 		{"DuplicateGroupName", web.ErrGroupNameDuplicate},
 	}
-	for i, tt := range groupNames {
-		ii := uint64(i) * 10
+	for _, tt := range groupNames {
 		t.Run(tt.name, func(t *testing.T) {
-			user1 := qtest.CreateFakeUser(t, db, ii+2)
-			user2 := qtest.CreateFakeUser(t, db, ii+3)
+			user1 := qtest.CreateFakeUser(t, db)
+			user2 := qtest.CreateFakeUser(t, db)
 			qtest.EnrollStudent(t, db, user1, course)
 			qtest.EnrollStudent(t, db, user2, course)
 
