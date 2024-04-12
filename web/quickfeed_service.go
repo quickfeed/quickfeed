@@ -609,9 +609,6 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository does not exist or not empty"))
 	}
 	return &connect.Response[qf.Void]{}, nil
