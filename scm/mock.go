@@ -439,7 +439,6 @@ func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOpt
 
 // CreateGroup creates team and repository for a new group.
 func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
-	fmt.Println("CreateGroup", opt)
 	if !opt.valid() {
 		return nil, nil, fmt.Errorf("invalid argument: %v", opt)
 	}
