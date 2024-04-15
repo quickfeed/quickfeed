@@ -2,8 +2,10 @@ import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
-import { Timestamp } from "@bufbuild/protobuf"
+import { AnyMessage, Timestamp } from "@bufbuild/protobuf"
 import { CourseSubmissions } from "../proto/qf/requests_pb"
+import { Code } from "@bufbuild/connect"
+import { Response } from "./client"
 
 export enum Color {
     RED = "danger",
@@ -404,4 +406,31 @@ export class SubmissionsForCourse {
                 break
         }
     }
+}
+
+
+export namespace Prompt {
+    export const GroupDelete = "Are you sure you want to delete this group?"
+    export const GroupRepoNotEmpty = "Warning: The group repository is not empty. Do you still want to delete the group, GitHub team, and group repository?" 
+    export const EnrollmentRepoNotEmpty = "Warning: The enrollment repository is not empty. Do you still want to delete the enrollment and enrollment repository?"
+}
+
+/** promptOnErrorResponse prompts the user with a warning if the response contains an error with the given code. 
+ *  If the user confirms the warning, the function returns null. Otherwise, it returns the error.
+ *  The function is used to prompt the user before performing an action that may result in data loss.
+ * @param response The response to check for errors.
+ * @param errorCode The error code to check for.
+ * @param message The message to display to the user.
+ * @returns The error if the user did not confirm the warning, or null if the user did.
+ * 
+*/
+export function promptOnErrorResponse<T extends AnyMessage>(response: Response<T>, errorCode: Code, message: string) {
+    if (response.error) {
+        if (response.error.code === errorCode) {
+            if (confirm(message)) {
+                return null;
+            }
+        }
+    }
+    return response.error
 }
