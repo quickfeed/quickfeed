@@ -1,7 +1,7 @@
 import { Code } from "@bufbuild/connect";
 import { Context } from ".";
 import { RepositoryRequest } from "../../proto/qf/requests_pb";
-import { Prompt, promptOnErrorResponse } from "../Helpers";
+import { Prompt, promptOnErrorResponse } from "./utils/errors";
 
 export const isEmptyRepo = async (
   { effects }: Context,
