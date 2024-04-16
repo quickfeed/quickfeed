@@ -11,5 +11,5 @@ export const isEmptyRepo = async (
   const prompt = request.groupID
     ? Prompt.GroupRepoNotEmpty
     : Prompt.EnrollmentRepoNotEmpty
-  promptOnErrorResponse(response, Code.FailedPrecondition, prompt) === null
+  return promptOnErrorResponse(response, Code.FailedPrecondition, prompt) === null
 }
