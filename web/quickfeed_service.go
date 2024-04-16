@@ -599,6 +599,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
+		s.logger.Errorf("IsEmptyRepo failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	repos, err := s.db.GetRepositories(&qf.Repository{
@@ -607,7 +608,8 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 		GroupID:           in.Msg.GetGroupID(),
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get database repositories"))
+		s.logger.Errorf("IsEmptyRepo failed: could not get repositories for course %d, user %d, group %d: %v", in.Msg.GetCourseID(), in.Msg.GetUserID(), in.Msg.GetGroupID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("repositories not found"))
 	}
 	if len(repos) < 1 {
 		// No repository found, nothing to delete
@@ -625,7 +627,7 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository does not exist or not empty"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository is not empty"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
