@@ -296,8 +296,6 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 	}
 
 	// Group now has a repository
-	// TODO: Although the repository is created, it is empty.
-	// TODO: Our mock SCM client returns false (not empty) as long as the repository exists.
 	tests[0].wantErr = true
 	if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tests[0].request, "cookie")); err == nil {
 		t.Error("expected error", err)
