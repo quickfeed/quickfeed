@@ -1,20 +1,15 @@
-import { Code } from "@bufbuild/connect";
-import { Context } from ".";
-import { RepositoryRequest } from "../../proto/qf/requests_pb";
-import { Prompt, promptOnErrorResponse } from "./utils/errors";
+import { Code } from "@bufbuild/connect"
+import { Context } from "."
+import { RepositoryRequest } from "../../proto/qf/requests_pb"
+import { Prompt, promptOnErrorResponse } from "./utils/errors"
 
 export const isEmptyRepo = async (
   { effects }: Context,
   request: Partial<RepositoryRequest>
 ) => {
-  const response = await effects.api.client.isEmptyRepo(request);
+  const response = await effects.api.client.isEmptyRepo(request)
   const prompt = request.groupID
     ? Prompt.GroupRepoNotEmpty
-    : Prompt.EnrollmentRepoNotEmpty;
-  if (
-    promptOnErrorResponse(response, Code.FailedPrecondition, prompt) === null
-  ) {
-    return true;
-  }
-  return false;
-};
+    : Prompt.EnrollmentRepoNotEmpty
+  promptOnErrorResponse(response, Code.FailedPrecondition, prompt) === null
+}
