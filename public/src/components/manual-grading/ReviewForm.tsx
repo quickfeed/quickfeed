@@ -58,16 +58,14 @@ const ReviewForm = (): JSX.Element => {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
-            <div className="col reviewLab reviewLabResult">
-                <div className="mb-1">
-                    {selectReviewButton}
-                </div>
-                {state.review.currentReview ?
+            <div className="col lab-sticky reviewLabResult">
+                <div className="mb-1">{selectReviewButton}</div>
+                {state.review.currentReview ? (
                     <>
                         <ReviewInfo review={state.review.currentReview} />
                         <ReviewResult review={state.review.currentReview} />
-                    </> : null
-                }
+                    </>
+                ) : null}
             </div>
         )
     }

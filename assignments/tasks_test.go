@@ -116,7 +116,7 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 		ScmOrganizationName: org.GetScmOrganizationName(),
 		ScmOrganizationID:   org.GetScmOrganizationID(),
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
@@ -133,7 +133,7 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 			RepoType:          qf.RepoType(scmRepo.Path),
 		}
 		if repo.IsUserRepo() {
-			user := qtest.CreateFakeUser(t, db, 0)
+			user := qtest.CreateFakeUser(t, db)
 			qtest.EnrollStudent(t, db, user, course)
 			group := &qf.Group{
 				Name:     repo.UserName(),

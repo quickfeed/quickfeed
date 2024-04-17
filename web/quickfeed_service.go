@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
@@ -351,7 +351,7 @@ func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
 func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error) {
-	s.logger.Debugf("GetSubmissions: %v", in)
+	s.logger.Debugf("GetSubmissions: %v", in.Msg)
 	submissions, err := s.getSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetSubmissions failed: %v", err)

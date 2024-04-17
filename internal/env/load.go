@@ -10,14 +10,17 @@ import (
 	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
-const dotEnvPath = ".env"
+const (
+	dotEnvPath          = ".env"
+	quickfeedModulePath = "github.com/quickfeed/quickfeed"
+)
 
 var quickfeedRoot string
 
 func init() {
 	quickfeedRoot = os.Getenv("QUICKFEED")
 	if quickfeedRoot == "" {
-		out, err := sh.Output("go list -m -f {{.Dir}}")
+		out, err := sh.Output("go list -m -f {{.Dir}} " + quickfeedModulePath)
 		if err != nil {
 			log.Fatalf("Failed to set QUICKFEED variable: %v", err)
 		}
@@ -80,5 +83,5 @@ func Load(filename string) error {
 
 func ignore(line string) bool {
 	trimmedLine := strings.TrimSpace(line)
-	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
+	return trimmedLine == "" || strings.HasPrefix(trimmedLine, "#")
 }

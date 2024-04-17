@@ -6,7 +6,7 @@ import CourseUtilityLinks from "../components/CourseUtilityLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
-import Alert from "../components/Alert"
+import Alerts from "../components/alerts/Alerts"
 
 
 const StudentPage = (): JSX.Element => {
@@ -17,7 +17,7 @@ const StudentPage = (): JSX.Element => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alert />
+            <Alerts />
             <div className="row" hidden={history.location.pathname !== root}>
                 <div className="col-md-9" >
                     <CourseLabs />

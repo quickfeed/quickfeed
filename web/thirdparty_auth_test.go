@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -38,7 +38,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 func fillDatabase(t *testing.T, db database.Database, token string) *qf.User {
 	t.Helper()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		Code: "DAT320",
 		Name: "Operating Systems and Systems Programming",

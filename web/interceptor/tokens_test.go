@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -37,8 +37,8 @@ func TestRefreshTokens(t *testing.T) {
 		return cookie.String()
 	}
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
-	user := qtest.CreateFakeUser(t, db, 56)
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
+	user := qtest.CreateFakeUser(t, db)
 	adminCookie := f(t, admin.ID)
 	userCookie := f(t, user.ID)
 	adminClaims := &auth.Claims{

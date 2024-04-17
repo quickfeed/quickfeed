@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
@@ -36,11 +36,11 @@ func TestAccessControl(t *testing.T) {
 	))
 	ctx := context.Background()
 
-	courseAdmin := qtest.CreateFakeUser(t, db, 1)
-	groupStudent := qtest.CreateNamedUser(t, db, 2, "group student")
-	student := qtest.CreateNamedUser(t, db, 3, "student")
-	user := qtest.CreateNamedUser(t, db, 4, "user")
-	admin := qtest.CreateFakeUser(t, db, 6)
+	courseAdmin := qtest.CreateFakeUser(t, db)
+	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "group student", Login: "group student"})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
+	admin := qtest.CreateFakeUser(t, db)
 	admin.IsAdmin = true
 	if err := db.UpdateUser(admin); err != nil {
 		t.Fatal(err)

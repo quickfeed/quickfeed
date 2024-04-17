@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"go.uber.org/zap"
 )
 
