@@ -11,8 +11,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/360EntSecGroup-Skylar/excelize"
 	"connectrpc.com/connect"
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
@@ -20,10 +20,11 @@ import (
 )
 
 const (
-	srcSuffix = "-original.xlsx"
-	dstSuffix = "-approve-list.xlsx"
-	pass      = "Godkjent"
-	fail      = "Ikke godkjent"
+	srcSuffix      = "-original.xlsx"
+	dstSuffix      = "-approve-list.xlsx"
+	pass           = "Godkjent"
+	fail           = "Ikke godkjent"
+	approveColName = "Godkjenning" // header name of the approval column in approve spreadsheet
 )
 
 func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
@@ -38,17 +39,16 @@ func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
 
 func main() {
 	var (
-		serverURL    = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
-		passLimit    = flag.Int("limit", 6, "number of assignments required to pass")
-		ignorePass   = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
-		showAll      = flag.Bool("all", false, "show all students")
-		courseCode   = flag.String("course", "DAT320", "course code to query (case sensitive)")
-		year         = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
-		approvalName = flag.String("approval", "Godkjenning", "name of approval column in approve sheet")
+		serverURL  = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
+		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
+		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
+		showAll    = flag.Bool("all", false, "show all students")
+		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
+		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
 	)
 	flag.Parse()
 
-	studentRowMap, sheetName, col, err := loadApproveSheet(*courseCode, *approvalName)
+	studentRowMap, sheetName, approveCol, err := loadApproveSheet(*courseCode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func main() {
 			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\t%s\n", student, numApproved(approved), approvedValue)
 			continue
 		}
-		cell := fmt.Sprintf("%s%d", col, rowNum)
+		cell := fmt.Sprintf("%s%d", approveCol, rowNum)
 		approvedMap[cell] = approvedValue
 		if *showAll {
 			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\t%s\n", student, rowNum, numApproved(approved), approvedValue)
@@ -106,7 +106,7 @@ func main() {
 		if err != nil {
 			// not found in QuickFeed, but is signed up in FS
 			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\t\n", student, rowNum)
-			cell := fmt.Sprintf("%s%d", col, rowNum)
+			cell := fmt.Sprintf("%s%d", approveCol, rowNum)
 			approvedMap[cell] = fail
 		}
 	}
@@ -223,7 +223,7 @@ func fileName(courseCode, suffix string) string {
 	return strings.ToLower(courseCode) + suffix
 }
 
-func loadApproveSheet(courseCode, approvalName string) (approveMap map[string]int, sheetName, approvalCol string, err error) {
+func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName, approvalCol string, err error) {
 	// The approve sheet is a single sheet Excel file with five columns:
 	//
 	//		First name | Last name | Student number    | Candidate number | Approval
@@ -248,7 +248,7 @@ func loadApproveSheet(courseCode, approvalName string) (approveMap map[string]in
 	rows := f.GetRows(sheetName)
 	// find the approval column
 	for j, cell := range rows[0] {
-		if cell == approvalName {
+		if cell == approveColName {
 			approvalCol = excelize.ToAlphaString(j)
 			break
 		}

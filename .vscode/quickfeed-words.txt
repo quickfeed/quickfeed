@@ -59,6 +59,7 @@ Getwd
 githubv
 GOBIN
 GOCACHE
+Godkjenning
 Godkjent
 gofumports
 gofumpt
