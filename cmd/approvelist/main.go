@@ -283,7 +283,7 @@ type approveSheet struct {
 	approveStudMap map[string]int
 }
 
-func NewApproveSheet(sheetName string, rows [][]string) (*approveSheet, error) {
+func newApproveSheet(sheetName string, rows [][]string) (*approveSheet, error) {
 	as := &approveSheet{
 		sheetName: sheetName,
 		headerLabels: map[string]string{
@@ -371,7 +371,7 @@ func loadApproveSheet(courseCode string) (*approveSheet, error) {
 	// we expect only a single sheet; assume that is the active sheet
 	sheetName := f.GetSheetName(f.GetActiveSheetIndex())
 	rows := f.GetRows(sheetName)
-	as, err := NewApproveSheet(sheetName, rows)
+	as, err := newApproveSheet(sheetName, rows)
 	if err != nil {
 		return nil, fmt.Errorf("parse error in %s: %w", fileName(courseCode, srcSuffix), err)
 	}
