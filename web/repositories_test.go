@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -189,5 +190,114 @@ func TestGetRepositories(t *testing.T) {
 				t.Errorf("%s mismatch repositories (-want +got):\n%s", tt.name, diff)
 			}
 		}
+	}
+}
+
+func TestQuickFeedService_isEmptyRepo(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.MockClient(t, db, nil)
+
+	user := qtest.CreateFakeUser(t, db)
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, user, course)
+
+	student := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student, course)
+
+	// student, in a group
+	groupStudent := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, groupStudent, course)
+
+	group := &qf.Group{
+		Name:     "1001 Hacking Crew",
+		CourseID: course.ID,
+		Users:    []*qf.User{groupStudent},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// create repositories for users and group
+	userRepo := &qf.Repository{
+		ScmOrganizationID: course.ScmOrganizationID,
+		ScmRepositoryID:   1,
+		UserID:            user.ID, // 1
+		HTMLURL:           "user",
+		RepoType:          qf.Repository_USER,
+	}
+	if err := db.CreateRepository(userRepo); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name    string
+		request *qf.RepositoryRequest
+		wantErr bool
+	}{
+		{
+			// cannot distinguish between empty and non-existing repositories
+			name: "empty repositories",
+			request: &qf.RepositoryRequest{
+				CourseID: course.ID, // 1
+				GroupID:  group.ID,  // 1
+			},
+			wantErr: false,
+		},
+		{
+			name: "no repositories",
+			request: &qf.RepositoryRequest{
+				CourseID: course.ID,
+				GroupID:  group.ID, // 1
+			},
+			wantErr: false,
+		},
+		{
+			name: "course not found",
+			request: &qf.RepositoryRequest{
+				CourseID: 123,
+				UserID:   user.ID, // 1
+			},
+			// unable to get SCM client for unknown course -> error
+			wantErr: true,
+		},
+		{
+			name: "user not found",
+			request: &qf.RepositoryRequest{
+				CourseID: course.ID, // 1
+				UserID:   123,
+			},
+			// lookup for invalid user should return no repositories
+			wantErr: false,
+		},
+		{
+			name: "user has no repositories",
+			request: &qf.RepositoryRequest{
+				CourseID: 1,
+				UserID:   student.ID, // 2
+			},
+			// lookup for user with no repositories should return no repositories
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tt.request, "cookie")); (err != nil) != tt.wantErr {
+				t.Errorf("IsEmptyRepo() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+
+	// UpdateGroup to trigger repository creation
+	_, err := client.UpdateGroup(context.Background(), qtest.RequestWithCookie(group, "cookie"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Group now has a repository
+	tests[0].wantErr = true
+	if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tests[0].request, "cookie")); err == nil {
+		t.Error("expected error", err)
 	}
 }
