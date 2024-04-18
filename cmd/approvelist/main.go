@@ -281,8 +281,6 @@ type approveSheet struct {
 	rows           [][]string
 	approveNameMap map[string]int
 	approveStudMap map[string]int
-	approvalCol    string
-	studentNumCol  string
 }
 
 func NewApproveSheet(sheetName string, rows [][]string) (*approveSheet, error) {
