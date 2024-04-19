@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
@@ -220,7 +221,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 		return err
 	}
 	for _, group := range courseGroups {
-		if group.GetName() == groupName {
+		if strings.EqualFold(group.GetName(), groupName) {
 			return ErrGroupNameDuplicate
 		}
 	}
