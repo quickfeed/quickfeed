@@ -41,7 +41,6 @@ func main() {
 	var (
 		serverURL  = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
 		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
-		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
 		showAll    = flag.Bool("all", false, "show all students")
 		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
 		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
@@ -88,10 +87,6 @@ func main() {
 		if isApproved(*passLimit, approved) {
 			approvedValue = pass
 			numPass++
-			if *ignorePass {
-				numIgnored++
-				continue
-			}
 		}
 		rowNum, err := as.lookupRow(studID)
 		if err != nil {
