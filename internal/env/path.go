@@ -8,10 +8,6 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-const (
-	dotEnvPath = ".env"
-)
-
 var quickfeedRoot string
 
 func init() {
