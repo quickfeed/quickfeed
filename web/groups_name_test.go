@@ -47,6 +47,8 @@ func TestBadGroupNames(t *testing.T) {
 		{"Å", web.ErrGroupNameInvalid},
 		{"DuplicateGroupName", nil},
 		{"DuplicateGroupName", web.ErrGroupNameDuplicate},
+		{"duplicateGroupName", web.ErrGroupNameDuplicate},
+		{"duplicateGroupname", web.ErrGroupNameDuplicate},
 	}
 	for _, tt := range groupNames {
 		t.Run(tt.name, func(t *testing.T) {
@@ -61,6 +63,15 @@ func TestBadGroupNames(t *testing.T) {
 				Users:    []*qf.User{user1, user2},
 			}
 			_, err := client.CreateGroup(context.Background(), connect.NewRequest(group))
+			if tt.wantError == nil {
+				if err != nil {
+					t.Errorf("got error %v, want nil", err)
+				}
+				return
+			}
+			if err == nil && tt.wantError != nil {
+				t.Errorf("got no error, want %v", tt.wantError)
+			}
 			if connErr, ok := err.(*connect.Error); ok {
 				if connErr.Code() != tt.wantError.Code() {
 					t.Errorf("got error code %v, want %v", connErr.Code(), tt.wantError.Code())
