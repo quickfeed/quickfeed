@@ -36,6 +36,8 @@ func TestLoad(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
+	// ensure that QUICKFEED is set
+	env.Root()
 
 	want := map[string]string{
 		"QUICKFEED":           os.Getenv("QUICKFEED"),

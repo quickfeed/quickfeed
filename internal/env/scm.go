@@ -70,7 +70,7 @@ func AppID() (string, error) {
 func AppKey() string {
 	appKey := os.Getenv("QUICKFEED_APP_KEY")
 	if appKey == "" {
-		return filepath.Join(root(), defaultKeyPath)
+		return filepath.Join(Root(), defaultKeyPath)
 	}
 	return appKey
 }
