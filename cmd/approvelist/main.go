@@ -178,7 +178,7 @@ func numApproved(submissions []*qf.Submission) int {
 	return numApproved
 }
 
-func approved(numApproved int, passLimit int) bool {
+func approved(numApproved, passLimit int) bool {
 	return numApproved >= passLimit
 }
 
