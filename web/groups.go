@@ -154,7 +154,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 }
 
 // newGroup returns a new group based on the request and the existing group.
-func (s *QuickFeedService) newGroup(group *qf.Group, request *qf.Group, users []*qf.User) (*qf.Group, error) {
+func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) (*qf.Group, error) {
 	if group.Name != request.Name && group.Status == qf.Group_PENDING {
 		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
 			return nil, err // group name is invalid
