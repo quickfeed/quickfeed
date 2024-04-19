@@ -56,9 +56,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
-	fmt.Fprint(tw, head())
-
 	quickfeedStudents := make(map[string]string) // map of students found on quickfeed: student id -> student name
 	approvedMap := make(map[string]string)
 	onlyFS := make(map[int]string) // row -> student data
@@ -71,11 +68,6 @@ func main() {
 		if enroll.IsAdmin() || enroll.IsTeacher() {
 			continue
 		}
-		submissions := courseSubmissions.For(enroll.ID)
-		approved := make([]bool, len(submissions))
-		for i, s := range submissions {
-			approved[i] = s.IsApproved()
-		}
 		studID := enroll.GetUser().GetStudentID()
 		student := enroll.Name()
 		if quickfeedStudents[studID] != "" {
@@ -83,6 +75,11 @@ func main() {
 		}
 		quickfeedStudents[studID] = student
 
+		submissions := courseSubmissions.For(enroll.ID)
+		approved := make([]bool, len(submissions))
+		for i, s := range submissions {
+			approved[i] = s.IsApproved()
+		}
 		approvedValue := fail
 		if isApproved(*passLimit, approved) {
 			approvedValue = pass
@@ -114,6 +111,10 @@ func main() {
 			approvedMap[as.approveCell(rowNum)] = fail
 		}
 	}
+
+	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
+	fmt.Fprint(tw, head())
+
 	rows := Keys(both)
 	if *showAll {
 		slices.Sort(rows)
