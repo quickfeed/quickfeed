@@ -28,8 +28,8 @@ func init() {
 	}
 }
 
-// Root returns the root directory as defined by $QUICKFEED.
-func Root() string {
+// root returns the root directory as defined by $QUICKFEED.
+func root() string {
 	return quickfeedRoot
 }
 
