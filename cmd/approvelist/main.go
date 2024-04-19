@@ -56,12 +56,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	quickfeedStudents := make(map[string]string) // map of students found on quickfeed: student id -> student name
-	onlyFS := make(map[int]string)               // row -> student data
-	onlyQF := make(map[int]string)
-	both := make(map[int]string)
 	numPass := 0
-	negRow := -1
+	buf := newOutput()
+	quickfeedStudents := make(map[string]string) // map of students found on quickfeed: student id -> student name
 	for _, enroll := range enrollments {
 		// ignore course admins and teachers
 		if enroll.IsAdmin() || enroll.IsTeacher() {
@@ -88,15 +85,14 @@ func main() {
 			rowNum, err = as.lookupRowByName(student)
 			if err != nil {
 				// student name not found in FS database, but has approved assignments
-				onlyQF[negRow] = out(-1, student, studID, approvedValue, numApproved, false, true)
-				negRow--
+				buf.addQF(student, studID, approvedValue, numApproved)
 				continue
 			}
 		}
 		as.setApproveCell(rowNum, approvedValue)
 		// use student name from FS
 		student = as.lookupStudentByRow(rowNum)
-		both[rowNum] = out(rowNum, student, studID, approvedValue, numApproved, true, true)
+		buf.addBoth(rowNum, student, studID, approvedValue, numApproved)
 	}
 
 	// find students signed up to course, but not found in QuickFeed
@@ -104,39 +100,72 @@ func main() {
 		_, ok := quickfeedStudents[studID]
 		if !ok {
 			// student found in FS, but not in QuickFeed
-			onlyFS[rowNum] = out(rowNum, as.lookupStudentByRow(rowNum), studID, fail, 0, true, false)
+			buf.addFS(rowNum, as.lookupStudentByRow(rowNum), studID, fail, 0)
 			as.setApproveCell(rowNum, fail)
 		}
 	}
 
-	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
-	fmt.Fprint(tw, head())
-
-	rows := Keys(both)
-	if *showAll {
-		slices.Sort(rows)
-		for _, r := range rows {
-			fmt.Fprint(tw, both[r])
-		}
-	}
-	rows = Keys(onlyFS)
-	slices.Sort(rows)
-	for _, r := range rows {
-		fmt.Fprint(tw, onlyFS[r])
-	}
-	rows = Keys(onlyQF)
-	slices.Sort(rows)
-	for _, r := range rows {
-		fmt.Fprint(tw, onlyQF[r])
-	}
-
-	tw.Flush()
-	fmt.Println("----------")
+	buf.Print(*showAll)
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(as.approveMap), numPass, len(as.approveMap)-numPass)
-	fmt.Printf("FS: %d, QF: %d, Both: %d\n", len(onlyFS), len(onlyQF), len(both))
 	if err = saveApproveSheet(*courseCode, as.sheetName, as.approveMap); err != nil {
 		log.Fatal(err)
 	}
+}
+
+type output struct {
+	fs     map[int]string // row -> student data
+	qf     map[int]string
+	both   map[int]string
+	negRow int
+}
+
+func newOutput() *output {
+	return &output{
+		fs:     make(map[int]string),
+		qf:     make(map[int]string),
+		both:   make(map[int]string),
+		negRow: -1,
+	}
+}
+
+func (o *output) addFS(row int, student, studID, approveValue string, numApproved int) {
+	o.fs[row] = out(row, student, studID, approveValue, numApproved, true, false)
+}
+
+func (o *output) addQF(student, studID, approveValue string, numApproved int) {
+	// we use a negative row number for students found in QuickFeed, but not in FS
+	o.qf[o.negRow] = outNoRow(student, studID, approveValue, numApproved, false, true)
+	o.negRow--
+}
+
+func (o *output) addBoth(row int, student, studID, approveValue string, numApproved int) {
+	o.both[row] = out(row, student, studID, approveValue, numApproved, true, true)
+}
+
+func (o *output) Print(showAll bool) {
+	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
+	fmt.Fprint(tw, head())
+
+	rows := Keys(o.both)
+	if showAll {
+		slices.Sort(rows)
+		for _, r := range rows {
+			fmt.Fprint(tw, o.both[r])
+		}
+	}
+	rows = Keys(o.fs)
+	slices.Sort(rows)
+	for _, r := range rows {
+		fmt.Fprint(tw, o.fs[r])
+	}
+	rows = Keys(o.qf)
+	slices.Sort(rows)
+	for _, r := range rows {
+		fmt.Fprint(tw, o.qf[r])
+	}
+	tw.Flush()
+	fmt.Println("----------")
+	fmt.Printf("FS: %d, QF: %d, Both: %d\n", len(o.fs), len(o.qf), len(o.both))
 }
 
 func numApproved(submissions []*qf.Submission) int {
@@ -159,6 +188,10 @@ func head() string {
 
 func out(row int, student, studID, approvedValue string, numApproved int, fs, qf bool) string {
 	return fmt.Sprintf("%d\t%s\t%s\t%s\t%s\t%s\t%d\n", row, student, studID, approvedValue, mark(fs), mark(qf), numApproved)
+}
+
+func outNoRow(student, studID, approvedValue string, numApproved int, fs, qf bool) string {
+	return fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%d\n", student, studID, approvedValue, mark(fs), mark(qf), numApproved)
 }
 
 func mark(b bool) string {
