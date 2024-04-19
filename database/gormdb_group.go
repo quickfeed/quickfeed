@@ -183,3 +183,15 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 	}
 	return groups, nil
 }
+
+// GroupNameExists checks if a group with the given name exists in the course.
+func (db *GormDB) GroupNameExists(courseID uint64, groupName string) (bool, error) {
+	var count int64
+	if err := db.conn.Model(&qf.Group{}).
+		// Case insensitive search
+		Where("course_id = ? AND lower(name) = lower(?)", courseID, groupName).
+		Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

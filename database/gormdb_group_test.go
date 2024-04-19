@@ -352,3 +352,65 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Errorf("Expected one pending and one approved group, got %d pending, %d approved", len(pendingGroups), len(approvedGroups))
 	}
 }
+
+func TestGroupNameExists(t *testing.T) {
+	type args struct {
+		courseID  uint64
+		groupName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "group name exists",
+			args: args{
+				courseID:  1,
+				groupName: "group1",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "group name exists with different case",
+			args: args{
+				courseID:  1,
+				groupName: "GROUP1",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "group name does not exist",
+			args: args{
+				courseID:  1,
+				groupName: "group2",
+			},
+			want:    false,
+			wantErr: false,
+		},
+	}
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, user, &qf.Course{ID: 1})
+	if err := db.CreateGroup(&qf.Group{Name: "group1", CourseID: 1, Users: []*qf.User{user}}); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := db.GroupNameExists(tt.args.courseID, tt.args.groupName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GroupNameExists() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GroupNameExists() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

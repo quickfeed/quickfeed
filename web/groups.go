@@ -215,14 +215,12 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 	if regexpNonAuthorizedChars.MatchString(groupName) {
 		return ErrGroupNameInvalid
 	}
-	courseGroups, err := s.db.GetGroupsByCourse(courseID)
+	exists, err := s.db.GroupNameExists(courseID, groupName)
 	if err != nil {
 		return err
 	}
-	for _, group := range courseGroups {
-		if group.GetName() == groupName {
-			return ErrGroupNameDuplicate
-		}
+	if exists {
+		return ErrGroupNameDuplicate
 	}
 	return nil
 }

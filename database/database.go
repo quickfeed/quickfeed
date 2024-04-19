@@ -64,6 +64,8 @@ type Database interface {
 	GetGroup(uint64) (*qf.Group, error)
 	// GetGroupsByCourse returns the groups for the given course.
 	GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupStatus) ([]*qf.Group, error)
+	// GroupNameExists checks if a group with the given name exists in the course.
+	GroupNameExists(courseID uint64, groupName string) (bool, error)
 
 	// CreateAssignment creates a new or updates an existing assignment.
 	CreateAssignment(*qf.Assignment) error
