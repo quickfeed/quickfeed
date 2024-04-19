@@ -34,7 +34,7 @@ func testRunData(qfTestOrg string) *RunData {
 }
 
 func TestLoadRunScript(t *testing.T) {
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 	runData := &RunData{
 		Course: &qf.Course{
 			ID:                  1,
@@ -63,7 +63,7 @@ func TestLoadRunScript(t *testing.T) {
 }
 
 func TestParseTestRunnerScript(t *testing.T) {
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 
 	const (
 		qfTestOrg        = "qf104-2022"
@@ -118,7 +118,7 @@ echo "$QUICKFEED_SESSION_SECRET"
 }
 
 func TestParseBadTestRunnerScript(t *testing.T) {
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 
 	const qfTestOrg = "qf104-2022"
 	randomSecret := rand.String()

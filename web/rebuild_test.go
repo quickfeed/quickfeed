@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -144,7 +143,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Errorf("Expected error: record not found")
 	}
 
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {

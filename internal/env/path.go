@@ -42,3 +42,8 @@ func RootEnv(envFile string) string {
 func PublicEnv(envFile string) string {
 	return filepath.Join(quickfeedRoot, "public", envFile)
 }
+
+// TestdataPath returns the path to the testdata/courses directory.
+func TestdataPath() string {
+	return filepath.Join(quickfeedRoot, "testdata", "courses")
+}
