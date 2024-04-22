@@ -18,7 +18,7 @@ const SubmissionScore = ({
                 {score.Score}/{score.MaxScore}
             </td>
             <td>
-                <span className={percentage == maxPercentage ? "text-success" : "text-danger"}>{percentage.toFixed(1)}%</span>
+                <span className={percentage === maxPercentage ? "text-success" : "text-danger"}>{percentage.toFixed(1)}%</span>
                 <span style={{opacity: 0.5}}> / {maxPercentage.toFixed(1)}%</span>
             </td>
         </tr>
