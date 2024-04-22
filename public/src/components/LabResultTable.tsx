@@ -61,10 +61,10 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                     <ProgressBar key={"progress-bar"} courseID={assignment.CourseID.toString()} assignmentIndex={assignment.order - 1} submission={submission} type={Progress.LAB} />
                 </div>
                 <table className="table table-curved table-striped">
-                    <thead className={"thead-dark"}>
+                    <thead className="thead-dark">
                         <tr>
                             <th colSpan={2}>Lab information</th>
-                            <th colSpan={1}>{assignment.name}</th>
+                            <th>{assignment.name}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -110,16 +110,21 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                                 enrollment.slipDaysRemaining
                             }</td>
                         </tr>
-                        <tr className={"thead-dark"}>
+                    </tbody>
+                </table>
+                
+                <table className="table table-curved table-striped">
+                    <thead className="thead-dark">
+                        <tr>
                             <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
                             <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
                             <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>Weight</th>
-
                         </tr>
+                    </thead>
+                    <tbody style={{"wordBreak": "break-word"}}>
                         {sortedScores.map(score =>
                             <SubmissionScore key={score.ID.toString()} score={score} />
                         )}
-
                     </tbody>
                     <tfoot>
                         <tr>
