@@ -53,6 +53,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
         const delivered = getFormattedTime(buildInfo?.SubmissionDate)
         const built = getFormattedTime(buildInfo?.BuildDate)
         const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
+        const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
 
         const className = isApproved(submission) ? "passed" : "failed"
         return (
@@ -113,11 +114,11 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         <tr className={"thead-dark"}>
                             <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
                             <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                            <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>Weight</th>
+                            <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>% of total</th>
 
                         </tr>
                         {sortedScores.map(score =>
-                            <SubmissionScore key={score.ID.toString()} score={score} />
+                            <SubmissionScore key={score.ID.toString()} score={score} totalWeight={totalWeight} />
                         )}
 
                     </tbody>
