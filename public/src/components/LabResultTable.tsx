@@ -113,9 +113,9 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         </tr>
                         <tr className={"thead-dark"}>
                             <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
-                            <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                            <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>% of total</th>
-
+                            <th colSpan={1} className="text-right" data-key={"score"} role="button" onClick={handleSort}>Score</th>
+                            <th colSpan={1} className="text-right" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
+                            <th colSpan={1} className="text-right" data-key={"weight"} role="button" onClick={handleSort}>% of total</th>
                         </tr>
                         {sortedScores.map(score =>
                             <SubmissionScore key={score.ID.toString()} score={score} totalWeight={totalWeight} />
