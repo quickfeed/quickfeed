@@ -10,17 +10,18 @@ interface lab {
     assignment: Assignment
 }
 
-type ScoreSort = "name" | "score" | "weight"
+type ScoreSort = "name" | "score" | "weight" | "percentage"
 
 const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     const state = useAppState()
 
     const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
     const [sortAscending, setSortAscending] = React.useState<boolean>(true)
-
+    
     const sortScores = () => {
         const sortBy = sortAscending ? 1 : -1
         const scores = submission.clone().Scores
+        const totalWeight = scores.reduce((acc, score) => acc + score.Weight, 0)
         return scores.sort((a, b) => {
             switch (sortKey) {
                 case "name":
@@ -29,6 +30,8 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                     return sortBy * (a.Score - b.Score)
                 case "weight":
                     return sortBy * (a.Weight - b.Weight)
+                case "percentage":
+                    return sortBy * ((a.Score / a.MaxScore) * (a.Weight / totalWeight) - (b.Score / b.MaxScore) * (b.Weight / totalWeight))
                 default:
                     return 0
             }
