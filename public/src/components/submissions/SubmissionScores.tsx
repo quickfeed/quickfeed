@@ -26,7 +26,7 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
     }
 
     const handleSort = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
-        const key = event.currentTarget.dataset["key"] as ScoreSort
+        const key = event.currentTarget.dataset.key as ScoreSort
         if (sortKey === key) {
             setSortAscending(!sortAscending)
         } else {
