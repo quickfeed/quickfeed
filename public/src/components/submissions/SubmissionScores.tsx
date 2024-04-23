@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { Submission } from "../../../proto/qf/types_pb"
-import SubmissionScore from "../SubmissionScore"
+import SubmissionScore from "./SubmissionScore"
 
 type ScoreSort = "name" | "score" | "weight"
 
