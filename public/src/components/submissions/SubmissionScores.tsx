@@ -39,25 +39,25 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
 
     return (
         <table className="table table-curved table-striped">
-                    <thead className="thead-dark">
-                        <tr>
-                            <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
-                            <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                            <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>Weight</th>
-                        </tr>
-                    </thead>
-                    <tbody style={{"wordBreak": "break-word"}}>
-                        {sortedScores.map(score =>
-                            <SubmissionScore key={score.ID.toString()} score={score} />
-                        )}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Total Score</th>
-                            <th>{submission.score}%</th>
-                            <th>100%</th>
-                        </tr>
-                    </tfoot>
+            <thead className="thead-dark">
+                <tr>
+                    <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
+                    <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
+                    <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>Weight</th>
+                </tr>
+            </thead>
+            <tbody style={{"wordBreak": "break-word"}}>
+                {sortedScores.map(score =>
+                    <SubmissionScore key={score.ID.toString()} score={score} />
+                )}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total Score</th>
+                    <th>{submission.score}%</th>
+                    <th>100%</th>
+                </tr>
+            </tfoot>
         </table>
     )
 }
