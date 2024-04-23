@@ -15,8 +15,8 @@ func TestNewManager(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user1 := qtest.CreateFakeUser(t, db, 1)
-	user2 := qtest.CreateFakeUser(t, db, 2)
+	user1 := qtest.CreateFakeUser(t, db)
+	user2 := qtest.CreateFakeUser(t, db)
 
 	user2.UpdateToken = true
 	if err := db.UpdateUser(user2); err != nil {
@@ -74,7 +74,7 @@ func TestNewCookie(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := qtest.CreateFakeUser(t, db, 1)
+	user := qtest.CreateFakeUser(t, db)
 	manager, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
@@ -98,7 +98,7 @@ func TestNewCookie(t *testing.T) {
 func TestUserClaims(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 	manager, err := auth.NewTokenManager(db)
@@ -137,7 +137,7 @@ func TestUserClaims(t *testing.T) {
 func TestUpdateTokenList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	manager, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
@@ -207,7 +207,7 @@ func TestUpdateTokenList(t *testing.T) {
 func TestUpdateCookie(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user := qtest.CreateFakeUser(t, db, 1)
+	user := qtest.CreateFakeUser(t, db)
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)

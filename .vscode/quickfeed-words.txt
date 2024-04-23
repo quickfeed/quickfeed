@@ -50,15 +50,18 @@ envoyproxy
 errcheck
 Errorf
 espeland
+Etternavn
 excelize
 extendee
 fileop
+Fornavn
 Frøyland
 fullchain
 Getwd
 githubv
 GOBIN
 GOCACHE
+Godkjenning
 Godkjent
 gofumports
 gofumpt
@@ -100,6 +103,7 @@ jinzhu
 Jostein
 jsonpb
 JWTs
+Kandidatnr
 keepalive
 keychain
 Keychains
@@ -184,6 +188,7 @@ steinfletcher
 struct
 structs
 Studentid
+Studentnr
 subtest
 subtests
 swiftui
