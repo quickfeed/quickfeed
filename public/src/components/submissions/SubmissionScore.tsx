@@ -22,7 +22,7 @@ const SubmissionScore = ({
                 <span className={percentage === maxPercentage ? "text-success" : "text-danger"}>{percentage.toFixed(1)}%</span>
             </td>
             <td className="text-right">
-                <span style={{opacity: 0.5}}  data-toggle="tooltip" title={"Weight: " + score.Weight}>{maxPercentage.toFixed(1)}%</span>
+                <span style={{opacity: 0.5}}  data-toggle="tooltip" title={`Weight: ${score.Weight}`}>{maxPercentage.toFixed(1)}%</span>
             </td>
         </tr>
     )
