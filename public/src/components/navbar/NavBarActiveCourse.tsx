@@ -9,8 +9,8 @@ import Breadcrumbs from "./Breadcrumbs"
 const NavBarActiveCourse = (): JSX.Element | null => {
     const activeCourse = useAppState((state) => state.activeCourse ? (state.courses.find((c) => c.ID === state.activeCourse) ?? null) : null)
     const enrollment = useAppState((state) => state.enrollmentsByCourseID[state.activeCourse?.toString() ?? ""] ?? null)
-    const {isLoggedIn} = useAppState()
-    
+    const { isLoggedIn } = useAppState()
+
     if (!isLoggedIn || !activeCourse || !enrollment) {
         return null
     }

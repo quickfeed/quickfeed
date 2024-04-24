@@ -10,8 +10,8 @@ import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
 import Alerts from "../components/alerts/Alerts"
 
-const ReviewResults = () => <Results review />;
-const RegularResults = () => <Results review={false} />;
+const ReviewResults = () => <Results review />
+const RegularResults = () => <Results review={false} />
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
 const TeacherPage = (): JSX.Element => {

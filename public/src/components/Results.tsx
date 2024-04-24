@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react"
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom'
 import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -17,8 +17,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const history = useHistory();
-    const location = useLocation();
+    const history = useHistory()
+    const location = useLocation()
 
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
     const assignments = useMemo(() => {
@@ -41,7 +41,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         if (!state.selectedSubmission) {
             // If no submission is selected, check if there is a selected lab in the URL
             // and select it if it exists
-            const selectedLab = new URLSearchParams(location.search).get('id');
+            const selectedLab = new URLSearchParams(location.search).get('id')
             if (selectedLab) {
                 const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
                 if (submission) {
@@ -57,8 +57,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         history.replace({
             pathname: location.pathname,
             search: `?id=${labId}`
-        });
-    }, [history]);
+        })
+    }, [history])
 
     if (!state.loadedCourse[courseID.toString()]) {
         return <h1>Fetching Submissions...</h1>

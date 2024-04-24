@@ -249,7 +249,7 @@ export const getSubmissionCellColor = (submission: Submission): string => {
 }
 
 // pattern for group name validation. Only letters, numbers, underscores and dashes are allowed.
-const pattern = /^[a-zA-Z0-9_-]+$/;
+const pattern = /^[a-zA-Z0-9_-]+$/
 export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
     if (group.name.length === 0) {
         return { valid: false, message: "Group name cannot be empty" }
