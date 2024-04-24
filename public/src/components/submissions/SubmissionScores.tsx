@@ -41,13 +41,13 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
     const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
     const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
     return (
-        <table className="table table-curved table-striped">
+        <table className="table table-curved table-striped table-hover">
             <thead className="thead-dark">
                 <tr>
-                    <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
-                    <th colSpan={1} className="text-right" data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                    <th colSpan={1} className="text-right" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
-                    <th colSpan={1} className="text-right" data-key={"weight"} role="button" onClick={handleSort}>% of total</th>
+                    <th colSpan={1} className="col-md-8" data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
+                    <th colSpan={1} className="text-right col-md-auto" data-key={"score"} role="button" onClick={handleSort}>Score</th>
+                    <th colSpan={1} className="text-right col-md-auto" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
+                    <th colSpan={1} className="text-right col-md-auto" data-key={"weight"} data-toggle="tooltip" title={"Maximum % contribution to total score"} role="button" onClick={handleSort}>Max</th>
                 </tr>
             </thead>
             <tbody style={{"wordBreak": "break-word"}}>
