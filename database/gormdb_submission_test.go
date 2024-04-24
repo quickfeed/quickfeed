@@ -24,7 +24,7 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 
 func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment) {
 	// create a course and an assignment
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 	assignment := &qf.Assignment{
@@ -36,7 +36,7 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	}
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, course)
 	return user, course, assignment
 }
@@ -277,14 +277,14 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	c1 := &qf.Course{ScmOrganizationID: 1, Year: 1}
 	c2 := &qf.Course{ScmOrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 
 	// enroll student in course c1
 	qtest.EnrollStudent(t, db, user, c1)
@@ -517,7 +517,7 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 func TestGormDBGetLastSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	c1 := &qf.Course{ScmOrganizationID: 1, Year: 1}
 	c2 := &qf.Course{ScmOrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
@@ -546,7 +546,7 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	}
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 	// create a new submission
 	submission := qf.Submission{
 		AssignmentID: assignment1.ID,

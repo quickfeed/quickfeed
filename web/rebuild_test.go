@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -67,7 +66,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	defer cleanup()
 	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
-	teacher := qtest.CreateFakeUser(t, db, 1)
+	teacher := qtest.CreateFakeUser(t, db)
 	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
@@ -81,10 +80,10 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	student1 := qtest.CreateFakeUser(t, db, 2)
+	student1 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student1, &course)
 
-	student2 := qtest.CreateFakeUser(t, db, 4)
+	student2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student2, &course)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.ScmOrganizationName}
@@ -145,7 +144,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Errorf("Expected error: record not found")
 	}
 
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {

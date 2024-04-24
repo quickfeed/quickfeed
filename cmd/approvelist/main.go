@@ -7,12 +7,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"text/tabwriter"
 	"time"
 
-	"github.com/360EntSecGroup-Skylar/excelize"
 	"connectrpc.com/connect"
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
@@ -40,81 +41,172 @@ func main() {
 	var (
 		serverURL  = flag.String("server", "https://uis.itest.run", "UiS' QuickFeed server URL")
 		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
-		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
 		showAll    = flag.Bool("all", false, "show all students")
 		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
 		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
 	)
 	flag.Parse()
 
-	studentRowMap, sheetName, err := loadApproveSheet(*courseCode)
+	as, err := loadApproveSheet(*courseCode)
+	if err != nil {
+		log.Fatal(err)
+	}
+	courseSubmissions, enrollments, err := getSubmissions(*serverURL, *courseCode, uint32(*year))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	submissions, enrollments, err := getSubmissions(*serverURL, *courseCode, uint32(*year))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
-	fmt.Fprint(tw, "Student\tFS\tRow#\tQuickFeed\t#Approved\tApproved\n")
-
-	// map of students found in QuickFeed; the int value is ignored (set to 1),
-	// but used to allow use of the lookupRow() function.
-	quickfeedStudents := make(map[string]int)
-	approvedMap := make(map[string]string)
-	numPass, numIgnored := 0, 0
+	numPass := 0
+	buf := newOutput()
+	quickfeedStudents := make(map[string]string) // map of students found on quickfeed: student id -> student name
 	for _, enroll := range enrollments {
 		// ignore course admins and teachers
 		if enroll.IsAdmin() || enroll.IsTeacher() {
 			continue
 		}
+		studID := enroll.GetUser().GetStudentID()
 		student := enroll.Name()
-		approved := make([]bool, len(submissions.For(enroll.ID)))
-		for i, s := range submissions.For(enroll.ID) {
-			approved[i] = s.IsApproved()
+		if quickfeedStudents[studID] != "" {
+			fmt.Printf("Duplicate student ID: %s, %q and %q\n", studID, quickfeedStudents[studID], student)
 		}
-		quickfeedStudents[student] = 1
+		quickfeedStudents[studID] = student
 
+		submissions := courseSubmissions.For(enroll.ID)
+		numApproved := numApproved(submissions)
 		approvedValue := fail
-		if isApproved(*passLimit, approved) {
+		if approved(numApproved, *passLimit) {
 			approvedValue = pass
 			numPass++
-			if *ignorePass {
-				numIgnored++
+		}
+
+		rowNum, err := as.lookupRow(studID)
+		if err != nil {
+			// student ID not found in FS database, but has approved assignments
+			rowNum, err = as.lookupRowByName(student)
+			if err != nil {
+				// student name not found in FS database, but has approved assignments
+				buf.addQF(student, studID, approvedValue, numApproved)
 				continue
 			}
 		}
-		rowNum, err := lookupRow(student, studentRowMap)
-		if err != nil {
-			// not found in FS database, but has approved assignments
-			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\t%s\n", student, numApproved(approved), approvedValue)
-			continue
-		}
-		cell := fmt.Sprintf("B%d", rowNum)
-		approvedMap[cell] = approvedValue
-		if *showAll {
-			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\t%s\n", student, rowNum, numApproved(approved), approvedValue)
-		}
+		as.setApproveCell(rowNum, approvedValue)
+		// use student name from FS
+		student = as.lookupStudentByRow(rowNum)
+		buf.addBoth(rowNum, student, studID, approvedValue, numApproved)
 	}
 
 	// find students signed up to course, but not found in QuickFeed
-	for student, rowNum := range studentRowMap {
-		_, err := lookupRow(student, quickfeedStudents)
-		if err != nil {
-			// not found in QuickFeed, but is signed up in FS
-			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\t\n", student, rowNum)
-			cell := fmt.Sprintf("B%d", rowNum)
-			approvedMap[cell] = fail
+	for studID, rowNum := range as.approveStudMap {
+		_, ok := quickfeedStudents[studID]
+		if !ok {
+			// student found in FS, but not in QuickFeed
+			buf.addFS(rowNum, as.lookupStudentByRow(rowNum), studID, fail, 0)
+			as.setApproveCell(rowNum, fail)
 		}
+	}
+
+	buf.Print(*showAll)
+	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(as.approveMap), numPass, len(as.approveMap)-numPass)
+	if err = saveApproveSheet(*courseCode, as.sheetName, as.approveMap); err != nil {
+		log.Fatal(err)
+	}
+}
+
+type output struct {
+	fs     map[int]string // row -> student data
+	qf     map[int]string
+	both   map[int]string
+	negRow int
+}
+
+func newOutput() *output {
+	return &output{
+		fs:     make(map[int]string),
+		qf:     make(map[int]string),
+		both:   make(map[int]string),
+		negRow: -1,
+	}
+}
+
+func (o *output) addFS(row int, student, studID, approveValue string, numApproved int) {
+	o.fs[row] = out(row, student, studID, approveValue, numApproved, true, false)
+}
+
+func (o *output) addQF(student, studID, approveValue string, numApproved int) {
+	// we use a negative row number for students found in QuickFeed, but not in FS
+	o.qf[o.negRow] = outNoRow(student, studID, approveValue, numApproved, false, true)
+	o.negRow--
+}
+
+func (o *output) addBoth(row int, student, studID, approveValue string, numApproved int) {
+	o.both[row] = out(row, student, studID, approveValue, numApproved, true, true)
+}
+
+func (o *output) Print(showAll bool) {
+	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
+	fmt.Fprint(tw, head())
+
+	rows := Keys(o.both)
+	if showAll {
+		slices.Sort(rows)
+		for _, r := range rows {
+			fmt.Fprint(tw, o.both[r])
+		}
+	}
+	rows = Keys(o.fs)
+	slices.Sort(rows)
+	for _, r := range rows {
+		fmt.Fprint(tw, o.fs[r])
+	}
+	rows = Keys(o.qf)
+	slices.Sort(rows)
+	for _, r := range rows {
+		fmt.Fprint(tw, o.qf[r])
 	}
 	tw.Flush()
 	fmt.Println("----------")
-	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap)+numIgnored, numPass, len(approvedMap)+numIgnored-numPass)
-	if err = saveApproveSheet(*courseCode, sheetName, approvedMap); err != nil {
-		log.Fatal(err)
+	fmt.Printf("FS: %d, QF: %d, Both: %d\n", len(o.fs), len(o.qf), len(o.both))
+}
+
+func numApproved(submissions []*qf.Submission) int {
+	numApproved := 0
+	for _, s := range submissions {
+		if s.IsApproved() {
+			numApproved++
+		}
 	}
+	return numApproved
+}
+
+func approved(numApproved, passLimit int) bool {
+	return numApproved >= passLimit
+}
+
+func head() string {
+	return "Row#\tStudent\tStudID\tApproved\tFS\tQF\t#Approved\n"
+}
+
+func out(row int, student, studID, approvedValue string, numApproved int, fs, qf bool) string {
+	return fmt.Sprintf("%d\t%s\t%s\t%s\t%s\t%s\t%d\n", row, student, studID, approvedValue, mark(fs), mark(qf), numApproved)
+}
+
+func outNoRow(student, studID, approvedValue string, numApproved int, fs, qf bool) string {
+	return fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%d\n", student, studID, approvedValue, mark(fs), mark(qf), numApproved)
+}
+
+func mark(b bool) string {
+	if b {
+		return "✓"
+	}
+	return "x"
+}
+
+func Keys[K comparable, V any](m map[K]V) []K {
+	ks := make([]K, 0, len(m))
+	for k := range m {
+		ks = append(ks, k)
+	}
+	return ks
 }
 
 func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmissions, []*qf.Enrollment, error) {
@@ -164,14 +256,6 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 	return submissions.Msg, enrollments.Msg.Enrollments, err
 }
 
-func lookupRow(name string, studentMap map[string]int) (int, error) {
-	if rowNum, ok := studentMap[name]; ok {
-		return rowNum, nil
-	} else {
-		return partialMatch(name, studentMap)
-	}
-}
-
 func partialMatch(name string, studentMap map[string]int) (int, error) {
 	nameParts := strings.Split(strings.ToLower(name), " ")
 	possibleNames := make(map[string][]string)
@@ -200,45 +284,126 @@ func partialMatch(name string, studentMap map[string]int) (int, error) {
 	return studentMap[possibleNames[name][0]], nil
 }
 
-func isApproved(requirements int, approved []bool) bool {
-	for _, a := range approved {
-		if a {
-			requirements--
-		}
-	}
-	return requirements <= 0
-}
-
-func numApproved(approved []bool) (numApproved int) {
-	for _, a := range approved {
-		if a {
-			numApproved++
-		}
-	}
-	return
-}
-
 func fileName(courseCode, suffix string) string {
 	return strings.ToLower(courseCode) + suffix
 }
 
-func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName string, err error) {
+const (
+	firstNameColumn    = "Fornavn"
+	lastNameColumn     = "Etternavn"
+	studentNumColumn   = "Studentnr."
+	candidateNumColumn = "Kandidatnr."
+	approvedColumn     = "Godkjenning"
+)
+
+type approveSheet struct {
+	sheetName      string
+	headerLabels   map[string]string
+	headerIndexes  map[string]int
+	rows           [][]string
+	approveNameMap map[string]int
+	approveStudMap map[string]int
+	approveMap     map[string]string
+}
+
+func newApproveSheet(sheetName string, rows [][]string) (*approveSheet, error) {
+	as := &approveSheet{
+		sheetName: sheetName,
+		headerLabels: map[string]string{
+			firstNameColumn:    "A",
+			lastNameColumn:     "B",
+			studentNumColumn:   "C",
+			candidateNumColumn: "D",
+			approvedColumn:     "E",
+		},
+		headerIndexes: map[string]int{
+			firstNameColumn:    0,
+			lastNameColumn:     1,
+			studentNumColumn:   2,
+			candidateNumColumn: 3,
+			approvedColumn:     4,
+		},
+		rows:           rows[1:],                // skip header row
+		approveNameMap: make(map[string]int),    // map of full names to row numbers
+		approveStudMap: make(map[string]int),    // map of student numbers to row numbers
+		approveMap:     make(map[string]string), // map of approve cells to approval status
+	}
+	for i, row := range as.rows { // skip header row
+		rowNum := i + 2 // since we skip the header row
+		fn := as.fullName(row)
+		sn := as.studentNum(row)
+		as.approveNameMap[fn] = rowNum
+		as.approveStudMap[sn] = rowNum
+	}
+	return as, nil
+}
+
+func (a *approveSheet) fullName(row []string) string {
+	fi, li := a.headerIndexes[firstNameColumn], a.headerIndexes[lastNameColumn]
+	first, last := row[fi], row[li]
+	if first == "" && last == "" {
+		return "MISSING NAME"
+	}
+	return fmt.Sprintf("%s %s", first, last)
+}
+
+func (a *approveSheet) studentNum(row []string) string {
+	return row[a.headerIndexes[studentNumColumn]]
+}
+
+func (a *approveSheet) lookupStudentByRow(rowNum int) string {
+	return a.fullName(a.rows[rowNum-2])
+}
+
+func (a *approveSheet) lookupRow(studNum string) (int, error) {
+	if rowNum, ok := a.approveStudMap[studNum]; ok {
+		return rowNum, nil
+	}
+	return 0, fmt.Errorf("not found: %s", studNum)
+}
+
+func (a *approveSheet) lookupRowByName(name string) (int, error) {
+	if rowNum, ok := a.approveNameMap[name]; ok {
+		return rowNum, nil
+	}
+	return partialMatch(name, a.approveNameMap)
+}
+
+func (a *approveSheet) setApproveCell(rowNum int, approveValue string) {
+	a.approveMap[a.approveCell(rowNum)] = approveValue
+}
+
+func (a *approveSheet) approveCell(rowNum int) string {
+	return fmt.Sprintf("%s%d", a.headerLabels[approvedColumn], rowNum)
+}
+
+func loadApproveSheet(courseCode string) (*approveSheet, error) {
+	// The approve sheet is a single sheet Excel file with five columns:
+	//
+	//		First name | Last name | Student number    | Candidate number | Approval
+	// 		-----------+-----------+-------------------+------------------+----------
+	// 		<first>    | <last>    | <student_no>      | <candidate_no>   | <approved>
+	//		John       | Doe       | 123456            |                  |
+	//
+	// Approval and candidate number columns are empty by default.
+	// The approval column should be filled with either "Godkjent" or "Ikke godkjent".
+	// The candidate number column is irrelevant for approval and can be ignored.
+	//
 	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	if f.SheetCount != 1 {
-		return nil, "", fmt.Errorf("expected a single sheet in %s, got %d", fileName(courseCode, srcSuffix), f.SheetCount)
+		return nil, fmt.Errorf("expected a single sheet in %s, got %d", fileName(courseCode, srcSuffix), f.SheetCount)
 	}
 	// we expect only a single sheet; assume that is the active sheet
-	sheetName = f.GetSheetName(f.GetActiveSheetIndex())
-	approveMap = make(map[string]int)
-	for i, row := range f.GetRows(sheetName) {
-		if i > 0 && row[0] != "" {
-			approveMap[row[0]] = i + 1
-		}
+	sheetName := f.GetSheetName(f.GetActiveSheetIndex())
+	rows := f.GetRows(sheetName)
+	as, err := newApproveSheet(sheetName, rows)
+	if err != nil {
+		return nil, fmt.Errorf("parse error in %s: %w", fileName(courseCode, srcSuffix), err)
 	}
-	return approveMap, sheetName, nil
+	return as, nil
 }
 
 func saveApproveSheet(courseCode, sheetName string, approveMap map[string]string) error {

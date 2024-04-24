@@ -26,7 +26,7 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := qtest.CreateFakeUser(t, db, 10)
+	user := qtest.CreateFakeUser(t, db)
 	repo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   100,
@@ -112,10 +112,10 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		Tag:               "Spring",
 		ScmOrganizationID: 1234,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
@@ -166,11 +166,11 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		ScmOrganizationID: 120,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	userTwo := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
+	userTwo := qtest.CreateFakeUser(t, db)
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
@@ -249,11 +249,11 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		ScmOrganizationID: 120,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	userTwo := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
+	userTwo := qtest.CreateFakeUser(t, db)
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
@@ -332,10 +332,10 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		ScmOrganizationID: 1234,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 
 	// Creating Course info repo
 	repoCourseInfo := qf.Repository{
