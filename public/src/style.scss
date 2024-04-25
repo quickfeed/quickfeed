@@ -627,3 +627,9 @@ nav.flexbox {
         display: none;
     }
 }
+
+.breadcrumb {
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">" !important;
+    }
+}
