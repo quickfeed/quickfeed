@@ -501,7 +501,7 @@ nav.flexbox {
         }
 
         &:not(:checked) + .slider {
-            color: #007bff;
+            background-color: #007bff;
         }
     }
 
