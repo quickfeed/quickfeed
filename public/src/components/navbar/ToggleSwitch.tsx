@@ -42,7 +42,7 @@ const ToggleSwitch = () => {
     }
 
     return (
-        <label className="switch">
+        <label className="switch" data-toggle="tooltip" title="Toggle between student and teacher view">
             <input type="checkbox" readOnly checked={enrollmentStatus} />
             <span className="slider round" onClick={switchView}>
                 <span className="toggle">{text}</span>
