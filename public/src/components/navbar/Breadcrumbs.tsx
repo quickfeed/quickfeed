@@ -23,6 +23,10 @@ const Breadcrumbs = () => {
         return null
     }
 
+    const handleDashboard = () => {
+        actions.setActiveCourse(0n)
+    }
+
     useEffect(() => {
         if (pathnames[0] === 'course' && pathnames[1]) {
             setCourseName(getCourseNameById(pathnames[1]))
@@ -36,7 +40,7 @@ const Breadcrumbs = () => {
         <nav aria-label="breadcrumb">
             <ol className="breadcrumb m-0 bg-transparent">
                 <li className="breadcrumb-item">
-                    <Link to="/">Dashboard</Link>
+                    <Link to="/" onClick={handleDashboard}>Dashboard</Link>
                 </li>
                 {pathnames.map((value, index) => {
                     const last = index === pathnames.length - 1
