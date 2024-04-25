@@ -136,7 +136,10 @@ func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*R
 }
 
 // RepositoryIsEmpty implements the SCM interface
-func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
+func (s *MockSCM) RepositoryIsEmpty(_ context.Context, opts *RepositoryOptions) bool {
+	if _, err := s.getRepository(opts); err != nil {
+		return true
+	}
 	return false
 }
 
