@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
-import { useAppState } from '../../overmind'
+import { useActions, useAppState } from '../../overmind'
 
 
 const Breadcrumbs = () => {
     const state = useAppState()
+    const actions = useActions()
     const location = useLocation()
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
