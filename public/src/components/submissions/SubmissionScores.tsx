@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { Submission } from "../../../proto/qf/types_pb"
 import SubmissionScore from "./SubmissionScore"
 
-type ScoreSort = "name" | "score" | "weight"
+type ScoreSort = "name" | "score" | "weight" | "percentage"
 
 const SubmissionScores = ({submission}: {submission: Submission}) => {
     const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
@@ -11,6 +11,7 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
     const sortScores = () => {
         const sortBy = sortAscending ? 1 : -1
         const scores = submission.clone().Scores
+        const totalWeight = scores.reduce((acc, score) => acc + score.Weight, 0)
         return scores.sort((a, b) => {
             switch (sortKey) {
                 case "name":
@@ -19,6 +20,8 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
                     return sortBy * (a.Score - b.Score)
                 case "weight":
                     return sortBy * (a.Weight - b.Weight)
+                case "percentage":
+                    return sortBy * ((a.Score / a.MaxScore) * (a.Weight / totalWeight) - (b.Score / b.MaxScore) * (b.Weight / totalWeight))
                 default:
                     return 0
             }
@@ -36,26 +39,27 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
     }, [sortKey, sortAscending])
 
     const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
-
+    const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
     return (
-        <table className="table table-curved table-striped">
+        <table className="table table-curved table-striped table-hover">
             <thead className="thead-dark">
                 <tr>
-                    <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
-                    <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                    <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>Weight</th>
+                    <th colSpan={1} className="col-md-8" data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
+                    <th colSpan={1} className="text-right col-md-auto" data-key={"score"} role="button" onClick={handleSort}>Score</th>
+                    <th colSpan={1} className="text-right col-md-auto" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
+                    <th colSpan={1} className="text-right col-md-auto" data-key={"weight"} data-toggle="tooltip" title={"Maximum % contribution to total score"} role="button" onClick={handleSort}>Max</th>
                 </tr>
             </thead>
             <tbody style={{"wordBreak": "break-word"}}>
                 {sortedScores.map(score =>
-                    <SubmissionScore key={score.ID.toString()} score={score} />
+                    <SubmissionScore key={score.ID.toString()} score={score} totalWeight={totalWeight} />
                 )}
             </tbody>
             <tfoot>
                 <tr>
-                    <th>Total Score</th>
-                    <th>{submission.score}%</th>
-                    <th>100%</th>
+                    <th colSpan={2}>Total Score</th>
+                    <th className="text-right">{submission.score}%</th>
+                    <th className="text-right">100%</th>
                 </tr>
             </tfoot>
         </table>
