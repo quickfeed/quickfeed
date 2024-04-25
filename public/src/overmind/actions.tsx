@@ -916,3 +916,7 @@ export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group
         state.submissionOwner = { type: "ENROLLMENT", id: owner.ID }
     }
 }
+
+export const updateSubmissionOwner = ({ state }: Context, owner: SubmissionOwner) => {
+    state.submissionOwner = owner
+}

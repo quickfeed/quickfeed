@@ -10,6 +10,8 @@ import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
 import Alerts from "../components/alerts/Alerts"
 
+const ReviewResults = () => <Results review />
+const RegularResults = () => <Results review={false} />
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
 const TeacherPage = (): JSX.Element => {
@@ -52,8 +54,8 @@ const TeacherPage = (): JSX.Element => {
             <Switch>
                 <Route path={`/course/:id/groups`} exact component={GroupPage} />
                 <Route path={"/course/:id/members"} component={Members} />
-                <Route path={"/course/:id/review"} component={() => Results({ review: true })} />
-                <Route path={"/course/:id/results"} component={() => Results({ review: false })} />
+                <Route path={"/course/:id/review"} component={ReviewResults} />
+                <Route path={"/course/:id/results"} component={RegularResults} />
                 <Route path={"/course/:id/assignments"} component={Assignments} />
             </Switch>
         </div>

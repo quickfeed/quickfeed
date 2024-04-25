@@ -501,7 +501,7 @@ nav.flexbox {
         }
 
         &:not(:checked) + .slider {
-            color: #007bff;
+            background-color: #007bff;
         }
     }
 
@@ -625,5 +625,11 @@ nav.flexbox {
 
     &.hidden {
         display: none;
+    }
+}
+
+.breadcrumb {
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">" !important;
     }
 }

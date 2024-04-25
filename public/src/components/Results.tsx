@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from "react"
+import React, { useCallback, useEffect, useMemo } from "react"
+import { useHistory, useLocation } from 'react-router-dom'
 import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -16,6 +17,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
+    const history = useHistory()
+    const location = useLocation()
 
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
     const assignments = useMemo(() => {
@@ -32,7 +35,30 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             actions.review.setAssignmentID(-1n)
             actions.setActiveEnrollment(null)
         }
-    }, [state.loadedCourse])
+    }, [])
+
+    useEffect(() => {
+        if (!state.selectedSubmission) {
+            // If no submission is selected, check if there is a selected lab in the URL
+            // and select it if it exists
+            const selectedLab = new URLSearchParams(location.search).get('id')
+            if (selectedLab) {
+                const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
+                if (submission) {
+                    actions.setSelectedSubmission(submission)
+                    actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+                }
+            }
+        }
+    }, [])
+
+    const handleLabClick = useCallback((labId: bigint) => {
+        // Update the URL with the selected lab
+        history.replace({
+            pathname: location.pathname,
+            search: `?id=${labId}`
+        })
+    }, [history])
 
     if (!state.loadedCourse[courseID.toString()]) {
         return <h1>Fetching Submissions...</h1>
@@ -65,6 +91,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 }
                 actions.setSubmissionOwner(owner)
                 actions.review.setSelectedReview(-1)
+                handleLabClick(submission.ID)
             }
         })
     }
@@ -82,6 +109,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                     actions.setActiveEnrollment(owner.clone())
                 }
                 actions.setSubmissionOwner(owner)
+                handleLabClick(submission.ID)
                 actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
             }
         })
