@@ -10,14 +10,14 @@ import (
 
 func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEvent) {
 	installerID := uint64(event.GetSender().GetID())
-	user, err := wh.db.GetUserByRemoteIdentity(installerID)
+	courseCreator, err := wh.db.GetUserByRemoteIdentity(installerID)
 	if err != nil {
 		wh.logger.Errorf("Could not get user by remote identity: %v", err)
 		return
 	}
 
-	if !user.GetIsAdmin() {
-		wh.logger.Errorf("User %s is not an admin", user.Login)
+	if !courseCreator.GetIsAdmin() {
+		wh.logger.Errorf("User %s is not an admin", courseCreator.Login)
 		return
 	}
 
@@ -27,7 +27,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		ScmOrganizationID:   orgID,
 		ScmOrganizationName: orgName,
 		Name:                orgName,
-		CourseCreatorID:     user.ID,
+		CourseCreatorID:     courseCreator.ID,
 	}
 
 	ctx := context.Background()
@@ -37,7 +37,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		return
 	}
 	repos, err := sc.CreateCourse(ctx, &scm.CourseOptions{
-		CourseCreator:  user.Login,
+		CourseCreator:  courseCreator.Login,
 		OrganizationID: orgID,
 	})
 	if err != nil {
@@ -52,7 +52,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 			RepoType:          qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {
-			dbRepo.UserID = user.ID
+			dbRepo.UserID = courseCreator.ID
 		}
 		if err := wh.db.CreateRepository(&dbRepo); err != nil {
 			wh.logger.Errorf("Could not create database repository %s: %v", repo.Path, err)
@@ -60,11 +60,11 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		}
 	}
 
-	if err := wh.db.CreateCourse(user.ID, course); err != nil {
+	if err := wh.db.CreateCourse(courseCreator.ID, course); err != nil {
 		wh.logger.Errorf("Could not create database record for course %s: %v", orgName, err)
 	}
 
-	if err := wh.tm.Add(user.ID); err != nil {
-		wh.logger.Errorf("Could not add user %s for token refresh: %v", user.Login, err)
+	if err := wh.tm.Add(courseCreator.ID); err != nil {
+		wh.logger.Errorf("Could not add user %s for token refresh: %v", courseCreator.Login, err)
 	}
 }
