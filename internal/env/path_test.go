@@ -27,8 +27,11 @@ func TestSetRootWorkingDirOutside(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	os.Chdir("/")
-	defer os.Chdir(wd)
+	err = os.Chdir("/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(wd) }()
 
 	// setRoot() is expected to panic; this test will fail if it does not panic
 	defer func() {
@@ -49,8 +52,11 @@ func TestSetRootWrongGitRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	gitRepo := t.TempDir()
-	os.Chdir(gitRepo)
-	defer os.Chdir(wd)
+	err = os.Chdir(gitRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(wd) }()
 
 	// create a git repository
 	_, err = git.PlainInit(gitRepo, false)
@@ -64,7 +70,7 @@ func TestSetRootWrongGitRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if _, err := f.WriteString("module github.com/wrong/module\n"); err != nil {
 		t.Fatal(err)
 	}
