@@ -2,6 +2,7 @@ package hooks
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/qf"
@@ -27,7 +28,10 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		ScmOrganizationID:   orgID,
 		ScmOrganizationName: orgName,
 		Name:                orgName,
+		Code:                orgName,
+		Tag:                 defaultTag(),
 		CourseCreatorID:     courseCreator.ID,
+		Year:                defaultYear(),
 	}
 
 	ctx := context.Background()
@@ -67,4 +71,20 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 	if err := wh.tm.Add(courseCreator.ID); err != nil {
 		wh.logger.Errorf("Could not add user %s for token refresh: %v", courseCreator.Login, err)
 	}
+}
+
+func defaultYear() uint32 {
+	now := time.Now()
+	if now.Month() <= 11 && now.Day() <= 31 && now.Month() > 10 {
+		return uint32(now.Year() + 1)
+	}
+	return uint32(now.Year())
+}
+
+func defaultTag() string {
+	now := time.Now()
+	if now.Month() >= 10 || now.Month() < 4 {
+		return "Spring"
+	}
+	return "Fall"
 }
