@@ -67,6 +67,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 
 	if err := wh.db.CreateCourse(courseCreator.ID, course); err != nil {
 		wh.logger.Errorf("Could not create database record for course %s: %v", orgName, err)
+		return
 	}
 
 	if err := wh.tm.Add(courseCreator.ID); err != nil {
