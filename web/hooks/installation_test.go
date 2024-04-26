@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"text/template"
+	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
@@ -287,4 +288,54 @@ func sendEvent(t *testing.T, event event, server *httptest.Server) *http.Respons
 		t.Fatal(err)
 	}
 	return resp
+}
+
+func Test_defaultYearAndTag(t *testing.T) {
+	tests := []struct {
+		name     string
+		now      time.Time
+		wantYear uint32
+		wantTag  string
+	}{
+		{
+			name:     "january",
+			now:      time.Date(2022, time.January, 1, 0, 0, 0, 0, time.UTC),
+			wantYear: 2022,
+			wantTag:  "Spring",
+		},
+		{
+			name:     "december",
+			now:      time.Date(2022, time.December, 31, 0, 0, 0, 0, time.UTC),
+			wantYear: 2023,
+			wantTag:  "Spring",
+		},
+		{
+			name:     "november",
+			now:      time.Date(2022, time.November, 30, 0, 0, 0, 0, time.UTC),
+			wantYear: 2023,
+			wantTag:  "Spring",
+		},
+		{
+			name:     "october",
+			now:      time.Date(2022, time.October, 31, 0, 0, 0, 0, time.UTC),
+			wantYear: 2022,
+			wantTag:  "Fall",
+		},
+		{
+			name:     "april",
+			now:      time.Date(2022, time.April, 30, 0, 0, 0, 0, time.UTC),
+			wantYear: 2022,
+			wantTag:  "Fall",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := defaultYear(tt.now); got != tt.wantYear {
+				t.Errorf("defaultYear() = %v, want %v", got, tt.now.Year())
+			}
+			if got := defaultTag(tt.now); got != tt.wantTag {
+				t.Errorf("defaultTag() = %v, want %v", got, tt.wantTag)
+			}
+		})
+	}
 }
