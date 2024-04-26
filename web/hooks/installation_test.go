@@ -51,6 +51,28 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	if course.CourseCreatorID != admin.ID {
 		t.Errorf("got course creator id %d, want 1", course.CourseCreatorID)
 	}
+
+	// Send another event with another organization.
+	response = sendEvent(t, event{
+		OrganizationLogin: "qf103-2022",
+		OrganizationScmID: 2,
+		UserLogin:         "quickfeed",
+		UserScmID:         1,
+	}, server)
+
+	if response.StatusCode != 200 {
+		t.Errorf("got status %d, want 200", response.StatusCode)
+	}
+
+	// Second course should be created successfully.
+	course, err = wh.db.GetCourseByOrganizationID(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if course.Name != "qf103-2022" {
+		t.Errorf("got course name %s, want qf102-2022", course.Name)
+	}
 }
 
 func TestNonExistingUser(t *testing.T) {
