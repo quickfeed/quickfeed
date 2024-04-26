@@ -24,14 +24,15 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 
 	orgName := event.GetInstallation().GetAccount().GetLogin()
 	orgID := uint64(event.GetInstallation().GetAccount().GetID())
+	now := time.Now()
 	course := &qf.Course{
 		ScmOrganizationID:   orgID,
 		ScmOrganizationName: orgName,
 		Name:                orgName,
 		Code:                orgName,
-		Tag:                 defaultTag(),
+		Tag:                 defaultTag(now),
 		CourseCreatorID:     courseCreator.ID,
-		Year:                defaultYear(),
+		Year:                defaultYear(now),
 	}
 
 	ctx := context.Background()
@@ -73,17 +74,15 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 	}
 }
 
-func defaultYear() uint32 {
-	now := time.Now()
-	if now.Month() <= 11 && now.Day() <= 31 && now.Month() > 10 {
+func defaultYear(now time.Time) uint32 {
+	if now.Month() > time.October {
 		return uint32(now.Year() + 1)
 	}
 	return uint32(now.Year())
 }
 
-func defaultTag() string {
-	now := time.Now()
-	if now.Month() >= 10 || now.Month() < 4 {
+func defaultTag(now time.Time) string {
+	if now.Month() > time.October || now.Month() < time.April {
 		return "Spring"
 	}
 	return "Fall"
