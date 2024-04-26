@@ -76,6 +76,41 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	}
 }
 
+func TestNonAdminUser(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// first created user is admin
+	_ = qtest.CreateFakeUser(t, db)
+
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{
+		Name:        "user",
+		Login:       "quickfeed",
+		ScmRemoteID: 1000,
+	})
+
+	wh, server := setupWebhook(t, db)
+	defer server.Close()
+
+	// Send an event with a valid organization, but an invalid user.
+	_ = sendEvent(t, event{
+		OrganizationLogin: "qf102-2022",
+		OrganizationScmID: 1,
+		UserLogin:         "quickfeed",
+		UserScmID:         int(user.ScmRemoteID),
+	}, server)
+
+	course, err := wh.db.GetCourseByOrganizationID(1)
+	if err == nil {
+		// expect error: record not found
+		t.Errorf("got course %v, want error", course)
+	}
+
+	if course != nil {
+		t.Errorf("got course %v, want nil", course)
+	}
+}
+
 func TestNonExistingUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
