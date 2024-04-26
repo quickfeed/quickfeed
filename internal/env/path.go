@@ -1,7 +1,8 @@
 package env
 
 import (
-	"log"
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -10,12 +11,17 @@ import (
 
 var quickfeedRoot string
 
+const quickfeedModulePath = "github.com/quickfeed/quickfeed"
+
 func init() {
 	quickfeedRoot = os.Getenv("QUICKFEED")
 }
 
 // Root returns the root directory as defined by $QUICKFEED or
 // sets it relative to the quickfeed module's root.
+// This function will panic if called when the working directory
+// is not within the quickfeed repository. In this case, the
+// environment variable $QUICKFEED must be set manually.
 func Root() string {
 	if quickfeedRoot != "" {
 		return quickfeedRoot
@@ -27,26 +33,17 @@ func Root() string {
 func setRoot() {
 	root, err := gitRoot()
 	if err != nil {
-		log.Println("When running outside QuickFeed's git repository you must set the QUICKFEED environment variable manually.")
-		log.Fatalf("Failed to set QUICKFEED variable: %v", err)
+		// When the working directory is outside the git repository, we must set the QUICKFEED env variable.
+		wd, _ := os.Getwd()
+		fmt.Printf("Working directory (%s) may be outside quickfeed's git repository.\n", wd)
+		fmt.Println("Please set the QUICKFEED environment variable to the root of the repository.")
+		panic(fmt.Sprintf("Failed to determine root of the git repository: %v", err))
+	}
+	if err := checkModulePath(root); err != nil {
+		panic(fmt.Sprintf("Invalid module path: %v", err))
 	}
 	os.Setenv("QUICKFEED", root)
 	quickfeedRoot = root
-}
-
-// RootEnv returns the path $QUICKFEED/{envFile}.
-func RootEnv(envFile string) string {
-	return filepath.Join(Root(), envFile)
-}
-
-// PublicEnv returns the path $QUICKFEED/public/{envFile}.
-func PublicEnv(envFile string) string {
-	return filepath.Join(Root(), "public", envFile)
-}
-
-// TestdataPath returns the path to the testdata/courses directory.
-func TestdataPath() string {
-	return filepath.Join(Root(), "testdata", "courses")
 }
 
 // gitRoot return the root of the Git repository.
@@ -65,4 +62,33 @@ func gitRoot() (string, error) {
 		return "", err
 	}
 	return w.Filesystem.Root(), nil
+}
+
+// checkModulePath checks that the root directory contains a go.mod file
+// with the correct module path for QuickFeed.
+func checkModulePath(root string) error {
+	modFile := filepath.Join(root, "go.mod")
+	data, err := os.ReadFile(modFile)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %v", modFile, err)
+	}
+	if !bytes.Contains(data, []byte("module "+quickfeedModulePath)) {
+		return fmt.Errorf("invalid go.mod file: %s", modFile)
+	}
+	return nil
+}
+
+// RootEnv returns the path $QUICKFEED/{envFile}.
+func RootEnv(envFile string) string {
+	return filepath.Join(Root(), envFile)
+}
+
+// PublicEnv returns the path $QUICKFEED/public/{envFile}.
+func PublicEnv(envFile string) string {
+	return filepath.Join(Root(), "public", envFile)
+}
+
+// TestdataPath returns the path to the testdata/courses directory.
+func TestdataPath() string {
+	return filepath.Join(Root(), "testdata", "courses")
 }
