@@ -96,7 +96,8 @@ func TestRunRaceTest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			output, race := sh.RunRaceTest(tt.testName)
+			// The tags argument is the empty string; we are currently not testing it.
+			output, race := sh.RunRaceTest(tt.testName, "")
 			if race != tt.expectedRace {
 				t.Errorf("%s data race warning from %s", unexpected(race), tt.testName)
 			}

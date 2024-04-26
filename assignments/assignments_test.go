@@ -69,8 +69,8 @@ func TestUpdateCriteria(t *testing.T) {
 	defer cleanup()
 
 	course := &qf.Course{}
-	admin := qtest.CreateFakeUser(t, db, 10)
-	user := qtest.CreateFakeUser(t, db, 20)
+	admin := qtest.CreateFakeUser(t, db)
+	user := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
 	// Assignment that will be updated

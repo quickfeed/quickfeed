@@ -262,7 +262,7 @@ input {
     flex: 20;
 }
 
-.reviewLab {
+.lab-sticky {
     position: sticky;
     top: 100px;
     height: 90vh;
@@ -501,7 +501,7 @@ nav.flexbox {
         }
 
         &:not(:checked) + .slider {
-            color: #007bff;
+            background-color: #007bff;
         }
     }
 
@@ -625,5 +625,11 @@ nav.flexbox {
 
     &.hidden {
         display: none;
+    }
+}
+
+.breadcrumb {
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">" !important;
     }
 }

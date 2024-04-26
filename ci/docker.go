@@ -38,7 +38,10 @@ type Docker struct {
 
 // NewDockerCI returns a runner to run CI tests.
 func NewDockerCI(logger *zap.SugaredLogger) (*Docker, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithAPIVersionNegotiation(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +73,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 	d.logger.Infof("Created container image '%s' for %s", job.Image, job.Name)
-	if err := d.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return "", err
 	}
 
@@ -82,7 +85,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	d.logger.Infof("Done waiting for container image '%s' for %s", job.Image, job.Name)
 	// extract the logs before removing the container below
-	logReader, err := d.client.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+	logReader, err := d.client.ContainerLogs(ctx, resp.ID, container.LogsOptions{
 		ShowStdout: true,
 	})
 	if err != nil {
@@ -91,7 +94,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	d.logger.Infof("Removing container image '%s' for %s", job.Image, job.Name)
 	// remove the container when finished to prevent too many open files
-	err = d.client.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	err = d.client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -107,7 +110,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 }
 
 // createImage creates an image for the given job.
-func (d *Docker) createImage(ctx context.Context, job *Job) (*container.ContainerCreateCreatedBody, error) {
+func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateResponse, error) {
 	if job.Image == "" {
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
@@ -144,7 +147,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		}
 	}
 
-	create := func() (container.ContainerCreateCreatedBody, error) {
+	create := func() (container.CreateResponse, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
 			User:  fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), // Run the image as the current user, e.g., quickfeed
@@ -177,20 +180,21 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 				return "", err
 			}
 			// stop runaway container whose deadline was exceeded
-			timeout := time.Duration(1 * time.Second)
-			stopErr := d.client.ContainerStop(context.Background(), respID, &timeout)
+			timeout := 1 // seconds to wait before forcefully killing the container
+			stopErr := d.client.ContainerStop(context.Background(), respID, container.StopOptions{Timeout: &timeout})
 			if stopErr != nil {
 				return "", stopErr
 			}
 			// remove the docker container (when stopped due to timeout) to prevent too many open files
-			rmErr := d.client.ContainerRemove(context.Background(), respID, types.ContainerRemoveOptions{})
+			rmErr := d.client.ContainerRemove(context.Background(), respID, container.RemoveOptions{})
 			if rmErr != nil {
 				return "", rmErr
 			}
 			// return message to user to be shown in the results log
 			return "Container timeout. Please check for infinite loops or other slowness.", err
 		}
-	case <-statusCh:
+	case status := <-statusCh:
+		d.logger.Infof("Container: '%s' for %s: exited with status: %v", job.Image, job.Name, status.StatusCode)
 	}
 	return "", nil
 }

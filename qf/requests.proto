@@ -82,11 +82,6 @@ message Repositories {
     map<uint32, string> URLs = 1;  // Map key is the Repository.Type
 }
 
-message Status {
-    uint64 Code  = 1;
-    string Error = 2;
-}
-
 message RebuildRequest {
     uint64 courseID     = 1;
     uint64 assignmentID = 2;

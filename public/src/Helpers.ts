@@ -249,7 +249,7 @@ export const getSubmissionCellColor = (submission: Submission): string => {
 }
 
 // pattern for group name validation. Only letters, numbers, underscores and dashes are allowed.
-const pattern = /^[a-zA-Z0-9_-]+$/;
+const pattern = /^[a-zA-Z0-9_-]+$/
 export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
     if (group.name.length === 0) {
         return { valid: false, message: "Group name cannot be empty" }
@@ -371,6 +371,41 @@ export class SubmissionsForCourse {
             return this.groupSubmissions.get(owner.id)?.submissions ?? []
         }
         return this.userSubmissions.get(owner.id)?.submissions ?? []
+    }
+
+    ByID(id: bigint): Submission | undefined {
+        for (const submissions of this.userSubmissions.values()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return submission
+            }
+        }
+        for (const submissions of this.groupSubmissions.values()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return submission
+            }
+        }
+        return undefined
+    }
+
+    OwnerByID(id: bigint): SubmissionOwner | undefined {
+        for (const [key, submissions] of this.userSubmissions.entries()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                if (submission.groupID > 0) {
+                    return { type: "GROUP", id: submission.groupID }
+                }
+                return { type: "ENROLLMENT", id: key }
+            }
+        }
+        for (const [key, submissions] of this.groupSubmissions.entries()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return { type: "GROUP", id: key }
+            }
+        }
+        return undefined
     }
 
     update(owner: SubmissionOwner, submission: Submission) {

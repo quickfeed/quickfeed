@@ -4,10 +4,10 @@ import {
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
+import * as internalActions from "./internalActions"
 import { Context } from "."
 import { Response } from "../client"
 import { Code, ConnectError } from "@bufbuild/connect"
-import * as internalActions from "./internalActions" // skipcq: JS-C1003
 import { PartialMessage } from "@bufbuild/protobuf"
 
 export const internal = internalActions
@@ -192,11 +192,19 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
-export const updateEnrollment = async ({ state, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment_UserStatus }): Promise<void> => {
+export const updateEnrollment = async ({ state, actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment_UserStatus }): Promise<void> => {
     if (!enrollment.user) {
         // user name is required
         return
     }
+
+    if (status === Enrollment_UserStatus.NONE) {
+        const proceed = await actions.internal.isEmptyRepo({ userID: enrollment.userID, courseID: enrollment.courseID })
+        if (!proceed) {
+            return
+        }
+    }
+
     // Confirm that user really wants to change enrollment status
     let confirmed = false
     switch (status) {
@@ -439,7 +447,7 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
     state.assignments[id]?.forEach(assignment => {
         const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
         if (!state.submissions[id][assignment.order - 1]) {
-	    state.submissions[id][assignment.order - 1] = submission ? submission : new Submission()
+            state.submissions[id][assignment.order - 1] = submission ? submission : new Submission()
         }
     })
 }
@@ -564,21 +572,15 @@ export const updateGroupStatus = async ({ effects }: Context, { group, status }:
     }
 }
 
-export const deleteGroup = async ({ state, effects }: Context, group: Group): Promise<void> => {
+export const deleteGroup = async ({ state, actions, effects }: Context, group: Group): Promise<void> => {
     if (!confirm("Deleting a group is an irreversible action. Are you sure?")) {
         return
     }
-    const isEmptyResponse = await effects.api.client.isEmptyRepo({
-        courseID: group.courseID,
-        groupID: group.ID,
-    })
-    if (isEmptyResponse.error) {
+    const proceed = await actions.internal.isEmptyRepo({ groupID: group.ID, courseID: group.courseID })
+    if (!proceed) {
         return
     }
 
-    if (!confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
-        return
-    }
     const deleteResponse = await effects.api.client.deleteGroup({
         courseID: group.courseID,
         groupID: group.ID,
@@ -913,4 +915,8 @@ export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group
         }
         state.submissionOwner = { type: "ENROLLMENT", id: owner.ID }
     }
+}
+
+export const updateSubmissionOwner = ({ state }: Context, owner: SubmissionOwner) => {
+    state.submissionOwner = owner
 }

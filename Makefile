@@ -9,7 +9,7 @@ ARCH				:= $(shell uname -m)
 protopatch			:= patch/go.proto
 protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
 toolsdir			:= bin
-tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
+tool-pkgs			:= $(shell go list -e -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 export PATH			:= $(shell pwd)/$(toolsdir):$(PATH)
 
@@ -67,7 +67,7 @@ proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
 
 test:
-	@go clean -testcache ./...
+	@go clean -testcache
 	@go test ./...
 
 webpack-dev-server:

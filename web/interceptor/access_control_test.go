@@ -36,11 +36,11 @@ func TestAccessControl(t *testing.T) {
 	))
 	ctx := context.Background()
 
-	courseAdmin := qtest.CreateFakeUser(t, db, 1)
-	groupStudent := qtest.CreateNamedUser(t, db, 2, "group student")
-	student := qtest.CreateNamedUser(t, db, 3, "student")
-	user := qtest.CreateNamedUser(t, db, 4, "user")
-	admin := qtest.CreateFakeUser(t, db, 6)
+	courseAdmin := qtest.CreateFakeUser(t, db)
+	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "group student", Login: "group student"})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
+	admin := qtest.CreateFakeUser(t, db)
 	admin.IsAdmin = true
 	if err := db.UpdateUser(admin); err != nil {
 		t.Fatal(err)
@@ -354,6 +354,27 @@ func TestAccessControl(t *testing.T) {
 		t.Run("AdminStatusChange/"+name, func(t *testing.T) {
 			_, err := client.UpdateUser(ctx, qtest.RequestWithCookie(tt.user, tt.cookie))
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
+		})
+	}
+
+	adminGetEnrollmentsTests := map[string]accessTest{
+		"admin, not enrolled in the course": {cookie: adminCookie, courseID: course.ID, userID: student.ID, wantAccess: true, wantCode: connect.CodePermissionDenied},
+	}
+
+	for name, tt := range adminGetEnrollmentsTests {
+		t.Run("AdminGetEnrollments/"+name, func(t *testing.T) {
+			_, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_CourseID{
+					CourseID: tt.courseID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
+			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_UserID{
+					UserID: tt.userID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 }

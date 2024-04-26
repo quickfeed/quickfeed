@@ -41,6 +41,7 @@ coverprofile
 CSRF
 dateext
 deadcode
+datetime
 Debugf
 dhparams
 dockerd
@@ -51,15 +52,18 @@ envoyproxy
 errcheck
 Errorf
 espeland
+Etternavn
 excelize
 extendee
 fileop
+Fornavn
 Frøyland
 fullchain
 Getwd
 githubv
 GOBIN
 GOCACHE
+Godkjenning
 Godkjent
 godox
 gofumports
@@ -103,6 +107,7 @@ jinzhu
 Jostein
 jsonpb
 JWTs
+Kandidatnr
 keepalive
 keychain
 Keychains
@@ -188,6 +193,7 @@ struct
 structcheck
 structs
 Studentid
+Studentnr
 subtest
 subtests
 swiftui
