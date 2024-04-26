@@ -40,11 +40,13 @@ covermode
 coverprofile
 CSRF
 dateext
+deadcode
 datetime
 Debugf
 dhparams
 dockerd
 Docroot
+doesnotexist
 Eivind
 envoyproxy
 errcheck
@@ -63,8 +65,10 @@ GOBIN
 GOCACHE
 Godkjenning
 Godkjent
+godox
 gofumports
 gofumpt
+goimports
 golangci
 Gollum
 googleapis
@@ -186,6 +190,7 @@ Stavnes
 stdcopy
 steinfletcher
 struct
+structcheck
 structs
 Studentid
 Studentnr
@@ -207,6 +212,7 @@ unmarshalls
 urfave
 URL's
 usermod
+varcheck
 verdana
 Warnf
 webpack's
