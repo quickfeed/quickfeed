@@ -331,7 +331,7 @@ func Test_defaultYearAndTag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := defaultYear(tt.now); got != tt.wantYear {
-				t.Errorf("defaultYear() = %v, want %v", got, tt.now.Year())
+				t.Errorf("defaultYear() = %v, want %v", got, tt.wantYear)
 			}
 			if got := defaultTag(tt.now); got != tt.wantTag {
 				t.Errorf("defaultTag() = %v, want %v", got, tt.wantTag)
