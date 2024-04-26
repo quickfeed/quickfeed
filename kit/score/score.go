@@ -129,7 +129,7 @@ func (s *Score) json() string {
 	return string(b)
 }
 
-func printPanicMessage(testName, msg string, recoverVal interface{}) {
+func printPanicMessage(testName, msg string, recoverVal any) {
 	var s strings.Builder
 	s.WriteString("******************\n")
 	s.WriteString(testName)

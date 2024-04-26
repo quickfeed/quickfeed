@@ -1,6 +1,7 @@
 addstore
 agpath
 alecthomas
+Alloc
 allstudents
 allteachers
 apitest
@@ -20,6 +21,7 @@ bufbuild
 bufconn
 bufnet
 buildid
+callframe
 centerblock
 Certbot
 certonly
@@ -38,10 +40,12 @@ covermode
 coverprofile
 CSRF
 dateext
+deadcode
 Debugf
 dhparams
 dockerd
 Docroot
+doesnotexist
 Eivind
 envoyproxy
 errcheck
@@ -57,8 +61,10 @@ githubv
 GOBIN
 GOCACHE
 Godkjent
+godox
 gofumports
 gofumpt
+goimports
 golangci
 Gollum
 googleapis
@@ -179,6 +185,7 @@ Stavnes
 stdcopy
 steinfletcher
 struct
+structcheck
 structs
 Studentid
 subtest
@@ -199,6 +206,7 @@ unmarshalls
 urfave
 URL's
 usermod
+varcheck
 verdana
 Warnf
 webpack's
