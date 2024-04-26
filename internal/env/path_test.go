@@ -8,6 +8,31 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
+func TestRoot(t *testing.T) {
+	// make sure quickfeedRoot is set
+	wantRoot := Root()
+
+	// reset quickfeedRoot to empty string; to circumvent the init() function
+	quickfeedRoot = ""
+
+	// get current dir; to change back to after test
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(wd) }()
+
+	// change to other directory inside the quickfeed repository
+	if err = os.Chdir(filepath.Join(wantRoot, "internal", "env")); err != nil {
+		t.Fatal(err)
+	}
+
+	gotRoot := Root()
+	if gotRoot != wantRoot {
+		t.Errorf("Root() = %s, want %s", gotRoot, wantRoot)
+	}
+}
+
 func TestSetRoot(t *testing.T) {
 	// assume working directory is within the quickfeed repository
 	defer func() {
