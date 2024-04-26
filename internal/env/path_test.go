@@ -11,6 +11,10 @@ import (
 func TestRoot(t *testing.T) {
 	// make sure quickfeedRoot is set
 	wantRoot := Root()
+	gotRoot := Root()
+	if gotRoot != wantRoot {
+		t.Errorf("Root() = %s, want %s", gotRoot, wantRoot)
+	}
 
 	// reset quickfeedRoot to empty string; to circumvent the init() function
 	quickfeedRoot = ""
@@ -27,7 +31,7 @@ func TestRoot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotRoot := Root()
+	gotRoot = Root()
 	if gotRoot != wantRoot {
 		t.Errorf("Root() = %s, want %s", gotRoot, wantRoot)
 	}
