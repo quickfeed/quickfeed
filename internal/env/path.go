@@ -88,6 +88,16 @@ func PublicEnv(envFile string) string {
 	return filepath.Join(Root(), "public", envFile)
 }
 
+// PublicDir returns the path to the public directory.
+func PublicDir() string {
+	return filepath.Join(Root(), "public")
+}
+
+// DatabasePath returns the path to the database file.
+func DatabasePath() string {
+	return filepath.Join(Root(), "qf.db")
+}
+
 // TestdataPath returns the path to the testdata/courses directory.
 func TestdataPath() string {
 	return filepath.Join(Root(), "testdata", "courses")
