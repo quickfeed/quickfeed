@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	defaultCertPath = "internal/config/certs"
 	defaultDomain   = "127.0.0.1"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
@@ -75,10 +74,12 @@ func KeyFile() string {
 	return keyFile
 }
 
+// CertPath returns the full path to the directory containing the certificates.
+// If QUICKFEED_CERT_PATH is not set, the default path $QUICKFEED/internal/config/certs is used.
 func CertPath() string {
 	certPath := os.Getenv("QUICKFEED_CERT_PATH")
 	if certPath == "" {
-		certPath = defaultCertPath
+		certPath = filepath.Join(Root(), "internal", "config", "certs")
 	}
 	return certPath
 }
