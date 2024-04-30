@@ -44,8 +44,8 @@ func init() {
 
 func main() {
 	var (
-		dbFile   = flag.String("database.file", "qf.db", "database file")
-		public   = flag.String("http.public", "public", "path to content to serve")
+		dbFile   = flag.String("database.file", env.DatabasePath(), "database file")
+		public   = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
