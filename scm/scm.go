@@ -49,8 +49,7 @@ type SCM interface {
 
 	// AcceptInvitations accepts course invites on behalf of the user.
 	// A new refresh token for the user is returned, which may be used in subsequent requests.
-	//
-	// IMPORTANT: The provided refresh token will be invalidated after this call.
+	// The provided refresh token will be invalidated after this call.
 	// The returned refresh token must be stored in the database.
 	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
 
