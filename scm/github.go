@@ -399,7 +399,16 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		if err := s.grantPullAccessToCourseRepos(ctx, org.ScmOrganizationName, opt.User); err != nil {
 			return nil, err
 		}
-		return s.createStudentRepo(ctx, org.ScmOrganizationName, opt.User)
+		repo, err := s.createStudentRepo(ctx, org.ScmOrganizationName, opt.User)
+		if err != nil {
+			return nil, err
+		}
+		// Promote user to organization member
+		role := OrgMember
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
+			return nil, err
+		}
+		return repo, nil
 
 	case qf.Enrollment_TEACHER:
 		// Promote user to organization owner
