@@ -41,11 +41,6 @@ const (
 	RepoPush = "push"
 	// RepoFull allows full access to repository
 	RepoFull = "admin"
-
-	// Standard team names
-
-	// TeachersTeam is the team with all teachers and teaching assistants of a course.
-	TeachersTeam = "allteachers"
 )
 
 const (

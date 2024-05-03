@@ -138,49 +138,49 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
 }
 
-// UpdateTeamMembers implements the SCM interface
-func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
+// UpdateGroupMembers implements the SCM interface
+func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *TeamOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
 
-	// find current team members
-	oldUsers, _, err := s.client.Teams.ListTeamMembersByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), nil)
+	// find current group members
+	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
-			Method:   "UpdateTeamMember",
-			Message:  fmt.Sprintf("failed to get members for team ID %d", opt.TeamID),
+			Method:   "UpdateGroupMembers",
+			Message:  fmt.Sprintf("failed to get members for repository %s", opt.GroupName),
 		}
 	}
 
-	// check whether group members are already in team; add missing members
+	// check whether group members are already in repository; add missing members
 	for _, member := range opt.Users {
-		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), member, nil)
+		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, nil)
 		if err != nil {
 			return ErrFailedSCM{
 				GitError: err,
-				Method:   "UpdateTeamMember",
-				Message:  fmt.Sprintf("failed to add user %s to team ID %d", member, opt.TeamID),
+				Method:   "UpdateGroupMembers",
+				Message:  fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
 			}
 		}
 	}
 
-	// check if all the team members are in the new group;
-	for _, teamMember := range oldUsers {
+	// check if all the repository members are in the new group;
+	for _, repoMember := range oldUsers {
 		toRemove := true
 		for _, groupMember := range opt.Users {
-			if teamMember.GetLogin() == groupMember {
+			if repoMember.GetLogin() == groupMember {
 				toRemove = false
 			}
 		}
 		if toRemove {
-			_, err = s.client.Teams.RemoveTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), teamMember.GetLogin())
+			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, repoMember.GetLogin())
 			if err != nil {
 				return ErrFailedSCM{
 					GitError: err,
-					Method:   "UpdateTeamMember",
-					Message:  fmt.Sprintf("failed to remove user %s from team ID %d", teamMember.GetLogin(), opt.TeamID),
+					Method:   "UpdateGroupMembers",
+					Message:  fmt.Sprintf("failed to remove user %s from repository %s", repoMember.GetLogin(), opt.GroupName),
 				}
 			}
 		}
@@ -326,7 +326,7 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 	return nil
 }
 
-// CreateCourse creates repositories and teams for a new course.
+// CreateCourse creates repositories for a new course.
 func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
@@ -363,16 +363,6 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 		repositories = append(repositories, repo)
 	}
 
-	// Create teacher team with course creator
-	teamOpt := &TeamOptions{
-		Organization: org.ScmOrganizationName,
-		TeamName:     TeachersTeam,
-		Users:        []string{opt.CourseCreator},
-	}
-	if _, err = s.createTeam(ctx, teamOpt); err != nil {
-		return nil, err
-	}
-
 	// Create student repository for the course creator
 	repo, err := s.createStudentRepo(ctx, org.ScmOrganizationName, opt.CourseCreator)
 	if err != nil {
@@ -382,7 +372,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	return repositories, nil
 }
 
-// UpdateEnrollment updates organization and team membership and creates user repositories.
+// UpdateEnrollment updates organization membership and creates user repositories.
 func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
@@ -416,7 +406,6 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
 			return nil, err
 		}
-		err = s.promoteToTeacher(ctx, org.ScmOrganizationName, opt.User)
 	}
 	return nil, err
 }
@@ -436,62 +425,53 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	return s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
 }
 
-// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
+// DemoteTeacherToStudent revokes owner status in the organization.
 func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrollmentOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
-	}
-	if _, err := s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, TeachersTeam, opt.User); err != nil {
-		return err
 	}
 	role := OrgMember
 	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: &role})
 	return err
 }
 
-// CreateGroup creates team and repository for a new group.
-func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
+// CreateGroup creates repository for a new group.
+func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, error) {
 	if !opt.valid() {
-		return nil, nil, fmt.Errorf("missing fields: %+v", opt)
+		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
 	orgOptions := &OrganizationOptions{Name: opt.Organization}
 	org, err := s.GetOrganization(ctx, orgOptions)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	repoOptions := &CreateRepositoryOptions{
 		Organization: opt.Organization,
-		Path:         opt.TeamName,
+		Path:         opt.GroupName,
 		Private:      true,
 	}
 	repo, err := s.createRepository(ctx, repoOptions)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	team, err := s.createTeam(ctx, opt)
-	if err != nil {
-		return nil, nil, err
+	for _, user := range opt.Users {
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org.ScmOrganizationName, repo.Path, user, &github.RepositoryAddCollaboratorOptions{
+			Permission: RepoPush,
+		}); err != nil {
+			return nil, err
+		}
 	}
-	permissions := &github.TeamAddTeamRepoOptions{
-		Permission: RepoPush, // make sure users can pull and push
-	}
-	if _, err := s.client.Teams.AddTeamRepoByID(ctx, int64(org.ScmOrganizationID), int64(team.ID), org.ScmOrganizationName, repo.Path, permissions); err != nil {
-		return nil, nil, err
-	}
-	return repo, team, nil
+
+	return repo, nil
 }
 
-// DeleteGroup deletes group's repository and team.
+// DeleteGroup deletes a group's repository.
 func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
-	if err := s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
-		return err
-	}
-	_, err := s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
-	return err
+	return s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID})
 }
 
 // createRepository creates a new repository or returns an existing repository with the given name.
@@ -556,51 +536,6 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 	return nil
 }
 
-// createTeam creates a new GitHub team.
-func (s *GithubSCM) createTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("missing fields: %+v", opt)
-	}
-	teamName := slug.Make(opt.TeamName)
-	// check that the team name does not already exist for this organization
-	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, teamName)
-	if err != nil {
-		// error expected to be 404 Not Found; logging here in case it's a different error
-		s.logger.Debugf("CreateTeam: check for team %s: %s", teamName, err)
-	}
-
-	if team == nil {
-		s.logger.Debugf("CreateTeam: creating %s", teamName)
-		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
-			Name: teamName,
-		})
-		if err != nil {
-			return nil, ErrFailedSCM{
-				Method:   "CreateTeam",
-				Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
-				GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
-			}
-		}
-		s.logger.Debugf("CreateTeam: done creating %s", teamName)
-	}
-	for _, user := range opt.Users {
-		s.logger.Debugf("CreateTeam: adding user %s to %s", user, teamName)
-		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
-		if err != nil {
-			return nil, ErrFailedSCM{
-				Method:   "CreateTeam",
-				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, team.GetName()),
-				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, team.GetName(), err),
-			}
-		}
-	}
-	return &Team{
-		ID:           uint64(team.GetID()),
-		Name:         team.GetName(),
-		Organization: team.GetOrganization().GetLogin(),
-	}, nil
-}
-
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, login string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
@@ -636,13 +571,6 @@ func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login
 		}
 	}
 	return nil
-}
-
-// promoteToTeacher adds user to the organization's "teachers" team.
-func (s *GithubSCM) promoteToTeacher(ctx context.Context, org, login string) error {
-	teamMaintainer := &github.TeamAddTeamMembershipOptions{Role: TeamMaintainer}
-	_, _, err := s.client.Teams.AddTeamMembershipBySlug(ctx, org, TeachersTeam, login, teamMaintainer)
-	return err
 }
 
 // Client returns GitHub client.
