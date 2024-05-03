@@ -245,7 +245,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup = gotGroup
 	wantGroup.Msg.Name = updateGroupRequest.Msg.Name
 	wantGroup.Msg.Users = grpUsers
-	wantGroup.Msg.ScmTeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
 	// Ignore enrollments in check
@@ -285,7 +284,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 	wantGroup.Msg = updateGroupRequest.Msg
 	wantGroup.Msg.Users = grpUsers
-	wantGroup.Msg.ScmTeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
 	gotUpdatedGroup.Msg.Enrollments = nil
@@ -465,11 +463,10 @@ func TestPatchGroupStatus(t *testing.T) {
 	qtest.EnrollStudent(t, db, user2, &course)
 
 	group := &qf.Group{
-		ID:        1,
-		Name:      "Test Group",
-		CourseID:  course.ID,
-		Users:     []*qf.User{user1, user2},
-		ScmTeamID: 1,
+		ID:       1,
+		Name:     "Test Group",
+		CourseID: course.ID,
+		Users:    []*qf.User{user1, user2},
 	}
 	err = db.CreateGroup(group)
 	if err != nil {

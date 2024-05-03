@@ -55,7 +55,7 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 		return nil
 	}
 
-	// when deleting an approved group, remove github repository and team as well
+	// when deleting an approved group, remove github repository as well
 	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
 		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, group.Name, err)
 		// continue with other delete operations
@@ -63,7 +63,6 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 	opt := &scm.GroupOptions{
 		OrganizationID: repo.GetScmOrganizationID(),
 		RepositoryID:   repo.GetScmRepositoryID(),
-		TeamID:         group.GetScmTeamID(),
 	}
 	return sc.DeleteGroup(ctx, opt)
 }
@@ -119,12 +118,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
 	}
 	if repo == nil {
-		// no group repository exists; create new repository for group
-		if request.Name != "" && newGroup.ScmTeamID < 1 {
-			// update group name only if team not already created on SCM
-			newGroup.Name = request.Name
-		}
-		repo, team, err := createRepoAndTeam(ctx, sc, course, newGroup)
+		repo, err := createRepo(ctx, sc, course, newGroup)
 		if err != nil {
 			return err
 		}
@@ -132,18 +126,11 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 		if err := s.db.CreateRepository(repo); err != nil {
 			return err
 		}
-		newGroup.ScmTeamID = team.ID
-		// when updating a group for an existing team, name changes are not allowed.
-		// this to avoid a mismatch between database group name and SCM team name
-		s.logger.Debugf("updateGroup: SCM team name: %s, requested group name: %s", team.Name, request.Name)
-		if team.Name != request.Name {
-			newGroup.Name = team.Name
-		}
 	}
 
-	// if there are changes in group membership, update SCM team
+	// if there are changes in group membership, update group repository
 	if !group.ContainsAll(newGroup) {
-		if err := updateGroupTeam(ctx, sc, newGroup, course.GetScmOrganizationID()); err != nil {
+		if err := updateGroupTeam(ctx, sc, newGroup, course.GetScmOrganizationName()); err != nil {
 			return err
 		}
 	}
@@ -165,7 +152,6 @@ func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) 
 		ID:          group.ID,
 		Name:        group.Name,
 		CourseID:    group.CourseID,
-		ScmTeamID:   group.ScmTeamID,
 		Status:      group.Status,
 		Users:       users,
 		Enrollments: group.Enrollments,
