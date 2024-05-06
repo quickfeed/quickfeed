@@ -175,8 +175,14 @@ func (o *output) Print(showAll bool) {
 
 func numApproved(submissions []*qf.Submission) int {
 	numApproved := 0
+	duplicateAssignments := make(map[uint64]struct{})
 	for _, s := range submissions {
+		// ignore duplicate approved assignments
+		if _, ok := duplicateAssignments[s.AssignmentID]; ok {
+			continue
+		}
 		if s.IsApproved() {
+			duplicateAssignments[s.AssignmentID] = struct{}{}
 			numApproved++
 		}
 	}
