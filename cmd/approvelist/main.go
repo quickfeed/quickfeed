@@ -45,6 +45,11 @@ func main() {
 		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
 		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
 	)
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options]\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Fprintln(flag.CommandLine.Output(), "\nTo use this tool, GITHUB_ACCESS_TOKEN must be set to the personal access token of a course teacher.")
+	}
 	flag.Parse()
 
 	as, err := loadApproveSheet(*courseCode)
