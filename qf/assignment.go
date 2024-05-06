@@ -33,6 +33,14 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 // for the latest submission, or if the score of the latest submission is sufficient
 // to autoapprove the assignment.
 func (a *Assignment) IsApproved(latest *Submission, score uint32) Submission_Status {
+	switch {
+	case latest.GetGroupID() > 0 && !a.IsGroupLab:
+		// If a group submits to a student assignment, ignore the submission.
+		return Submission_NONE
+	case latest.GetUserID() > 0 && a.IsGroupLab:
+		// If a student submits to a group assignment, ignore the submission.
+		return Submission_NONE
+	}
 	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
 		return Submission_APPROVED
 	}
