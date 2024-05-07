@@ -18,8 +18,8 @@ type SCM interface {
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// UpdateGroupMembers adds or removes members of an existing group repository based on list of users in TeamOptions.
-	UpdateGroupMembers(context.Context, *TeamOptions) error
+	// UpdateGroupMembers adds or removes members of an existing group repository based on list of users in GroupOptions.
+	UpdateGroupMembers(context.Context, *GroupOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
@@ -60,7 +60,7 @@ type SCM interface {
 	// DemoteTeacherToStudent revokes a users' owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
 	// CreateGroup creates repository for a new group.
-	CreateGroup(context.Context, *TeamOptions) (*Repository, error)
+	CreateGroup(context.Context, *GroupOptions) (*Repository, error)
 	// DeleteGroup deletes group's repository.
 	DeleteGroup(context.Context, *RepositoryOptions) error
 }

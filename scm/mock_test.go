@@ -1123,9 +1123,9 @@ func TestMockCreateGroup(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 
-	paths := []string{"a_team", "another_team", "best_team"}
+	paths := []string{"a_group", "another_group", "best_group"}
 
-	teamRepos := []*scm.Repository{
+	groupRepos := []*scm.Repository{
 		{
 			ID:    1,
 			Path:  paths[0],
@@ -1141,23 +1141,23 @@ func TestMockCreateGroup(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		opt       *scm.TeamOptions
+		opt       *scm.GroupOptions
 		wantRepo  *scm.Repository
 		wantRepos map[uint64]*scm.Repository
 		wantErr   bool
 	}{
 		{
 			name: "invalid opts, missing organization",
-			opt: &scm.TeamOptions{
-				GroupName: "test-team",
+			opt: &scm.GroupOptions{
+				GroupName: "test-group",
 			},
 			wantRepo:  nil,
 			wantRepos: map[uint64]*scm.Repository{},
 			wantErr:   true,
 		},
 		{
-			name: "invalid opts, missing team name",
-			opt: &scm.TeamOptions{
+			name: "invalid opts, missing group name",
+			opt: &scm.GroupOptions{
 				Organization: qtest.MockOrg,
 			},
 			wantRepo:  nil,
@@ -1166,9 +1166,9 @@ func TestMockCreateGroup(t *testing.T) {
 		},
 		{
 			name: "organization does not exist",
-			opt: &scm.TeamOptions{
+			opt: &scm.GroupOptions{
 				Organization: "some-org",
-				GroupName:    "team",
+				GroupName:    "group",
 			},
 			wantRepo:  nil,
 			wantRepos: map[uint64]*scm.Repository{},
@@ -1176,24 +1176,24 @@ func TestMockCreateGroup(t *testing.T) {
 		},
 		{
 			name: "add a new group",
-			opt: &scm.TeamOptions{
+			opt: &scm.GroupOptions{
 				Organization: qtest.MockOrg,
 				GroupName:    paths[0],
 				Users:        []string{user},
 			},
-			wantRepo:  teamRepos[0],
-			wantRepos: map[uint64]*scm.Repository{1: teamRepos[0]},
+			wantRepo:  groupRepos[0],
+			wantRepos: map[uint64]*scm.Repository{1: groupRepos[0]},
 			wantErr:   false,
 		},
 		{
 			name: "add another group",
-			opt: &scm.TeamOptions{
+			opt: &scm.GroupOptions{
 				Organization: qtest.MockOrg,
 				GroupName:    paths[1],
 				Users:        []string{user},
 			},
-			wantRepo:  teamRepos[1],
-			wantRepos: map[uint64]*scm.Repository{1: teamRepos[0], 2: teamRepos[1]},
+			wantRepo:  groupRepos[1],
+			wantRepos: map[uint64]*scm.Repository{1: groupRepos[0], 2: groupRepos[1]},
 			wantErr:   false,
 		},
 	}

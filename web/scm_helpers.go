@@ -34,7 +34,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, error) {
-	opt := &scm.TeamOptions{
+	opt := &scm.GroupOptions{
 		Organization: course.ScmOrganizationName,
 		GroupName:    group.GetName(),
 		Users:        group.UserNames(),
@@ -54,7 +54,7 @@ func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Gr
 }
 
 func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
-	opt := &scm.TeamOptions{
+	opt := &scm.GroupOptions{
 		GroupName:    group.Name,
 		Organization: orgName,
 		Users:        group.UserNames(),

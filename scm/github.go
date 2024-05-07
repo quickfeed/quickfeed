@@ -139,7 +139,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 }
 
 // UpdateGroupMembers implements the SCM interface
-func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *TeamOptions) error {
+func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
@@ -436,7 +436,7 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 }
 
 // CreateGroup creates repository for a new group.
-func (s *GithubSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, error) {
+func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}

@@ -12,16 +12,6 @@ func (opt CourseOptions) valid() bool {
 	return opt.OrganizationID > 0 && opt.CourseCreator != ""
 }
 
-// GroupOptions contain information about group.
-type GroupOptions struct {
-	OrganizationID uint64
-	RepositoryID   uint64
-}
-
-func (opt *GroupOptions) valid() bool {
-	return opt.OrganizationID > 0 && opt.RepositoryID > 0
-}
-
 // UpdateEnrollmentOptions contain information about enrollment.
 type UpdateEnrollmentOptions struct {
 	Organization string
@@ -82,14 +72,14 @@ func (opt CreateRepositoryOptions) valid() bool {
 	return opt.Organization != "" && opt.Path != ""
 }
 
-// TeamOptions used when creating a new team
-type TeamOptions struct {
+// GroupOptions is used when creating or modifying a group.
+type GroupOptions struct {
 	Organization string
 	GroupName    string
 	Users        []string
 }
 
-func (opt TeamOptions) valid() bool {
+func (opt GroupOptions) valid() bool {
 	return opt.GroupName != "" && opt.Organization != ""
 }
 
