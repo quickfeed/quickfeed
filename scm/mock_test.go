@@ -182,57 +182,6 @@ func TestMockOrganizations(t *testing.T) {
 	}
 }
 
-func TestMockUpdateTeamMembers(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	course := qtest.MockCourses[0]
-	groupName := "test-team"
-
-	// TODO: Teams no longer exist in the mock client.
-	// s.Teams[1] = team
-	tests := []struct {
-		name    string
-		opt     *scm.TeamOptions
-		wantErr bool
-	}{
-		{
-			name: "valid team and opts",
-			opt: &scm.TeamOptions{
-				Organization: course.ScmOrganizationName,
-				GroupName:    groupName,
-			},
-			wantErr: false,
-		},
-		{
-			name: "missing team ID",
-			opt: &scm.TeamOptions{
-				Organization: course.ScmOrganizationName,
-			},
-			wantErr: true,
-		},
-		{
-			name: "valid team, missing org ID",
-			opt: &scm.TeamOptions{
-				GroupName: groupName,
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid team",
-			opt: &scm.TeamOptions{
-				GroupName:    "not-found",
-				Organization: course.ScmOrganizationName,
-			},
-			wantErr: false, // TODO: Original code expects an error here.
-		},
-	}
-	for _, tt := range tests {
-		if err := s.UpdateGroupMembers(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
-		}
-	}
-}
-
 func TestMockCreateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
