@@ -15,6 +15,16 @@ func TestIsApproved(t *testing.T) {
 		AutoApprove: true,
 		ScoreLimit:  80,
 	}
+	d := &qf.Assignment{
+		IsGroupLab:  false, // making it explicit that it isn't a group lab
+		AutoApprove: true,
+		ScoreLimit:  90,
+	}
+	e := &qf.Assignment{
+		IsGroupLab:  true, // making it explicit that it is a group lab
+		AutoApprove: true,
+		ScoreLimit:  90,
+	}
 	isApprovedTests := []struct {
 		name       string
 		assignment *qf.Assignment
@@ -105,6 +115,34 @@ func TestIsApproved(t *testing.T) {
 			submission: &qf.Submission{Status: qf.Submission_APPROVED, Score: 50},
 			score:      0,
 			expected:   qf.Submission_APPROVED,
+		},
+		{
+			name:       "Assignment:ScoreLimit=90:AutoApprove,Submission:GroupId=5:Status=NONE:OldScore=0,NewScore:50",
+			assignment: d,
+			submission: &qf.Submission{Status: qf.Submission_NONE, Score: 50, GroupID: 5},
+			score:      50,
+			expected:   qf.Submission_NONE,
+		},
+		{
+			name:       "Assignment:ScoreLimit=90:AutoApprove,Submission:GroupId=5:Status=NONE:OldScore=0,NewScore:95",
+			assignment: d,
+			submission: &qf.Submission{Status: qf.Submission_NONE, Score: 95, GroupID: 5},
+			score:      95,
+			expected:   qf.Submission_NONE,
+		},
+		{
+			name:       "Assignment:ScoreLimit=90:AutoApprove:IsGroupLab,Submission:UserId=15:Status=NONE:OldScore=0,NewScore:50",
+			assignment: e,
+			submission: &qf.Submission{Status: qf.Submission_NONE, Score: 50, UserID: 15},
+			score:      50,
+			expected:   qf.Submission_NONE,
+		},
+		{
+			name:       "Assignment:ScoreLimit=90:AutoApprove:IsGroupLab,Submission:UserId=15:Status=NONE:OldScore=0,NewScore:95",
+			assignment: e,
+			submission: &qf.Submission{Status: qf.Submission_NONE, Score: 95, UserID: 15},
+			score:      95,
+			expected:   qf.Submission_NONE,
 		},
 	}
 
