@@ -18,7 +18,7 @@ type SCM interface {
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// UpdateTeamMembers adds or removes members of an existing group repository based on list of users in TeamOptions.
+	// UpdateGroupMembers adds or removes members of an existing group repository based on list of users in TeamOptions.
 	UpdateGroupMembers(context.Context, *TeamOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
@@ -51,13 +51,13 @@ type SCM interface {
 	// A new refresh token for the user is returned, which may be used in subsequent requests.
 	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
 
-	// CreateCourse creates repositories and teams for a new course.
+	// CreateCourse creates repositories for a new course.
 	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)
-	// UpdateEnrollment updates team and organization membership and creates user repository.
+	// UpdateEnrollment updates organization membership and creates and grants access to user repository.
 	UpdateEnrollment(context.Context, *UpdateEnrollmentOptions) (*Repository, error)
 	// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
-	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
+	// DemoteTeacherToStudent revokes a users' owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
 	// CreateGroup creates repository for a new group.
 	CreateGroup(context.Context, *TeamOptions) (*Repository, error)

@@ -112,10 +112,10 @@ Application errors can be classified into several groups and handled in differen
 
 - Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 
-  **Examples**: 
-  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization. 
-  As a result, the requested organization cannot be seen by QuickFeed. 
-  - If a GitHub repository or team cannot be found, they could have been manually deleted from GitHub. 
+  **Examples**:
+  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization.
+  As a result, the requested organization cannot be seen by QuickFeed.
+  - If a GitHub repository cannot be found, they could have been manually deleted from GitHub.
   Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
 
 - Sometimes GitHub interactions take too long and the request times out, or is otherwise cancelled by GitHub.
@@ -169,7 +169,7 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 - Push events from the `username-labs` repositories may trigger text execution.
 - The webhook will POST events to `$DOMAIN/hook/`, where `$DOMAIN` is the domain name of the server, as defined in your `.env` file.
 
-### User roles/access levels for organization / team / repository
+### User roles/access levels for organization / repository
 
 - GitHub API name for organization owner is `admin`
 - Repository access levels for any organization member in GitHub API calls are: `read`/`write`/`admin`/`none`
@@ -177,7 +177,7 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 
 ### Slugs
 
-When retrieving team, organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page.
+When retrieving organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page.
 For example, organization with a name like `QuickFeed Test Org` will have slugified name `quickfeed-test-org`.
 
 [URL slugs explained](http://patterns.dataincubator.org/book/url-slug.html)
@@ -188,14 +188,6 @@ For example, organization with a name like `QuickFeed Test Org` will have slugif
 - access policy:
   - on course creation - default repository access across the whole organization is set to `none`, which means that only the organization owners can see any private repository on that organization
   - when students enroll, they receive read/pull access to `assignments` repository and write/push access to a personal student repository as GitHub invitations to their registered GitHub email
-
-### Teams
-
-QuickFeed will create a team for each group in a course organization. 
-The team name will be the same as the group name. 
-Members of a group will be added to the corresponding team, and will have write/push access to the group repository.
-
-Group records in the database will have references to the corresponding GitHub team ID's.
 
 ## Docker
 

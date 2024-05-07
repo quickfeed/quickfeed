@@ -97,16 +97,16 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
 	}
-	// create user scmRepo, user team, and add user to students team
+	// create user scmRepo and add user to course organization as a member
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
 		Organization: course.ScmOrganizationName,
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.Code, user.Login, err)
 	}
-	s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
+	s.logger.Debugf("Enrolling student %q in %s; repo update done", user.Login, course.Code)
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
@@ -138,7 +138,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, query 
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_TEACHER,
 	}); err != nil {
-		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to update %s repository membership for teacher %q: %w", course.Code, user.Login, err)
 	}
 	return s.db.UpdateEnrollment(query)
 }

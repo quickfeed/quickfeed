@@ -258,7 +258,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// ******************* Teacher UpdateGroup *******************
 
 	// change group to only one student
-	// name must not update because group team and repo already exist
+	// name must not update because group repo already exist
 	updateGroupRequest1 := qtest.RequestWithCookie(&qf.Group{
 		ID:       gotGroup.Msg.ID,
 		Name:     "Hein's single member Group",

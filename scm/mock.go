@@ -38,7 +38,7 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
-// NewMockSCMClientWithCOurse creates a new mock scm with default course repositories and teams
+// NewMockSCMClientWithCourse creates a new mock scm with default course repositories
 // associated with qtest.MockOrg mock organization.
 func NewMockSCMClientWithCourse() *MockSCM {
 	s := NewMockSCMClient()
@@ -420,7 +420,7 @@ func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOpt
 	return nil
 }
 
-// CreateGroup creates team and repository for a new group.
+// CreateGroup creates a repository for a new group.
 func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)

@@ -28,7 +28,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.ScmOrganizationName)
 }
 
-// createRepo invokes the SCM to create a repository and team for the
+// createRepo invokes the SCM to create a repository for the
 // specified course (represented with organization ID). The SCM team name
 // is also used as the group name and repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
@@ -53,7 +53,7 @@ func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Gr
 	return groupRepo, nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
+func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
 	opt := &scm.TeamOptions{
 		GroupName:    group.Name,
 		Organization: orgName,
