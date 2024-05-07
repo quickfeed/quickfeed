@@ -130,7 +130,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 
 	// if there are changes in group membership, update group repository
 	if !group.ContainsAll(newGroup) {
-		if err := updateGroupTeam(ctx, sc, newGroup, course.GetScmOrganizationName()); err != nil {
+		if err := updateGroupMembers(ctx, sc, newGroup, course.GetScmOrganizationName()); err != nil {
 			return err
 		}
 	}
