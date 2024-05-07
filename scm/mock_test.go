@@ -1225,7 +1225,7 @@ func TestMockDeleteGroup(t *testing.T) {
 			ID:    2,
 			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  "a_team",
+			Path:  "a_group",
 		},
 	}
 	s.Repositories = map[uint64]*scm.Repository{
@@ -1235,36 +1235,14 @@ func TestMockDeleteGroup(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		opt       *scm.GroupOptions
+		opt       *scm.RepositoryOptions
 		wantRepos map[uint64]*scm.Repository
 		wantErr   bool
 	}{
 		{
-			name: "invalid opt, missing organization",
-			opt: &scm.GroupOptions{
-				RepositoryID: 2,
-			},
-			wantRepos: map[uint64]*scm.Repository{
-				1: repositories[0],
-				2: repositories[1],
-			},
-			wantErr: true,
-		},
-		{
 			name: "invalid opt, missing repo ID",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
-			},
-			wantRepos: map[uint64]*scm.Repository{
-				1: repositories[0],
-				2: repositories[1],
-			},
-			wantErr: true,
-		},
-		{
-			name: "incorrect organization ID",
-			opt: &scm.GroupOptions{
-				OrganizationID: 100,
+			opt:  &scm.RepositoryOptions{
+				// empty
 			},
 			wantRepos: map[uint64]*scm.Repository{
 				1: repositories[0],
@@ -1274,9 +1252,8 @@ func TestMockDeleteGroup(t *testing.T) {
 		},
 		{
 			name: "correct opt, delete group repo with ID 2",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
-				RepositoryID:   2,
+			opt: &scm.RepositoryOptions{
+				ID: 2,
 			},
 			wantRepos: map[uint64]*scm.Repository{
 				1: repositories[0],

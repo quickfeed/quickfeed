@@ -60,9 +60,8 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, group.Name, err)
 		// continue with other delete operations
 	}
-	opt := &scm.GroupOptions{
-		OrganizationID: repo.GetScmOrganizationID(),
-		RepositoryID:   repo.GetScmRepositoryID(),
+	opt := &scm.RepositoryOptions{
+		ID: repo.GetScmRepositoryID(),
 	}
 	return sc.DeleteGroup(ctx, opt)
 }

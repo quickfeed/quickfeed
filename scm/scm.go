@@ -62,7 +62,7 @@ type SCM interface {
 	// CreateGroup creates repository for a new group.
 	CreateGroup(context.Context, *TeamOptions) (*Repository, error)
 	// DeleteGroup deletes group's repository.
-	DeleteGroup(context.Context, *GroupOptions) error
+	DeleteGroup(context.Context, *RepositoryOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
