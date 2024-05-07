@@ -1302,18 +1302,6 @@ func TestMockDeleteGroup(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid opt, missing team ID",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
-				RepositoryID:   1,
-			},
-			wantRepos: map[uint64]*scm.Repository{
-				1: repositories[0],
-				2: repositories[1],
-			},
-			wantErr: true,
-		},
-		{
 			name: "invalid opt, missing repo ID",
 			opt: &scm.GroupOptions{
 				OrganizationID: 1,
@@ -1327,7 +1315,7 @@ func TestMockDeleteGroup(t *testing.T) {
 		{
 			name: "incorrect organization ID",
 			opt: &scm.GroupOptions{
-				OrganizationID: 1,
+				OrganizationID: 100,
 			},
 			wantRepos: map[uint64]*scm.Repository{
 				1: repositories[0],
@@ -1336,7 +1324,7 @@ func TestMockDeleteGroup(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "correct opt, delete group repo with ID 2, team ID 1",
+			name: "correct opt, delete group repo with ID 2",
 			opt: &scm.GroupOptions{
 				OrganizationID: 1,
 				RepositoryID:   2,
