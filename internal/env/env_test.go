@@ -46,8 +46,8 @@ func TestLoad(t *testing.T) {
 		"QUICKFEED_TEST_ENV4": "test4 xyz",
 		"QUICKFEED_TEST_ENV5": "test5 = zyx",
 		"SOME_CERT_FILE":      "/quickfeed/root/cert/fullchain.pem",
-		"SOME_KEY_FILE":       filepath.Join(os.Getenv("QUICKFEED"), "cert/fullchain.pem"),
-		"WITHOUT_QUOTES":      filepath.Join(os.Getenv("QUICKFEED"), "cert/fullchain.pem"),
+		"SOME_KEY_FILE":       filepath.Join(os.Getenv("QUICKFEED"), "cert", "fullchain.pem"),
+		"WITHOUT_QUOTES":      filepath.Join(os.Getenv("QUICKFEED"), "cert", "fullchain.pem"),
 	}
 
 	input := `QUICKFEED_TEST_ENV=test

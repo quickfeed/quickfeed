@@ -17,7 +17,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
 
 	wantCourse := qtest.MockCourses[0]
@@ -48,7 +48,7 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
 
 	wantCourse := qtest.MockCourses[0]
@@ -101,7 +101,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
@@ -133,7 +133,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
 
 	ctx := context.Background()
@@ -150,7 +150,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	client, tm, _ := MockClientWithUser(t, db)
 
 	ctx := context.Background()
@@ -159,7 +159,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stud1 := qtest.CreateNamedUser(t, db, 2, "student1")
+	stud1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student1", Login: "student1"})
 	enrollStud1 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud1.ID}
 	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud1, Cookie(t, tm, stud1))); err != nil {
 		t.Error(err)
@@ -247,7 +247,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// create another user and enroll as student
 
-	stud2 := qtest.CreateNamedUser(t, db, 3, "student2")
+	stud2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student2", Login: "student2"})
 	enrollStud2 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud2.ID}
 	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud2))); err != nil {
 		t.Error(err)
@@ -301,8 +301,8 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
-	user := qtest.CreateFakeUser(t, db, 2)
+	admin := qtest.CreateFakeUser(t, db)
+	user := qtest.CreateFakeUser(t, db)
 
 	var testCourses []*qf.Course
 	for _, course := range qtest.MockCourses {
@@ -369,7 +369,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	client, tm, _ := MockClientWithUser(t, db)
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var testCourses []*qf.Course
 	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
@@ -379,7 +379,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		testCourses = append(testCourses, course)
 	}
 
-	user := qtest.CreateFakeUser(t, db, 2)
+	user := qtest.CreateFakeUser(t, db)
 
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
@@ -462,10 +462,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	teacher := qtest.CreateNamedUser(t, db, 1, "teacher")
-	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
-	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
-	ta := qtest.CreateNamedUser(t, db, 13, "TA")
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
+	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student1", Login: "student1"})
+	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student2", Login: "student2"})
+	ta := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "TA", Login: "TA"})
 
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
@@ -581,8 +581,8 @@ func TestUpdateCourseVisibility(t *testing.T) {
 
 	client, tm := MockClientWithUserAndCourse(t, db)
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	user := qtest.CreateFakeUser(t, db, 2)
+	teacher := qtest.CreateFakeUser(t, db)
+	user := qtest.CreateFakeUser(t, db)
 	cookie := Cookie(t, tm, user)
 
 	course := qtest.MockCourses[0]

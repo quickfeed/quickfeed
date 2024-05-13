@@ -88,7 +88,7 @@ func (s *MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) 
 		return "", err
 	}
 	// Simulate cloning by copying the testdata repository to the destination path.
-	testdataSrc := filepath.Join(env.Root(), "testdata", "courses", opt.Organization, opt.Repository)
+	testdataSrc := filepath.Join(env.TestdataPath(), opt.Organization, opt.Repository)
 	if err := fileop.CopyDir(testdataSrc, opt.DestDir); err != nil {
 		return "", err
 	}
@@ -136,7 +136,10 @@ func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*R
 }
 
 // RepositoryIsEmpty implements the SCM interface
-func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
+func (s *MockSCM) RepositoryIsEmpty(_ context.Context, opts *RepositoryOptions) bool {
+	if _, err := s.getRepository(opts); err != nil {
+		return true
+	}
 	return false
 }
 

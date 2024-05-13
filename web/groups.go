@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
@@ -108,22 +109,9 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
-	if group.Name != request.Name && group.Status == qf.Group_PENDING {
-		// return error to user if group name is invalid
-		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
-			return err
-		}
-		group.Name = request.Name
-	}
-
-	newGroup := &qf.Group{
-		ID:          group.ID,
-		Name:        group.Name,
-		CourseID:    group.CourseID,
-		ScmTeamID:   group.ScmTeamID,
-		Status:      group.Status,
-		Users:       users,
-		Enrollments: group.Enrollments,
+	newGroup, err := s.newGroup(group, request, users)
+	if err != nil {
+		return err
 	}
 
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
@@ -163,6 +151,25 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 	// approve and update the group in the database
 	newGroup.Status = qf.Group_APPROVED
 	return s.db.UpdateGroup(newGroup)
+}
+
+// newGroup returns a new group based on the request and the existing group.
+func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) (*qf.Group, error) {
+	if group.Name != request.Name && group.Status == qf.Group_PENDING {
+		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
+			return nil, err // group name is invalid
+		}
+		group.Name = request.Name
+	}
+	return &qf.Group{
+		ID:          group.ID,
+		Name:        group.Name,
+		CourseID:    group.CourseID,
+		ScmTeamID:   group.ScmTeamID,
+		Status:      group.Status,
+		Users:       users,
+		Enrollments: group.Enrollments,
+	}, nil
 }
 
 // getGroupUsers returns the users of the specified group request, and checks
@@ -220,7 +227,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 		return err
 	}
 	for _, group := range courseGroups {
-		if group.GetName() == groupName {
+		if strings.EqualFold(group.GetName(), groupName) {
 			return ErrGroupNameDuplicate
 		}
 	}

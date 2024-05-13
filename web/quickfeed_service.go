@@ -597,22 +597,37 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted.
 func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
+	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	if err != nil {
+		s.logger.Errorf("IsEmptyRepo failed: course %d not found: %v", in.Msg.GetCourseID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
+	}
+	repos, err := s.db.GetRepositories(&qf.Repository{
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		UserID:            in.Msg.GetUserID(),
+		GroupID:           in.Msg.GetGroupID(),
+	})
+	if err != nil {
+		s.logger.Errorf("IsEmptyRepo failed: could not get repositories for course %d, user %d, group %d: %v", in.Msg.GetCourseID(), in.Msg.GetUserID(), in.Msg.GetGroupID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("repositories not found"))
+	}
+	if len(repos) < 1 {
+		// No repository found, nothing to delete
+		return &connect.Response[qf.Void]{}, nil
+	}
+	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 
-	if err := s.isEmptyRepo(ctx, scmClient, in.Msg); err != nil {
+	if err := isEmpty(ctx, scmClient, repos); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository does not exist or not empty"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository is not empty"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }

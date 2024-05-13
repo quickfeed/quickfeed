@@ -3,7 +3,11 @@ name: Jest Test
 on:
   push:
     branches: [master]
+    paths:
+      - '/public/src/**'
   pull_request:
+    paths:
+      - '/public/src/**'
 
 jobs:
   build:

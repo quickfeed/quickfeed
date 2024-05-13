@@ -125,7 +125,7 @@ func TestRecordResults(t *testing.T) {
 		ScmOrganizationID: 1,
 		SlipDays:          5,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
@@ -248,7 +248,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		ScmOrganizationID: 1,
 		SlipDays:          5,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
@@ -320,12 +320,12 @@ func TestStreamRecordResults(t *testing.T) {
 		ScmOrganizationID: 1,
 		SlipDays:          5,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
-	groupMember1 := qtest.CreateFakeUser(t, db, 2)
-	groupMember2 := qtest.CreateFakeUser(t, db, 3)
-	groupMember3 := qtest.CreateFakeUser(t, db, 4)
+	groupMember1 := qtest.CreateFakeUser(t, db)
+	groupMember2 := qtest.CreateFakeUser(t, db)
+	groupMember3 := qtest.CreateFakeUser(t, db)
 	for _, user := range []*qf.User{groupMember1, groupMember2, groupMember3} {
 		qtest.EnrollStudent(t, db, user, course)
 	}
