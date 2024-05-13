@@ -104,7 +104,6 @@ This approach prevents accidentally revealing commit history from old course ins
 - Promote them to your course's teacher on course members page
 
 Assistants will automatically be given organization `owner` role to be able to accept student enrollments, approve student groups and access all course repositories.
-They will also be added to the `allteachers` team.
 
 ## Student Enrollments
 
