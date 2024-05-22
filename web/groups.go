@@ -121,10 +121,11 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 		if err != nil {
 			return err
 		}
-		s.logger.Debugf("Creating group repo in the database: %+v", repo)
+		s.logger.Debugf("Created group repo on SCM: %+v", repo)
 		if err := s.db.CreateRepository(repo); err != nil {
 			return err
 		}
+		s.logger.Debugf("Created group repo in database: %+v", repo)
 	}
 
 	// if there are changes in group membership, update group repository
