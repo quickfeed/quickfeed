@@ -561,7 +561,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 
 // grantPullAccessToCourseRepos gives pull access to the course's info and assignments repositories.
 func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login string) error {
-	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
+	commonRepos := []string{qf.AssignmentsRepo}
 	for _, repoType := range commonRepos {
 		opt := &github.RepositoryAddCollaboratorOptions{
 			Permission: RepoPull,
