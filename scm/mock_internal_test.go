@@ -20,17 +20,6 @@ func TestIDs(t *testing.T) {
 		t.Errorf("expected id = 4, got %d", id)
 	}
 
-	teams := make(map[uint64]*Team)
-	id = generateID(teams)
-	if id != 1 {
-		t.Errorf("expected id = 1, got %d", id)
-	}
-	teams[id] = &Team{}
-	id = generateID(teams)
-	if id != 2 {
-		t.Errorf("expected id = 2, got %d", id)
-	}
-
 	organizations := make(map[uint64]*qf.Organization)
 	organizations[2] = &qf.Organization{}
 	id = generateID(organizations)

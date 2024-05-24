@@ -87,16 +87,6 @@ func TestMockSCMWithCourse(t *testing.T) {
 	if diff := cmp.Diff(wantRepos, s.Repositories); diff != "" {
 		t.Errorf("mismatch repos (-want +got):\n%s", diff)
 	}
-	wantTeams := map[uint64]*scm.Team{
-		1: {
-			ID:           1,
-			Name:         scm.TeachersTeam,
-			Organization: qtest.MockOrg,
-		},
-	}
-	if diff := cmp.Diff(wantTeams, s.Teams); diff != "" {
-		t.Errorf("mismatch teams (-want +got):\n%s", diff)
-	}
 }
 
 func TestMockClone(t *testing.T) {
@@ -188,77 +178,6 @@ func TestMockOrganizations(t *testing.T) {
 	for _, org := range invalidOrgs {
 		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: org.id, Name: org.name}); err == nil {
 			t.Errorf("expected error: %s", org.err)
-		}
-	}
-}
-
-var mockTeams = []*scm.Team{
-	{
-		ID:           1,
-		Organization: qtest.MockOrg,
-		Name:         "a_team",
-	},
-	{
-		ID:           2,
-		Organization: qtest.MockOrg,
-		Name:         "another_team",
-	},
-	{
-		ID:           3,
-		Organization: qtest.MockOrg,
-		Name:         "best_team",
-	},
-}
-
-func TestMockUpdateTeamMembers(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	course := qtest.MockCourses[0]
-	team := &scm.Team{
-		ID:           1,
-		Name:         "test-team",
-		Organization: course.ScmOrganizationName,
-	}
-	s.Teams[1] = team
-	tests := []struct {
-		name    string
-		opt     *scm.UpdateTeamOptions
-		wantErr bool
-	}{
-		{
-			name: "valid team and opts",
-			opt: &scm.UpdateTeamOptions{
-				OrganizationID: course.ScmOrganizationID,
-				TeamID:         team.ID,
-			},
-			wantErr: false,
-		},
-		{
-			name: "missing team ID",
-			opt: &scm.UpdateTeamOptions{
-				OrganizationID: course.ScmOrganizationID,
-			},
-			wantErr: true,
-		},
-		{
-			name: "valid team, missing org ID",
-			opt: &scm.UpdateTeamOptions{
-				TeamID: team.ID,
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid team",
-			opt: &scm.UpdateTeamOptions{
-				TeamID:         123,
-				OrganizationID: course.ScmOrganizationID,
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		if err := s.UpdateTeamMembers(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
 	}
 }
@@ -1013,7 +932,6 @@ func TestMockCreateCourse(t *testing.T) {
 		name      string
 		opt       *scm.CourseOptions
 		wantRepos int
-		wantTeams map[uint64]*scm.Team
 		wantErr   bool
 	}{
 		{
@@ -1022,7 +940,6 @@ func TestMockCreateCourse(t *testing.T) {
 				CourseCreator: user,
 			},
 			wantRepos: 0,
-			wantTeams: map[uint64]*scm.Team{},
 			wantErr:   true,
 		},
 		{
@@ -1031,7 +948,6 @@ func TestMockCreateCourse(t *testing.T) {
 				OrganizationID: 1,
 			},
 			wantRepos: 0,
-			wantTeams: map[uint64]*scm.Team{},
 			wantErr:   true,
 		},
 		{
@@ -1041,7 +957,6 @@ func TestMockCreateCourse(t *testing.T) {
 				CourseCreator:  user,
 			},
 			wantRepos: 0,
-			wantTeams: map[uint64]*scm.Team{},
 			wantErr:   true,
 		},
 		{
@@ -1051,14 +966,7 @@ func TestMockCreateCourse(t *testing.T) {
 				CourseCreator:  user,
 			},
 			wantRepos: len(wantRepos),
-			wantTeams: map[uint64]*scm.Team{
-				1: {
-					ID:           1,
-					Name:         scm.TeachersTeam,
-					Organization: qtest.MockOrg,
-				},
-			},
-			wantErr: false,
+			wantErr:   false,
 		},
 	}
 	for _, tt := range tests {
@@ -1074,9 +982,6 @@ func TestMockCreateCourse(t *testing.T) {
 				if !found(r, repos) {
 					t.Errorf("expected repository %s to be found", r)
 				}
-			}
-			if diff := cmp.Diff(tt.wantTeams, s.Teams); diff != "" {
-				t.Errorf("mismatch teams (-want +got):\n%s", diff)
 			}
 		}
 	}
@@ -1217,106 +1122,91 @@ func TestMockRejectEnrollment(t *testing.T) {
 func TestMockCreateGroup(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	teamRepos := []*scm.Repository{
+
+	paths := []string{"a_group", "another_group", "best_group"}
+
+	groupRepos := []*scm.Repository{
 		{
 			ID:    1,
-			Path:  mockTeams[0].Name,
+			Path:  paths[0],
 			Owner: qtest.MockOrg,
 			OrgID: 1,
 		},
 		{
 			ID:    2,
-			Path:  mockTeams[1].Name,
+			Path:  paths[1],
 			Owner: qtest.MockOrg,
 			OrgID: 1,
 		},
 	}
 	tests := []struct {
 		name      string
-		opt       *scm.TeamOptions
-		wantTeam  *scm.Team
+		opt       *scm.GroupOptions
 		wantRepo  *scm.Repository
-		wantTeams map[uint64]*scm.Team
 		wantRepos map[uint64]*scm.Repository
 		wantErr   bool
 	}{
 		{
 			name: "invalid opts, missing organization",
-			opt: &scm.TeamOptions{
-				TeamName: "test-team",
+			opt: &scm.GroupOptions{
+				GroupName: "test-group",
 			},
-			wantTeam:  nil,
 			wantRepo:  nil,
-			wantTeams: map[uint64]*scm.Team{},
 			wantRepos: map[uint64]*scm.Repository{},
 			wantErr:   true,
 		},
 		{
-			name: "invalid opts, missing team name",
-			opt: &scm.TeamOptions{
+			name: "invalid opts, missing group name",
+			opt: &scm.GroupOptions{
 				Organization: qtest.MockOrg,
 			},
-			wantTeam:  nil,
 			wantRepo:  nil,
-			wantTeams: map[uint64]*scm.Team{},
 			wantRepos: map[uint64]*scm.Repository{},
 			wantErr:   true,
 		},
 		{
 			name: "organization does not exist",
-			opt: &scm.TeamOptions{
+			opt: &scm.GroupOptions{
 				Organization: "some-org",
-				TeamName:     "team",
+				GroupName:    "group",
 			},
-			wantTeam:  nil,
 			wantRepo:  nil,
-			wantTeams: map[uint64]*scm.Team{},
 			wantRepos: map[uint64]*scm.Repository{},
 			wantErr:   true,
 		},
 		{
 			name: "add a new group",
-			opt: &scm.TeamOptions{
+			opt: &scm.GroupOptions{
 				Organization: qtest.MockOrg,
-				TeamName:     mockTeams[0].Name,
+				GroupName:    paths[0],
 				Users:        []string{user},
 			},
-			wantTeam:  mockTeams[0],
-			wantRepo:  teamRepos[0],
-			wantTeams: map[uint64]*scm.Team{1: mockTeams[0]},
-			wantRepos: map[uint64]*scm.Repository{1: teamRepos[0]},
+			wantRepo:  groupRepos[0],
+			wantRepos: map[uint64]*scm.Repository{1: groupRepos[0]},
 			wantErr:   false,
 		},
 		{
 			name: "add another group",
-			opt: &scm.TeamOptions{
+			opt: &scm.GroupOptions{
 				Organization: qtest.MockOrg,
-				TeamName:     mockTeams[1].Name,
+				GroupName:    paths[1],
 				Users:        []string{user},
 			},
-			wantTeam:  mockTeams[1],
-			wantRepo:  teamRepos[1],
-			wantTeams: map[uint64]*scm.Team{1: mockTeams[0], 2: mockTeams[1]},
-			wantRepos: map[uint64]*scm.Repository{1: teamRepos[0], 2: teamRepos[1]},
+			wantRepo:  groupRepos[1],
+			wantRepos: map[uint64]*scm.Repository{1: groupRepos[0], 2: groupRepos[1]},
 			wantErr:   false,
 		},
 	}
 	for _, tt := range tests {
-		repo, team, err := s.CreateGroup(ctx, tt.opt)
+		repo, err := s.CreateGroup(ctx, tt.opt)
 		if (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantRepo, repo); diff != "" {
 			t.Errorf("%s: mismatch repo (-want +got):\n%s", tt.name, diff)
 		}
-		if diff := cmp.Diff(tt.wantTeam, team); diff != "" {
-			t.Errorf("%s: mismatch team (-want +got):\n%s", tt.name, diff)
-		}
 		if diff := cmp.Diff(tt.wantRepos, s.Repositories); diff != "" {
 			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
-		}
-		if diff := cmp.Diff(tt.wantTeams, s.Teams); diff != "" {
-			t.Errorf("%s: mismatch teams (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }
@@ -1335,106 +1225,38 @@ func TestMockDeleteGroup(t *testing.T) {
 			ID:    2,
 			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  mockTeams[0].Name,
+			Path:  "a_group",
 		},
 	}
 	s.Repositories = map[uint64]*scm.Repository{
 		1: repositories[0],
 		2: repositories[1],
 	}
-	s.Teams = map[uint64]*scm.Team{
-		1: mockTeams[0],
-		2: mockTeams[1],
-		3: mockTeams[2],
-	}
 
 	tests := []struct {
 		name      string
-		opt       *scm.GroupOptions
+		opt       *scm.RepositoryOptions
 		wantRepos map[uint64]*scm.Repository
-		wantTeams map[uint64]*scm.Team
 		wantErr   bool
 	}{
 		{
-			name: "invalid opt, missing organization",
-			opt: &scm.GroupOptions{
-				TeamID:       1,
-				RepositoryID: 2,
-			},
-			wantRepos: map[uint64]*scm.Repository{
-				1: repositories[0],
-				2: repositories[1],
-			},
-			wantTeams: map[uint64]*scm.Team{
-				1: mockTeams[0],
-				2: mockTeams[1],
-				3: mockTeams[2],
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid opt, missing team ID",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
-				RepositoryID:   1,
-			},
-			wantRepos: map[uint64]*scm.Repository{
-				1: repositories[0],
-				2: repositories[1],
-			},
-			wantTeams: map[uint64]*scm.Team{
-				1: mockTeams[0],
-				2: mockTeams[1],
-				3: mockTeams[2],
-			},
-			wantErr: true,
-		},
-		{
 			name: "invalid opt, missing repo ID",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
-				TeamID:         1,
+			opt:  &scm.RepositoryOptions{
+				// empty
 			},
 			wantRepos: map[uint64]*scm.Repository{
 				1: repositories[0],
 				2: repositories[1],
 			},
-			wantTeams: map[uint64]*scm.Team{
-				1: mockTeams[0],
-				2: mockTeams[1],
-				3: mockTeams[2],
-			},
 			wantErr: true,
 		},
 		{
-			name: "incorrect organization ID",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
+			name: "correct opt, delete group repo with ID 2",
+			opt: &scm.RepositoryOptions{
+				ID: 2,
 			},
 			wantRepos: map[uint64]*scm.Repository{
 				1: repositories[0],
-				2: repositories[1],
-			},
-			wantTeams: map[uint64]*scm.Team{
-				1: mockTeams[0],
-				2: mockTeams[1],
-				3: mockTeams[2],
-			},
-			wantErr: true,
-		},
-		{
-			name: "correct opt, delete group repo with ID 2, team ID 1",
-			opt: &scm.GroupOptions{
-				OrganizationID: 1,
-				TeamID:         1,
-				RepositoryID:   2,
-			},
-			wantRepos: map[uint64]*scm.Repository{
-				1: repositories[0],
-			},
-			wantTeams: map[uint64]*scm.Team{
-				2: mockTeams[1],
-				3: mockTeams[2],
 			},
 			wantErr: false,
 		},
@@ -1445,9 +1267,6 @@ func TestMockDeleteGroup(t *testing.T) {
 		}
 		if diff := cmp.Diff(tt.wantRepos, s.Repositories); diff != "" {
 			t.Errorf("%s: mismatch repos (-want +got):\n%s", tt.name, diff)
-		}
-		if diff := cmp.Diff(tt.wantTeams, s.Teams); diff != "" {
-			t.Errorf("%s: mismatch teams (-want +got):\n%s", tt.name, diff)
 		}
 	}
 }

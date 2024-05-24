@@ -5,7 +5,7 @@ import { Response } from "../../client"
 /** Prompt contains the messages to display to the user when prompting for confirmation. */
 export namespace Prompt {
     export const GroupDelete = "Are you sure you want to delete this group?"
-    export const GroupRepoNotEmpty = "Warning: The group repository is not empty. Do you still want to delete the group, GitHub team, and group repository?"
+    export const GroupRepoNotEmpty = "Warning: The group repository is not empty. Do you still want to delete the group and its corresponding GitHub repository?"
     export const EnrollmentRepoNotEmpty = "Warning: The enrollment repository is not empty. Do you still want to delete the enrollment and enrollment repository?"
 }
 

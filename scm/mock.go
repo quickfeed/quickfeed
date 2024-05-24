@@ -16,7 +16,6 @@ import (
 type MockSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization
-	Teams         map[uint64]*Team
 	Issues        map[uint64]*Issue
 	IssueComments map[uint64]string
 }
@@ -26,7 +25,6 @@ func NewMockSCMClient() *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
-		Teams:         make(map[uint64]*Team),
 		Issues:        make(map[uint64]*Issue),
 		IssueComments: make(map[uint64]string),
 	}
@@ -40,17 +38,10 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
-// NewMockSCMClientWithCOurse creates a new mock scm with default course repositories and teams
+// NewMockSCMClientWithCourse creates a new mock scm with default course repositories
 // associated with qtest.MockOrg mock organization.
 func NewMockSCMClientWithCourse() *MockSCM {
 	s := NewMockSCMClient()
-	s.Teams = map[uint64]*Team{
-		1: {
-			ID:           1,
-			Name:         TeachersTeam,
-			Organization: qtest.MockOrg,
-		},
-	}
 	s.Repositories = map[uint64]*Repository{
 		1: {
 			ID:    1,
@@ -143,14 +134,13 @@ func (s *MockSCM) RepositoryIsEmpty(_ context.Context, opts *RepositoryOptions) 
 	return false
 }
 
-// UpdateTeamMembers implements the SCM interface.
-func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
+// UpdateGroupMembers implements the SCM interface.
+func (s *MockSCM) UpdateGroupMembers(_ context.Context, opt *GroupOptions) error {
 	if !opt.valid() {
+		fmt.Printf("invalid argument: %+v", opt)
 		return fmt.Errorf("invalid argument: %+v", opt)
 	}
-	if !s.teamExists(opt.TeamID, "", "") {
-		return errors.New("team not found")
-	}
+	// TODO: This previously checked if a team existed.
 	return nil
 }
 
@@ -355,7 +345,7 @@ func (*MockSCM) AcceptInvitations(_ context.Context, opt *InvitationOptions) (st
 	return "refresh_token", nil
 }
 
-// CreateCourse creates repositories and teams for a new course.
+// CreateCourse creates repositories for a new course.
 func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %v", opt)
@@ -384,13 +374,6 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 	s.Repositories[id] = labRepo
 	repositories = append(repositories, labRepo)
 
-	s.Teams = map[uint64]*Team{
-		1: {
-			ID:           1,
-			Name:         TeachersTeam,
-			Organization: org.ScmOrganizationName,
-		},
-	}
 	return repositories, nil
 }
 
@@ -437,64 +420,35 @@ func (*MockSCM) DemoteTeacherToStudent(_ context.Context, _ *UpdateEnrollmentOpt
 	return nil
 }
 
-// CreateGroup creates team and repository for a new group.
-func (s *MockSCM) CreateGroup(ctx context.Context, opt *TeamOptions) (*Repository, *Team, error) {
+// CreateGroup creates a repository for a new group.
+func (s *MockSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Repository, error) {
 	if !opt.valid() {
-		return nil, nil, fmt.Errorf("invalid argument: %v", opt)
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
 	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
 		Name: opt.Organization,
 	}); err != nil {
-		return nil, nil, errors.New("organization not found")
+		return nil, errors.New("organization not found")
 	}
-	id := generateID(s.Teams)
-	team := &Team{
-		ID:           id,
-		Name:         opt.TeamName,
-		Organization: opt.Organization,
-	}
-	s.Teams[id] = team
 
-	id = generateID(s.Repositories)
+	id := generateID(s.Repositories)
 	repo := &Repository{
 		ID:    id,
-		Path:  opt.TeamName,
+		Path:  opt.GroupName,
 		Owner: opt.Organization,
 		OrgID: 1,
 	}
 	s.Repositories[id] = repo
-	return repo, team, nil
+	return repo, nil
 }
 
-// DeleteGroup deletes repository and team for a group.
-func (s *MockSCM) DeleteGroup(ctx context.Context, opt *GroupOptions) error {
+// DeleteGroup deletes repository for a group.
+func (s *MockSCM) DeleteGroup(ctx context.Context, opt *RepositoryOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &OrganizationOptions{
-		ID: opt.OrganizationID,
-	}); err != nil {
-		return errors.New("organization not found")
-	}
-	delete(s.Repositories, opt.RepositoryID)
-	delete(s.Teams, opt.TeamID)
+	delete(s.Repositories, opt.ID)
 	return nil
-}
-
-// teamExists checks teams by ID, or by team and organization name.
-func (s *MockSCM) teamExists(id uint64, team, org string) bool {
-	if id > 0 {
-		if _, ok := s.Teams[id]; ok {
-			return true
-		}
-	} else {
-		for _, t := range s.Teams {
-			if t.Name == team && t.Organization == org {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // generateID generates a new, unused map key to use as ID in tests.

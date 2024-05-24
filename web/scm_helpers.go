@@ -28,20 +28,20 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.ScmOrganizationName)
 }
 
-// createRepoAndTeam invokes the SCM to create a repository and team for the
-// specified course (represented with organization ID). The SCM team name
-// is also used as the group name and repository path. The provided user names represent the SCM group members.
+// createRepo invokes the SCM to create a repository for the
+// specified course (represented with organization ID). The group name
+// is used as the repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	opt := &scm.TeamOptions{
+func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, error) {
+	opt := &scm.GroupOptions{
 		Organization: course.ScmOrganizationName,
-		TeamName:     group.GetName(),
+		GroupName:    group.GetName(),
 		Users:        group.UserNames(),
 	}
-	repo, team, err := sc.CreateGroup(ctx, opt)
+	repo, err := sc.CreateGroup(ctx, opt)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	groupRepo := &qf.Repository{
 		ScmOrganizationID: course.GetScmOrganizationID(),
@@ -50,16 +50,16 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 		HTMLURL:           repo.HTMLURL,
 		RepoType:          qf.Repository_GROUP,
 	}
-	return groupRepo, team, nil
+	return groupRepo, nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uint64) error {
-	opt := &scm.UpdateTeamOptions{
-		TeamID:         group.ScmTeamID,
-		OrganizationID: orgID,
-		Users:          group.UserNames(),
+func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
+	opt := &scm.GroupOptions{
+		GroupName:    group.Name,
+		Organization: orgName,
+		Users:        group.UserNames(),
 	}
-	return sc.UpdateTeamMembers(ctx, opt)
+	return sc.UpdateGroupMembers(ctx, opt)
 }
 
 // isEmpty ensured that all of the provided repositories are empty

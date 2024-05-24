@@ -15,13 +15,6 @@ const (
 	// OrgMember is organization's member
 	OrgMember = "member"
 
-	// Team roles //
-
-	// TeamMaintainer can add and delete team users and repos
-	TeamMaintainer = "maintainer"
-	// TeamMember is a regular member
-	TeamMember = "member"
-
 	// Repository permission levels for organization //
 
 	// OrgPull allows only pull access to organization repositories
@@ -41,11 +34,6 @@ const (
 	RepoPush = "push"
 	// RepoFull allows full access to repository
 	RepoFull = "admin"
-
-	// Standard team names
-
-	// TeachersTeam is the team with all teachers and teaching assistants of a course.
-	TeachersTeam = "allteachers"
 )
 
 const (

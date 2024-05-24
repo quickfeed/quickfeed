@@ -18,8 +18,8 @@ type SCM interface {
 	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
-	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
+	// UpdateGroupMembers adds or removes members of an existing group repository based on list of users in GroupOptions.
+	UpdateGroupMembers(context.Context, *GroupOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
@@ -51,18 +51,18 @@ type SCM interface {
 	// A new refresh token for the user is returned, which may be used in subsequent requests.
 	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
 
-	// CreateCourse creates repositories and teams for a new course.
+	// CreateCourse creates repositories for a new course.
 	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)
-	// UpdateEnrollment updates team and organization membership and creates user repository.
+	// UpdateEnrollment updates organization membership and creates and grants access to user repository.
 	UpdateEnrollment(context.Context, *UpdateEnrollmentOptions) (*Repository, error)
 	// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
 	RejectEnrollment(context.Context, *RejectEnrollmentOptions) error
-	// DemoteTeacherToStudent removes user from teachers team, revokes owner status in the organization.
+	// DemoteTeacherToStudent revokes a users' owner status in the organization.
 	DemoteTeacherToStudent(context.Context, *UpdateEnrollmentOptions) error
-	// CreateGroup creates repository and team for a new group.
-	CreateGroup(context.Context, *TeamOptions) (*Repository, *Team, error)
-	// DeleteGroup deletes group's repository and team.
-	DeleteGroup(context.Context, *GroupOptions) error
+	// CreateGroup creates repository for a new group.
+	CreateGroup(context.Context, *GroupOptions) (*Repository, error)
+	// DeleteGroup deletes group's repository.
+	DeleteGroup(context.Context, *RepositoryOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -96,13 +96,6 @@ type Repository struct {
 	HTMLURL string // Repository website.
 	OrgID   uint64
 	Size    uint64
-}
-
-// Team represents a git Team
-type Team struct {
-	ID           uint64
-	Name         string
-	Organization string
 }
 
 // Authorization stores information about user scopes
