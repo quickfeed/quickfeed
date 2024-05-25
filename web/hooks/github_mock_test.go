@@ -5,7 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
 )
