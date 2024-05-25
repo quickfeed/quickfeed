@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/qf"

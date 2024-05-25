@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
 )
