@@ -56,7 +56,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	} else {
 		// if ID not provided, get by name
 		orgNameOrID = slug.Make(opt.Name)
-		gitOrg, _, err = s.client.Organizations.Get(ctx, slug.Make(opt.Name))
+		gitOrg, _, err = s.client.Organizations.Get(ctx, orgNameOrID)
 	}
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{
@@ -86,17 +86,17 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	// If user name is provided, return the organization only if the user is one of its owners.
 	if opt.Username != "" {
 		// fetch user membership in that organization, if exists
-		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
+		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.ScmOrganizationName)
 		if err != nil {
 			return nil, ErrFailedSCM{
 				Method:   "GetOrganization",
-				Message:  fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, slug.Make(opt.Name)),
-				GitError: fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, slug.Make(opt.Name), err),
+				Message:  fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, org.ScmOrganizationName),
+				GitError: fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, org.ScmOrganizationName, err),
 			}
 		}
 		// membership role must be "admin", if not, return error (possibly to show user)
 		if membership.GetRole() != OrgOwner {
-			return nil, ErrNotOwner
+			return nil, fmt.Errorf("%s not owner of organization %s", opt.Username, org.ScmOrganizationName)
 		}
 	}
 	return org, nil

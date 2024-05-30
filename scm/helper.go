@@ -55,8 +55,6 @@ var (
 	// ErrNotMember indicates that the requested organization exists, but the current user
 	// is not its member.
 	ErrNotMember = errors.New("user is not a member of the organization")
-	// ErrNotOwner indicates that user has no admin rights in the requested organization.
-	ErrNotOwner = errors.New("user is not an owner of the organization")
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
