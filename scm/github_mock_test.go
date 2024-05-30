@@ -59,7 +59,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 				}
 				for _, org := range orgs {
 					if org.GetID() == int64(id) {
-						w.Write(mock.MustMarshal(org))
+						_, _ = w.Write(mock.MustMarshal(org))
 						return
 					}
 				}
@@ -72,7 +72,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				org := lookup("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
 				found := matchFn(org, func(o github.Organization) {
-					w.Write(mock.MustMarshal(o))
+					_, _ = w.Write(mock.MustMarshal(o))
 				})
 				if !found {
 					w.WriteHeader(http.StatusNotFound)
@@ -91,7 +91,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 							foundRepos = append(foundRepos, repo)
 						}
 					}
-					w.Write(mock.MustMarshal(foundRepos))
+					_, _ = w.Write(mock.MustMarshal(foundRepos))
 				})
 				if !found {
 					w.WriteHeader(http.StatusNotFound)
@@ -107,7 +107,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 				found := matchFn(org, func(o github.Organization) {
 					for _, m := range memberships {
 						if m.GetOrganization().GetLogin() == org && m.GetUser().GetLogin() == username {
-							w.Write(mock.MustMarshal(m))
+							_, _ = w.Write(mock.MustMarshal(m))
 							return
 						}
 					}
