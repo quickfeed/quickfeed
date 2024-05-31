@@ -2,7 +2,6 @@ package scm
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"slices"
 	"testing"
@@ -258,7 +257,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 	}
 }
 
-func TestGetOrganization2(t *testing.T) {
+func TestMockGetOrganization(t *testing.T) {
 	orgFoo := &qf.Organization{ScmOrganizationID: 123, ScmOrganizationName: "foo"}
 	orgBar := &qf.Organization{ScmOrganizationID: 456, ScmOrganizationName: "bar"}
 
@@ -268,53 +267,46 @@ func TestGetOrganization2(t *testing.T) {
 		wantOrg *qf.Organization
 		wantErr bool
 	}{
-		{name: "GetOrganization/IncompleteRequest", org: &OrganizationOptions{}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/IncompleteRequest/Username", org: &OrganizationOptions{Username: "meling"}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/IncompleteRequest/NewCourse", org: &OrganizationOptions{NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/IncompleteRequest/NewCourse/Username", org: &OrganizationOptions{NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &OrganizationOptions{}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &OrganizationOptions{Username: "meling"}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &OrganizationOptions{NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &OrganizationOptions{NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},
 
-		{name: "GetOrganization", org: &OrganizationOptions{ID: 123}, wantOrg: orgFoo, wantErr: false},
-		{name: "GetOrganization", org: &OrganizationOptions{ID: 456}, wantOrg: orgBar, wantErr: false},
-		{name: "GetOrganization/Missing", org: &OrganizationOptions{ID: 789}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123}, wantOrg: orgFoo, wantErr: false},
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "GetOrganization/NewCourse", org: &OrganizationOptions{ID: 123, NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/NewCourse", org: &OrganizationOptions{ID: 456, NewCourse: true}, wantOrg: orgBar, wantErr: false},
-		{name: "GetOrganization/NewCourse/Missing", org: &OrganizationOptions{ID: 789, NewCourse: true}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123, NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456, NewCourse: true}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789, NewCourse: true}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "GetOrganization/Username", org: &OrganizationOptions{ID: 123, Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
-		{name: "GetOrganization/Username", org: &OrganizationOptions{ID: 456, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "GetOrganization/Username/Missing", org: &OrganizationOptions{ID: 789, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123, Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "GetOrganization/NewCourse/Username", org: &OrganizationOptions{ID: 123, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo, but foo is not empty (not new course)
-		{name: "GetOrganization/NewCourse/Username", org: &OrganizationOptions{ID: 456, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "GetOrganization/NewCourse/Username/Missing", org: &OrganizationOptions{ID: 789, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo, but foo is not empty (not new course)
+		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "GetOrganization", org: &OrganizationOptions{Name: "foo"}, wantOrg: orgFoo, wantErr: false},
-		{name: "GetOrganization", org: &OrganizationOptions{Name: "bar"}, wantOrg: orgBar, wantErr: false},
-		{name: "GetOrganization/Missing", org: &OrganizationOptions{Name: "baz"}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo"}, wantOrg: orgFoo, wantErr: false},
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar"}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz"}, wantOrg: nil, wantErr: true}, // baz does not exist
 
-		{name: "GetOrganization/NewCourse", org: &OrganizationOptions{Name: "foo", NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/NewCourse", org: &OrganizationOptions{Name: "bar", NewCourse: true}, wantOrg: orgBar, wantErr: false},
-		{name: "GetOrganization/NewCourse/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo", NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", NewCourse: true}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true}, wantOrg: nil, wantErr: true}, // baz does not exist
 
-		{name: "GetOrganization/Username", org: &OrganizationOptions{Name: "foo", Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
-		{name: "GetOrganization/Username", org: &OrganizationOptions{Name: "bar", Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "GetOrganization/Username/Missing", org: &OrganizationOptions{Name: "baz", Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo", Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
 
-		{name: "GetOrganization/NewCourse/Username", org: &OrganizationOptions{Name: "foo", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo
-		{name: "GetOrganization/NewCourse/Username", org: &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "GetOrganization/NewCourse/Username/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo
+		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
-		var name string
-		if tt.org.ID == 0 && tt.org.Name == "" {
-			name = tt.name
-		} else if tt.org.ID != 0 {
-			name = fmt.Sprintf("%s/ID=%d", tt.name, tt.org.ID)
-		} else {
-			name = fmt.Sprintf("%s/Name=%s", tt.name, tt.org.Name)
-		}
+		name := testName(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.org.ID, tt.org.Name, tt.org.Username, tt.org.NewCourse)
 		t.Run(name, func(t *testing.T) {
 			gotOrg, gotErr := s.GetOrganization(context.Background(), tt.org)
 			if (gotErr != nil) != tt.wantErr {
@@ -328,22 +320,22 @@ func TestGetOrganization2(t *testing.T) {
 	}
 }
 
-func TestGetRepositories(t *testing.T) {
+func TestMockGetRepositories(t *testing.T) {
 	tests := []struct {
 		name    string
 		org     *qf.Organization
 		want    []*Repository
 		wantErr bool
 	}{
-		{name: "GetRepositories", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
+		{name: "IncompleteRequest/NilOrg", org: nil, want: nil, wantErr: true},
+		{name: "IncompleteRequest/NoOrgName", org: &qf.Organization{}, want: nil, wantErr: true},
+		{name: "CompleteRequest/NotFound", org: &qf.Organization{ScmOrganizationName: "bar"}, want: []*Repository{}, wantErr: false},
+		{name: "CompleteRequest/FourRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
 			{OrgID: 123, Path: "info"},
 			{OrgID: 123, Path: "assignments"},
 			{OrgID: 123, Path: "tests"},
 			{OrgID: 123, Path: "meling-labs"},
 		}},
-		{name: "GetRepositoriesNilOrg", org: nil, want: nil, wantErr: true},
-		{name: "GetRepositoriesNoOrgName", org: &qf.Organization{}, want: nil, wantErr: true},
-		{name: "GetRepositoriesNotFound", org: &qf.Organization{ScmOrganizationName: "bar"}, want: []*Repository{}, wantErr: false},
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
@@ -360,29 +352,29 @@ func TestGetRepositories(t *testing.T) {
 	}
 }
 
-func TestRepositoryIsEmpty(t *testing.T) {
+func TestMockRepositoryIsEmpty(t *testing.T) {
 	tests := []struct {
 		name      string
 		opt       *RepositoryOptions
 		wantEmpty bool
 	}{
-		{name: "RepositoryIsEmpty/IncompleteRequest/Owner=%s/Repo=%s", opt: &RepositoryOptions{}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/IncompleteRequest/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/IncompleteRequest/Owner=%s/Repo=%s", opt: &RepositoryOptions{Path: "info"}, wantEmpty: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantEmpty: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "info"}, wantEmpty: true},
 
-		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "info"}, wantEmpty: false},
-		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "assignments"}, wantEmpty: false},
-		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "tests"}, wantEmpty: false},
-		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantEmpty: false},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "info"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "assignments"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "tests"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, wantEmpty: true},
 
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "info"}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "assignments"}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "tests"}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, wantEmpty: true},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "info"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "assignments"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "tests"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantEmpty: false},
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
-		name := fmt.Sprintf(tt.name, tt.opt.Owner, tt.opt.Path)
+		name := testName(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
 			gotIsEmpty := s.RepositoryIsEmpty(context.Background(), tt.opt)
 			if gotIsEmpty != tt.wantEmpty {
@@ -392,7 +384,7 @@ func TestRepositoryIsEmpty(t *testing.T) {
 	}
 }
 
-func TestUpdateGroupMembers(t *testing.T) {
+func TestMockUpdateGroupMembers(t *testing.T) {
 	tests := []struct {
 		name      string
 		org       *GroupOptions
@@ -425,11 +417,7 @@ func TestUpdateGroupMembers(t *testing.T) {
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
-		users := "nil"
-		if tt.org.Users != nil {
-			users = fmt.Sprintf("%v", tt.org.Users)
-		}
-		name := fmt.Sprintf("%s/Organization=%s/GroupName=%s/Users=%v", tt.name, tt.org.Organization, tt.org.GroupName, users)
+		name := testName(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)
 		t.Run(name, func(t *testing.T) {
 			if err := s.UpdateGroupMembers(context.Background(), tt.org); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
