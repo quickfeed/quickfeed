@@ -74,9 +74,9 @@ func (opt CreateRepositoryOptions) valid() bool {
 
 // GroupOptions is used when creating or modifying a group.
 type GroupOptions struct {
-	Organization string
-	GroupName    string
-	Users        []string
+	Organization string   // Organization is the owner of the repository
+	GroupName    string   // GroupName is the name of the repository
+	Users        []string // Users are group collaborators (GitHub usernames)
 }
 
 func (opt GroupOptions) valid() bool {

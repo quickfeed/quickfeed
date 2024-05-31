@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -45,6 +46,28 @@ var jsonFolderContent = `[
   }
 ]`
 
+var (
+	meling  = github.User{Login: github.String("meling")}
+	leslie  = github.User{Login: github.String("leslie")}
+	lamport = github.User{Login: github.String("lamport")}
+	jostein = github.User{Login: github.String("jostein")}
+)
+
+// map for testing UpdateGroupMembers; owner -> group_repo -> collaborators
+var groups = map[string]map[string][]github.User{
+	"foo": {
+		"info":        {},
+		"assignments": {},
+		"tests":       {},
+		"meling-labs": {},
+		"groupX":      {lamport},
+	},
+	"bar": {
+		"groupY": {leslie},
+		"groupZ": {},
+	},
+}
+
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
 func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 	orgs := []github.Organization{
@@ -58,8 +81,8 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		{Organization: &orgs[0], Name: github.String("meling-labs")},
 	}
 	memberships := []github.Membership{
-		{Organization: &orgs[0], User: &github.User{Login: github.String("meling")}, Role: github.String(OrgOwner)},
-		{Organization: &orgs[1], User: &github.User{Login: github.String("meling")}, Role: github.String(OrgMember)},
+		{Organization: &orgs[0], User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &orgs[1], User: &meling, Role: github.String(OrgMember)},
 	}
 	matchFn := func(orgName string, f func(github.Organization)) bool {
 		for _, org := range orgs {
@@ -110,7 +133,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 				found := matchFn(org, func(o github.Organization) {
 					foundRepos := make([]github.Repository, 0)
 					for _, repo := range repos {
-						if repo.GetOrganization().GetLogin() == org {
+						if repo.GetOrganization().GetLogin() == o.GetLogin() {
 							foundRepos = append(foundRepos, repo)
 						}
 					}
@@ -129,7 +152,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 				username := lookup("username", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
 				found := matchFn(org, func(o github.Organization) {
 					for _, m := range memberships {
-						if m.GetOrganization().GetLogin() == org && m.GetUser().GetLogin() == username {
+						if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
 							_, _ = w.Write(mock.MustMarshal(m))
 							return
 						}
@@ -155,6 +178,75 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 					}
 				}
 				w.WriteHeader(http.StatusNotFound)
+			}),
+		),
+
+		// Mock handlers for UpdateGroupMembers
+		mock.WithRequestMatchHandler(
+			mock.GetReposCollaboratorsByOwnerByRepo,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				pattern := mock.GetReposCollaboratorsByOwnerByRepo.Pattern
+				owner := lookup("owner", pattern, r.URL.Path)
+				repo := lookup("repo", pattern, r.URL.Path)
+
+				collaborators := groups[owner][repo]
+				if collaborators == nil {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(mock.MustMarshal(collaborators))
+			}),
+		),
+		mock.WithRequestMatchHandler(
+			mock.PutReposCollaboratorsByOwnerByRepoByUsername,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				pattern := mock.PutReposCollaboratorsByOwnerByRepoByUsername.Pattern
+				owner := lookup("owner", pattern, r.URL.Path)
+				repo := lookup("repo", pattern, r.URL.Path)
+				username := lookup("username", pattern, r.URL.Path)
+
+				collaborators := groups[owner][repo]
+				if collaborators == nil {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				if slices.ContainsFunc(collaborators, func(u github.User) bool { return u.GetLogin() == username }) {
+					// already exists; no need to add again
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+
+				ghUser := github.User{Login: github.String(username)}
+				groups[owner][repo] = append(collaborators, ghUser)
+				invite := github.CollaboratorInvitation{
+					Repo:    &github.Repository{Owner: &github.User{Login: github.String(owner)}, Name: github.String(repo)},
+					Invitee: &ghUser,
+				}
+				w.WriteHeader(http.StatusCreated)
+				_, _ = w.Write(mock.MustMarshal(invite))
+			}),
+		),
+		mock.WithRequestMatchHandler(
+			mock.DeleteReposCollaboratorsByOwnerByRepoByUsername,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				pattern := mock.DeleteReposCollaboratorsByOwnerByRepoByUsername.Pattern
+				owner := lookup("owner", pattern, r.URL.Path)
+				repo := lookup("repo", pattern, r.URL.Path)
+				username := lookup("username", pattern, r.URL.Path)
+
+				collaborators := groups[owner][repo]
+				if collaborators == nil {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+
+				collaborators = slices.DeleteFunc(collaborators, func(u github.User) bool {
+					return u.GetLogin() == username
+				})
+				groups[owner][repo] = collaborators
+				w.WriteHeader(http.StatusNoContent)
+				_, _ = w.Write([]byte{})
 			}),
 		),
 	)
@@ -297,5 +389,78 @@ func TestRepositoryIsEmpty(t *testing.T) {
 				t.Errorf("RepositoryIsEmpty() = %v, want %v", gotIsEmpty, tt.wantEmpty)
 			}
 		})
+	}
+}
+
+func TestUpdateGroupMembers(t *testing.T) {
+	tests := []struct {
+		name      string
+		org       *GroupOptions
+		wantUsers []github.User
+		wantErr   bool
+	}{
+		{name: "IncompleteRequest", org: &GroupOptions{}, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a"}, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantErr: true},
+
+		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "foo", GroupName: "a"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "x", GroupName: "info"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "foo", GroupName: "a", Users: []string{"meling"}}, wantErr: true},
+		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "x", GroupName: "info", Users: []string{"meling"}}, wantErr: true},
+
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "info", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling"}}, wantErr: false, wantUsers: []github.User{meling}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie"}}, wantErr: false, wantUsers: []github.User{meling, leslie}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{meling, leslie, lamport}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
+		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
+	}
+	s := NewMockGithubSCMClient(qtest.Logger(t))
+	for _, tt := range tests {
+		users := "nil"
+		if tt.org.Users != nil {
+			users = fmt.Sprintf("%v", tt.org.Users)
+		}
+		name := fmt.Sprintf("%s/Organization=%s/GroupName=%s/Users=%v", tt.name, tt.org.Organization, tt.org.GroupName, users)
+		t.Run(name, func(t *testing.T) {
+			if err := s.UpdateGroupMembers(context.Background(), tt.org); (err != nil) != tt.wantErr {
+				t.Errorf("UpdateGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantUsers == nil {
+				return
+			}
+			// verify the state of the groups after the test
+			if diff := cmp.Diff(tt.wantUsers, groups[tt.org.Organization][tt.org.GroupName], protocmp.Transform()); diff != "" {
+				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+
+	// expected state after calling the sequence of UpdateGroupMembers
+	// owner -> repo -> collaborators
+	wantGroups := map[string]map[string][]github.User{
+		"foo": {
+			"info":        {},
+			"assignments": {},
+			"tests":       {},
+			"meling-labs": {},
+			"groupX":      {meling, leslie, lamport},
+		},
+		"bar": {
+			"groupY": {},
+			"groupZ": {jostein},
+		},
+	}
+	// verify the state of the groups after the sequence of UpdateGroupMembers
+	if diff := cmp.Diff(wantGroups, groups, protocmp.Transform()); diff != "" {
+		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 	}
 }
