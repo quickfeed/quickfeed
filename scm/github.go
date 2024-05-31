@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"go.uber.org/zap"
@@ -154,7 +155,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		}
 	}
 
-	// check whether group members are already in repository; add missing members
+	// add members that are not already in the group
 	for _, member := range opt.Users {
 		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, nil)
 		if err != nil {
@@ -166,21 +167,16 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		}
 	}
 
-	// check if all the repository members are in the new group;
+	// remove members that are no longer in the group
 	for _, repoMember := range oldUsers {
-		toRemove := true
-		for _, groupMember := range opt.Users {
-			if repoMember.GetLogin() == groupMember {
-				toRemove = false
-			}
-		}
-		if toRemove {
-			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, repoMember.GetLogin())
+		member := repoMember.GetLogin()
+		if !slices.Contains(opt.Users, member) {
+			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, member)
 			if err != nil {
 				return ErrFailedSCM{
 					GitError: err,
 					Method:   "UpdateGroupMembers",
-					Message:  fmt.Sprintf("failed to remove user %s from repository %s", repoMember.GetLogin(), opt.GroupName),
+					Message:  fmt.Sprintf("failed to remove user %s from repository %s", member, opt.GroupName),
 				}
 			}
 		}
