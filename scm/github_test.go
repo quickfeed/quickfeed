@@ -256,30 +256,9 @@ func TestEmptyRepo(t *testing.T) {
 		opt       *scm.RepositoryOptions
 		wantEmpty bool
 	}{
-		{
-			"tests repo, assume not empty",
-			&scm.RepositoryOptions{
-				Path:  "tests",
-				Owner: qfTestOrg,
-			},
-			false,
-		},
-		{
-			"info repo, assume empty",
-			&scm.RepositoryOptions{
-				Path:  "info",
-				Owner: qfTestOrg,
-			},
-			true,
-		},
-		{
-			"non-existent repo, handle as empty",
-			&scm.RepositoryOptions{
-				Path:  "some-other-repo",
-				Owner: qfTestOrg,
-			},
-			true,
-		},
+		{"tests repo, assume not empty", &scm.RepositoryOptions{Path: "tests", Owner: qfTestOrg}, false},
+		{"info repo, assume empty", &scm.RepositoryOptions{Path: "info", Owner: qfTestOrg}, true},
+		{"non-existent repo, handle as empty", &scm.RepositoryOptions{Path: "some-other-repo", Owner: qfTestOrg}, true},
 	}
 	for _, tt := range tests {
 		if empty := s.RepositoryIsEmpty(ctx, tt.opt); empty != tt.wantEmpty {

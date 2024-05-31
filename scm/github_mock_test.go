@@ -118,6 +118,31 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 				}
 			}),
 		),
+
+		// "repos/%s/%s/contents/%s"
+		// u := fmt.Sprintf("repos/%s/%s/contents/%s", owner, repo, escapedPath)
+		// Pattern: "/repos/{owner}/{repo}/contents/{path:.+}",
+		// Method:  "GET",
+
+		mock.WithRequestMatchHandler(
+			mock.GetReposContentsByOwnerByRepoByPath,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// w.WriteHeader(http.StatusOK)
+				fmt.Printf("r.URL.Path: %s\n", r.URL.Path)
+				// we only care about the owner and repo
+				owner := lookup("owner", mock.GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
+				repo := lookup("repo", mock.GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
+				fmt.Printf("s owner: %s, repo: %s\n", owner, repo)
+				for _, re := range repos {
+					fmt.Printf("x owner: %s, repo: %s\n", re.GetOrganization().GetLogin(), re.GetName())
+					if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
+						_, _ = w.Write([]byte("[x]"))
+						return
+					}
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+		),
 	)
 	return &GithubSCM{
 		logger:      logger,
@@ -224,6 +249,30 @@ func TestGetRepositories(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("GetRepositories() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestRepositoryIsEmpty(t *testing.T) {
+	tests := []struct {
+		name      string
+		opt       *RepositoryOptions
+		wantEmpty bool
+	}{
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{Path: "info"}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{Owner: "foo", Path: "info"}, wantEmpty: true},
+	}
+
+	s := NewMockGithubSCMClient(qtest.Logger(t))
+	for _, tt := range tests {
+		name := fmt.Sprintf(tt.name, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			gotIsEmpty := s.RepositoryIsEmpty(context.Background(), tt.opt)
+			if gotIsEmpty != tt.wantEmpty {
+				t.Errorf("RepositoryIsEmpty() = %v, want %v", gotIsEmpty, tt.wantEmpty)
 			}
 		})
 	}
