@@ -22,6 +22,29 @@ var GetByID mock.EndpointPattern = mock.EndpointPattern{
 	Method:  "GET",
 }
 
+// The original mock.GetReposContentsByOwnerByRepoByPath pattern was incorrectly specified as: {path:.+}
+var GetReposContentsByOwnerByRepoByPath mock.EndpointPattern = mock.EndpointPattern{
+	Pattern: "/repos/{owner}/{repo}/contents/{path:.*}",
+	Method:  "GET",
+}
+
+var jsonFolderContent = `[
+  {
+    "name": "Dockerfile",
+    "path": "scripts/Dockerfile",
+    "sha": "873c7550c0fc40b07cf173382bc93028f8f87c06",
+    "size": 316,
+    "type": "file"
+  },
+  {
+    "name": "run.sh",
+    "path": "scripts/run.sh",
+    "sha": "fa3515649d92a369bb4c212760bf54b5d4d00d4e",
+    "size": 1381,
+    "type": "file"
+  }
+]`
+
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
 func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 	orgs := []github.Organization{
@@ -119,24 +142,15 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			}),
 		),
 
-		// "repos/%s/%s/contents/%s"
-		// u := fmt.Sprintf("repos/%s/%s/contents/%s", owner, repo, escapedPath)
-		// Pattern: "/repos/{owner}/{repo}/contents/{path:.+}",
-		// Method:  "GET",
-
 		mock.WithRequestMatchHandler(
-			mock.GetReposContentsByOwnerByRepoByPath,
+			GetReposContentsByOwnerByRepoByPath,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				// w.WriteHeader(http.StatusOK)
-				fmt.Printf("r.URL.Path: %s\n", r.URL.Path)
-				// we only care about the owner and repo
-				owner := lookup("owner", mock.GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
-				repo := lookup("repo", mock.GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
-				fmt.Printf("s owner: %s, repo: %s\n", owner, repo)
+				// we only care about the owner and repo; we ignore the path component
+				owner := lookup("owner", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
+				repo := lookup("repo", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
 				for _, re := range repos {
-					fmt.Printf("x owner: %s, repo: %s\n", re.GetOrganization().GetLogin(), re.GetName())
 					if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
-						_, _ = w.Write([]byte("[x]"))
+						_, _ = w.Write([]byte(jsonFolderContent))
 						return
 					}
 				}
@@ -162,10 +176,10 @@ func TestGetOrganization2(t *testing.T) {
 		wantOrg *qf.Organization
 		wantErr bool
 	}{
-		{name: "GetOrganization/Empty", org: &OrganizationOptions{}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/Empty/Username", org: &OrganizationOptions{Username: "meling"}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/Empty/NewCourse", org: &OrganizationOptions{NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "GetOrganization/Empty/NewCourse/Username", org: &OrganizationOptions{NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},
+		{name: "GetOrganization/IncompleteRequest", org: &OrganizationOptions{}, wantOrg: nil, wantErr: true},
+		{name: "GetOrganization/IncompleteRequest/Username", org: &OrganizationOptions{Username: "meling"}, wantOrg: nil, wantErr: true},
+		{name: "GetOrganization/IncompleteRequest/NewCourse", org: &OrganizationOptions{NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "GetOrganization/IncompleteRequest/NewCourse/Username", org: &OrganizationOptions{NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},
 
 		{name: "GetOrganization", org: &OrganizationOptions{ID: 123}, wantOrg: orgFoo, wantErr: false},
 		{name: "GetOrganization", org: &OrganizationOptions{ID: 456}, wantOrg: orgBar, wantErr: false},
@@ -260,12 +274,20 @@ func TestRepositoryIsEmpty(t *testing.T) {
 		opt       *RepositoryOptions
 		wantEmpty bool
 	}{
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{Path: "info"}, wantEmpty: true},
-		{name: "RepositoryIsEmpty/Empty/Owner=%s/Path=%s", opt: &RepositoryOptions{Owner: "foo", Path: "info"}, wantEmpty: true},
-	}
+		{name: "RepositoryIsEmpty/IncompleteRequest/Owner=%s/Repo=%s", opt: &RepositoryOptions{}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/IncompleteRequest/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/IncompleteRequest/Owner=%s/Repo=%s", opt: &RepositoryOptions{Path: "info"}, wantEmpty: true},
 
+		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "info"}, wantEmpty: false},
+		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "assignments"}, wantEmpty: false},
+		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "tests"}, wantEmpty: false},
+		{name: "RepositoryIsEmpty/NonEmpty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantEmpty: false},
+
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "info"}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "assignments"}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "tests"}, wantEmpty: true},
+		{name: "RepositoryIsEmpty/Empty/Owner=%s/Repo=%s", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, wantEmpty: true},
+	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := fmt.Sprintf(tt.name, tt.opt.Owner, tt.opt.Path)
