@@ -19,7 +19,7 @@ func TestLookup(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := lookup(tt.key, tt.pattern, tt.url)
+		got := pathValue(tt.key, tt.pattern, tt.url)
 		if got != tt.want {
 			t.Errorf("lookup(%q, %q, %q) = %q, want %q", tt.key, tt.pattern, tt.url, got, tt.want)
 		}

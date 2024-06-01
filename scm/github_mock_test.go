@@ -97,11 +97,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		mock.WithRequestMatchHandler(
 			GetByID,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				id, err := lookupInt("id", GetByID.Pattern, r.URL.Path)
-				if err != nil {
-					// Unreachable in this test
-					panic(err)
-				}
+				id := mustParseInt("id", GetByID.Pattern, r.URL.Path)
 				for _, org := range orgs {
 					if org.GetID() == int64(id) {
 						_, _ = w.Write(mock.MustMarshal(org))
@@ -115,7 +111,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		mock.WithRequestMatchHandler(
 			mock.GetOrgsByOrg,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				org := lookup("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
+				org := pathValue("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
 				found := matchFn(org, func(o github.Organization) {
 					_, _ = w.Write(mock.MustMarshal(o))
 				})
@@ -128,7 +124,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		mock.WithRequestMatchHandler(
 			mock.GetOrgsReposByOrg,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				org := lookup("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
+				org := pathValue("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
 				found := matchFn(org, func(o github.Organization) {
 					foundRepos := make([]github.Repository, 0)
 					for _, repo := range repos {
@@ -147,8 +143,8 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		mock.WithRequestMatchHandler(
 			mock.GetOrgsMembershipsByOrgByUsername,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				org := lookup("org", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
-				username := lookup("username", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
+				org := pathValue("org", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
+				username := pathValue("username", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
 				found := matchFn(org, func(o github.Organization) {
 					for _, m := range memberships {
 						if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
@@ -168,8 +164,8 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			GetReposContentsByOwnerByRepoByPath,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// we only care about the owner and repo; we ignore the path component
-				owner := lookup("owner", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
-				repo := lookup("repo", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
+				owner := pathValue("owner", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
+				repo := pathValue("repo", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
 				for _, re := range repos {
 					if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 						_, _ = w.Write([]byte(jsonFolderContent))
@@ -185,8 +181,8 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			mock.GetReposCollaboratorsByOwnerByRepo,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				pattern := mock.GetReposCollaboratorsByOwnerByRepo.Pattern
-				owner := lookup("owner", pattern, r.URL.Path)
-				repo := lookup("repo", pattern, r.URL.Path)
+				owner := pathValue("owner", pattern, r.URL.Path)
+				repo := pathValue("repo", pattern, r.URL.Path)
 
 				collaborators := groups[owner][repo]
 				if collaborators == nil {
@@ -201,9 +197,9 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			mock.PutReposCollaboratorsByOwnerByRepoByUsername,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				pattern := mock.PutReposCollaboratorsByOwnerByRepoByUsername.Pattern
-				owner := lookup("owner", pattern, r.URL.Path)
-				repo := lookup("repo", pattern, r.URL.Path)
-				username := lookup("username", pattern, r.URL.Path)
+				owner := pathValue("owner", pattern, r.URL.Path)
+				repo := pathValue("repo", pattern, r.URL.Path)
+				username := pathValue("username", pattern, r.URL.Path)
 
 				collaborators := groups[owner][repo]
 				if collaborators == nil {
@@ -230,9 +226,9 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			mock.DeleteReposCollaboratorsByOwnerByRepoByUsername,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				pattern := mock.DeleteReposCollaboratorsByOwnerByRepoByUsername.Pattern
-				owner := lookup("owner", pattern, r.URL.Path)
-				repo := lookup("repo", pattern, r.URL.Path)
-				username := lookup("username", pattern, r.URL.Path)
+				owner := pathValue("owner", pattern, r.URL.Path)
+				repo := pathValue("repo", pattern, r.URL.Path)
+				username := pathValue("username", pattern, r.URL.Path)
 
 				collaborators := groups[owner][repo]
 				if collaborators == nil {

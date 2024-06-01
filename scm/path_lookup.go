@@ -1,12 +1,11 @@
 package scm
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
 
-func lookup(key, pattern, url string) string {
+func pathValue(key, pattern, url string) string {
 	urlParts := strings.Split(url, "/")
 
 	// find the key in pattern
@@ -21,16 +20,19 @@ func lookup(key, pattern, url string) string {
 	return ""
 }
 
-func lookupInt(key, pattern, url string) (int, error) {
+// mustParseInt returns the integer value of the key in the URL.
+// If the key is not found, or the value cannot be converted to an integer, the function panics.
+func mustParseInt(key, pattern, url string) int {
 	// Use the lookup function to get the string value
-	value := lookup(key, pattern, url)
+	value := pathValue(key, pattern, url)
 	if value == "" {
-		return 0, fmt.Errorf("no value found for key %s", key)
+		panic("no value found for key")
 	}
 	// Convert the string value to an integer
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, fmt.Errorf("could not convert value to int: %v", err)
+		// could not convert value to int
+		panic(err)
 	}
-	return intValue, nil
+	return intValue
 }
