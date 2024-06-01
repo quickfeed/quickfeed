@@ -1,12 +1,12 @@
-package scm
+package qtest
 
 import (
 	"fmt"
 	"strings"
 )
 
-// testName returns the test name based on the provided fields and values.
-func testName(name string, fields []string, values ...any) string {
+// Name returns the test name based on the provided fields and values.
+func Name(name string, fields []string, values ...any) string {
 	if len(fields) != len(values) {
 		panic("fields and values must have the same length")
 	}

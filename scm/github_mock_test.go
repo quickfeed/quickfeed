@@ -306,7 +306,7 @@ func TestMockGetOrganization(t *testing.T) {
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
-		name := testName(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.org.ID, tt.org.Name, tt.org.Username, tt.org.NewCourse)
+		name := qtest.Name(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.org.ID, tt.org.Name, tt.org.Username, tt.org.NewCourse)
 		t.Run(name, func(t *testing.T) {
 			gotOrg, gotErr := s.GetOrganization(context.Background(), tt.org)
 			if (gotErr != nil) != tt.wantErr {
@@ -374,7 +374,7 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
-		name := testName(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
 			gotIsEmpty := s.RepositoryIsEmpty(context.Background(), tt.opt)
 			if gotIsEmpty != tt.wantEmpty {
@@ -417,7 +417,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	}
 	s := NewMockGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
-		name := testName(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)
+		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)
 		t.Run(name, func(t *testing.T) {
 			if err := s.UpdateGroupMembers(context.Background(), tt.org); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
