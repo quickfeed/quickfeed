@@ -7,8 +7,6 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
-
-	"github.com/google/go-github/v62/github"
 )
 
 func MustParseInt64(s string) int64 {
@@ -33,20 +31,6 @@ func MustMarshal(v interface{}) []byte {
 		panic(err)
 	}
 	return b
-}
-
-// WriteError helper function to write errors to HTTP handlers
-func WriteError(
-	w http.ResponseWriter,
-	httpStatus int,
-	msg string,
-	errors ...github.Error,
-) {
-	w.WriteHeader(httpStatus)
-	w.Write(MustMarshal(github.ErrorResponse{
-		Message: msg,
-		Errors:  errors,
-	}))
 }
 
 // MockBackendOption is used to configure the *http.ServeMux for the mocked backend.
