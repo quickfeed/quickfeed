@@ -8,25 +8,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
-	"github.com/migueleliasweb/go-github-mock/src/mock"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
-
-// Note: GetByID uses the undocumented GitHub API endpoint /organizations/:id.
-var GetByID mock.EndpointPattern = mock.EndpointPattern{
-	Pattern: "/organizations/{id}",
-	Method:  "GET",
-}
-
-// The original mock.GetReposContentsByOwnerByRepoByPath pattern was incorrectly specified as: {path:.+}
-var GetReposContentsByOwnerByRepoByPath mock.EndpointPattern = mock.EndpointPattern{
-	Pattern: "/repos/{owner}/{repo}/contents/{path:.*}",
-	Method:  "GET",
-}
 
 var jsonFolderContent = `[
   {
@@ -93,162 +79,161 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		return false
 	}
 
-	httpClient := mock.NewMockedHTTPClient(
-		mock.WithRequestMatchHandler(
-			GetByID,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				id := mustParseInt("id", GetByID.Pattern, r.URL.Path)
-				for _, org := range orgs {
-					if org.GetID() == int64(id) {
-						_, _ = w.Write(mock.MustMarshal(org))
+	getByIDHandler := WithRequestMatchHandler(
+		getByID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			id := MustParseInt64(r.PathValue("id"))
+			for _, org := range orgs {
+				if org.GetID() == id {
+					_, _ = w.Write(MustMarshal(org))
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
+	getOrgsByOrgHandler := WithRequestMatchHandler(
+		getOrgsByOrg,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			org := r.PathValue("org")
+			found := matchFn(org, func(o github.Organization) {
+				_, _ = w.Write(MustMarshal(o))
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}),
+	)
+	getOrgsReposByOrgHandler := WithRequestMatchHandler(
+		getOrgsReposByOrg,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			org := r.PathValue("org")
+			found := matchFn(org, func(o github.Organization) {
+				foundRepos := make([]github.Repository, 0)
+				for _, repo := range repos {
+					if repo.GetOrganization().GetLogin() == o.GetLogin() {
+						foundRepos = append(foundRepos, repo)
+					}
+				}
+				_, _ = w.Write(MustMarshal(foundRepos))
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}),
+	)
+	getOrgsMembershipsByOrgByUsernameHandler := WithRequestMatchHandler(
+		getOrgsMembershipsByOrgByUsername,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			org := r.PathValue("org")
+			username := r.PathValue("username")
+			found := matchFn(org, func(o github.Organization) {
+				for _, m := range memberships {
+					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
+						_, _ = w.Write(MustMarshal(m))
 						return
 					}
 				}
 				w.WriteHeader(http.StatusNotFound)
-			}),
-		),
-
-		mock.WithRequestMatchHandler(
-			mock.GetOrgsByOrg,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				org := pathValue("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
-				found := matchFn(org, func(o github.Organization) {
-					_, _ = w.Write(mock.MustMarshal(o))
-				})
-				if !found {
-					w.WriteHeader(http.StatusNotFound)
-				}
-			}),
-		),
-
-		mock.WithRequestMatchHandler(
-			mock.GetOrgsReposByOrg,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				org := pathValue("org", mock.GetOrgsByOrg.Pattern, r.URL.Path)
-				found := matchFn(org, func(o github.Organization) {
-					foundRepos := make([]github.Repository, 0)
-					for _, repo := range repos {
-						if repo.GetOrganization().GetLogin() == o.GetLogin() {
-							foundRepos = append(foundRepos, repo)
-						}
-					}
-					_, _ = w.Write(mock.MustMarshal(foundRepos))
-				})
-				if !found {
-					w.WriteHeader(http.StatusNotFound)
-				}
-			}),
-		),
-
-		mock.WithRequestMatchHandler(
-			mock.GetOrgsMembershipsByOrgByUsername,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				org := pathValue("org", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
-				username := pathValue("username", mock.GetOrgsMembershipsByOrgByUsername.Pattern, r.URL.Path)
-				found := matchFn(org, func(o github.Organization) {
-					for _, m := range memberships {
-						if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
-							_, _ = w.Write(mock.MustMarshal(m))
-							return
-						}
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-				if !found {
-					w.WriteHeader(http.StatusNotFound)
-				}
-			}),
-		),
-
-		mock.WithRequestMatchHandler(
-			GetReposContentsByOwnerByRepoByPath,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				// we only care about the owner and repo; we ignore the path component
-				owner := pathValue("owner", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
-				repo := pathValue("repo", GetReposContentsByOwnerByRepoByPath.Pattern, r.URL.Path)
-				for _, re := range repos {
-					if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
-						_, _ = w.Write([]byte(jsonFolderContent))
-						return
-					}
-				}
+			})
+			if !found {
 				w.WriteHeader(http.StatusNotFound)
-			}),
-		),
-
-		// Mock handlers for UpdateGroupMembers
-		mock.WithRequestMatchHandler(
-			mock.GetReposCollaboratorsByOwnerByRepo,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				pattern := mock.GetReposCollaboratorsByOwnerByRepo.Pattern
-				owner := pathValue("owner", pattern, r.URL.Path)
-				repo := pathValue("repo", pattern, r.URL.Path)
-
-				collaborators := groups[owner][repo]
-				if collaborators == nil {
-					w.WriteHeader(http.StatusNotFound)
+			}
+		}),
+	)
+	getReposContentsByOwnerByRepoByPathHandler := WithRequestMatchHandler(
+		getReposContentsByOwnerByRepoByPath,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// we only care about the owner and repo; we ignore the path component
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			for _, re := range repos {
+				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
+					_, _ = w.Write([]byte(jsonFolderContent))
 					return
 				}
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(mock.MustMarshal(collaborators))
-			}),
-		),
-		mock.WithRequestMatchHandler(
-			mock.PutReposCollaboratorsByOwnerByRepoByUsername,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				pattern := mock.PutReposCollaboratorsByOwnerByRepoByUsername.Pattern
-				owner := pathValue("owner", pattern, r.URL.Path)
-				repo := pathValue("repo", pattern, r.URL.Path)
-				username := pathValue("username", pattern, r.URL.Path)
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
+	getReposCollaboratorsByOwnerByRepoHandler := WithRequestMatchHandler(
+		getReposCollaboratorsByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
 
-				collaborators := groups[owner][repo]
-				if collaborators == nil {
-					w.WriteHeader(http.StatusNotFound)
-					return
-				}
-				if slices.ContainsFunc(collaborators, func(u github.User) bool { return u.GetLogin() == username }) {
-					// already exists; no need to add again
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
+			collaborators := groups[owner][repo]
+			if collaborators == nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(MustMarshal(collaborators))
+		}),
+	)
+	putReposCollaboratorsByOwnerByRepoByUsernameHandler := WithRequestMatchHandler(
+		putReposCollaboratorsByOwnerByRepoByUsername,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			username := r.PathValue("username")
 
-				ghUser := github.User{Login: github.String(username)}
-				groups[owner][repo] = append(collaborators, ghUser)
-				invite := github.CollaboratorInvitation{
-					Repo:    &github.Repository{Owner: &github.User{Login: github.String(owner)}, Name: github.String(repo)},
-					Invitee: &ghUser,
-				}
-				w.WriteHeader(http.StatusCreated)
-				_, _ = w.Write(mock.MustMarshal(invite))
-			}),
-		),
-		mock.WithRequestMatchHandler(
-			mock.DeleteReposCollaboratorsByOwnerByRepoByUsername,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				pattern := mock.DeleteReposCollaboratorsByOwnerByRepoByUsername.Pattern
-				owner := pathValue("owner", pattern, r.URL.Path)
-				repo := pathValue("repo", pattern, r.URL.Path)
-				username := pathValue("username", pattern, r.URL.Path)
-
-				collaborators := groups[owner][repo]
-				if collaborators == nil {
-					w.WriteHeader(http.StatusNotFound)
-					return
-				}
-
-				collaborators = slices.DeleteFunc(collaborators, func(u github.User) bool {
-					return u.GetLogin() == username
-				})
-				groups[owner][repo] = collaborators
+			collaborators := groups[owner][repo]
+			if collaborators == nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			if slices.ContainsFunc(collaborators, func(u github.User) bool { return u.GetLogin() == username }) {
+				// already exists; no need to add again
 				w.WriteHeader(http.StatusNoContent)
-				_, _ = w.Write([]byte{})
-			}),
-		),
+				return
+			}
+
+			ghUser := github.User{Login: github.String(username)}
+			groups[owner][repo] = append(collaborators, ghUser)
+			invite := github.CollaboratorInvitation{
+				Repo:    &github.Repository{Owner: &github.User{Login: github.String(owner)}, Name: github.String(repo)},
+				Invitee: &ghUser,
+			}
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write(MustMarshal(invite))
+		}),
+	)
+	deleteReposCollaboratorsByOwnerByRepoByUsernameHandler := WithRequestMatchHandler(
+		deleteReposCollaboratorsByOwnerByRepoByUsername,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			username := r.PathValue("username")
+
+			collaborators := groups[owner][repo]
+			if collaborators == nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+
+			collaborators = slices.DeleteFunc(collaborators, func(u github.User) bool {
+				return u.GetLogin() == username
+			})
+			groups[owner][repo] = collaborators
+			w.WriteHeader(http.StatusNoContent)
+			_, _ = w.Write([]byte{})
+		}),
+	)
+
+	httpClient := NewMockedHTTPClient(
+		getByIDHandler,
+		getOrgsByOrgHandler,
+		getOrgsReposByOrgHandler,
+		getOrgsMembershipsByOrgByUsernameHandler,
+		getReposContentsByOwnerByRepoByPathHandler,
+		getReposCollaboratorsByOwnerByRepoHandler,
+		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
+		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
 	)
 	return &GithubSCM{
 		logger:      logger,
 		client:      github.NewClient(httpClient),
-		clientV4:    githubv4.NewClient(httpClient),
 		providerURL: "github.com",
 	}
 }
