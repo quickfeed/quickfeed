@@ -82,7 +82,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 	getByIDHandler := WithRequestMatchHandler(
 		getByID,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			id := MustParseInt64(r.PathValue("id"))
+			id := MustParse[int64](r.PathValue("id"))
 			for _, org := range orgs {
 				if org.GetID() == id {
 					_, _ = w.Write(MustMarshal(org))

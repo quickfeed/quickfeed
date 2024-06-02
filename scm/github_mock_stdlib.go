@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-func MustParseInt64(s string) int64 {
+func MustParse[N ~int | ~int64](s string) N {
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		panic(err)
 	}
-	return int64(i)
+	return N(i)
 }
 
 func MustUnmarshal[T any](r io.Reader) T {
