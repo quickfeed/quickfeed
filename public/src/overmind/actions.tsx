@@ -1,6 +1,7 @@
-import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
+    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus,
+    Grade
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
@@ -165,8 +166,26 @@ export const setEnrollmentState = async ({ effects }: Context, enrollment: Enrol
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
 export const updateSubmission = async ({ state, effects }: Context, { owner, submission, status }: { owner: SubmissionOwner, submission: Submission | null, status: Submission_Status }): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
-    if (!submission || submission.status === status) {
+    if (!submission) {
         return
+    }
+
+    switch (owner.type) {
+        // Take no action if there is no change in status
+        case "ENROLLMENT":
+            // TODO: Checks if the user has the same status
+            // TODO: Take an extra look at this
+            if (getStatusByUser(submission, owner.id) === status) {
+                return
+            }
+            break
+        case "GROUP":
+            // TODO: Checks if all group members have the same status
+            // TODO: Take an extra look at this
+            if (hasAllStatus(submission, status)) {
+                return
+            }
+            break
     }
 
     /* Confirm that user really wants to change submission status */
@@ -174,20 +193,30 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
         return
     }
 
-    const clone = submission.clone()
-    clone.status = status
+    let clone = submission.clone()
+    
+    switch (owner.type) {
+        case "ENROLLMENT":
+            clone = setStatusByUser(clone, owner.id, status)
+            break
+        case "GROUP":
+            clone = setStatusAll(clone, status)
+            break
+    }
+    console.log(submission)
+    console.log(clone)
     /* Update the submission status */
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
-        status: clone.status,
+        grades: clone.Grades,
         released: submission.released,
         score: submission.score,
     })
     if (response.error) {
         return
     }
-    submission.status = status
+    submission.Grades = clone.Grades
     state.submissionsForCourse.update(owner, submission)
 }
 
