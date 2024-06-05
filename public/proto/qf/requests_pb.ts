@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
-import { Enrollment_UserStatus, Review, Submission_Status, Submissions } from "./types_pb.js";
+import { Enrollment_UserStatus, Grade, Review, Submissions } from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -415,9 +415,9 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
   released = false;
 
   /**
-   * @generated from field: qf.Submission.Status status = 5;
+   * @generated from field: repeated qf.Grade grades = 5;
    */
-  status = Submission_Status.NONE;
+  grades: Grade[] = [];
 
   constructor(data?: PartialMessage<UpdateSubmissionRequest>) {
     super();
@@ -431,7 +431,7 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
     { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 4, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+    { no: 5, name: "grades", kind: "message", T: Grade, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateSubmissionRequest {
@@ -652,11 +652,6 @@ export class RebuildRequest extends Message<RebuildRequest> {
 }
 
 /**
- * Void contains no fields. A server response with a Void still contains a gRPC status code,
- * which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
- * whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from
- * the server.
- *
  * @generated from message qf.Void
  */
 export class Void extends Message<Void> {

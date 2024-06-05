@@ -1292,9 +1292,9 @@ export class Submission extends Message<Submission> {
   released = false;
 
   /**
-   * @generated from field: qf.Submission.Status status = 8;
+   * @generated from field: repeated qf.Grade Grades = 8;
    */
-  status = Submission_Status.NONE;
+  Grades: Grade[] = [];
 
   /**
    * @generated from field: google.protobuf.Timestamp approvedDate = 9;
@@ -1337,7 +1337,7 @@ export class Submission extends Message<Submission> {
     { no: 5, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 6, name: "commitHash", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+    { no: 8, name: "Grades", kind: "message", T: Grade, repeated: true },
     { no: 9, name: "approvedDate", kind: "message", T: Timestamp },
     { no: 10, name: "reviews", kind: "message", T: Review, repeated: true },
     { no: 11, name: "BuildInfo", kind: "message", T: BuildInfo },
@@ -1427,6 +1427,55 @@ export class Submissions extends Message<Submissions> {
 
   static equals(a: Submissions | PlainMessage<Submissions> | undefined, b: Submissions | PlainMessage<Submissions> | undefined): boolean {
     return proto3.util.equals(Submissions, a, b);
+  }
+}
+
+/**
+ * @generated from message qf.Grade
+ */
+export class Grade extends Message<Grade> {
+  /**
+   * @generated from field: uint64 SubmissionID = 1;
+   */
+  SubmissionID = protoInt64.zero;
+
+  /**
+   * @generated from field: uint64 UserID = 2;
+   */
+  UserID = protoInt64.zero;
+
+  /**
+   * @generated from field: qf.Submission.Status Status = 3;
+   */
+  Status = Submission_Status.NONE;
+
+  constructor(data?: PartialMessage<Grade>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "qf.Grade";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "UserID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "Status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Grade {
+    return new Grade().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Grade {
+    return new Grade().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Grade {
+    return new Grade().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Grade | PlainMessage<Grade> | undefined, b: Grade | PlainMessage<Grade> | undefined): boolean {
+    return proto3.util.equals(Grade, a, b);
   }
 }
 
