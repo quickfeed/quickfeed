@@ -1,5 +1,5 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, Grade } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
 import { Timestamp } from "@bufbuild/protobuf"
@@ -137,14 +137,46 @@ export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.reviewers > 0
 }
 
-export const isApproved = (submission: Submission): boolean => { return submission.status === Submission_Status.APPROVED }
-export const isRevision = (submission: Submission): boolean => { return submission.status === Submission_Status.REVISION }
-export const isRejected = (submission: Submission): boolean => { return submission.status === Submission_Status.REJECTED }
+export const isApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
+export const isRevision = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REVISION) }
+export const isRejected = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REJECTED) }
+
+export const hasAllStatus = (submission: Submission, status: Submission_Status): boolean => {
+    return submission.Grades.every(grade => grade.Status === status)
+}
 
 export const hasReviews = (submission: Submission): boolean => { return submission.reviews.length > 0 }
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return obj.gradingBenchmarks.length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return benchmark.criteria.length > 0 }
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
+
+export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
+    if (!submission) {
+        return Submission_Status.NONE
+    }
+    const grade = submission.Grades.find(grade => grade.UserID === userID)
+    if (!grade) {
+        return Submission_Status.NONE
+    }
+    return grade.Status
+}
+
+export const setStatusByUser = (submission: Submission, userID: bigint, status: Submission_Status): Submission => {
+    const grades = submission.Grades.map(grade => {
+        if (grade.UserID === userID) {
+            return new Grade({ ...grade, Status: status })
+        }
+        return grade
+    })
+    return new Submission({ ...submission, Grades: grades })
+}
+
+export const setStatusAll = (submission: Submission, status: Submission_Status): Submission => {
+    const grades = submission.Grades.map(grade => {
+        return new Grade({ ...grade, Status: status })
+    })
+    return new Submission({ ...submission, Grades: grades })
+}
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): bigint => {
@@ -193,9 +225,9 @@ export const SubmissionStatus = {
 
 // TODO: This could possibly be done on the server. Would need to add a field to the proto submission/score model.
 /** assignmentStatusText returns a string that is used to tell the user what the status of their submission is */
-export const assignmentStatusText = (assignment: Assignment, submission: Submission): string => {
+export const assignmentStatusText = (assignment: Assignment, submission: Submission, status: Submission_Status): string => {
     // If the submission is not graded, return a descriptive text
-    if (submission.status === Submission_Status.NONE) {
+    if (status === Submission_Status.NONE) {
         // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
         if (!assignment.autoApprove && submission.score >= assignment.scoreLimit) {
             return "Awaiting approval"
@@ -205,7 +237,7 @@ export const assignmentStatusText = (assignment: Assignment, submission: Submiss
         }
     }
     // If the submission is graded, return the status
-    return SubmissionStatus[submission.status]
+    return SubmissionStatus[status]
 }
 
 // Helper functions for default values for new courses
