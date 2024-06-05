@@ -167,7 +167,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
-        status: submission.status,
+        grades: submission.Grades,
         released: clone.released,
         score: submission.score,
     })
