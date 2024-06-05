@@ -268,13 +268,15 @@ func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Subm
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
+func (s *QuickFeedService) updateSubmission(submissionID uint64, grades []*qf.Grade, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
 
-	submission.Status = status
+	for _, grade := range grades {
+		submission.SetGrade(grade.UserID, grade.Status)
+	}
 	submission.Released = released
 	if score > 0 {
 		submission.Score = score
@@ -290,6 +292,9 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 		Score:        request.ScoreLimit,
 		Released:     request.Release,
 	}
+
+	return s.db.UpdateSubmissions(query, true)
+}
 
 func (s *QuickFeedService) updateGrade(request *qf.Grade) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: request.SubmissionID})
@@ -338,7 +343,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		var totalApproved uint64
 		var submissionDate time.Time
 		for _, submission := range submissions.For(enrollment.ID) {
-			if submission.IsApproved() {
+			if submission.IsApproved(enrollment.UserID) {
 				totalApproved++
 			}
 			if enrollment.LastActivityDate == nil {
