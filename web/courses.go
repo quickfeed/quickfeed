@@ -290,10 +290,14 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 		Score:        request.ScoreLimit,
 		Released:     request.Release,
 	}
-	if request.Approve {
-		query.Status = qf.Submission_APPROVED
+
+func (s *QuickFeedService) updateGrade(request *qf.Grade) error {
+	submission, err := s.db.GetSubmission(&qf.Submission{ID: request.SubmissionID})
+	if err != nil {
+		return err
 	}
-	return s.db.UpdateSubmissions(query)
+	submission.SetGrade(request.UserID, request.Status)
+	return s.db.UpdateSubmission(submission)
 }
 
 // updateCourse updates an existing course.

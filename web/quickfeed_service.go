@@ -410,6 +410,14 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 	return &connect.Response[qf.Void]{}, nil
 }
 
+func (s *QuickFeedService) UpdateGrade(ctx context.Context, in *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
+	if err := s.updateGrade(in.Msg); err != nil {
+		s.logger.Errorf("UpdateGrade failed: %v", err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update grade"))
+	}
+	return &connect.Response[qf.Void]{}, nil
+}
+
 // CreateBenchmark adds a new grading benchmark for an assignment.
 func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
 	bm, err := s.createBenchmark(in.Msg)
