@@ -32,20 +32,24 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 // IsApproved returns an approved submission status if this assignment is already approved
 // for the latest submission, or if the score of the latest submission is sufficient
 // to autoapprove the assignment.
-func (a *Assignment) IsApproved(latest *Submission, score uint32) Submission_Status {
+func (a *Assignment) IsApproved(latest *Submission, score uint32) []*Grade {
 	switch {
+	// TODO: Check if returning nil is the correct behavior.
 	case latest.GetGroupID() > 0 && !a.IsGroupLab:
 		// If a group submits to a student assignment, ignore the submission.
-		return Submission_NONE
+		latest.SetGradeAll(Submission_NONE)
+		return latest.GetGrades()
 	case latest.GetUserID() > 0 && a.IsGroupLab:
 		// If a student submits to a group assignment, ignore the submission.
-		return Submission_NONE
+		latest.SetGradeAll(Submission_NONE)
+		return latest.GetGrades()
 	}
 	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
-		return Submission_APPROVED
+		latest.SetGradeAll(Submission_APPROVED)
+		return latest.GetGrades()
 	}
 	// keep existing status if already approved/revision/rejected
-	return latest.GetStatus()
+	return latest.GetGrades()
 }
 
 // CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
