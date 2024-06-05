@@ -29,10 +29,11 @@ const ManageSubmissionStatus = (): JSX.Element => {
     }
 
     const getButtonType = (status: Submission_Status): ButtonType => {
-        if (state.selectedSubmission?.status === status) {
-            return ButtonType.BUTTON
-        }
-        return ButtonType.OUTLINE
+        console.log(status)
+        //if (state.selectedSubmission?.status === status) {
+        return ButtonType.BUTTON
+        //}
+        //return ButtonType.OUTLINE
     }
 
     return (

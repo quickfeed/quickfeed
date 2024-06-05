@@ -1,7 +1,7 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import { Review, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
-import { Color, getFormattedTime, SubmissionStatus } from "../../Helpers"
+import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
@@ -24,8 +24,10 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
     const markReadyButton = <MarkReadyButton review={review} />
 
     const user = state.selectedEnrollment?.user
+    let status = Submission_Status.NONE
     let userLi = null
     if (user) {
+        status = getStatusByUser(submission, user.ID)
         // List item for the user that submitted the selected submission
         userLi = (
             <li className="list-group-item">
@@ -60,7 +62,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[submission.status] : { NoSubmission }}
+                {submission ? SubmissionStatus[status] : { NoSubmission }}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>

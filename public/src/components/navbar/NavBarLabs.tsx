@@ -5,6 +5,7 @@ import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useHistory } from "react-router"
 import { Status } from "../../consts"
+import { getStatusByUser } from "../../Helpers"
 
 
 const NavBarLabs = (): JSX.Element | null => {
@@ -20,7 +21,7 @@ const NavBarLabs = (): JSX.Element | null => {
         return (
             <div>
                 {assignment.isGroupLab && <i className={"fa fa-users"} title={"Group assignment"} />}
-                {submission?.status === Submission_Status.APPROVED && <i className="fa fa-check ml-2" />}
+                {getStatusByUser(submission, state.self.ID) === Submission_Status.APPROVED && <i className="fa fa-check ml-2" />}
             </div>
         )
     }
