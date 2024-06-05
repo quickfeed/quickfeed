@@ -66,7 +66,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        80,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -92,13 +92,14 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        0,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
+	t.Log(submissions[0], "a")
 }
 
 func TestGormDBUpdateSubmission(t *testing.T) {
@@ -130,7 +131,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -138,7 +139,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
-	if submissions[0].GetStatus() != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
@@ -152,10 +153,10 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if submissions[0].GetStatus() != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].Status = qf.Submission_APPROVED
+	submissions[0].SetGrade(user.ID, qf.Submission_APPROVED)
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +165,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetStatus() != qf.Submission_APPROVED {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_APPROVED {
 		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }
@@ -221,6 +222,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		ID:           gotSubmission.ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: gotSubmission.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -483,7 +485,7 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 	want := &qf.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 		BuildInfo: &score.BuildInfo{
@@ -495,6 +497,7 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 		t.Fatal(err)
 	}
 	want.ID = submission.ID
+	want.Grades[0].SubmissionID = submission.ID
 	want.BuildInfo.ID = 1
 	want.BuildInfo.SubmissionID = submission.ID
 	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
@@ -508,6 +511,7 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 	want.ID = submissions[0].ID
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+		t.Log(submissions[0], "a")
 	}
 }
 
