@@ -62,6 +62,7 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	}
 	// If we fail to get owners, we ignore sending on the stream.
 	if userIDs, err := runData.GetOwners(s.db); err == nil {
+		// TODO: Check how grades are sent to students.
 		s.streams.Submission.SendTo(submission, userIDs...)
 	}
 	return submission, nil

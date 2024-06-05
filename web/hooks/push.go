@@ -132,6 +132,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 	}
 	// If we fail to get owners, we ignore sending on the stream.
 	if userIDs, err := runData.GetOwners(wh.db); err == nil {
+		// TODO: Check how grades are sent to students.
 		wh.streams.Submission.SendTo(submission, userIDs...)
 	}
 	// Non-default branch indicates push to a group repo.
