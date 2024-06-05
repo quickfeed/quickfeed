@@ -4,8 +4,46 @@ import (
 	"time"
 )
 
-func (s *Submission) IsApproved() bool {
-	return s.GetStatus() == Submission_APPROVED
+func (s *Submission) IsApproved(userID uint64) bool {
+	for _, grade := range s.GetGrades() {
+		if grade.GetUserID() == userID && grade.GetStatus() == Submission_APPROVED {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Submission) IsAllApproved() bool {
+	for _, grade := range s.GetGrades() {
+		if grade.GetStatus() != Submission_APPROVED {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Submission) GetStatusByUser(userID uint64) Submission_Status {
+	for idx, grade := range s.GetGrades() {
+		if grade.GetUserID() == userID {
+			return s.Grades[idx].GetStatus()
+		}
+	}
+	return Submission_NONE
+}
+
+func (s *Submission) SetGrade(userID uint64, status Submission_Status) {
+	for idx, grade := range s.GetGrades() {
+		if grade.GetUserID() == userID {
+			s.Grades[idx].Status = status
+			return
+		}
+	}
+}
+
+func (s *Submission) SetGradeAll(status Submission_Status) {
+	for idx := range s.Grades {
+		s.Grades[idx].Status = status
+	}
 }
 
 // NewestSubmissionDate returns the submission's submission date if newer than the provided date.
