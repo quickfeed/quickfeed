@@ -191,6 +191,18 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     state.submissionsForCourse.update(owner, submission)
 }
 
+export const updateGrade = async ({ state, effects }: Context, { grade }: { grade: Grade }): Promise<void> => {
+    const response = await effects.api.client.updateGrade(grade)
+    if (response.error) {
+        return
+    }
+    const submission = state.submissionsForCourse.ByID(grade.SubmissionID)
+    if (submission) {
+        setStatusByUser(submission, grade.UserID, grade.Status)
+    }
+
+}
+
 /** updateEnrollment updates an enrollment status with the given status */
 export const updateEnrollment = async ({ state, actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment_UserStatus }): Promise<void> => {
     if (!enrollment.user) {
