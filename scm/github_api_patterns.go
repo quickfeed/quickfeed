@@ -13,4 +13,5 @@ const (
 	patchIssueByOwnerByRepoByIssueNumber            = "PATCH /repos/{owner}/{repo}/issues/{issue_number}"
 	getIssueByOwnerByRepoByIssueNumber              = "GET /repos/{owner}/{repo}/issues/{issue_number}"
 	getIssuesByOwnerByRepo                          = "GET /repos/{owner}/{repo}/issues"
+	postIssueCommentByOwnerByRepoByIssueNumber      = "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
 )

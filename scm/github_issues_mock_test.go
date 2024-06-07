@@ -226,3 +226,56 @@ func TestMockGetIssues(t *testing.T) {
 		})
 	}
 }
+
+func TestMockCreateIssueComment(t *testing.T) {
+	tests := []struct {
+		name          string
+		opt           *IssueCommentOptions
+		wantCommentID int64
+		wantErr       bool
+	}{
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{}, wantCommentID: 0, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Body: "Hello"}, wantCommentID: 0, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Body: "Hello"}, wantCommentID: 0, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs"}, wantCommentID: 0, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Body: "Hello"}, wantCommentID: 0, wantErr: true},
+
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"}, wantCommentID: 1, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"}, wantCommentID: 2, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"}, wantCommentID: 3, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"}, wantCommentID: 4, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"}, wantCommentID: 5, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"}, wantCommentID: 6, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 1, Body: "Hello 1.1"}, wantCommentID: 7, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 1, Body: "Hello 1.2"}, wantCommentID: 8, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 1, Body: "Hello 1.3"}, wantCommentID: 9, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.1"}, wantCommentID: 10, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.2"}, wantCommentID: 11, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.3"}, wantCommentID: 12, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"}, wantCommentID: 13, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"}, wantCommentID: 14, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"}, wantCommentID: 15, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"}, wantCommentID: 16, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"}, wantCommentID: 17, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"}, wantCommentID: 18, wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, tt := range tests {
+		name := qtest.Name(
+			tt.name,
+			[]string{"Organization", "Repository", "Number", "Body"},
+			tt.opt.Organization, tt.opt.Repository, tt.opt.Number, tt.opt.Body,
+		)
+		t.Run(name, func(t *testing.T) {
+			commentID, err := s.CreateIssueComment(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateIssueComment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if commentID != tt.wantCommentID {
+				t.Errorf("CreateIssueComment() = %v, want %v", commentID, tt.wantCommentID)
+			}
+		})
+	}
+}

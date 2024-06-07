@@ -54,11 +54,13 @@ var (
 // MockedGithubSCM implements the SCM interface.
 type MockedGithubSCM struct {
 	*GithubSCM
-	orgs    []github.Organization
-	repos   []github.Repository
-	members []github.Membership
-	groups  map[string]map[string][]github.User  // map: owner -> repo -> collaborators
-	issues  map[string]map[string][]github.Issue // map: owner -> repo -> issues
+	orgs      []github.Organization
+	repos     []github.Repository
+	members   []github.Membership
+	groups    map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
+	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
+	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
+	commentID int64
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
@@ -133,6 +135,17 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				{ID: github.Int64(6), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &barMelingRepo},
 			},
 		},
+	}
+	// initial empty comments map: owner -> repo -> issue ID -> comments
+	s.comments = make(map[string]map[string]map[int64][]github.IssueComment)
+	for org, repo := range s.issues {
+		s.comments[org] = make(map[string]map[int64][]github.IssueComment)
+		for re, issues := range repo {
+			s.comments[org][re] = make(map[int64][]github.IssueComment)
+			for _, issue := range issues {
+				s.comments[org][re][issue.GetID()] = []github.IssueComment{}
+			}
+		}
 	}
 
 	matchFn := func(orgName string, f func(github.Organization)) bool {
@@ -307,6 +320,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 					return
 				}
 			}
+			w.WriteHeader(http.StatusNotFound)
 		}),
 	)
 	patchIssueByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
@@ -331,6 +345,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 					return
 				}
 			}
+			w.WriteHeader(http.StatusNotFound)
 		}),
 	)
 	getIssueByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
@@ -364,6 +379,27 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			_, _ = w.Write(MustMarshal(issues))
 		}),
 	)
+	postIssueCommentByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
+		postIssueCommentByOwnerByRepoByIssueNumber,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			issueNumber := github.Int(MustParse[int](r.PathValue("issue_number")))
+			comment := MustUnmarshal[github.IssueComment](r.Body)
+
+			for _, ghIssue := range s.issues[owner][repo] {
+				if *ghIssue.Number == *issueNumber {
+					s.commentID++
+					comment.ID = github.Int64(s.commentID)
+					s.comments[owner][repo][*ghIssue.ID] = append(s.comments[owner][repo][*ghIssue.ID], comment)
+					w.WriteHeader(http.StatusCreated)
+					_, _ = w.Write(MustMarshal(comment))
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
 
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
@@ -378,6 +414,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		patchIssueByOwnerByRepoByIssueNumberHandler,
 		getIssueByOwnerByRepoByIssueNumberHandler,
 		getIssuesByOwnerByRepoHandler,
+		postIssueCommentByOwnerByRepoByIssueNumberHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		logger:      logger,
