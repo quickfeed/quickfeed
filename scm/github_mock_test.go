@@ -36,6 +36,19 @@ var (
 	leslie  = github.User{Login: github.String("leslie")}
 	lamport = github.User{Login: github.String("lamport")}
 	jostein = github.User{Login: github.String("jostein")}
+	foo     = github.User{Login: github.String("foo")} // organization (user/owner)
+	bar     = github.User{Login: github.String("bar")} // organization (user/owner)
+)
+
+var (
+	orgFoo = github.Organization{ID: github.Int64(123), Login: foo.Login}
+	orgBar = github.Organization{ID: github.Int64(456), Login: bar.Login}
+)
+
+var (
+	fooMelingRepo = github.Repository{Organization: &orgFoo, Owner: &foo, Name: github.String("meling-labs")}
+	barMelingRepo = github.Repository{Organization: &orgBar, Owner: &bar, Name: github.String("meling-labs")}
+	fooJosieRepo  = github.Repository{Organization: &orgFoo, Owner: &foo, Name: github.String("josie-labs")}
 )
 
 // MockedGithubSCM implements the SCM interface.
@@ -44,7 +57,8 @@ type MockedGithubSCM struct {
 	orgs    []github.Organization
 	repos   []github.Repository
 	members []github.Membership
-	groups  map[string]map[string][]github.User // map: owner -> group_repo -> collaborators
+	groups  map[string]map[string][]github.User  // map: owner -> repo -> collaborators
+	issues  map[string]map[string][]github.Issue // map: owner -> repo -> issues
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
@@ -66,24 +80,21 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 	}
 
 	// setup mock data based with partial organizations, repositories, memberships, and groups
-	orgs := []github.Organization{
-		{ID: github.Int64(123), Login: github.String("foo")},
-		{ID: github.Int64(456), Login: github.String("bar")},
-	}
+	orgs := []github.Organization{orgFoo, orgBar}
 	// initial memberships: user -> role; two members; one owner, one member
 	s.members = []github.Membership{
-		{Organization: &orgs[0], User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &orgs[1], User: &meling, Role: github.String(OrgMember)},
+		{Organization: &orgFoo, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &orgBar, User: &meling, Role: github.String(OrgMember)},
 	}
 	for _, org := range orgs {
 		s.orgs = append(s.orgs, org)
 	}
 	// initial repositories: for organization foo; bar has no repositories
 	repos := []github.Repository{
-		{Organization: &orgs[0], Name: github.String("info")},
-		{Organization: &orgs[0], Name: github.String("assignments")},
-		{Organization: &orgs[0], Name: github.String("tests")},
-		{Organization: &orgs[0], Name: github.String("meling-labs")},
+		{Organization: &orgFoo, Name: github.String("info")},
+		{Organization: &orgFoo, Name: github.String("assignments")},
+		{Organization: &orgFoo, Name: github.String("tests")},
+		{Organization: &orgFoo, Name: github.String("meling-labs")},
 	}
 	for _, repo := range repos {
 		s.repos = append(s.repos, repo)
@@ -101,6 +112,26 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		"bar": {
 			"groupY": {leslie},
 			"groupZ": {},
+		},
+	}
+
+	// initial issues map: owner -> repo -> issues
+	s.issues = map[string]map[string][]github.Issue{
+		"foo": {
+			"meling-labs": {
+				{ID: github.Int64(1), Number: github.Int(1), Title: github.String("First"), Body: github.String("xyz"), Repository: &fooMelingRepo},
+				{ID: github.Int64(2), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &fooMelingRepo},
+			},
+			"josie-labs": {
+				{ID: github.Int64(3), Number: github.Int(1), Title: github.String("First"), Body: github.String("xyz"), Repository: &fooJosieRepo},
+				{ID: github.Int64(4), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &fooJosieRepo},
+			},
+		},
+		"bar": {
+			"meling-labs": {
+				{ID: github.Int64(5), Number: github.Int(1), Title: github.String("First"), Body: github.String("xyz"), Repository: &barMelingRepo},
+				{ID: github.Int64(6), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &barMelingRepo},
+			},
 		},
 	}
 
@@ -255,6 +286,54 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			_, _ = w.Write([]byte{})
 		}),
 	)
+	postReposIssuesByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposIssuesByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			issue := MustUnmarshal[github.Issue](r.Body)
+
+			for i, ghIssue := range s.issues[owner][repo] {
+				if *ghIssue.Title == *issue.Title && *ghIssue.Body == *issue.Body {
+					issue.ID = github.Int64(*ghIssue.ID)
+					issue.Number = github.Int(*ghIssue.Number)
+					issue.Repository = &github.Repository{
+						Owner: &github.User{Login: github.String(owner)},
+						Name:  github.String(repo),
+					}
+					s.issues[owner][repo][i] = issue
+					w.WriteHeader(http.StatusCreated)
+					_, _ = w.Write(MustMarshal(issue))
+					return
+				}
+			}
+		}),
+	)
+	patchReposIssuesByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
+		patchReposIssuesByOwnerByRepoByIssueNumber,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			issueNumber := github.Int(MustParse[int](r.PathValue("issue_number")))
+			issue := MustUnmarshal[github.Issue](r.Body)
+
+			for i, ghIssue := range s.issues[owner][repo] {
+				if *ghIssue.Number == *issueNumber {
+					issue.ID = ghIssue.ID
+					issue.Number = issueNumber
+					issue.Repository = &github.Repository{
+						Owner: &github.User{Login: github.String(owner)},
+						Name:  github.String(repo),
+					}
+					s.issues[owner][repo][i] = issue
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write(MustMarshal(issue))
+					return
+				}
+			}
+		}),
+	)
+
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
 		getOrgsByOrgHandler,
@@ -264,6 +343,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		getReposCollaboratorsByOwnerByRepoHandler,
 		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
 		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
+		postReposIssuesByOwnerByRepoHandler,
+		patchReposIssuesByOwnerByRepoByIssueNumberHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		logger:      logger,

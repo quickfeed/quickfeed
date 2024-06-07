@@ -2,11 +2,9 @@ package scm
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 )
 
@@ -50,36 +48,7 @@ func TestMockCreateIssue(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "bar", Repository: "meling-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["bar"]["meling-labs"][1], wantErr: false},
 	}
 
-	postReposIssuesByOwnerByRepoHandler := WithRequestMatchHandler(
-		postReposIssuesByOwnerByRepo,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-
-			issue := MustUnmarshal[github.Issue](r.Body)
-			for _, wantIssue := range wantIssues[owner][repo] {
-				if wantIssue.Title == *issue.Title && wantIssue.Body == *issue.Body {
-					issue.ID = github.Int64(int64(wantIssue.ID))
-					issue.Number = github.Int(wantIssue.Number)
-					issue.Repository = &github.Repository{
-						Owner: &github.User{Login: github.String(owner)},
-						Name:  github.String(repo),
-					}
-					w.WriteHeader(http.StatusCreated)
-					_, _ = w.Write(MustMarshal(issue))
-					return
-				}
-			}
-		}),
-	)
-	httpClient := NewMockedHTTPClient(
-		postReposIssuesByOwnerByRepoHandler,
-	)
-	s := &GithubSCM{
-		logger:      qtest.Logger(t),
-		client:      github.NewClient(httpClient),
-		providerURL: "github.com",
-	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Title", "Body", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Title, tt.opt.Body, tt.opt.Number)
 		t.Run(name, func(t *testing.T) {
@@ -88,7 +57,7 @@ func TestMockCreateIssue(t *testing.T) {
 				t.Errorf("CreateIssue() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if diff := cmp.Diff(issue, tt.wantIssue); diff != "" {
+			if diff := cmp.Diff(tt.wantIssue, issue); diff != "" {
 				t.Errorf("CreateIssue() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -96,24 +65,6 @@ func TestMockCreateIssue(t *testing.T) {
 }
 
 func TestMockUpdateIssue(t *testing.T) {
-	scmIssues := map[string]map[string][]*Issue{
-		"foo": {
-			"meling-labs": {
-				{ID: 1, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
-				{ID: 2, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
-			},
-			"josie-labs": {
-				{ID: 3, Number: 1, Title: "First", Body: "xyz", Repository: "josie-labs"},
-				{ID: 4, Number: 2, Title: "Second", Body: "abc", Repository: "josie-labs"},
-			},
-		},
-		"bar": {
-			"meling-labs": {
-				{ID: 5, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
-				{ID: 6, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
-			},
-		},
-	}
 	wantIssues := map[string]map[string][]*Issue{
 		"foo": {
 			"meling-labs": {
@@ -153,37 +104,7 @@ func TestMockUpdateIssue(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "bar", Repository: "meling-labs", Title: "Second 2", Body: "Second Body", Number: 2}, wantIssue: wantIssues["bar"]["meling-labs"][1], wantErr: false},
 	}
 
-	patchReposIssuesByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
-		patchReposIssuesByOwnerByRepoByIssueNumber,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			number := MustParse[int](r.PathValue("issue_number"))
-
-			issue := MustUnmarshal[github.Issue](r.Body)
-			for _, scmIssue := range scmIssues[owner][repo] {
-				if scmIssue.Number == number {
-					issue.ID = github.Int64(int64(scmIssue.ID))
-					issue.Number = github.Int(number)
-					issue.Repository = &github.Repository{
-						Owner: &github.User{Login: github.String(owner)},
-						Name:  github.String(repo),
-					}
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write(MustMarshal(issue))
-					return
-				}
-			}
-		}),
-	)
-	httpClient := NewMockedHTTPClient(
-		patchReposIssuesByOwnerByRepoByIssueNumberHandler,
-	)
-	s := &GithubSCM{
-		logger:      qtest.Logger(t),
-		client:      github.NewClient(httpClient),
-		providerURL: "github.com",
-	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Title", "Body", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Title, tt.opt.Body, tt.opt.Number)
 		t.Run(name, func(t *testing.T) {
