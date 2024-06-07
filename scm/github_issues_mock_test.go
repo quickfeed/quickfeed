@@ -175,3 +175,54 @@ func TestMockGetIssue(t *testing.T) {
 		})
 	}
 }
+
+func TestMockGetIssues(t *testing.T) {
+	wantIssues := map[string]map[string][]*Issue{
+		"foo": {
+			"meling-labs": {
+				{ID: 1, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
+				{ID: 2, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
+			},
+			"josie-labs": {
+				{ID: 3, Number: 1, Title: "First", Body: "xyz", Repository: "josie-labs"},
+				{ID: 4, Number: 2, Title: "Second", Body: "abc", Repository: "josie-labs"},
+			},
+		},
+		"bar": {
+			"meling-labs": {
+				{ID: 5, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
+				{ID: 6, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
+			},
+		},
+	}
+
+	tests := []struct {
+		name       string
+		opt        *RepositoryOptions
+		wantIssues []*Issue
+		wantErr    bool
+	}{
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantIssues: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantIssues: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "meling-labs"}, wantIssues: nil, wantErr: true},
+
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantIssues: wantIssues["foo"]["meling-labs"], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, wantIssues: wantIssues["foo"]["josie-labs"], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, wantIssues: wantIssues["bar"]["meling-labs"], wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			issues, err := s.GetIssues(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetIssues() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(issues, tt.wantIssues); diff != "" {
+				t.Errorf("GetIssues() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

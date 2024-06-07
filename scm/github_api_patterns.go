@@ -9,7 +9,8 @@ const (
 	getReposCollaboratorsByOwnerByRepo              = "GET /repos/{owner}/{repo}/collaborators"
 	putReposCollaboratorsByOwnerByRepoByUsername    = "PUT /repos/{owner}/{repo}/collaborators/{username}"
 	deleteReposCollaboratorsByOwnerByRepoByUsername = "DELETE /repos/{owner}/{repo}/collaborators/{username}"
-	postReposIssuesByOwnerByRepo                    = "POST /repos/{owner}/{repo}/issues"
-	patchReposIssuesByOwnerByRepoByIssueNumber      = "PATCH /repos/{owner}/{repo}/issues/{issue_number}"
-	getReposIssuesByOwnerByRepoByIssueNumber        = "GET /repos/{owner}/{repo}/issues/{issue_number}"
+	postIssueByOwnerByRepo                          = "POST /repos/{owner}/{repo}/issues"
+	patchIssueByOwnerByRepoByIssueNumber            = "PATCH /repos/{owner}/{repo}/issues/{issue_number}"
+	getIssueByOwnerByRepoByIssueNumber              = "GET /repos/{owner}/{repo}/issues/{issue_number}"
+	getIssuesByOwnerByRepo                          = "GET /repos/{owner}/{repo}/issues"
 )
