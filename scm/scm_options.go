@@ -100,7 +100,7 @@ func (opt *IssueOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
 }
 
-// RequestReviewersOptions contains information on how to create or edit a pull request comment.
+// IssueCommentOptions contains information for creating or updating an IssueComment.
 type IssueCommentOptions struct {
 	Organization string
 	Repository   string

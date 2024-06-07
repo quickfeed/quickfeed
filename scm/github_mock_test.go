@@ -400,6 +400,28 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			w.WriteHeader(http.StatusNotFound)
 		}),
 	)
+	patchIssueCommentByOwnerByRepoByCommentIDHandler := WithRequestMatchHandler(
+		patchIssueCommentByOwnerByRepoByCommentID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			commentID := github.Int64(MustParse[int64](r.PathValue("comment_id")))
+			comment := MustUnmarshal[github.IssueComment](r.Body)
+
+			for _, ghIssue := range s.issues[owner][repo] {
+				for i, ghComment := range s.comments[owner][repo][*ghIssue.ID] {
+					if *ghComment.ID == *commentID {
+						comment.ID = ghComment.ID
+						s.comments[owner][repo][*ghIssue.ID][i] = comment
+						w.WriteHeader(http.StatusOK)
+						_, _ = w.Write(MustMarshal(comment))
+						return
+					}
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
 
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
@@ -415,6 +437,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		getIssueByOwnerByRepoByIssueNumberHandler,
 		getIssuesByOwnerByRepoHandler,
 		postIssueCommentByOwnerByRepoByIssueNumberHandler,
+		patchIssueCommentByOwnerByRepoByCommentIDHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		logger:      logger,

@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestMockCreateIssue(t *testing.T) {
@@ -275,6 +277,93 @@ func TestMockCreateIssueComment(t *testing.T) {
 			}
 			if commentID != tt.wantCommentID {
 				t.Errorf("CreateIssueComment() = %v, want %v", commentID, tt.wantCommentID)
+			}
+		})
+	}
+}
+
+func TestMockUpdateIssueComment(t *testing.T) {
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	initialComments := []IssueCommentOptions{
+		{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"},
+		{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"},
+		{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"},
+		{Organization: "foo", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"},
+		{Organization: "foo", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"},
+		{Organization: "foo", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"},
+		{Organization: "foo", Repository: "josie-labs", Number: 1, Body: "Hello 1.1"},
+		{Organization: "foo", Repository: "josie-labs", Number: 1, Body: "Hello 1.2"},
+		{Organization: "foo", Repository: "josie-labs", Number: 1, Body: "Hello 1.3"},
+		{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.1"},
+		{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.2"},
+		{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.3"},
+		{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"},
+		{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"},
+		{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"},
+		{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"},
+		{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"},
+		{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"},
+	}
+	for _, comment := range initialComments {
+		if _, err := s.CreateIssueComment(context.Background(), &comment); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	tests := []struct {
+		name        string
+		opt         *IssueCommentOptions
+		wantComment github.IssueComment
+		wantErr     bool
+	}{
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Body: "Hello"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Body: "Hello"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Body: "Hello"}, wantErr: true},
+
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 1, Body: "World 1.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(1), Body: github.String("World 1.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 2, Body: "World 1.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(2), Body: github.String("World 1.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 3, Body: "World 1.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(3), Body: github.String("World 1.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 4, Body: "World 2.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(4), Body: github.String("World 2.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 5, Body: "World 2.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(5), Body: github.String("World 2.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 6, Body: "World 2.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(6), Body: github.String("World 2.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 7, Body: "World 1.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(7), Body: github.String("World 1.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 8, Body: "World 1.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(8), Body: github.String("World 1.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 9, Body: "World 1.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(9), Body: github.String("World 1.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 10, Body: "World 2.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(10), Body: github.String("World 2.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 11, Body: "World 2.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(11), Body: github.String("World 2.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 12, Body: "World 2.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(12), Body: github.String("World 2.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 13, Body: "World 1.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(13), Body: github.String("World 1.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 14, Body: "World 1.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(14), Body: github.String("World 1.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 15, Body: "World 1.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(15), Body: github.String("World 1.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 16, Body: "World 2.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(16), Body: github.String("World 2.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 17, Body: "World 2.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(17), Body: github.String("World 2.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 18, Body: "World 2.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(18), Body: github.String("World 2.3")}},
+	}
+	for _, tt := range tests {
+		name := qtest.Name(
+			tt.name,
+			[]string{"Organization", "Repository", "CommentID", "Body"},
+			tt.opt.Organization, tt.opt.Repository, tt.opt.CommentID, tt.opt.Body,
+		)
+		t.Run(name, func(t *testing.T) {
+			err := s.UpdateIssueComment(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateIssueComment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+			// verify the state of the issue comment
+			for _, comment := range s.comments[tt.opt.Organization][tt.opt.Repository][int64(tt.opt.Number)] {
+				if *comment.ID == tt.opt.CommentID {
+					if diff := cmp.Diff(tt.wantComment, comment, protocmp.Transform()); diff != "" {
+						t.Errorf("UpdateIssueComment() mismatch (-want +got):\n%s", diff)
+					}
+					return
+				}
 			}
 		})
 	}
