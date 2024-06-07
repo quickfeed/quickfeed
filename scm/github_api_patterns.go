@@ -11,4 +11,5 @@ const (
 	deleteReposCollaboratorsByOwnerByRepoByUsername = "DELETE /repos/{owner}/{repo}/collaborators/{username}"
 	postReposIssuesByOwnerByRepo                    = "POST /repos/{owner}/{repo}/issues"
 	patchReposIssuesByOwnerByRepoByIssueNumber      = "PATCH /repos/{owner}/{repo}/issues/{issue_number}"
+	getReposIssuesByOwnerByRepoByIssueNumber        = "GET /repos/{owner}/{repo}/issues/{issue_number}"
 )

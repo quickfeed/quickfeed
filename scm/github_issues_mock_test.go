@@ -119,3 +119,59 @@ func TestMockUpdateIssue(t *testing.T) {
 		})
 	}
 }
+
+func TestMockGetIssue(t *testing.T) {
+	wantIssues := map[string]map[string][]*Issue{
+		"foo": {
+			"meling-labs": {
+				{ID: 1, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
+				{ID: 2, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
+			},
+			"josie-labs": {
+				{ID: 3, Number: 1, Title: "First", Body: "xyz", Repository: "josie-labs"},
+				{ID: 4, Number: 2, Title: "Second", Body: "abc", Repository: "josie-labs"},
+			},
+		},
+		"bar": {
+			"meling-labs": {
+				{ID: 5, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
+				{ID: 6, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
+			},
+		},
+	}
+
+	tests := []struct {
+		name      string
+		opt       *RepositoryOptions
+		number    int
+		wantIssue *Issue
+		wantErr   bool
+	}{
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantIssue: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantIssue: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "meling-labs"}, wantIssue: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantIssue: nil, wantErr: true},
+
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 1, wantIssue: wantIssues["foo"]["meling-labs"][0], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 2, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 1, wantIssue: wantIssues["foo"]["josie-labs"][0], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 2, wantIssue: wantIssues["foo"]["josie-labs"][1], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, number: 1, wantIssue: wantIssues["bar"]["meling-labs"][0], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, number: 2, wantIssue: wantIssues["bar"]["meling-labs"][1], wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			issue, err := s.GetIssue(context.Background(), tt.opt, tt.number)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetIssue() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(issue, tt.wantIssue); diff != "" {
+				t.Errorf("GetIssue() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

@@ -333,6 +333,22 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			}
 		}),
 	)
+	getReposIssuesByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
+		getReposIssuesByOwnerByRepoByIssueNumber,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			issueNumber := github.Int(MustParse[int](r.PathValue("issue_number")))
+
+			for _, issue := range s.issues[owner][repo] {
+				if *issue.Number == *issueNumber {
+					_, _ = w.Write(MustMarshal(issue))
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
 
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
@@ -345,6 +361,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
 		postReposIssuesByOwnerByRepoHandler,
 		patchReposIssuesByOwnerByRepoByIssueNumberHandler,
+		getReposIssuesByOwnerByRepoByIssueNumberHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		logger:      logger,
