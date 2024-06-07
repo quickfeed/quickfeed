@@ -368,3 +368,37 @@ func TestMockUpdateIssueComment(t *testing.T) {
 		})
 	}
 }
+
+func TestMockRequestReviewers(t *testing.T) {
+	tests := []struct {
+		name          string
+		opt           *RequestReviewersOptions
+		wantErr       bool
+		wantReviewers []string
+	}{
+		{name: "IncompleteRequest", opt: &RequestReviewersOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RequestReviewersOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RequestReviewersOptions{Repository: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+
+		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Reviewers: []string{"meling", "leslie"}}, wantErr: false, wantReviewers: []string{"meling", "leslie"}},
+		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Number: 2, Reviewers: []string{"lamport", "jostein"}}, wantErr: false, wantReviewers: []string{"lamport", "jostein"}},
+		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "josie-labs", Number: 1, Reviewers: []string{"meling", "leslie"}}, wantErr: false, wantReviewers: []string{"meling", "leslie"}},
+		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Reviewers: []string{"meling", "jostein"}}, wantErr: false, wantReviewers: []string{"meling", "jostein"}},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Number)
+		t.Run(name, func(t *testing.T) {
+			err := s.RequestReviewers(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RequestReviewers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(tt.wantReviewers, s.reviewers[tt.opt.Organization][tt.opt.Repository][tt.opt.Number].Reviewers); diff != "" {
+				t.Errorf("RequestReviewers() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

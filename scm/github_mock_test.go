@@ -60,6 +60,7 @@ type MockedGithubSCM struct {
 	groups    map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
 	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
 	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
+	reviewers map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
 	commentID int64
 }
 
@@ -146,6 +147,19 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				s.comments[org][re][issue.GetID()] = []github.IssueComment{}
 			}
 		}
+	}
+	// initial reviewers map: owner -> repo -> pull requests ID -> reviewers
+	s.reviewers = map[string]map[string]map[int]github.ReviewersRequest{
+		"foo": {
+			"meling-labs": {
+				1: {Reviewers: []string{"meling", "leslie"}},
+				2: {Reviewers: []string{"lamport", "jostein"}},
+			},
+			"josie-labs": {
+				1: {Reviewers: []string{"meling", "leslie"}},
+				2: {Reviewers: []string{"lamport", "jostein"}},
+			},
+		},
 	}
 
 	matchFn := func(orgName string, f func(github.Organization)) bool {
@@ -422,6 +436,31 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			w.WriteHeader(http.StatusNotFound)
 		}),
 	)
+	postPullReviewersByOwnerByRepoByPullNumberHandler := WithRequestMatchHandler(
+		postPullReviewersByOwnerByRepoByPullNumber,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			pullNumber := MustParse[int](r.PathValue("pull_number"))
+			reviewers := MustUnmarshal[github.ReviewersRequest](r.Body)
+
+			if _, exists := s.reviewers[owner][repo][pullNumber]; !exists {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			s.reviewers[owner][repo][pullNumber] = reviewers
+			users := make([]*github.User, 0, len(reviewers.Reviewers))
+			for _, reviewer := range reviewers.Reviewers {
+				users = append(users, &github.User{Login: github.String(reviewer)})
+			}
+			pr := github.PullRequest{
+				Number:             github.Int(pullNumber),
+				RequestedReviewers: users,
+			}
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write(MustMarshal(pr))
+		}),
+	)
 
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
@@ -438,6 +477,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		getIssuesByOwnerByRepoHandler,
 		postIssueCommentByOwnerByRepoByIssueNumberHandler,
 		patchIssueCommentByOwnerByRepoByCommentIDHandler,
+		postPullReviewersByOwnerByRepoByPullNumberHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		logger:      logger,

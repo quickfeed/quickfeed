@@ -15,4 +15,5 @@ const (
 	getIssuesByOwnerByRepo                          = "GET /repos/{owner}/{repo}/issues"
 	postIssueCommentByOwnerByRepoByIssueNumber      = "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
 	patchIssueCommentByOwnerByRepoByCommentID       = "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"
+	postPullReviewersByOwnerByRepoByPullNumber      = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
 )
