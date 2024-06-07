@@ -38,39 +38,74 @@ var (
 	jostein = github.User{Login: github.String("jostein")}
 )
 
-// map for testing UpdateGroupMembers; owner -> group_repo -> collaborators
-var groups = map[string]map[string][]github.User{
-	"foo": {
-		"info":        {},
-		"assignments": {},
-		"tests":       {},
-		"meling-labs": {},
-		"groupX":      {lamport},
-	},
-	"bar": {
-		"groupY": {leslie},
-		"groupZ": {},
-	},
+// MockedGithubSCM implements the SCM interface.
+type MockedGithubSCM struct {
+	*GithubSCM
+	orgs    []github.Organization
+	repos   []github.Repository
+	members []github.Membership
+	groups  map[string]map[string][]github.User // map: owner -> group_repo -> collaborators
 }
 
-// NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
+// NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
+func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
+	s := &MockedGithubSCM{}
+
+	// setup mock data based on qtest.MockCourses (complete course organizations and four repositories)
+	mockRepos := []string{"info", "assignments", "tests", qf.StudentRepoName("meling")}
+	for _, course := range qtest.MockCourses {
+		ghOrg := github.Organization{
+			ID:    github.Int64(int64(course.ScmOrganizationID)),
+			Login: github.String(course.ScmOrganizationName),
+		}
+		s.orgs = append(s.orgs, ghOrg)
+		for _, repo := range mockRepos {
+			ghRepo := github.Repository{Organization: &ghOrg, Name: github.String(repo)}
+			s.repos = append(s.repos, ghRepo)
+		}
+	}
+
+	// setup mock data based with partial organizations, repositories, memberships, and groups
 	orgs := []github.Organization{
 		{ID: github.Int64(123), Login: github.String("foo")},
 		{ID: github.Int64(456), Login: github.String("bar")},
 	}
+	// initial memberships: user -> role; two members; one owner, one member
+	s.members = []github.Membership{
+		{Organization: &orgs[0], User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &orgs[1], User: &meling, Role: github.String(OrgMember)},
+	}
+	for _, org := range orgs {
+		s.orgs = append(s.orgs, org)
+	}
+	// initial repositories: for organization foo; bar has no repositories
 	repos := []github.Repository{
 		{Organization: &orgs[0], Name: github.String("info")},
 		{Organization: &orgs[0], Name: github.String("assignments")},
 		{Organization: &orgs[0], Name: github.String("tests")},
 		{Organization: &orgs[0], Name: github.String("meling-labs")},
 	}
-	memberships := []github.Membership{
-		{Organization: &orgs[0], User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &orgs[1], User: &meling, Role: github.String(OrgMember)},
+	for _, repo := range repos {
+		s.repos = append(s.repos, repo)
 	}
+
+	// initial groups map: owner -> repo -> collaborators (only group repos should have collaborators)
+	s.groups = map[string]map[string][]github.User{
+		"foo": {
+			"info":        {},
+			"assignments": {},
+			"tests":       {},
+			"meling-labs": {},
+			"groupX":      {lamport},
+		},
+		"bar": {
+			"groupY": {leslie},
+			"groupZ": {},
+		},
+	}
+
 	matchFn := func(orgName string, f func(github.Organization)) bool {
-		for _, org := range orgs {
+		for _, org := range s.orgs {
 			if org.GetLogin() == orgName {
 				f(org)
 				return true
@@ -83,7 +118,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		getByID,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			id := MustParse[int64](r.PathValue("id"))
-			for _, org := range orgs {
+			for _, org := range s.orgs {
 				if org.GetID() == id {
 					_, _ = w.Write(MustMarshal(org))
 					return
@@ -110,7 +145,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			org := r.PathValue("org")
 			found := matchFn(org, func(o github.Organization) {
 				foundRepos := make([]github.Repository, 0)
-				for _, repo := range repos {
+				for _, repo := range s.repos {
 					if repo.GetOrganization().GetLogin() == o.GetLogin() {
 						foundRepos = append(foundRepos, repo)
 					}
@@ -128,7 +163,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			org := r.PathValue("org")
 			username := r.PathValue("username")
 			found := matchFn(org, func(o github.Organization) {
-				for _, m := range memberships {
+				for _, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
 						_, _ = w.Write(MustMarshal(m))
 						return
@@ -147,7 +182,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			// we only care about the owner and repo; we ignore the path component
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			for _, re := range repos {
+			for _, re := range s.repos {
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 					_, _ = w.Write([]byte(jsonFolderContent))
 					return
@@ -162,7 +197,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
 
-			collaborators := groups[owner][repo]
+			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
 				w.WriteHeader(http.StatusNotFound)
 				return
@@ -178,7 +213,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			repo := r.PathValue("repo")
 			username := r.PathValue("username")
 
-			collaborators := groups[owner][repo]
+			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
 				w.WriteHeader(http.StatusNotFound)
 				return
@@ -190,7 +225,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			}
 
 			ghUser := github.User{Login: github.String(username)}
-			groups[owner][repo] = append(collaborators, ghUser)
+			s.groups[owner][repo] = append(collaborators, ghUser)
 			invite := github.CollaboratorInvitation{
 				Repo:    &github.Repository{Owner: &github.User{Login: github.String(owner)}, Name: github.String(repo)},
 				Invitee: &ghUser,
@@ -206,7 +241,7 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			repo := r.PathValue("repo")
 			username := r.PathValue("username")
 
-			collaborators := groups[owner][repo]
+			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
 				w.WriteHeader(http.StatusNotFound)
 				return
@@ -215,12 +250,11 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 			collaborators = slices.DeleteFunc(collaborators, func(u github.User) bool {
 				return u.GetLogin() == username
 			})
-			groups[owner][repo] = collaborators
+			s.groups[owner][repo] = collaborators
 			w.WriteHeader(http.StatusNoContent)
 			_, _ = w.Write([]byte{})
 		}),
 	)
-
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
 		getOrgsByOrgHandler,
@@ -231,11 +265,12 @@ func NewMockGithubSCMClient(logger *zap.SugaredLogger) *GithubSCM {
 		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
 		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
 	)
-	return &GithubSCM{
+	s.GithubSCM = &GithubSCM{
 		logger:      logger,
 		client:      github.NewClient(httpClient),
 		providerURL: "github.com",
 	}
+	return s
 }
 
 func TestMockGetOrganization(t *testing.T) {
@@ -285,7 +320,7 @@ func TestMockGetOrganization(t *testing.T) {
 		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
 		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
 	}
-	s := NewMockGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.org.ID, tt.org.Name, tt.org.Username, tt.org.NewCourse)
 		t.Run(name, func(t *testing.T) {
@@ -318,7 +353,7 @@ func TestMockGetRepositories(t *testing.T) {
 			{OrgID: 123, Path: "meling-labs"},
 		}},
 	}
-	s := NewMockGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := s.GetRepositories(context.Background(), tt.org)
@@ -353,7 +388,7 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "tests"}, wantEmpty: false},
 		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantEmpty: false},
 	}
-	s := NewMockGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
@@ -396,7 +431,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
 		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
 	}
-	s := NewMockGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)
 		t.Run(name, func(t *testing.T) {
@@ -407,7 +442,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 				return
 			}
 			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, groups[tt.org.Organization][tt.org.GroupName], protocmp.Transform()); diff != "" {
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.org.Organization][tt.org.GroupName], protocmp.Transform()); diff != "" {
 				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -429,7 +464,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		},
 	}
 	// verify the state of the groups after the sequence of UpdateGroupMembers
-	if diff := cmp.Diff(wantGroups, groups, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroups, s.groups, protocmp.Transform()); diff != "" {
 		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 	}
 }
