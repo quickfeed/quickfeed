@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,6 +12,7 @@ import (
 	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -469,6 +471,86 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			mustWrite(w, pr)
 		}),
 	)
+	// Mock query handler for fetching the issue ID based on issue number
+	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
+		owner := vars["repositoryOwner"].(string)
+		repo := vars["repositoryName"].(string)
+		issueNumber := int(vars["issueNumber"].(float64))
+
+		var id int64
+		for _, issue := range s.issues[owner][repo] {
+			if issue.GetNumber() == issueNumber {
+				id = issue.GetID()
+				break
+			}
+		}
+		if id == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		respBody := map[string]any{
+			"data": map[string]any{
+				"repository": map[string]any{
+					"issue": map[string]any{
+						"id": id,
+					},
+				},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		mustWrite(w, respBody)
+	}
+	// Mock mutation handler for deleting an issue based on issue ID
+	mutationHandler := func(w http.ResponseWriter, vars map[string]any) {
+		id := int64(vars["issueId"].(float64))
+
+		var foundRepo string
+		for owner := range s.issues {
+			for repo := range s.issues[owner] {
+				for _, issue := range s.issues[owner][repo] {
+					if issue.GetID() == id {
+						foundRepo = repo
+						issues := s.issues[owner][repo]
+						issues = slices.DeleteFunc(issues, func(i github.Issue) bool { return i.GetID() == id })
+						s.issues[owner][repo] = issues
+						break
+					}
+				}
+			}
+		}
+		if foundRepo == "" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		respBody := map[string]any{
+			"data": map[string]any{
+				"deleteIssue": map[string]any{
+					"repository": map[string]any{
+						"name": foundRepo,
+					},
+				},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		mustWrite(w, respBody)
+	}
+	graphQLHandler := WithRequestMatchHandler("/graphql", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type request struct {
+			Query     string         `json:"query"`
+			Variables map[string]any `json:"variables"`
+		}
+		req := mustRead[request](r.Body)
+
+		if strings.HasPrefix(req.Query, "mutation") {
+			mutationHandler(w, req.Variables["input"].(map[string]any))
+		} else {
+			queryHandler(w, req.Variables)
+		}
+	}))
 
 	httpClient := NewMockedHTTPClient(
 		getByIDHandler,
@@ -486,10 +568,12 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		postIssueCommentByOwnerByRepoByIssueNumberHandler,
 		patchIssueCommentByOwnerByRepoByCommentIDHandler,
 		postPullReviewersByOwnerByRepoByPullNumberHandler,
+		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		logger:      logger,
 		client:      github.NewClient(httpClient),
+		clientV4:    githubv4.NewClient(httpClient),
 		providerURL: "github.com",
 	}
 	return s

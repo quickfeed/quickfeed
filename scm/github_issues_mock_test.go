@@ -66,6 +66,41 @@ func TestMockCreateIssue(t *testing.T) {
 	}
 }
 
+func TestMockDeleteIssue(t *testing.T) {
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
+	}
+	issues, err := s.GetIssues(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"})
+	if err != nil {
+		t.Fatalf("failed to get issues: %v", err)
+	}
+	for _, issue := range issues {
+		s.DeleteIssue(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, issue.Number)
+		if err != nil {
+			t.Fatalf("failed to delete issue: %v", err)
+		}
+	}
+	issues, err = s.GetIssues(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"})
+	if err != nil {
+		t.Fatalf("failed to get issues: %v", err)
+	}
+	if len(issues) != 0 {
+		t.Errorf("expected no issues, got %d", len(issues))
+	}
+}
+
 func TestMockUpdateIssue(t *testing.T) {
 	wantIssues := map[string]map[string][]*Issue{
 		"foo": {
