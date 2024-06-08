@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func MustParse[N ~int | ~int64](s string) N {
+func mustParse[N ~int | ~int64](s string) N {
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		panic(err)
@@ -17,7 +17,7 @@ func MustParse[N ~int | ~int64](s string) N {
 	return N(i)
 }
 
-func MustUnmarshal[T any](r io.Reader) T {
+func mustRead[T any](r io.Reader) T {
 	var v T
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
 		panic(err)
@@ -25,12 +25,14 @@ func MustUnmarshal[T any](r io.Reader) T {
 	return v
 }
 
-func MustMarshal(v interface{}) []byte {
+func mustWrite(w http.ResponseWriter, v any) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
-	return b
+	if _, err := w.Write(b); err != nil {
+		panic(err)
+	}
 }
 
 // MockBackendOption is used to configure the *http.ServeMux for the mocked backend.

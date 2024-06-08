@@ -169,10 +169,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 	getByIDHandler := WithRequestMatchHandler(
 		getByID,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			id := MustParse[int64](r.PathValue("id"))
+			id := mustParse[int64](r.PathValue("id"))
 			for _, org := range s.orgs {
 				if org.GetID() == id {
-					_, _ = w.Write(MustMarshal(org))
+					mustWrite(w, org)
 					return
 				}
 			}
@@ -184,7 +184,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			found := matchFn(org, func(o github.Organization) {
-				_, _ = w.Write(MustMarshal(o))
+				mustWrite(w, o)
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound)
@@ -202,7 +202,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 						foundRepos = append(foundRepos, repo)
 					}
 				}
-				_, _ = w.Write(MustMarshal(foundRepos))
+				mustWrite(w, foundRepos)
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound)
@@ -217,7 +217,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			found := matchFn(org, func(o github.Organization) {
 				for _, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
-						_, _ = w.Write(MustMarshal(m))
+						mustWrite(w, m)
 						return
 					}
 				}
@@ -238,7 +238,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			_, _ = w.Write([]byte(jsonFolderContent))
+			mustWrite(w, jsonFolderContent)
 		}),
 	)
 	getReposCollaboratorsByOwnerByRepoHandler := WithRequestMatchHandler(
@@ -253,7 +253,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(MustMarshal(collaborators))
+			mustWrite(w, collaborators)
 		}),
 	)
 	putReposCollaboratorsByOwnerByRepoByUsernameHandler := WithRequestMatchHandler(
@@ -281,7 +281,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				Invitee: &ghUser,
 			}
 			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write(MustMarshal(invite))
+			mustWrite(w, invite)
 		}),
 	)
 	deleteReposCollaboratorsByOwnerByRepoByUsernameHandler := WithRequestMatchHandler(
@@ -302,7 +302,6 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			})
 			s.groups[owner][repo] = collaborators
 			w.WriteHeader(http.StatusNoContent)
-			_, _ = w.Write([]byte{})
 		}),
 	)
 	postIssueByOwnerByRepoHandler := WithRequestMatchHandler(
@@ -310,7 +309,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issue := MustUnmarshal[github.Issue](r.Body)
+			issue := mustRead[github.Issue](r.Body)
 
 			if !hasOrgRepo(owner, repo) {
 				w.WriteHeader(http.StatusNotFound)
@@ -342,7 +341,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			}
 			s.issues[owner][repo] = append(s.issues[owner][repo], issue)
 			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write(MustMarshal(issue))
+			mustWrite(w, issue)
 			return
 		}),
 	)
@@ -351,8 +350,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issueNumber := github.Int(MustParse[int](r.PathValue("issue_number")))
-			issue := MustUnmarshal[github.Issue](r.Body)
+			issueNumber := github.Int(mustParse[int](r.PathValue("issue_number")))
+			issue := mustRead[github.Issue](r.Body)
 
 			for i, ghIssue := range s.issues[owner][repo] {
 				if *ghIssue.Number == *issueNumber {
@@ -364,7 +363,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 					}
 					s.issues[owner][repo][i] = issue
 					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write(MustMarshal(issue))
+					mustWrite(w, issue)
 					return
 				}
 			}
@@ -376,11 +375,11 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issueNumber := github.Int(MustParse[int](r.PathValue("issue_number")))
+			issueNumber := github.Int(mustParse[int](r.PathValue("issue_number")))
 
 			for _, issue := range s.issues[owner][repo] {
 				if *issue.Number == *issueNumber {
-					_, _ = w.Write(MustMarshal(issue))
+					mustWrite(w, issue)
 					return
 				}
 			}
@@ -399,7 +398,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(MustMarshal(issues))
+			mustWrite(w, issues)
 		}),
 	)
 	postIssueCommentByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
@@ -407,8 +406,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issueNumber := github.Int(MustParse[int](r.PathValue("issue_number")))
-			comment := MustUnmarshal[github.IssueComment](r.Body)
+			issueNumber := github.Int(mustParse[int](r.PathValue("issue_number")))
+			comment := mustRead[github.IssueComment](r.Body)
 
 			for _, ghIssue := range s.issues[owner][repo] {
 				if *ghIssue.Number == *issueNumber {
@@ -416,7 +415,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 					comment.ID = github.Int64(s.commentID)
 					s.comments[owner][repo][*ghIssue.ID] = append(s.comments[owner][repo][*ghIssue.ID], comment)
 					w.WriteHeader(http.StatusCreated)
-					_, _ = w.Write(MustMarshal(comment))
+					mustWrite(w, comment)
 					return
 				}
 			}
@@ -428,8 +427,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			commentID := github.Int64(MustParse[int64](r.PathValue("comment_id")))
-			comment := MustUnmarshal[github.IssueComment](r.Body)
+			commentID := github.Int64(mustParse[int64](r.PathValue("comment_id")))
+			comment := mustRead[github.IssueComment](r.Body)
 
 			for _, ghIssue := range s.issues[owner][repo] {
 				for i, ghComment := range s.comments[owner][repo][*ghIssue.ID] {
@@ -437,7 +436,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 						comment.ID = ghComment.ID
 						s.comments[owner][repo][*ghIssue.ID][i] = comment
 						w.WriteHeader(http.StatusOK)
-						_, _ = w.Write(MustMarshal(comment))
+						mustWrite(w, comment)
 						return
 					}
 				}
@@ -450,8 +449,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			pullNumber := MustParse[int](r.PathValue("pull_number"))
-			reviewers := MustUnmarshal[github.ReviewersRequest](r.Body)
+			pullNumber := mustParse[int](r.PathValue("pull_number"))
+			reviewers := mustRead[github.ReviewersRequest](r.Body)
 
 			if _, exists := s.reviewers[owner][repo][pullNumber]; !exists {
 				w.WriteHeader(http.StatusNotFound)
@@ -467,7 +466,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 				RequestedReviewers: users,
 			}
 			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write(MustMarshal(pr))
+			mustWrite(w, pr)
 		}),
 	)
 
