@@ -350,13 +350,13 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issueNumber := github.Int(mustParse[int](r.PathValue("issue_number")))
+			issueNumber := mustParse[int](r.PathValue("issue_number"))
 			issue := mustRead[github.Issue](r.Body)
 
 			for i, ghIssue := range s.issues[owner][repo] {
-				if *ghIssue.Number == *issueNumber {
+				if *ghIssue.Number == issueNumber {
 					issue.ID = ghIssue.ID
-					issue.Number = issueNumber
+					issue.Number = &issueNumber
 					issue.Repository = &github.Repository{
 						Owner: &github.User{Login: github.String(owner)},
 						Name:  github.String(repo),
@@ -375,10 +375,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issueNumber := github.Int(mustParse[int](r.PathValue("issue_number")))
+			issueNumber := mustParse[int](r.PathValue("issue_number"))
 
 			for _, issue := range s.issues[owner][repo] {
-				if *issue.Number == *issueNumber {
+				if *issue.Number == issueNumber {
 					mustWrite(w, issue)
 					return
 				}
@@ -406,11 +406,11 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issueNumber := github.Int(mustParse[int](r.PathValue("issue_number")))
+			issueNumber := mustParse[int](r.PathValue("issue_number"))
 			comment := mustRead[github.IssueComment](r.Body)
 
 			for _, ghIssue := range s.issues[owner][repo] {
-				if *ghIssue.Number == *issueNumber {
+				if *ghIssue.Number == issueNumber {
 					s.commentID++
 					comment.ID = github.Int64(s.commentID)
 					s.comments[owner][repo][*ghIssue.ID] = append(s.comments[owner][repo][*ghIssue.ID], comment)
@@ -427,12 +427,12 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			commentID := github.Int64(mustParse[int64](r.PathValue("comment_id")))
+			commentID := mustParse[int64](r.PathValue("comment_id"))
 			comment := mustRead[github.IssueComment](r.Body)
 
 			for _, ghIssue := range s.issues[owner][repo] {
 				for i, ghComment := range s.comments[owner][repo][*ghIssue.ID] {
-					if *ghComment.ID == *commentID {
+					if *ghComment.ID == commentID {
 						comment.ID = ghComment.ID
 						s.comments[owner][repo][*ghIssue.ID][i] = comment
 						w.WriteHeader(http.StatusOK)
