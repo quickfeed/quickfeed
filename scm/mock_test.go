@@ -153,7 +153,7 @@ func TestMockClone(t *testing.T) {
 const user = "test_user"
 
 func TestMockOrganizations(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t))
 	ctx := context.Background()
 	for _, course := range qtest.MockCourses {
 		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: course.ScmOrganizationID}); err != nil {
@@ -172,7 +172,7 @@ func TestMockOrganizations(t *testing.T) {
 		err        string
 	}{
 		{id: 0, name: "", username: "", permission: "", err: "invalid argument"},
-		{id: 123, name: "test_missing_org", username: user, permission: "read", err: "organization not found"},
+		{id: 1234, name: "test_missing_org", username: user, permission: "read", err: "organization not found"},
 	}
 
 	for _, org := range invalidOrgs {

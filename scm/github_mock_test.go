@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
+	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -73,7 +74,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 	for _, course := range qtest.MockCourses {
 		ghOrg := github.Organization{
 			ID:    github.Int64(int64(course.ScmOrganizationID)),
-			Login: github.String(course.ScmOrganizationName),
+			Login: github.String(slug.Make(course.ScmOrganizationName)),
 		}
 		s.orgs = append(s.orgs, ghOrg)
 		for _, repo := range mockRepos {
@@ -83,14 +84,11 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 	}
 
 	// setup mock data based with partial organizations, repositories, memberships, and groups
-	orgs := []github.Organization{orgFoo, orgBar}
+	s.orgs = append(s.orgs, orgFoo, orgBar)
 	// initial memberships: user -> role; two members; one owner, one member
 	s.members = []github.Membership{
 		{Organization: &orgFoo, User: &meling, Role: github.String(OrgOwner)},
 		{Organization: &orgBar, User: &meling, Role: github.String(OrgMember)},
-	}
-	for _, org := range orgs {
-		s.orgs = append(s.orgs, org)
 	}
 	// initial repositories: for organization foo; bar has no repositories
 	repos := []github.Repository{
@@ -99,9 +97,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		{Organization: &orgFoo, Name: github.String("tests")},
 		{Organization: &orgFoo, Name: github.String("meling-labs")},
 	}
-	for _, repo := range repos {
-		s.repos = append(s.repos, repo)
-	}
+	s.repos = append(s.repos, repos...)
 
 	// initial groups map: owner -> repo -> collaborators (only group repos should have collaborators)
 	s.groups = map[string]map[string][]github.User{
