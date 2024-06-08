@@ -62,6 +62,7 @@ type MockedGithubSCM struct {
 	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
 	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	issueID   int64
 	commentID int64
 }
 
@@ -96,6 +97,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		{Organization: &orgFoo, Name: github.String("assignments")},
 		{Organization: &orgFoo, Name: github.String("tests")},
 		{Organization: &orgFoo, Name: github.String("meling-labs")},
+		{Organization: &orgFoo, Name: github.String("josie-labs")},
 	}
 	s.repos = append(s.repos, repos...)
 
@@ -113,25 +115,13 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			"groupZ": {},
 		},
 	}
-
-	// initial issues map: owner -> repo -> issues
-	s.issues = map[string]map[string][]github.Issue{
-		"foo": {
-			"meling-labs": {
-				{ID: github.Int64(1), Number: github.Int(1), Title: github.String("First"), Body: github.String("xyz"), Repository: &fooMelingRepo},
-				{ID: github.Int64(2), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &fooMelingRepo},
-			},
-			"josie-labs": {
-				{ID: github.Int64(3), Number: github.Int(1), Title: github.String("First"), Body: github.String("xyz"), Repository: &fooJosieRepo},
-				{ID: github.Int64(4), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &fooJosieRepo},
-			},
-		},
-		"bar": {
-			"meling-labs": {
-				{ID: github.Int64(5), Number: github.Int(1), Title: github.String("First"), Body: github.String("xyz"), Repository: &barMelingRepo},
-				{ID: github.Int64(6), Number: github.Int(2), Title: github.String("Second"), Body: github.String("abc"), Repository: &barMelingRepo},
-			},
-		},
+	// initial empty issues map: owner -> repo -> issues
+	s.issues = make(map[string]map[string][]github.Issue)
+	for _, repo := range s.repos {
+		if s.issues[*repo.Organization.Login] == nil {
+			s.issues[*repo.Organization.Login] = make(map[string][]github.Issue)
+		}
+		s.issues[*repo.Organization.Login][*repo.Name] = make([]github.Issue, 0)
 	}
 	// initial empty comments map: owner -> repo -> issue ID -> comments
 	s.comments = make(map[string]map[string]map[int64][]github.IssueComment)
@@ -162,6 +152,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		for _, org := range s.orgs {
 			if org.GetLogin() == orgName {
 				f(org)
+				return true
+			}
+		}
+		return false
+	}
+	hasOrgRepo := func(orgName, repoName string) bool {
+		for _, repo := range s.repos {
+			if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
 				return true
 			}
 		}
@@ -236,13 +234,11 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			// we only care about the owner and repo; we ignore the path component
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			for _, re := range s.repos {
-				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
-					_, _ = w.Write([]byte(jsonFolderContent))
-					return
-				}
+			if !hasOrgRepo(owner, repo) {
+				w.WriteHeader(http.StatusNotFound)
+				return
 			}
-			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write([]byte(jsonFolderContent))
 		}),
 	)
 	getReposCollaboratorsByOwnerByRepoHandler := WithRequestMatchHandler(
@@ -316,21 +312,38 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			repo := r.PathValue("repo")
 			issue := MustUnmarshal[github.Issue](r.Body)
 
-			for i, ghIssue := range s.issues[owner][repo] {
-				if *ghIssue.Title == *issue.Title && *ghIssue.Body == *issue.Body {
-					issue.ID = github.Int64(*ghIssue.ID)
-					issue.Number = github.Int(*ghIssue.Number)
-					issue.Repository = &github.Repository{
-						Owner: &github.User{Login: github.String(owner)},
-						Name:  github.String(repo),
-					}
-					s.issues[owner][repo][i] = issue
-					w.WriteHeader(http.StatusCreated)
-					_, _ = w.Write(MustMarshal(issue))
-					return
+			if !hasOrgRepo(owner, repo) {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			if issue.ID != nil || issue.Number != nil || issue.Repository != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			if s.issues[owner] == nil {
+				s.issues[owner] = make(map[string][]github.Issue)
+			}
+			if s.issues[owner][repo] == nil {
+				s.issues[owner][repo] = make([]github.Issue, 0)
+			}
+			nextIssueNumber := 1
+			for _, ghIssue := range s.issues[owner][repo] {
+				if *ghIssue.Number >= nextIssueNumber {
+					nextIssueNumber = *ghIssue.Number + 1
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			s.issueID++
+			issue.ID = github.Int64(s.issueID)
+			issue.Number = github.Int(nextIssueNumber)
+			issue.Repository = &github.Repository{
+				Owner: &github.User{Login: github.String(owner)},
+				Name:  github.String(repo),
+			}
+			s.issues[owner][repo] = append(s.issues[owner][repo], issue)
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write(MustMarshal(issue))
+			return
 		}),
 	)
 	patchIssueByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
@@ -556,11 +569,12 @@ func TestMockGetRepositories(t *testing.T) {
 		{name: "IncompleteRequest/NilOrg", org: nil, want: nil, wantErr: true},
 		{name: "IncompleteRequest/NoOrgName", org: &qf.Organization{}, want: nil, wantErr: true},
 		{name: "CompleteRequest/NotFound", org: &qf.Organization{ScmOrganizationName: "bar"}, want: []*Repository{}, wantErr: false},
-		{name: "CompleteRequest/FourRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
+		{name: "CompleteRequest/FiveRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
 			{OrgID: 123, Path: "info"},
 			{OrgID: 123, Path: "assignments"},
 			{OrgID: 123, Path: "tests"},
 			{OrgID: 123, Path: "meling-labs"},
+			{OrgID: 123, Path: "josie-labs"},
 		}},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t))

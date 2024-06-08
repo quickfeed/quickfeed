@@ -22,7 +22,7 @@ func TestMockCreateIssue(t *testing.T) {
 				{ID: 4, Number: 2, Title: "Second", Body: "abc", Repository: "josie-labs"},
 			},
 		},
-		"bar": {
+		"dat320": {
 			"meling-labs": {
 				{ID: 5, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
 				{ID: 6, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
@@ -46,8 +46,8 @@ func TestMockCreateIssue(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"}, wantIssue: wantIssues["foo"]["josie-labs"][0], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["foo"]["josie-labs"][1], wantErr: false},
-		{name: "CompleteRequest", opt: &IssueOptions{Organization: "bar", Repository: "meling-labs", Title: "First", Body: "xyz"}, wantIssue: wantIssues["bar"]["meling-labs"][0], wantErr: false},
-		{name: "CompleteRequest", opt: &IssueOptions{Organization: "bar", Repository: "meling-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["bar"]["meling-labs"][1], wantErr: false},
+		{name: "CompleteRequest", opt: &IssueOptions{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"}, wantIssue: wantIssues["dat320"]["meling-labs"][0], wantErr: false},
+		{name: "CompleteRequest", opt: &IssueOptions{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["dat320"]["meling-labs"][1], wantErr: false},
 	}
 
 	s := NewMockedGithubSCMClient(qtest.Logger(t))
@@ -78,12 +78,27 @@ func TestMockUpdateIssue(t *testing.T) {
 				{ID: 4, Number: 2, Title: "Second 2", Body: "Second Body", Repository: "josie-labs"},
 			},
 		},
-		"bar": {
+		"dat320": {
 			"meling-labs": {
 				{ID: 5, Number: 1, Title: "First 1", Body: "First Body", Repository: "meling-labs"},
 				{ID: 6, Number: 2, Title: "Second 2", Body: "Second Body", Repository: "meling-labs"},
 			},
 		},
+	}
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
 	}
 
 	tests := []struct {
@@ -102,11 +117,9 @@ func TestMockUpdateIssue(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "Second 2", Body: "Second Body", Number: 2}, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "josie-labs", Title: "First 1", Body: "First Body", Number: 1}, wantIssue: wantIssues["foo"]["josie-labs"][0], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "josie-labs", Title: "Second 2", Body: "Second Body", Number: 2}, wantIssue: wantIssues["foo"]["josie-labs"][1], wantErr: false},
-		{name: "CompleteRequest", opt: &IssueOptions{Organization: "bar", Repository: "meling-labs", Title: "First 1", Body: "First Body", Number: 1}, wantIssue: wantIssues["bar"]["meling-labs"][0], wantErr: false},
-		{name: "CompleteRequest", opt: &IssueOptions{Organization: "bar", Repository: "meling-labs", Title: "Second 2", Body: "Second Body", Number: 2}, wantIssue: wantIssues["bar"]["meling-labs"][1], wantErr: false},
+		{name: "CompleteRequest", opt: &IssueOptions{Organization: "dat320", Repository: "meling-labs", Title: "First 1", Body: "First Body", Number: 1}, wantIssue: wantIssues["dat320"]["meling-labs"][0], wantErr: false},
+		{name: "CompleteRequest", opt: &IssueOptions{Organization: "dat320", Repository: "meling-labs", Title: "Second 2", Body: "Second Body", Number: 2}, wantIssue: wantIssues["dat320"]["meling-labs"][1], wantErr: false},
 	}
-
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Title", "Body", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Title, tt.opt.Body, tt.opt.Number)
 		t.Run(name, func(t *testing.T) {
@@ -134,12 +147,27 @@ func TestMockGetIssue(t *testing.T) {
 				{ID: 4, Number: 2, Title: "Second", Body: "abc", Repository: "josie-labs"},
 			},
 		},
-		"bar": {
+		"dat320": {
 			"meling-labs": {
 				{ID: 5, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
 				{ID: 6, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
 			},
 		},
+	}
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
 	}
 
 	tests := []struct {
@@ -158,11 +186,9 @@ func TestMockGetIssue(t *testing.T) {
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 2, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 1, wantIssue: wantIssues["foo"]["josie-labs"][0], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 2, wantIssue: wantIssues["foo"]["josie-labs"][1], wantErr: false},
-		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, number: 1, wantIssue: wantIssues["bar"]["meling-labs"][0], wantErr: false},
-		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, number: 2, wantIssue: wantIssues["bar"]["meling-labs"][1], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, number: 1, wantIssue: wantIssues["dat320"]["meling-labs"][0], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, number: 2, wantIssue: wantIssues["dat320"]["meling-labs"][1], wantErr: false},
 	}
-
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
@@ -190,12 +216,27 @@ func TestMockGetIssues(t *testing.T) {
 				{ID: 4, Number: 2, Title: "Second", Body: "abc", Repository: "josie-labs"},
 			},
 		},
-		"bar": {
+		"dat320": {
 			"meling-labs": {
 				{ID: 5, Number: 1, Title: "First", Body: "xyz", Repository: "meling-labs"},
 				{ID: 6, Number: 2, Title: "Second", Body: "abc", Repository: "meling-labs"},
 			},
 		},
+	}
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
 	}
 
 	tests := []struct {
@@ -210,10 +251,8 @@ func TestMockGetIssues(t *testing.T) {
 
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantIssues: wantIssues["foo"]["meling-labs"], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, wantIssues: wantIssues["foo"]["josie-labs"], wantErr: false},
-		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, wantIssues: wantIssues["bar"]["meling-labs"], wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, wantIssues: wantIssues["dat320"]["meling-labs"], wantErr: false},
 	}
-
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
@@ -230,6 +269,22 @@ func TestMockGetIssues(t *testing.T) {
 }
 
 func TestMockCreateIssueComment(t *testing.T) {
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
+	}
+
 	tests := []struct {
 		name          string
 		opt           *IssueCommentOptions
@@ -254,15 +309,13 @@ func TestMockCreateIssueComment(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.1"}, wantCommentID: 10, wantErr: false},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.2"}, wantCommentID: 11, wantErr: false},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.3"}, wantCommentID: 12, wantErr: false},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"}, wantCommentID: 13, wantErr: false},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"}, wantCommentID: 14, wantErr: false},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"}, wantCommentID: 15, wantErr: false},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"}, wantCommentID: 16, wantErr: false},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"}, wantCommentID: 17, wantErr: false},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"}, wantCommentID: 18, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"}, wantCommentID: 13, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"}, wantCommentID: 14, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"}, wantCommentID: 15, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"}, wantCommentID: 16, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"}, wantCommentID: 17, wantErr: false},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"}, wantCommentID: 18, wantErr: false},
 	}
-
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
 	for _, tt := range tests {
 		name := qtest.Name(
 			tt.name,
@@ -283,8 +336,22 @@ func TestMockCreateIssueComment(t *testing.T) {
 }
 
 func TestMockUpdateIssueComment(t *testing.T) {
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t))
-	initialComments := []IssueCommentOptions{
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
+	}
+	initialComments := []*IssueCommentOptions{
 		{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"},
 		{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"},
 		{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"},
@@ -297,15 +364,15 @@ func TestMockUpdateIssueComment(t *testing.T) {
 		{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.1"},
 		{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.2"},
 		{Organization: "foo", Repository: "josie-labs", Number: 2, Body: "Hello 2.3"},
-		{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"},
-		{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"},
-		{Organization: "bar", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"},
-		{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"},
-		{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"},
-		{Organization: "bar", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"},
+		{Organization: "dat320", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"},
+		{Organization: "dat320", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"},
+		{Organization: "dat320", Repository: "meling-labs", Number: 1, Body: "Hello 1.3"},
+		{Organization: "dat320", Repository: "meling-labs", Number: 2, Body: "Hello 2.1"},
+		{Organization: "dat320", Repository: "meling-labs", Number: 2, Body: "Hello 2.2"},
+		{Organization: "dat320", Repository: "meling-labs", Number: 2, Body: "Hello 2.3"},
 	}
 	for _, comment := range initialComments {
-		if _, err := s.CreateIssueComment(context.Background(), &comment); err != nil {
+		if _, err := s.CreateIssueComment(context.Background(), comment); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -334,12 +401,12 @@ func TestMockUpdateIssueComment(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 10, Body: "World 2.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(10), Body: github.String("World 2.1")}},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 11, Body: "World 2.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(11), Body: github.String("World 2.2")}},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "josie-labs", CommentID: 12, Body: "World 2.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(12), Body: github.String("World 2.3")}},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 13, Body: "World 1.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(13), Body: github.String("World 1.1")}},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 14, Body: "World 1.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(14), Body: github.String("World 1.2")}},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 15, Body: "World 1.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(15), Body: github.String("World 1.3")}},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 16, Body: "World 2.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(16), Body: github.String("World 2.1")}},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 17, Body: "World 2.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(17), Body: github.String("World 2.2")}},
-		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "bar", Repository: "meling-labs", CommentID: 18, Body: "World 2.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(18), Body: github.String("World 2.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", CommentID: 13, Body: "World 1.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(13), Body: github.String("World 1.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", CommentID: 14, Body: "World 1.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(14), Body: github.String("World 1.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", CommentID: 15, Body: "World 1.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(15), Body: github.String("World 1.3")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", CommentID: 16, Body: "World 2.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(16), Body: github.String("World 2.1")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", CommentID: 17, Body: "World 2.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(17), Body: github.String("World 2.2")}},
+		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "dat320", Repository: "meling-labs", CommentID: 18, Body: "World 2.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(18), Body: github.String("World 2.3")}},
 	}
 	for _, tt := range tests {
 		name := qtest.Name(
