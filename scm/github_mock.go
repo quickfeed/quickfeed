@@ -44,12 +44,6 @@ var (
 	orgBar = github.Organization{ID: github.Int64(456), Login: bar.Login}
 )
 
-var (
-	fooMelingRepo = github.Repository{Organization: &orgFoo, Owner: &foo, Name: github.String("meling-labs")}
-	barMelingRepo = github.Repository{Organization: &orgBar, Owner: &bar, Name: github.String("meling-labs")}
-	fooJosieRepo  = github.Repository{Organization: &orgFoo, Owner: &foo, Name: github.String("josie-labs")}
-)
-
 // MockedGithubSCM implements the SCM interface.
 type MockedGithubSCM struct {
 	*GithubSCM
@@ -340,7 +334,6 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			s.issues[owner][repo] = append(s.issues[owner][repo], issue)
 			w.WriteHeader(http.StatusCreated)
 			mustWrite(w, issue)
-			return
 		}),
 	)
 	patchIssueByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(

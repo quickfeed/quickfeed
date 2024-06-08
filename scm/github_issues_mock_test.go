@@ -87,7 +87,7 @@ func TestMockDeleteIssue(t *testing.T) {
 		t.Fatalf("failed to get issues: %v", err)
 	}
 	for _, issue := range issues {
-		s.DeleteIssue(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, issue.Number)
+		err = s.DeleteIssue(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, issue.Number)
 		if err != nil {
 			t.Fatalf("failed to delete issue: %v", err)
 		}
