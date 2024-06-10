@@ -38,7 +38,7 @@ var (
 		},
 		{
 			ID:         3,
-			Number:     3,
+			Number:     1,
 			Title:      "Task 1",
 			Body:       "Finish Task 1",
 			Repository: qf.StudentRepoName(user),
@@ -47,8 +47,8 @@ var (
 	}
 	ghOrg = github.Organization{ID: github.Int64(987), Login: github.String(qtest.MockOrg)}
 	repos = []github.Repository{
-		{Organization: &ghOrg, Name: repoName("test")},
-		{Organization: &ghOrg, Name: repoName(user)},
+		{ID: github.Int64(1), Organization: &ghOrg, Name: repoName("test")},
+		{ID: github.Int64(2), Organization: &ghOrg, Name: repoName(user)},
 	}
 	mockRepos = []*scm.Repository{
 		{
@@ -283,7 +283,6 @@ func TestMockUpdateIssue(t *testing.T) {
 		Title:        mockIssues[0].Title,
 		Body:         mockIssues[0].Body,
 		Assignee:     &mockIssues[0].Assignee,
-		Number:       mockIssues[0].Number,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -372,15 +371,19 @@ func TestMockUpdateIssue(t *testing.T) {
 }
 
 func TestMockGetIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	ctx := context.Background()
-	issue := mockIssues[0]
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
+	issue, err := s.CreateIssue(ctx, &scm.IssueOptions{
+		Organization: qtest.MockOrg,
+		Repository:   mockIssues[0].Repository,
+		Title:        mockIssues[0].Title,
+		Body:         mockIssues[0].Body,
+		Assignee:     &mockIssues[0].Assignee,
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
-	s.Issues = map[uint64]*scm.Issue{
-		1: issue,
-	}
+
 	tests := []struct {
 		name      string
 		opt       *scm.RepositoryOptions
@@ -431,13 +434,8 @@ func TestMockGetIssue(t *testing.T) {
 }
 
 func TestMockGetIssues(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	ctx := context.Background()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-		2: mockRepos[1],
-	}
-
 	for _, issue := range mockIssues {
 		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
 			Organization: qtest.MockOrg,
@@ -508,41 +506,32 @@ func TestMockGetIssues(t *testing.T) {
 }
 
 func TestMockGetIssues2(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: {
-			ID:    1,
-			OrgID: 1,
-			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName("test"),
-		},
-	}
-
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qtest.MockOrg,
 		Path:  qf.StudentRepoName("test"),
 	}
 
-	var wantIssueIDs []int
-	for i := 1; i <= 5; i++ {
+	var wantIssueNumbers []int
+	for range 5 {
 		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 		defer cleanup()
-		wantIssueIDs = append(wantIssueIDs, issue.Number)
+		wantIssueNumbers = append(wantIssueNumbers, issue.Number)
 	}
 
-	var gotIssueIDs []int
+	var gotIssueNumbers []int
 	gotIssues, err := s.GetIssues(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, issue := range gotIssues {
-		gotIssueIDs = append(gotIssueIDs, issue.Number)
+		gotIssueNumbers = append(gotIssueNumbers, issue.Number)
 	}
 
 	less := func(a, b int) bool { return a < b }
-	if equal := cmp.Equal(wantIssueIDs, gotIssueIDs, cmpopts.SortSlices(less)); !equal {
-		t.Errorf("GetIssues() mismatch wantIssueIDs: %v, gotIssueIDs: %v", wantIssueIDs, gotIssueIDs)
+	if equal := cmp.Equal(wantIssueNumbers, gotIssueNumbers, cmpopts.SortSlices(less)); !equal {
+		t.Errorf("GetIssues() mismatch wantIssueNumbers: %v, gotIssueNumbers: %v", wantIssueNumbers, gotIssueNumbers)
 	}
 }
 

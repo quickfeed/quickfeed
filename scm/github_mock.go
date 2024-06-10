@@ -287,6 +287,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			for _, issue := range s.issues[owner][repo] {
 				if *issue.Number == issueNumber {
+					w.WriteHeader(http.StatusOK)
 					mustWrite(w, issue)
 					return
 				}
