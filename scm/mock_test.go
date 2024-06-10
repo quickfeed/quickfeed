@@ -8,19 +8,24 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
+func repoName(studName string) *string {
+	return github.String(qf.StudentRepoName(studName))
+}
+
 var (
 	mockIssues = []*scm.Issue{
 		{
 			ID:         1,
+			Number:     1,
 			Title:      "Test issue",
 			Body:       "This is a test issue.",
 			Repository: qf.StudentRepoName("test"),
-			Number:     1,
 			Assignee:   user,
 		},
 		{
@@ -39,6 +44,11 @@ var (
 			Repository: qf.StudentRepoName(user),
 			Assignee:   "",
 		},
+	}
+	ghOrg = github.Organization{ID: github.Int64(987), Login: github.String(qtest.MockOrg)}
+	repos = []github.Repository{
+		{Organization: &ghOrg, Name: repoName("test")},
+		{Organization: &ghOrg, Name: repoName(user)},
 	}
 	mockRepos = []*scm.Repository{
 		{
@@ -183,11 +193,8 @@ func TestMockOrganizations(t *testing.T) {
 }
 
 func TestMockCreateIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	ctx := context.Background()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-	}
 	issue := mockIssues[0]
 
 	tests := []struct {
