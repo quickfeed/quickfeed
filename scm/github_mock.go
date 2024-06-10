@@ -6,9 +6,6 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v62/github"
-	"github.com/gosimple/slug"
-	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
 )
@@ -39,74 +36,24 @@ var (
 	bar     = github.User{Login: github.String("bar")} // organization (user/owner)
 )
 
-var (
-	orgFoo = github.Organization{ID: github.Int64(123), Login: foo.Login}
-	orgBar = github.Organization{ID: github.Int64(456), Login: bar.Login}
-)
-
 // MockedGithubSCM implements the SCM interface.
 type MockedGithubSCM struct {
 	*GithubSCM
-	orgs      []github.Organization
-	repos     []github.Repository
-	members   []github.Membership
-	groups    map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
-	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
-	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
-	reviewers map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	*mockOptions
 	issueID   int64
 	commentID int64
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
-func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
-	s := &MockedGithubSCM{}
-
-	// setup mock data based on qtest.MockCourses (complete course organizations and four repositories)
-	mockRepos := []string{"info", "assignments", "tests", qf.StudentRepoName("meling")}
-	for _, course := range qtest.MockCourses {
-		ghOrg := github.Organization{
-			ID:    github.Int64(int64(course.ScmOrganizationID)),
-			Login: github.String(slug.Make(course.ScmOrganizationName)),
-		}
-		s.orgs = append(s.orgs, ghOrg)
-		for _, repo := range mockRepos {
-			ghRepo := github.Repository{Organization: &ghOrg, Name: github.String(repo)}
-			s.repos = append(s.repos, ghRepo)
-		}
+func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM {
+	mockOpts := newMockOptions()
+	for _, o := range opts {
+		o(mockOpts)
+	}
+	s := &MockedGithubSCM{
+		mockOptions: mockOpts,
 	}
 
-	// setup mock data based with partial organizations, repositories, memberships, and groups
-	s.orgs = append(s.orgs, orgFoo, orgBar)
-	// initial memberships: user -> role; two members; one owner, one member
-	s.members = []github.Membership{
-		{Organization: &orgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &orgBar, User: &meling, Role: github.String(OrgMember)},
-	}
-	// initial repositories: for organization foo; bar has no repositories
-	repos := []github.Repository{
-		{Organization: &orgFoo, Name: github.String("info")},
-		{Organization: &orgFoo, Name: github.String("assignments")},
-		{Organization: &orgFoo, Name: github.String("tests")},
-		{Organization: &orgFoo, Name: github.String("meling-labs")},
-		{Organization: &orgFoo, Name: github.String("josie-labs")},
-	}
-	s.repos = append(s.repos, repos...)
-
-	// initial groups map: owner -> repo -> collaborators (only group repos should have collaborators)
-	s.groups = map[string]map[string][]github.User{
-		"foo": {
-			"info":        {},
-			"assignments": {},
-			"tests":       {},
-			"meling-labs": {},
-			"groupX":      {lamport},
-		},
-		"bar": {
-			"groupY": {leslie},
-			"groupZ": {},
-		},
-	}
 	// initial empty issues map: owner -> repo -> issues
 	s.issues = make(map[string]map[string][]github.Issue)
 	for _, repo := range s.repos {
@@ -126,37 +73,6 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			}
 		}
 	}
-	// initial reviewers map: owner -> repo -> pull requests ID -> reviewers
-	s.reviewers = map[string]map[string]map[int]github.ReviewersRequest{
-		"foo": {
-			"meling-labs": {
-				1: {Reviewers: []string{"meling", "leslie"}},
-				2: {Reviewers: []string{"lamport", "jostein"}},
-			},
-			"josie-labs": {
-				1: {Reviewers: []string{"meling", "leslie"}},
-				2: {Reviewers: []string{"lamport", "jostein"}},
-			},
-		},
-	}
-
-	matchFn := func(orgName string, f func(github.Organization)) bool {
-		for _, org := range s.orgs {
-			if org.GetLogin() == orgName {
-				f(org)
-				return true
-			}
-		}
-		return false
-	}
-	hasOrgRepo := func(orgName, repoName string) bool {
-		for _, repo := range s.repos {
-			if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
-				return true
-			}
-		}
-		return false
-	}
 
 	getByIDHandler := WithRequestMatchHandler(
 		getByID,
@@ -175,7 +91,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		getOrgsByOrg,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
-			found := matchFn(org, func(o github.Organization) {
+			found := s.matchOrgFunc(org, func(o github.Organization) {
 				mustWrite(w, o)
 			})
 			if !found {
@@ -187,7 +103,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		getOrgsReposByOrg,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
-			found := matchFn(org, func(o github.Organization) {
+			found := s.matchOrgFunc(org, func(o github.Organization) {
 				foundRepos := make([]github.Repository, 0)
 				for _, repo := range s.repos {
 					if repo.GetOrganization().GetLogin() == o.GetLogin() {
@@ -206,7 +122,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			username := r.PathValue("username")
-			found := matchFn(org, func(o github.Organization) {
+			found := s.matchOrgFunc(org, func(o github.Organization) {
 				for _, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
 						mustWrite(w, m)
@@ -226,7 +142,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			// we only care about the owner and repo; we ignore the path component
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			if !hasOrgRepo(owner, repo) {
+			if !s.hasOrgRepo(owner, repo) {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
@@ -303,7 +219,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger) *MockedGithubSCM {
 			repo := r.PathValue("repo")
 			issue := mustRead[github.Issue](r.Body)
 
-			if !hasOrgRepo(owner, repo) {
+			if !s.hasOrgRepo(owner, repo) {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}

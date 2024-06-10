@@ -50,7 +50,7 @@ func TestMockCreateIssue(t *testing.T) {
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["dat320"]["meling-labs"][1], wantErr: false},
 	}
 
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Title", "Body", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Title, tt.opt.Body, tt.opt.Number)
 		t.Run(name, func(t *testing.T) {
@@ -75,7 +75,7 @@ func TestMockDeleteIssue(t *testing.T) {
 		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
 		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, opt := range createIssues {
 		_, err := s.CreateIssue(context.Background(), opt)
 		if err != nil {
@@ -128,7 +128,7 @@ func TestMockUpdateIssue(t *testing.T) {
 		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
 		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, opt := range createIssues {
 		_, err := s.CreateIssue(context.Background(), opt)
 		if err != nil {
@@ -197,7 +197,7 @@ func TestMockGetIssue(t *testing.T) {
 		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
 		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, opt := range createIssues {
 		_, err := s.CreateIssue(context.Background(), opt)
 		if err != nil {
@@ -266,7 +266,7 @@ func TestMockGetIssues(t *testing.T) {
 		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
 		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, opt := range createIssues {
 		_, err := s.CreateIssue(context.Background(), opt)
 		if err != nil {
@@ -312,7 +312,7 @@ func TestMockCreateIssueComment(t *testing.T) {
 		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
 		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, opt := range createIssues {
 		_, err := s.CreateIssue(context.Background(), opt)
 		if err != nil {
@@ -379,7 +379,7 @@ func TestMockUpdateIssueComment(t *testing.T) {
 		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
 		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses())
 	for _, opt := range createIssues {
 		_, err := s.CreateIssue(context.Background(), opt)
 		if err != nil {
@@ -489,7 +489,7 @@ func TestMockRequestReviewers(t *testing.T) {
 		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "josie-labs", Number: 2, Reviewers: []string{"meling", "jostein"}}, wantErr: false, wantReviewers: []string{"meling", "jostein"}},
 	}
 
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMockCourses(), WithReviewers(reviewers))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Number)
 		t.Run(name, func(t *testing.T) {

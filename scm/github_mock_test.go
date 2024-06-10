@@ -11,9 +11,60 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
+// mock organizations foo and bar
+var (
+	ghOrgFoo    = github.Organization{ID: github.Int64(123), Login: foo.Login}
+	ghOrgBar    = github.Organization{ID: github.Int64(456), Login: bar.Login}
+	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: github.String("dat320")}
+)
+
+// mock repositories for organization foo; bar has no repositories
+var repos = []github.Repository{
+	{Organization: &ghOrgFoo, Name: github.String("info")},
+	{Organization: &ghOrgFoo, Name: github.String("assignments")},
+	{Organization: &ghOrgFoo, Name: github.String("tests")},
+	{Organization: &ghOrgFoo, Name: github.String("meling-labs")},
+	{Organization: &ghOrgFoo, Name: github.String("josie-labs")},
+}
+
+// memberships: user -> role; two members; one owner, one member
+var members = []github.Membership{
+	{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
+	{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgMember)},
+}
+
+// groups map: owner -> repo -> collaborators (only group repos should have collaborators)
+var groups = map[string]map[string][]github.User{
+	"foo": {
+		"info":        {},
+		"assignments": {},
+		"tests":       {},
+		"meling-labs": {},
+		"groupX":      {lamport},
+	},
+	"bar": {
+		"groupY": {leslie},
+		"groupZ": {},
+	},
+}
+
+// reviewers map: owner -> repo -> pull requests ID -> reviewers
+var reviewers = map[string]map[string]map[int]github.ReviewersRequest{
+	"foo": {
+		"meling-labs": {
+			1: {Reviewers: []string{"meling", "leslie"}},
+			2: {Reviewers: []string{"lamport", "jostein"}},
+		},
+		"josie-labs": {
+			1: {Reviewers: []string{"meling", "leslie"}},
+			2: {Reviewers: []string{"lamport", "jostein"}},
+		},
+	},
+}
+
 func TestMockGetOrganization(t *testing.T) {
-	orgFoo := &qf.Organization{ScmOrganizationID: 123, ScmOrganizationName: "foo"}
-	orgBar := &qf.Organization{ScmOrganizationID: 456, ScmOrganizationName: "bar"}
+	orgFoo := &qf.Organization{ScmOrganizationID: 123, ScmOrganizationName: *foo.Login}
+	orgBar := &qf.Organization{ScmOrganizationID: 456, ScmOrganizationName: *bar.Login}
 
 	tests := []struct {
 		name    string
@@ -58,7 +109,7 @@ func TestMockGetOrganization(t *testing.T) {
 		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
 		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.org.ID, tt.org.Name, tt.org.Username, tt.org.NewCourse)
 		t.Run(name, func(t *testing.T) {
@@ -92,7 +143,7 @@ func TestMockGetRepositories(t *testing.T) {
 			{OrgID: 123, Path: "josie-labs"},
 		}},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := s.GetRepositories(context.Background(), tt.org)
@@ -127,7 +178,7 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "tests"}, wantEmpty: false},
 		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantEmpty: false},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
@@ -170,7 +221,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
 		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)
 		t.Run(name, func(t *testing.T) {

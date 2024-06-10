@@ -153,7 +153,7 @@ func TestMockClone(t *testing.T) {
 const user = "test_user"
 
 func TestMockOrganizations(t *testing.T) {
-	s := scm.NewMockedGithubSCMClient(qtest.Logger(t))
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockCourses())
 	ctx := context.Background()
 	for _, course := range qtest.MockCourses {
 		if _, err := s.GetOrganization(ctx, &scm.OrganizationOptions{ID: course.ScmOrganizationID}); err != nil {
@@ -567,12 +567,12 @@ func TestMockDeleteIssue(t *testing.T) {
 }
 
 func TestMockCreateGetDeleteIssueSequence(t *testing.T) {
-	s := scm.NewMockSCMClientWithCourse()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockCourses())
 	ctx := context.Background()
 
 	opt := &scm.IssueOptions{
 		Organization: qtest.MockOrg,
-		Repository:   qf.StudentRepoName("user"),
+		Repository:   qf.StudentRepoName("meling"),
 		Title:        "Dummy Title",
 		Body:         "Dummy body of the issue",
 	}
