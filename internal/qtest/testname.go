@@ -34,7 +34,7 @@ func Name(name string, fields []string, values ...any) string {
 				b.WriteString(fmt.Sprintf("/%s=%d", f, v))
 			}
 		case bool:
-			if !x {
+			if x {
 				b.WriteString(fmt.Sprintf("/%s", f))
 			}
 		default:
