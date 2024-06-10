@@ -275,14 +275,18 @@ func TestMockCreateIssue(t *testing.T) {
 }
 
 func TestMockUpdateIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	ctx := context.Background()
-	issue := mockIssues[0]
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-	}
-	s.Issues = map[uint64]*scm.Issue{
-		1: issue,
+	issue, err := s.CreateIssue(ctx, &scm.IssueOptions{
+		Organization: qtest.MockOrg,
+		Repository:   mockIssues[0].Repository,
+		Title:        mockIssues[0].Title,
+		Body:         mockIssues[0].Body,
+		Assignee:     &mockIssues[0].Assignee,
+		Number:       mockIssues[0].Number,
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	tests := []struct {
