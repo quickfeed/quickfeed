@@ -23,24 +23,24 @@ var (
 		{
 			ID:         1,
 			Number:     1,
-			Title:      "Test issue",
-			Body:       "This is a test issue.",
+			Title:      "Test ID 1",
+			Body:       "Body ID 1",
 			Repository: qf.StudentRepoName("test"),
 			Assignee:   user,
 		},
 		{
 			ID:         2,
 			Number:     2,
-			Title:      "Task 1",
-			Body:       "Finish Task 1",
+			Title:      "Test ID 2",
+			Body:       "Body ID 2",
 			Repository: qf.StudentRepoName("test"),
 			Assignee:   "",
 		},
 		{
 			ID:         3,
 			Number:     1,
-			Title:      "Task 1",
-			Body:       "Finish Task 1",
+			Title:      "Test ID 3",
+			Body:       "Body ID 3",
 			Repository: qf.StudentRepoName(user),
 			Assignee:   "",
 		},
@@ -536,12 +536,8 @@ func TestMockGetIssues2(t *testing.T) {
 }
 
 func TestMockDeleteIssue(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	ctx := context.Background()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-		2: mockRepos[1],
-	}
 	for _, issue := range mockIssues {
 		issueOptions := &scm.IssueOptions{
 			Organization: qtest.MockOrg,

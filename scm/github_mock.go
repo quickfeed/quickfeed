@@ -1,6 +1,7 @@
 package scm
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -40,8 +41,19 @@ var (
 type MockedGithubSCM struct {
 	*GithubSCM
 	*mockOptions
-	issueID   int64
-	commentID int64
+	issueID     int64
+	issueNumber map[string]int // owner/repo -> issue number
+	commentID   int64
+}
+
+// nextIssueNumber returns the next issue number for the given owner and repo.
+func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
+	key := fmt.Sprintf("%s/%s", owner, repo)
+	if s.issueNumber == nil {
+		s.issueNumber = make(map[string]int)
+	}
+	s.issueNumber[key]++
+	return github.Int(s.issueNumber[key])
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
@@ -225,23 +237,17 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-
 			if s.issues[owner] == nil {
 				s.issues[owner] = make(map[string][]github.Issue)
 			}
 			if s.issues[owner][repo] == nil {
 				s.issues[owner][repo] = make([]github.Issue, 0)
 			}
-			nextIssueNumber := 1
-			for _, ghIssue := range s.issues[owner][repo] {
-				if *ghIssue.Number >= nextIssueNumber {
-					nextIssueNumber = *ghIssue.Number + 1
-				}
-			}
+
 			s.issueID++
 			issue := github.Issue{
 				ID:       github.Int64(s.issueID),
-				Number:   github.Int(nextIssueNumber),
+				Number:   s.nextIssueNumber(owner, repo),
 				Title:    issueReq.Title,
 				Body:     issueReq.Body,
 				Assignee: &github.User{Name: issueReq.Assignee},
