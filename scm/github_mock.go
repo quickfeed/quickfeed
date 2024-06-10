@@ -215,13 +215,13 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-			issue := mustRead[github.Issue](r.Body)
+			issueReq := mustRead[github.IssueRequest](r.Body)
 
 			if !s.hasOrgRepo(owner, repo) {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			if issue.ID != nil || issue.Number != nil || issue.Repository != nil {
+			if issueReq.Title == nil || issueReq.Body == nil {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -239,11 +239,16 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				}
 			}
 			s.issueID++
-			issue.ID = github.Int64(s.issueID)
-			issue.Number = github.Int(nextIssueNumber)
-			issue.Repository = &github.Repository{
-				Owner: &github.User{Login: github.String(owner)},
-				Name:  github.String(repo),
+			issue := github.Issue{
+				ID:       github.Int64(s.issueID),
+				Number:   github.Int(nextIssueNumber),
+				Title:    issueReq.Title,
+				Body:     issueReq.Body,
+				Assignee: &github.User{Name: issueReq.Assignee},
+				Repository: &github.Repository{
+					Owner: &github.User{Login: github.String(owner)},
+					Name:  github.String(repo),
+				},
 			}
 			s.issues[owner][repo] = append(s.issues[owner][repo], issue)
 			w.WriteHeader(http.StatusCreated)
