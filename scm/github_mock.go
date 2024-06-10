@@ -261,19 +261,17 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
 			issueNumber := mustParse[int](r.PathValue("issue_number"))
-			issue := mustRead[github.Issue](r.Body)
+			issueReq := mustRead[github.IssueRequest](r.Body)
 
 			for i, ghIssue := range s.issues[owner][repo] {
 				if *ghIssue.Number == issueNumber {
-					issue.ID = ghIssue.ID
-					issue.Number = &issueNumber
-					issue.Repository = &github.Repository{
-						Owner: &github.User{Login: github.String(owner)},
-						Name:  github.String(repo),
-					}
-					s.issues[owner][repo][i] = issue
+					ghIssue.Title = issueReq.Title
+					ghIssue.Body = issueReq.Body
+					ghIssue.Assignee = &github.User{Name: issueReq.Assignee}
+					ghIssue.State = issueReq.State
+					s.issues[owner][repo][i] = ghIssue
 					w.WriteHeader(http.StatusOK)
-					mustWrite(w, issue)
+					mustWrite(w, ghIssue)
 					return
 				}
 			}
