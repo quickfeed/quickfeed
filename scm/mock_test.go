@@ -66,39 +66,6 @@ var (
 	}
 )
 
-func TestMockSCMWithCourse(t *testing.T) {
-	s := scm.NewMockSCMClientWithCourse()
-	wantRepos := map[uint64]*scm.Repository{
-		1: {
-			ID:    1,
-			Path:  "info",
-			Owner: qtest.MockOrg,
-			OrgID: 1,
-		},
-		2: {
-			ID:    2,
-			Path:  "assignments",
-			Owner: qtest.MockOrg,
-			OrgID: 1,
-		},
-		3: {
-			ID:    3,
-			Path:  "tests",
-			Owner: qtest.MockOrg,
-			OrgID: 1,
-		},
-		4: {
-			ID:    4,
-			Path:  qf.StudentRepoName("user"),
-			Owner: qtest.MockOrg,
-			OrgID: 1,
-		},
-	}
-	if diff := cmp.Diff(wantRepos, s.Repositories); diff != "" {
-		t.Errorf("mismatch repos (-want +got):\n%s", diff)
-	}
-}
-
 func TestMockClone(t *testing.T) {
 	dstDir := t.TempDir()
 	s := scm.NewMockSCMClient()
@@ -611,53 +578,39 @@ func TestMockCreateGetDeleteIssueSequence(t *testing.T) {
 }
 
 func TestMockDeleteIssues(t *testing.T) {
-	ctx := context.Background()
-	course := qtest.MockCourses[0]
-	s := scm.NewMockSCMClient()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-		2: mockRepos[1],
-	}
+	userRepoOpt := &scm.RepositoryOptions{Path: qf.StudentRepoName(user), Owner: qtest.MockOrg}
+	testRepoOpt := &scm.RepositoryOptions{Path: qf.StudentRepoName("test"), Owner: qtest.MockOrg}
 
 	tests := []struct {
 		name       string
 		opt        *scm.RepositoryOptions
+		getOpt     *scm.RepositoryOptions
 		wantIssues map[uint64]*scm.Issue
 		wantErr    bool
 	}{
 		{
-			name: "delete all issues for 'user-labs' repo (issue 3)",
-			opt: &scm.RepositoryOptions{
-				Path:  qf.StudentRepoName(user),
-				Owner: course.ScmOrganizationName,
-			},
+			name:       "delete all issues for 'user-labs' repo (issue 3)",
+			opt:        userRepoOpt,
+			getOpt:     testRepoOpt,
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1]},
 			wantErr:    false,
 		},
 		{
-			name: "delete all issues for 'test-labs' repo (issues 1 and 2)",
-			opt: &scm.RepositoryOptions{
-				Path:  "test-labs",
-				Owner: course.ScmOrganizationName,
-			},
+			name:       "delete all issues for 'test-labs' repo (issues 1 and 2)",
+			opt:        testRepoOpt,
+			getOpt:     userRepoOpt,
 			wantIssues: map[uint64]*scm.Issue{3: mockIssues[2]},
 			wantErr:    false,
 		},
 		{
-			name: "missing repository, nothing deleted",
-			opt: &scm.RepositoryOptions{
-				Owner: course.ScmOrganizationName,
-				Path:  "some-labs",
-			},
+			name:       "missing repository, nothing deleted",
+			opt:        &scm.RepositoryOptions{Path: qf.StudentRepoName("some"), Owner: qtest.MockOrg},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
 			wantErr:    true,
 		},
 		{
-			name: "incorrect organization name",
-			opt: &scm.RepositoryOptions{
-				Owner: "organization",
-				Path:  "test-labs",
-			},
+			name:       "incorrect organization name",
+			opt:        &scm.RepositoryOptions{Path: qf.StudentRepoName("test"), Owner: "organization"},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
 			wantErr:    true,
 		},
@@ -669,17 +622,38 @@ func TestMockDeleteIssues(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		issues := make(map[uint64]*scm.Issue)
-		for _, issue := range mockIssues {
-			issues[issue.ID] = issue
-		}
-		s.Issues = issues
-		if err := s.DeleteIssues(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
-		}
-		if diff := cmp.Diff(tt.wantIssues, s.Issues); diff != "" {
-			t.Errorf("%s mismatch issues (-want +got):\n%s", tt.name, diff)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
+			for _, issue := range mockIssues {
+				if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
+					Organization: qtest.MockOrg,
+					Repository:   issue.Repository,
+					Title:        issue.Title,
+					Body:         issue.Body,
+					Assignee:     &issue.Assignee,
+				}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := s.DeleteIssues(ctx, tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+			}
+			if tt.wantErr {
+				return
+			}
+			issueSlice, err := s.GetIssues(ctx, tt.getOpt)
+			if err != nil {
+				t.Fatal(err)
+			}
+			issues := make(map[uint64]*scm.Issue)
+			for _, issue := range issueSlice {
+				issues[issue.ID] = issue
+			}
+			if diff := cmp.Diff(tt.wantIssues, issues); diff != "" {
+				t.Errorf("%s mismatch issues (-want +got):\n%s", tt.name, diff)
+			}
+		})
 	}
 }
 
