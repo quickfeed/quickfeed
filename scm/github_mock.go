@@ -57,20 +57,18 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 	// initial empty issues map: owner -> repo -> issues
 	s.issues = make(map[string]map[string][]github.Issue)
 	for _, repo := range s.repos {
-		if s.issues[*repo.Organization.Login] == nil {
-			s.issues[*repo.Organization.Login] = make(map[string][]github.Issue)
+		org := repo.GetOrganization().GetLogin()
+		if s.issues[org] == nil {
+			s.issues[org] = make(map[string][]github.Issue)
 		}
-		s.issues[*repo.Organization.Login][*repo.Name] = make([]github.Issue, 0)
+		s.issues[org][repo.GetName()] = make([]github.Issue, 0)
 	}
 	// initial empty comments map: owner -> repo -> issue ID -> comments
 	s.comments = make(map[string]map[string]map[int64][]github.IssueComment)
 	for org, repo := range s.issues {
 		s.comments[org] = make(map[string]map[int64][]github.IssueComment)
-		for re, issues := range repo {
+		for re := range repo {
 			s.comments[org][re] = make(map[int64][]github.IssueComment)
-			for _, issue := range issues {
-				s.comments[org][re][issue.GetID()] = []github.IssueComment{}
-			}
 		}
 	}
 
