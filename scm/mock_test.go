@@ -50,18 +50,15 @@ var (
 		{ID: github.Int64(1), Organization: &ghOrg, Name: repoName("test")},
 		{ID: github.Int64(2), Organization: &ghOrg, Name: repoName(user)},
 	}
-	mockRepos = []*scm.Repository{
-		{
-			ID:    1,
-			OrgID: 1,
-			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName("test"),
-		},
-		{
-			ID:    2,
-			OrgID: 1,
-			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName(user),
+	issues = map[string]map[string][]github.Issue{
+		qtest.MockOrg: {
+			qf.StudentRepoName("test"): {
+				{ID: github.Int64(1), Number: github.Int(1), Title: github.String("Test ID 1"), Body: github.String("Body ID 1"), Repository: &repos[0]},
+				{ID: github.Int64(2), Number: github.Int(2), Title: github.String("Test ID 2"), Body: github.String("Body ID 2"), Repository: &repos[0]},
+			},
+			qf.StudentRepoName(user): {
+				{ID: github.Int64(3), Number: github.Int(1), Title: github.String("Test ID 3"), Body: github.String("Body ID 3"), Repository: &repos[1]},
+			},
 		},
 	}
 )
@@ -658,15 +655,8 @@ func TestMockDeleteIssues(t *testing.T) {
 }
 
 func TestMockCreateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...), scm.WithIssues(issues))
 	ctx := context.Background()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-	}
-	s.Issues = map[uint64]*scm.Issue{
-		1: mockIssues[0],
-		2: mockIssues[2],
-	}
 
 	tests := []struct {
 		name       string
@@ -783,66 +773,56 @@ func TestMockCreateIssueComment(t *testing.T) {
 }
 
 func TestMockUpdateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: mockRepos[0],
-	}
-	s.Issues = map[uint64]*scm.Issue{
-		1: mockIssues[0],
-	}
-	s.IssueComments = map[uint64]string{
-		1: "Not updated",
-		2: "Not updated",
-	}
 	tests := []struct {
-		name        string
-		issueNumber int
-		commentID   int64
-		wantErr     bool
+		name      string
+		commentID int64
+		wantErr   bool
 	}{
 		{
-			name:        "update issue 1",
-			issueNumber: 1,
-			commentID:   1,
-			wantErr:     false,
+			name:      "update comment 1",
+			commentID: 1,
+			wantErr:   false,
 		},
 		{
-			name:        "update issue 2",
-			issueNumber: 1,
-			commentID:   2,
-			wantErr:     false,
+			name:      "update comment 2",
+			commentID: 2,
+			wantErr:   false,
 		},
 		{
-			name:        "incorrect issue number",
-			issueNumber: 5,
-			commentID:   1,
-			wantErr:     true,
-		},
-		{
-			name:        "incorrect issue comment ID",
-			issueNumber: 1,
-			commentID:   4,
-			wantErr:     true,
+			name:      "incorrect comment ID",
+			commentID: 4,
+			wantErr:   true,
 		},
 	}
-	for _, tt := range tests {
-		if err := s.UpdateIssueComment(ctx, &scm.IssueCommentOptions{
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...), scm.WithIssues(issues))
+	// create two comments for issue 1 to initialize the comments map
+	for range 2 {
+		s.CreateIssueComment(context.Background(), &scm.IssueCommentOptions{
 			Organization: qtest.MockOrg,
-			Repository:   mockRepos[0].Path,
-			Number:       tt.issueNumber,
+			Repository:   repos[0].GetName(),
+			Body:         "Not updated",
+			Number:       1,
+		})
+	}
+
+	for _, tt := range tests {
+		// update the specified comment; note that UpdateIssueComment does not use the issue number
+		if err := s.UpdateIssueComment(context.Background(), &scm.IssueCommentOptions{
+			Organization: qtest.MockOrg,
+			Repository:   repos[0].GetName(),
 			CommentID:    tt.commentID,
 			Body:         "Updated",
 		}); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if !tt.wantErr {
-			comment, ok := s.IssueComments[uint64(tt.commentID)]
-			if !ok {
-				t.Fatalf("%s: comment not found", tt.name)
-			}
-			if !ok || comment != "Updated" {
-				t.Errorf("%s: expected comment body 'Updated', got '%s'", tt.name, comment)
+			comment := s.GetComment(qtest.MockOrg, repos[0].GetName(), tt.commentID)
+			if comment == nil {
+				t.Errorf("%s: comment not found", tt.name)
+			} else {
+				if *comment.Body != "Updated" {
+					t.Errorf("%s: expected comment body 'Updated', got '%s'", tt.name, *comment.Body)
+				}
 			}
 		}
 	}

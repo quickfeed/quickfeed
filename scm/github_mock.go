@@ -66,21 +66,29 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		mockOptions: mockOpts,
 	}
 
-	// initial empty issues map: owner -> repo -> issues
-	s.issues = make(map[string]map[string][]github.Issue)
+	if s.issues == nil {
+		// initial empty issues map: owner -> repo -> issues
+		s.issues = make(map[string]map[string][]github.Issue)
+	}
 	for _, repo := range s.repos {
 		org := repo.GetOrganization().GetLogin()
 		if s.issues[org] == nil {
 			s.issues[org] = make(map[string][]github.Issue)
+			s.issues[org][repo.GetName()] = make([]github.Issue, 0)
 		}
-		s.issues[org][repo.GetName()] = make([]github.Issue, 0)
 	}
-	// initial empty comments map: owner -> repo -> issue ID -> comments
-	s.comments = make(map[string]map[string]map[int64][]github.IssueComment)
-	for org, repo := range s.issues {
-		s.comments[org] = make(map[string]map[int64][]github.IssueComment)
-		for re := range repo {
-			s.comments[org][re] = make(map[int64][]github.IssueComment)
+	if s.comments == nil {
+		// initial empty comments map: owner -> repo -> issue ID -> comments
+		s.comments = make(map[string]map[string]map[int64][]github.IssueComment)
+	}
+	for org, repos := range s.issues {
+		if s.comments[org] == nil {
+			s.comments[org] = make(map[string]map[int64][]github.IssueComment)
+		}
+		for repo := range repos {
+			if s.comments[org][repo] == nil {
+				s.comments[org][repo] = make(map[int64][]github.IssueComment)
+			}
 		}
 	}
 
@@ -328,6 +336,9 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				if *ghIssue.Number == issueNumber {
 					s.commentID++
 					comment.ID = github.Int64(s.commentID)
+					if s.comments[owner][repo] == nil {
+						s.comments[owner][repo] = make(map[int64][]github.IssueComment)
+					}
 					s.comments[owner][repo][*ghIssue.ID] = append(s.comments[owner][repo][*ghIssue.ID], comment)
 					w.WriteHeader(http.StatusCreated)
 					mustWrite(w, comment)

@@ -38,6 +38,22 @@ func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) b
 	return false
 }
 
+// GetComment returns the comment for the given organization, repository, and matching comment ID.
+// This is used to inspect the comments created/updated during testing; not part of the SCM interface.
+func (s mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
+	if s.comments[orgName] == nil || s.comments[orgName][repoName] == nil {
+		return nil
+	}
+	for _, comments := range s.comments[orgName][repoName] {
+		for _, comment := range comments {
+			if *comment.ID == commentID {
+				return &comment
+			}
+		}
+	}
+	return nil
+}
+
 func newMockOptions() *mockOptions {
 	return &mockOptions{
 		orgs:      make([]github.Organization, 0),
@@ -79,6 +95,12 @@ func WithGroups(groups map[string]map[string][]github.User) MockOption {
 func WithReviewers(reviewers map[string]map[string]map[int]github.ReviewersRequest) MockOption {
 	return func(opts *mockOptions) {
 		opts.reviewers = reviewers
+	}
+}
+
+func WithIssues(issues map[string]map[string][]github.Issue) MockOption {
+	return func(opts *mockOptions) {
+		opts.issues = issues
 	}
 }
 
