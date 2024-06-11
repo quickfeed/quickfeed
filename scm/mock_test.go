@@ -360,7 +360,7 @@ func TestMockGetIssues(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name: "issues for 'test-labs' repo",
+			name: "issues for user1-labs repo",
 			opt: &scm.RepositoryOptions{
 				Owner: qtest.MockOrg,
 				Path:  mockIssues[0].Repository,
@@ -369,7 +369,7 @@ func TestMockGetIssues(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name: "issues for 'user-labs' repo",
+			name: "issues for user2-labs repo",
 			opt: &scm.RepositoryOptions{
 				Owner: qtest.MockOrg,
 				Path:  mockIssues[2].Repository,
@@ -527,14 +527,14 @@ func TestMockDeleteIssues(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "delete all issues for 'user-labs' repo (issue 3)",
+			name:       "delete all issues for user1-labs repo (issue 3)",
 			opt:        u1RepoOpt,
 			getOpt:     u2RepoOpt,
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1]},
 			wantErr:    false,
 		},
 		{
-			name:       "delete all issues for 'test-labs' repo (issues 1 and 2)",
+			name:       "delete all issues for user2-labs repo (issues 1 and 2)",
 			opt:        u2RepoOpt,
 			getOpt:     u1RepoOpt,
 			wantIssues: map[uint64]*scm.Issue{3: mockIssues[2]},
@@ -738,12 +738,15 @@ func TestMockUpdateIssueComment(t *testing.T) {
 	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...), scm.WithIssues(issues))
 	// create two comments for issue 1 to initialize the comments map
 	for range 2 {
-		s.CreateIssueComment(context.Background(), &scm.IssueCommentOptions{
+		_, err := s.CreateIssueComment(context.Background(), &scm.IssueCommentOptions{
 			Organization: qtest.MockOrg,
 			Repository:   repos[0].GetName(),
 			Body:         "Not updated",
 			Number:       1,
 		})
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	for _, tt := range tests {
@@ -803,6 +806,7 @@ func TestMockUpdateIssueComment2(t *testing.T) {
 }
 
 func TestMockCreateCourse(t *testing.T) {
+	// s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(u1)}
