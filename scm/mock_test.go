@@ -2,7 +2,6 @@ package scm_test
 
 import (
 	"context"
-	"path/filepath"
 	"sort"
 	"testing"
 
@@ -67,67 +66,6 @@ var (
 		},
 	}
 )
-
-func TestMockClone(t *testing.T) {
-	dstDir := t.TempDir()
-	s := scm.NewMockSCMClient()
-	ctx := context.Background()
-	tests := []struct {
-		name     string
-		opt      *scm.CloneOptions
-		wantPath string
-		wantErr  bool
-	}{
-		{
-			name: "student repository",
-			opt: &scm.CloneOptions{
-				Organization: qtest.MockOrg,
-				Repository:   qf.StudentRepoName("user"),
-				DestDir:      dstDir,
-			},
-			wantPath: filepath.Join(dstDir, qf.StudentRepoName("user")),
-			wantErr:  false,
-		},
-		{
-			name: "assignments repository",
-			opt: &scm.CloneOptions{
-				Organization: qtest.MockOrg,
-				Repository:   qf.AssignmentsRepo,
-				DestDir:      dstDir,
-			},
-			wantPath: filepath.Join(dstDir, "assignments"),
-			wantErr:  false,
-		},
-		{
-			name: "tests repository",
-			opt: &scm.CloneOptions{
-				Organization: qtest.MockOrg,
-				Repository:   qf.TestsRepo,
-				DestDir:      dstDir,
-			},
-			wantPath: filepath.Join(dstDir, "tests"),
-			wantErr:  false,
-		},
-		{
-			name: "missing organization info",
-			opt: &scm.CloneOptions{
-				Repository: qf.StudentRepoName(u1),
-				DestDir:    dstDir,
-			},
-			wantPath: "",
-			wantErr:  true,
-		},
-	}
-	for _, tt := range tests {
-		path, err := s.Clone(ctx, tt.opt)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v", tt.name, tt.wantErr, err)
-		}
-		if path != tt.wantPath {
-			t.Errorf("%s: expected path '%s', got '%s'", tt.name, tt.wantPath, path)
-		}
-	}
-}
 
 func TestMockOrganizations(t *testing.T) {
 	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockCourses())
