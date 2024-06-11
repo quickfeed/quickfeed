@@ -829,24 +829,13 @@ func TestMockUpdateIssueComment(t *testing.T) {
 }
 
 func TestMockUpdateIssueComment2(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	repo := &scm.Repository{
-		ID:    1,
-		OrgID: 1,
-		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("user"),
-	}
-	s.Repositories = map[uint64]*scm.Repository{
-		1: repo,
-	}
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithRepos(repos...))
 
-	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
-		Organization: repo.Owner,
-		Repository:   repo.Path,
-		Body:         body,
+		Organization: qtest.MockOrg,
+		Repository:   qf.StudentRepoName("test"),
+		Body:         "Issue Comment",
 	}
-
 	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
 	defer cleanup()
 
@@ -857,11 +846,18 @@ func TestMockUpdateIssueComment2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// NOTE: We do not currently return the updated comment, so we cannot verify its content.
 	opt.Body = "Updated Issue Comment"
 	opt.CommentID = commentID
 	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
 		t.Fatal(err)
+	}
+	comment := s.GetComment(opt.Organization, opt.Repository, commentID)
+	if comment == nil {
+		t.Errorf("comment not found")
+	} else {
+		if *comment.Body != "Updated Issue Comment" {
+			t.Errorf("expected comment body 'Updated Issue Comment', got '%s'", *comment.Body)
+		}
 	}
 }
 
