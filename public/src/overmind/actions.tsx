@@ -220,11 +220,14 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     state.submissionsForCourse.update(owner, submission)
 }
 
-export const updateGrade = async ({ state, effects }: Context, { grade }: { grade: Grade }): Promise<void> => {
-    const response = await effects.api.client.updateGrade(grade)
+export const updateGrade = async ({ state, effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
+    const clone = grade.clone()
+    clone.Status = status
+    const response = await effects.api.client.updateGrade(clone)
     if (response.error) {
         return
     }
+    // grade.Status = status
     const submission = state.submissionsForCourse.ByID(grade.SubmissionID)
     if (submission) {
         setStatusByUser(submission, grade.UserID, grade.Status)
