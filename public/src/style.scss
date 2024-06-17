@@ -315,6 +315,11 @@ input {
     cursor: pointer;
 }
 
+.result-mixed {
+    background: linear-gradient(45deg, #ccffcc 33%, #ffffcc 33%, #ffffcc 66%, #ffcccc 66%);
+    cursor: pointer;
+}
+
 .selected {
     border: 2px solid rgb(0, 123, 255);
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.5) inset;
