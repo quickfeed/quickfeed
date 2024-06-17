@@ -316,9 +316,9 @@ input {
 }
 
 .selected {
-    background-color: #007bff;
-    color: white;
-}
+    border: 2px solid rgb(0, 123, 255);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5) inset;
+  }
 
 .release {
     box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
