@@ -7,7 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestMockCreateIssue(t *testing.T) {
@@ -461,7 +460,7 @@ func TestMockUpdateIssueComment(t *testing.T) {
 			// verify the state of the issue comment
 			for _, comment := range s.comments[tt.opt.Organization][tt.opt.Repository][int64(tt.opt.Number)] {
 				if *comment.ID == tt.opt.CommentID {
-					if diff := cmp.Diff(tt.wantComment, comment, protocmp.Transform()); diff != "" {
+					if diff := cmp.Diff(tt.wantComment, comment); diff != "" {
 						t.Errorf("UpdateIssueComment() mismatch (-want +got):\n%s", diff)
 					}
 					return
