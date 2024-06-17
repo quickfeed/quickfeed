@@ -3,8 +3,11 @@ package scm
 const (
 	getByID                                         = "GET /organizations/{id}"
 	getOrgsByOrg                                    = "GET /orgs/{org}"
+	patchOrgsByOrg                                  = "PATCH /orgs/{org}"
 	getOrgsReposByOrg                               = "GET /orgs/{org}/repos"
+	postOrgsReposByOrg                              = "POST /orgs/{org}/repos"
 	getOrgsMembershipsByOrgByUsername               = "GET /orgs/{org}/memberships/{username}"
+	getReposOwnerByOwnerByRepo                      = "GET /repos/{owner}/{repo}"
 	getReposContentsByOwnerByRepoByPath             = "GET /repos/{owner}/{repo}/contents/{path...}"
 	getReposCollaboratorsByOwnerByRepo              = "GET /repos/{owner}/{repo}/collaborators"
 	putReposCollaboratorsByOwnerByRepoByUsername    = "PUT /repos/{owner}/{repo}/collaborators/{username}"

@@ -2,9 +2,12 @@ package scm
 
 import (
 	"context"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -256,5 +259,55 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	// verify the state of the groups after the sequence of UpdateGroupMembers
 	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
 		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestMockCreateCourse(t *testing.T) {
+	// repositories that should be created for bar; manually sorted by path
+	wantBarRepos := []*Repository{
+		{OrgID: 456, Owner: "bar", Path: "assignments"},
+		{OrgID: 456, Owner: "bar", Path: "info"},
+		{OrgID: 456, Owner: "bar", Path: "meling-labs"},
+		{OrgID: 456, Owner: "bar", Path: "tests"},
+	}
+	// we need to initialize the groups table (collaborators) to allow creating a course with meling as course creator
+	g := map[string]map[string][]github.User{
+		"bar": {
+			"meling-labs": {},
+		},
+	}
+
+	tests := []struct {
+		name      string
+		opt       *CourseOptions // cannot be nil
+		wantRepos []*Repository
+		wantErr   bool
+	}{
+		{name: "IncompleteRequest", opt: &CourseOptions{}, wantRepos: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &CourseOptions{OrganizationID: 123}, wantRepos: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &CourseOptions{CourseCreator: "meling"}, wantRepos: nil, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &CourseOptions{OrganizationID: 789, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},              // 789 does not exist
+		{name: "CompleteRequest/FooReposAlreadyExists", opt: &CourseOptions{OrganizationID: 123, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},    // foo already has repositories
+		{name: "CompleteRequest/CourseCreatorDoesNotExist", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "frank"}, wantRepos: nil, wantErr: true}, // frank is not a member of bar
+		{name: "CompleteRequest/CourseBarReposCreated", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "meling"}, wantRepos: wantBarRepos, wantErr: false},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(g))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"OrganizationID", "CourseCreator"}, tt.opt.OrganizationID, tt.opt.CourseCreator)
+		t.Run(name, func(t *testing.T) {
+			got, err := s.CreateCourse(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateCourse() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			// sort repositories to make comparison easier since the order is not guaranteed
+			slices.SortFunc(got, func(a, b *Repository) int {
+				return strings.Compare(a.Path, b.Path)
+			})
+			if diff := cmp.Diff(tt.wantRepos, got, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
+				t.Errorf("CreateCourse() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
