@@ -145,6 +145,10 @@ export const hasAllStatus = (submission: Submission, status: Submission_Status):
     return submission.Grades.every(grade => grade.Status === status)
 }
 
+export const userHasStatus = (submission: Submission, userID: bigint, status: Submission_Status): boolean => {
+    return submission.Grades.some(grade => grade.UserID === userID && grade.Status === status)
+}
+
 export const hasReviews = (submission: Submission): boolean => { return submission.reviews.length > 0 }
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return obj.gradingBenchmarks.length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return benchmark.criteria.length > 0 }
@@ -267,15 +271,30 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
-export const getSubmissionCellColor = (submission: Submission): string => {
-    if (isApproved(submission)) {
-        return "result-approved"
-    }
-    if (isRevision(submission)) {
-        return "result-revision"
-    }
-    if (isRejected(submission)) {
-        return "result-rejected"
+export const getSubmissionCellColor = (submission: Submission, owner:  Enrollment | Group): string => {
+    if (owner instanceof Group) {
+        if (isApproved(submission)) {
+            return "result-approved"
+        }
+        if (isRevision(submission)) {
+            return "result-revision"
+        }
+        if (isRejected(submission)) {
+            return "result-rejected"
+        }
+        if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {
+            return "result-pending"
+        }
+    } else {
+        if (userHasStatus(submission, owner.ID, Submission_Status.APPROVED)) {
+            return "result-approved"
+        }
+        if (userHasStatus(submission, owner.ID, Submission_Status.REVISION)) {
+            return "result-revision"
+        }
+        if (userHasStatus(submission, owner.ID, Submission_Status.REJECTED)) {
+            return "result-rejected"
+        }
     }
     return "clickable"
 }

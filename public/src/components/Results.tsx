@@ -83,7 +83,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         return ({
             // TODO: Figure out a better way to visualize released submissions than '(r)'
             value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
-            className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
+            className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
                 actions.setSelectedSubmission(submission)
                 if (owner instanceof Enrollment) {
@@ -102,7 +102,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
         const isSelected = state.selectedSubmission?.ID === submission.ID
         return ({
             value: `${submission.score} %`,
-            className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
+            className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
                 actions.setSelectedSubmission(submission)
                 if (owner instanceof Enrollment) {
