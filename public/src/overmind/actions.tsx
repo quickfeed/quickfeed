@@ -220,19 +220,33 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     state.submissionsForCourse.update(owner, submission)
 }
 
-export const updateGrade = async ({ state, effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
-    const clone = grade.clone()
-    clone.Status = status
-    const response = await effects.api.client.updateGrade(clone)
+export const updateGrade = async ({state,  effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
+    if (grade.Status === status || !state.selectedSubmission) {
+        return
+    }
+
+    if (!confirm(`Are you sure you want to set status ${SubmissionStatus[status]} on this grade?`)) {
+        return
+    }
+    
+    const clone = state.selectedSubmission.clone()
+    clone.Grades = clone.Grades.map(g => {
+        if (g.UserID === grade.UserID) {
+            g.Status = status
+        }
+        return g
+    }) 
+    const response = await effects.api.client.updateSubmission({
+        courseID: state.activeCourse,
+        submissionID: state.selectedSubmission.ID,
+        grades: clone.Grades,
+        released: state.selectedSubmission.released,
+        score: state.selectedSubmission.score,
+    })
     if (response.error) {
         return
     }
-    // grade.Status = status
-    const submission = state.submissionsForCourse.ByID(grade.SubmissionID)
-    if (submission) {
-        setStatusByUser(submission, grade.UserID, grade.Status)
-    }
-
+    state.selectedSubmission.Grades = clone.Grades
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
