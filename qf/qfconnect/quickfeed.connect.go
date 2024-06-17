@@ -105,9 +105,6 @@ const (
 	// QuickFeedServiceRebuildSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
 	// RebuildSubmissions RPC.
 	QuickFeedServiceRebuildSubmissionsProcedure = "/qf.QuickFeedService/RebuildSubmissions"
-	// QuickFeedServiceUpdateGradeProcedure is the fully-qualified name of the QuickFeedService's
-	// UpdateGrade RPC.
-	QuickFeedServiceUpdateGradeProcedure = "/qf.QuickFeedService/UpdateGrade"
 	// QuickFeedServiceCreateBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
 	// CreateBenchmark RPC.
 	QuickFeedServiceCreateBenchmarkProcedure = "/qf.QuickFeedService/CreateBenchmark"
@@ -173,7 +170,6 @@ var (
 	quickFeedServiceUpdateSubmissionMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateSubmission")
 	quickFeedServiceUpdateSubmissionsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateSubmissions")
 	quickFeedServiceRebuildSubmissionsMethodDescriptor     = quickFeedServiceServiceDescriptor.Methods().ByName("RebuildSubmissions")
-	quickFeedServiceUpdateGradeMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateGrade")
 	quickFeedServiceCreateBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("CreateBenchmark")
 	quickFeedServiceUpdateBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateBenchmark")
 	quickFeedServiceDeleteBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteBenchmark")
@@ -217,7 +213,6 @@ type QuickFeedServiceClient interface {
 	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
 	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
 	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
-	UpdateGrade(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error)
 	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
 	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
 	DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
@@ -388,12 +383,6 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceRebuildSubmissionsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		updateGrade: connect.NewClient[qf.Grade, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceUpdateGradeProcedure,
-			connect.WithSchema(quickFeedServiceUpdateGradeMethodDescriptor),
-			connect.WithClientOptions(opts...),
-		),
 		createBenchmark: connect.NewClient[qf.GradingBenchmark, qf.GradingBenchmark](
 			httpClient,
 			baseURL+QuickFeedServiceCreateBenchmarkProcedure,
@@ -495,7 +484,6 @@ type quickFeedServiceClient struct {
 	updateSubmission       *connect.Client[qf.UpdateSubmissionRequest, qf.Void]
 	updateSubmissions      *connect.Client[qf.UpdateSubmissionsRequest, qf.Void]
 	rebuildSubmissions     *connect.Client[qf.RebuildRequest, qf.Void]
-	updateGrade            *connect.Client[qf.Grade, qf.Void]
 	createBenchmark        *connect.Client[qf.GradingBenchmark, qf.GradingBenchmark]
 	updateBenchmark        *connect.Client[qf.GradingBenchmark, qf.Void]
 	deleteBenchmark        *connect.Client[qf.GradingBenchmark, qf.Void]
@@ -630,11 +618,6 @@ func (c *quickFeedServiceClient) RebuildSubmissions(ctx context.Context, req *co
 	return c.rebuildSubmissions.CallUnary(ctx, req)
 }
 
-// UpdateGrade calls qf.QuickFeedService.UpdateGrade.
-func (c *quickFeedServiceClient) UpdateGrade(ctx context.Context, req *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
-	return c.updateGrade.CallUnary(ctx, req)
-}
-
 // CreateBenchmark calls qf.QuickFeedService.CreateBenchmark.
 func (c *quickFeedServiceClient) CreateBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
 	return c.createBenchmark.CallUnary(ctx, req)
@@ -724,7 +707,6 @@ type QuickFeedServiceHandler interface {
 	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
 	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
 	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
-	UpdateGrade(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error)
 	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
 	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
 	DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
@@ -891,12 +873,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceRebuildSubmissionsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	quickFeedServiceUpdateGradeHandler := connect.NewUnaryHandler(
-		QuickFeedServiceUpdateGradeProcedure,
-		svc.UpdateGrade,
-		connect.WithSchema(quickFeedServiceUpdateGradeMethodDescriptor),
-		connect.WithHandlerOptions(opts...),
-	)
 	quickFeedServiceCreateBenchmarkHandler := connect.NewUnaryHandler(
 		QuickFeedServiceCreateBenchmarkProcedure,
 		svc.CreateBenchmark,
@@ -1019,8 +995,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceUpdateSubmissionsHandler.ServeHTTP(w, r)
 		case QuickFeedServiceRebuildSubmissionsProcedure:
 			quickFeedServiceRebuildSubmissionsHandler.ServeHTTP(w, r)
-		case QuickFeedServiceUpdateGradeProcedure:
-			quickFeedServiceUpdateGradeHandler.ServeHTTP(w, r)
 		case QuickFeedServiceCreateBenchmarkProcedure:
 			quickFeedServiceCreateBenchmarkHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateBenchmarkProcedure:
@@ -1148,10 +1122,6 @@ func (UnimplementedQuickFeedServiceHandler) UpdateSubmissions(context.Context, *
 
 func (UnimplementedQuickFeedServiceHandler) RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.RebuildSubmissions is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) UpdateGrade(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateGrade is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {

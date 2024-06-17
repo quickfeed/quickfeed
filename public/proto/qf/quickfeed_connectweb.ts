@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { CourseRequest, CourseSubmissions, EnrollmentRequest, GroupRequest, Organization, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, Void } from "./requests_pb.js";
-import { Assignments, Course, Courses, Enrollment, Enrollments, Grade, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users } from "./types_pb.js";
+import { Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users } from "./types_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -234,15 +234,6 @@ export const QuickFeedService = {
     rebuildSubmissions: {
       name: "RebuildSubmissions",
       I: RebuildRequest,
-      O: Void,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.UpdateGrade
-     */
-    updateGrade: {
-      name: "UpdateGrade",
-      I: Grade,
       O: Void,
       kind: MethodKind.Unary,
     },

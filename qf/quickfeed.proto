@@ -52,8 +52,6 @@ service QuickFeedService {
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmissions(RebuildRequest) returns (Void) {}
 
-    rpc UpdateGrade(Grade) returns (Void) {}
-
     // manual grading //
 
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
