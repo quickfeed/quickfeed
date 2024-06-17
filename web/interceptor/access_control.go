@@ -57,7 +57,6 @@ var accessRolesFor = map[string]roles{
 	"UpdateSubmission":       {teacher},
 	"UpdateSubmissions":      {teacher},
 	"RebuildSubmissions":     {teacher},
-	"UpdateGrade":            {teacher},
 	"CreateBenchmark":        {teacher},
 	"UpdateBenchmark":        {teacher},
 	"DeleteBenchmark":        {teacher},

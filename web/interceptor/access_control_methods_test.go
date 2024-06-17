@@ -44,7 +44,6 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"UpdateSubmission":       true,
 		"UpdateSubmissions":      true,
 		"RebuildSubmissions":     true,
-		"UpdateGrade":            true,
 		"CreateBenchmark":        true,
 		"UpdateBenchmark":        true,
 		"DeleteBenchmark":        true,

@@ -296,15 +296,6 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 	return s.db.UpdateSubmissions(query, true)
 }
 
-func (s *QuickFeedService) updateGrade(request *qf.Grade) error {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: request.SubmissionID})
-	if err != nil {
-		return err
-	}
-	submission.SetGrade(request.UserID, request.Status)
-	return s.db.UpdateSubmission(submission)
-}
-
 // updateCourse updates an existing course.
 func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
 	// ensure the course exists
