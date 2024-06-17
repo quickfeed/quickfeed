@@ -283,7 +283,7 @@ export const getSubmissionCellColor = (submission: Submission, owner:  Enrollmen
             return "result-rejected"
         }
         if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {
-            return "result-pending"
+            return "result-mixed"
         }
     } else {
         if (userHasStatus(submission, owner.ID, Submission_Status.APPROVED)) {
