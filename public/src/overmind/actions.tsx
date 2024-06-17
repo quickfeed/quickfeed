@@ -229,8 +229,7 @@ export const updateGrade = async ({state,  effects }: Context, { grade, status }
         return
     }
     
-    const clone = state.selectedSubmission.clone()
-    clone.Grades = clone.Grades.map(g => {
+    const grades = state.selectedSubmission.Grades.map(g => {
         if (g.UserID === grade.UserID) {
             g.Status = status
         }
@@ -239,14 +238,14 @@ export const updateGrade = async ({state,  effects }: Context, { grade, status }
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: state.selectedSubmission.ID,
-        grades: clone.Grades,
+        grades: grades,
         released: state.selectedSubmission.released,
         score: state.selectedSubmission.score,
     })
     if (response.error) {
         return
     }
-    state.selectedSubmission.Grades = clone.Grades
+    state.selectedSubmission.Grades = grades
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
