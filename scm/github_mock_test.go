@@ -311,3 +311,69 @@ func TestMockCreateCourse(t *testing.T) {
 		})
 	}
 }
+
+func TestMockUpdateEnrollment(t *testing.T) {
+	// we need to initialize the groups table (collaborators) to allow updating repository accesses
+	g := map[string]map[string][]github.User{
+		"foo": {
+			"assignments": {}, // needed to allow updating PULL access to the repository
+			"meling-labs": {}, // needed to allow updating PUSH access to the repository
+		},
+		"bar": {
+			"assignments": {}, // needed to allow updating PULL access to the repository
+			"meling-labs": {}, // needed to allow updating PUSH access to the repository
+		},
+	}
+	// two members; no roles defined yet
+	members := []github.Membership{
+		{Organization: &ghOrgFoo, User: &meling},
+		{Organization: &ghOrgBar, User: &meling},
+	}
+	wantFooRepo := &Repository{OrgID: 123, Owner: "foo", Path: "meling-labs"}
+	wantBarRepo := &Repository{OrgID: 456, Owner: "bar", Path: "meling-labs"}
+
+	tests := []struct {
+		name     string
+		opt      *UpdateEnrollmentOptions // cannot be nil
+		wantRepo *Repository
+		wantErr  bool
+	}{
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Status: qf.Enrollment_STUDENT}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Organization: "foo"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Organization: "foo", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Organization: "foo", Status: qf.Enrollment_STUDENT}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Organization: "foo", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                // not allowed
+		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},          // not allowed
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
+		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...), WithGroups(g))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "User", "Status"}, tt.opt.Organization, tt.opt.User, tt.opt.Status)
+		t.Run(name, func(t *testing.T) {
+			got, err := s.UpdateEnrollment(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateEnrollment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(tt.wantRepo, got, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
+				t.Errorf("UpdateEnrollment() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

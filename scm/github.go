@@ -264,8 +264,11 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
 			return nil, err
 		}
+		// Teacher's private (student) repo should already exist
+		return nil, nil
 	}
-	return nil, err
+	// Only student and teacher enrollments are allowed (NONE and PENDING are not relevant here)
+	return nil, fmt.Errorf("invalid enrollment status: %v", opt.Status)
 }
 
 // RejectEnrollment removes user's repository and revokes user's membership in the course organization.
