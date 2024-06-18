@@ -414,3 +414,36 @@ func TestMockRejectEnrollment(t *testing.T) {
 		})
 	}
 }
+
+func TestMockDemoteTeacherToStudent(t *testing.T) {
+	members := []github.Membership{
+		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &jostein, Role: github.String(OrgMember)},
+		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+	}
+
+	tests := []struct {
+		name    string
+		opt     *UpdateEnrollmentOptions // cannot be nil; the Status field is not used by DemoteTeacherToStudent
+		wantErr bool
+	}{
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling"}, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantErr: true},
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: true},
+		{name: "CompleteRequest/FooStudent", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"}, wantErr: false}, // jostein is already a student
+		{name: "CompleteRequest/FooTeacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
+		{name: "CompleteRequest/BarTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "User"}, tt.opt.Organization, tt.opt.User)
+		t.Run(name, func(t *testing.T) {
+			if err := s.DemoteTeacherToStudent(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("DemoteTeacherToStudent() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
