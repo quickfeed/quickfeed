@@ -23,11 +23,11 @@ var (
 
 // mock repositories for organization foo; bar has no repositories
 var repos = []github.Repository{
-	{Organization: &ghOrgFoo, Name: github.String("info")},
-	{Organization: &ghOrgFoo, Name: github.String("assignments")},
-	{Organization: &ghOrgFoo, Name: github.String("tests")},
-	{Organization: &ghOrgFoo, Name: github.String("meling-labs")},
-	{Organization: &ghOrgFoo, Name: github.String("josie-labs")},
+	{ID: github.Int64(1), Organization: &ghOrgFoo, Name: github.String("info")},
+	{ID: github.Int64(2), Organization: &ghOrgFoo, Name: github.String("assignments")},
+	{ID: github.Int64(3), Organization: &ghOrgFoo, Name: github.String("tests")},
+	{ID: github.Int64(4), Organization: &ghOrgFoo, Name: github.String("meling-labs")},
+	{ID: github.Int64(5), Organization: &ghOrgFoo, Name: github.String("josie-labs")},
 }
 
 // memberships: user -> role; two members; one owner, one member
@@ -139,11 +139,11 @@ func TestMockGetRepositories(t *testing.T) {
 		{name: "IncompleteRequest/NoOrgName", org: &qf.Organization{}, want: nil, wantErr: true},
 		{name: "CompleteRequest/NotFound", org: &qf.Organization{ScmOrganizationName: "bar"}, want: []*Repository{}, wantErr: false},
 		{name: "CompleteRequest/FiveRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
-			{OrgID: 123, Path: "info"},
-			{OrgID: 123, Path: "assignments"},
-			{OrgID: 123, Path: "tests"},
-			{OrgID: 123, Path: "meling-labs"},
-			{OrgID: 123, Path: "josie-labs"},
+			{ID: 1, OrgID: 123, Path: "info"},
+			{ID: 2, OrgID: 123, Path: "assignments"},
+			{ID: 3, OrgID: 123, Path: "tests"},
+			{ID: 4, OrgID: 123, Path: "meling-labs"},
+			{ID: 5, OrgID: 123, Path: "josie-labs"},
 		}},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
@@ -373,6 +373,43 @@ func TestMockUpdateEnrollment(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.wantRepo, got, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
 				t.Errorf("UpdateEnrollment() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestMockRejectEnrollment(t *testing.T) {
+	members := []github.Membership{
+		{Organization: &ghOrgFoo, User: &meling},
+		{Organization: &ghOrgFoo, User: &jostein},
+		{Organization: &ghOrgBar, User: &meling},
+	}
+
+	tests := []struct {
+		name    string
+		opt     *RejectEnrollmentOptions // cannot be nil
+		wantErr bool
+	}{
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{OrganizationID: 123}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{RepositoryID: 1}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{User: "meling"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{OrganizationID: 123, User: "meling"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{RepositoryID: 1, User: "meling"}, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"}, wantErr: true},     // 789 does not exist
+		{name: "CompleteRequest/RepoNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"}, wantErr: true}, // 999 does not exist; note that jostein will be removed from foo
+		{name: "CompleteRequest/UserNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"}, wantErr: true},     // frank is not a member of foo
+		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 4, User: "meling"}, wantErr: false},
+		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"}, wantErr: true}, // jostein was already removed
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"OrganizationID", "RepositoryID", "User"}, tt.opt.OrganizationID, tt.opt.RepositoryID, tt.opt.User)
+		t.Run(name, func(t *testing.T) {
+			if err := s.RejectEnrollment(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("RejectEnrollment() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

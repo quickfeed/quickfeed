@@ -11,6 +11,7 @@ const (
 	deleteOrgsMembersByOrgByUsername                = "DELETE /orgs/{org}/members/{username}"
 	getReposOwnerByOwnerByRepo                      = "GET /repos/{owner}/{repo}"
 	deleteReposByOwnerByRepo                        = "DELETE /repos/{owner}/{repo}"
+	getRepositoriesByID                             = "GET /repositories/{repository_id}"
 	getReposContentsByOwnerByRepoByPath             = "GET /repos/{owner}/{repo}/contents/{path...}"
 	getReposCollaboratorsByOwnerByRepo              = "GET /repos/{owner}/{repo}/collaborators"
 	putReposCollaboratorsByOwnerByRepoByUsername    = "PUT /repos/{owner}/{repo}/collaborators/{username}"

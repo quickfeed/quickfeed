@@ -272,6 +272,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 }
 
 // RejectEnrollment removes user's repository and revokes user's membership in the course organization.
+// If the user was already removed from the organization an error is returned, and the repository deletion is skipped.
 func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
@@ -280,6 +281,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if err != nil {
 		return err
 	}
+	// If user was already removed we report the error and skip the repository deletion
 	if _, err := s.client.Organizations.RemoveMember(ctx, org.ScmOrganizationName, opt.User); err != nil {
 		return err
 	}

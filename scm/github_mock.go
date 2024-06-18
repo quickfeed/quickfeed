@@ -103,7 +103,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // org not found
 		}),
 	)
 	getOrgsByOrgHandler := WithRequestMatchHandler(
@@ -114,7 +114,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				mustWrite(w, o)
 			})
 			if !found {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org not found
 			}
 		}),
 	)
@@ -132,7 +132,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				mustWrite(w, o)
 			})
 			if !found {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org not found
 			}
 		}),
 	)
@@ -150,7 +150,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				mustWrite(w, foundRepos)
 			})
 			if !found {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org not found
 			}
 		}),
 	)
@@ -168,7 +168,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				mustWrite(w, repo)
 			})
 			if !found {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org not found
 			}
 		}),
 	)
@@ -184,10 +184,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 						return
 					}
 				}
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // member not found
 			})
 			if !found {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org not found
 			}
 		}),
 	)
@@ -206,11 +206,31 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 						return
 					}
 				}
-				w.WriteHeader(http.StatusNotFound)
-				return
+				w.WriteHeader(http.StatusNotFound) // member not found
 			})
 			if !found {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org not found
+			}
+		}),
+	)
+	deleteOrgsMembersByOrgByUsernameHandler := WithRequestMatchHandler(
+		deleteOrgsMembersByOrgByUsername,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			org := r.PathValue("org")
+			username := r.PathValue("username")
+
+			found := s.matchOrgFunc(org, func(o github.Organization) {
+				for i, m := range s.members {
+					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
+						s.members = slices.Delete(s.members, i, i+1)
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+				}
+				w.WriteHeader(http.StatusNotFound) // member not found
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound) // org not found
 			}
 		}),
 	)
@@ -226,7 +246,36 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // repo not found
+		}),
+	)
+	deleteReposByOwnerByRepoHandler := WithRequestMatchHandler(
+		deleteReposByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			for i, re := range s.repos {
+				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
+					s.repos = slices.Delete(s.repos, i, i+1)
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound) // repo not found
+		}),
+	)
+	getRepositoriesByIDHandler := WithRequestMatchHandler(
+		getRepositoriesByID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			id := mustParse[int64](r.PathValue("repository_id"))
+			for _, repo := range s.repos {
+				if repo.GetID() == id {
+					repo.Owner = &github.User{Login: github.String(repo.GetOrganization().GetLogin())}
+					mustWrite(w, repo)
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound) // repo not found
 		}),
 	)
 	getReposContentsByOwnerByRepoByPathHandler := WithRequestMatchHandler(
@@ -236,7 +285,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
 			if !s.hasOrgRepo(owner, repo) {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
 			}
 			mustWrite(w, jsonFolderContent)
@@ -250,7 +299,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
 			}
 			w.WriteHeader(http.StatusOK)
@@ -267,7 +316,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
 			}
 			if slices.ContainsFunc(collaborators, func(u github.User) bool { return u.GetLogin() == username }) {
@@ -301,7 +350,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
 			}
 
@@ -320,7 +369,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			issueReq := mustRead[github.IssueRequest](r.Body)
 
 			if !s.hasOrgRepo(owner, repo) {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
 			}
 			if issueReq.Title == nil || issueReq.Body == nil {
@@ -371,7 +420,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // issue not found
 		}),
 	)
 	getIssueByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
@@ -388,7 +437,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // issue not found
 		}),
 	)
 	getIssuesByOwnerByRepoHandler := WithRequestMatchHandler(
@@ -399,7 +448,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			issues := s.issues[owner][repo]
 			if issues == nil {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
 			}
 			w.WriteHeader(http.StatusOK)
@@ -427,7 +476,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // issue not found
 		}),
 	)
 	patchIssueCommentByOwnerByRepoByCommentIDHandler := WithRequestMatchHandler(
@@ -449,7 +498,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					}
 				}
 			}
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // comment not found
 		}),
 	)
 	postPullReviewersByOwnerByRepoByPullNumberHandler := WithRequestMatchHandler(
@@ -461,7 +510,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			reviewers := mustRead[github.ReviewersRequest](r.Body)
 
 			if _, exists := s.reviewers[owner][repo][pullNumber]; !exists {
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound) // pull request not found
 				return
 			}
 			s.reviewers[owner][repo][pullNumber] = reviewers
@@ -491,7 +540,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			}
 		}
 		if id == 0 {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // issue not found
 			return
 		}
 
@@ -527,7 +576,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			}
 		}
 		if foundRepo == "" {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound) // issue not found
 			return
 		}
 
@@ -566,7 +615,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postOrgsReposByOrgHandler,
 		getOrgsMembershipsByOrgByUsernameHandler,
 		putOrgsMembershipsByOrgByUsernameHandler,
+		deleteOrgsMembersByOrgByUsernameHandler,
 		getReposByOwnersByRepoHandler,
+		deleteReposByOwnerByRepoHandler,
+		getRepositoriesByIDHandler,
 		getReposContentsByOwnerByRepoByPathHandler,
 		getReposCollaboratorsByOwnerByRepoHandler,
 		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
