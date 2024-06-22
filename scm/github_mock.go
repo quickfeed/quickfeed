@@ -249,6 +249,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			for i, re := range s.repos {
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 					s.repos = slices.Delete(s.repos, i, i+1)
+					delete(s.groups[owner], repo)
 					w.WriteHeader(http.StatusNoContent)
 					return
 				}
