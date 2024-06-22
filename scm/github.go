@@ -197,7 +197,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 
 	// Set restrictions to prevent students from creating new repositories and prevent access
 	// to organization repositories. This will not affect organization owners (teachers).
-	defaultPermissions := OrgNone
+	defaultPermissions := "none"
 	createRepoPermissions := false
 	if _, _, err = s.client.Organizations.Edit(ctx, org.ScmOrganizationName, &github.Organization{
 		DefaultRepoPermission: &defaultPermissions,

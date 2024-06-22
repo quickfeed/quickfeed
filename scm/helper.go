@@ -15,17 +15,6 @@ const (
 	OrgOwner = "admin"
 	// OrgMember is organization's member
 	OrgMember = "member"
-
-	// Repository permission levels for organization //
-
-	// OrgPull allows only pull access to organization repositories
-	OrgPull = "read"
-	// OrgPush allows pull and push access to organization repositories
-	OrgPush = "write"
-	// OrgFull allows to pull/push, create, remove and update organization repositories
-	OrgFull = "admin"
-	// OrgNone allows no access to organization repositories
-	OrgNone = "none"
 )
 
 const (
