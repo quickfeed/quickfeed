@@ -323,15 +323,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				return
 			}
 
-			ghUser := github.User{Login: github.String(username)}
+			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
+			ghUser := github.User{Login: github.String(username), Permissions: permissions}
 			s.groups[owner][repo] = append(collaborators, ghUser)
 			invite := github.CollaboratorInvitation{
 				Repo: &github.Repository{
-					Owner: &github.User{Login: github.String(owner)},
-					Name:  github.String(repo),
-					Permissions: map[string]bool{
-						repoCollaboratorOptions.Permission: true,
-					},
+					Owner:       &github.User{Login: github.String(owner)},
+					Name:        github.String(repo),
+					Permissions: permissions,
 				},
 				Invitee: &ghUser,
 			}

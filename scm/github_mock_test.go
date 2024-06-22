@@ -205,6 +205,13 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 }
 
 func TestMockUpdateGroupMembers(t *testing.T) {
+	push := map[string]bool{"push": true}
+	var (
+		meling  = github.User{Login: github.String("meling"), Permissions: push}
+		leslie  = github.User{Login: github.String("leslie"), Permissions: push}
+		lamport = github.User{Login: github.String("lamport"), Permissions: push}
+		jostein = github.User{Login: github.String("jostein"), Permissions: push}
+	)
 	tests := []struct {
 		name      string
 		org       *GroupOptions
@@ -235,6 +242,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
 		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
 	}
+	groups["bar"]["groupY"] = []github.User{leslie}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)

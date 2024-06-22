@@ -157,7 +157,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 
 	// add members that are not already in the group
 	for _, member := range opt.Users {
-		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, nil)
+		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, pushAccess)
 		if err != nil {
 			return ErrFailedSCM{
 				GitError: err,
