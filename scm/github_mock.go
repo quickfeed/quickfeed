@@ -165,6 +165,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				repo.ID = &s.repoID
 				repo.Owner = &github.User{Login: github.String(org)}
 				repo.Organization = &o
+				s.repos = append(s.repos, repo)
 				mustWrite(w, repo)
 			})
 			if !found {
@@ -316,8 +317,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
-				w.WriteHeader(http.StatusNotFound) // org and repo not found
-				return
+				if !slices.ContainsFunc(s.repos, func(r github.Repository) bool {
+					return r.GetOrganization().GetLogin() == owner && r.GetName() == repo
+				}) {
+					w.WriteHeader(http.StatusNotFound) // org and repo not found
+					return
+				}
+				collaborators = make([]github.User, 0)
+				s.groups[owner][repo] = collaborators
 			}
 			if slices.ContainsFunc(collaborators, func(u github.User) bool { return u.GetLogin() == username }) {
 				// already exists; no need to add again
