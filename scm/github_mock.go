@@ -28,15 +28,6 @@ var jsonFolderContent = `[
   }
 ]`
 
-var (
-	meling  = github.User{Login: github.String("meling")}
-	leslie  = github.User{Login: github.String("leslie")}
-	lamport = github.User{Login: github.String("lamport")}
-	jostein = github.User{Login: github.String("jostein")}
-	foo     = github.User{Login: github.String("foo")} // organization (user/owner)
-	bar     = github.User{Login: github.String("bar")} // organization (user/owner)
-)
-
 // MockedGithubSCM implements the SCM interface.
 type MockedGithubSCM struct {
 	*GithubSCM

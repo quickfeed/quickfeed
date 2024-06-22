@@ -31,6 +31,15 @@ var repos = []github.Repository{
 	{ID: github.Int64(6), Organization: &ghOrgFoo, Name: github.String("groupX")},
 }
 
+var (
+	meling  = github.User{Login: github.String("meling")}
+	leslie  = github.User{Login: github.String("leslie")}
+	lamport = github.User{Login: github.String("lamport")}
+	jostein = github.User{Login: github.String("jostein")}
+	foo     = github.User{Login: github.String("foo")} // organization (user/owner)
+	bar     = github.User{Login: github.String("bar")} // organization (user/owner)
+)
+
 // memberships: user -> role; two members; one owner, one member
 var members = []github.Membership{
 	{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
