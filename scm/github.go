@@ -194,14 +194,11 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	if err != nil {
 		return nil, err
 	}
-
 	// Set restrictions to prevent students from creating new repositories and prevent access
 	// to organization repositories. This will not affect organization owners (teachers).
-	defaultPermissions := "none"
-	createRepoPermissions := false
 	if _, _, err = s.client.Organizations.Edit(ctx, org.ScmOrganizationName, &github.Organization{
-		DefaultRepoPermission: &defaultPermissions,
-		MembersCanCreateRepos: &createRepoPermissions,
+		DefaultRepoPermission: github.String("none"),
+		MembersCanCreateRepos: github.Bool(false),
 	}); err != nil {
 		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.ScmOrganizationName, err)
 	}
@@ -252,16 +249,14 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 			return nil, err
 		}
 		// Promote user to organization member
-		role := OrgMember
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: github.String(OrgMember)}); err != nil {
 			return nil, err
 		}
 		return repo, nil
 
 	case qf.Enrollment_TEACHER:
 		// Promote user to organization owner
-		role := OrgOwner
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: github.String(OrgOwner)}); err != nil {
 			return nil, err
 		}
 		// Teacher's private (student) repo should already exist
@@ -293,8 +288,7 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
-	role := OrgMember
-	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: &role})
+	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: github.String(OrgMember)})
 	return err
 }
 

@@ -8,9 +8,8 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
+// Organization roles
 const (
-	// Organization roles //
-
 	// OrgOwner is organization's owner
 	OrgOwner = "admin"
 	// OrgMember is organization's member
