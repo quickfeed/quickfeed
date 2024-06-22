@@ -315,9 +315,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 		return nil, err
 	}
 	for _, user := range opt.Users {
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, opt.Organization, repo.Path, user, &github.RepositoryAddCollaboratorOptions{
-			Permission: RepoPush,
-		}); err != nil {
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, opt.Organization, repo.Path, user, pushAccess); err != nil {
 			return nil, err
 		}
 	}
@@ -421,12 +419,8 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo: %w", err)
 	}
-
 	// add push access to student repo
-	opt := &github.RepositoryAddCollaboratorOptions{
-		Permission: RepoPush,
-	}
-	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, opt); err != nil {
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, pushAccess); err != nil {
 		return nil, fmt.Errorf("failed to grant push access to %s/%s for user %s: %w", repo.Owner, repo.Path, login, err)
 	}
 	return repo, nil
@@ -436,10 +430,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login string) error {
 	commonRepos := []string{qf.AssignmentsRepo}
 	for _, repoType := range commonRepos {
-		opt := &github.RepositoryAddCollaboratorOptions{
-			Permission: RepoPull,
-		}
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, opt); err != nil {
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, pullAccess); err != nil {
 			return fmt.Errorf("failed to grant pull access to %s/%s for user %s: %w", org, repoType, login, err)
 		}
 	}

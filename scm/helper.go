@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -25,20 +26,19 @@ const (
 	OrgFull = "admin"
 	// OrgNone allows no access to organization repositories
 	OrgNone = "none"
-
-	// Repository permission levels for a user //
-
-	// RepoPull allows only pull access to repository
-	RepoPull = "pull"
-	// RepoPush allows pull and push access to repository
-	RepoPush = "push"
-	// RepoFull allows full access to repository
-	RepoFull = "admin"
 )
 
 const (
 	private = true
 	public  = !private
+)
+
+// Repository permission levels for users
+var (
+	// pullAccess allows only pull access to repository
+	pullAccess = &github.RepositoryAddCollaboratorOptions{Permission: "pull"}
+	// pushAccess allows pull and push access to repository
+	pushAccess = &github.RepositoryAddCollaboratorOptions{Permission: "push"}
 )
 
 var (
