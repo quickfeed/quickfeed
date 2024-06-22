@@ -81,52 +81,52 @@ func TestMockGetOrganization(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		org     *OrganizationOptions // cannot be nil
+		opt     *OrganizationOptions // cannot be nil
 		wantOrg *qf.Organization
 		wantErr bool
 	}{
-		{name: "IncompleteRequest", org: &OrganizationOptions{}, wantOrg: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &OrganizationOptions{Username: "meling"}, wantOrg: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &OrganizationOptions{NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &OrganizationOptions{NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &OrganizationOptions{}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &OrganizationOptions{Username: "meling"}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &OrganizationOptions{NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &OrganizationOptions{NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},
 
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123}, wantOrg: orgFoo, wantErr: false},
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456}, wantOrg: orgBar, wantErr: false},
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 123}, wantOrg: orgFoo, wantErr: false},
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 456}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{ID: 789}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123, NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456, NewCourse: true}, wantOrg: orgBar, wantErr: false},
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789, NewCourse: true}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 123, NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 456, NewCourse: true}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{ID: 789, NewCourse: true}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123, Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 123, Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 456, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{ID: 789, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 123, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo, but foo is not empty (not new course)
-		{name: "CompleteRequest", org: &OrganizationOptions{ID: 456, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{ID: 789, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 123, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo, but foo is not empty (not new course)
+		{name: "CompleteRequest", opt: &OrganizationOptions{ID: 456, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{ID: 789, NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // 789 does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo"}, wantOrg: orgFoo, wantErr: false},
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar"}, wantOrg: orgBar, wantErr: false},
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz"}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "foo"}, wantOrg: orgFoo, wantErr: false},
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "bar"}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{Name: "baz"}, wantOrg: nil, wantErr: true}, // baz does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo", NewCourse: true}, wantOrg: nil, wantErr: true},
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", NewCourse: true}, wantOrg: orgBar, wantErr: false},
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "foo", NewCourse: true}, wantOrg: nil, wantErr: true},
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "bar", NewCourse: true}, wantOrg: orgBar, wantErr: false},
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{Name: "baz", NewCourse: true}, wantOrg: nil, wantErr: true}, // baz does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo", Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "foo", Username: "meling"}, wantOrg: orgFoo, wantErr: false},     // meling is owner of foo
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "bar", Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{Name: "baz", Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
 
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "foo", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo
-		{name: "CompleteRequest", org: &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
-		{name: "CompleteRequest/Missing", org: &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "foo", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is owner of foo
+		{name: "CompleteRequest", opt: &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true},         // meling is only member of bar, not owner
+		{name: "CompleteRequest/Missing", opt: &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, wantOrg: nil, wantErr: true}, // baz does not exist
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
 	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.org.ID, tt.org.Name, tt.org.Username, tt.org.NewCourse)
+		name := qtest.Name(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.opt.ID, tt.opt.Name, tt.opt.Username, tt.opt.NewCourse)
 		t.Run(name, func(t *testing.T) {
-			gotOrg, gotErr := s.GetOrganization(context.Background(), tt.org)
+			gotOrg, gotErr := s.GetOrganization(context.Background(), tt.opt)
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("GetOrganization() error = %v, wantErr %v", gotErr, tt.wantErr)
 				return
@@ -214,47 +214,47 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	)
 	tests := []struct {
 		name      string
-		org       *GroupOptions
+		opt       *GroupOptions
 		wantUsers []github.User
 		wantErr   bool
 	}{
-		{name: "IncompleteRequest", org: &GroupOptions{}, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo"}, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a"}, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{Users: []string{"meling"}}, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantErr: true},
 
-		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "foo", GroupName: "a"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "x", GroupName: "info"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "foo", GroupName: "a", Users: []string{"meling"}}, wantErr: true},
-		{name: "CompleteRequest/NotFound", org: &GroupOptions{Organization: "x", GroupName: "info", Users: []string{"meling"}}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "foo", GroupName: "a"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "x", GroupName: "info"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "foo", GroupName: "a", Users: []string{"meling"}}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "x", GroupName: "info", Users: []string{"meling"}}, wantErr: true},
 
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "info", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling"}}, wantErr: false, wantUsers: []github.User{meling}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie"}}, wantErr: false, wantUsers: []github.User{meling, leslie}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{meling, leslie, lamport}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
-		{name: "CompleteRequest", org: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "info", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling"}}, wantErr: false, wantUsers: []github.User{meling}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie"}}, wantErr: false, wantUsers: []github.User{meling, leslie}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{meling, leslie, lamport}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
 	}
 	groups["bar"]["groupY"] = []github.User{leslie}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
 	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.org.Organization, tt.org.GroupName, tt.org.Users)
+		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
-			if err := s.UpdateGroupMembers(context.Background(), tt.org); (err != nil) != tt.wantErr {
+			if err := s.UpdateGroupMembers(context.Background(), tt.opt); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantUsers == nil {
 				return
 			}
 			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.org.Organization][tt.org.GroupName]); diff != "" {
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
 				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -284,33 +284,33 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 func TestMockCreateGroup(t *testing.T) {
 	tests := []struct {
 		name     string
-		org      *GroupOptions
+		opt      *GroupOptions
 		wantRepo *Repository
 		wantErr  bool
 	}{
-		{name: "IncompleteRequest", org: &GroupOptions{}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo"}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a"}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
 
-		{name: "CompleteRequest/OrgNotFound", org: &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "info"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "assignments"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "tests"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "meling-labs"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "groupX"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/OrgNotFound", opt: &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "info"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "assignments"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "tests"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "meling-labs"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "groupX"}, wantRepo: nil, wantErr: true},
 
-		{name: "CompleteRequest/GroupCreated", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "yes-minister"}, wantErr: false},
-		{name: "CompleteRequest/GroupCreated", org: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "paxos"}, wantErr: false},
-		{name: "CompleteRequest/GroupCreated", org: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{OrgID: 456, Owner: "bar", Path: "raft"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "yes-minister"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "paxos"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{OrgID: 456, Owner: "bar", Path: "raft"}, wantErr: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
 	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Organization", "GroupName"}, tt.org.Organization, tt.org.GroupName)
+		name := qtest.Name(tt.name, []string{"Organization", "GroupName"}, tt.opt.Organization, tt.opt.GroupName)
 		t.Run(name, func(t *testing.T) {
-			repo, err := s.CreateGroup(context.Background(), tt.org)
+			repo, err := s.CreateGroup(context.Background(), tt.opt)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateGroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -321,7 +321,7 @@ func TestMockCreateGroup(t *testing.T) {
 				t.Errorf("CreateGroup() mismatch (-want +got):\n%s", diff)
 			}
 			// verify the state of the groups after the test
-			if _, ok := s.groups[tt.org.Organization][tt.org.GroupName]; !ok {
+			if _, ok := s.groups[tt.opt.Organization][tt.opt.GroupName]; !ok {
 				t.Errorf("CreateGroup() group not created")
 			}
 		})
