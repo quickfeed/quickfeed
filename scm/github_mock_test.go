@@ -28,6 +28,7 @@ var repos = []github.Repository{
 	{ID: github.Int64(3), Organization: &ghOrgFoo, Name: github.String("tests")},
 	{ID: github.Int64(4), Organization: &ghOrgFoo, Name: github.String("meling-labs")},
 	{ID: github.Int64(5), Organization: &ghOrgFoo, Name: github.String("josie-labs")},
+	{ID: github.Int64(6), Organization: &ghOrgFoo, Name: github.String("groupX")},
 }
 
 // memberships: user -> role; two members; one owner, one member
@@ -138,12 +139,13 @@ func TestMockGetRepositories(t *testing.T) {
 		{name: "IncompleteRequest/NilOrg", org: nil, want: nil, wantErr: true},
 		{name: "IncompleteRequest/NoOrgName", org: &qf.Organization{}, want: nil, wantErr: true},
 		{name: "CompleteRequest/NotFound", org: &qf.Organization{ScmOrganizationName: "bar"}, want: []*Repository{}, wantErr: false},
-		{name: "CompleteRequest/FiveRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
+		{name: "CompleteRequest/SixRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
 			{ID: 1, OrgID: 123, Path: "info"},
 			{ID: 2, OrgID: 123, Path: "assignments"},
 			{ID: 3, OrgID: 123, Path: "tests"},
 			{ID: 4, OrgID: 123, Path: "meling-labs"},
 			{ID: 5, OrgID: 123, Path: "josie-labs"},
+			{ID: 6, OrgID: 123, Path: "groupX"},
 		}},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
@@ -262,6 +264,53 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	}
 }
 
+func TestMockCreateGroup(t *testing.T) {
+	tests := []struct {
+		name     string
+		org      *GroupOptions
+		wantRepo *Repository
+		wantErr  bool
+	}{
+		{name: "IncompleteRequest", org: &GroupOptions{}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", org: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", org: &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "info"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "assignments"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "tests"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "meling-labs"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "groupX"}, wantRepo: nil, wantErr: true},
+
+		{name: "CompleteRequest/GroupCreated", org: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "yes-minister"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", org: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "paxos"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", org: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{OrgID: 456, Owner: "bar", Path: "raft"}, wantErr: false},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "GroupName"}, tt.org.Organization, tt.org.GroupName)
+		t.Run(name, func(t *testing.T) {
+			repo, err := s.CreateGroup(context.Background(), tt.org)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateGroup() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantRepo == nil {
+				return
+			}
+			if diff := cmp.Diff(tt.wantRepo, repo, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
+				t.Errorf("CreateGroup() mismatch (-want +got):\n%s", diff)
+			}
+			// verify the state of the groups after the test
+			if _, ok := s.groups[tt.org.Organization][tt.org.GroupName]; !ok {
+				t.Errorf("CreateGroup() group not created")
+			}
+		})
+	}
+}
+
 func TestMockCreateCourse(t *testing.T) {
 	// repositories that should be created for bar; manually sorted by path
 	wantBarRepos := []*Repository{
@@ -287,9 +336,8 @@ func TestMockCreateCourse(t *testing.T) {
 		{name: "IncompleteRequest", opt: &CourseOptions{OrganizationID: 123}, wantRepos: nil, wantErr: true},
 		{name: "IncompleteRequest", opt: &CourseOptions{CourseCreator: "meling"}, wantRepos: nil, wantErr: true},
 
-		{name: "CompleteRequest/OrgNotFound", opt: &CourseOptions{OrganizationID: 789, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},              // 789 does not exist
-		{name: "CompleteRequest/FooReposAlreadyExists", opt: &CourseOptions{OrganizationID: 123, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},    // foo already has repositories
-		{name: "CompleteRequest/CourseCreatorDoesNotExist", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "frank"}, wantRepos: nil, wantErr: true}, // frank is not a member of bar
+		{name: "CompleteRequest/OrgNotFound", opt: &CourseOptions{OrganizationID: 789, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},           // 789 does not exist
+		{name: "CompleteRequest/FooReposAlreadyExists", opt: &CourseOptions{OrganizationID: 123, CourseCreator: "meling"}, wantRepos: nil, wantErr: true}, // foo already has repositories
 		{name: "CompleteRequest/CourseBarReposCreated", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "meling"}, wantRepos: wantBarRepos, wantErr: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(g))

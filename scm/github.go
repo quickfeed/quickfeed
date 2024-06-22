@@ -303,35 +303,48 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-	orgOptions := &OrganizationOptions{Name: opt.Organization}
-	org, err := s.GetOrganization(ctx, orgOptions)
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
+		// organization must exist
+		return nil, err
+	}
+	if _, err := s.getRepository(ctx, &RepositoryOptions{Owner: opt.Organization, Path: opt.GroupName}); err == nil {
+		return nil, fmt.Errorf("failed to create group in %s: repository %q already exists", opt.Organization, opt.GroupName)
+	}
+	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Organization: opt.Organization, Path: opt.GroupName, Private: true})
 	if err != nil {
 		return nil, err
 	}
-	repoOptions := &CreateRepositoryOptions{
-		Organization: opt.Organization,
-		Path:         opt.GroupName,
-		Private:      true,
-	}
-	repo, err := s.createRepository(ctx, repoOptions)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, user := range opt.Users {
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org.ScmOrganizationName, repo.Path, user, &github.RepositoryAddCollaboratorOptions{
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, opt.Organization, repo.Path, user, &github.RepositoryAddCollaboratorOptions{
 			Permission: RepoPush,
 		}); err != nil {
 			return nil, err
 		}
 	}
-
 	return repo, nil
 }
 
 // DeleteGroup deletes a group's repository.
 func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *RepositoryOptions) error {
 	return s.deleteRepository(ctx, opt)
+}
+
+// getRepository fetches a repository by ID or name.
+func (s *GithubSCM) getRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("missing fields: %+v", opt)
+	}
+	var repo *github.Repository
+	var err error
+	if opt.ID > 0 {
+		repo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
+	} else {
+		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return toRepository(repo), nil
 }
 
 // createRepository creates a new repository or returns an existing repository with the given name.
