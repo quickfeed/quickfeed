@@ -237,9 +237,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-	org, err := s.GetOrganization(ctx, &OrganizationOptions{
-		Name: opt.Organization,
-	})
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization})
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +349,7 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, opt.Path)
 	if repo != nil {
 		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
 		return toRepository(repo), nil
@@ -362,8 +360,8 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	// repo does not exist, create it
 	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
 	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
-		Name:    &opt.Path,
-		Private: &opt.Private,
+		Name:    github.String(opt.Path),
+		Private: github.Bool(opt.Private),
 	})
 	if err != nil {
 		return nil, ErrFailedSCM{
