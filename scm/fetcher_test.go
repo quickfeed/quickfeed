@@ -3,16 +3,75 @@ package scm_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/sh"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
+
+const debug = false
+
+func mustRun(wd, cmd string, args ...string) {
+	c := exec.Command(cmd, args...)
+	c.Dir = wd
+	if debug {
+		c.Stderr = os.Stderr
+		c.Stdout = os.Stdout
+		log.Println("running:", cmd, strings.Join(args, " "))
+	}
+	if err := c.Run(); err != nil {
+		panic(fmt.Sprintf("failed to run %s %v: %v", cmd, args, err))
+	}
+}
+
+func prepareGitRepo(dst, repo string) {
+	mustRun(dst, "mv", repo, repo+".git")
+	gitRepo := filepath.Join(dst, repo+".git")
+	mustRun(gitRepo, "git", "init")
+	mustRun(gitRepo, "git", "add", "lab1")
+	mustRun(gitRepo, "git", "commit", "-m", "added lab1")
+}
+
+func TestFileClone(t *testing.T) {
+	repoPath := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", repoPath)
+
+	testdataSrc := filepath.Join(env.TestdataPath(), qtest.MockOrg, qf.AssignmentsRepo)
+	dst := filepath.Join(repoPath, qtest.MockOrg)
+	if err := fileop.CopyDir(testdataSrc, dst); err != nil {
+		t.Fatal(err)
+	}
+	prepareGitRepo(dst, qf.AssignmentsRepo)
+
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t))
+
+	dstDir := t.TempDir()
+	assignmentDir, err := s.Clone(context.Background(), &scm.CloneOptions{
+		Organization: qtest.MockOrg,
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The following depends on the actual content of
+	// the testdata/courses/qf102-2022/assignments folder.
+	found, err := exists(filepath.Join(assignmentDir, "lab1"))
+	if !found {
+		t.Fatalf("lab1 not found in %s: %v", assignmentDir, err)
+	}
+}
 
 func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)

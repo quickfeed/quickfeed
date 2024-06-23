@@ -66,7 +66,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 
 // cloneURL returns the URL to clone the given repository.
 func (s *GithubSCM) cloneURL(opt *CloneOptions) string {
-	return fmt.Sprintf("https://%s/%s/%s.git", s.providerURL, opt.Organization, opt.Repository)
+	return fmt.Sprintf("%s/%s/%s.git", s.providerURL, opt.Organization, opt.Repository)
 }
 
 type CloneOptions struct {

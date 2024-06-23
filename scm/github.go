@@ -38,7 +38,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
 		token:       token,
-		providerURL: "github.com",
+		providerURL: "https://github.com",
 	}
 }
 

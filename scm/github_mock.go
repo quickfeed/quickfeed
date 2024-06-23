@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
 )
@@ -646,7 +647,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		logger:      logger,
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
-		providerURL: "github.com",
+		providerURL: "file://" + env.RepositoryPath(),
 	}
 	return s
 }
