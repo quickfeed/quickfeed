@@ -200,9 +200,8 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
 		t.Run(name, func(t *testing.T) {
-			gotIsEmpty := s.RepositoryIsEmpty(context.Background(), tt.opt)
-			if gotIsEmpty != tt.wantEmpty {
-				t.Errorf("RepositoryIsEmpty() = %v, want %v", gotIsEmpty, tt.wantEmpty)
+			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
+				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
 			}
 		})
 	}

@@ -126,13 +126,18 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
-	_, contents, resp, err := s.client.Repositories.GetContents(
-		ctx,
-		opt.Owner,
-		opt.Path,
-		"",
-		&github.RepositoryContentGetOptions{},
-	)
+	repo, err := s.getRepository(ctx, opt)
+	if err != nil {
+		s.logger.Error(err)
+		return true
+	}
+	opt.ID, opt.Owner, opt.Path = repo.ID, repo.Owner, repo.Path
+
+	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Path, "", &github.RepositoryContentGetOptions{})
+	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
+	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
+	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == 404) || (err == nil && %d == 0) == %t", resp.StatusCode, len(contents), (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0))
+
 	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
 	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
 	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
