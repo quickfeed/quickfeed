@@ -437,6 +437,7 @@ func TestMockUpdateEnrollment(t *testing.T) {
 	}
 	wantFooRepo := &Repository{OrgID: 123, Owner: "foo", Path: "meling-labs"}
 	wantBarRepo := &Repository{OrgID: 456, Owner: "bar", Path: "meling-labs"}
+	wantBarFrankRepo := &Repository{OrgID: 456, Owner: "bar", Path: "frank-labs"}
 
 	tests := []struct {
 		name     string
@@ -458,12 +459,16 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: true},
 
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                // not allowed
-		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},          // not allowed
+
+		// user frank does not exist, but is added to s.members in github_mock.go
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                   // ignored
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                // ignored
+		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
+
+		// user meling already exists in s.members in github_mock.go
+		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                // ignored
+		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},          // ignored
 		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
 		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
 		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)

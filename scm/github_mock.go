@@ -157,6 +157,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				repo.Owner = &github.User{Login: github.String(org)}
 				repo.Organization = &o
 				s.repos = append(s.repos, repo)
+				if s.groups[org] == nil {
+					s.groups[org] = make(map[string][]github.User)
+				}
+				s.groups[org][repo.GetName()] = make([]github.User, 0)
 				mustWrite(w, repo)
 			})
 			if !found {
@@ -289,7 +293,6 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
-
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
 				w.WriteHeader(http.StatusNotFound) // org and repo not found
@@ -316,6 +319,9 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 				collaborators = make([]github.User, 0)
+				if s.groups[owner] == nil {
+					s.groups[owner] = make(map[string][]github.User)
+				}
 				s.groups[owner][repo] = collaborators
 			}
 			if slices.ContainsFunc(collaborators, func(u github.User) bool { return u.GetLogin() == username }) {
@@ -326,7 +332,13 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
 			ghUser := github.User{Login: github.String(username), Permissions: permissions}
+			// this simulates that the user accepts the invitation (mocking the invite response is not supported yet)
 			s.groups[owner][repo] = append(collaborators, ghUser)
+			s.members = append(s.members, github.Membership{
+				Organization: &github.Organization{Login: github.String(owner)},
+				User:         &github.User{Login: github.String(username)},
+				Role:         github.String(repoCollaboratorOptions.Permission),
+			})
 			invite := github.CollaboratorInvitation{
 				Repo: &github.Repository{
 					Owner:       &github.User{Login: github.String(owner)},
