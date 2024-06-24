@@ -41,6 +41,11 @@ func TestMockCreateIssue(t *testing.T) {
 		{name: "IncompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Body: "xyz"}, wantIssue: nil, wantErr: true},
 		{name: "IncompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "Hello"}, wantIssue: nil, wantErr: true},
 
+		{name: "CompleteRequest/OrgNotFound", opt: &IssueOptions{Organization: "buz", Repository: "meling-labs", Title: "First", Body: "xyz"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &IssueOptions{Organization: "foo", Repository: "lamport-labs", Title: "First", Body: "xyz"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/MissingTitle", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Body: "xyz"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/MissingBody", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "First"}, wantIssue: nil, wantErr: true},
+
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"}, wantIssue: wantIssues["foo"]["meling-labs"][0], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"}, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"}, wantIssue: wantIssues["foo"]["josie-labs"][0], wantErr: false},
@@ -85,11 +90,40 @@ func TestMockDeleteIssue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get issues: %v", err)
 	}
-	for _, issue := range issues {
-		err = s.DeleteIssue(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, issue.Number)
-		if err != nil {
-			t.Fatalf("failed to delete issue: %v", err)
-		}
+	if len(issues) != 2 { // only two issues are created for foo/meling-labs
+		t.Fatalf("expected %d issues, got %d", 2, len(issues))
+	}
+
+	tests := []struct {
+		name    string
+		opt     *RepositoryOptions
+		number  int
+		wantErr bool
+	}{
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &RepositoryOptions{Owner: "buz", Path: "meling-labs"}, number: 1, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &RepositoryOptions{Owner: "foo", Path: "lamport-labs"}, number: 1, wantErr: true},
+		{name: "CompleteRequest/MissingNumber", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantErr: true},
+		{name: "CompleteRequest/WrongNumber", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 543, wantErr: true},
+
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 1, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 2, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 1, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 2, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, number: 1, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, number: 2, wantErr: false},
+	}
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			if err := s.DeleteIssue(context.Background(), tt.opt, tt.number); (err != nil) != tt.wantErr {
+				t.Errorf("DeleteIssue() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 	issues, err = s.GetIssues(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"})
 	if err != nil {
@@ -97,6 +131,92 @@ func TestMockDeleteIssue(t *testing.T) {
 	}
 	if len(issues) != 0 {
 		t.Errorf("expected no issues, got %d", len(issues))
+	}
+}
+
+func TestMockDeleteIssues(t *testing.T) {
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "meling-labs", Title: "Second", Body: "abc"},
+		{Organization: "foo", Repository: "josie-labs", Title: "First", Body: "xyz"},
+		{Organization: "foo", Repository: "josie-labs", Title: "Second", Body: "abc"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "First", Body: "xyz"},
+		{Organization: "dat320", Repository: "meling-labs", Title: "Second", Body: "abc"},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar, ghOrgDat320), WithRepos(repos...), WithMockCourses())
+	for _, opt := range createIssues {
+		_, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
+	}
+	allIssuesMap := make(map[uint64]*Issue)
+	queryOpts := []*RepositoryOptions{
+		{Owner: "foo", Path: "meling-labs"},
+		{Owner: "foo", Path: "josie-labs"},
+		{Owner: "dat320", Path: "meling-labs"},
+	}
+	for _, opt := range queryOpts {
+		issues, err := s.GetIssues(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to get issues: %v", err)
+		}
+		for _, issue := range issues {
+			allIssuesMap[issue.ID] = issue
+		}
+	}
+	if len(allIssuesMap) != len(createIssues) {
+		t.Fatalf("expected %d issues, got %d", len(createIssues), len(allIssuesMap))
+	}
+
+	tests := []struct {
+		name                string
+		opt                 *RepositoryOptions
+		wantRemainingIssues int
+		wantErr             bool
+	}{
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "meling-labs"}, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &RepositoryOptions{Owner: "buz", Path: "meling-labs"}, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &RepositoryOptions{Owner: "foo", Path: "lamport-labs"}, wantErr: true},
+
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantRemainingIssues: 4, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, wantRemainingIssues: 2, wantErr: false},
+		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, wantRemainingIssues: 0, wantErr: false},
+	}
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			if err := s.DeleteIssues(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("DeleteIssue() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
+			issues, err := s.GetIssues(context.Background(), tt.opt)
+			if err != nil {
+				t.Fatalf("failed to get issues: %v", err)
+			}
+			if len(issues) != 0 {
+				t.Errorf("expected no issues, got %d", len(issues))
+			}
+			gotIssues := 0
+			for _, opt := range queryOpts {
+				if opt.Owner == tt.opt.Owner && opt.Path == tt.opt.Path {
+					continue
+				}
+				issues, err := s.GetIssues(context.Background(), opt)
+				if err != nil {
+					t.Fatalf("failed to get issues: %v", err)
+				}
+				gotIssues += len(issues)
+			}
+			if gotIssues != tt.wantRemainingIssues {
+				t.Errorf("expected %d remaining issues, got %d", tt.wantRemainingIssues, gotIssues)
+			}
+		})
 	}
 }
 
@@ -146,6 +266,11 @@ func TestMockUpdateIssue(t *testing.T) {
 		{name: "IncompleteRequest", opt: &IssueOptions{Organization: "foo", Title: "Hello", Body: "xyz"}, wantIssue: nil, wantErr: true},
 		{name: "IncompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Body: "xyz"}, wantIssue: nil, wantErr: true},
 		{name: "IncompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "Hello"}, wantIssue: nil, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &IssueOptions{Organization: "buz", Repository: "meling-labs", Title: "First", Body: "xyz"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &IssueOptions{Organization: "foo", Repository: "lamport-labs", Title: "First", Body: "xyz"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/MissingTitle", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Body: "xyz"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/MissingBody", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "First"}, wantIssue: nil, wantErr: true},
 
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "First 1", Body: "First Body", Number: 1}, wantIssue: wantIssues["foo"]["meling-labs"][0], wantErr: false},
 		{name: "CompleteRequest", opt: &IssueOptions{Organization: "foo", Repository: "meling-labs", Title: "Second 2", Body: "Second Body", Number: 2}, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
@@ -216,6 +341,11 @@ func TestMockGetIssue(t *testing.T) {
 		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "meling-labs"}, wantIssue: nil, wantErr: true},
 		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantIssue: nil, wantErr: true},
 
+		{name: "CompleteRequest/OrgNotFound", opt: &RepositoryOptions{Owner: "buz", Path: "meling-labs"}, number: 1, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &RepositoryOptions{Owner: "foo", Path: "lamport-labs"}, number: 1, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/MissingNumber", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantIssue: nil, wantErr: true},
+		{name: "CompleteRequest/WrongNumber", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 543, wantIssue: nil, wantErr: true},
+
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 1, wantIssue: wantIssues["foo"]["meling-labs"][0], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, number: 2, wantIssue: wantIssues["foo"]["meling-labs"][1], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, number: 1, wantIssue: wantIssues["foo"]["josie-labs"][0], wantErr: false},
@@ -283,6 +413,9 @@ func TestMockGetIssues(t *testing.T) {
 		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantIssues: nil, wantErr: true},
 		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "meling-labs"}, wantIssues: nil, wantErr: true},
 
+		{name: "CompleteRequest/OrgNotFound", opt: &RepositoryOptions{Owner: "buz", Path: "meling-labs"}, wantIssues: nil, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &RepositoryOptions{Owner: "foo", Path: "lamport-labs"}, wantIssues: nil, wantErr: true},
+
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantIssues: wantIssues["foo"]["meling-labs"], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "foo", Path: "josie-labs"}, wantIssues: wantIssues["foo"]["josie-labs"], wantErr: false},
 		{name: "CompleteRequest", opt: &RepositoryOptions{Owner: "dat320", Path: "meling-labs"}, wantIssues: wantIssues["dat320"]["meling-labs"], wantErr: false},
@@ -299,6 +432,39 @@ func TestMockGetIssues(t *testing.T) {
 				t.Errorf("GetIssues() mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestMockGetIssues_CheckIssueNumbers(t *testing.T) {
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithRepos(repos...))
+	var wantIssueNumbers []int
+	createIssues := []*IssueOptions{
+		{Organization: "foo", Repository: "meling-labs", Title: "1st", Body: "Body 1"},
+		{Organization: "foo", Repository: "meling-labs", Title: "2nd", Body: "Body 2"},
+		{Organization: "foo", Repository: "meling-labs", Title: "3rd", Body: "Body 3"},
+		{Organization: "foo", Repository: "meling-labs", Title: "4th", Body: "Body 4"},
+		{Organization: "foo", Repository: "meling-labs", Title: "5th", Body: "Body 5"},
+		{Organization: "foo", Repository: "meling-labs", Title: "6th", Body: "Body 6"},
+	}
+	for _, opt := range createIssues {
+		issue, err := s.CreateIssue(context.Background(), opt)
+		if err != nil {
+			t.Fatalf("failed to create issue: %v", err)
+		}
+		wantIssueNumbers = append(wantIssueNumbers, issue.Number)
+	}
+
+	gotIssueNumbers := make([]int, len(createIssues))
+	issues, err := s.GetIssues(context.Background(), &RepositoryOptions{Owner: "foo", Path: "meling-labs"})
+	if err != nil {
+		t.Fatalf("failed to get issues: %v", err)
+	}
+	for i, issue := range issues {
+		gotIssueNumbers[i] = issue.Number
+	}
+
+	if diff := cmp.Diff(wantIssueNumbers, gotIssueNumbers); diff != "" {
+		t.Errorf("GetIssues() mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -330,6 +496,11 @@ func TestMockCreateIssueComment(t *testing.T) {
 		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Body: "Hello"}, wantCommentID: 0, wantErr: true},
 		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs"}, wantCommentID: 0, wantErr: true},
 		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Body: "Hello"}, wantCommentID: 0, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &IssueCommentOptions{Organization: "buz", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"}, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &IssueCommentOptions{Organization: "foo", Repository: "lamport-labs", Number: 1, Body: "Hello 1.1"}, wantErr: true},
+		{name: "CompleteRequest/MissingIssue", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Body: "Hello 1.1"}, wantErr: true},
+		{name: "CompleteRequest/UnknownIssue", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 654, Body: "Hello 1.1"}, wantErr: true},
 
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.1"}, wantCommentID: 1, wantErr: false},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Body: "Hello 1.2"}, wantCommentID: 2, wantErr: false},
@@ -423,6 +594,11 @@ func TestMockUpdateIssueComment(t *testing.T) {
 		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
 		{name: "IncompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Body: "Hello"}, wantErr: true},
 
+		{name: "CompleteRequest/OrgNotFound", opt: &IssueCommentOptions{Organization: "buz", Repository: "meling-labs", CommentID: 1, Body: "Hello 1.1"}, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &IssueCommentOptions{Organization: "foo", Repository: "lamport-labs", CommentID: 1, Body: "Hello 1.1"}, wantErr: true},
+		{name: "CompleteRequest/MissingCommentID", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", Body: "Hello 1.1"}, wantErr: true},
+		{name: "CompleteRequest/UnknownCommentID", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 654, Body: "Hello 1.1"}, wantErr: true},
+
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 1, Body: "World 1.1"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(1), Body: github.String("World 1.1")}},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 2, Body: "World 1.2"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(2), Body: github.String("World 1.2")}},
 		{name: "CompleteRequest", opt: &IssueCommentOptions{Organization: "foo", Repository: "meling-labs", CommentID: 3, Body: "World 1.3"}, wantErr: false, wantComment: github.IssueComment{ID: github.Int64(3), Body: github.String("World 1.3")}},
@@ -482,6 +658,12 @@ func TestMockRequestReviewers(t *testing.T) {
 		{name: "IncompleteRequest", opt: &RequestReviewersOptions{Repository: "meling-labs"}, wantErr: true},
 		{name: "IncompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
 
+		{name: "CompleteRequest/OrgNotFound", opt: &RequestReviewersOptions{Organization: "buz", Repository: "meling-labs", Number: 1, Reviewers: []string{"meling", "leslie"}}, wantErr: true},
+		{name: "CompleteRequest/RepoNotFound", opt: &RequestReviewersOptions{Organization: "foo", Repository: "lamport-labs", Number: 1, Reviewers: []string{"meling", "leslie"}}, wantErr: true},
+		{name: "CompleteRequest/MissingNumber", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Reviewers: []string{"meling", "leslie"}}, wantErr: true},
+		{name: "CompleteRequest/WrongNumber", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Number: 543, Reviewers: []string{"meling", "leslie"}}, wantErr: true},
+		{name: "CompleteRequest/MissingReviewers", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Number: 1}, wantErr: true},
+
 		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Number: 1, Reviewers: []string{"meling", "leslie"}}, wantErr: false, wantReviewers: []string{"meling", "leslie"}},
 		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "meling-labs", Number: 2, Reviewers: []string{"lamport", "jostein"}}, wantErr: false, wantReviewers: []string{"lamport", "jostein"}},
 		{name: "CompleteRequest", opt: &RequestReviewersOptions{Organization: "foo", Repository: "josie-labs", Number: 1, Reviewers: []string{"meling", "leslie"}}, wantErr: false, wantReviewers: []string{"meling", "leslie"}},
@@ -492,9 +674,11 @@ func TestMockRequestReviewers(t *testing.T) {
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Number"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Number)
 		t.Run(name, func(t *testing.T) {
-			err := s.RequestReviewers(context.Background(), tt.opt)
-			if (err != nil) != tt.wantErr {
+			if err := s.RequestReviewers(context.Background(), tt.opt); (err != nil) != tt.wantErr {
 				t.Errorf("RequestReviewers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
 				return
 			}
 			if diff := cmp.Diff(tt.wantReviewers, s.reviewers[tt.opt.Organization][tt.opt.Repository][tt.opt.Number].Reviewers); diff != "" {

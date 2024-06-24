@@ -140,6 +140,27 @@ func TestMockGetOrganization(t *testing.T) {
 			}
 		})
 	}
+
+	s = NewMockedGithubSCMClient(qtest.Logger(t), WithMockCourses())
+	for _, course := range qtest.MockCourses {
+		name := qtest.Name(course.Name, []string{"ScmOrgID", "ScmOrgName"}, course.ScmOrganizationID, course.ScmOrganizationName)
+		t.Run(name, func(t *testing.T) {
+			gotOrg, err := s.GetOrganization(context.Background(), &OrganizationOptions{Name: course.ScmOrganizationName})
+			if err != nil {
+				t.Errorf("GetOrganization() error = %v, want <nil>", err)
+			}
+			if gotOrg == nil {
+				t.Errorf("GetOrganization() = <nil>, want non-nil organization")
+			}
+			gotOrg, err = s.GetOrganization(context.Background(), &OrganizationOptions{ID: course.ScmOrganizationID})
+			if err != nil {
+				t.Errorf("GetOrganization() error = %v, want <nil>", err)
+			}
+			if gotOrg == nil {
+				t.Errorf("GetOrganization() = <nil>, want non-nil organization")
+			}
+		})
+	}
 }
 
 func TestMockGetRepositories(t *testing.T) {
@@ -396,6 +417,7 @@ func TestMockCreateCourse(t *testing.T) {
 
 		{name: "CompleteRequest/OrgNotFound", opt: &CourseOptions{OrganizationID: 789, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},           // 789 does not exist
 		{name: "CompleteRequest/FooReposAlreadyExists", opt: &CourseOptions{OrganizationID: 123, CourseCreator: "meling"}, wantRepos: nil, wantErr: true}, // foo already has repositories
+
 		{name: "CompleteRequest/CourseBarReposCreated", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "meling"}, wantRepos: wantBarRepos, wantErr: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(g))
@@ -512,6 +534,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 		{name: "CompleteRequest/OrgNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"}, wantErr: true},     // 789 does not exist
 		{name: "CompleteRequest/RepoNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"}, wantErr: true}, // 999 does not exist; note that jostein will be removed from foo
 		{name: "CompleteRequest/UserNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"}, wantErr: true},     // frank is not a member of foo
+
 		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 4, User: "meling"}, wantErr: false},
 		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"}, wantErr: true}, // jostein was already removed
 	}
@@ -544,6 +567,7 @@ func TestMockDemoteTeacherToStudent(t *testing.T) {
 
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantErr: true},
 		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: true},
+
 		{name: "CompleteRequest/FooStudent", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"}, wantErr: false}, // jostein is already a student
 		{name: "CompleteRequest/FooTeacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
 		{name: "CompleteRequest/BarTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
