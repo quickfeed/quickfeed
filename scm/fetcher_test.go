@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -34,24 +35,40 @@ func mustRun(wd, cmd string, args ...string) {
 	}
 }
 
-func prepareGitRepo(dst, repo string) {
-	mustRun(dst, "mv", repo, repo+".git")
-	gitRepo := filepath.Join(dst, repo+".git")
-	mustRun(gitRepo, "git", "init")
-	mustRun(gitRepo, "git", "add", "lab1")
-	mustRun(gitRepo, "git", "commit", "-m", "added lab1")
+func prepareGitRepo(src, dst, repo string) error {
+	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
+		return err
+	}
+	gitRepo := filepath.Join(dst, repo)
+	r, err := git.PlainInit(gitRepo, false)
+	if err != nil {
+		return err
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	_, err = w.Add("lab1")
+	if err != nil {
+		return err
+	}
+	_, err = w.Commit("added lab1", &git.CommitOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func TestFileClone(t *testing.T) {
 	repoPath := t.TempDir()
 	t.Setenv("QUICKFEED_REPOSITORY_PATH", repoPath)
 
-	testdataSrc := filepath.Join(env.TestdataPath(), qtest.MockOrg, qf.AssignmentsRepo)
+	src := filepath.Join(env.TestdataPath(), qtest.MockOrg)
 	dst := filepath.Join(repoPath, qtest.MockOrg)
-	if err := fileop.CopyDir(testdataSrc, dst); err != nil {
+	err := prepareGitRepo(src, dst, qf.AssignmentsRepo)
+	if err != nil {
 		t.Fatal(err)
 	}
-	prepareGitRepo(dst, qf.AssignmentsRepo)
 
 	s := scm.NewMockedGithubSCMClient(qtest.Logger(t))
 
