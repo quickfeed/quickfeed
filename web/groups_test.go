@@ -181,13 +181,12 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user1 := qtest.CreateFakeUser(t, db)
+	// create named users; needed for group creation
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
+	user3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user3"})
 	qtest.EnrollStudent(t, db, user1, &course)
-
-	user2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user2, &course)
-
-	user3 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user3, &course)
 
 	// set user1 in cookie, which is a group member
@@ -455,8 +454,8 @@ func TestPatchGroupStatus(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1 := qtest.CreateFakeUser(t, db)
-	user2 := qtest.CreateFakeUser(t, db)
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, &course)
@@ -557,8 +556,8 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, admin, course)
 
-	user1 := qtest.CreateFakeUser(t, db)
-	user2 := qtest.CreateFakeUser(t, db)
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, course)
