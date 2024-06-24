@@ -35,6 +35,8 @@ func mustRun(wd, cmd string, args ...string) {
 	}
 }
 
+// prepareGitRepo creates copies src/repo folder to dst and initializes
+// dst/repo as a git repository and adds a single file lab1/lab1.go.
 func prepareGitRepo(src, dst, repo string) error {
 	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
 		return err

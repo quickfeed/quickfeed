@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
 
 	"connectrpc.com/connect"
+	"github.com/go-git/go-git/v5"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -59,7 +62,42 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 	}
 }
 
+// prepareGitRepo creates copies src/repo folder to dst and initializes
+// dst/repo as a git repository and adds a single file lab1/lab1.go.
+func prepareGitRepo(src, dst, repo string) error {
+	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
+		return err
+	}
+	gitRepo := filepath.Join(dst, repo)
+	r, err := git.PlainInit(gitRepo, false)
+	if err != nil {
+		return err
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	_, err = w.Add("lab1")
+	if err != nil {
+		return err
+	}
+	_, err = w.Commit("added lab1", &git.CommitOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestRebuildSubmissions(t *testing.T) {
+	repoPath := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", repoPath)
+
+	src := filepath.Join(env.TestdataPath(), qtest.MockOrg)
+	dst := filepath.Join(repoPath, qtest.MockOrg)
+	prepareGitRepo(src, dst, qf.StudentRepoName("user"))
+	prepareGitRepo(src, dst, qf.TestsRepo)
+	prepareGitRepo(src, dst, qf.AssignmentsRepo)
+
 	_, mgr := scm.MockSCMManager(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -143,7 +181,6 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Errorf("Expected error: record not found")
 	}
 
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
