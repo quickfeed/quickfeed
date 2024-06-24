@@ -469,36 +469,39 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
-	qtest.EnrollStudent(t, db, student1, course)
-	qtest.EnrollStudent(t, db, student2, course)
-	qtest.EnrollStudent(t, db, ta, course)
 
-	student1Enrollment := &qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
+	student1Enrollment := &qf.Enrollment{UserID: student1.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
+	student2Enrollment := &qf.Enrollment{UserID: student2.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
+	taEnrollment := &qf.Enrollment{UserID: ta.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
+	teacherEnrollment := &qf.Enrollment{UserID: teacher.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
+
+	ctx := context.Background()
+
+	// student1 attempts to enroll in the course, must succeed
+	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(student1Enrollment, Cookie(t, tm, student1))); err != nil {
+		t.Error(err)
 	}
-	student2Enrollment := &qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
+	// student2 attempts to enroll in the course, must succeed
+	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(student2Enrollment, Cookie(t, tm, student2))); err != nil {
+		t.Error(err)
 	}
-	taEnrollment := &qf.Enrollment{
-		UserID:   ta.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}
-	teacherEnrollment := &qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
+	// ta attempts to enroll in the course, must succeed
+	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(taEnrollment, Cookie(t, tm, ta))); err != nil {
+		t.Error(err)
 	}
 
 	request := &qf.Enrollments{}
 
-	// teacher promotes students to teachers, must succeed
-	ctx := context.Background()
+	// teacher accepts pending students {student1, student2, ta} as student, must succeed
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
+		t.Error(err)
+	}
+
+	// teacher promotes students to teachers, must succeed
+	for _, enrollment := range request.Enrollments {
+		enrollment.Status = qf.Enrollment_TEACHER
+	}
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)
 	}

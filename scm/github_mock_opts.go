@@ -104,6 +104,14 @@ func WithIssues(issues map[string]map[string][]github.Issue) MockOption {
 	}
 }
 
+func WithMockOrgs() MockOption {
+	return func(opts *mockOptions) {
+		for _, course := range qtest.MockCourses {
+			opts.orgs = append(opts.orgs, toOrg(course))
+		}
+	}
+}
+
 // WithMockCourses sets up mock data based on qtest.MockCourses with complete
 // course organizations and four repositories.
 func WithMockCourses() MockOption {

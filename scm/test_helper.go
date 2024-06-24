@@ -18,7 +18,7 @@ func MockSCMManager(t *testing.T) (SCM, *Manager) {
 		"qfClientSecret",
 		&app.Config{},
 	}
-	sc := NewMockSCMClient()
+	sc := NewMockedGithubSCMClient(qtest.Logger(t), WithMockOrgs())
 	return sc, &Manager{
 		scms: map[string]SCM{
 			qtest.MockOrg: sc,
@@ -37,7 +37,7 @@ func MockSCMManagerWithCourse(t *testing.T) (SCM, *Manager) {
 		"qfClientSecret",
 		&app.Config{},
 	}
-	sc := NewMockSCMClientWithCourse()
+	sc := NewMockedGithubSCMClient(qtest.Logger(t), WithMockCourses())
 	return sc, &Manager{
 		scms: map[string]SCM{
 			qtest.MockOrg: sc,
