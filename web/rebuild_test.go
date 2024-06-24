@@ -8,9 +8,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/fileop"
@@ -81,7 +83,13 @@ func prepareGitRepo(src, dst, repo string) error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Commit("added lab1", &git.CommitOptions{})
+	_, err = w.Commit("added lab1", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Test",
+			Email: "test@itest.run",
+			When:  time.Now(),
+		},
+	})
 	if err != nil {
 		return err
 	}
