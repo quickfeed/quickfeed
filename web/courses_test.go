@@ -470,10 +470,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
 
-	student1Enrollment := &qf.Enrollment{UserID: student1.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
-	student2Enrollment := &qf.Enrollment{UserID: student2.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
-	taEnrollment := &qf.Enrollment{UserID: ta.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
-	teacherEnrollment := &qf.Enrollment{UserID: teacher.ID, CourseID: course.ID, Status: qf.Enrollment_STUDENT}
+	student1Enrollment := &qf.Enrollment{UserID: student1.ID, CourseID: course.ID}
+	student2Enrollment := &qf.Enrollment{UserID: student2.ID, CourseID: course.ID}
+	taEnrollment := &qf.Enrollment{UserID: ta.ID, CourseID: course.ID}
+	teacherEnrollment := &qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}
 
 	ctx := context.Background()
 
@@ -494,6 +494,9 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher accepts pending students {student1, student2, ta} as student, must succeed
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
+	for _, enrollment := range request.Enrollments {
+		enrollment.Status = qf.Enrollment_STUDENT
+	}
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)
 	}
