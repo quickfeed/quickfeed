@@ -94,9 +94,18 @@ func TestRebuildSubmissions(t *testing.T) {
 
 	src := filepath.Join(env.TestdataPath(), qtest.MockOrg)
 	dst := filepath.Join(repoPath, qtest.MockOrg)
-	prepareGitRepo(src, dst, qf.StudentRepoName("user"))
-	prepareGitRepo(src, dst, qf.TestsRepo)
-	prepareGitRepo(src, dst, qf.AssignmentsRepo)
+	err := prepareGitRepo(src, dst, qf.StudentRepoName("user"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = prepareGitRepo(src, dst, qf.TestsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = prepareGitRepo(src, dst, qf.AssignmentsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	_, mgr := scm.MockSCMManager(t)
 	db, cleanup := qtest.TestDB(t)
@@ -104,7 +113,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	teacher := qtest.CreateFakeUser(t, db)
-	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
+	err = db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
 	}

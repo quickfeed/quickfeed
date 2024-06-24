@@ -3,9 +3,7 @@ package scm_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,21 +17,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
-
-const debug = false
-
-func mustRun(wd, cmd string, args ...string) {
-	c := exec.Command(cmd, args...)
-	c.Dir = wd
-	if debug {
-		c.Stderr = os.Stderr
-		c.Stdout = os.Stdout
-		log.Println("running:", cmd, strings.Join(args, " "))
-	}
-	if err := c.Run(); err != nil {
-		panic(fmt.Sprintf("failed to run %s %v: %v", cmd, args, err))
-	}
-}
 
 // prepareGitRepo creates copies src/repo folder to dst and initializes
 // dst/repo as a git repository and adds a single file lab1/lab1.go.
