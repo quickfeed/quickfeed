@@ -251,168 +251,6 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 	}
 }
 
-func TestMockUpdateGroupMembers(t *testing.T) {
-	push := map[string]bool{"push": true}
-	var (
-		meling  = github.User{Login: github.String("meling"), Permissions: push}
-		leslie  = github.User{Login: github.String("leslie"), Permissions: push}
-		lamport = github.User{Login: github.String("lamport"), Permissions: push}
-		jostein = github.User{Login: github.String("jostein"), Permissions: push}
-	)
-	tests := []struct {
-		name      string
-		opt       *GroupOptions
-		wantUsers []github.User
-		wantErr   bool
-	}{
-		{name: "IncompleteRequest", opt: &GroupOptions{}, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo"}, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a"}, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{Users: []string{"meling"}}, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantErr: true},
-
-		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "foo", GroupName: "a"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "x", GroupName: "info"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "foo", GroupName: "a", Users: []string{"meling"}}, wantErr: true},
-		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "x", GroupName: "info", Users: []string{"meling"}}, wantErr: true},
-
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "info", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling"}}, wantErr: false, wantUsers: []github.User{meling}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie"}}, wantErr: false, wantUsers: []github.User{meling, leslie}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{meling, leslie, lamport}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
-		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
-	}
-	groups["bar"]["groupY"] = []github.User{leslie}
-	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
-	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
-		t.Run(name, func(t *testing.T) {
-			if err := s.UpdateGroupMembers(context.Background(), tt.opt); (err != nil) != tt.wantErr {
-				t.Errorf("UpdateGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if tt.wantUsers == nil {
-				return
-			}
-			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
-				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-
-	// expected state after calling the sequence of UpdateGroupMembers
-	// owner -> repo -> collaborators
-	wantGroups := map[string]map[string][]github.User{
-		"foo": {
-			"info":        {},
-			"assignments": {},
-			"tests":       {},
-			"meling-labs": {},
-			"groupX":      {meling, leslie, lamport},
-		},
-		"bar": {
-			"groupY": {},
-			"groupZ": {jostein},
-		},
-	}
-	// verify the state of the groups after the sequence of UpdateGroupMembers
-	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
-		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestMockCreateGroup(t *testing.T) {
-	tests := []struct {
-		name     string
-		opt      *GroupOptions
-		wantRepo *Repository
-		wantErr  bool
-	}{
-		{name: "IncompleteRequest", opt: &GroupOptions{}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo"}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a"}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-
-		{name: "CompleteRequest/OrgNotFound", opt: &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "info"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "assignments"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "tests"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "meling-labs"}, wantRepo: nil, wantErr: true},
-		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "groupX"}, wantRepo: nil, wantErr: true},
-
-		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "yes-minister"}, wantErr: false},
-		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "paxos"}, wantErr: false},
-		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{OrgID: 456, Owner: "bar", Path: "raft"}, wantErr: false},
-	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
-	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Organization", "GroupName"}, tt.opt.Organization, tt.opt.GroupName)
-		t.Run(name, func(t *testing.T) {
-			repo, err := s.CreateGroup(context.Background(), tt.opt)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateGroup() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if tt.wantRepo == nil {
-				return
-			}
-			if diff := cmp.Diff(tt.wantRepo, repo, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
-				t.Errorf("CreateGroup() mismatch (-want +got):\n%s", diff)
-			}
-			// verify the state of the groups after the test
-			if _, ok := s.groups[tt.opt.Organization][tt.opt.GroupName]; !ok {
-				t.Errorf("CreateGroup() group not created")
-			}
-		})
-	}
-}
-
-func TestMockDeleteGroup(t *testing.T) {
-	tests := []struct {
-		name    string
-		opt     *RepositoryOptions
-		wantErr bool
-	}{
-		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "info"}, wantErr: true},
-
-		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "foo", Path: "bar"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "bar", Path: "foo"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{ID: 432}, wantErr: true}, // Repo ID 432 does not exist
-
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "foo", Path: "groupX"}, wantErr: false}, // ID 6
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                        // ID 5 is josie-labs
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "bar", Path: "groupY"}, wantErr: false}, // ID 7
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                        // ID 8 is groupZ
-
-		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 6}, wantErr: true},                        // ID 6 already deleted
-		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 7}, wantErr: true},                        // ID 7 already deleted
-		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{Owner: "bar", Path: "groupZ"}, wantErr: true}, // ID 8 already deleted
-	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
-	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
-		t.Run(name, func(t *testing.T) {
-			if err := s.DeleteGroup(context.Background(), tt.opt); (err != nil) != tt.wantErr {
-				t.Errorf("DeleteGroup() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			// verify the state of the groups after the test
-			if _, ok := s.groups[tt.opt.Owner][tt.opt.Path]; ok {
-				t.Errorf("DeleteGroup() group not deleted")
-			}
-		})
-	}
-}
-
 func TestMockCreateCourse(t *testing.T) {
 	// repositories that should be created for bar; manually sorted by path
 	wantBarRepos := []*Repository{
@@ -601,6 +439,168 @@ func TestMockDemoteTeacherToStudent(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if err := s.DemoteTeacherToStudent(context.Background(), tt.opt); (err != nil) != tt.wantErr {
 				t.Errorf("DemoteTeacherToStudent() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestMockCreateGroup(t *testing.T) {
+	tests := []struct {
+		name     string
+		opt      *GroupOptions
+		wantRepo *Repository
+		wantErr  bool
+	}{
+		{name: "IncompleteRequest", opt: &GroupOptions{}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a"}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+
+		{name: "CompleteRequest/OrgNotFound", opt: &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "info"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "assignments"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "tests"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "meling-labs"}, wantRepo: nil, wantErr: true},
+		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "groupX"}, wantRepo: nil, wantErr: true},
+
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "yes-minister"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "paxos"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{OrgID: 456, Owner: "bar", Path: "raft"}, wantErr: false},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "GroupName"}, tt.opt.Organization, tt.opt.GroupName)
+		t.Run(name, func(t *testing.T) {
+			repo, err := s.CreateGroup(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateGroup() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantRepo == nil {
+				return
+			}
+			if diff := cmp.Diff(tt.wantRepo, repo, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
+				t.Errorf("CreateGroup() mismatch (-want +got):\n%s", diff)
+			}
+			// verify the state of the groups after the test
+			if _, ok := s.groups[tt.opt.Organization][tt.opt.GroupName]; !ok {
+				t.Errorf("CreateGroup() group not created")
+			}
+		})
+	}
+}
+
+func TestMockUpdateGroupMembers(t *testing.T) {
+	push := map[string]bool{"push": true}
+	var (
+		meling  = github.User{Login: github.String("meling"), Permissions: push}
+		leslie  = github.User{Login: github.String("leslie"), Permissions: push}
+		lamport = github.User{Login: github.String("lamport"), Permissions: push}
+		jostein = github.User{Login: github.String("jostein"), Permissions: push}
+	)
+	tests := []struct {
+		name      string
+		opt       *GroupOptions
+		wantUsers []github.User
+		wantErr   bool
+	}{
+		{name: "IncompleteRequest", opt: &GroupOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}}, wantErr: true},
+		{name: "IncompleteRequest", opt: &GroupOptions{GroupName: "a", Users: []string{"meling"}}, wantErr: true},
+
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "foo", GroupName: "a"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "x", GroupName: "info"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "foo", GroupName: "a", Users: []string{"meling"}}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &GroupOptions{Organization: "x", GroupName: "info", Users: []string{"meling"}}, wantErr: true},
+
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "info", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling"}}, wantErr: false, wantUsers: []github.User{meling}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie"}}, wantErr: false, wantUsers: []github.User{meling, leslie}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "foo", GroupName: "groupX", Users: []string{"meling", "leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{meling, leslie, lamport}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupY", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie"}}, wantErr: false, wantUsers: []github.User{leslie}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{}}, wantErr: false, wantUsers: []github.User{}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"leslie", "lamport"}}, wantErr: false, wantUsers: []github.User{leslie, lamport}},
+		{name: "CompleteRequest", opt: &GroupOptions{Organization: "bar", GroupName: "groupZ", Users: []string{"jostein"}}, wantErr: false, wantUsers: []github.User{jostein}},
+	}
+	groups["bar"]["groupY"] = []github.User{leslie}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
+		t.Run(name, func(t *testing.T) {
+			if err := s.UpdateGroupMembers(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("UpdateGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantUsers == nil {
+				return
+			}
+			// verify the state of the groups after the test
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
+				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+
+	// expected state after calling the sequence of UpdateGroupMembers
+	// owner -> repo -> collaborators
+	wantGroups := map[string]map[string][]github.User{
+		"foo": {
+			"info":        {},
+			"assignments": {},
+			"tests":       {},
+			"meling-labs": {},
+			"groupX":      {meling, leslie, lamport},
+		},
+		"bar": {
+			"groupY": {},
+			"groupZ": {jostein},
+		},
+	}
+	// verify the state of the groups after the sequence of UpdateGroupMembers
+	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
+		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestMockDeleteGroup(t *testing.T) {
+	tests := []struct {
+		name    string
+		opt     *RepositoryOptions
+		wantErr bool
+	}{
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "info"}, wantErr: true},
+
+		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "foo", Path: "bar"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "bar", Path: "foo"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{ID: 432}, wantErr: true}, // Repo ID 432 does not exist
+
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "foo", Path: "groupX"}, wantErr: false}, // ID 6
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                        // ID 5 is josie-labs
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "bar", Path: "groupY"}, wantErr: false}, // ID 7
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                        // ID 8 is groupZ
+
+		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 6}, wantErr: true},                        // ID 6 already deleted
+		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 7}, wantErr: true},                        // ID 7 already deleted
+		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{Owner: "bar", Path: "groupZ"}, wantErr: true}, // ID 8 already deleted
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			if err := s.DeleteGroup(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("DeleteGroup() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			// verify the state of the groups after the test
+			if _, ok := s.groups[tt.opt.Owner][tt.opt.Path]; ok {
+				t.Errorf("DeleteGroup() group not deleted")
 			}
 		})
 	}

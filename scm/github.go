@@ -144,51 +144,6 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
 }
 
-// UpdateGroupMembers implements the SCM interface
-func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("missing fields: %+v", opt)
-	}
-
-	// find current group members
-	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "UpdateGroupMembers",
-			Message:  fmt.Sprintf("failed to get members for %s/%s", opt.Organization, opt.GroupName),
-		}
-	}
-
-	// add members that are not already in the group
-	for _, member := range opt.Users {
-		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, pushAccess)
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: err,
-				Method:   "UpdateGroupMembers",
-				Message:  fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
-			}
-		}
-	}
-
-	// remove members that are no longer in the group
-	for _, repoMember := range oldUsers {
-		member := repoMember.GetLogin()
-		if !slices.Contains(opt.Users, member) {
-			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, member)
-			if err != nil {
-				return ErrFailedSCM{
-					GitError: err,
-					Method:   "UpdateGroupMembers",
-					Message:  fmt.Sprintf("failed to remove user %s from repository %s", member, opt.GroupName),
-				}
-			}
-		}
-	}
-	return nil
-}
-
 // CreateCourse creates repositories for a new course.
 func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repository, error) {
 	if !opt.valid() {
@@ -317,6 +272,51 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 		}
 	}
 	return repo, nil
+}
+
+// UpdateGroupMembers implements the SCM interface
+func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("missing fields: %+v", opt)
+	}
+
+	// find current group members
+	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
+	if err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "UpdateGroupMembers",
+			Message:  fmt.Sprintf("failed to get members for %s/%s", opt.Organization, opt.GroupName),
+		}
+	}
+
+	// add members that are not already in the group
+	for _, member := range opt.Users {
+		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, pushAccess)
+		if err != nil {
+			return ErrFailedSCM{
+				GitError: err,
+				Method:   "UpdateGroupMembers",
+				Message:  fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
+			}
+		}
+	}
+
+	// remove members that are no longer in the group
+	for _, repoMember := range oldUsers {
+		member := repoMember.GetLogin()
+		if !slices.Contains(opt.Users, member) {
+			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, member)
+			if err != nil {
+				return ErrFailedSCM{
+					GitError: err,
+					Method:   "UpdateGroupMembers",
+					Message:  fmt.Sprintf("failed to remove user %s from repository %s", member, opt.GroupName),
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // DeleteGroup deletes a group's repository.
