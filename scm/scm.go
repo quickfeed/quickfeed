@@ -95,11 +95,6 @@ type Repository struct {
 	Size    uint64
 }
 
-// Authorization stores information about user scopes
-type Authorization struct {
-	Scopes []string
-}
-
 // Issue represents an SCM issue.
 type Issue struct {
 	ID         int64
