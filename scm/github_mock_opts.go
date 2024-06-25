@@ -1,6 +1,9 @@
 package scm
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/google/go-github/v62/github"
 	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -15,6 +18,51 @@ type mockOptions struct {
 	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
 	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+}
+
+// DumpState returns a string representation of the mock state.
+// This is used for debugging and testing purposes.
+func (s mockOptions) DumpState() string {
+	b := new(strings.Builder)
+	fmt.Fprintln(b, "Mock state:")
+	for i, org := range s.orgs {
+		fmt.Fprintf(b, "Org[%d]: %v\n", i, org)
+	}
+	for i, repo := range s.repos {
+		fmt.Fprintf(b, "Repo[%d]: %v\n", i, repo)
+	}
+	for i, member := range s.members {
+		fmt.Fprintf(b, "Member[%d]: %v\n", i, member)
+	}
+	for owner, repos := range s.groups {
+		for repo, members := range repos {
+			fmt.Fprintf(b, "Group[%s][%s]: %v\n", owner, repo, members)
+		}
+	}
+	for owner, repos := range s.issues {
+		for repo, issues := range repos {
+			for i, issue := range issues {
+				fmt.Fprintf(b, "Issue[%s][%s][%d]: %v\n", owner, repo, i, issue)
+			}
+		}
+	}
+	for owner, repos := range s.comments {
+		for repo, issues := range repos {
+			for issueID, comments := range issues {
+				for i, comment := range comments {
+					fmt.Fprintf(b, "Comment[%s][%s][%d][%d]: %v\n", owner, repo, issueID, i, comment)
+				}
+			}
+		}
+	}
+	for owner, repos := range s.reviewers {
+		for repo, prs := range repos {
+			for prID, reviewers := range prs {
+				fmt.Fprintf(b, "Reviewers[%s][%s][%d]: %v\n", owner, repo, prID, reviewers)
+			}
+		}
+	}
+	return b.String()
 }
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
