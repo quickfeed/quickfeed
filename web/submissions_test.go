@@ -15,7 +15,7 @@ func TestApproveSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -91,7 +91,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[2]
@@ -263,7 +263,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -486,7 +486,7 @@ func TestCreateApproveList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -679,7 +679,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 

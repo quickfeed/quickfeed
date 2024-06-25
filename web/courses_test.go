@@ -15,7 +15,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -46,7 +46,7 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -99,7 +99,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -151,7 +151,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	ctx := context.Background()
 	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
@@ -299,7 +299,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 	user := qtest.CreateFakeUser(t, db)
@@ -367,7 +367,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 
 	admin := qtest.CreateFakeUser(t, db)
 	var testCourses []*qf.Course

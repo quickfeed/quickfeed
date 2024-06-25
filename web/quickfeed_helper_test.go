@@ -37,9 +37,9 @@ func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconne
 	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL)
 }
 
-func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager, scm.SCM) {
+func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager) {
 	t.Helper()
-	scmClient, mgr := scm.MockSCMManager(t, scm.WithMockOrgs())
+	_, mgr := scm.MockSCMManager(t, scm.WithMockOrgs())
 	logger := qtest.Logger(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
@@ -61,7 +61,7 @@ func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connec
 	server.StartTLS()
 	t.Cleanup(server.Close)
 
-	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL, clientOpts...), tm, scmClient
+	return qfconnect.NewQuickFeedServiceClient(server.Client(), server.URL, clientOpts...), tm
 }
 
 func MockClientWithUserAndCourse(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager) {

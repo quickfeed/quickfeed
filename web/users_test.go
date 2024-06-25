@@ -171,7 +171,7 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := MockClientWithUser(t, db)
 	ctx := context.Background()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
