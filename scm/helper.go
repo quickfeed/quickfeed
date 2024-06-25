@@ -48,19 +48,6 @@ var (
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
 
-// Errors //
-
-// ErrNotSupported is returned when the source code management solution used
-// does not provide a sufficient API for the method called.
-type ErrNotSupported struct {
-	SCM    string
-	Method string
-}
-
-func (e ErrNotSupported) Error() string {
-	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
-}
-
 // ErrFailedSCM is returned to provide detailed information
 // to user about source of the error and possible solution
 type ErrFailedSCM struct {
