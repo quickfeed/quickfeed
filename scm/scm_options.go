@@ -36,12 +36,10 @@ func (opt *RejectEnrollmentOptions) valid() bool {
 
 // OrganizationOptions contain information about organization.
 type OrganizationOptions struct {
-	ID   uint64
-	Name string
-	// Username field is used to filter organizations
-	// where the given user has a certain role.
-	Username  string
-	NewCourse bool // Get organization for a new course
+	ID        uint64
+	Name      string
+	Username  string // Username, if provide, must be owner of the organization
+	NewCourse bool   // Get organization for a new course
 }
 
 func (opt OrganizationOptions) valid() bool {
@@ -65,7 +63,6 @@ type CreateRepositoryOptions struct {
 	Organization string
 	Path         string
 	Private      bool
-	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
