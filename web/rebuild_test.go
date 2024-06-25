@@ -115,7 +115,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, mgr := scm.MockSCMManager(t)
+	_, mgr := scm.MockSCMManager(t, scm.WithMockOrgs())
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t).Desugar()

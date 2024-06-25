@@ -256,7 +256,7 @@ func TestCheckUserClaims(t *testing.T) {
 }
 
 func setupWebhook(t *testing.T, db database.Database) (*GitHubWebHook, *httptest.Server) {
-	_, manager := scm.MockSCMManager(t)
+	_, manager := scm.MockSCMManager(t, scm.WithMockOrgs())
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)

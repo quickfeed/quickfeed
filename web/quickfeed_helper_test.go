@@ -20,7 +20,7 @@ import (
 // MockClient returns a QuickFeed client for invoking RPCs.
 func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconnect.QuickFeedServiceClient {
 	t.Helper()
-	_, mgr := scm.MockSCMManager(t)
+	_, mgr := scm.MockSCMManager(t, scm.WithMockOrgs())
 	logger := qtest.Logger(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
@@ -39,7 +39,7 @@ func MockClient(t *testing.T, db database.Database, opts connect.Option) qfconne
 
 func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager, scm.SCM) {
 	t.Helper()
-	scmClient, mgr := scm.MockSCMManager(t)
+	scmClient, mgr := scm.MockSCMManager(t, scm.WithMockOrgs())
 	logger := qtest.Logger(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
@@ -66,7 +66,7 @@ func MockClientWithUser(t *testing.T, db database.Database, clientOpts ...connec
 
 func MockClientWithUserAndCourse(t *testing.T, db database.Database, clientOpts ...connect.ClientOption) (qfconnect.QuickFeedServiceClient, *auth.TokenManager) {
 	t.Helper()
-	_, mgr := scm.MockSCMManagerWithCourse(t)
+	_, mgr := scm.MockSCMManager(t, scm.WithMockCourses())
 	logger := qtest.Logger(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 

@@ -8,40 +8,16 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 )
 
-// MockSCMManager sets the current provider to "fake", creates a "test" organization
-// and a fake scm client for this organization.
-func MockSCMManager(t *testing.T) (SCM, *Manager) {
+// MockSCMManager sets the current provider to "fake", and initializes the
+// MockedGithubSCMClient based on the provided mock options, which can be
+// used to mock different scenarios (course organizations and repositories).
+// Two options are available: WithMockOrgs() and WithMockCourses().
+func MockSCMManager(t *testing.T, opts ...MockOption) (SCM, *Manager) {
 	t.Helper()
 	env.SetFakeProvider(t)
-	conf := &Config{
-		"qfClientID",
-		"qfClientSecret",
-		&app.Config{},
-	}
-	sc := NewMockedGithubSCMClient(qtest.Logger(t), WithMockOrgs())
+	sc := NewMockedGithubSCMClient(qtest.Logger(t), opts...)
 	return sc, &Manager{
-		scms: map[string]SCM{
-			qtest.MockOrg: sc,
-		},
-		Config: conf,
-	}
-}
-
-// MockSCMManagerWithCourse sets provider to "fake", creates a mock organization
-// and sets up default course repositories for this organization.
-func MockSCMManagerWithCourse(t *testing.T) (SCM, *Manager) {
-	t.Helper()
-	env.SetFakeProvider(t)
-	conf := &Config{
-		"qfClientID",
-		"qfClientSecret",
-		&app.Config{},
-	}
-	sc := NewMockedGithubSCMClient(qtest.Logger(t), WithMockCourses())
-	return sc, &Manager{
-		scms: map[string]SCM{
-			qtest.MockOrg: sc,
-		},
-		Config: conf,
+		scms:   map[string]SCM{qtest.MockOrg: sc},
+		Config: &Config{"qfClientID", "qfClientSecret", &app.Config{}},
 	}
 }
