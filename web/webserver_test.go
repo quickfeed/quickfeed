@@ -20,7 +20,7 @@ func TestRegisterRouter(t *testing.T) {
 	db, stop := qtest.TestDB(t)
 	defer stop()
 
-	_, mgr := scm.MockSCMManager(t, scm.WithMockOrgs())
+	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
 
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
