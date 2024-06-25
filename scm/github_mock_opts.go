@@ -88,7 +88,18 @@ func WithMembers(members ...github.Membership) MockOption {
 
 func WithGroups(groups map[string]map[string][]github.User) MockOption {
 	return func(opts *mockOptions) {
-		opts.groups = groups
+		// Deep clone: owner -> repo -> collaborators
+		clonedGroups := make(map[string]map[string][]github.User)
+		for owner, repos := range groups {
+			clonedRepos := make(map[string][]github.User)
+			for repoName, users := range repos {
+				clonedUsers := make([]github.User, len(users))
+				copy(clonedUsers, users)
+				clonedRepos[repoName] = clonedUsers
+			}
+			clonedGroups[owner] = clonedRepos
+		}
+		opts.groups = clonedGroups
 	}
 }
 
