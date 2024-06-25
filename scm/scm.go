@@ -102,7 +102,7 @@ type Authorization struct {
 
 // Issue represents an SCM issue.
 type Issue struct {
-	ID         uint64
+	ID         int64
 	Title      string
 	Body       string
 	Repository string

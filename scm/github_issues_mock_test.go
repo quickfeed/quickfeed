@@ -150,7 +150,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			t.Fatalf("failed to create issue: %v", err)
 		}
 	}
-	allIssuesMap := make(map[uint64]*Issue)
+	allIssuesMap := make(map[int64]*Issue)
 	queryOpts := []*RepositoryOptions{
 		{Owner: "foo", Path: "meling-labs"},
 		{Owner: "foo", Path: "josie-labs"},

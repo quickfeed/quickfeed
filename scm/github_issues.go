@@ -141,7 +141,7 @@ func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersO
 
 func toIssue(issue *github.Issue) *Issue {
 	return &Issue{
-		ID:         uint64(issue.GetID()),
+		ID:         issue.GetID(),
 		Title:      issue.GetTitle(),
 		Body:       issue.GetBody(),
 		Repository: issue.Repository.GetName(),
