@@ -1,26 +1,26 @@
 package scm
 
 const (
-	getOrganizationsByID                                      = "GET /organizations/{id}"
-	getOrgsByOrg                                              = "GET /orgs/{org}"
-	patchOrgsByOrg                                            = "PATCH /orgs/{org}"
-	getOrgsReposByOrg                                         = "GET /orgs/{org}/repos"
-	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"
-	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"
-	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"
-	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"
-	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"
-	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"
-	getRepositoriesByID                                       = "GET /repositories/{repository_id}"
-	getReposContentsByOwnerByRepoByPath                       = "GET /repos/{owner}/{repo}/contents/{path...}"
-	getReposCollaboratorsByOwnerByRepo                        = "GET /repos/{owner}/{repo}/collaborators"
-	putReposCollaboratorsByOwnerByRepoByUsername              = "PUT /repos/{owner}/{repo}/collaborators/{username}"
-	deleteReposCollaboratorsByOwnerByRepoByUsername           = "DELETE /repos/{owner}/{repo}/collaborators/{username}"
-	postReposIssuesByOwnerByRepo                              = "POST /repos/{owner}/{repo}/issues"
-	patchReposIssuesByOwnerByRepoByIssueNumber                = "PATCH /repos/{owner}/{repo}/issues/{issue_number}"
-	getReposIssuesByOwnerByRepoByIssueNumber                  = "GET /repos/{owner}/{repo}/issues/{issue_number}"
-	getReposIssuesByOwnerByRepo                               = "GET /repos/{owner}/{repo}/issues"
-	postReposIssuesCommentsByOwnerByRepoByIssueNumber         = "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
-	patchReposIssuesCommentsByOwnerByRepoByCommentID          = "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"
-	postReposPullsRequestedReviewersByOwnerByRepoByPullNumber = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+	getOrganizationsByID                                      = "GET /organizations/{id}"                                            // GetOrganization
+	getOrgsByOrg                                              = "GET /orgs/{org}"                                                    // GetOrganization
+	patchOrgsByOrg                                            = "PATCH /orgs/{org}"                                                  // CreateCourse
+	getOrgsReposByOrg                                         = "GET /orgs/{org}/repos"                                              // GetRepositories
+	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"                                             // CreateCourse, createRepository
+	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"                             // GetOrganization
+	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"                             // UpdateEnrollment, DemoteTeacherToStudent
+	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"                              // RejectEnrollment
+	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createRepository
+	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository
+	getRepositoriesByID                                       = "GET /repositories/{repository_id}"                                  // getRepository, deleteRepository
+	getReposContentsByOwnerByRepoByPath                       = "GET /repos/{owner}/{repo}/contents/{path...}"                       // RepositoryIsEmpty
+	getReposCollaboratorsByOwnerByRepo                        = "GET /repos/{owner}/{repo}/collaborators"                            // UpdateGroupMembers
+	putReposCollaboratorsByOwnerByRepoByUsername              = "PUT /repos/{owner}/{repo}/collaborators/{username}"                 // CreateCourse, UpdateEnrollment, CreateGroup, UpdateGroupMembers, createStudentRepo, grantPullAccessToCourseRepos
+	deleteReposCollaboratorsByOwnerByRepoByUsername           = "DELETE /repos/{owner}/{repo}/collaborators/{username}"              // UpdateGroupMembers
+	postReposIssuesByOwnerByRepo                              = "POST /repos/{owner}/{repo}/issues"                                  // CreateIssue
+	patchReposIssuesByOwnerByRepoByIssueNumber                = "PATCH /repos/{owner}/{repo}/issues/{issue_number}"                  // UpdateIssue
+	getReposIssuesByOwnerByRepoByIssueNumber                  = "GET /repos/{owner}/{repo}/issues/{issue_number}"                    // GetIssue
+	getReposIssuesByOwnerByRepo                               = "GET /repos/{owner}/{repo}/issues"                                   // GetIssues
+	postReposIssuesCommentsByOwnerByRepoByIssueNumber         = "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"          // CreateIssueComment
+	patchReposIssuesCommentsByOwnerByRepoByCommentID          = "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"           // UpdateIssueComment
+	postReposPullsRequestedReviewersByOwnerByRepoByPullNumber = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers" // RequestReviewers
 )
