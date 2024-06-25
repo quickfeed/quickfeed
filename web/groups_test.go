@@ -10,13 +10,14 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestNewGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -49,7 +50,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -87,7 +88,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -137,7 +138,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -171,7 +172,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qf.Course{ScmOrganizationID: 1, ScmOrganizationName: qtest.MockOrg}
@@ -298,7 +299,7 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 
 	ctx := context.Background()
@@ -386,7 +387,7 @@ func TestGetGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	testCourse := qf.Course{
 		Name:              "Distributed Systems",
@@ -428,7 +429,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	course := qf.Course{
 		Name:                "Distributed Systems",
@@ -493,7 +494,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	course := qf.Course{
 		Name:              "Distributed Systems",
@@ -551,7 +552,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -629,7 +630,7 @@ func TestGetGroups(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	var users []*qf.User
 	for i := 0; i < 10; i++ {

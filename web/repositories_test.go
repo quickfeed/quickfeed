@@ -16,7 +16,7 @@ func TestGetRepositories(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	teacher := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]

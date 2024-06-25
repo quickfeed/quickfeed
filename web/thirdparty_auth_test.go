@@ -9,6 +9,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/oauth2"
@@ -20,7 +21,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 	defer cleanup()
 	user := fillDatabase(t, db, token)
 
-	client, _ := MockClientWithOption(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
+	client, _ := web.MockClientWithOption(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
 		interceptor.NewTokenAuthClientInterceptor(token),
 	))
 	ctx := context.Background()
