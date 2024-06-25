@@ -164,7 +164,7 @@ func TestMockGetOrganization(t *testing.T) {
 		})
 	}
 
-	s = NewMockedGithubSCMClient(qtest.Logger(t), WithMockCourses())
+	s = NewMockedGithubSCMClient(qtest.Logger(t), WithMockOrgs())
 	for _, course := range qtest.MockCourses {
 		name := qtest.Name(course.Name, []string{"ScmOrgID", "ScmOrgName"}, course.ScmOrganizationID, course.ScmOrganizationName)
 		t.Run(name, func(t *testing.T) {
