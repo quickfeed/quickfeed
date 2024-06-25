@@ -2,6 +2,7 @@ package scm
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -33,6 +34,32 @@ func mustWrite(w http.ResponseWriter, v any) {
 	if _, err := w.Write(b); err != nil {
 		panic(err)
 	}
+}
+
+// replaceArgs replaces placeholders in the API pattern with provided values.
+// Placeholders are expected to be in the format `{name}`, and the values are
+// expected to be in the same order as the placeholders.
+// It panics if the number of placeholders does not match the number of values,
+// or if the placeholder format is invalid, such as missing the closing brace.
+func replaceArgs(pattern string, args ...any) string {
+	placeholders := strings.Count(pattern, "{")
+	if placeholders != len(args) {
+		panic(fmt.Sprintf("expected %d arguments, but got %d", placeholders, len(args)))
+	}
+
+	// Replace each placeholder with the corresponding argument
+	for _, arg := range args {
+		start := strings.Index(pattern, "{")
+		if start == -1 {
+			break
+		}
+		end := strings.Index(pattern, "}")
+		if end == -1 || end < start {
+			panic("invalid placeholder format")
+		}
+		pattern = fmt.Sprintf("%s%s=%v%s", pattern[:start], pattern[start+1:end], arg, pattern[end+1:])
+	}
+	return pattern
 }
 
 // MockBackendOption is used to configure the *http.ServeMux for the mocked backend.

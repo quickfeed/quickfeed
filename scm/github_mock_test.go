@@ -79,6 +79,29 @@ var reviewers = map[string]map[string]map[int]github.ReviewersRequest{
 	},
 }
 
+func TestMustReplaceArgs(t *testing.T) {
+	tests := []struct {
+		name    string
+		pattern string
+		args    []any
+		want    string
+	}{
+		{name: "NoArgs", pattern: "foo", args: nil, want: "foo"},
+		{name: "OneArg", pattern: "foo/{bar}", args: []any{"baz"}, want: "foo/bar=baz"},
+		{name: "TwoArgs", pattern: "foo/{bar}/{baz}", args: []any{123, "qux"}, want: "foo/bar=123/baz=qux"},
+		{name: "ThreeArgs", pattern: "foo/{bar}/{baz}/{qux}", args: []any{123, "qux", "quux"}, want: "foo/bar=123/baz=qux/qux=quux"},
+		{name: "WithPathElemInBetween", pattern: "foo/{bar}/baz/{qux}", args: []any{"baz", "quux"}, want: "foo/bar=baz/baz/qux=quux"},
+		{name: "WithNumbers", pattern: "foo/{bar}/baz/{qux}", args: []any{123, 456}, want: "foo/bar=123/baz/qux=456"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := replaceArgs(tt.pattern, tt.args...); got != tt.want {
+				t.Errorf("mustReplaceArgs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestMockGetOrganization(t *testing.T) {
 	orgFoo := &qf.Organization{ScmOrganizationID: 123, ScmOrganizationName: *foo.Login}
 	orgBar := &qf.Organization{ScmOrganizationID: 456, ScmOrganizationName: *bar.Login}
