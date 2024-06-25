@@ -30,7 +30,7 @@ type RejectEnrollmentOptions struct {
 	User           string
 }
 
-func (opt *RejectEnrollmentOptions) valid() bool {
+func (opt RejectEnrollmentOptions) valid() bool {
 	return opt.OrganizationID > 0 && opt.RepositoryID > 0 && opt.User != ""
 }
 
@@ -93,7 +93,7 @@ type IssueOptions struct {
 	Number       int
 }
 
-func (opt *IssueOptions) valid() bool {
+func (opt IssueOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
 }
 
