@@ -89,6 +89,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getOrganizationsByID,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			id := mustParse[int64](r.PathValue("id"))
+			logger.Debug(replaceArgs(getOrganizationsByID, id))
+
 			for _, org := range s.orgs {
 				if org.GetID() == id {
 					mustWrite(w, org)
@@ -102,6 +104,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getOrgsByOrg,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
+			logger.Debug(replaceArgs(getOrgsByOrg, org))
+
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				mustWrite(w, o)
 			})
@@ -115,6 +119,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			newOrg := mustRead[github.Organization](r.Body)
+			logger.Debug(replaceArgs(patchOrgsByOrg, org), " newOrg=", newOrg)
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				o.Login = newOrg.Login
@@ -132,6 +137,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getOrgsReposByOrg,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
+			logger.Debug(replaceArgs(getOrgsReposByOrg, org))
+
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				foundRepos := make([]github.Repository, 0)
 				for _, repo := range s.repos {
@@ -151,6 +158,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			repo := mustRead[github.Repository](r.Body)
+			logger.Debug(replaceArgs(postOrgsReposByOrg, org), " repo=", repo)
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				s.repoID++
@@ -174,6 +182,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			username := r.PathValue("username")
+			logger.Debug(replaceArgs(getOrgsMembershipsByOrgByUsername, org, username))
+
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				for _, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
@@ -194,6 +204,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			org := r.PathValue("org")
 			username := r.PathValue("username")
 			membership := mustRead[github.Membership](r.Body)
+			logger.Debug(replaceArgs(putOrgsMembershipsByOrgByUsername, org, username), " membership=", membership)
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				for i, m := range s.members {
@@ -215,6 +226,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			username := r.PathValue("username")
+			logger.Debug(replaceArgs(deleteOrgsMembersByOrgByUsername, org, username))
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				for i, m := range s.members {
@@ -236,6 +248,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(getReposByOwnerByRepo, owner, repo))
+
 			for _, re := range s.repos {
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 					re.Owner = &github.User{Login: github.String(owner)}
@@ -251,6 +265,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(deleteReposByOwnerByRepo, owner, repo))
+
 			for i, re := range s.repos {
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 					s.repos = slices.Delete(s.repos, i, i+1)
@@ -266,6 +282,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getRepositoriesByID,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			id := mustParse[int64](r.PathValue("repository_id"))
+			logger.Debug(replaceArgs(getRepositoriesByID, id))
+
 			for _, repo := range s.repos {
 				if repo.GetID() == id {
 					repo.Owner = &github.User{Login: github.String(repo.GetOrganization().GetLogin())}
@@ -282,6 +300,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			// we only care about the owner and repo; we ignore the path component
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(getReposContentsByOwnerByRepoByPath, owner, repo, ""))
+
 			if !s.hasOrgRepo(owner, repo) {
 				w.WriteHeader(http.StatusNotFound) // org and repo not found
 				return
@@ -294,6 +314,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(getReposCollaboratorsByOwnerByRepo, owner, repo))
+
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
 				w.WriteHeader(http.StatusNotFound) // org and repo not found
@@ -310,6 +332,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			username := r.PathValue("username")
 			repoCollaboratorOptions := mustRead[github.RepositoryAddCollaboratorOptions](r.Body)
+			logger.Debug(replaceArgs(putReposCollaboratorsByOwnerByRepoByUsername, owner, repo, username), " options=", repoCollaboratorOptions)
 
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
@@ -358,6 +381,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
 			username := r.PathValue("username")
+			logger.Debug(replaceArgs(deleteReposCollaboratorsByOwnerByRepoByUsername, owner, repo, username))
 
 			collaborators := s.groups[owner][repo]
 			if collaborators == nil {
@@ -378,6 +402,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
 			issueReq := mustRead[github.IssueRequest](r.Body)
+			logger.Debug(replaceArgs(postReposIssuesByOwnerByRepo, owner, repo), " issue_req=", issueReq)
 
 			if !s.hasOrgRepo(owner, repo) {
 				w.WriteHeader(http.StatusNotFound) // org and repo not found
@@ -418,6 +443,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			issueNumber := mustParse[int](r.PathValue("issue_number"))
 			issueReq := mustRead[github.IssueRequest](r.Body)
+			logger.Debug(replaceArgs(patchReposIssuesByOwnerByRepoByIssueNumber, owner, repo, issueNumber), " issue_req=", issueReq)
 
 			for i, ghIssue := range s.issues[owner][repo] {
 				if *ghIssue.Number == issueNumber {
@@ -440,6 +466,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
 			issueNumber := mustParse[int](r.PathValue("issue_number"))
+			logger.Debug(replaceArgs(getReposIssuesByOwnerByRepoByIssueNumber, owner, repo, issueNumber))
 
 			for _, issue := range s.issues[owner][repo] {
 				if *issue.Number == issueNumber {
@@ -456,6 +483,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			owner := r.PathValue("owner")
 			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(getReposIssuesByOwnerByRepo, owner, repo))
 
 			issues := s.issues[owner][repo]
 			if issues == nil {
@@ -473,6 +501,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			issueNumber := mustParse[int](r.PathValue("issue_number"))
 			comment := mustRead[github.IssueComment](r.Body)
+			logger.Debug(replaceArgs(postReposIssuesCommentsByOwnerByRepoByIssueNumber, owner, repo, issueNumber), " comment=", comment)
 
 			for _, ghIssue := range s.issues[owner][repo] {
 				if *ghIssue.Number == issueNumber {
@@ -497,6 +526,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			commentID := mustParse[int64](r.PathValue("comment_id"))
 			comment := mustRead[github.IssueComment](r.Body)
+			logger.Debug(replaceArgs(patchReposIssuesCommentsByOwnerByRepoByCommentID, owner, repo, commentID), " comment=", comment)
 
 			for _, ghIssue := range s.issues[owner][repo] {
 				for i, ghComment := range s.comments[owner][repo][*ghIssue.ID] {
@@ -519,6 +549,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			pullNumber := mustParse[int](r.PathValue("pull_number"))
 			reviewers := mustRead[github.ReviewersRequest](r.Body)
+			logger.Debug(replaceArgs(postReposPullsRequestedReviewersByOwnerByRepoByPullNumber, owner, repo, pullNumber), " reviewers=", reviewers)
 
 			if _, exists := s.reviewers[owner][repo][pullNumber]; !exists {
 				w.WriteHeader(http.StatusNotFound) // pull request not found
@@ -542,6 +573,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		owner := vars["repositoryOwner"].(string)
 		repo := vars["repositoryName"].(string)
 		issueNumber := int(vars["issueNumber"].(float64))
+		logger.Debugf("/graphql query | owner: %s, repo: %s, issue number: %d", owner, repo, issueNumber)
 
 		var id int64
 		for _, issue := range s.issues[owner][repo] {
@@ -571,6 +603,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 	// Mock mutation handler for deleting an issue based on issue ID
 	mutationHandler := func(w http.ResponseWriter, vars map[string]any) {
 		id := int64(vars["issueId"].(float64))
+		logger.Debugf("/graphql mutation | issue ID: %d", id)
 
 		var foundRepo string
 		for owner := range s.issues {
