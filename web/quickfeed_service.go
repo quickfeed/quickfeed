@@ -29,6 +29,11 @@ type QuickFeedService struct {
 	streams *stream.StreamServices
 }
 
+const (
+	failed  = "Failed"
+	success = "Succeeded"
+)
+
 // NewQuickFeedService returns a QuickFeedService object.
 func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
@@ -44,11 +49,18 @@ func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Mana
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
 func (s *QuickFeedService) GetUser(ctx context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.User], error) {
+	logger := ctx.Value("logger").(*zap.Logger)
 	userInfo, err := s.db.GetUserWithEnrollments(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetUser(%d) failed: %v", userID(ctx), err)
+		logger.Error(failed,
+			zap.Uint64("userID", userID(ctx)),
+			zap.Error(err),
+		)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
+	logger.Info(success,
+		zap.Uint64("userID", userID(ctx)),
+	)
 	return connect.NewResponse(userInfo), nil
 }
 
@@ -129,12 +141,19 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 }
 
 // GetCourse returns course information for the given course.
-func (s *QuickFeedService) GetCourse(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
+func (s *QuickFeedService) GetCourse(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
+	logger := ctx.Value("logger").(*zap.Logger)
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
-		s.logger.Errorf("GetCourse failed: %v", err)
+		logger.Error(failed,
+			zap.Uint64("courseID", in.Msg.GetCourseID()),
+			zap.Error(err),
+		)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
+	logger.Info(success,
+		zap.Uint64("courseID", in.Msg.GetCourseID()),
+	)
 	return connect.NewResponse(course), nil
 }
 
