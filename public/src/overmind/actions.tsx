@@ -245,10 +245,10 @@ export const updateGrade = async ({state,  effects }: Context, { grade, status }
     const type = clone.userID ? "ENROLLMENT" : "GROUP"
     switch (type) {
         case "ENROLLMENT":
-            state.submissionsForCourse.update({type: type, id: clone.userID}, clone)
+            state.submissionsForCourse.update({type, id: clone.userID}, clone)
             break
         case "GROUP":
-            state.submissionsForCourse.update({type: type, id: clone.groupID}, clone)
+            state.submissionsForCourse.update({type, id: clone.groupID}, clone)
             break
     }
 }
