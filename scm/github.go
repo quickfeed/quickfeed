@@ -62,7 +62,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	if err != nil || gitOrg == nil {
 		return nil, SCMError{
 			Method:  "GetOrganization",
-			Message: fmt.Sprintf("could not find github organization %s. Make sure it allows third party access.", orgNameOrID), // this message is logged, never sent to user
+			Message: fmt.Sprintf("could not find github organization %s. Make sure it allows third party access.", orgNameOrID),
 			Err:     err,
 		}
 	}
@@ -92,7 +92,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 			return nil, SCMError{
 				Method:  "GetOrganization",
 				Message: fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, org.ScmOrganizationName),
-				Err:     fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, org.ScmOrganizationName, err),
+				Err:     err,
 			}
 		}
 		// membership role must be "admin", if not, return error (possibly to show user)
