@@ -43,15 +43,13 @@ var (
 	mockRepos = []*scm.Repository{
 		{
 			ID:    1,
-			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName("test"),
+			Repo:  qf.StudentRepoName("test"),
 		},
 		{
 			ID:    2,
-			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName(user),
+			Repo:  qf.StudentRepoName(user),
 		},
 	}
 )
@@ -61,27 +59,23 @@ func TestMockSCMWithCourse(t *testing.T) {
 	wantRepos := map[uint64]*scm.Repository{
 		1: {
 			ID:    1,
-			Path:  "info",
+			Repo:  "info",
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		2: {
 			ID:    2,
-			Path:  "assignments",
+			Repo:  "assignments",
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		3: {
 			ID:    3,
-			Path:  "tests",
+			Repo:  "tests",
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		4: {
 			ID:    4,
-			Path:  qf.StudentRepoName("user"),
+			Repo:  qf.StudentRepoName("user"),
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 	}
 	if diff := cmp.Diff(wantRepos, s.Repositories); diff != "" {
@@ -380,7 +374,7 @@ func TestMockGetIssue(t *testing.T) {
 		{
 			name: "correct issue",
 			opt: &scm.RepositoryOptions{
-				Path:  issue.Repository,
+				Repo:  issue.Repository,
 				Owner: qtest.MockOrg,
 			},
 			number:    issue.Number,
@@ -390,7 +384,7 @@ func TestMockGetIssue(t *testing.T) {
 		{
 			name: "incorrect issue number",
 			opt: &scm.RepositoryOptions{
-				Path:  issue.Repository,
+				Repo:  issue.Repository,
 				Owner: qtest.MockOrg,
 			},
 			number:    13,
@@ -400,7 +394,7 @@ func TestMockGetIssue(t *testing.T) {
 		{
 			name: "incorrect organization name",
 			opt: &scm.RepositoryOptions{
-				Path:  issue.Repository,
+				Repo:  issue.Repository,
 				Owner: "some-org",
 			},
 			number:    issue.Number,
@@ -449,7 +443,7 @@ func TestMockGetIssues(t *testing.T) {
 			name: "issues for 'test-labs' repo",
 			opt: &scm.RepositoryOptions{
 				Owner: qtest.MockOrg,
-				Path:  mockIssues[0].Repository,
+				Repo:  mockIssues[0].Repository,
 			},
 			wantIssues: []*scm.Issue{mockIssues[0], mockIssues[1]},
 			wantErr:    false,
@@ -458,7 +452,7 @@ func TestMockGetIssues(t *testing.T) {
 			name: "issues for 'user-labs' repo",
 			opt: &scm.RepositoryOptions{
 				Owner: qtest.MockOrg,
-				Path:  mockIssues[2].Repository,
+				Repo:  mockIssues[2].Repository,
 			},
 			wantIssues: []*scm.Issue{mockIssues[2]},
 			wantErr:    false,
@@ -467,7 +461,7 @@ func TestMockGetIssues(t *testing.T) {
 			name: "incorrect repository",
 			opt: &scm.RepositoryOptions{
 				Owner: qtest.MockOrg,
-				Path:  "unknown-labs",
+				Repo:  "unknown-labs",
 			},
 			wantIssues: nil,
 			wantErr:    true,
@@ -476,7 +470,7 @@ func TestMockGetIssues(t *testing.T) {
 			name: "incorrect organization",
 			opt: &scm.RepositoryOptions{
 				Owner: "some-org",
-				Path:  mockIssues[0].Repository,
+				Repo:  mockIssues[0].Repository,
 			},
 			wantIssues: nil,
 			wantErr:    true,
@@ -501,21 +495,20 @@ func TestMockGetIssues2(t *testing.T) {
 	s.Repositories = map[uint64]*scm.Repository{
 		1: {
 			ID:    1,
-			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName("test"),
+			Repo:  qf.StudentRepoName("test"),
 		},
 	}
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("test"),
+		Repo:  qf.StudentRepoName("test"),
 	}
 
 	var wantIssueIDs []int
 	for i := 1; i <= 5; i++ {
-		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
+		issue, cleanup := createIssue(t, s, opt.Owner, opt.Repo)
 		defer cleanup()
 		wantIssueIDs = append(wantIssueIDs, issue.Number)
 	}
@@ -555,7 +548,7 @@ func TestMockDeleteIssue(t *testing.T) {
 		}
 		opt := &scm.RepositoryOptions{
 			Owner: qtest.MockOrg,
-			Path:  issue.Repository,
+			Repo:  issue.Repository,
 		}
 		if err := s.DeleteIssue(ctx, opt, issue.Number); err != nil {
 			t.Error(err)
@@ -583,7 +576,7 @@ func TestMockCreateGetDeleteIssueSequence(t *testing.T) {
 
 	repoOpt := &scm.RepositoryOptions{
 		Owner: qtest.MockOrg,
-		Path:  opt.Repository,
+		Repo:  opt.Repository,
 	}
 	issues, err := s.GetIssues(ctx, repoOpt)
 	if err != nil {
@@ -632,7 +625,7 @@ func TestMockDeleteIssues(t *testing.T) {
 		{
 			name: "delete all issues for 'user-labs' repo (issue 3)",
 			opt: &scm.RepositoryOptions{
-				Path:  qf.StudentRepoName(user),
+				Repo:  qf.StudentRepoName(user),
 				Owner: course.ScmOrganizationName,
 			},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1]},
@@ -641,7 +634,7 @@ func TestMockDeleteIssues(t *testing.T) {
 		{
 			name: "delete all issues for 'test-labs' repo (issues 1 and 2)",
 			opt: &scm.RepositoryOptions{
-				Path:  "test-labs",
+				Repo:  "test-labs",
 				Owner: course.ScmOrganizationName,
 			},
 			wantIssues: map[uint64]*scm.Issue{3: mockIssues[2]},
@@ -651,7 +644,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			name: "missing repository, nothing deleted",
 			opt: &scm.RepositoryOptions{
 				Owner: course.ScmOrganizationName,
-				Path:  "some-labs",
+				Repo:  "some-labs",
 			},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
 			wantErr:    true,
@@ -660,7 +653,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			name: "incorrect organization name",
 			opt: &scm.RepositoryOptions{
 				Owner: "organization",
-				Path:  "test-labs",
+				Repo:  "test-labs",
 			},
 			wantIssues: map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
 			wantErr:    true,
@@ -859,7 +852,7 @@ func TestMockUpdateIssueComment(t *testing.T) {
 	for _, tt := range tests {
 		if err := s.UpdateIssueComment(ctx, &scm.IssueCommentOptions{
 			Organization: qtest.MockOrg,
-			Repository:   mockRepos[0].Path,
+			Repository:   mockRepos[0].Repo,
 			Number:       tt.issueNumber,
 			CommentID:    tt.commentID,
 			Body:         "Updated",
@@ -882,9 +875,8 @@ func TestMockUpdateIssueComment2(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	repo := &scm.Repository{
 		ID:    1,
-		OrgID: 1,
 		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("user"),
+		Repo:  qf.StudentRepoName("user"),
 	}
 	s.Repositories = map[uint64]*scm.Repository{
 		1: repo,
@@ -893,7 +885,7 @@ func TestMockUpdateIssueComment2(t *testing.T) {
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
 		Organization: repo.Owner,
-		Repository:   repo.Path,
+		Repository:   repo.Repo,
 		Body:         body,
 	}
 
@@ -921,7 +913,7 @@ func TestMockCreateCourse(t *testing.T) {
 	wantRepos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo, qf.StudentRepoName(user)}
 	found := func(wantRepo string, repos []*scm.Repository) bool {
 		for _, repo := range repos {
-			if repo.Path == wantRepo {
+			if repo.Repo == wantRepo {
 				return true
 			}
 		}
@@ -1034,9 +1026,8 @@ func TestMockUpdateEnrollment(t *testing.T) {
 			wantRepos: map[uint64]*scm.Repository{
 				1: {
 					ID:    1,
-					Path:  qf.StudentRepoName(user),
+					Repo:  qf.StudentRepoName(user),
 					Owner: qtest.MockOrg,
-					OrgID: 1,
 				},
 			},
 			wantErr: false,
@@ -1059,8 +1050,7 @@ func TestMockRejectEnrollment(t *testing.T) {
 	repo := &scm.Repository{
 		ID:    1,
 		Owner: qtest.MockOrg,
-		Path:  "test-group",
-		OrgID: 1,
+		Repo:  "test-group",
 	}
 	s.Repositories = map[uint64]*scm.Repository{
 		1: repo,
@@ -1128,15 +1118,13 @@ func TestMockCreateGroup(t *testing.T) {
 	groupRepos := []*scm.Repository{
 		{
 			ID:    1,
-			Path:  paths[0],
+			Repo:  paths[0],
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		{
 			ID:    2,
-			Path:  paths[1],
+			Repo:  paths[1],
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 	}
 	tests := []struct {
@@ -1217,15 +1205,13 @@ func TestMockDeleteGroup(t *testing.T) {
 	repositories := []*scm.Repository{
 		{
 			ID:    1,
-			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName(user),
+			Repo:  qf.StudentRepoName(user),
 		},
 		{
 			ID:    2,
-			OrgID: 1,
 			Owner: qtest.MockOrg,
-			Path:  "a_group",
+			Repo:  "a_group",
 		},
 	}
 	s.Repositories = map[uint64]*scm.Repository{

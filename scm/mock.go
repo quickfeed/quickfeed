@@ -45,27 +45,23 @@ func NewMockSCMClientWithCourse() *MockSCM {
 	s.Repositories = map[uint64]*Repository{
 		1: {
 			ID:    1,
-			Path:  "info",
+			Repo:  "info",
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		2: {
 			ID:    2,
-			Path:  "assignments",
+			Repo:  "assignments",
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		3: {
 			ID:    3,
-			Path:  "tests",
+			Repo:  "tests",
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 		4: {
 			ID:    4,
-			Path:  qf.StudentRepoName("user"),
+			Repo:  qf.StudentRepoName("user"),
 			Owner: qtest.MockOrg,
-			OrgID: 1,
 		},
 	}
 	return s
@@ -104,7 +100,7 @@ func (s *MockSCM) GetOrganization(ctx context.Context, opt *OrganizationOptions)
 		return nil, errors.New("organization not found")
 	}
 	if opt.NewCourse {
-		repos, err := s.GetRepositories(ctx, org)
+		repos, err := s.GetRepositories(ctx, org.ScmOrganizationName)
 		if err != nil {
 			return nil, err
 		}
@@ -116,10 +112,10 @@ func (s *MockSCM) GetOrganization(ctx context.Context, opt *OrganizationOptions)
 }
 
 // GetRepositories implements the SCM interface.
-func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
+func (s *MockSCM) GetRepositories(_ context.Context, owner string) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
-		if repo.OrgID == org.ScmOrganizationID {
+		if repo.Owner == owner {
 			repos = append(repos, repo)
 		}
 	}
@@ -153,7 +149,7 @@ func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Repository,
+		Repo:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
 		return nil, errors.New("repository not found")
@@ -182,7 +178,7 @@ func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Repository,
+		Repo:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
 		return nil, errors.New("repository not found")
@@ -209,7 +205,7 @@ func (s *MockSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, issueNum
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Path,
+		Repo:  opt.Repo,
 		Owner: opt.Owner,
 	}); err != nil {
 		return nil, errors.New("repository not found")
@@ -230,7 +226,7 @@ func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Iss
 		return nil, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Path,
+		Repo:  opt.Repo,
 		Owner: opt.Owner,
 	}); err != nil {
 		return nil, errors.New("repository not found")
@@ -238,7 +234,7 @@ func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Iss
 	var issues []*Issue
 
 	for _, i := range s.Issues {
-		if i.Repository == opt.Path {
+		if i.Repository == opt.Repo {
 			issues = append(issues, i)
 		}
 	}
@@ -253,7 +249,7 @@ func (s *MockSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issue
 		return errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Path,
+		Repo:  opt.Repo,
 		Owner: opt.Owner,
 	}); err != nil {
 		return errors.New("repository not found")
@@ -270,13 +266,13 @@ func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) erro
 		return errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Path,
+		Repo:  opt.Repo,
 		Owner: opt.Owner,
 	}); err != nil {
 		return errors.New("repository not found")
 	}
 	for _, issue := range s.Issues {
-		if issue.Repository == opt.Path {
+		if issue.Repository == opt.Repo {
 			delete(s.Issues, issue.ID)
 		}
 	}
@@ -292,7 +288,7 @@ func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptio
 		return 0, errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Repository,
+		Repo:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
 		return 0, errors.New("repository not found")
@@ -314,7 +310,7 @@ func (s *MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptio
 		return errors.New("organization not found")
 	}
 	if _, err := s.getRepository(&RepositoryOptions{
-		Path:  opt.Repository,
+		Repo:  opt.Repository,
 		Owner: opt.Organization,
 	}); err != nil {
 		return errors.New("repository not found")
@@ -359,7 +355,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 		id := generateID(s.Repositories)
 		repo := &Repository{
 			ID:    id,
-			Path:  path,
+			Repo:  path,
 			Owner: org.ScmOrganizationName,
 		}
 		s.Repositories[id] = repo
@@ -368,7 +364,7 @@ func (s *MockSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Repo
 	id := generateID(s.Repositories)
 	labRepo := &Repository{
 		ID:    id,
-		Path:  qf.StudentRepoName(opt.CourseCreator),
+		Repo:  qf.StudentRepoName(opt.CourseCreator),
 		Owner: org.ScmOrganizationName,
 	}
 	s.Repositories[id] = labRepo
@@ -392,9 +388,8 @@ func (s *MockSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOpt
 		id := generateID(s.Repositories)
 		repo = &Repository{
 			ID:    id,
-			Path:  qf.StudentRepoName(opt.User),
+			Repo:  qf.StudentRepoName(opt.User),
 			Owner: org.ScmOrganizationName,
-			OrgID: 1,
 		}
 		s.Repositories[id] = repo
 	}
@@ -434,9 +429,8 @@ func (s *MockSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposito
 	id := generateID(s.Repositories)
 	repo := &Repository{
 		ID:    id,
-		Path:  opt.GroupName,
+		Repo:  opt.GroupName,
 		Owner: opt.Organization,
-		OrgID: 1,
 	}
 	s.Repositories[id] = repo
 	return repo, nil
@@ -476,7 +470,7 @@ func (s *MockSCM) getRepository(opt *RepositoryOptions) (*Repository, error) {
 		return repo, nil
 	}
 	for _, repo := range s.Repositories {
-		if repo.Path == opt.Path && repo.Owner == opt.Owner {
+		if repo.Repo == opt.Repo && repo.Owner == opt.Owner {
 			return repo, nil
 		}
 	}

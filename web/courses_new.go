@@ -29,13 +29,13 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 			ScmOrganizationID: request.ScmOrganizationID,
 			ScmRepositoryID:   repo.ID,
 			HTMLURL:           repo.HTMLURL,
-			RepoType:          qf.RepoType(repo.Path),
+			RepoType:          qf.RepoType(repo.Repo),
 		}
 		if dbRepo.IsUserRepo() {
 			dbRepo.UserID = courseCreator.ID
 		}
 		if err := s.db.CreateRepository(&dbRepo); err != nil {
-			return nil, fmt.Errorf("failed to create database record for repository %s: %w", repo.Path, err)
+			return nil, fmt.Errorf("failed to create database record for repository %s: %w", repo.Repo, err)
 		}
 	}
 

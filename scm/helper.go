@@ -96,7 +96,7 @@ func isDirty(repos []*Repository) bool {
 		return false
 	}
 	for _, repo := range repos {
-		if _, exists := RepoPaths[repo.Path]; exists {
+		if _, exists := RepoPaths[repo.Repo]; exists {
 			return true
 		}
 	}

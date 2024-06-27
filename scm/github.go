@@ -128,7 +128,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	_, contents, resp, err := s.client.Repositories.GetContents(
 		ctx,
 		opt.Owner,
-		opt.Path,
+		opt.Repo,
 		"",
 		&github.RepositoryContentGetOptions{},
 	)
@@ -245,7 +245,7 @@ func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, number)
+	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Repo, number)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetIssue",
@@ -261,11 +261,11 @@ func (s *GithubSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*I
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{})
+	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Repo, &github.IssueListByRepoOptions{})
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetIssues",
-			Message:  fmt.Sprintf("failed to get issues for %s", opt.Path),
+			Message:  fmt.Sprintf("failed to get issues for %s", opt.Repo),
 			GitError: err,
 		}
 	}
@@ -352,9 +352,9 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
-			Path:         path,
-			Organization: org.ScmOrganizationName,
-			Private:      private,
+			Repo:    path,
+			Owner:   org.ScmOrganizationName,
+			Private: private,
 		}
 		repo, err := s.createRepository(ctx, repoOptions)
 		if err != nil {
@@ -446,9 +446,9 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 		return nil, err
 	}
 	repoOptions := &CreateRepositoryOptions{
-		Organization: opt.Organization,
-		Path:         opt.GroupName,
-		Private:      true,
+		Owner:   opt.Organization,
+		Repo:    opt.GroupName,
+		Private: true,
 	}
 	repo, err := s.createRepository(ctx, repoOptions)
 	if err != nil {
@@ -456,7 +456,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 	}
 
 	for _, user := range opt.Users {
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org.ScmOrganizationName, repo.Path, user, &github.RepositoryAddCollaboratorOptions{
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org.ScmOrganizationName, repo.Repo, user, &github.RepositoryAddCollaboratorOptions{
 			Permission: RepoPush,
 		}); err != nil {
 			return nil, err
@@ -481,28 +481,28 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Owner, slug.Make(opt.Repo))
 	if repo != nil {
-		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
+		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
 		return toRepository(repo), nil
 	}
 	// error expected to be 404 Not Found; logging here in case it's a different error
-	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Path, err)
+	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Repo, err)
 
 	// repo does not exist, create it
-	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
-		Name:    &opt.Path,
+	s.logger.Debugf("CreateRepository: creating %s", opt.Repo)
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
+		Name:    &opt.Repo,
 		Private: &opt.Private,
 	})
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "CreateRepository",
-			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
+			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Repo),
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
+	s.logger.Debugf("CreateRepository: done creating %s", opt.Repo)
 	return toRepository(repo), nil
 }
 
@@ -522,15 +522,15 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
 			}
 		}
-		opt.Path = repo.GetName()
+		opt.Repo = repo.GetName()
 		opt.Owner = repo.Owner.GetLogin()
 	}
 
-	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
+	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Repo); err != nil {
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "DeleteRepository",
-			Message:  fmt.Sprintf("failed to delete repository %s", opt.Path),
+			Message:  fmt.Sprintf("failed to delete repository %s", opt.Repo),
 		}
 	}
 	return nil
@@ -541,9 +541,9 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{
-		Organization: organization,
-		Path:         qf.StudentRepoName(login),
-		Private:      true,
+		Owner:   organization,
+		Repo:    qf.StudentRepoName(login),
+		Private: true,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo: %w", err)
@@ -553,8 +553,8 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 	opt := &github.RepositoryAddCollaboratorOptions{
 		Permission: RepoPush,
 	}
-	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, opt); err != nil {
-		return nil, fmt.Errorf("failed to grant push access to %s/%s for user %s: %w", repo.Owner, repo.Path, login, err)
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Repo, login, opt); err != nil {
+		return nil, fmt.Errorf("failed to grant push access to %s/%s for user %s: %w", repo.Owner, repo.Repo, login, err)
 	}
 	return repo, nil
 }
@@ -581,11 +581,9 @@ func (s *GithubSCM) Client() *github.Client {
 func toRepository(repo *github.Repository) *Repository {
 	return &Repository{
 		ID:      uint64(repo.GetID()),
-		Path:    repo.GetName(),
+		Repo:    repo.GetName(),
 		Owner:   repo.Owner.GetLogin(),
 		HTMLURL: repo.GetHTMLURL(),
-		OrgID:   uint64(repo.Organization.GetID()),
-		Size:    uint64(repo.GetSize()),
 	}
 }
 

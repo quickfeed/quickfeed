@@ -58,10 +58,10 @@ func TestGetIssue(t *testing.T) {
 
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Repo:  qf.StudentRepoName(qfTestUser),
 	}
 
-	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
+	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Repo)
 	defer cleanup()
 
 	gotIssue, err := s.GetIssue(context.Background(), opt, wantIssue.Number)
@@ -111,7 +111,7 @@ func TestDeleteAllIssues(t *testing.T) {
 
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Repo:  qf.StudentRepoName(qfTestUser),
 	}
 	if err := s.DeleteIssues(context.Background(), opt); err != nil {
 		t.Fatal(err)
@@ -259,7 +259,7 @@ func TestEmptyRepo(t *testing.T) {
 		{
 			"tests repo, assume not empty",
 			&scm.RepositoryOptions{
-				Path:  "tests",
+				Repo:  "tests",
 				Owner: qfTestOrg,
 			},
 			false,
@@ -267,7 +267,7 @@ func TestEmptyRepo(t *testing.T) {
 		{
 			"info repo, assume empty",
 			&scm.RepositoryOptions{
-				Path:  "info",
+				Repo:  "info",
 				Owner: qfTestOrg,
 			},
 			true,
@@ -275,7 +275,7 @@ func TestEmptyRepo(t *testing.T) {
 		{
 			"non-existent repo, handle as empty",
 			&scm.RepositoryOptions{
-				Path:  "some-other-repo",
+				Repo:  "some-other-repo",
 				Owner: qfTestOrg,
 			},
 			true,
@@ -303,7 +303,7 @@ func createIssue(t *testing.T, s scm.SCM, org, repo string) (*scm.Issue, func())
 
 	return issue, func() {
 		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{
-			Owner: org, Path: repo,
+			Owner: org, Repo: repo,
 		}, issue.Number); err != nil {
 			t.Fatal(err)
 		}

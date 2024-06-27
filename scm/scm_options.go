@@ -52,24 +52,24 @@ func (opt OrganizationOptions) valid() bool {
 // Either ID or both Path and Owner fields must be set.
 type RepositoryOptions struct {
 	ID    uint64
-	Path  string
+	Repo  string
 	Owner string
 }
 
 func (opt RepositoryOptions) valid() bool {
-	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
+	return opt.ID > 0 || (opt.Repo != "" && opt.Owner != "")
 }
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization string
-	Path         string
-	Private      bool
-	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
+	Owner      string
+	Repo       string
+	Private    bool
+	Permission string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
-	return opt.Organization != "" && opt.Path != ""
+	return opt.Owner != "" && opt.Repo != ""
 }
 
 // GroupOptions is used when creating or modifying a group.

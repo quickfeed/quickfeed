@@ -91,11 +91,9 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 // Repository represents a git remote repository.
 type Repository struct {
 	ID      uint64
-	Path    string
+	Repo    string
 	Owner   string // Only used by GitHub.
 	HTMLURL string // Repository website.
-	OrgID   uint64
-	Size    uint64
 }
 
 // Authorization stores information about user scopes
