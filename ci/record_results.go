@@ -29,8 +29,7 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 	if err = db.CreateSubmission(newSubmission); err != nil {
 		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
 	}
-	// TODO: This logs the status by user. For repositories that are groups this will not be correct.
-	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatusByUser(previous.GetUserID()), newSubmission.GetScore())
+	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatuses(), newSubmission.GetScore())
 
 	if !r.Rebuild {
 		if err := r.updateSlipDays(db, newSubmission); err != nil {

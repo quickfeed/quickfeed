@@ -25,6 +25,14 @@ func (s *Submission) IsAllApproved() bool {
 	return true
 }
 
+func (s *Submission) GetStatuses() []Submission_Status {
+	statuses := make([]Submission_Status, len(s.GetGrades()))
+	for idx, grade := range s.GetGrades() {
+		statuses[idx] = grade.GetStatus()
+	}
+	return statuses
+}
+
 func (s *Submission) GetStatusByUser(userID uint64) Submission_Status {
 	for idx, grade := range s.GetGrades() {
 		if grade.GetUserID() == userID {
