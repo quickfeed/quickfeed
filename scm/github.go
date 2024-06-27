@@ -2,7 +2,6 @@ package scm
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -74,7 +73,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	// If getting organization for the purpose of creating a new course,
 	// ensure that the organization does not already contain any course repositories.
 	if opt.NewCourse {
-		repos, err := s.GetRepositories(ctx, org)
+		repos, err := s.GetRepositories(ctx, org.ScmOrganizationName)
 		if err != nil {
 			return nil, err
 		}
@@ -103,17 +102,13 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
-	path := org.GetScmOrganizationName()
-	if path == "" {
-		return nil, errors.New("organization name must be provided")
-	}
-	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
+func (s *GithubSCM) GetRepositories(ctx context.Context, owner string) ([]*Repository, error) {
+	repos, _, err := s.client.Repositories.ListByOrg(ctx, owner, nil)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			GitError: err,
 			Method:   "GetRepositories",
-			Message:  fmt.Sprintf("failed to access repositories for organization %s", path),
+			Message:  fmt.Sprintf("failed to access repositories for organization %s", owner),
 		}
 	}
 	repositories := make([]*Repository, 0, len(repos))
