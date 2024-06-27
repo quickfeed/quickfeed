@@ -60,7 +60,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 		gitOrg, _, err = s.client.Organizations.Get(ctx, orgNameOrID)
 	}
 	if err != nil || gitOrg == nil {
-		return nil, ErrFailedSCM{
+		return nil, SCMError{
 			Method:   "GetOrganization",
 			Message:  fmt.Sprintf("could not find github organization %s. Make sure it allows third party access.", orgNameOrID), // this message is logged, never sent to user
 			GitError: err,
@@ -89,7 +89,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 		// fetch user membership in that organization, if exists
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.ScmOrganizationName)
 		if err != nil {
-			return nil, ErrFailedSCM{
+			return nil, SCMError{
 				Method:   "GetOrganization",
 				Message:  fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, org.ScmOrganizationName),
 				GitError: fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, org.ScmOrganizationName, err),
@@ -111,7 +111,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 	}
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
 	if err != nil {
-		return nil, ErrFailedSCM{
+		return nil, SCMError{
 			GitError: err,
 			Method:   "GetRepositories",
 			Message:  fmt.Sprintf("failed to access repositories for organization %s", path),
@@ -283,7 +283,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	// find current group members
 	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
 	if err != nil {
-		return ErrFailedSCM{
+		return SCMError{
 			GitError: err,
 			Method:   "UpdateGroupMembers",
 			Message:  fmt.Sprintf("failed to get members for %s/%s", opt.Organization, opt.GroupName),
@@ -294,7 +294,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	for _, member := range opt.Users {
 		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, pushAccess)
 		if err != nil {
-			return ErrFailedSCM{
+			return SCMError{
 				GitError: err,
 				Method:   "UpdateGroupMembers",
 				Message:  fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
@@ -308,7 +308,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		if !slices.Contains(opt.Users, member) {
 			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, member)
 			if err != nil {
-				return ErrFailedSCM{
+				return SCMError{
 					GitError: err,
 					Method:   "UpdateGroupMembers",
 					Message:  fmt.Sprintf("failed to remove user %s from repository %s", member, opt.GroupName),
@@ -364,7 +364,7 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 		Private: github.Bool(opt.Private),
 	})
 	if err != nil {
-		return nil, ErrFailedSCM{
+		return nil, SCMError{
 			Method:   "CreateRepository",
 			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
 			GitError: err,
@@ -384,7 +384,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 	if opt.ID > 0 {
 		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
 		if err != nil {
-			return ErrFailedSCM{
+			return SCMError{
 				GitError: err,
 				Method:   "DeleteRepository",
 				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
@@ -395,7 +395,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 	}
 
 	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
-		return ErrFailedSCM{
+		return SCMError{
 			GitError: err,
 			Method:   "DeleteRepository",
 			Message:  fmt.Sprintf("failed to delete repository %s", opt.Path),

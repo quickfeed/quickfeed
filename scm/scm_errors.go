@@ -11,9 +11,9 @@ var (
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
 
-// ErrFailedSCM is returned to provide detailed information
+// SCMError is returned to provide detailed information
 // to user about source of the error and possible solution
-type ErrFailedSCM struct {
+type SCMError struct {
 	Method   string
 	Message  string
 	GitError error
@@ -21,6 +21,6 @@ type ErrFailedSCM struct {
 
 // Error message includes name of the failed method and the original error message
 // from GitHub, to make it suitable for informative back-end logging
-func (e ErrFailedSCM) Error() string {
+func (e SCMError) Error() string {
 	return "github method " + e.Method + " failed: " + e.GitError.Error() + "\n" + e.Message
 }

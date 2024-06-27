@@ -90,7 +90,7 @@ func ctxErr(ctx context.Context) error {
 // Returns true and formatted error if error type is SCM error
 // designed to be shown to user
 func parseSCMError(err error) (bool, error) {
-	errStruct, ok := err.(scm.ErrFailedSCM)
+	errStruct, ok := err.(scm.SCMError)
 	if ok {
 		return ok, connect.NewError(connect.CodeNotFound, errors.New(errStruct.Message))
 	}
