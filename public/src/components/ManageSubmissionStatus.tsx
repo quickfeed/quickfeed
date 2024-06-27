@@ -54,20 +54,15 @@ const ManageSubmissionStatus = (): JSX.Element => {
     }
 
     const getButtonType = (status: Submission_Status): ButtonType => {
-        console.log(status)
         const submission = state.selectedSubmission
         const grades = submission?.Grades
         if (!grades) {
             return ButtonType.OUTLINE
         }
         if (hasAllStatus(submission, status)) {
-            // Handle in case of multiple grades
             return ButtonType.BUTTON
         }
-        //if (state.selectedSubmission?.status === status) {
         return ButtonType.OUTLINE
-        //}
-        //return ButtonType.OUTLINE
     }
 
     const getGradeButtonType = (grade: Grade, status: Submission_Status): ButtonType => {

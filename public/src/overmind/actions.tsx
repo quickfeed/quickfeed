@@ -173,15 +173,11 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     switch (owner.type) {
         // Take no action if there is no change in status
         case "ENROLLMENT":
-            // TODO: Checks if the user has the same status
-            // TODO: Take an extra look at this
             if (getStatusByUser(submission, owner.id) === status) {
                 return
             }
             break
         case "GROUP":
-            // TODO: Checks if all group members have the same status
-            // TODO: Take an extra look at this
             if (hasAllStatus(submission, status)) {
                 return
             }
