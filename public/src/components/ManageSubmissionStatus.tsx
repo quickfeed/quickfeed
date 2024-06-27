@@ -107,7 +107,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
                 )}
                 {state.selectedSubmission?.Grades && state.selectedSubmission.Grades.length > 1 && (
                 <DynamicButton
-                    text={viewIndividualGrades ? "View All Grades" : "View Individual Grades"}
+                    text={viewIndividualGrades ? "All Grades" : "Individual Grades"}
                     color={Color.GRAY}
                     type={ButtonType.OUTLINE}
                     className="col mr-2"
