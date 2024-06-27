@@ -61,7 +61,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	}
 	if err != nil || gitOrg == nil {
 		return nil, SCMError{
-			Method:  "GetOrganization",
+			Op:      "GetOrganization",
 			Message: fmt.Sprintf("could not find github organization %s. Make sure it allows third party access.", orgNameOrID),
 			Err:     err,
 		}
@@ -90,7 +90,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.ScmOrganizationName)
 		if err != nil {
 			return nil, SCMError{
-				Method:  "GetOrganization",
+				Op:      "GetOrganization",
 				Message: fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, org.ScmOrganizationName),
 				Err:     err,
 			}
@@ -113,7 +113,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 	if err != nil {
 		return nil, SCMError{
 			Err:     err,
-			Method:  "GetRepositories",
+			Op:      "GetRepositories",
 			Message: fmt.Sprintf("failed to access repositories for organization %s", path),
 		}
 	}
@@ -285,7 +285,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	if err != nil {
 		return SCMError{
 			Err:     err,
-			Method:  "UpdateGroupMembers",
+			Op:      "UpdateGroupMembers",
 			Message: fmt.Sprintf("failed to get members for %s/%s", opt.Organization, opt.GroupName),
 		}
 	}
@@ -296,7 +296,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		if err != nil {
 			return SCMError{
 				Err:     err,
-				Method:  "UpdateGroupMembers",
+				Op:      "UpdateGroupMembers",
 				Message: fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
 			}
 		}
@@ -310,7 +310,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 			if err != nil {
 				return SCMError{
 					Err:     err,
-					Method:  "UpdateGroupMembers",
+					Op:      "UpdateGroupMembers",
 					Message: fmt.Sprintf("failed to remove user %s from repository %s", member, opt.GroupName),
 				}
 			}
@@ -365,7 +365,7 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	})
 	if err != nil {
 		return nil, SCMError{
-			Method:  "CreateRepository",
+			Op:      "CreateRepository",
 			Message: fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
 			Err:     err,
 		}
@@ -386,7 +386,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 		if err != nil {
 			return SCMError{
 				Err:     err,
-				Method:  "DeleteRepository",
+				Op:      "DeleteRepository",
 				Message: fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
 			}
 		}
@@ -397,7 +397,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
 		return SCMError{
 			Err:     err,
-			Method:  "DeleteRepository",
+			Op:      "DeleteRepository",
 			Message: fmt.Sprintf("failed to delete repository %s", opt.Path),
 		}
 	}
