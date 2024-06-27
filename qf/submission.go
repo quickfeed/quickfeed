@@ -122,7 +122,7 @@ func (s *Submission) BeforeCreate(tx *gorm.DB) error {
 			return errors.New("group has no users")
 		}
 
-		s.Grades = make([]*Grade, 0, len(userIDs))
+		s.Grades = make([]*Grade, len(userIDs))
 		for idx, id := range userIDs {
 			// Create a grade for each user in the group
 			s.Grades[idx] = &Grade{
