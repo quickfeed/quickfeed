@@ -99,7 +99,6 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
-	t.Log(submissions[0], "a")
 }
 
 func TestGormDBUpdateSubmission(t *testing.T) {
@@ -511,7 +510,6 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 	want.ID = submissions[0].ID
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
-		t.Log(submissions[0], "a")
 	}
 }
 

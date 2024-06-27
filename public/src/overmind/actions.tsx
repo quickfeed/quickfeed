@@ -199,8 +199,6 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
             clone = setStatusAll(clone, status)
             break
     }
-    console.log(submission)
-    console.log(clone)
     /* Update the submission status */
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
