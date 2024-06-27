@@ -1,7 +1,6 @@
 package scm
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/google/go-github/v62/github"
@@ -39,28 +38,7 @@ var (
 	}
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
 		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
-
-	// ErrNotMember indicates that the requested organization exists, but the current user
-	// is not its member.
-	ErrNotMember = errors.New("user is not a member of the organization")
-	// ErrAlreadyExists indicates that one or more QuickFeed repositories
-	// already exists for the directory (or GitHub organization).
-	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
-
-// ErrFailedSCM is returned to provide detailed information
-// to user about source of the error and possible solution
-type ErrFailedSCM struct {
-	Method   string
-	Message  string
-	GitError error
-}
-
-// Error message includes name of the failed method and the original error message
-// from GitHub, to make it suitable for informative back-end logging
-func (e ErrFailedSCM) Error() string {
-	return "github method " + e.Method + " failed: " + e.GitError.Error() + "\n" + e.Message
-}
 
 // isDirty returns true if the list of provided repositories contains
 // any of the repositories that QuickFeed wants to create.
