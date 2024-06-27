@@ -21,9 +21,9 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 	issue, _, err := s.client.Issues.Create(ctx, opt.Organization, opt.Repository, newIssue)
 	if err != nil {
 		return nil, SCMError{
-			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to create issue %q on %s/%s", opt.Title, opt.Organization, opt.Repository),
-			GitError: err,
+			Method:  "CreateIssue",
+			Message: fmt.Sprintf("failed to create issue %q on %s/%s", opt.Title, opt.Organization, opt.Repository),
+			Err:     err,
 		}
 	}
 	s.logger.Debugf("Created issue %q on %s/%s", opt.Title, opt.Organization, opt.Repository)
@@ -45,9 +45,9 @@ func (s *GithubSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, opt.Number, issueReq)
 	if err != nil {
 		return nil, SCMError{
-			Method:   "UpdateIssue",
-			Message:  fmt.Sprintf("failed to update issue #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
-			GitError: err,
+			Method:  "UpdateIssue",
+			Message: fmt.Sprintf("failed to update issue #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
+			Err:     err,
 		}
 	}
 	s.logger.Debugf("Updated issue number %d on %s/%s", opt.Number, opt.Organization, opt.Repository)
@@ -62,9 +62,9 @@ func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number
 	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, number)
 	if err != nil {
 		return nil, SCMError{
-			Method:   "GetIssue",
-			Message:  fmt.Sprintf("failed to get issue #%d on %s/%s", number, opt.Owner, opt.Path),
-			GitError: err,
+			Method:  "GetIssue",
+			Message: fmt.Sprintf("failed to get issue #%d on %s/%s", number, opt.Owner, opt.Path),
+			Err:     err,
 		}
 	}
 	return toIssue(issue), nil
@@ -78,9 +78,9 @@ func (s *GithubSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*I
 	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{})
 	if err != nil {
 		return nil, SCMError{
-			Method:   "GetIssues",
-			Message:  fmt.Sprintf("failed to get issues for %s/%s", opt.Owner, opt.Path),
-			GitError: err,
+			Method:  "GetIssues",
+			Message: fmt.Sprintf("failed to get issues for %s/%s", opt.Owner, opt.Path),
+			Err:     err,
 		}
 	}
 	var issues []*Issue
@@ -98,9 +98,9 @@ func (s *GithubSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOpt
 	createdComment, _, err := s.client.Issues.CreateComment(ctx, opt.Organization, opt.Repository, opt.Number, &github.IssueComment{Body: &opt.Body})
 	if err != nil {
 		return 0, SCMError{
-			Method:   "CreateIssueComment",
-			Message:  fmt.Sprintf("failed to create comment for issue #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
-			GitError: err,
+			Method:  "CreateIssueComment",
+			Message: fmt.Sprintf("failed to create comment for issue #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
+			Err:     err,
 		}
 	}
 	return createdComment.GetID(), nil
@@ -113,9 +113,9 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 	}
 	if _, _, err := s.client.Issues.EditComment(ctx, opt.Organization, opt.Repository, opt.CommentID, &github.IssueComment{Body: &opt.Body}); err != nil {
 		return SCMError{
-			Method:   "UpdateIssueComment",
-			Message:  fmt.Sprintf("failed to edit comment %d on issue #%d on %s/%s", opt.CommentID, opt.Number, opt.Organization, opt.Repository),
-			GitError: err,
+			Method:  "UpdateIssueComment",
+			Message: fmt.Sprintf("failed to edit comment %d on issue #%d on %s/%s", opt.CommentID, opt.Number, opt.Organization, opt.Repository),
+			Err:     err,
 		}
 	}
 	return nil
@@ -131,9 +131,9 @@ func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersO
 	}
 	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.Number, reviewersRequest); err != nil {
 		return SCMError{
-			Method:   "RequestReviewers",
-			Message:  fmt.Sprintf("failed to request reviewers for pull request #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
-			GitError: err,
+			Method:  "RequestReviewers",
+			Message: fmt.Sprintf("failed to request reviewers for pull request #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
+			Err:     err,
 		}
 	}
 	return nil
