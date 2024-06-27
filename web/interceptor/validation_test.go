@@ -23,6 +23,7 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.Users":                    {cleaner: T, validator: F},
 		"qf.Submission":               {cleaner: F, validator: F},
 		"qf.Submissions":              {cleaner: F, validator: F},
+		"qf.Grade":                    {cleaner: F, validator: F},
 		"qf.Enrollment":               {cleaner: T, validator: T},
 		"qf.Enrollments":              {cleaner: T, validator: T},
 		"qf.Assignment":               {cleaner: F, validator: F},
@@ -54,7 +55,6 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.EnrollmentRequest":        {cleaner: F, validator: T},
 		"score.Score":                 {cleaner: F, validator: F},
 		"score.BuildInfo":             {cleaner: F, validator: F},
-		"qf.Grade":                    {cleaner: F, validator: F},
 	}
 
 	protoregistry.GlobalTypes.RangeMessages(func(desc protoreflect.MessageType) bool {
