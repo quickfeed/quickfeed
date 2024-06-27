@@ -1,10 +1,11 @@
 package qf_test
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestIsApproved(t *testing.T) {
@@ -270,8 +271,8 @@ func TestIsApproved(t *testing.T) {
 	for _, test := range isApprovedTests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.assignment.IsApproved(test.submission, test.score)
-			if !reflect.DeepEqual(got, test.expected) {
-				t.Errorf("IsApproved(%v, %v, %d) = %v, expected %v", test.assignment, test.submission, test.score, got, test.expected)
+			if diff := cmp.Diff(got, test.expected, protocmp.Transform()); diff != "" {
+				t.Errorf("IsApproved(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
 			}
 		})
 	}
