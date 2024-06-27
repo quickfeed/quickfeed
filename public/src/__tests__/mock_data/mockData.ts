@@ -469,7 +469,7 @@ export class MockData {
                 commitHash: "test",
                 Grades: [
                     new Grade({
-                        Status: Submission_Status.APPROVED,
+                        Status: Submission_Status.NONE,
                         SubmissionID: BigInt(6),
                         UserID: BigInt(3),
                     })
