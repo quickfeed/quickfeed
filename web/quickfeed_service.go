@@ -397,7 +397,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	if in.Msg.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
-		if _, err := s.rebuildSubmission(in.Msg); err != nil {
+		if err := s.rebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
 		}
