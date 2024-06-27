@@ -63,10 +63,7 @@ func TestApproveSubmission(t *testing.T) {
 	wantSubmission.Grades = []*qf.Grade{{UserID: student.ID, Status: qf.Submission_APPROVED}}
 	wantSubmission.ApprovedDate = gotApprovedSubmission.ApprovedDate
 
-	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, cmp.Options{
-		protocmp.Transform(),
-		protocmp.IgnoreFields(&qf.Grade{}, "SubmissionID"),
-	}); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Grade{}, "SubmissionID")); diff != "" {
 		t.Errorf("UpdateSubmission(approve) mismatch (-wantSubmission, +gotApprovedSubmission):\n%s", diff)
 	}
 
@@ -85,10 +82,7 @@ func TestApproveSubmission(t *testing.T) {
 	wantSubmission.SetGrade(student.ID, qf.Submission_REJECTED)
 	// Note that the approved date is not set when the submission is rejected
 
-	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, cmp.Options{
-		protocmp.Transform(),
-		protocmp.IgnoreFields(&qf.Grade{}, "SubmissionID"),
-	}); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Grade{}, "SubmissionID")); diff != "" {
 		t.Errorf("UpdateSubmission(reject) mismatch (-wantSubmission, +gotRejectedSubmission):\n%s", diff)
 	}
 }
