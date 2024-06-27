@@ -195,8 +195,8 @@ func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
 		}
 
 		if err := tx.Model(query).
-			Where("assignment_id = ?", query.AssignmentID).
-			Where("score >= ?", query.Score).
+			// Update the released status of all submissions that have score equal or above the provided score
+			Where("id IN (?)", submissionIDs).
 			Updates(&qf.Submission{
 				Released: query.Released,
 			}).Error; err != nil {
