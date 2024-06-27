@@ -15,7 +15,7 @@ type SCM interface {
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
-	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
+	GetRepositories(ctx context.Context, owner string) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// UpdateGroupMembers adds or removes members of an existing group repository based on list of users in GroupOptions.
