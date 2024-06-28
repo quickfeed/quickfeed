@@ -74,28 +74,16 @@ const ManageSubmissionStatus = (): JSX.Element => {
 
     return (
         <>
-            <div className="row m-auto">
-                <DynamicButton
-                    text="Approve"
-                    color={Color.GREEN}
-                    type={getButtonType(Submission_Status.APPROVED)}
-                    className="col mr-2"
-                    onClick={() => handleSetStatus(Submission_Status.APPROVED)}
-                />
-                <DynamicButton
-                    text="Revision"
-                    color={Color.YELLOW}
-                    type={getButtonType(Submission_Status.REVISION)}
-                    className="col mr-2"
-                    onClick={() => handleSetStatus(Submission_Status.REVISION)}
-                />
-                <DynamicButton
-                    text="Reject"
-                    color={Color.RED}
-                    type={getButtonType(Submission_Status.REJECTED)}
-                    className="col mr-2"
-                    onClick={() => handleSetStatus(Submission_Status.REJECTED)}
-                />
+            <div className="row mb-1 ml-auto mr-auto">
+                {state.selectedSubmission?.Grades && state.selectedSubmission.Grades.length > 1 && (
+                    <DynamicButton
+                        text={viewIndividualGrades ? "All Grades" : "Individual Grades"}
+                        color={Color.GRAY}
+                        type={ButtonType.OUTLINE}
+                        className="col mr-2"
+                        onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
+                    />
+                )}
                 {assignment && !isManuallyGraded(assignment) && (
                     <DynamicButton
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
@@ -105,42 +93,71 @@ const ManageSubmissionStatus = (): JSX.Element => {
                         onClick={handleRebuild}
                     />
                 )}
-                {state.selectedSubmission?.Grades && state.selectedSubmission.Grades.length > 1 && (
-                <DynamicButton
-                    text={viewIndividualGrades ? "All Grades" : "Individual Grades"}
-                    color={Color.GRAY}
-                    type={ButtonType.OUTLINE}
-                    className="col mr-2"
-                    onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
-                />
-                )}
             </div>
-                {viewIndividualGrades && state.selectedSubmission?.Grades && state.selectedSubmission.Grades.map((grade) => (
-                    <div key={grade.UserID.toString()} className="row mt-1 ml-auto mr-auto">
-                        <span className="col badge text-center align-self-center">{getUserName(grade.UserID)}</span>
-                        <DynamicButton
-                            text="Approve"
-                            color={Color.GREEN}
-                            type={getGradeButtonType(grade, Submission_Status.APPROVED)}
-                            className="col mr-2"
-                            onClick={() => handleSetGrade(grade, Submission_Status.APPROVED)}
-                        />
-                        <DynamicButton
-                            text="Revision"
-                            color={Color.YELLOW}
-                            type={getGradeButtonType(grade, Submission_Status.REVISION)}
-                            className="col mr-2"
-                            onClick={() => handleSetGrade(grade, Submission_Status.REVISION)}
-                        />
-                        <DynamicButton
-                            text="Reject"
-                            color={Color.RED}
-                            type={getGradeButtonType(grade,Submission_Status.REJECTED)}
-                            className="col mr-2"
-                            onClick={() => handleSetGrade(grade, Submission_Status.REJECTED)}
-                        />
-                    </div>
-                ))}
+            
+            {!viewIndividualGrades && (
+                <div className="row m-auto">
+                    <DynamicButton
+                        text="Approve"
+                        color={Color.GREEN}
+                        type={getButtonType(Submission_Status.APPROVED)}
+                        className="col mr-2"
+                        onClick={() => handleSetStatus(Submission_Status.APPROVED)}
+                    />
+                    <DynamicButton
+                        text="Revision"
+                        color={Color.YELLOW}
+                        type={getButtonType(Submission_Status.REVISION)}
+                        className="col mr-2"
+                        onClick={() => handleSetStatus(Submission_Status.REVISION)}
+                    />
+                    <DynamicButton
+                        text="Reject"
+                        color={Color.RED}
+                        type={getButtonType(Submission_Status.REJECTED)}
+                        className="col mr-2"
+                        onClick={() => handleSetStatus(Submission_Status.REJECTED)}
+                    />
+                </div>
+            )}
+            {viewIndividualGrades &&
+                <table className="table">
+                    <tbody>
+                        {state.selectedSubmission?.Grades.map((grade) => (
+                            <tr key={grade.UserID.toString()}>
+                                <td className="td-center word-break">{getUserName(grade.UserID)}</td>
+                                <td>
+                                    <DynamicButton
+                                        text="Approve"
+                                        color={Color.GREEN}
+                                        type={getGradeButtonType(grade, Submission_Status.APPROVED)}
+                                        className="mr-2"
+                                        onClick={() => handleSetGrade(grade, Submission_Status.APPROVED)}
+                                    />
+                                </td>
+                                <td>
+                                    <DynamicButton
+                                        text="Revision"
+                                        color={Color.YELLOW}
+                                        type={getGradeButtonType(grade, Submission_Status.REVISION)}
+                                        className="mr-2"
+                                        onClick={() => handleSetGrade(grade, Submission_Status.REVISION)}
+                                    />
+                                </td>
+                                <td>
+                                    <DynamicButton
+                                        text="Reject"
+                                        color={Color.RED}
+                                        type={getGradeButtonType(grade, Submission_Status.REJECTED)}
+                                        className="mr-2"
+                                        onClick={() => handleSetGrade(grade, Submission_Status.REJECTED)}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            }
         </>
     )
 }
