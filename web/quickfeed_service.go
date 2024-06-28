@@ -560,7 +560,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found. Please make sure that 3rd-party access is enabled for your organization"))
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found. Please make sure that third-party access is enabled for your organization"))
 	}
 	return connect.NewResponse(org), nil
 }

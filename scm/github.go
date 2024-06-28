@@ -198,8 +198,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	}
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
-		// Give access to the course's info and assignments repositories
-		if err := s.grantPullAccessToCourseRepos(ctx, org.ScmOrganizationName, opt.User); err != nil {
+		if err := s.grantAccess(ctx, org.ScmOrganizationName, qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, err
 		}
 		repo, err := s.createStudentRepo(ctx, org.ScmOrganizationName, opt.User)
@@ -267,7 +266,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 		return nil, err
 	}
 	for _, user := range opt.Users {
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, opt.Organization, repo.Path, user, pushAccess); err != nil {
+		if err := s.grantAccess(ctx, opt.Organization, repo.Path, user, pushAccess); err != nil {
 			return nil, err
 		}
 	}
@@ -292,13 +291,8 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 
 	// add members that are not already in the group
 	for _, member := range opt.Users {
-		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, pushAccess)
-		if err != nil {
-			return SCMError{
-				Err:     err,
-				Op:      "UpdateGroupMembers",
-				Message: fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
-			}
+		if err := s.grantAccess(ctx, opt.Organization, opt.GroupName, member, pushAccess); err != nil {
+			return err
 		}
 	}
 
@@ -416,20 +410,15 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo: %w", err)
 	}
-	// add push access to student repo
-	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, pushAccess); err != nil {
-		return nil, fmt.Errorf("failed to grant push access to %s/%s for user %s: %w", repo.Owner, repo.Path, login, err)
+	if err := s.grantAccess(ctx, repo.Owner, repo.Path, login, pushAccess); err != nil {
+		return nil, err
 	}
 	return repo, nil
 }
 
-// grantPullAccessToCourseRepos gives pull access to the course's info and assignments repositories.
-func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login string) error {
-	commonRepos := []string{qf.AssignmentsRepo}
-	for _, repoType := range commonRepos {
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, pullAccess); err != nil {
-			return fmt.Errorf("failed to grant pull access to %s/%s for user %s: %w", org, repoType, login, err)
-		}
+func (s *GithubSCM) grantAccess(ctx context.Context, org, repo, login string, access *github.RepositoryAddCollaboratorOptions) error {
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repo, login, access); err != nil {
+		return fmt.Errorf("failed to grant %q access to %s/%s for user %s: %w", access.Permission, org, repo, login, err)
 	}
 	return nil
 }
