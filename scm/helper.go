@@ -29,6 +29,11 @@ var (
 )
 
 var (
+	member = &github.Membership{Role: github.String(OrgMember)}
+	admin  = &github.Membership{Role: github.String(OrgOwner)}
+)
+
+var (
 	// RepoPaths maps from QuickFeed repository path names to a boolean indicating
 	// whether or not the repository should be create as public or private.
 	RepoPaths = map[string]bool{

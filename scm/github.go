@@ -206,14 +206,14 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 			return nil, err
 		}
 		// Promote user to organization member
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: github.String(OrgMember)}); err != nil {
+		if err := s.updatePermission(ctx, opt.User, org.ScmOrganizationName, member); err != nil {
 			return nil, err
 		}
 		return repo, nil
 
 	case qf.Enrollment_TEACHER:
-		// Promote user to organization owner
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: github.String(OrgOwner)}); err != nil {
+		// Promote user to organization admin
+		if err := s.updatePermission(ctx, opt.User, org.ScmOrganizationName, admin); err != nil {
 			return nil, err
 		}
 		// Teacher's private (student) repo should already exist
@@ -245,8 +245,8 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
-	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: github.String(OrgMember)})
-	return err
+	// Demote user to organization member
+	return s.updatePermission(ctx, opt.User, opt.Organization, member)
 }
 
 // CreateGroup creates repository for a new group.
@@ -414,6 +414,13 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 		return nil, err
 	}
 	return repo, nil
+}
+
+func (s *GithubSCM) updatePermission(ctx context.Context, user, org string, role *github.Membership) error {
+	if _, _, err := s.client.Organizations.EditOrgMembership(ctx, user, org, role); err != nil {
+		return fmt.Errorf("failed to update %s's role to %q in organization %s: %w", user, *role.Role, org, err)
+	}
+	return nil
 }
 
 func (s *GithubSCM) grantAccess(ctx context.Context, org, repo, login string, access *github.RepositoryAddCollaboratorOptions) error {
