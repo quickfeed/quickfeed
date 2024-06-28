@@ -1,11 +1,11 @@
 import React from "react"
 import { useAppState } from "../../overmind"
-import { Assignment, Submission_Status } from "../../../proto/qf/types_pb"
+import { Assignment } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useHistory } from "react-router"
 import { Status } from "../../consts"
-import { getStatusByUser } from "../../Helpers"
+import { getStatusByUser, isApproved } from "../../Helpers"
 
 
 const NavBarLabs = (): JSX.Element | null => {
@@ -21,7 +21,7 @@ const NavBarLabs = (): JSX.Element | null => {
         return (
             <div>
                 {assignment.isGroupLab && <i className={"fa fa-users"} title={"Group assignment"} />}
-                {getStatusByUser(submission, state.self.ID) === Submission_Status.APPROVED && <i className="fa fa-check ml-2" />}
+                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fa fa-check ml-2" />}
             </div>
         )
     }

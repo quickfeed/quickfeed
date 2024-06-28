@@ -137,9 +137,13 @@ export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.reviewers > 0
 }
 
-export const isApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
-export const isRevision = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REVISION) }
-export const isRejected = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REJECTED) }
+export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
+export const isAllRevision = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REVISION) }
+export const isAllRejected = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REJECTED) }
+
+export const isApproved = (status: Submission_Status): boolean => { return status === Submission_Status.APPROVED }
+export const isRevision = (status: Submission_Status): boolean => { return status === Submission_Status.REVISION }
+export const isRejected = (status: Submission_Status): boolean => { return status === Submission_Status.REJECTED }
 
 export const hasAllStatus = (submission: Submission, status: Submission_Status): boolean => {
     return submission.Grades.every(grade => grade.Status === status)
@@ -205,7 +209,7 @@ export const getSubmissionsScore = (submissions: Submission[]): number => {
 export const getNumApproved = (submissions: Submission[]): number => {
     let num = 0
     submissions.forEach(submission => {
-        if (isApproved(submission)) {
+        if (isAllApproved(submission)) {
             num++
         }
     })
@@ -273,13 +277,13 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
 
 export const getSubmissionCellColor = (submission: Submission, owner:  Enrollment | Group): string => {
     if (owner instanceof Group) {
-        if (isApproved(submission)) {
+        if (isAllApproved(submission)) {
             return "result-approved"
         }
-        if (isRevision(submission)) {
+        if (isAllRevision(submission)) {
             return "result-revision"
         }
-        if (isRejected(submission)) {
+        if (isAllRejected(submission)) {
             return "result-rejected"
         }
         if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {

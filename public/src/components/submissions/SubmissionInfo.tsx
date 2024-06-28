@@ -1,5 +1,5 @@
 import React from "react"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isApproved, isManuallyGraded } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 
@@ -17,7 +17,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
     
     const status = getStatusByUser(submission, enrollment.userID)
-    const className = isApproved(submission) ? "passed" : "failed"
+    const className = isAllApproved(submission) ? "passed" : "failed"
     return (
         <table className="table table-curved table-striped">
             <thead className="thead-dark">
