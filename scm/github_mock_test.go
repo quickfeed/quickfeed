@@ -79,7 +79,7 @@ var reviewers = map[string]map[string]map[int]github.ReviewersRequest{
 	},
 }
 
-func TestMustReplaceArgs(t *testing.T) {
+func TestReplaceArgs(t *testing.T) {
 	tests := []struct {
 		name    string
 		pattern string
@@ -96,7 +96,7 @@ func TestMustReplaceArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := replaceArgs(tt.pattern, tt.args...); got != tt.want {
-				t.Errorf("mustReplaceArgs() = %v, want %v", got, tt.want)
+				t.Errorf("replaceArgs(%q) = %v, want %v", tt.pattern, got, tt.want)
 			}
 		})
 	}
