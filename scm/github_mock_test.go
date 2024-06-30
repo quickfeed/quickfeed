@@ -259,11 +259,11 @@ func TestMockCreateCourse(t *testing.T) {
 		{OrgID: 456, Owner: "bar", Path: "meling-labs"},
 		{OrgID: 456, Owner: "bar", Path: "tests"},
 	}
-	// we need to initialize the groups table (collaborators) to allow creating a course with meling as course creator
-	g := map[string]map[string][]github.User{
-		"bar": {
-			"meling-labs": {},
-		},
+	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
+	members := []github.Membership{
+		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgBar, User: &jostein, Role: github.String(OrgMember)}, // not allowed to create course
+		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -279,9 +279,10 @@ func TestMockCreateCourse(t *testing.T) {
 		{name: "CompleteRequest/OrgNotFound", opt: &CourseOptions{OrganizationID: 789, CourseCreator: "meling"}, wantRepos: nil, wantErr: true},           // 789 does not exist
 		{name: "CompleteRequest/FooReposAlreadyExists", opt: &CourseOptions{OrganizationID: 123, CourseCreator: "meling"}, wantRepos: nil, wantErr: true}, // foo already has repositories
 
+		{name: "CompleteRequest/CourseBarReposCreated", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "jostein"}, wantRepos: nil, wantErr: true}, // jostein is not owner and cannot create course
 		{name: "CompleteRequest/CourseBarReposCreated", opt: &CourseOptions{OrganizationID: 456, CourseCreator: "meling"}, wantRepos: wantBarRepos, wantErr: false},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(g))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"OrganizationID", "CourseCreator"}, tt.opt.OrganizationID, tt.opt.CourseCreator)
 		t.Run(name, func(t *testing.T) {
