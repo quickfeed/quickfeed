@@ -330,6 +330,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
+		// TODO why are we doing Unwrap here?
 		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
 			return nil, parsedErr
 		}
