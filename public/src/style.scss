@@ -462,7 +462,7 @@ nav.flexbox {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-
+    flex-wrap: nowrap;
     ul {
         padding: 0.3rem;
         margin: 0.3rem;
@@ -632,4 +632,5 @@ nav.flexbox {
     .breadcrumb-item + .breadcrumb-item::before {
         content: ">" !important;
     }
+    flex-wrap: nowrap;
 }
