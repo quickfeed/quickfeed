@@ -681,9 +681,9 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 }
 
 func TestErrorE(t *testing.T) {
-	e1 := E(Op("GetOrganization"), Msg("organization not found"), errors.New("organization not found"))
-	e2 := E(Op("GetRepository"), Msg("repository not found"), e1)
-	e3 := E(Op("GetUser"), Msg("user not found"), e2)
+	e1 := E(Op("GetOrganization"), M("organization not found"), errors.New("organization not found"))
+	e2 := E(Op("GetRepository"), M("repository not found"), e1)
+	e3 := E(Op("GetUser"), M("user not found"), e2)
 
 	tests := []struct {
 		name           string

@@ -17,21 +17,30 @@ var (
 // SCMError holds the operation, user error message and the original error.
 type SCMError struct {
 	op      Op
-	userErr Msg
 	err     error
+	userErr error
 }
 
-var _ error = (*SCMError)(nil)
-
-type (
-	// Op describes an operation, such as "GetOrganization".
-	Op string
-	// Msg is the error message to be displayed to the user.
-	Msg string
+var (
+	_ error = (*SCMError)(nil)
+	_ error = (*userError)(nil)
 )
 
-func M(format string, a ...interface{}) Msg {
-	return Msg(fmt.Sprintf(format, a...))
+// Op describes an operation, such as "GetOrganization".
+type Op string
+
+// userError is an error that is meant to be displayed to the user.
+type userError struct {
+	s string
+}
+
+func (e *userError) Error() string {
+	return e.s
+}
+
+// M creates a new user error with the given format string.
+func M(format string, a ...interface{}) error {
+	return &userError{fmt.Sprintf(format, a...)}
 }
 
 func E(args ...interface{}) error {
@@ -43,7 +52,7 @@ func E(args ...interface{}) error {
 		switch arg := arg.(type) {
 		case Op:
 			e.op = arg
-		case Msg:
+		case *userError:
 			e.userErr = arg
 		case *SCMError:
 			e.err = arg
@@ -68,15 +77,15 @@ func (e *SCMError) Unwrap() error {
 // UserError returns the error message to be displayed to the user.
 // It returns the first error in the chain of user errors.
 func (e *SCMError) UserError() error {
-	return errors.New(string(e.userErr))
+	return e.userErr
 }
 
 // AllUserErrors returns all user errors in the error chain.
 func (e *SCMError) AllUserErrors() error {
-	err := errors.New(string(e.userErr))
+	err := e.userErr
 	var se *SCMError
 	for errors.As(e.err, &se) {
-		err = fmt.Errorf("%s: %w", err, errors.New(string(se.userErr)))
+		err = fmt.Errorf("%s: %w", err, se.userErr)
 		e = se
 	}
 	return err
