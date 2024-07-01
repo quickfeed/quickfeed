@@ -172,9 +172,9 @@ func TestErrorGetOrganization(t *testing.T) {
 				t.Logf(gotErr.Error())
 				t.Errorf("GetOrganization() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(gotErr, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("GetOrganization() user error mismatch (-want +got):\n%s", diff)
@@ -253,9 +253,9 @@ func TestErrorCreateCourse(t *testing.T) {
 				t.Logf(gotErr.Error())
 				t.Errorf("CreateCourse() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(gotErr, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("GetOrganization() user error mismatch (-want +got):\n%s", diff)
@@ -299,7 +299,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
-			wantErr:     "scm.UpdateEnrollment: scm.GetOrganization: failed to get organization: GET http://127.0.0.1:50580/orgs/fuzz: 404  []",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: scm.GetOrganization: failed to get organization: GET http://127.0.0.1:50580/orgs/fuzz: 404  []",
 			wantUserErr: wantUserErr,
 		},
 
@@ -388,9 +388,9 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 				t.Logf(gotErr.Error())
 				t.Errorf("UpdateEnrollment() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(gotErr, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("UpdateEnrollment() user error mismatch (-want +got):\n%s", diff)
@@ -423,13 +423,13 @@ func TestErrorRejectEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"},
-			wantErr:     "scm.RejectEnrollment: scm.GetOrganization: failed to get organization: GET http://127.0.0.1/organizations/789: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for meling: scm.GetOrganization: failed to get organization: GET http://127.0.0.1/organizations/789: 404  []",
 			wantUserErr: userErrPrefix + "meling",
 		},
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: scm.deleteRepository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
 			wantUserErr: userErrPrefix + "jostein",
 		},
 		{
@@ -455,20 +455,20 @@ func TestErrorRejectEnrollment(t *testing.T) {
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"OrganizationID", "RepositoryID", "User"}, tt.opt.OrganizationID, tt.opt.RepositoryID, tt.opt.User)
 		t.Run(name, func(t *testing.T) {
-			err := s.RejectEnrollment(context.Background(), tt.opt)
-			if err == nil {
+			gotErr := s.RejectEnrollment(context.Background(), tt.opt)
+			if gotErr == nil {
 				if tt.wantErr != "" {
 					t.Errorf("RejectEnrollment() error = nil, want %q", tt.wantErr)
 				}
 				return
 			}
-			if diff := cmp.Diff(tt.wantErr, err.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(err.Error())
+			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
+				t.Logf(gotErr.Error())
 				t.Errorf("RejectEnrollment() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(err, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("RejectEnrollment() user error mismatch (-want +got):\n%s", diff)
@@ -544,9 +544,9 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 				t.Logf(gotErr.Error())
 				t.Errorf("DemoteTeacherToStudent() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(gotErr, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("DemoteTeacherToStudent() user error mismatch (-want +got):\n%s", diff)
@@ -574,7 +574,7 @@ func TestErrorCreateGroup(t *testing.T) {
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}},
-			wantErr:     "scm.CreateGroup: scm.GetOrganization: failed to get organization: GET http://127.0.0.1:61071/orgs/x: 404  []",
+			wantErr:     "scm.CreateGroup: failed to create group: scm.GetOrganization: failed to get organization: GET http://127.0.0.1:61071/orgs/x: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		{
@@ -610,9 +610,9 @@ func TestErrorCreateGroup(t *testing.T) {
 				t.Logf(gotErr.Error())
 				t.Errorf("CreateGroup() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(gotErr, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("CreateGroup() user error mismatch (-want +got):\n%s", diff)
@@ -668,9 +668,9 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 				t.Logf(gotErr.Error())
 				t.Errorf("UpdateGroupMembers() error mismatch (-want +got):\n%s", diff)
 			}
-			var scmErr *SCMError
-			if errors.As(gotErr, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(gotErr, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Logf(gotUserErr)
 					t.Errorf("UpdateGroupMembers() user error mismatch (-want +got):\n%s", diff)
@@ -686,32 +686,28 @@ func TestErrorE(t *testing.T) {
 	e3 := E(Op("GetUser"), M("user not found"), e2)
 
 	tests := []struct {
-		name           string
-		err            error
-		wantErr        string
-		wantUserErr    string
-		wantAllUserErr string
+		name        string
+		err         error
+		wantErr     string
+		wantUserErr string
 	}{
 		{
-			name:           "E1",
-			err:            e1,
-			wantErr:        "scm.GetOrganization: organization not found",
-			wantUserErr:    "organization not found",
-			wantAllUserErr: "organization not found",
+			name:        "E1",
+			err:         e1,
+			wantErr:     "scm.GetOrganization: organization not found",
+			wantUserErr: "organization not found",
 		},
 		{
-			name:           "E2",
-			err:            e2,
-			wantErr:        "scm.GetRepository: scm.GetOrganization: organization not found",
-			wantUserErr:    "repository not found",
-			wantAllUserErr: "repository not found: organization not found",
+			name:        "E2",
+			err:         e2,
+			wantErr:     "scm.GetRepository: repository not found: scm.GetOrganization: organization not found",
+			wantUserErr: "repository not found",
 		},
 		{
-			name:           "E3",
-			err:            e3,
-			wantErr:        "scm.GetUser: scm.GetRepository: scm.GetOrganization: organization not found",
-			wantUserErr:    "user not found",
-			wantAllUserErr: "user not found: repository not found: organization not found",
+			name:        "E3",
+			err:         e3,
+			wantErr:     "scm.GetUser: user not found: scm.GetRepository: repository not found: scm.GetOrganization: organization not found",
+			wantUserErr: "user not found",
 		},
 	}
 	for _, tt := range tests {
@@ -719,15 +715,11 @@ func TestErrorE(t *testing.T) {
 			if diff := cmp.Diff(tt.wantErr, tt.err.Error()); diff != "" {
 				t.Errorf("%s() error mismatch (-want +got):\n%s", tt.name, diff)
 			}
-			var scmErr *SCMError
-			if errors.As(tt.err, &scmErr) {
-				gotUserErr := scmErr.UserError().Error()
+			var userErr *UserError
+			if errors.As(tt.err, &userErr) {
+				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
 					t.Errorf("%s() user error mismatch (-want +got):\n%s", tt.name, diff)
-				}
-				gotAllUserErr := scmErr.AllUserErrors().Error()
-				if diff := cmp.Diff(tt.wantAllUserErr, gotAllUserErr); diff != "" {
-					t.Errorf("%s() all user errors mismatch (-want +got):\n%s", tt.name, diff)
 				}
 			}
 		})

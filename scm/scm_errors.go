@@ -16,38 +16,38 @@ var (
 
 // SCMError holds the operation, user error message and the original error.
 type SCMError struct {
-	op      Op
-	err     error
-	userErr error
+	op  Op
+	err error
 }
 
 var (
 	_ error = (*SCMError)(nil)
-	_ error = (*userError)(nil)
+	_ error = (*UserError)(nil)
 )
 
 // Op describes an operation, such as "GetOrganization".
 type Op string
 
-// userError is an error that is meant to be displayed to the user.
-type userError struct {
+// UserError is an error that is meant to be displayed to the user.
+type UserError struct {
 	s string
 }
 
-func (e *userError) Error() string {
+func (e *UserError) Error() string {
 	return e.s
 }
 
 // M creates a new user error with the given format string.
 func M(format string, a ...interface{}) error {
-	return &userError{fmt.Sprintf(format, a...)}
+	return &UserError{fmt.Sprintf(format, a...)}
 }
 
 // E creates a new SCM error with the given operation, error, and user error.
 // The error message is constructed as "scm.<op>: <err>".
 // The user error can be constructed with the M function.
-// If more than one error (or user error) is passed, only the last one is kept.
-// If an SCMError itself is passed, it is used as the error.
+// If more than one SCMError or UserError is passed, these are chained.
+// However, if more than one other error is added, only the last one is kept.
+// TODO (This limitation is temporary because too many tests and error messages would need to be updated.)
 // If no arguments are passed, E panics.
 func E(args ...interface{}) error {
 	if len(args) == 0 {
@@ -58,17 +58,26 @@ func E(args ...interface{}) error {
 		switch arg := arg.(type) {
 		case Op:
 			e.op = arg
-		case *userError:
-			e.userErr = arg
+		case *UserError:
+			e.add(arg)
 		case *SCMError:
-			e.err = arg
+			e.add(arg)
 		case string:
-			e.err = errors.New(arg)
+			e.add(errors.New(arg))
 		case error:
+			// e.add(arg)
 			e.err = arg
 		}
 	}
 	return e
+}
+
+func (e *SCMError) add(err error) {
+	if e.err == nil {
+		e.err = err
+	} else {
+		e.err = fmt.Errorf("%s: %w", e.err, err)
+	}
 }
 
 // Error returns the error message to be logged.
@@ -83,16 +92,9 @@ func (e *SCMError) Unwrap() error {
 // UserError returns the error message to be displayed to the user.
 // It returns the first error in the chain of user errors.
 func (e *SCMError) UserError() error {
-	return e.userErr
-}
-
-// AllUserErrors returns all user errors in the error chain.
-func (e *SCMError) AllUserErrors() error {
-	err := e.userErr
-	var se *SCMError
-	for errors.As(e.err, &se) {
-		err = fmt.Errorf("%s: %w", err, se.userErr)
-		e = se
+	var ue *UserError
+	if errors.As(e.err, &ue) {
+		return ue
 	}
-	return err
+	return nil
 }
