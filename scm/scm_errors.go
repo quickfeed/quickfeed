@@ -43,6 +43,12 @@ func M(format string, a ...interface{}) error {
 	return &userError{fmt.Sprintf(format, a...)}
 }
 
+// E creates a new SCM error with the given operation, error, and user error.
+// The error message is constructed as "scm.<op>: <err>".
+// The user error can be constructed with the M function.
+// If more than one error (or user error) is passed, only the last one is kept.
+// If an SCMError itself is passed, it is used as the error.
+// If no arguments are passed, E panics.
 func E(args ...interface{}) error {
 	if len(args) == 0 {
 		panic("call to scm.E with no arguments")
