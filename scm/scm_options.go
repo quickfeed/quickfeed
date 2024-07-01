@@ -30,18 +30,16 @@ type RejectEnrollmentOptions struct {
 	User           string
 }
 
-func (opt *RejectEnrollmentOptions) valid() bool {
+func (opt RejectEnrollmentOptions) valid() bool {
 	return opt.OrganizationID > 0 && opt.RepositoryID > 0 && opt.User != ""
 }
 
 // OrganizationOptions contain information about organization.
 type OrganizationOptions struct {
-	ID   uint64
-	Name string
-	// Username field is used to filter organizations
-	// where the given user has a certain role.
-	Username  string
-	NewCourse bool // Get organization for a new course
+	ID        uint64
+	Name      string
+	Username  string // Username, if provide, must be owner of the organization
+	NewCourse bool   // Get organization for a new course
 }
 
 func (opt OrganizationOptions) valid() bool {
@@ -65,7 +63,6 @@ type CreateRepositoryOptions struct {
 	Organization string
 	Path         string
 	Private      bool
-	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
@@ -74,9 +71,9 @@ func (opt CreateRepositoryOptions) valid() bool {
 
 // GroupOptions is used when creating or modifying a group.
 type GroupOptions struct {
-	Organization string
-	GroupName    string
-	Users        []string
+	Organization string   // Organization is the owner of the repository
+	GroupName    string   // GroupName is the name of the repository
+	Users        []string // Users are group collaborators (GitHub usernames)
 }
 
 func (opt GroupOptions) valid() bool {
@@ -96,11 +93,11 @@ type IssueOptions struct {
 	Number       int
 }
 
-func (opt *IssueOptions) valid() bool {
+func (opt IssueOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
 }
 
-// RequestReviewersOptions contains information on how to create or edit a pull request comment.
+// IssueCommentOptions contains information for creating or updating an IssueComment.
 type IssueCommentOptions struct {
 	Organization string
 	Repository   string

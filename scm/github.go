@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"go.uber.org/zap"
@@ -37,7 +38,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
 		token:       token,
-		providerURL: "github.com",
+		providerURL: "https://github.com",
 	}
 }
 
@@ -56,7 +57,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	} else {
 		// if ID not provided, get by name
 		orgNameOrID = slug.Make(opt.Name)
-		gitOrg, _, err = s.client.Organizations.Get(ctx, slug.Make(opt.Name))
+		gitOrg, _, err = s.client.Organizations.Get(ctx, orgNameOrID)
 	}
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{
@@ -86,17 +87,17 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	// If user name is provided, return the organization only if the user is one of its owners.
 	if opt.Username != "" {
 		// fetch user membership in that organization, if exists
-		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
+		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.ScmOrganizationName)
 		if err != nil {
 			return nil, ErrFailedSCM{
 				Method:   "GetOrganization",
-				Message:  fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, slug.Make(opt.Name)),
-				GitError: fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, slug.Make(opt.Name), err),
+				Message:  fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, org.ScmOrganizationName),
+				GitError: fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, org.ScmOrganizationName, err),
 			}
 		}
 		// membership role must be "admin", if not, return error (possibly to show user)
 		if membership.GetRole() != OrgOwner {
-			return nil, ErrNotOwner
+			return nil, fmt.Errorf("%s not owner of organization %s", opt.Username, org.ScmOrganizationName)
 		}
 	}
 	return org, nil
@@ -125,205 +126,22 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
-	_, contents, resp, err := s.client.Repositories.GetContents(
-		ctx,
-		opt.Owner,
-		opt.Path,
-		"",
-		&github.RepositoryContentGetOptions{},
-	)
+	repo, err := s.getRepository(ctx, opt)
+	if err != nil {
+		s.logger.Error(err)
+		return true
+	}
+	opt.ID, opt.Owner, opt.Path = repo.ID, repo.Owner, repo.Path
+
+	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Path, "", &github.RepositoryContentGetOptions{})
+	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
+	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
+	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == 404) || (err == nil && %d == 0) == %t", resp.StatusCode, len(contents), (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0))
+
 	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
 	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
 	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
 	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
-}
-
-// UpdateGroupMembers implements the SCM interface
-func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("missing fields: %+v", opt)
-	}
-
-	// find current group members
-	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "UpdateGroupMembers",
-			Message:  fmt.Sprintf("failed to get members for repository %s", opt.GroupName),
-		}
-	}
-
-	// check whether group members are already in repository; add missing members
-	for _, member := range opt.Users {
-		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, nil)
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: err,
-				Method:   "UpdateGroupMembers",
-				Message:  fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
-			}
-		}
-	}
-
-	// check if all the repository members are in the new group;
-	for _, repoMember := range oldUsers {
-		toRemove := true
-		for _, groupMember := range opt.Users {
-			if repoMember.GetLogin() == groupMember {
-				toRemove = false
-			}
-		}
-		if toRemove {
-			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, repoMember.GetLogin())
-			if err != nil {
-				return ErrFailedSCM{
-					GitError: err,
-					Method:   "UpdateGroupMembers",
-					Message:  fmt.Sprintf("failed to remove user %s from repository %s", repoMember.GetLogin(), opt.GroupName),
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// CreateIssue implements the SCM interface
-func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("missing fields: %+v", opt)
-	}
-	newIssue := &github.IssueRequest{
-		Title:     &opt.Title,
-		Body:      &opt.Body,
-		Assignee:  opt.Assignee,
-		Assignees: opt.Assignees,
-	}
-
-	s.logger.Debugf("Creating issue %q on %s", opt.Title, opt.Repository)
-	issue, _, err := s.client.Issues.Create(ctx, opt.Organization, opt.Repository, newIssue)
-	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to create issue %q", opt.Title),
-			GitError: err,
-		}
-	}
-	s.logger.Debugf("Created issue %q", opt.Title)
-
-	return toIssue(issue), nil
-}
-
-// UpdateIssue implements the SCM interface
-func (s *GithubSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("missing fields: %+v", opt)
-	}
-
-	issueReq := &github.IssueRequest{
-		Title:     &opt.Title,
-		Body:      &opt.Body,
-		State:     &opt.State,
-		Assignee:  opt.Assignee,
-		Assignees: opt.Assignees,
-	}
-	s.logger.Debugf("Updating issue %d on %s", opt.Number, opt.Repository)
-	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, opt.Number, issueReq)
-	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "UpdateIssue",
-			Message:  fmt.Sprintf("failed to update issue %d on %s/%s", opt.Number, opt.Organization, opt.Repository),
-			GitError: err,
-		}
-	}
-	s.logger.Debugf("Updated issue number %d", opt.Number)
-	return toIssue(issue), nil
-}
-
-// GetIssue implements the SCM interface
-func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("missing fields: %+v", opt)
-	}
-	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, number)
-	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "GetIssue",
-			Message:  fmt.Sprintf("failed to get issue %d", number),
-			GitError: err,
-		}
-	}
-	return toIssue(issue), nil
-}
-
-// GetIssues implements the SCM interface
-func (s *GithubSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
-	if !opt.valid() {
-		return nil, fmt.Errorf("missing fields: %+v", opt)
-	}
-	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{})
-	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "GetIssues",
-			Message:  fmt.Sprintf("failed to get issues for %s", opt.Path),
-			GitError: err,
-		}
-	}
-	var issues []*Issue
-	for _, issue := range issueList {
-		issues = append(issues, toIssue(issue))
-	}
-
-	return issues, nil
-}
-
-// RequestReviewers implements the SCM interface
-func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("missing fields: %+v", opt)
-	}
-	reviewersRequest := github.ReviewersRequest{
-		Reviewers: opt.Reviewers,
-	}
-	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.Number, reviewersRequest); err != nil {
-		return ErrFailedSCM{
-			Method:   "RequestReviewers",
-			Message:  fmt.Sprintf("failed to request reviewers for pull request #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
-			GitError: err,
-		}
-	}
-	return nil
-}
-
-// CreateIssueComment implements the SCM interface
-func (s *GithubSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
-	if !opt.valid() {
-		return 0, fmt.Errorf("missing fields: %+v", opt)
-	}
-	createdComment, _, err := s.client.Issues.CreateComment(ctx, opt.Organization, opt.Repository, opt.Number, &github.IssueComment{Body: &opt.Body})
-	if err != nil {
-		return 0, ErrFailedSCM{
-			Method:   "CreateIssueComment",
-			Message:  fmt.Sprintf("failed to create comment for issue #%d, in repository: %s, for organization: %s", opt.Number, opt.Repository, opt.Organization),
-			GitError: err,
-		}
-	}
-	return createdComment.GetID(), nil
-}
-
-// UpdateIssueComment implements the SCM interface
-func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("missing fields: %+v", opt)
-	}
-	if _, _, err := s.client.Issues.EditComment(ctx, opt.Organization, opt.Repository, opt.CommentID, &github.IssueComment{Body: &opt.Body}); err != nil {
-		return ErrFailedSCM{
-			Method:   "UpdateIssueComment",
-			Message:  fmt.Sprintf("failed to edit comment in repository: %s, for organization: %s", opt.Repository, opt.Organization),
-			GitError: err,
-		}
-	}
-	return nil
 }
 
 // CreateCourse creates repositories for a new course.
@@ -336,14 +154,11 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	if err != nil {
 		return nil, err
 	}
-
 	// Set restrictions to prevent students from creating new repositories and prevent access
 	// to organization repositories. This will not affect organization owners (teachers).
-	defaultPermissions := OrgNone
-	createRepoPermissions := false
 	if _, _, err = s.client.Organizations.Edit(ctx, org.ScmOrganizationName, &github.Organization{
-		DefaultRepoPermission: &defaultPermissions,
-		MembersCanCreateRepos: &createRepoPermissions,
+		DefaultRepoPermission: github.String("none"),
+		MembersCanCreateRepos: github.Bool(false),
 	}); err != nil {
 		return nil, fmt.Errorf("failed to update permissions for GitHub organization %s: %w", org.ScmOrganizationName, err)
 	}
@@ -377,9 +192,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-	org, err := s.GetOrganization(ctx, &OrganizationOptions{
-		Name: opt.Organization,
-	})
+	org, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization})
 	if err != nil {
 		return nil, err
 	}
@@ -394,23 +207,25 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 			return nil, err
 		}
 		// Promote user to organization member
-		role := OrgMember
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: github.String(OrgMember)}); err != nil {
 			return nil, err
 		}
 		return repo, nil
 
 	case qf.Enrollment_TEACHER:
 		// Promote user to organization owner
-		role := OrgOwner
-		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: &role}); err != nil {
+		if _, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, org.ScmOrganizationName, &github.Membership{Role: github.String(OrgOwner)}); err != nil {
 			return nil, err
 		}
+		// Teacher's private (student) repo should already exist
+		return nil, nil
 	}
-	return nil, err
+	// Only student and teacher enrollments are allowed (NONE and PENDING are not relevant here)
+	return nil, fmt.Errorf("invalid enrollment status: %v", opt.Status)
 }
 
 // RejectEnrollment removes user's repository and revokes user's membership in the course organization.
+// If the user was already removed from the organization an error is returned, and the repository deletion is skipped.
 func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
@@ -419,6 +234,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if err != nil {
 		return err
 	}
+	// If user was already removed we report the error and skip the repository deletion
 	if _, err := s.client.Organizations.RemoveMember(ctx, org.ScmOrganizationName, opt.User); err != nil {
 		return err
 	}
@@ -430,8 +246,7 @@ func (s *GithubSCM) DemoteTeacherToStudent(ctx context.Context, opt *UpdateEnrol
 	if !opt.valid() {
 		return fmt.Errorf("missing fields: %+v", opt)
 	}
-	role := OrgMember
-	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: &role})
+	_, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.User, opt.Organization, &github.Membership{Role: github.String(OrgMember)})
 	return err
 }
 
@@ -440,38 +255,91 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 	if !opt.valid() {
 		return nil, fmt.Errorf("missing fields: %+v", opt)
 	}
-	orgOptions := &OrganizationOptions{Name: opt.Organization}
-	org, err := s.GetOrganization(ctx, orgOptions)
+	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
+		// organization must exist
+		return nil, err
+	}
+	if _, err := s.getRepository(ctx, &RepositoryOptions{Owner: opt.Organization, Path: opt.GroupName}); err == nil {
+		return nil, fmt.Errorf("failed to create group in %s: repository %q already exists", opt.Organization, opt.GroupName)
+	}
+	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Organization: opt.Organization, Path: opt.GroupName, Private: true})
 	if err != nil {
 		return nil, err
 	}
-	repoOptions := &CreateRepositoryOptions{
-		Organization: opt.Organization,
-		Path:         opt.GroupName,
-		Private:      true,
-	}
-	repo, err := s.createRepository(ctx, repoOptions)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, user := range opt.Users {
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org.ScmOrganizationName, repo.Path, user, &github.RepositoryAddCollaboratorOptions{
-			Permission: RepoPush,
-		}); err != nil {
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, opt.Organization, repo.Path, user, pushAccess); err != nil {
 			return nil, err
 		}
 	}
-
 	return repo, nil
+}
+
+// UpdateGroupMembers implements the SCM interface
+func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("missing fields: %+v", opt)
+	}
+
+	// find current group members
+	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
+	if err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "UpdateGroupMembers",
+			Message:  fmt.Sprintf("failed to get members for %s/%s", opt.Organization, opt.GroupName),
+		}
+	}
+
+	// add members that are not already in the group
+	for _, member := range opt.Users {
+		_, _, err = s.client.Repositories.AddCollaborator(ctx, opt.Organization, opt.GroupName, member, pushAccess)
+		if err != nil {
+			return ErrFailedSCM{
+				GitError: err,
+				Method:   "UpdateGroupMembers",
+				Message:  fmt.Sprintf("failed to add user %s to repository %s", member, opt.GroupName),
+			}
+		}
+	}
+
+	// remove members that are no longer in the group
+	for _, repoMember := range oldUsers {
+		member := repoMember.GetLogin()
+		if !slices.Contains(opt.Users, member) {
+			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, member)
+			if err != nil {
+				return ErrFailedSCM{
+					GitError: err,
+					Method:   "UpdateGroupMembers",
+					Message:  fmt.Sprintf("failed to remove user %s from repository %s", member, opt.GroupName),
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // DeleteGroup deletes a group's repository.
 func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *RepositoryOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("missing fields: %+v", opt)
-	}
 	return s.deleteRepository(ctx, opt)
+}
+
+// getRepository fetches a repository by ID or name.
+func (s *GithubSCM) getRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("missing fields: %+v", opt)
+	}
+	var repo *github.Repository
+	var err error
+	if opt.ID > 0 {
+		repo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
+	} else {
+		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return toRepository(repo), nil
 }
 
 // createRepository creates a new repository or returns an existing repository with the given name.
@@ -481,7 +349,7 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, opt.Path)
 	if repo != nil {
 		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
 		return toRepository(repo), nil
@@ -492,8 +360,8 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	// repo does not exist, create it
 	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
 	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
-		Name:    &opt.Path,
-		Private: &opt.Private,
+		Name:    github.String(opt.Path),
+		Private: github.Bool(opt.Private),
 	})
 	if err != nil {
 		return nil, ErrFailedSCM{
@@ -548,12 +416,8 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo: %w", err)
 	}
-
 	// add push access to student repo
-	opt := &github.RepositoryAddCollaboratorOptions{
-		Permission: RepoPush,
-	}
-	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, opt); err != nil {
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, login, pushAccess); err != nil {
 		return nil, fmt.Errorf("failed to grant push access to %s/%s for user %s: %w", repo.Owner, repo.Path, login, err)
 	}
 	return repo, nil
@@ -563,10 +427,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 func (s *GithubSCM) grantPullAccessToCourseRepos(ctx context.Context, org, login string) error {
 	commonRepos := []string{qf.AssignmentsRepo}
 	for _, repoType := range commonRepos {
-		opt := &github.RepositoryAddCollaboratorOptions{
-			Permission: RepoPull,
-		}
-		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, opt); err != nil {
+		if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repoType, login, pullAccess); err != nil {
 			return fmt.Errorf("failed to grant pull access to %s/%s for user %s: %w", org, repoType, login, err)
 		}
 	}
@@ -586,17 +447,5 @@ func toRepository(repo *github.Repository) *Repository {
 		HTMLURL: repo.GetHTMLURL(),
 		OrgID:   uint64(repo.Organization.GetID()),
 		Size:    uint64(repo.GetSize()),
-	}
-}
-
-func toIssue(issue *github.Issue) *Issue {
-	return &Issue{
-		ID:         uint64(issue.GetID()),
-		Title:      issue.GetTitle(),
-		Body:       issue.GetBody(),
-		Repository: issue.Repository.GetName(),
-		Assignee:   issue.Assignee.GetName(),
-		Number:     issue.GetNumber(),
-		Status:     issue.GetState(),
 	}
 }

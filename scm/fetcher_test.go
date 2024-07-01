@@ -9,10 +9,78 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/sh"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
+
+// prepareGitRepo creates copies src/repo folder to dst and initializes
+// dst/repo as a git repository and adds a single file lab1/lab1.go.
+func prepareGitRepo(src, dst, repo string) error {
+	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
+		return err
+	}
+	gitRepo := filepath.Join(dst, repo)
+	r, err := git.PlainInit(gitRepo, false)
+	if err != nil {
+		return err
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	_, err = w.Add("lab1")
+	if err != nil {
+		return err
+	}
+	_, err = w.Commit("added lab1", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Test",
+			Email: "test@itest.run",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func TestFileClone(t *testing.T) {
+	repoPath := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", repoPath)
+
+	src := filepath.Join(env.TestdataPath(), qtest.MockOrg)
+	dst := filepath.Join(repoPath, qtest.MockOrg)
+	err := prepareGitRepo(src, dst, qf.AssignmentsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t))
+
+	dstDir := t.TempDir()
+	assignmentDir, err := s.Clone(context.Background(), &scm.CloneOptions{
+		Organization: qtest.MockOrg,
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The following depends on the actual content of
+	// the testdata/courses/qf102-2022/assignments folder.
+	found, err := exists(filepath.Join(assignmentDir, "lab1"))
+	if !found {
+		t.Fatalf("lab1 not found in %s: %v", assignmentDir, err)
+	}
+}
 
 func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)

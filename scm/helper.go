@@ -4,41 +4,29 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
+// Organization roles
 const (
-	// Organization roles //
-
 	// OrgOwner is organization's owner
 	OrgOwner = "admin"
 	// OrgMember is organization's member
 	OrgMember = "member"
-
-	// Repository permission levels for organization //
-
-	// OrgPull allows only pull access to organization repositories
-	OrgPull = "read"
-	// OrgPush allows pull and push access to organization repositories
-	OrgPush = "write"
-	// OrgFull allows to pull/push, create, remove and update organization repositories
-	OrgFull = "admin"
-	// OrgNone allows no access to organization repositories
-	OrgNone = "none"
-
-	// Repository permission levels for a user //
-
-	// RepoPull allows only pull access to repository
-	RepoPull = "pull"
-	// RepoPush allows pull and push access to repository
-	RepoPush = "push"
-	// RepoFull allows full access to repository
-	RepoFull = "admin"
 )
 
 const (
 	private = true
 	public  = !private
+)
+
+// Repository permission levels for users
+var (
+	// pullAccess allows only pull access to repository
+	pullAccess = &github.RepositoryAddCollaboratorOptions{Permission: "pull"}
+	// pushAccess allows pull and push access to repository
+	pushAccess = &github.RepositoryAddCollaboratorOptions{Permission: "push"}
 )
 
 var (
@@ -55,25 +43,10 @@ var (
 	// ErrNotMember indicates that the requested organization exists, but the current user
 	// is not its member.
 	ErrNotMember = errors.New("user is not a member of the organization")
-	// ErrNotOwner indicates that user has no admin rights in the requested organization.
-	ErrNotOwner = errors.New("user is not an owner of the organization")
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
-
-// Errors //
-
-// ErrNotSupported is returned when the source code management solution used
-// does not provide a sufficient API for the method called.
-type ErrNotSupported struct {
-	SCM    string
-	Method string
-}
-
-func (e ErrNotSupported) Error() string {
-	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
-}
 
 // ErrFailedSCM is returned to provide detailed information
 // to user about source of the error and possible solution

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -249,42 +250,25 @@ func TestFeedbackCommentFormat(t *testing.T) {
 func TestEmptyRepo(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, _ := scm.GetTestSCM(t)
-	ctx := context.Background()
 
 	tests := []struct {
 		name      string
 		opt       *scm.RepositoryOptions
 		wantEmpty bool
 	}{
-		{
-			"tests repo, assume not empty",
-			&scm.RepositoryOptions{
-				Path:  "tests",
-				Owner: qfTestOrg,
-			},
-			false,
-		},
-		{
-			"info repo, assume empty",
-			&scm.RepositoryOptions{
-				Path:  "info",
-				Owner: qfTestOrg,
-			},
-			true,
-		},
-		{
-			"non-existent repo, handle as empty",
-			&scm.RepositoryOptions{
-				Path:  "some-other-repo",
-				Owner: qfTestOrg,
-			},
-			true,
-		},
+		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{Path: "tests", Owner: qfTestOrg}, wantEmpty: false},
+		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{ID: 328688692}, wantEmpty: false},
+		{name: "EmptyRepo", opt: &scm.RepositoryOptions{Path: "info", Owner: qfTestOrg}, wantEmpty: true},
+		{name: "EmptyRepo", opt: &scm.RepositoryOptions{ID: 328688666}, wantEmpty: true},
+		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Path: "some-other-repo", Owner: qfTestOrg}, wantEmpty: true}, // treat non-existent repo as empty
 	}
 	for _, tt := range tests {
-		if empty := s.RepositoryIsEmpty(ctx, tt.opt); empty != tt.wantEmpty {
-			t.Errorf("%s: expected empty repository: %v, got = %v, ", tt.name, tt.wantEmpty, empty)
-		}
+		name := qtest.Name(tt.name, []string{"ID", "Owner", "Repo"}, tt.opt.ID, tt.opt.Owner, tt.opt.Path)
+		t.Run(name, func(t *testing.T) {
+			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
+				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			}
+		})
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -15,7 +16,7 @@ func TestGetRepositories(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	teacher := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -193,30 +194,21 @@ func TestGetRepositories(t *testing.T) {
 	}
 }
 
-func TestQuickFeedService_isEmptyRepo(t *testing.T) {
+func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.MockClient(t, db, nil)
 
-	user := qtest.CreateFakeUser(t, db)
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user"})
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, user, course)
 
-	student := qtest.CreateFakeUser(t, db)
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student"})
 	qtest.EnrollStudent(t, db, student, course)
 
-	// student, in a group
-	groupStudent := qtest.CreateFakeUser(t, db)
+	// student in a group
+	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "groupStudent"})
 	qtest.EnrollStudent(t, db, groupStudent, course)
-
-	group := &qf.Group{
-		Name:     "1001 Hacking Crew",
-		CourseID: course.ID,
-		Users:    []*qf.User{groupStudent},
-	}
-	if err := db.CreateGroup(group); err != nil {
-		t.Fatal(err)
-	}
 
 	// create repositories for users and group
 	userRepo := &qf.Repository{
@@ -229,75 +221,45 @@ func TestQuickFeedService_isEmptyRepo(t *testing.T) {
 	if err := db.CreateRepository(userRepo); err != nil {
 		t.Fatal(err)
 	}
+	group := &qf.Group{
+		ID:       1,
+		Name:     "1001-HackingCrew",
+		CourseID: course.ID,
+		Users:    []*qf.User{groupStudent},
+	}
+	g, err := client.CreateGroup(context.Background(), qtest.RequestWithCookie(group, "cookie"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	group = g.Msg
 
 	tests := []struct {
 		name    string
 		request *qf.RepositoryRequest
+		create  bool
 		wantErr bool
 	}{
-		{
-			// cannot distinguish between empty and non-existing repositories
-			name: "empty repositories",
-			request: &qf.RepositoryRequest{
-				CourseID: course.ID, // 1
-				GroupID:  group.ID,  // 1
-			},
-			wantErr: false,
-		},
-		{
-			name: "no repositories",
-			request: &qf.RepositoryRequest{
-				CourseID: course.ID,
-				GroupID:  group.ID, // 1
-			},
-			wantErr: false,
-		},
-		{
-			name: "course not found",
-			request: &qf.RepositoryRequest{
-				CourseID: 123,
-				UserID:   user.ID, // 1
-			},
-			// unable to get SCM client for unknown course -> error
-			wantErr: true,
-		},
-		{
-			name: "user not found",
-			request: &qf.RepositoryRequest{
-				CourseID: course.ID, // 1
-				UserID:   123,
-			},
-			// lookup for invalid user should return no repositories
-			wantErr: false,
-		},
-		{
-			name: "user has no repositories",
-			request: &qf.RepositoryRequest{
-				CourseID: 1,
-				UserID:   student.ID, // 2
-			},
-			// lookup for user with no repositories should return no repositories
-			wantErr: false,
-		},
-	}
+		{name: "CourseNotFound", request: &qf.RepositoryRequest{CourseID: 123, UserID: user.ID}, wantErr: true},    // unable to get SCM client for unknown course -> error
+		{name: "UserNotFound", request: &qf.RepositoryRequest{CourseID: course.ID, UserID: 123}, wantErr: false},   // lookup invalid user should have no repositories (no error)
+		{name: "GroupNotFound", request: &qf.RepositoryRequest{CourseID: course.ID, GroupID: 123}, wantErr: false}, // lookup invalid group should have no repositories (no error)
 
+		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.ID}, wantErr: false},                    // lookup valid user with no repositories should return no repositories (no error)
+		{name: "GroupHasNoRepositories", request: &qf.RepositoryRequest{CourseID: course.ID, GroupID: group.ID}, wantErr: false},            // lookup valid group with no repositories should return no repositories (no error)
+		{name: "GroupHasRepositories", request: &qf.RepositoryRequest{CourseID: course.ID, GroupID: group.ID}, create: true, wantErr: true}, // lookup for group with repositories -> error
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.create {
+				// trigger group repository creation on SCM
+				group.Status = qf.Group_APPROVED
+				group.Users = append(group.Users, user)
+				if _, err := client.UpdateGroup(context.Background(), qtest.RequestWithCookie(group, "cookie")); err != nil {
+					t.Fatal(err)
+				}
+			}
 			if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tt.request, "cookie")); (err != nil) != tt.wantErr {
 				t.Errorf("IsEmptyRepo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
-	}
-
-	// UpdateGroup to trigger repository creation
-	_, err := client.UpdateGroup(context.Background(), qtest.RequestWithCookie(group, "cookie"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Group now has a repository
-	tests[0].wantErr = true
-	if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tests[0].request, "cookie")); err == nil {
-		t.Error("expected error", err)
 	}
 }

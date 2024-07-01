@@ -256,12 +256,12 @@ func TestCheckUserClaims(t *testing.T) {
 }
 
 func setupWebhook(t *testing.T, db database.Database) (*GitHubWebHook, *httptest.Server) {
-	_, manager := scm.MockSCMManager(t)
+	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wh := NewGitHubWebHook(qtest.Logger(t), db, manager, &ci.Local{}, "", stream.NewStreamServices(), tm)
+	wh := NewGitHubWebHook(qtest.Logger(t), db, mgr, &ci.Local{}, "", stream.NewStreamServices(), tm)
 
 	router := http.NewServeMux()
 	router.HandleFunc("/hook/", wh.Handle())

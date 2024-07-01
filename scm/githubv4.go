@@ -21,8 +21,7 @@ func (s *GithubSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, iss
 		"repositoryName":  githubv4.String(opt.Path),
 		"issueNumber":     githubv4.Int(issueNumber),
 	}
-	err := s.clientV4.Query(ctx, &q, variables)
-	if err != nil {
+	if err := s.clientV4.Query(ctx, &q, variables); err != nil {
 		return err
 	}
 
@@ -33,7 +32,6 @@ func (s *GithubSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, iss
 			}
 		} `graphql:"deleteIssue(input:$input)"`
 	}
-
 	input := githubv4.DeleteIssueInput{
 		IssueID: q.Repository.Issue.ID,
 	}

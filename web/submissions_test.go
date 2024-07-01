@@ -8,6 +8,8 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -15,7 +17,7 @@ func TestApproveSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -91,7 +93,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[2]
@@ -263,7 +265,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -486,7 +488,7 @@ func TestCreateApproveList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -679,7 +681,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 

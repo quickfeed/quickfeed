@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
-
 	"github.com/quickfeed/quickfeed/scm"
 )
 

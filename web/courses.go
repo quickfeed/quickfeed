@@ -74,7 +74,7 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		RepositoryID:   repo.ScmRepositoryID,
 	}
 	if err := sc.RejectEnrollment(ctx, opt); err != nil {
-		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
+		s.logger.Debugf("rejectEnrollment: failed to remove %s from %q (expected behavior): %v", user.Login, course.Code, err)
 	}
 	return nil
 }

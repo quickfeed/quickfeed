@@ -8,6 +8,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -15,7 +17,7 @@ func TestCreateAndGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -46,7 +48,7 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -99,7 +101,7 @@ func TestCreateAndGetCourses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -131,7 +133,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithUserAndCourse(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	cookie := Cookie(t, tm, admin)
@@ -151,7 +153,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	ctx := context.Background()
 	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
@@ -299,7 +301,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	user := qtest.CreateFakeUser(t, db)
@@ -367,7 +369,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var testCourses []*qf.Course
@@ -460,7 +462,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithUserAndCourse(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
 
 	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
 	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student1", Login: "student1"})
@@ -469,36 +471,42 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
-	qtest.EnrollStudent(t, db, student1, course)
-	qtest.EnrollStudent(t, db, student2, course)
-	qtest.EnrollStudent(t, db, ta, course)
 
-	student1Enrollment := &qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
+	student1Enrollment := &qf.Enrollment{UserID: student1.ID, CourseID: course.ID}
+	student2Enrollment := &qf.Enrollment{UserID: student2.ID, CourseID: course.ID}
+	taEnrollment := &qf.Enrollment{UserID: ta.ID, CourseID: course.ID}
+	teacherEnrollment := &qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}
+
+	ctx := context.Background()
+
+	// student1 attempts to enroll in the course, must succeed
+	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(student1Enrollment, Cookie(t, tm, student1))); err != nil {
+		t.Error(err)
 	}
-	student2Enrollment := &qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
+	// student2 attempts to enroll in the course, must succeed
+	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(student2Enrollment, Cookie(t, tm, student2))); err != nil {
+		t.Error(err)
 	}
-	taEnrollment := &qf.Enrollment{
-		UserID:   ta.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}
-	teacherEnrollment := &qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
+	// ta attempts to enroll in the course, must succeed
+	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(taEnrollment, Cookie(t, tm, ta))); err != nil {
+		t.Error(err)
 	}
 
 	request := &qf.Enrollments{}
 
-	// teacher promotes students to teachers, must succeed
-	ctx := context.Background()
+	// teacher accepts pending students {student1, student2, ta} as student, must succeed
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
+	for _, enrollment := range request.Enrollments {
+		enrollment.Status = qf.Enrollment_STUDENT
+	}
+	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
+		t.Error(err)
+	}
+
+	// teacher promotes students to teachers, must succeed
+	for _, enrollment := range request.Enrollments {
+		enrollment.Status = qf.Enrollment_TEACHER
+	}
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)
 	}
@@ -579,7 +587,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := MockClientWithUserAndCourse(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
 
 	teacher := qtest.CreateFakeUser(t, db)
 	user := qtest.CreateFakeUser(t, db)
