@@ -92,7 +92,14 @@ func ctxErr(ctx context.Context) error {
 func parseSCMError(err error) (bool, error) {
 	var scmErr *scm.SCMError
 	if errors.As(err, &scmErr) {
-		return true, connect.NewError(connect.CodeNotFound, scmErr.UserError())
+		userErr := scmErr.UserError()
+		if errors.Is(err, scm.ErrAlreadyExists) {
+			return true, connect.NewError(connect.CodeAlreadyExists, userErr)
+		}
+		if errors.Is(err, scm.ErrNotOwner) {
+			return true, connect.NewError(connect.CodePermissionDenied, userErr)
+		}
+		return true, connect.NewError(connect.CodeNotFound, userErr)
 	}
 	return false, nil
 }

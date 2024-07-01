@@ -84,6 +84,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			}
 		}
 	}
+	// To assist with debugging; this may be useful
+	// logger.Debug(s.DumpState())
 
 	getOrganizationsByIDHandler := WithRequestMatchHandler(
 		getOrganizationsByID,

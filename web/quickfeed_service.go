@@ -96,9 +96,6 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if err == scm.ErrAlreadyExists {
-			return nil, connect.NewError(connect.CodeAlreadyExists, err)
-		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
@@ -303,11 +300,6 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		if connect.CodeOf(err) != connect.CodeUnknown {
-			// err was already a status error; return it to client.
-			return nil, err
-		}
-		// err was not a status error; return a generic error to client.
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update group"))
 	}
 	group, err := s.db.GetGroup(in.Msg.ID)
@@ -330,8 +322,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		// TODO why are we doing Unwrap here?
-		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
+		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete group"))
@@ -555,13 +546,10 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if err == scm.ErrNotMember {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
-		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found. Please make sure that third-party access is enabled for your organization"))
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found"))
 	}
 	return connect.NewResponse(org), nil
 }
