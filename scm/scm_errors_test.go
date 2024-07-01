@@ -40,7 +40,7 @@ func IgnoreURLPort() cmp.Option {
 func TestErrorGetOrganization(t *testing.T) {
 	const wantErrPrefix = "scm.GetOrganization: failed to get organization: "
 	const wantErrPrefix2 = "scm.GetOrganization: foo: course repositories already exist"
-	wantErrPrefix3 := "scm.GetOrganization: meling is not an owner of organization bar: " + ErrNotOwner.Error()
+	wantErrPrefix3 := "scm.GetOrganization: bar/meling: " + ErrNotOwner.Error()
 	const wantUserErrPrefix = "failed to get organization"
 	const wantUserErrSuffix = ": permission denied for "
 	const wantUserErrPrefix2 = "course repositories (info, assignments, tests) already exist for "
@@ -219,7 +219,7 @@ func TestErrorCreateCourse(t *testing.T) {
 		{
 			name:        "CompleteRequest/NotOwner",
 			opt:         &CourseOptions{OrganizationID: 456, CourseCreator: "jostein"},
-			wantErr:     "scm.GetOrganization: jostein is not an owner of organization bar: " + ErrNotOwner.Error(),
+			wantErr:     "scm.GetOrganization: bar/jostein: " + ErrNotOwner.Error(),
 			wantUserErr: "bar: permission denied for jostein",
 		},
 		{

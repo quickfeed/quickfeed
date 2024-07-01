@@ -96,7 +96,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 		}
 		// membership role must be "admin"
 		if membership.GetRole() != OrgOwner {
-			return nil, E(op, m, fmt.Errorf("%s is not an owner of organization %s: %w", opt.Username, org.ScmOrganizationName, ErrNotOwner))
+			return nil, E(op, m, fmt.Errorf("%s/%s: %w", org.ScmOrganizationName, opt.Username, ErrNotOwner))
 		}
 	}
 	return org, nil

@@ -7,9 +7,9 @@ import (
 
 var (
 	// ErrNotFound indicates that the user is not member of the organization.
-	ErrNotMember = errors.New("not a member of the organization")
+	ErrNotMember = errors.New("not a member of organization")
 	// ErrNotOwner indicates that the user is not an owner of the organization.
-	ErrNotOwner = errors.New("not an owner of the organization")
+	ErrNotOwner = errors.New("not an owner of organization")
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories already exist in the organization.
 	ErrAlreadyExists = errors.New("course repositories already exist")
 )
