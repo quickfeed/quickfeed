@@ -18,7 +18,7 @@ import (
 func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, nil)
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 	ctx := context.Background()
 
 	unexpectedUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
@@ -45,7 +45,7 @@ func TestGetUsers(t *testing.T) {
 func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, nil)
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 	ctx := context.Background()
 
 	var users []*qf.User
@@ -108,7 +108,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := web.MockClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
 	ctx := context.Background()

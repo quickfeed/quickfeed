@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -30,7 +31,7 @@ func TestAccessControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := web.MockClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),
 	))

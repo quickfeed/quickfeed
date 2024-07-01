@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -23,7 +24,7 @@ func TestUserVerifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := web.MockClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 	))
 	ctx := context.Background()

@@ -163,10 +163,20 @@ func WithIssues(issues map[string]map[string][]github.Issue) MockOption {
 	}
 }
 
-func WithMockOrgs() MockOption {
+// WithMockOrgs sets up mock data with course organizations and members, if any.
+// The first member in the list is the owner of the organization.
+func WithMockOrgs(members ...string) MockOption {
 	return func(opts *mockOptions) {
 		for _, course := range qtest.MockCourses {
-			opts.orgs = append(opts.orgs, toOrg(course))
+			ghOrg := toOrg(course)
+			opts.orgs = append(opts.orgs, ghOrg)
+			for i, member := range members {
+				if i == 0 {
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{Login: github.String(member)}})
+				} else {
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{Login: github.String(member)}})
+				}
+			}
 		}
 	}
 }

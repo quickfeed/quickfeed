@@ -29,9 +29,10 @@ func TestReceiveInstallationEvent(t *testing.T) {
 		ScmRemoteID: 1,
 	})
 
+	wantCourse1 := qtest.MockCourses[0]
 	response := sendEvent(t, event{
-		OrganizationLogin: "qf102-2022",
-		OrganizationScmID: 1,
+		OrganizationLogin: wantCourse1.ScmOrganizationName,
+		OrganizationScmID: int(wantCourse1.ScmOrganizationID),
 		UserLogin:         "quickfeed",
 		UserScmID:         1,
 	}, server)
@@ -44,19 +45,18 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if course.Name != "qf102-2022" {
-		t.Errorf("got course name %s, want qf102-2022", course.Name)
+	if course.ScmOrganizationName != wantCourse1.ScmOrganizationName {
+		t.Errorf("got course %q, want %q", course.ScmOrganizationName, wantCourse1.ScmOrganizationName)
 	}
-
 	if course.CourseCreatorID != admin.ID {
 		t.Errorf("got course creator id %d, want 1", course.CourseCreatorID)
 	}
 
 	// Send another event with another organization.
+	wantCourse2 := qtest.MockCourses[1]
 	response = sendEvent(t, event{
-		OrganizationLogin: "qf103-2022",
-		OrganizationScmID: 2,
+		OrganizationLogin: wantCourse2.ScmOrganizationName,
+		OrganizationScmID: int(wantCourse2.ScmOrganizationID),
 		UserLogin:         "quickfeed",
 		UserScmID:         1,
 	}, server)
@@ -70,9 +70,8 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if course.Name != "qf103-2022" {
-		t.Errorf("got course name %s, want qf102-2022", course.Name)
+	if course.ScmOrganizationName != wantCourse2.ScmOrganizationName {
+		t.Errorf("got course %s, want %s", course.ScmOrganizationName, wantCourse2.ScmOrganizationName)
 	}
 }
 
@@ -256,7 +255,7 @@ func TestCheckUserClaims(t *testing.T) {
 }
 
 func setupWebhook(t *testing.T, db database.Database) (*GitHubWebHook, *httptest.Server) {
-	mgr := scm.MockManager(t, scm.WithMockOrgs())
+	mgr := scm.MockManager(t, scm.WithMockOrgs("quickfeed"))
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)

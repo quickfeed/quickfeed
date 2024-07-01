@@ -299,7 +299,7 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs("admin"))
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 
 	ctx := context.Background()
