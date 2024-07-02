@@ -15,6 +15,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -117,7 +118,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 	}
 	if job.Dockerfile != "" {
 		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
-		resp, err := d.client.ImageRemove(ctx, job.Image, types.ImageRemoveOptions{Force: true})
+		resp, err := d.client.ImageRemove(ctx, job.Image, image.RemoveOptions{Force: true})
 		if err != nil {
 			d.logger.Debugf("Expected error (continuing): %v", err)
 			// continue because we may not have an image to remove
@@ -201,8 +202,8 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 
 // pullImage pulls an image from docker hub.
 // This can be slow and should be avoided if possible.
-func (d *Docker) pullImage(ctx context.Context, image string) error {
-	progress, err := d.client.ImagePull(ctx, image, types.ImagePullOptions{})
+func (d *Docker) pullImage(ctx context.Context, imageName string) error {
+	progress, err := d.client.ImagePull(ctx, imageName, image.PullOptions{})
 	if err != nil {
 		return err
 	}
