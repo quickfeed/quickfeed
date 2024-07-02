@@ -103,8 +103,9 @@ type Database interface {
 	GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
-	// UpdateSubmissions releases and/or approves all submissions with a certain score
-	UpdateSubmissions(*qf.Submission) error
+	// UpdateSubmissions releases and/or approves all submissions with a certain score.
+	// The boolean argument determines whether to approve or reject the submissions.
+	UpdateSubmissions(*qf.Submission, bool) error
 	// GetReview returns a single review matching the given query.
 	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.

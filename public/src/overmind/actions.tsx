@@ -1,6 +1,7 @@
-import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
+    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus,
+    Grade
 } from "../../proto/qf/types_pb"
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
@@ -165,8 +166,22 @@ export const setEnrollmentState = async ({ effects }: Context, enrollment: Enrol
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
 export const updateSubmission = async ({ state, effects }: Context, { owner, submission, status }: { owner: SubmissionOwner, submission: Submission | null, status: Submission_Status }): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
-    if (!submission || submission.status === status) {
+    if (!submission) {
         return
+    }
+
+    switch (owner.type) {
+        // Take no action if there is no change in status
+        case "ENROLLMENT":
+            if (getStatusByUser(submission, owner.id) === status) {
+                return
+            }
+            break
+        case "GROUP":
+            if (hasAllStatus(submission, status)) {
+                return
+            }
+            break
     }
 
     /* Confirm that user really wants to change submission status */
@@ -174,21 +189,68 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
         return
     }
 
-    const clone = submission.clone()
-    clone.status = status
+    let clone = submission.clone()
+    
+    switch (owner.type) {
+        case "ENROLLMENT":
+            clone = setStatusByUser(clone, owner.id, status)
+            break
+        case "GROUP":
+            clone = setStatusAll(clone, status)
+            break
+    }
     /* Update the submission status */
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
-        status: clone.status,
+        grades: clone.Grades,
         released: submission.released,
         score: submission.score,
     })
     if (response.error) {
         return
     }
-    submission.status = status
+    submission.Grades = clone.Grades
     state.submissionsForCourse.update(owner, submission)
+}
+
+export const updateGrade = async ({state,  effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
+    if (grade.Status === status || !state.selectedSubmission) {
+        return
+    }
+
+    if (!confirm(`Are you sure you want to set status ${SubmissionStatus[status]} on this grade?`)) {
+        return
+    }
+    
+    const clone = state.selectedSubmission.clone()
+    clone.Grades = clone.Grades.map(g => {
+        if (g.UserID === grade.UserID) {
+            g.Status = status
+        }
+        return g
+    }) 
+    const response = await effects.api.client.updateSubmission({
+        courseID: state.activeCourse,
+        submissionID: state.selectedSubmission.ID,
+        grades: clone.Grades,
+        released: state.selectedSubmission.released,
+        score: state.selectedSubmission.score,
+    })
+    if (response.error) {
+        return
+    }
+
+    state.selectedSubmission.Grades = clone.Grades
+    const type = clone.userID ? "ENROLLMENT" : "GROUP"
+    switch (type) {
+        case "ENROLLMENT":
+            state.submissionsForCourse.update({type, id: clone.userID}, clone)
+            break
+        case "GROUP":
+            state.submissionsForCourse.update({type, id: clone.groupID}, clone)
+            break
+    }
 }
 
 /** updateEnrollment updates an enrollment status with the given status */

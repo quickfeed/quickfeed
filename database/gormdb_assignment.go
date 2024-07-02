@@ -203,7 +203,8 @@ func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.Submis
 		return nil, err
 	}
 	var submissions []*qf.Submission
-	m := db.conn.Model(&qf.Submission{}).Preload("Reviews").
+	m := db.conn.Model(&qf.Submission{}).Preload("Grades").
+		Preload("Reviews").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").
 		Preload("Scores")

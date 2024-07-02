@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint
@@ -290,11 +290,11 @@ export const state: State = {
                         if (assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
                             const sub = submissions.get(el.ID)?.submissions?.find(s => s.AssignmentID === assignmentID)
-                            return sub !== undefined && !isApproved(sub)
+                            return sub !== undefined && !isAllApproved(sub)
                         }
                         const numApproved = submissions.get(el.ID)?.submissions?.reduce((acc, cur) => {
                             return acc + ((cur &&
-                                isApproved(cur)) ? 1 : 0)
+                                isAllApproved(cur)) ? 1 : 0)
                         }, 0) ?? 0
                         return numApproved < numAssignments
                     })
@@ -352,8 +352,8 @@ export const state: State = {
                 }
                 case SubmissionSort.Approved: {
                     if (assignmentID > 0) {
-                        const sA = subA && isApproved(subA) ? 1 : 0
-                        const sB = subB && isApproved(subB) ? 1 : 0
+                        const sA = subA && isAllApproved(subA) ? 1 : 0
+                        const sB = subB && isAllApproved(subB) ? 1 : 0
                         return sortOrder * (sA - sB)
                     }
                     const aApproved = subsA ? getNumApproved(subsA) : 0

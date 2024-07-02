@@ -21,7 +21,7 @@ func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submissi
 	sinceDeadline := assignment.SinceDeadline(submission.GetBuildInfo().GetSubmissionDate().AsTime())
 
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
-	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
+	if submission.Score < assignment.ScoreLimit && !submission.IsApproved(m.GetUserID()) && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slip days for this assignment
 		slpDays, slpHours := uint32(sinceDeadline/days), sinceDeadline%days
 		// slpHours is hours after deadline, excluding subsequent full-day slip days after deadline

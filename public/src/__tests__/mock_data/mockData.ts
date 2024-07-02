@@ -17,6 +17,7 @@ import {
     Submission_Status,
     GradingCriterion_Grade,
     Enrollment_DisplayState,
+    Grade,
 } from "../../../proto/qf/types_pb"
 import {
     Organization,
@@ -334,7 +335,13 @@ export class MockData {
                 ID: BigInt(1),
                 AssignmentID: BigInt(1),
                 userID: BigInt(1),
-                status: Submission_Status.APPROVED,
+                Grades: [
+                    new Grade({
+                        Status: Submission_Status.APPROVED,
+                        SubmissionID: BigInt(1),
+                        UserID: BigInt(1),
+                    })
+                ],
                 BuildInfo: new BuildInfo({
                     ID: BigInt(1),
                     SubmissionID: BigInt(1),
@@ -460,7 +467,13 @@ export class MockData {
                 userID: BigInt(3),
                 score: 50,
                 commitHash: "test",
-                status: Submission_Status.NONE,
+                Grades: [
+                    new Grade({
+                        Status: Submission_Status.NONE,
+                        SubmissionID: BigInt(6),
+                        UserID: BigInt(3),
+                    })
+                ],
                 BuildInfo: new BuildInfo({
                     ID: BigInt(3),
                     BuildDate: Timestamp.fromDate(new Date(2022, 6, 4)),

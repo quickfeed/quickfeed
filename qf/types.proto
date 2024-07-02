@@ -218,7 +218,7 @@ message Submission {
     uint32 score                           = 5;
     string commitHash                      = 6;
     bool released                          = 7;  // true => feedback is visible to the student or group members
-    Status status                          = 8;
+    repeated Grade Grades                  = 8;
     google.protobuf.Timestamp approvedDate = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     repeated Review reviews                = 10;  // reviews produced for this submission
     score.BuildInfo BuildInfo              = 11;  // build info for tests
@@ -227,6 +227,12 @@ message Submission {
 
 message Submissions {
     repeated Submission submissions = 1;
+}
+
+message Grade {
+    uint64 SubmissionID = 1 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
+    uint64 UserID       = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
+    qf.Submission.Status Status = 3;
 }
 
 //   MANUAL GRADING   //
