@@ -12,7 +12,7 @@ import (
 // createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
 // does not contain the QuickFeed repositories that will be created.
-func CreateCourse(ctx context.Context, db database.Database, sc scm.SCM, course *qf.Course, courseCreator *qf.User) (*qf.Course, error) {
+func createCourse(ctx context.Context, db database.Database, sc scm.SCM, course *qf.Course, courseCreator *qf.User) (*qf.Course, error) {
 	repos, err := sc.CreateCourse(ctx, &scm.CourseOptions{
 		CourseCreator:  courseCreator.Login,
 		OrganizationID: course.ScmOrganizationID,
