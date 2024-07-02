@@ -60,6 +60,7 @@ func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf
 	return user
 }
 
+// CreateCourse is a test helper to create a course in the database; it updates the course with the ID.
 func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
 	if err := db.CreateCourse(user.ID, course); err != nil {
