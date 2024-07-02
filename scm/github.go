@@ -110,7 +110,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 	}
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, orgName, nil)
 	if err != nil {
-		return nil, E(op, M("failed to get repositories for organization %s", orgName), fmt.Errorf("failed to get repositories: %w", err))
+		return nil, E(op, M("failed to get repositories for %s", orgName), err)
 	}
 	repositories := make([]*Repository, len(repos))
 	for i, repo := range repos {
@@ -158,7 +158,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 		DefaultRepoPermission: github.String("none"),
 		MembersCanCreateRepos: github.Bool(false),
 	}); err != nil {
-		return nil, E(op, m, fmt.Errorf("failed to update permissions for organization %s: %w", org.ScmOrganizationName, err))
+		return nil, E(op, m, fmt.Errorf("failed to update permissions for %s: %w", org.ScmOrganizationName, err))
 	}
 
 	// Create course repositories
@@ -229,10 +229,11 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 // If the user was already removed from the organization an error is returned, and the repository deletion is skipped.
 func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	const op Op = "RejectEnrollment"
-	m := M("failed to reject enrollment for %s", opt.User)
+	m := M("failed to reject enrollment")
 	if !opt.valid() {
 		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
+	m = M("failed to reject enrollment for %s", opt.User)
 	org, err := s.GetOrganization(ctx, &OrganizationOptions{ID: opt.OrganizationID})
 	if err != nil {
 		return E(op, m, err)
@@ -346,12 +347,12 @@ func (s *GithubSCM) getRepository(ctx context.Context, opt *RepositoryOptions) (
 	if opt.ID > 0 {
 		repo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
 		if err != nil {
-			return nil, E(op, m, fmt.Errorf("failed to get repository %d: %w", opt.ID, err))
+			return nil, E(op, M("failed to get repository %d", opt.ID), err)
 		}
 	} else {
 		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 		if err != nil {
-			return nil, E(op, m, fmt.Errorf("failed to get repository %s/%s: %w", opt.Owner, opt.Path, err))
+			return nil, E(op, M("failed to get repository %s/%s", opt.Owner, opt.Path), err)
 		}
 	}
 	return toRepository(repo), nil
@@ -383,8 +384,7 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 		Private: github.Bool(opt.Private),
 	})
 	if err != nil {
-		m = M("failed to create repository %s/%s", opt.Organization, opt.Path)
-		return nil, E(op, m, fmt.Errorf("failed to create repository %s/%s: %w", opt.Organization, opt.Path, err))
+		return nil, E(op, M("failed to create repository %s/%s", opt.Organization, opt.Path), err)
 	}
 	s.logger.Debugf("CreateRepository: successfully created %s/%s", opt.Organization, opt.Path)
 	return toRepository(repo), nil
@@ -409,7 +409,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions
 	}
 
 	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
-		return E(op, m, fmt.Errorf("failed to delete repository %s/%s: %w", opt.Owner, opt.Path, err))
+		return E(op, M("failed to delete repository %s/%s", opt.Owner, opt.Path), err)
 	}
 	return nil
 }

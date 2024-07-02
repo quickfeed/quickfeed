@@ -368,7 +368,7 @@ func TestErrorRejectEnrollment(t *testing.T) {
 		{Organization: &ghOrgFoo, User: &jostein},
 		{Organization: &ghOrgBar, User: &meling},
 	}
-	const userErrPrefix = "failed to reject enrollment for "
+	const userErrPrefix = "failed to reject enrollment"
 
 	tests := []struct {
 		name        string
@@ -379,32 +379,32 @@ func TestErrorRejectEnrollment(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &RejectEnrollmentOptions{},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for : missing fields: {OrganizationID:0 RepositoryID:0 User:}",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment: missing fields: {OrganizationID:0 RepositoryID:0 User:}",
 			wantUserErr: userErrPrefix,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"},
 			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for meling: scm.GetOrganization: failed to get organization by ID: 789: GET http://127.0.0.1/organizations/789: 404  []",
-			wantUserErr: userErrPrefix + "meling",
+			wantUserErr: userErrPrefix + " for meling",
 		},
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"},
 			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to delete repository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
-			wantUserErr: userErrPrefix + "jostein",
+			wantUserErr: userErrPrefix + " for jostein",
 		},
 		{
 			name:        "CompleteRequest/UserNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"},
 			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for frank: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/frank: 404  []",
-			wantUserErr: userErrPrefix + "frank",
+			wantUserErr: userErrPrefix + " for frank",
 		},
 		{
 			name:        "CompleteRequest/UserAlreadyRemoved",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"},
 			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/jostein: 404  []",
-			wantUserErr: userErrPrefix + "jostein",
+			wantUserErr: userErrPrefix + " for jostein",
 		},
 		{
 			name:        "CompleteRequest/Success",
