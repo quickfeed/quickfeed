@@ -21,10 +21,7 @@ func TestApproveSubmission(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
-	err := db.CreateCourse(admin.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	student := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student, course)
@@ -34,7 +31,7 @@ func TestApproveSubmission(t *testing.T) {
 		Name:     "test lab",
 		Order:    1,
 	}
-	if err = db.CreateAssignment(lab); err != nil {
+	if err := db.CreateAssignment(lab); err != nil {
 		t.Fatal(err)
 	}
 
@@ -43,14 +40,14 @@ func TestApproveSubmission(t *testing.T) {
 		UserID:       student.ID,
 		Score:        17,
 	}
-	if err = db.CreateSubmission(wantSubmission); err != nil {
+	if err := db.CreateSubmission(wantSubmission); err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.Background()
 	cookie := Cookie(t, tm, admin)
 
-	if _, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
+	if _, err := client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
 		Grades:       []*qf.Grade{{UserID: student.ID, Status: qf.Submission_APPROVED}},
@@ -271,12 +268,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	course1 := qtest.MockCourses[2]
 	course2 := qtest.MockCourses[3]
-	if err := db.CreateCourse(admin.ID, course1); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateCourse(admin.ID, course2); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course1)
+	qtest.CreateCourse(t, db, admin, course2)
 
 	student := qtest.CreateFakeUser(t, db)
 	enrolC1 := qtest.EnrollUser(t, db, student, course1, qf.Enrollment_STUDENT)
@@ -493,9 +486,7 @@ func TestCreateApproveList(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db)
 
 	course := qtest.MockCourses[2]
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Leslie Lamport", Login: "Leslie Lamport"})
 	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Hein Meling", Login: "Hein Meling"})
 	student3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "John Doe", Login: "John Doe"})
@@ -686,9 +677,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db)
 
 	course := qtest.MockCourses[2]
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Leslie Lamport", Login: "Leslie Lamport"})
 	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Hein Meling", Login: "Hein Meling"})
 	student3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "John Doe", Login: "John Doe"})

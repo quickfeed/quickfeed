@@ -263,9 +263,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	assignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
 	if err != nil {

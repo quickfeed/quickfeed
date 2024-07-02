@@ -141,7 +141,7 @@ func TestGormDBCreateCourseNonAdmin(t *testing.T) {
 	nonAdmin := qtest.CreateFakeUser(t, db)
 	// the following should fail to create a course
 	if err := db.CreateCourse(nonAdmin.ID, &qf.Course{}); err == nil {
-		t.Fatal(err)
+		t.Fatal("non-admin user should not be able to create a course")
 	}
 }
 
@@ -317,9 +317,7 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 	}
 
 	admin := qtest.CreateFakeUser(t, db)
-	if err := db.CreateCourse(admin.ID, wantCourse); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// CreateCourse should fail because the unique constraint (course.code, course.year) is violated
 	if err := db.CreateCourse(admin.ID, course); err != nil && !errors.Is(err, database.ErrCourseExists) {
@@ -342,9 +340,7 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 	// Now create a course with same code but different year
 	course.Year = 2018
 	// CreateCourse should succeed because the unique constraint (course.code, course.year) is not violated
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 }
 
 func TestGetCourseTeachers(t *testing.T) {

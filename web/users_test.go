@@ -55,10 +55,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 	admin := users[0]
 	for _, course := range qtest.MockCourses {
-		err := db.CreateCourse(admin.ID, course)
-		if err != nil {
-			t.Fatal(err)
-		}
+		qtest.CreateCourse(t, db, admin, course)
 	}
 
 	// users to enroll in course DAT520 Distributed Systems
