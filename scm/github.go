@@ -66,30 +66,27 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 		}
 	}
 
-	org := &qf.Organization{
-		ScmOrganizationID:   uint64(githubOrg.GetID()),
-		ScmOrganizationName: githubOrg.GetLogin(),
-	}
+	orgName := githubOrg.GetLogin()
 
 	// If getting organization for the purpose of creating a new course,
 	// ensure that the organization does not already contain any course repositories.
 	if opt.NewCourse {
-		repos, err := s.GetRepositories(ctx, org)
+		repos, err := s.GetRepositories(ctx, orgName)
 		if err != nil {
 			// this code path can only happen if there is an issue with accessing GitHub since
 			// we already checked that the organization exists; returning the underlying error.
 			return nil, err
 		}
 		if isDirty(repos) {
-			return nil, E(op, M("%s: course repositories %s: %w", org.ScmOrganizationName, repoNames, ErrAlreadyExists))
+			return nil, E(op, M("%s: course repositories %s: %w", orgName, repoNames, ErrAlreadyExists))
 		}
 	}
 
 	// If user name is provided, return the organization only if the user is one of its owners.
 	// This is used together with NewCourse to ensure that the user has access to create a new course.
 	if opt.Username != "" {
-		m := M("%s: permission denied", org.ScmOrganizationName)
-		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.ScmOrganizationName)
+		m := M("%s: permission denied", orgName)
+		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, orgName)
 		if err != nil {
 			return nil, E(op, m, fmt.Errorf("failed to get membership: %w", err))
 		}
@@ -98,19 +95,19 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 			return nil, E(op, m, fmt.Errorf("%s: %w", opt.Username, ErrNotOwner))
 		}
 	}
-	return org, nil
+
+	return &qf.Organization{ScmOrganizationID: uint64(githubOrg.GetID()), ScmOrganizationName: orgName}, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
+func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Repository, error) {
 	const op Op = "GetRepositories"
-	orgName := org.GetScmOrganizationName()
-	if orgName == "" {
+	if org == "" {
 		return nil, E(op, "organization name must be provided")
 	}
-	repos, _, err := s.client.Repositories.ListByOrg(ctx, orgName, nil)
+	repos, _, err := s.client.Repositories.ListByOrg(ctx, org, nil)
 	if err != nil {
-		return nil, E(op, M("failed to get repositories for %s", orgName), err)
+		return nil, E(op, M("failed to get repositories for %s", org), err)
 	}
 	repositories := make([]*Repository, len(repos))
 	for i, repo := range repos {

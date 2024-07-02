@@ -14,7 +14,7 @@ type SCM interface {
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
-	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
+	GetRepositories(context.Context, string) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 

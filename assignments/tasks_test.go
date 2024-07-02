@@ -119,7 +119,7 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
-	repos, err := sc.GetRepositories(ctx, org)
+	repos, err := sc.GetRepositories(ctx, org.GetScmOrganizationName())
 	if err != nil {
 		t.Fatal(err)
 	}

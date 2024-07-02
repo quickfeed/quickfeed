@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 
 	"github.com/urfave/cli"
@@ -208,14 +207,14 @@ func deleteRepositories(client *scm.GithubSCM) cli.ActionFunc {
 				return err
 			}
 
-			repos, err := (*client).GetRepositories(ctx, &qf.Organization{ScmOrganizationName: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, c.String("namespace"))
 			if err != nil {
 				return err
 			}
 
 			for _, repo := range repos {
 				var errs []error
-				if _, err := (*client).Client().Repositories.Delete(ctx, repo.Owner, repo.Path); err != nil {
+				if _, err := (*client).Client().Repositories.Delete(ctx, repo.Owner, repo.Repo); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted repository", repo.HTMLURL)
@@ -248,7 +247,7 @@ func getRepositories(client *scm.GithubSCM) cli.ActionFunc {
 			return cli.NewExitError("name and namespace must be provided", 3)
 		}
 		if c.Bool("all") {
-			repos, err := (*client).GetRepositories(ctx, &qf.Organization{ScmOrganizationName: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, c.String("namespace"))
 			if err != nil {
 				return err
 			}
