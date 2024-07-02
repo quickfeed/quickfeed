@@ -56,13 +56,13 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	if opt.ID > 0 {
 		githubOrg, _, err = s.client.Organizations.GetByID(ctx, int64(opt.ID))
 		if err != nil {
-			return nil, E(op, M("failed to get organization by ID: %d", opt.ID), fmt.Errorf("failed to get organization: %w", err))
+			return nil, E(op, M("failed to get organization by ID: %d", opt.ID), err)
 		}
 	} else {
 		name := slug.Make(opt.Name)
 		githubOrg, _, err = s.client.Organizations.Get(ctx, name)
 		if err != nil {
-			return nil, E(op, M("failed to get organization %s", opt.Name), fmt.Errorf("failed to get organization: %w", err))
+			return nil, E(op, M("failed to get organization %s", opt.Name), err)
 		}
 	}
 
@@ -81,22 +81,21 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 			return nil, err
 		}
 		if isDirty(repos) {
-			m := M("course repositories %s already exist for %s", repoNames, org.ScmOrganizationName)
-			return nil, E(op, m, fmt.Errorf("%s: %w", org.ScmOrganizationName, ErrAlreadyExists))
+			return nil, E(op, M("%s: course repositories %s: %w", org.ScmOrganizationName, repoNames, ErrAlreadyExists))
 		}
 	}
 
 	// If user name is provided, return the organization only if the user is one of its owners.
 	// This is used together with NewCourse to ensure that the user has access to create a new course.
 	if opt.Username != "" {
-		m := M("%s: permission denied for %s", org.ScmOrganizationName, opt.Username)
+		m := M("%s: permission denied", org.ScmOrganizationName)
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.ScmOrganizationName)
 		if err != nil {
 			return nil, E(op, m, fmt.Errorf("failed to get membership: %w", err))
 		}
 		// membership role must be "admin"
 		if membership.GetRole() != OrgOwner {
-			return nil, E(op, m, fmt.Errorf("%s/%s: %w", org.ScmOrganizationName, opt.Username, ErrNotOwner))
+			return nil, E(op, m, fmt.Errorf("%s: %w", opt.Username, ErrNotOwner))
 		}
 	}
 	return org, nil
@@ -275,7 +274,7 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 	}
 	if _, err := s.getRepository(ctx, &RepositoryOptions{Owner: opt.Organization, Path: opt.GroupName}); err == nil {
 		// repository must not exist
-		return nil, E(op, m, fmt.Errorf("repository %s/%s already exists: %w", opt.Organization, opt.GroupName, ErrAlreadyExists))
+		return nil, E(op, M("%s: repository %s %w", opt.Organization, opt.GroupName, ErrAlreadyExists))
 	}
 	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Organization: opt.Organization, Path: opt.GroupName, Private: true})
 	if err != nil {
@@ -300,7 +299,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	// find current group members
 	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
 	if err != nil {
-		return E(op, m, fmt.Errorf("failed to get members for %s/%s: %w", opt.Organization, opt.GroupName, err))
+		return E(op, m, fmt.Errorf("failed to get members: %w", err))
 	}
 
 	// add members that are not already in the group
@@ -316,7 +315,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		if !slices.Contains(opt.Users, user) {
 			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, user)
 			if err != nil {
-				return E(op, m, fmt.Errorf("failed to remove user %s from repository %s/%s: %w", user, opt.Organization, opt.GroupName, err))
+				return E(op, m, fmt.Errorf("failed to remove %s: %w", user, err))
 			}
 		}
 	}
@@ -435,7 +434,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 
 func (s *GithubSCM) updatePermission(ctx context.Context, user, org string, role *github.Membership) error {
 	if _, _, err := s.client.Organizations.EditOrgMembership(ctx, user, org, role); err != nil {
-		return fmt.Errorf("failed to update %s's role to %q in organization %s: %w", user, *role.Role, org, err)
+		return fmt.Errorf("failed to update to %q: %w", *role.Role, err)
 	}
 	return nil
 }
@@ -443,7 +442,7 @@ func (s *GithubSCM) updatePermission(ctx context.Context, user, org string, role
 // addUser adds user to the repository with the specified access level (pull or push).
 func (s *GithubSCM) addUser(ctx context.Context, org, repo, user string, access *github.RepositoryAddCollaboratorOptions) error {
 	if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repo, user, access); err != nil {
-		return fmt.Errorf("failed to add %s with %q access to %s/%s: %w", user, access.Permission, org, repo, err)
+		return fmt.Errorf("failed to add with %q access: %w", access.Permission, err)
 	}
 	return nil
 }

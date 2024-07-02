@@ -3,7 +3,9 @@ package scm
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -13,6 +15,13 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
+
+// Run tests with DEBUG_ERR_MSG=1 to print error messages to view them collectively.
+// This is useful when comparing error messages and user errors.
+// It is best to run without the -v flag to avoid interleaving with test output, e.g.,
+//
+//	DEBUG_ERR_MSG=1 go test -run TestErrorGetOrganization
+var debugErrMsg = os.Getenv("DEBUG_ERR_MSG") != ""
 
 // IgnoreURLPort returns a cmp.Option that compares URLs in strings ignoring port numbers.
 func IgnoreURLPort() cmp.Option {
@@ -38,12 +47,25 @@ func IgnoreURLPort() cmp.Option {
 }
 
 func TestErrorGetOrganization(t *testing.T) {
-	const wantErrPrefix = "scm.GetOrganization: failed to get organization: "
-	const wantErrPrefix2 = "scm.GetOrganization: foo: course repositories already exist"
-	wantErrPrefix3 := "scm.GetOrganization: bar/meling: " + ErrNotOwner.Error()
-	const wantUserErrPrefix = "failed to get organization"
-	const wantUserErrSuffix = ": permission denied for "
-	const wantUserErrPrefix2 = "course repositories (info, assignments, tests) already exist for "
+	const (
+		wantUserErrAlreadyExist     = "foo: course repositories (info, assignments, tests): already exist"
+		wantErrAlreadyExist         = "scm.GetOrganization: " + wantUserErrAlreadyExist
+		wantErrPermission           = "scm.GetOrganization: bar: permission denied: meling: not an owner of organization"
+		wantErrPermissionMembership = "scm.GetOrganization: bar: permission denied: failed to get membership: GET http://127.0.0.1/orgs/bar/memberships/jostein: 404  []"
+		wantUserErrPermission       = "bar: permission denied"
+		wantUserErrPrefix           = "failed to get organization"
+	)
+
+	orgErrFn := func(opt *OrganizationOptions, suffix string) string {
+		base := "scm.GetOrganization: failed to get organization"
+		if opt.ID != 0 {
+			return fmt.Sprintf("%s by ID: %d: %s", base, opt.ID, suffix)
+		}
+		if opt.Name != "" {
+			return fmt.Sprintf("%s %s: %s", base, opt.Name, suffix)
+		}
+		return base + suffix
+	}
 
 	tests := []struct {
 		name        string
@@ -54,98 +76,98 @@ func TestErrorGetOrganization(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &OrganizationOptions{},
-			wantErr:     "scm.GetOrganization: missing fields: {ID:0 Name: Username: NewCourse:false}",
+			wantErr:     orgErrFn(&OrganizationOptions{}, ": missing fields: {ID:0 Name: Username: NewCourse:false}"),
 			wantUserErr: wantUserErrPrefix,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{ID: 789},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1:61390/organizations/789: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{ID: 789}, "GET http://127.0.0.1/organizations/789: 404  []"),
 			wantUserErr: wantUserErrPrefix + " by ID: 789",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{ID: 789, NewCourse: true},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1:61730/organizations/789: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{ID: 789, NewCourse: true}, "GET http://127.0.0.1/organizations/789: 404  []"),
 			wantUserErr: wantUserErrPrefix + " by ID: 789",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{ID: 789, Username: "meling"},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1/organizations/789: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{ID: 789, Username: "meling"}, "GET http://127.0.0.1/organizations/789: 404  []"),
 			wantUserErr: wantUserErrPrefix + " by ID: 789",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{Name: "baz"},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1:49915/orgs/baz: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{Name: "baz"}, "GET http://127.0.0.1/orgs/baz: 404  []"),
 			wantUserErr: wantUserErrPrefix + " baz",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{Name: "baz", NewCourse: true},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1:49915/orgs/baz: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{Name: "baz", NewCourse: true}, "GET http://127.0.0.1/orgs/baz: 404  []"),
 			wantUserErr: wantUserErrPrefix + " baz",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{Name: "baz", Username: "meling"},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1:49915/orgs/baz: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{Name: "baz", Username: "meling"}, "GET http://127.0.0.1/orgs/baz: 404  []"),
 			wantUserErr: wantUserErrPrefix + " baz",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"},
-			wantErr:     wantErrPrefix + "GET http://127.0.0.1:51062/orgs/baz: 404  []",
+			wantErr:     orgErrFn(&OrganizationOptions{Name: "baz", NewCourse: true, Username: "meling"}, "GET http://127.0.0.1/orgs/baz: 404  []"),
 			wantUserErr: wantUserErrPrefix + " baz",
 		},
 		{
 			name:        "CompleteRequest/AlreadyExists",
 			opt:         &OrganizationOptions{ID: 123, NewCourse: true},
-			wantErr:     wantErrPrefix2,
-			wantUserErr: wantUserErrPrefix2 + "foo",
+			wantErr:     wantErrAlreadyExist,
+			wantUserErr: wantUserErrAlreadyExist,
 		},
 		{
 			name:        "CompleteRequest/AlreadyExists",
 			opt:         &OrganizationOptions{Name: "foo", NewCourse: true},
-			wantErr:     wantErrPrefix2,
-			wantUserErr: wantUserErrPrefix2 + "foo",
+			wantErr:     wantErrAlreadyExist,
+			wantUserErr: wantUserErrAlreadyExist,
 		},
 		{
 			name:        "CompleteRequest/AlreadyExists",
 			opt:         &OrganizationOptions{Name: "foo", NewCourse: true, Username: "meling"},
-			wantErr:     wantErrPrefix2,
-			wantUserErr: wantUserErrPrefix2 + "foo",
+			wantErr:     wantErrAlreadyExist,
+			wantUserErr: wantUserErrAlreadyExist,
 		},
 		{
 			name:        "CompleteRequest/NotMember",
 			opt:         &OrganizationOptions{ID: 456, Username: "jostein"},
-			wantErr:     "scm.GetOrganization: failed to get membership: GET http://127.0.0.1:62169/orgs/bar/memberships/jostein: 404  []",
-			wantUserErr: "bar" + wantUserErrSuffix + "jostein",
+			wantErr:     wantErrPermissionMembership,
+			wantUserErr: wantUserErrPermission,
 		},
 		{
 			name:        "CompleteRequest/NotMember",
 			opt:         &OrganizationOptions{Name: "bar", Username: "jostein"},
-			wantErr:     "scm.GetOrganization: failed to get membership: GET http://127.0.0.1:62169/orgs/bar/memberships/jostein: 404  []",
-			wantUserErr: "bar" + wantUserErrSuffix + "jostein",
+			wantErr:     wantErrPermissionMembership,
+			wantUserErr: wantUserErrPermission,
 		},
 		{
 			name:        "CompleteRequest/OnlyMemberNotOwner",
 			opt:         &OrganizationOptions{ID: 456, Username: "meling"},
-			wantErr:     wantErrPrefix3,
-			wantUserErr: "bar" + wantUserErrSuffix + "meling",
+			wantErr:     wantErrPermission,
+			wantUserErr: wantUserErrPermission,
 		},
 		{
 			name:        "CompleteRequest/OnlyMemberNotOwner",
 			opt:         &OrganizationOptions{Name: "bar", Username: "meling"},
-			wantErr:     wantErrPrefix3,
-			wantUserErr: "bar" + wantUserErrSuffix + "meling",
+			wantErr:     wantErrPermission,
+			wantUserErr: wantUserErrPermission,
 		},
 		{
 			name:        "CompleteRequest/OnlyMemberNotOwner",
 			opt:         &OrganizationOptions{Name: "bar", NewCourse: true, Username: "meling"},
-			wantErr:     wantErrPrefix3,
-			wantUserErr: "bar" + wantUserErrSuffix + "meling",
+			wantErr:     wantErrPermission,
+			wantUserErr: wantUserErrPermission,
 		},
 		{
 			name:        "CompleteRequest/Success",
@@ -159,27 +181,7 @@ func TestErrorGetOrganization(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"ID", "Name", "Username", "NewCourse"}, tt.opt.ID, tt.opt.Name, tt.opt.Username, tt.opt.NewCourse)
 		t.Run(name, func(t *testing.T) {
 			_, gotErr := s.GetOrganization(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("GetOrganization() error = nil, want %q", tt.wantErr)
-				}
-				if tt.wantUserErr != "" {
-					t.Errorf("GetOrganization() user error = nil, want %q", tt.wantUserErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("GetOrganization() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("GetOrganization() user error mismatch (-want +got):\n%s", diff)
-				}
-			}
+			chkErrMsg(t, "GetOrganization()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
 	}
 }
@@ -201,32 +203,32 @@ func TestErrorCreateCourse(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &CourseOptions{},
-			wantErr:     "scm.CreateCourse: missing fields: {OrganizationID:0 CourseCreator:}",
+			wantErr:     "scm.CreateCourse: failed to create course: missing fields: {OrganizationID:0 CourseCreator:}",
 			wantUserErr: "failed to create course",
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &CourseOptions{OrganizationID: 789, CourseCreator: "meling"},
-			wantErr:     "scm.GetOrganization: failed to get organization: GET http://127.0.0.1/organizations/789: 404  []",
+			wantErr:     "scm.GetOrganization: failed to get organization by ID: 789: GET http://127.0.0.1/organizations/789: 404  []",
 			wantUserErr: "failed to get organization by ID: 789",
 		},
 		{
 			name:        "CompleteRequest/FooReposAlreadyExists",
 			opt:         &CourseOptions{OrganizationID: 123, CourseCreator: "meling"},
-			wantErr:     "scm.GetOrganization: foo: course repositories already exist",
-			wantUserErr: "course repositories (info, assignments, tests) already exist for foo",
+			wantErr:     "scm.GetOrganization: foo: course repositories (info, assignments, tests): already exist",
+			wantUserErr: "foo: course repositories (info, assignments, tests): already exist",
 		},
 		{
 			name:        "CompleteRequest/NotOwner",
 			opt:         &CourseOptions{OrganizationID: 456, CourseCreator: "jostein"},
-			wantErr:     "scm.GetOrganization: bar/jostein: " + ErrNotOwner.Error(),
-			wantUserErr: "bar: permission denied for jostein",
+			wantErr:     "scm.GetOrganization: bar: permission denied: jostein: not an owner of organization",
+			wantUserErr: "bar: permission denied",
 		},
 		{
 			name:        "CompleteRequest/NotMember",
 			opt:         &CourseOptions{OrganizationID: 456, CourseCreator: "lamport"},
-			wantErr:     "scm.GetOrganization: failed to get membership: GET http://127.0.0.1:57346/orgs/bar/memberships/lamport: 404  []",
-			wantUserErr: "bar: permission denied for lamport",
+			wantErr:     "scm.GetOrganization: bar: permission denied: failed to get membership: GET http://127.0.0.1/orgs/bar/memberships/lamport: 404  []",
+			wantUserErr: "bar: permission denied",
 		},
 		{
 			name:        "CompleteRequest/Owner/Success",
@@ -240,27 +242,7 @@ func TestErrorCreateCourse(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"OrganizationID", "CourseCreator"}, tt.opt.OrganizationID, tt.opt.CourseCreator)
 		t.Run(name, func(t *testing.T) {
 			_, gotErr := s.CreateCourse(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("CreateCourse() error = nil, want %q", tt.wantErr)
-				}
-				if tt.wantUserErr != "" {
-					t.Errorf("CreateCourse() user error = nil, want %q", tt.wantUserErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("CreateCourse() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("GetOrganization() user error mismatch (-want +got):\n%s", diff)
-				}
-			}
+			chkErrMsg(t, "CreateCourse()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
 	}
 }
@@ -293,13 +275,13 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.UpdateEnrollment: missing fields: {Organization: User: Status:NONE}",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE}",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
-			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: scm.GetOrganization: failed to get organization: GET http://127.0.0.1:50580/orgs/fuzz: 404  []",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: scm.GetOrganization: failed to get organization fuzz: GET http://127.0.0.1/orgs/fuzz: 404  []",
 			wantUserErr: wantUserErr,
 		},
 
@@ -307,25 +289,25 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/IgnoredStatus",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE},
-			wantErr:     "scm.UpdateEnrollment: invalid enrollment status: NONE",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: NONE",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/IgnoredStatus",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING},
-			wantErr:     "scm.UpdateEnrollment: invalid enrollment status: PENDING",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: PENDING",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/CreateStudRepo",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT},
-			wantErr:     `scm.UpdateEnrollment: failed to add frank with "pull" access to bar/assignments: PUT http://127.0.0.1:55626/repos/bar/assignments/collaborators/frank: 404  []`,
+			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/frank: 404  []`,
 			wantUserErr: "failed to enroll frank as student in bar",
 		},
 		{
 			name:        "CompleteRequest/UpdateToTeacher",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER},
-			wantErr:     `scm.UpdateEnrollment: failed to update frank's role to "admin" in organization bar: PUT http://127.0.0.1:55626/orgs/bar/memberships/frank: 404  []`,
+			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as teacher in bar: failed to update to "admin": PUT http://127.0.0.1/orgs/bar/memberships/frank: 404  []`,
 			wantUserErr: "failed to enroll frank as teacher in bar",
 		},
 
@@ -333,13 +315,13 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/None",
 			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE},
-			wantErr:     "scm.UpdateEnrollment: invalid enrollment status: NONE",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: NONE",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/Pending",
 			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING},
-			wantErr:     "scm.UpdateEnrollment: invalid enrollment status: PENDING",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: PENDING",
 			wantUserErr: wantUserErr,
 		},
 		{
@@ -357,7 +339,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/Student/Fail",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT},
-			wantErr:     `scm.UpdateEnrollment: failed to add meling with "pull" access to bar/assignments: PUT http://127.0.0.1:55783/repos/bar/assignments/collaborators/meling: 404  []`,
+			wantErr:     `scm.UpdateEnrollment: failed to enroll meling as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/meling: 404  []`,
 			wantUserErr: "failed to enroll meling as student in bar",
 		},
 
@@ -375,27 +357,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"Organization", "User", "Status"}, tt.opt.Organization, tt.opt.User, tt.opt.Status)
 		t.Run(name, func(t *testing.T) {
 			_, gotErr := s.UpdateEnrollment(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("UpdateEnrollment() error = nil, want %q", tt.wantErr)
-				}
-				if tt.wantUserErr != "" {
-					t.Errorf("UpdateEnrollment() user error = nil, want %q", tt.wantUserErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("UpdateEnrollment() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("UpdateEnrollment() user error mismatch (-want +got):\n%s", diff)
-				}
-			}
+			chkErrMsg(t, "UpdateEnrollment()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
 	}
 }
@@ -417,31 +379,31 @@ func TestErrorRejectEnrollment(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &RejectEnrollmentOptions{},
-			wantErr:     "scm.RejectEnrollment: missing fields: {OrganizationID:0 RepositoryID:0 User:}",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for : missing fields: {OrganizationID:0 RepositoryID:0 User:}",
 			wantUserErr: userErrPrefix,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for meling: scm.GetOrganization: failed to get organization: GET http://127.0.0.1/organizations/789: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for meling: scm.GetOrganization: failed to get organization by ID: 789: GET http://127.0.0.1/organizations/789: 404  []",
 			wantUserErr: userErrPrefix + "meling",
 		},
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to delete repository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
 			wantUserErr: userErrPrefix + "jostein",
 		},
 		{
 			name:        "CompleteRequest/UserNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"},
-			wantErr:     "scm.RejectEnrollment: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/frank: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for frank: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/frank: 404  []",
 			wantUserErr: userErrPrefix + "frank",
 		},
 		{
 			name:        "CompleteRequest/UserAlreadyRemoved",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/jostein: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/jostein: 404  []",
 			wantUserErr: userErrPrefix + "jostein",
 		},
 		{
@@ -456,24 +418,7 @@ func TestErrorRejectEnrollment(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"OrganizationID", "RepositoryID", "User"}, tt.opt.OrganizationID, tt.opt.RepositoryID, tt.opt.User)
 		t.Run(name, func(t *testing.T) {
 			gotErr := s.RejectEnrollment(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("RejectEnrollment() error = nil, want %q", tt.wantErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("RejectEnrollment() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("RejectEnrollment() user error mismatch (-want +got):\n%s", diff)
-				}
-			}
+			chkErrMsg(t, "RejectEnrollment()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
 	}
 }
@@ -494,20 +439,20 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.DemoteTeacherToStudent: missing fields: {Organization: User: Status:NONE}",
+			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE}",
 			wantUserErr: "failed to demote teacher to student",
 		},
 
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
-			wantErr:     `scm.DemoteTeacherToStudent: failed to update meling's role to "member" in organization fuzz: PUT http://127.0.0.1:59502/orgs/fuzz/memberships/meling: 404  []`,
+			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher meling to student in fuzz: failed to update to "member": PUT http://127.0.0.1/orgs/fuzz/memberships/meling: 404  []`,
 			wantUserErr: "failed to demote teacher meling to student in fuzz",
 		},
 		{
 			name:        "CompleteRequest/UserNotFound",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank"},
-			wantErr:     `scm.DemoteTeacherToStudent: failed to update frank's role to "member" in organization bar: PUT http://127.0.0.1:59685/orgs/bar/memberships/frank: 404  []`,
+			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher frank to student in bar: failed to update to "member": PUT http://127.0.0.1/orgs/bar/memberships/frank: 404  []`,
 			wantUserErr: "failed to demote teacher frank to student in bar",
 		},
 		{
@@ -534,24 +479,7 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"Organization", "User"}, tt.opt.Organization, tt.opt.User)
 		t.Run(name, func(t *testing.T) {
 			gotErr := s.DemoteTeacherToStudent(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("DemoteTeacherToStudent() error = nil, want %q", tt.wantErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("DemoteTeacherToStudent() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("DemoteTeacherToStudent() user error mismatch (-want +got):\n%s", diff)
-				}
-			}
+			chkErrMsg(t, "DemoteTeacherToStudent()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
 	}
 }
@@ -568,20 +496,20 @@ func TestErrorCreateGroup(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &GroupOptions{},
-			wantErr:     "scm.CreateGroup: missing fields: {Organization: GroupName: Users:[]}",
+			wantErr:     "scm.CreateGroup: failed to create group: missing fields: {Organization: GroupName: Users:[]}",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &GroupOptions{Organization: "x", GroupName: "sphinx", Users: []string{"meling"}},
-			wantErr:     "scm.CreateGroup: failed to create group: scm.GetOrganization: failed to get organization: GET http://127.0.0.1:61071/orgs/x: 404  []",
+			wantErr:     "scm.CreateGroup: failed to create group: scm.GetOrganization: failed to get organization x: GET http://127.0.0.1/orgs/x: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/RepoAlreadyExists",
 			opt:         &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "tests"},
-			wantErr:     "scm.CreateGroup: repository foo/tests already exists: " + ErrAlreadyExists.Error(),
-			wantUserErr: wantUserErr,
+			wantErr:     "scm.CreateGroup: foo: repository tests already exist",
+			wantUserErr: "foo: repository tests already exist",
 		},
 
 		// This test cannot be implemented until the mock can check if a user exists.
@@ -597,27 +525,7 @@ func TestErrorCreateGroup(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName"}, tt.opt.Organization, tt.opt.GroupName)
 		t.Run(name, func(t *testing.T) {
 			_, gotErr := s.CreateGroup(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("CreateGroup() error = nil, want %q", tt.wantErr)
-				}
-				if tt.wantUserErr != "" {
-					t.Errorf("CreateGroup() user error = nil, want %q", tt.wantUserErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("CreateGroup() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("CreateGroup() user error mismatch (-want +got):\n%s", diff)
-				}
-			}
+			chkErrMsg(t, "CreateGroup()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
 	}
 }
@@ -634,27 +542,67 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &GroupOptions{},
-			wantErr:     "scm.UpdateGroupMembers: missing fields: {Organization: GroupName: Users:[]}",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: missing fields: {Organization: GroupName: Users:[]}",
 			wantUserErr: wantUserErr,
 		},
 		{
-			name:        "CompleteRequest/NotFound",
+			name:        "CompleteRequest/RepoNotFound",
 			opt:         &GroupOptions{Organization: "foo", GroupName: "a"},
-			wantErr:     "scm.UpdateGroupMembers: failed to get members for foo/a: GET http://127.0.0.1:63851/repos/foo/a/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: failed to get members: GET http://127.0.0.1/repos/foo/a/collaborators: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		{
-			name:        "CompleteRequest/NotFound",
+			name:        "CompleteRequest/OrgNotFound",
 			opt:         &GroupOptions{Organization: "x", GroupName: "info"},
-			wantErr:     "scm.UpdateGroupMembers: failed to get members for x/info: GET http://127.0.0.1:63851/repos/x/info/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: failed to get members: GET http://127.0.0.1/repos/x/info/collaborators: 404  []",
 			wantUserErr: wantUserErr,
 		},
+		// TODO: Add more tests to check error handling when updating group members.
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
 			gotErr := s.UpdateGroupMembers(context.Background(), tt.opt)
+			chkErrMsg(t, "UpdateGroupMembers()", gotErr, tt.wantErr, tt.wantUserErr)
+		})
+	}
+}
+
+func chkErrMsg(t *testing.T, m string, gotErr error, wantErr, wantUserErr string) {
+	t.Helper()
+	if gotErr == nil {
+		if wantErr != "" {
+			t.Errorf("%s error = nil, want %q", m, wantErr)
+		}
+		if wantUserErr != "" {
+			t.Errorf("%s user error = nil, want %q", m, wantUserErr)
+		}
+		return
+	}
+	if diff := cmp.Diff(wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
+		t.Log(" got error:", gotErr.Error())
+		t.Log("want error:", wantErr)
+		t.Errorf("%s error mismatch (-want +got):\n%s", m, diff)
+	}
+	var userErr *UserError
+	if errors.As(gotErr, &userErr) {
+		gotUserErr := userErr.Error()
+		if debugErrMsg {
+			fmt.Printf("%s      error: %v\n", m, gotErr)
+			fmt.Printf("%s user error: %v\n", m, gotUserErr)
+		}
+		if diff := cmp.Diff(wantUserErr, gotUserErr); diff != "" {
+			t.Log(" got user error:", gotUserErr)
+			t.Log("want user error:", wantUserErr)
+			t.Errorf("%s user error mismatch (-want +got):\n%s", m, diff)
+		}
+	} else {
+		if wantUserErr != "" {
+			t.Errorf("%s() user error = nil, want %q", m, wantUserErr)
+		}
+	}
+}
 
 func TestErrorCheckSentinel(t *testing.T) {
 	const op1 Op = Op("op1")
