@@ -34,8 +34,6 @@ func createCourse(ctx context.Context, db database.Database, sc scm.SCM, course 
 			return nil, fmt.Errorf("failed to create database record for repository %s: %w", repo.Repo, err)
 		}
 	}
-	// make sure to set as course creator
-	course.CourseCreatorID = courseCreator.ID
 	if err := db.CreateCourse(course.GetCourseCreatorID(), course); err != nil {
 		return nil, fmt.Errorf("failed to create database record for course %s: %w", course.Name, err)
 	}
