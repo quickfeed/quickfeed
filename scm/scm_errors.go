@@ -10,8 +10,8 @@ var (
 	ErrNotMember = errors.New("not a member of organization")
 	// ErrNotOwner indicates that the user is not an owner of the organization.
 	ErrNotOwner = errors.New("not an owner of organization")
-	// ErrAlreadyExists indicates that one or more QuickFeed repositories already exist in the organization.
-	ErrAlreadyExists = errors.New("course repositories already exist")
+	// ErrAlreadyExists indicates that a repository already exist in the organization.
+	ErrAlreadyExists = errors.New("already exist")
 )
 
 // SCMError holds the operation, user error message and the original error.
@@ -30,16 +30,20 @@ type Op string
 
 // UserError is an error that is meant to be displayed to the user.
 type UserError struct {
-	s string
+	e error
 }
 
 func (e *UserError) Error() string {
-	return e.s
+	return e.e.Error()
+}
+
+func (e *UserError) Unwrap() error {
+	return e.e
 }
 
 // M creates a new user error with the given format string.
 func M(format string, a ...interface{}) error {
-	return &UserError{fmt.Sprintf(format, a...)}
+	return &UserError{fmt.Errorf(format, a...)}
 }
 
 // E creates a new SCM error with the given operation, error, and user error.

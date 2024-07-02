@@ -655,26 +655,29 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
 			gotErr := s.UpdateGroupMembers(context.Background(), tt.opt)
-			if gotErr == nil {
-				if tt.wantErr != "" {
-					t.Errorf("UpdateGroupMembers() error = nil, want %q", tt.wantErr)
-				}
-				if tt.wantUserErr != "" {
-					t.Errorf("UpdateGroupMembers() user error = nil, want %q", tt.wantUserErr)
-				}
-				return
-			}
-			if diff := cmp.Diff(tt.wantErr, gotErr.Error(), IgnoreURLPort()); diff != "" {
-				t.Logf(gotErr.Error())
-				t.Errorf("UpdateGroupMembers() error mismatch (-want +got):\n%s", diff)
-			}
-			var userErr *UserError
-			if errors.As(gotErr, &userErr) {
-				gotUserErr := userErr.Error()
-				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
-					t.Logf(gotUserErr)
-					t.Errorf("UpdateGroupMembers() user error mismatch (-want +got):\n%s", diff)
-				}
+
+func TestErrorCheckSentinel(t *testing.T) {
+	const op1 Op = Op("op1")
+	const op2 Op = Op("op2")
+	tests := []struct {
+		name         string
+		err          error
+		wantSentinel bool
+	}{
+		{name: "nil", err: nil, wantSentinel: false},
+		{name: "simple", err: ErrAlreadyExists, wantSentinel: true},
+		{name: "wrapped", err: fmt.Errorf("wrapped: %w", ErrAlreadyExists), wantSentinel: true},
+		{name: "wrapped2", err: fmt.Errorf("wrapped: %w", fmt.Errorf("wrapped2: %w", ErrAlreadyExists)), wantSentinel: true},
+		{name: "E_func", err: E(op1, M("u1"), ErrAlreadyExists), wantSentinel: true},
+		{name: "E_func2", err: E(op2, M("u2"), E(op1, M("u1"), ErrAlreadyExists)), wantSentinel: true},
+		{name: "E_func_nested", err: E(op1, M("%s: course repositories %s:", "foo", repoNames), ErrAlreadyExists), wantSentinel: true},
+		{name: "E_func_nested2", err: E(op1, M("%s: course repositories %s: %w", "foo", repoNames, ErrAlreadyExists)), wantSentinel: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSentinel := errors.Is(tt.err, ErrAlreadyExists)
+			if gotSentinel != tt.wantSentinel {
+				t.Errorf("CheckSentinel() = %v, want %v", gotSentinel, tt.wantSentinel)
 			}
 		})
 	}
