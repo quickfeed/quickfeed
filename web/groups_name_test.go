@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
 
@@ -22,7 +23,7 @@ func TestBadGroupNames(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	client := web.MockClient(t, db, nil)
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 	groupNames := []struct {
 		name      string
 		wantError *connect.Error

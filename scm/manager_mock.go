@@ -16,8 +16,13 @@ func MockManager(t *testing.T, opts ...MockOption) *Manager {
 	t.Helper()
 	env.SetFakeProvider(t)
 	sc := NewMockedGithubSCMClient(qtest.Logger(t), opts...)
+	// We reuse the same github mock client for all organizations.
+	scms := make(map[string]SCM)
+	for _, org := range sc.orgs {
+		scms[*org.Login] = sc
+	}
 	return &Manager{
-		scms:   map[string]SCM{qtest.MockOrg: sc},
+		scms:   scms,
 		Config: &Config{"qfClientID", "qfClientSecret", &app.Config{}},
 	}
 }

@@ -21,7 +21,7 @@ var MockCourses = []*qf.Course{
 		Year:                2017,
 		Tag:                 "Fall",
 		ScmOrganizationID:   2,
-		ScmOrganizationName: "DAT320",
+		ScmOrganizationName: "dat320",
 	},
 	{
 		Name:                "New Systems",
@@ -30,7 +30,7 @@ var MockCourses = []*qf.Course{
 		Year:                2019,
 		Tag:                 "Fall",
 		ScmOrganizationID:   3,
-		ScmOrganizationName: "DATx20-2019",
+		ScmOrganizationName: "dat1020-2019",
 	},
 	{
 		Name:                "Hyped Systems",

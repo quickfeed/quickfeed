@@ -197,7 +197,7 @@ func TestGetRepositories(t *testing.T) {
 func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, nil)
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user"})
 	course := qtest.MockCourses[0]
