@@ -42,6 +42,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 	}
 	c, err := CreateCourse(ctx, wh.db, sc, course, courseCreator)
 	if err != nil {
+		// This may be an scm.ErrAlreadyExists error
 		wh.logger.Errorf("Could not create course %s: %v", orgName, err)
 		return
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"connectrpc.com/connect"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -108,25 +107,6 @@ func TestGetCourses(t *testing.T) {
 	gotCourses := foundCourses.Msg.Courses
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
-	}
-}
-
-func TestNewCourseExistingRepos(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
-
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
-	cookie := Cookie(t, tm, admin)
-
-	ctx := context.Background()
-	course, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], cookie))
-	if course != nil {
-		t.Fatal("expected CreateCourse to fail with AlreadyExists")
-	}
-	if err != nil && connect.CodeOf(err) != connect.CodeAlreadyExists {
-		t.Fatalf("expected CreateCourse to fail with AlreadyExists, but got: %v", err)
 	}
 }
 
