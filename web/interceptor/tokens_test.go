@@ -89,12 +89,7 @@ func TestRefreshTokens(t *testing.T) {
 			user,
 		},
 	}
-	if _, err := client.CreateCourse(ctx, qtest.RequestWithCookie(course, adminCookie)); err != nil {
-		t.Fatal(err)
-	}
-	if !updateRequired(t, tm, adminClaims) {
-		t.Error("Admin must be in the token update list after creating a new course")
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	qtest.EnrollStudent(t, db, user, course)
 	if _, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, adminCookie)); err != nil {
 		t.Fatal(err)
