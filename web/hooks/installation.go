@@ -54,13 +54,13 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 			ScmOrganizationID: orgID,
 			ScmRepositoryID:   repo.ID,
 			HTMLURL:           repo.HTMLURL,
-			RepoType:          qf.RepoType(repo.Path),
+			RepoType:          qf.RepoType(repo.Repo),
 		}
 		if dbRepo.IsUserRepo() {
 			dbRepo.UserID = courseCreator.ID
 		}
 		if err := wh.db.CreateRepository(&dbRepo); err != nil {
-			wh.logger.Errorf("Could not create database repository %s: %v", repo.Path, err)
+			wh.logger.Errorf("Could not create database repository %s: %v", repo.Repo, err)
 			return
 		}
 	}

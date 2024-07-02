@@ -14,7 +14,7 @@ type SCM interface {
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
-	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
+	GetRepositories(context.Context, string) ([]*Repository, error)
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 
@@ -88,11 +88,9 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 // Repository represents a git remote repository.
 type Repository struct {
 	ID      uint64
-	Path    string
+	Repo    string
 	Owner   string // Only used by GitHub.
 	HTMLURL string // Repository website.
-	OrgID   uint64
-	Size    uint64
 }
 
 // Issue represents an SCM issue.

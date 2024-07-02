@@ -59,10 +59,10 @@ func TestGetIssue(t *testing.T) {
 
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Repo:  qf.StudentRepoName(qfTestUser),
 	}
 
-	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
+	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Repo)
 	defer cleanup()
 
 	gotIssue, err := s.GetIssue(context.Background(), opt, wantIssue.Number)
@@ -112,7 +112,7 @@ func TestDeleteAllIssues(t *testing.T) {
 
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Repo:  qf.StudentRepoName(qfTestUser),
 	}
 	if err := s.DeleteIssues(context.Background(), opt); err != nil {
 		t.Fatal(err)
@@ -256,14 +256,14 @@ func TestEmptyRepo(t *testing.T) {
 		opt       *scm.RepositoryOptions
 		wantEmpty bool
 	}{
-		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{Path: "tests", Owner: qfTestOrg}, wantEmpty: false},
+		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{Repo: "tests", Owner: qfTestOrg}, wantEmpty: false},
 		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{ID: 328688692}, wantEmpty: false},
-		{name: "EmptyRepo", opt: &scm.RepositoryOptions{Path: "info", Owner: qfTestOrg}, wantEmpty: true},
+		{name: "EmptyRepo", opt: &scm.RepositoryOptions{Repo: "info", Owner: qfTestOrg}, wantEmpty: true},
 		{name: "EmptyRepo", opt: &scm.RepositoryOptions{ID: 328688666}, wantEmpty: true},
-		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Path: "some-other-repo", Owner: qfTestOrg}, wantEmpty: true}, // treat non-existent repo as empty
+		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Repo: "some-other-repo", Owner: qfTestOrg}, wantEmpty: true}, // treat non-existent repo as empty
 	}
 	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"ID", "Owner", "Repo"}, tt.opt.ID, tt.opt.Owner, tt.opt.Path)
+		name := qtest.Name(tt.name, []string{"ID", "Owner", "Repo"}, tt.opt.ID, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
 			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
 				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
@@ -287,7 +287,7 @@ func createIssue(t *testing.T, s scm.SCM, org, repo string) (*scm.Issue, func())
 
 	return issue, func() {
 		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{
-			Owner: org, Path: repo,
+			Owner: org, Repo: repo,
 		}, issue.Number); err != nil {
 			t.Fatal(err)
 		}
