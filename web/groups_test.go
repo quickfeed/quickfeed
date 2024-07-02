@@ -299,15 +299,12 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs("admin"))
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 
 	ctx := context.Background()
-	testCourse, err := client.CreateCourse(ctx, qtest.RequestWithCookie(qtest.MockCourses[0], Cookie(t, tm, admin)))
-	if err != nil {
-		t.Error(err)
-	}
-	course := testCourse.Msg
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
 
 	// create user and enroll as pending (teacher)
 	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
