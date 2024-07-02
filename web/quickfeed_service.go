@@ -14,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/hooks"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -79,32 +78,6 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update user"))
 	}
 	return &connect.Response[qf.Void]{}, nil
-}
-
-// CreateCourse creates a new course.
-func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.ScmOrganizationName)
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.ScmOrganizationName, err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
-	}
-	courseCreator, err := s.db.GetUser(userID(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get course creator record from database: %w", err)
-	}
-	course, err := hooks.CreateCourse(ctx, s.db, scmClient, in.Msg, courseCreator)
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
-			return nil, ctxErr
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create course"))
-	}
-	return connect.NewResponse(course), nil
 }
 
 // UpdateCourse changes the course information details.
