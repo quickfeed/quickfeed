@@ -189,20 +189,20 @@ func TestMockGetOrganization(t *testing.T) {
 func TestMockGetRepositories(t *testing.T) {
 	tests := []struct {
 		name    string
-		org     *qf.Organization
+		org     string
 		want    []*Repository
 		wantErr bool
 	}{
-		{name: "IncompleteRequest/NilOrg", org: nil, want: nil, wantErr: true},
-		{name: "IncompleteRequest/NoOrgName", org: &qf.Organization{}, want: nil, wantErr: true},
-		{name: "CompleteRequest/NotFound", org: &qf.Organization{ScmOrganizationName: "buz"}, want: []*Repository{}, wantErr: false},
-		{name: "CompleteRequest/SixRepos", org: &qf.Organization{ScmOrganizationName: "foo"}, want: []*Repository{
-			{ID: 1, OrgID: 123, Path: "info"},
-			{ID: 2, OrgID: 123, Path: "assignments"},
-			{ID: 3, OrgID: 123, Path: "tests"},
-			{ID: 4, OrgID: 123, Path: "meling-labs"},
-			{ID: 5, OrgID: 123, Path: "josie-labs"},
-			{ID: 6, OrgID: 123, Path: "groupX"},
+		{name: "IncompleteRequest/NilOrg", org: "", want: nil, wantErr: true},
+		{name: "IncompleteRequest/NoOrgName", org: "", want: nil, wantErr: true},
+		{name: "CompleteRequest/NotFound", org: "buz", want: []*Repository{}, wantErr: false},
+		{name: "CompleteRequest/SixRepos", org: "foo", want: []*Repository{
+			{ID: 1, Repo: "info"},
+			{ID: 2, Repo: "assignments"},
+			{ID: 3, Repo: "tests"},
+			{ID: 4, Repo: "meling-labs"},
+			{ID: 5, Repo: "josie-labs"},
+			{ID: 6, Repo: "groupX"},
 		}},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar, ghOrgBuz), WithRepos(repos...))
@@ -228,21 +228,21 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 	}{
 		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantEmpty: true},
 		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "info"}, wantEmpty: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Repo: "info"}, wantEmpty: true},
 
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "info"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "assignments"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "tests"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Path: "meling-labs"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "info"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "assignments"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "tests"}, wantEmpty: true},
+		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "meling-labs"}, wantEmpty: true},
 
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "info"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "assignments"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "tests"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Path: "meling-labs"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "info"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "assignments"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "tests"}, wantEmpty: false},
+		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantEmpty: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
 			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
 				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
@@ -254,10 +254,10 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 func TestMockCreateCourse(t *testing.T) {
 	// repositories that should be created for bar; manually sorted by path
 	wantBarRepos := []*Repository{
-		{OrgID: 456, Owner: "bar", Path: "assignments"},
-		{OrgID: 456, Owner: "bar", Path: "info"},
-		{OrgID: 456, Owner: "bar", Path: "meling-labs"},
-		{OrgID: 456, Owner: "bar", Path: "tests"},
+		{Owner: "bar", Repo: "assignments"},
+		{Owner: "bar", Repo: "info"},
+		{Owner: "bar", Repo: "meling-labs"},
+		{Owner: "bar", Repo: "tests"},
 	}
 	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
 	members := []github.Membership{
@@ -293,7 +293,7 @@ func TestMockCreateCourse(t *testing.T) {
 			}
 			// sort repositories to make comparison easier since the order is not guaranteed
 			slices.SortFunc(got, func(a, b *Repository) int {
-				return strings.Compare(a.Path, b.Path)
+				return strings.Compare(a.Repo, b.Repo)
 			})
 			if diff := cmp.Diff(tt.wantRepos, got, cmpopts.IgnoreFields(Repository{}, "ID")); diff != "" {
 				t.Errorf("CreateCourse() mismatch (-want +got):\n%s", diff)
@@ -319,9 +319,9 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{Organization: &ghOrgFoo, User: &meling},
 		{Organization: &ghOrgBar, User: &meling},
 	}
-	wantFooRepo := &Repository{OrgID: 123, Owner: "foo", Path: "meling-labs"}
-	wantBarRepo := &Repository{OrgID: 456, Owner: "bar", Path: "meling-labs"}
-	wantBarFrankRepo := &Repository{OrgID: 456, Owner: "bar", Path: "frank-labs"}
+	wantFooRepo := &Repository{Owner: "foo", Repo: "meling-labs"}
+	wantBarRepo := &Repository{Owner: "bar", Repo: "meling-labs"}
+	wantBarFrankRepo := &Repository{Owner: "bar", Repo: "frank-labs"}
 
 	tests := []struct {
 		name     string
@@ -466,9 +466,9 @@ func TestMockCreateGroup(t *testing.T) {
 		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "meling-labs"}, wantRepo: nil, wantErr: true},
 		{name: "CompleteRequest/RepoAlreadyExists", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "groupX"}, wantRepo: nil, wantErr: true},
 
-		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "yes-minister"}, wantErr: false},
-		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{OrgID: 123, Owner: "foo", Path: "paxos"}, wantErr: false},
-		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{OrgID: 456, Owner: "bar", Path: "raft"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"meling"}, GroupName: "yes-minister"}, wantRepo: &Repository{Owner: "foo", Repo: "yes-minister"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "foo", Users: []string{"leslie", "lamport"}, GroupName: "paxos"}, wantRepo: &Repository{Owner: "foo", Repo: "paxos"}, wantErr: false},
+		{name: "CompleteRequest/GroupCreated", opt: &GroupOptions{Organization: "bar", Users: []string{"jostein", "meling"}, GroupName: "raft"}, wantRepo: &Repository{Owner: "bar", Repo: "raft"}, wantErr: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
 	for _, tt := range tests {
@@ -577,30 +577,30 @@ func TestMockDeleteGroup(t *testing.T) {
 	}{
 		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
 		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Path: "info"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Repo: "info"}, wantErr: true},
 
-		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "foo", Path: "bar"}, wantErr: true},
-		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "bar", Path: "foo"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "foo", Repo: "bar"}, wantErr: true},
+		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "foo"}, wantErr: true},
 		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{ID: 432}, wantErr: true}, // Repo ID 432 does not exist
 
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "foo", Path: "groupX"}, wantErr: false}, // ID 6
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "foo", Repo: "groupX"}, wantErr: false}, // ID 6
 		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                        // ID 5 is josie-labs
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "bar", Path: "groupY"}, wantErr: false}, // ID 7
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "bar", Repo: "groupY"}, wantErr: false}, // ID 7
 		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                        // ID 8 is groupZ
 
 		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 6}, wantErr: true},                        // ID 6 already deleted
 		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 7}, wantErr: true},                        // ID 7 already deleted
-		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{Owner: "bar", Path: "groupZ"}, wantErr: true}, // ID 8 already deleted
+		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{Owner: "bar", Repo: "groupZ"}, wantErr: true}, // ID 8 already deleted
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithGroups(groups))
 	for _, tt := range tests {
-		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Path)
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
 			if err := s.DeleteGroup(context.Background(), tt.opt); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteGroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			// verify the state of the groups after the test
-			if _, ok := s.groups[tt.opt.Owner][tt.opt.Path]; ok {
+			if _, ok := s.groups[tt.opt.Owner][tt.opt.Repo]; ok {
 				t.Errorf("DeleteGroup() group not deleted")
 			}
 		})

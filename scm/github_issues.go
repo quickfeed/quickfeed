@@ -53,11 +53,11 @@ func (s *GithubSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 // GetIssue implements the SCM interface
 func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error) {
 	const op Op = "GetIssue"
-	m := M("failed to get issue #%d on %s/%s", number, opt.Owner, opt.Path)
+	m := M("failed to get issue #%d on %s/%s", number, opt.Owner, opt.Repo)
 	if !opt.valid() {
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", opt))
 	}
-	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, number)
+	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Repo, number)
 	if err != nil {
 		return nil, E(op, m, fmt.Errorf("%s: %w", m, err))
 	}
@@ -67,11 +67,11 @@ func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number
 // GetIssues implements the SCM interface
 func (s *GithubSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
 	const op Op = "GetIssues"
-	m := M("failed to get issues for %s/%s", opt.Owner, opt.Path)
+	m := M("failed to get issues for %s/%s", opt.Owner, opt.Repo)
 	if !opt.valid() {
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", opt))
 	}
-	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{})
+	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Repo, &github.IssueListByRepoOptions{})
 	if err != nil {
 		return nil, E(op, m, fmt.Errorf("%s: %w", m, err))
 	}

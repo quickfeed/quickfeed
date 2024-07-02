@@ -26,11 +26,11 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	repoFn(repos, func(repo *scm.Repository) {
 		if err := scmApp.DeleteIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.ScmOrganizationName,
-			Path:  repo.Path,
+			Repo:  repo.Repo,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("Deleted issues at repo: %+v", repo.Path)
+		t.Logf("Deleted issues at repo: %+v", repo.Repo)
 	})
 
 	// Create issues on student repositories for the first assignment's tasks
@@ -44,19 +44,19 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := scmApp.GetIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.ScmOrganizationName,
-			Path:  repo.Path,
+			Repo:  repo.Repo,
 		})
 		if err != nil {
 			t.Fatal(err)
 		}
 		issues := make(map[string]*scm.Issue)
 		for _, issue := range scmIssues {
-			t.Logf("Found issue (%s): %s", repo.Path, issue.Title)
+			t.Logf("Found issue (%s): %s", repo.Repo, issue.Title)
 			issues[issue.Title] = issue
 		}
 		for _, task := range first[0].Tasks {
 			if _, ok := issues[task.Title]; !ok {
-				t.Errorf("task.Title = %s not found in repo %s", task.Title, repo.Path)
+				t.Errorf("task.Title = %s not found in repo %s", task.Title, repo.Repo)
 			}
 		}
 	})
@@ -72,19 +72,19 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := scmApp.GetIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.ScmOrganizationName,
-			Path:  repo.Path,
+			Repo:  repo.Repo,
 		})
 		if err != nil {
 			t.Fatal(err)
 		}
 		issues := make(map[string]*scm.Issue)
 		for _, issue := range scmIssues {
-			t.Logf("Found issue (%s): %s", repo.Path, issue.Title)
+			t.Logf("Found issue (%s): %s", repo.Repo, issue.Title)
 			issues[issue.Title] = issue
 		}
 		for _, task := range second[0].Tasks {
 			if _, ok := issues[task.Title]; !ok {
-				t.Errorf("task.Title = %s not found in repo %s", task.Title, repo.Path)
+				t.Errorf("task.Title = %s not found in repo %s", task.Title, repo.Repo)
 			}
 		}
 	})
@@ -92,7 +92,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 
 func repoFn(repos []*scm.Repository, fn func(repo *scm.Repository)) {
 	for _, repo := range repos {
-		if qf.RepoType(repo.Path).IsCourseRepo() {
+		if qf.RepoType(repo.Repo).IsCourseRepo() {
 			continue
 		}
 		fn(repo)
@@ -130,7 +130,7 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 			ScmRepositoryID:   scmRepo.ID,
 			ScmOrganizationID: org.GetScmOrganizationID(),
 			HTMLURL:           scmRepo.HTMLURL,
-			RepoType:          qf.RepoType(scmRepo.Path),
+			RepoType:          qf.RepoType(scmRepo.Repo),
 		}
 		if repo.IsUserRepo() {
 			user := qtest.CreateFakeUser(t, db)
@@ -148,7 +148,7 @@ func initDatabase(t *testing.T, db database.Database, sc scm.SCM) (*qf.Course, [
 			repo.RepoType = qf.Repository_GROUP
 			repo.GroupID = group.GetID()
 		}
-		t.Logf("Creating repo in database: %v", scmRepo.Path)
+		t.Logf("Creating repo in database: %v", scmRepo.Repo)
 		if err = db.CreateRepository(repo); err != nil {
 			t.Fatal(err)
 		}
