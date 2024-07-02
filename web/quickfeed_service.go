@@ -14,6 +14,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/hooks"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -87,9 +88,11 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.ScmOrganizationName, err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	// make sure that the current user is set as course creator
-	in.Msg.CourseCreatorID = userID(ctx)
-	course, err := s.createCourse(ctx, scmClient, in.Msg)
+	courseCreator, err := s.db.GetUser(userID(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get course creator record from database: %w", err)
+	}
+	course, err := hooks.CreateCourse(ctx, s.db, scmClient, in.Msg, courseCreator)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
