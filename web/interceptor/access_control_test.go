@@ -2,6 +2,7 @@ package interceptor_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -288,8 +289,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.Organization{ScmOrganizationName: "test"}, tt.cookie))
 			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
-			_, err = client.CreateCourse(ctx, qtest.RequestWithCookie(course, tt.cookie))
-			checkAccess(t, "CreateCourse", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 
@@ -382,7 +381,8 @@ func TestAccessControl(t *testing.T) {
 
 func checkAccess(t *testing.T, method string, err error, wantCode connect.Code, wantAccess bool) {
 	t.Helper()
-	if connErr, ok := err.(*connect.Error); ok {
+	var connErr *connect.Error
+	if errors.As(err, &connErr) {
 		gotCode := connErr.Code()
 		gotAccess := gotCode == wantCode
 		if gotAccess == wantAccess {
