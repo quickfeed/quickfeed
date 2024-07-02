@@ -34,19 +34,17 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 // to autoapprove the assignment.
 func (a *Assignment) IsApproved(latest *Submission, score uint32) []*Grade {
 	switch {
-	// TODO: Check if returning nil is the correct behavior.
 	case latest.GetGroupID() > 0 && !a.IsGroupLab:
 		// If a group submits to a student assignment, ignore the submission.
 		latest.SetGradeAll(Submission_NONE)
-		return latest.GetGrades()
 	case latest.GetUserID() > 0 && a.IsGroupLab:
 		// If a student submits to a group assignment, ignore the submission.
 		latest.SetGradeAll(Submission_NONE)
-		return latest.GetGrades()
-	}
-	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
+	case latest.GetUserID() > 0 && latest.GetGroupID() > 0:
+		// submission cannot be both group and individual
+		return nil
+	case a.GetAutoApprove() && score >= a.GetScoreLimit():
 		latest.SetGradeAll(Submission_APPROVED)
-		return latest.GetGrades()
 	}
 	// keep existing status if already approved/revision/rejected
 	return latest.GetGrades()
