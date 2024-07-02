@@ -681,9 +681,9 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 }
 
 func TestErrorE(t *testing.T) {
-	e1 := E(Op("GetOrganization"), M("organization not found"), errors.New("organization not found"))
-	e2 := E(Op("GetRepository"), M("repository not found"), e1)
-	e3 := E(Op("GetUser"), M("user not found"), e2)
+	e1 := E(Op("op1"), M("u1"), errors.New("e1"))
+	e2 := E(Op("op2"), M("u2"), e1)
+	e3 := E(Op("op3"), M("u3"), e2)
 
 	tests := []struct {
 		name        string
@@ -694,32 +694,42 @@ func TestErrorE(t *testing.T) {
 		{
 			name:        "E1",
 			err:         e1,
-			wantErr:     "scm.GetOrganization: organization not found",
-			wantUserErr: "organization not found",
+			wantErr:     "scm.op1: u1: e1",
+			wantUserErr: "u1",
 		},
 		{
 			name:        "E2",
 			err:         e2,
-			wantErr:     "scm.GetRepository: repository not found: scm.GetOrganization: organization not found",
-			wantUserErr: "repository not found",
+			wantErr:     "scm.op2: u2: scm.op1: u1: e1",
+			wantUserErr: "u2",
 		},
 		{
 			name:        "E3",
 			err:         e3,
-			wantErr:     "scm.GetUser: user not found: scm.GetRepository: repository not found: scm.GetOrganization: organization not found",
-			wantUserErr: "user not found",
+			wantErr:     "scm.op3: u3: scm.op2: u2: scm.op1: u1: e1",
+			wantUserErr: "u3",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if diff := cmp.Diff(tt.wantErr, tt.err.Error()); diff != "" {
+				t.Logf("got err:  %s", tt.err.Error())
+				t.Logf("want err: %s", tt.wantErr)
 				t.Errorf("%s() error mismatch (-want +got):\n%s", tt.name, diff)
 			}
+
 			var userErr *UserError
-			if errors.As(tt.err, &userErr) {
+			hasUserErr := errors.As(tt.err, &userErr)
+			if hasUserErr {
 				gotUserErr := userErr.Error()
 				if diff := cmp.Diff(tt.wantUserErr, gotUserErr); diff != "" {
+					t.Logf("got user error:  %s", gotUserErr)
+					t.Logf("want user error: %s", tt.wantUserErr)
 					t.Errorf("%s() user error mismatch (-want +got):\n%s", tt.name, diff)
+				}
+			} else {
+				if tt.wantUserErr != "" {
+					t.Errorf("%s() user error = nil, want %q", tt.name, tt.wantUserErr)
 				}
 			}
 		})

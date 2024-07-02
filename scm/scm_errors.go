@@ -45,9 +45,7 @@ func M(format string, a ...interface{}) error {
 // E creates a new SCM error with the given operation, error, and user error.
 // The error message is constructed as "scm.<op>: <err>".
 // The user error can be constructed with the M function.
-// If more than one SCMError or UserError is passed, these are chained.
-// However, if more than one other error is added, only the last one is kept.
-// TODO (This limitation is temporary because too many tests and error messages would need to be updated.)
+// If more than one errors are passed, these are chained.
 // If no arguments are passed, E panics.
 func E(args ...interface{}) error {
 	if len(args) == 0 {
@@ -65,8 +63,7 @@ func E(args ...interface{}) error {
 		case string:
 			e.add(errors.New(arg))
 		case error:
-			// e.add(arg)
-			e.err = arg
+			e.add(arg)
 		}
 	}
 	return e
@@ -76,7 +73,7 @@ func (e *SCMError) add(err error) {
 	if e.err == nil {
 		e.err = err
 	} else {
-		e.err = fmt.Errorf("%s: %w", e.err, err)
+		e.err = fmt.Errorf("%w: %w", e.err, err)
 	}
 }
 
