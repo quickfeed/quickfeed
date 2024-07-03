@@ -79,7 +79,3 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
-
-scm:
-	@echo "Compiling the scm tool"
-	@cd cmd/scm; go install
