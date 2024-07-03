@@ -20,9 +20,13 @@ type SCMError struct {
 	err error
 }
 
+type unwrap interface{ Unwrap() error }
+
 var (
-	_ error = (*SCMError)(nil)
-	_ error = (*UserError)(nil)
+	_ error  = (*SCMError)(nil)
+	_ unwrap = (*SCMError)(nil)
+	_ error  = (*UserError)(nil)
+	_ unwrap = (*UserError)(nil)
 )
 
 // Op describes an operation, such as "GetOrganization".
