@@ -4,9 +4,9 @@ import { useAppState } from "../overmind"
 import EditCourse from "../components/admin/EditCourse"
 import Users from "../components/admin/Users"
 import Card from "../components/Card"
-import CourseForm from "../components/forms/CourseForm"
 import RedirectButton from "../components/RedirectButton"
 import Alerts from "../components/alerts/Alerts"
+import CreateCourse from "../components/admin/CreateCourse"
 
 
 // AdminPage is the page containing the admin-only components.
@@ -41,7 +41,7 @@ const AdminPage = (): JSX.Element => {
                     <Users />
                 </Route>
                 <Route path="/admin/create">
-                    <CourseForm />
+                    <CreateCourse />
                 </Route>
                 <Route path="/admin/edit">
                     <EditCourse />

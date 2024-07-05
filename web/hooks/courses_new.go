@@ -1,9 +1,10 @@
-package web
+package hooks
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -11,21 +12,17 @@ import (
 // createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
 // does not contain the QuickFeed repositories that will be created.
-func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request *qf.Course) (*qf.Course, error) {
-	courseCreator, err := s.db.GetUser(request.GetCourseCreatorID())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get course creator record from database: %w", err)
-	}
+func createCourse(ctx context.Context, db database.Database, sc scm.SCM, course *qf.Course, courseCreator *qf.User) (*qf.Course, error) {
 	repos, err := sc.CreateCourse(ctx, &scm.CourseOptions{
 		CourseCreator:  courseCreator.Login,
-		OrganizationID: request.ScmOrganizationID,
+		OrganizationID: course.ScmOrganizationID,
 	})
 	if err != nil {
 		return nil, err
 	}
 	for _, repo := range repos {
 		dbRepo := qf.Repository{
-			ScmOrganizationID: request.ScmOrganizationID,
+			ScmOrganizationID: course.ScmOrganizationID,
 			ScmRepositoryID:   repo.ID,
 			HTMLURL:           repo.HTMLURL,
 			RepoType:          qf.RepoType(repo.Repo),
@@ -33,13 +30,12 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		if dbRepo.IsUserRepo() {
 			dbRepo.UserID = courseCreator.ID
 		}
-		if err := s.db.CreateRepository(&dbRepo); err != nil {
+		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, fmt.Errorf("failed to create database record for repository %s: %w", repo.Repo, err)
 		}
 	}
-
-	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
-		return nil, fmt.Errorf("failed to create database record for course %s: %w", request.Name, err)
+	if err := db.CreateCourse(course.GetCourseCreatorID(), course); err != nil {
+		return nil, fmt.Errorf("failed to create database record for course %s: %w", course.Name, err)
 	}
-	return request, nil
+	return course, nil
 }

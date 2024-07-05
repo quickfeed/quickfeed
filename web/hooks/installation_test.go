@@ -75,6 +75,67 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	}
 }
 
+// To verify that we are not creating a new course if the course repositories already exist.
+// We cannot check this in this test directly, since we cannot pass the actual error through the webhook.
+// Hence, this test should be run with LOG=1 to see the error message.
+//
+//	LOG=1 go test -v -run TestAlreadyExistingCourse
+func TestAlreadyExistingCourse(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	wh, server := setupWebhook(t, db)
+	defer server.Close()
+	_ = qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "quickfeed", ScmRemoteID: 1})
+
+	wantCourse := qtest.MockCourses[0]
+	response := sendEvent(t, event{
+		OrganizationLogin: wantCourse.ScmOrganizationName,
+		OrganizationScmID: int(wantCourse.ScmOrganizationID),
+		UserLogin:         "quickfeed",
+		UserScmID:         1,
+	}, server)
+	if response.StatusCode != 200 {
+		t.Errorf("got status %d, want 200", response.StatusCode)
+	}
+
+	course, err := wh.db.GetCourseByOrganizationID(wantCourse.ScmOrganizationID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if course.ScmOrganizationName != wantCourse.ScmOrganizationName {
+		t.Errorf("got course %s, want %s", course.ScmOrganizationName, wantCourse.ScmOrganizationName)
+	}
+
+	// Send the same event again, this should not create a new course.
+	// This should log an scm.ErrAlreadyExists error; check running with LOG=1.
+	response = sendEvent(t, event{
+		OrganizationLogin: wantCourse.ScmOrganizationName,
+		OrganizationScmID: int(wantCourse.ScmOrganizationID),
+		UserLogin:         "quickfeed",
+		UserScmID:         1,
+	}, server)
+	if response.StatusCode != 200 {
+		t.Errorf("got status %d, want 200", response.StatusCode)
+	}
+
+	courses, err := wh.db.GetCourses()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(courses) != 1 {
+		t.Errorf("got %d courses, want 1", len(courses))
+	}
+
+	course, err = wh.db.GetCourseByOrganizationID(wantCourse.ScmOrganizationID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if course.ScmOrganizationName != wantCourse.ScmOrganizationName {
+		t.Errorf("got course %s, want %s", course.ScmOrganizationName, wantCourse.ScmOrganizationName)
+	}
+}
+
 func TestNonAdminUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

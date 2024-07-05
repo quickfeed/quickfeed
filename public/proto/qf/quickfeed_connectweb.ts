@@ -108,15 +108,6 @@ export const QuickFeedService = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc qf.QuickFeedService.CreateCourse
-     */
-    createCourse: {
-      name: "CreateCourse",
-      I: Course,
-      O: Course,
-      kind: MethodKind.Unary,
-    },
-    /**
      * @generated from rpc qf.QuickFeedService.UpdateCourse
      */
     updateCourse: {

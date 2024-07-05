@@ -17,7 +17,7 @@ const CourseCreationInfo = (): JSX.Element => {
                 The course organization must allow private repositories.
             </p>
             <p>
-                Add the <a className="badge-pill badge-info" href={process.env.QUICKFEED_APP_URL} target="_blank" rel="noopener noreferrer">QuickFeed application</a> to your GitHub organization before creating a course.
+                Add the <a className="badge-pill badge-info" href={process.env.QUICKFEED_APP_URL} target="_blank" rel="noopener noreferrer">QuickFeed application</a> to your GitHub organization to create a course.
             </p>
             <p>
                 QuickFeed will create the following repositories for you:
@@ -33,6 +33,9 @@ const CourseCreationInfo = (): JSX.Element => {
                     documentation
                 </a>
                 <span> for further instructions on how to work with the various repositories.</span>
+            </p>
+            <p>
+                <span>After you have installed the QuickFeed application, enter the name of the organization in the field below to find the created course.</span>
             </p>
         </div>
     )

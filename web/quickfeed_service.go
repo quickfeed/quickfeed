@@ -80,30 +80,6 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// CreateCourse creates a new course.
-func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.ScmOrganizationName)
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.ScmOrganizationName, err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
-	}
-	// make sure that the current user is set as course creator
-	in.Msg.CourseCreatorID = userID(ctx)
-	course, err := s.createCourse(ctx, scmClient, in.Msg)
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
-			return nil, ctxErr
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create course"))
-	}
-	return connect.NewResponse(course), nil
-}
-
 // UpdateCourse changes the course information details.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
 	scmClient, err := s.getSCM(ctx, in.Msg.ScmOrganizationName)

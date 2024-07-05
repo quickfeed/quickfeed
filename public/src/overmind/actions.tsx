@@ -9,7 +9,6 @@ import * as internalActions from "./internalActions"
 import { Context } from "."
 import { Response } from "../client"
 import { Code, ConnectError } from "@bufbuild/connect"
-import { PartialMessage } from "@bufbuild/protobuf"
 
 export const internal = internalActions
 
@@ -411,25 +410,6 @@ export const createGroup = async ({ state, actions, effects }: Context, group: C
 /** getOrganization returns the organization object for orgName retrieved from the server. */
 export const getOrganization = async ({ effects }: Context, orgName: string): Promise<Response<Organization>> => {
     return await effects.api.client.getOrganization({ ScmOrganizationName: orgName })
-}
-
-/* createCourse creates a new course */
-export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, org: Organization }): Promise<boolean> => {
-    const course: PartialMessage<Course> = { ...value.course }
-    /* Fill in required fields */
-    course.ScmOrganizationID = value.org.ScmOrganizationID
-    course.ScmOrganizationName = value.org.ScmOrganizationName
-    course.courseCreatorID = state.self.ID
-    /* Send the course to the server */
-    const response = await effects.api.client.createCourse(course)
-    if (response.error) {
-        return false
-    }
-    /* If successful, add the course to the state */
-    state.courses.push(response.message)
-    /* User that created the course is automatically enrolled in the course. Refresh the enrollment list */
-    await actions.getEnrollmentsByUser()
-    return true
 }
 
 /** Updates a given course and refreshes courses in state if successful  */
