@@ -55,9 +55,7 @@ func TestAccessControl(t *testing.T) {
 		ScmOrganizationName: "test",
 		CourseCreatorID:     courseAdmin.ID,
 	}
-	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, courseAdmin, course)
 	qtest.EnrollStudent(t, db, groupStudent, course)
 	qtest.EnrollStudent(t, db, student, course)
 	group := &qf.Group{

@@ -268,10 +268,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	var testCourses []*qf.Course
 	for _, course := range qtest.MockCourses {
-		err := db.CreateCourse(admin.ID, course)
-		if err != nil {
-			t.Fatal(err)
-		}
+		qtest.CreateCourse(t, db, admin, course)
 		testCourses = append(testCourses, course)
 	}
 
@@ -334,10 +331,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db)
 	var testCourses []*qf.Course
 	for _, course := range qtest.MockCourses {
-		err := db.CreateCourse(admin.ID, course)
-		if err != nil {
-			t.Fatal(err)
-		}
+		qtest.CreateCourse(t, db, admin, course)
 		testCourses = append(testCourses, course)
 	}
 
@@ -554,9 +548,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	cookie := Cookie(t, tm, user)
 
 	course := qtest.MockCourses[0]
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, teacher, course)
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,

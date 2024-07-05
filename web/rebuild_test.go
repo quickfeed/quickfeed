@@ -131,9 +131,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		ScmOrganizationID:   1,
 		ScmOrganizationName: qtest.MockOrg,
 	}
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, teacher, &course)
 	student1 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student1, &course)
 
