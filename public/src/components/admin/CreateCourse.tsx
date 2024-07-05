@@ -11,7 +11,7 @@ const CreateCourse = (): JSX.Element => {
     const actions = useActions()
     const [course, setCourse] = useState<Course>()
     const [orgName, setOrgName] = useState("")
-    
+
     const refresh = React.useCallback(async () => {
         await actions.getCourses()
         const c = state.courses.find(c => c.ScmOrganizationName === orgName)
@@ -21,7 +21,7 @@ const CreateCourse = (): JSX.Element => {
         } else {
             actions.alert({ text: "Course not found", color: Color.YELLOW, delay: 5000 })
         }
-    }, [orgName])
+    }, [actions, orgName, state.courses])
 
     return (
         <div className="container">
