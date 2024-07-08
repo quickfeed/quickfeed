@@ -18,6 +18,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/quickfeed/quickfeed/internal/multierr"
 	"go.uber.org/zap"
@@ -158,8 +159,12 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 	}
 
 	resp, err := create()
-	if err != nil {
-		d.logger.Infof("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
+	switch {
+	case errdefs.IsConflict(err):
+		d.logger.Errorf("Image '%s' already being built for '%s': %v", job.Image, job.Name, err)
+		return nil, ErrConflict
+	case err != nil:
+		d.logger.Errorf("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
 		d.logger.Infof("Trying to pull image: '%s' from remote repository", job.Image)
 		if err := d.pullImage(ctx, job.Image); err != nil {
 			return nil, err
