@@ -437,7 +437,7 @@ export const refreshCourseSubmissions = async ({ state, effects }: Context, cour
         CourseID: courseID,
         FetchMode: {
             case: "Type",
-            value: SubmissionRequest_SubmissionType.USER
+            value: SubmissionRequest_SubmissionType.ALL
         }
     })
     const groupResponse = await effects.api.client.getSubmissionsByCourse({
