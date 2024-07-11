@@ -1,30 +1,30 @@
 /* eslint-disable no-unused-vars */
-import {
-    Course,
-    Enrollment,
-    Enrollments,
-    GradingBenchmark,
-    GradingCriterion,
-    Group,
-    Groups,
-    Review,
-    Submission,
-    Submissions,
-    User,
-    Assignment,
-    Enrollment_UserStatus,
-    Group_GroupStatus,
-    Submission_Status,
-    GradingCriterion_Grade,
-    Enrollment_DisplayState,
-    Grade,
-} from "../../../proto/qf/types_pb"
+import { Timestamp } from "@bufbuild/protobuf"
+import { BuildInfo, Score } from "../../../proto/kit/score/score_pb"
 import {
     CourseSubmissions,
     Organization,
 } from "../../../proto/qf/requests_pb"
-import { BuildInfo, Score } from "../../../proto/kit/score/score_pb"
-import { Timestamp } from "@bufbuild/protobuf"
+import {
+    Assignment,
+    Course,
+    Enrollment,
+    Enrollment_DisplayState,
+    Enrollment_UserStatus,
+    Enrollments,
+    Grade,
+    GradingBenchmark,
+    GradingCriterion,
+    GradingCriterion_Grade,
+    Group,
+    Group_GroupStatus,
+    Groups,
+    Review,
+    Submission,
+    Submission_Status,
+    Submissions,
+    User,
+} from "../../../proto/qf/types_pb"
 import { SubmissionsForCourse } from "../../Helpers"
 
 export class MockData {
@@ -531,7 +531,7 @@ export class MockData {
     public static mockedCourseSubmissions(courseID: bigint): SubmissionsForCourse {
         const userSubmissions = new CourseSubmissions()
         const groupSubmissions = new CourseSubmissions()
-        
+
         const assignments = MockData.mockedAssignments().filter((a) => a.CourseID === courseID)
         const submissions = MockData.mockedSubmissions().submissions.filter((s) => assignments.map((a) => a.ID).includes(s.AssignmentID))
         const enrollments = MockData.mockedEnrollments().enrollments.filter((e) => e.courseID === courseID)
@@ -539,13 +539,13 @@ export class MockData {
         const sfc = new SubmissionsForCourse()
         for (const enrollment of enrollments) {
             const subs = submissions.filter((s) => s.userID === enrollment.userID)
-            userSubmissions.submissions[enrollment.ID.toString()] = new Submissions({submissions: subs})
+            userSubmissions.submissions[enrollment.ID.toString()] = new Submissions({ submissions: subs })
         }
 
         for (const group of groups) {
             const groupSubs = submissions.filter((s) => s.groupID === group.ID)
-            groupSubmissions.submissions[group.ID.toString()] = new Submissions({submissions: groupSubs})
-        }   
+            groupSubmissions.submissions[group.ID.toString()] = new Submissions({ submissions: groupSubs })
+        }
 
         sfc.setSubmissions("USER", userSubmissions)
         sfc.setSubmissions("GROUP", groupSubmissions)

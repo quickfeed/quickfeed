@@ -2,7 +2,7 @@ import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/q
 import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { AssignmentsMap } from "../overmind/state"
-import { RowElement, Row } from "./DynamicTable"
+import { Row, RowElement } from "./DynamicTable"
 
 
 export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
