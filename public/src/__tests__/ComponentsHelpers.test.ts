@@ -1,5 +1,5 @@
 
-import { Enrollment, Submission } from "../../proto/qf/types_pb"
+import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import {  generateRow } from "../components/ComponentsHelpers"
 import { MockData } from "./mock_data/mockData"
 import { initializeOvermind } from "./TestHelpers"
@@ -12,7 +12,7 @@ describe("ComponentsHelpers", () => {
             // - Submission ID: 1, Assignment ID: 1
             // - Submission ID: 3, Assignment ID: 3
             // Group submission:
-            // - Submission ID: 4, Assignment ID: 1
+            // - Submission ID: 4, Assignment ID: 4
             desc: "Enrollment{ID: 1, groupID: 1} should generate correct rows",
             enrollment: new Enrollment({ ID: 1n, groupID: 1n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
@@ -38,6 +38,23 @@ describe("ComponentsHelpers", () => {
             enrollment: new Enrollment({ ID: 5n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
             want: [{ value: "6" }, "N/A", "N/A", "N/A"]
+        },
+        {
+            // Group with ID: 1
+            // Group submissions:
+            // - Submission ID: 4, Assignment ID: 4
+            des: "Group{ID: 1} should generate correct rows",
+            enrollment: new Group({ID: 1n}),
+            generator: (s: Submission) => ({ value: `${s.ID}` }),
+            want: [{ value: "", link: "https://github.com//" }, { value: "4" }]
+        },
+        {
+            // Group with ID: 2
+            // Has no submissions
+            des: "Group{ID: 2} should generate correct rows",
+            enrollment: new Group({ID: 2n}),
+            generator: (s: Submission) => ({ value: `${s.ID}` }),
+            want: [{ value: "", link: "https://github.com//" }, "N/A"]
         }
     ]
     
