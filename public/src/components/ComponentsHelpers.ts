@@ -38,7 +38,16 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
             // we should exit early without adding to the row.
             return
         }
-        if (isGroupLab) {
+
+        if (isGroupLab && isEnrollment && !enrollment.groupID) {
+            // If we're dealing with a group assignment, and the enrollment is not part of a group
+            // we should try to find an individual submission instead
+            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+        } else if (isGroupLab) {
+            // If the previous conditions are not met, we have this situation:
+            // - The assignment is a group assignment
+            // - We're either dealing with an enrollment that is part of a group
+            // - or we're dealing with a group
             submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
         } else if (isEnrollment) {
             submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
