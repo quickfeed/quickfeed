@@ -1,14 +1,25 @@
-import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
-import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus,
-    Grade
-} from "../../proto/qf/types_pb"
-import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert, CourseGroup, SubmissionOwner } from "./state"
-import * as internalActions from "./internalActions"
-import { Context } from "."
-import { Response } from "../client"
 import { Code, ConnectError } from "@bufbuild/connect"
+import { Context } from "."
+import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import {
+    Assignment,
+    Course,
+    Enrollment,
+    Enrollment_DisplayState,
+    Enrollment_UserStatus,
+    Grade,
+    GradingBenchmark,
+    GradingCriterion,
+    Group,
+    Group_GroupStatus,
+    Submission,
+    Submission_Status,
+    User
+} from "../../proto/qf/types_pb"
+import { Response } from "../client"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import * as internalActions from "./internalActions"
+import { Alert, CourseGroup, SubmissionOwner } from "./state"
 
 export const internal = internalActions
 
@@ -189,7 +200,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     }
 
     let clone = submission.clone()
-    
+
     switch (owner.type) {
         case "ENROLLMENT":
             clone = setStatusByUser(clone, owner.id, status)
@@ -213,7 +224,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     state.submissionsForCourse.update(owner, submission)
 }
 
-export const updateGrade = async ({state,  effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
+export const updateGrade = async ({ state, effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
     if (grade.Status === status || !state.selectedSubmission) {
         return
     }
@@ -221,14 +232,14 @@ export const updateGrade = async ({state,  effects }: Context, { grade, status }
     if (!confirm(`Are you sure you want to set status ${SubmissionStatus[status]} on this grade?`)) {
         return
     }
-    
+
     const clone = state.selectedSubmission.clone()
     clone.Grades = clone.Grades.map(g => {
         if (g.UserID === grade.UserID) {
             g.Status = status
         }
         return g
-    }) 
+    })
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: state.selectedSubmission.ID,
@@ -244,10 +255,10 @@ export const updateGrade = async ({state,  effects }: Context, { grade, status }
     const type = clone.userID ? "ENROLLMENT" : "GROUP"
     switch (type) {
         case "ENROLLMENT":
-            state.submissionsForCourse.update({type, id: clone.userID}, clone)
+            state.submissionsForCourse.update({ type, id: clone.userID }, clone)
             break
         case "GROUP":
-            state.submissionsForCourse.update({type, id: clone.groupID}, clone)
+            state.submissionsForCourse.update({ type, id: clone.groupID }, clone)
             break
     }
 }
@@ -437,7 +448,7 @@ export const refreshCourseSubmissions = async ({ state, effects }: Context, cour
         CourseID: courseID,
         FetchMode: {
             case: "Type",
-            value: SubmissionRequest_SubmissionType.USER
+            value: SubmissionRequest_SubmissionType.ALL
         }
     })
     const groupResponse = await effects.api.client.getSubmissionsByCourse({
