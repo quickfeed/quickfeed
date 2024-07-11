@@ -20,10 +20,12 @@ import {
     Grade,
 } from "../../../proto/qf/types_pb"
 import {
+    CourseSubmissions,
     Organization,
 } from "../../../proto/qf/requests_pb"
 import { BuildInfo, Score } from "../../../proto/kit/score/score_pb"
 import { Timestamp } from "@bufbuild/protobuf"
+import { SubmissionsForCourse } from "../../Helpers"
 
 export class MockData {
     public static mockedUsers(): User[] {
@@ -178,6 +180,19 @@ export class MockData {
         a10.order = 1
 
         return [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10]
+    }
+
+    public static mockedCourseAssignments(): { [key: string]: Assignment[] } {
+        const courseAssignments: { [key: string]: Assignment[] } = {}
+        const assignments = MockData.mockedAssignments()
+        for (const assignment of assignments) {
+            if (courseAssignments[assignment.CourseID.toString()]) {
+                courseAssignments[assignment.CourseID.toString()].push(assignment)
+            } else {
+                courseAssignments[assignment.CourseID.toString()] = [assignment]
+            }
+        }
+        return courseAssignments
     }
 
     public static mockedCourses() {
@@ -448,7 +463,7 @@ export class MockData {
             }),
             new Submission({
                 ID: BigInt(4),
-                AssignmentID: BigInt(3),
+                AssignmentID: BigInt(4),
                 groupID: BigInt(1),
                 score: 90,
                 commitHash: "def",
@@ -500,10 +515,41 @@ export class MockData {
                         Weight: 2,
                     }),
                 ]
-            })
+            }),
+            new Submission({
+                ID: BigInt(7),
+                AssignmentID: BigInt(4),
+                userID: BigInt(2),
+                score: 75,
+                commitHash: "bcd",
+            }),
 
         ]
         return submissions
+    }
+
+    public static mockedCourseSubmissions(courseID: bigint): SubmissionsForCourse {
+        const userSubmissions = new CourseSubmissions()
+        const groupSubmissions = new CourseSubmissions()
+        
+        const assignments = MockData.mockedAssignments().filter((a) => a.CourseID === courseID)
+        const submissions = MockData.mockedSubmissions().submissions.filter((s) => assignments.map((a) => a.ID).includes(s.AssignmentID))
+        const enrollments = MockData.mockedEnrollments().enrollments.filter((e) => e.courseID === courseID)
+        const groups = MockData.mockedGroups().groups.filter((g) => g.courseID === courseID)
+        const sfc = new SubmissionsForCourse()
+        for (const enrollment of enrollments) {
+            const subs = submissions.filter((s) => s.userID === enrollment.userID)
+            userSubmissions.submissions[enrollment.ID.toString()] = new Submissions({submissions: subs})
+        }
+
+        for (const group of groups) {
+            const groupSubs = submissions.filter((s) => s.groupID === group.ID)
+            groupSubmissions.submissions[group.ID.toString()] = new Submissions({submissions: groupSubs})
+        }   
+
+        sfc.setSubmissions("USER", userSubmissions)
+        sfc.setSubmissions("GROUP", groupSubmissions)
+        return sfc
     }
 
     public static mockedBenchmarks(): GradingBenchmark[] {
