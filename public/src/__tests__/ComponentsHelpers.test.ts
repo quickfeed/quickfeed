@@ -33,7 +33,7 @@ describe("generateRow", () => {
         {
             // Enrolled user with enrollment ID: 3 and groupID: 0 (not in a group)
             // Individual submissions:
-            // - Submission ID: 5, Assignment ID: 3
+            // - Submission ID: 6, Assignment ID: 1
             desc: "Enrollment{ID: 3, groupID: 0} should have rows {6, N/A, N/A, N/A}",
             enrollment: new Enrollment({ ID: 5n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
