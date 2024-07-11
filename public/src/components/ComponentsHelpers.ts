@@ -14,7 +14,7 @@ export const generateSubmissionRows = (elements: Enrollment[] | Group[], generat
     })
 }
 
-const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
+export const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
@@ -39,7 +39,7 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
             return
         }
 
-        if (isGroupLab && isEnrollment && !enrollment.groupID) {
+        if (isGroupLab && isEnrollment && enrollment.groupID === 0n) {
             // If we're dealing with a group assignment, and the enrollment is not part of a group
             // we should try to find an individual submission instead
             submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
