@@ -4,7 +4,7 @@ import {  generateRow } from "../components/ComponentsHelpers"
 import { MockData } from "./mock_data/mockData"
 import { initializeOvermind } from "./TestHelpers"
 
-describe("ComponentsHelpers", () => {
+describe("generateRow", () => {
     const tests = [
         {
             // Enrolled user with enrollment ID: 1 and groupID: 1
@@ -13,7 +13,7 @@ describe("ComponentsHelpers", () => {
             // - Submission ID: 3, Assignment ID: 3
             // Group submission:
             // - Submission ID: 4, Assignment ID: 4
-            desc: "Enrollment{ID: 1, groupID: 1} should generate correct rows",
+            desc: "Enrollment{ID: 1, groupID: 1} should have rows {1, N/A, 3, 4}",
             enrollment: new Enrollment({ ID: 1n, groupID: 1n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
             want: [{ value: "1" }, "N/A", { value: "3" }, { value: "4" }]
@@ -25,7 +25,7 @@ describe("ComponentsHelpers", () => {
             // - Submission ID: 7, Assignment ID: 4
             // Individual submission for group assignment
             // should be included as the user is not in a group
-            desc: "Enrollment{ID: 2, groupID: 0} should generate correct rows",
+            desc: "Enrollment{ID: 2, groupID: 0} should have rows {N/A, 2, N/A, 7}",
             enrollment: new Enrollment({ ID: 3n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
             want: ["N/A", {value: "2" }, "N/A", { value: "7"}]
@@ -34,7 +34,7 @@ describe("ComponentsHelpers", () => {
             // Enrolled user with enrollment ID: 3 and groupID: 0 (not in a group)
             // Individual submissions:
             // - Submission ID: 5, Assignment ID: 3
-            desc: "Enrollment{ID: 3, groupID: 0} should generate correct rows",
+            desc: "Enrollment{ID: 3, groupID: 0} should have rows {6, N/A, N/A, N/A}",
             enrollment: new Enrollment({ ID: 5n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
             want: [{ value: "6" }, "N/A", "N/A", "N/A"]
@@ -43,7 +43,7 @@ describe("ComponentsHelpers", () => {
             // Group with ID: 1
             // Group submissions:
             // - Submission ID: 4, Assignment ID: 4
-            des: "Group{ID: 1} should generate correct rows",
+            desc: "Group{ID: 1} should have rows {4}",
             enrollment: new Group({ID: 1n}),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
             want: [{ value: "", link: "https://github.com//" }, { value: "4" }]
@@ -51,7 +51,7 @@ describe("ComponentsHelpers", () => {
         {
             // Group with ID: 2
             // Has no submissions
-            des: "Group{ID: 2} should generate correct rows",
+            desc: "Group{ID: 2} should have rows {N/A}",
             enrollment: new Group({ID: 2n}),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
             want: [{ value: "", link: "https://github.com//" }, "N/A"]
