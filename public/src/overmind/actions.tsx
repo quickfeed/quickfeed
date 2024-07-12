@@ -183,7 +183,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     switch (owner.type) {
         // Take no action if there is no change in status
         case "ENROLLMENT":
-            if (getStatusByUser(submission, owner.id) === status) {
+            if (getStatusByUser(submission, submission.userID) === status) {
                 return
             }
             break
@@ -200,10 +200,9 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
     }
 
     let clone = submission.clone()
-
     switch (owner.type) {
         case "ENROLLMENT":
-            clone = setStatusByUser(clone, owner.id, status)
+            clone = setStatusByUser(clone, submission.userID, status)
             break
         case "GROUP":
             clone = setStatusAll(clone, status)
