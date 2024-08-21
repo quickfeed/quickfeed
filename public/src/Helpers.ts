@@ -35,7 +35,13 @@ export const getFormattedTime = (timestamp: Timestamp | undefined): string => {
     if (!timestamp) {
         return "N/A"
     }
-    const deadline = timestamp.toDate()
+    const date = timestamp.toDate()
+    
+    // dates are stored in UTC, so we need to adjust for the local timezone
+    // otherwise the date will be off by the timezone offset, e.g. 
+    // 2024-02-08T23:59:00Z will be displayed to users in UTC+1 as "9 February 2024 00:59"
+    // not "8 February 2024 23:59" as expected
+    const deadline = new Date(date.getTime() + date.getTimezoneOffset() * 60000)
     const minutes = deadline.getMinutes()
     const zero = minutes < 10 ? "0" : ""
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
