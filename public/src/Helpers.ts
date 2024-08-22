@@ -296,13 +296,13 @@ export const getSubmissionCellColor = (submission: Submission, owner:  Enrollmen
             return "result-mixed"
         }
     } else {
-        if (userHasStatus(submission, owner.ID, Submission_Status.APPROVED)) {
+        if (userHasStatus(submission, owner.userID, Submission_Status.APPROVED)) {
             return "result-approved"
         }
-        if (userHasStatus(submission, owner.ID, Submission_Status.REVISION)) {
+        if (userHasStatus(submission, owner.userID, Submission_Status.REVISION)) {
             return "result-revision"
         }
-        if (userHasStatus(submission, owner.ID, Submission_Status.REJECTED)) {
+        if (userHasStatus(submission, owner.userID, Submission_Status.REJECTED)) {
             return "result-rejected"
         }
     }
