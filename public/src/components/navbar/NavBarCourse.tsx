@@ -14,6 +14,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
     const history = useHistory()
     // Determines if a dropdown should be shown for the course
     const active = state.activeCourse === enrollment.courseID
+    const course = state.courses.find(c => c.ID === enrollment.courseID)
 
     const navigateTo = (courseID: bigint) => {
         if (active) {
@@ -30,7 +31,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
         <>
             <li role={"button"} onClick={() => navigateTo(enrollment.courseID)} className="activeClass">
                 <div className="col" id="title">
-                    {enrollment.course?.code}
+                    {course?.code}
                 </div>
                 <div className="col" title="icon">
                     <i className={active ? " icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"} />
