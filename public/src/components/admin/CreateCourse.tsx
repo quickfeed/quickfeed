@@ -19,7 +19,7 @@ const CreateCourse = (): JSX.Element => {
             await actions.getEnrollmentsByUser()
             setCourse(c)
         } else {
-            actions.alert({ text: "Course not found", color: Color.YELLOW, delay: 5000 })
+            actions.alert({ text: "Course not found. Make sure the organization name is correct and that you have installed the GitHub App.", color: Color.YELLOW, delay: 10000 })
         }
     }, [actions, orgName, state.courses])
 
