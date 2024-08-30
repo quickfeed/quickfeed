@@ -112,6 +112,10 @@ export type State = {
     /* Contains all groups for a given course */
     groups: { [courseID: string]: Group[] },
 
+    /* Number of groups in the course */
+    // derived from groups
+    numGroups: number,
+
     /* Number of enrolled users */
     // derived from courseEnrollments
     numEnrolled: number,
@@ -397,6 +401,12 @@ export const state: State = {
             return courseEnrollments[activeCourse.toString()].filter(enrollment => isPending(enrollment))
         }
         return []
+    }),
+    numGroups: derived(({ groups, activeCourse }: State) => {
+        if (activeCourse > 0 && groups[activeCourse.toString()]) {
+            return groups[activeCourse.toString()]?.filter(group => !isPendingGroup(group)).length
+        }
+        return 0
     }),
     numEnrolled: derived(({ activeCourse, courseEnrollments }: State) => {
         if (activeCourse > 0 && courseEnrollments[activeCourse.toString()]) {
