@@ -93,7 +93,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }): JSX.Element | n
                             type="number"
                         />
                     </div>
-                    <input className="btn btn-primary" type="submit" value={"Edit Course"} />
+                    <input className="btn btn-primary" type="submit" value={"Save"} />
                 </form>
         </div>
     )
