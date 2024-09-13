@@ -1,8 +1,9 @@
-import { createStateHook, createActionsHook, createEffectsHook } from 'overmind-react'
+import { createStateHook, createActionsHook, createEffectsHook, createReactionHook } from 'overmind-react'
 import { state } from './state'
 import * as actions from './actions'
 import * as effects from './effects'
 import * as review from './namespaces/review'
+import * as settings from './namespaces/settings'
 import { IContext } from 'overmind'
 import { merge, namespaced } from 'overmind/config';
 
@@ -16,7 +17,8 @@ export const config = merge(
         effects,
     },
     namespaced({
-        review
+        review,
+        settings
     })
 )
 
@@ -31,3 +33,4 @@ export type Context = IContext<{
 export const useAppState = createStateHook<Context>()
 export const useActions = createActionsHook<Context>()
 export const useGrpc = createEffectsHook<Context>()
+export const useReaction = createReactionHook<Context>()
