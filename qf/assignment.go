@@ -29,21 +29,10 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 	return context.WithTimeout(context.Background(), timeout)
 }
 
-// IsApproved returns an approved submission status if this assignment is already approved
-// for the latest submission, or if the score of the latest submission is sufficient
-// to autoapprove the assignment.
-func (a *Assignment) IsApproved(latest *Submission, score uint32) []*Grade {
-	switch {
-	case latest.GetGroupID() > 0 && !a.IsGroupLab:
-		// If a group submits to a student assignment, ignore the submission.
-		latest.SetGradeAll(Submission_NONE)
-	case latest.GetUserID() > 0 && a.IsGroupLab:
-		// If a student submits to a group assignment, ignore the submission.
-		latest.SetGradeAll(Submission_NONE)
-	case latest.GetUserID() > 0 && latest.GetGroupID() > 0:
-		// submission cannot be both group and individual
-		return nil
-	case a.GetAutoApprove() && score >= a.GetScoreLimit():
+// SubmissionStatus returns the existing grade submission status, or an approved submission status
+// if the score of the latest submission is sufficient to autoapprove the assignment.
+func (a *Assignment) SubmissionStatus(latest *Submission, score uint32) []*Grade {
+	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
 		latest.SetGradeAll(Submission_APPROVED)
 	}
 	// keep existing status if already approved/revision/rejected
