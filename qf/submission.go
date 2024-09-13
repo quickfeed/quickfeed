@@ -52,7 +52,7 @@ func (s *Submission) SetGrade(userID uint64, status Submission_Status) {
 }
 
 func (s *Submission) SetGradeAll(status Submission_Status) {
-	for idx := range s.Grades {
+	for idx := range s.GetGrades() {
 		s.Grades[idx].Status = status
 	}
 }
