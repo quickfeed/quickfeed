@@ -266,6 +266,13 @@ func TestIsApproved(t *testing.T) {
 			score:      95,
 			expected:   []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
 		},
+		{
+			name:       "Assignment:ScoreLimit=90:AutoApprove:IsGroupLab,Submission:nil,Expected:nil",
+			assignment: e,
+			submission: nil,
+			score:      95,
+			expected:   nil,
+		},
 	}
 
 	for _, test := range isApprovedTests {
