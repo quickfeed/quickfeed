@@ -14,6 +14,11 @@ import (
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
 func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
+	defer func() {
+		if m := recover(); m != nil {
+			logger.Errorf("Recovered from panic: %v", m)
+		}
+	}()
 	logger.Debugf("Fetching (if any) previous submission for %s", r)
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
