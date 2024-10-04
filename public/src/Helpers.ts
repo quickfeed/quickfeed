@@ -501,3 +501,98 @@ export class SubmissionsForCourse {
         }
     }
 }
+
+export class SubmissionsForUser {
+    submissions: Map<bigint, Submission[]> = new Map()
+    groupSubmissions: Map<bigint, Submission[]> = new Map()
+    /** ForGroup returns group submissions for the given group */
+    ForGroup(courseID: bigint): Submission[] {
+        return this.groupSubmissions.get(courseID) ?? []
+    }
+
+    ForAssignment(assignment: Assignment): Submission[] {
+        const submissions: Submission[] = []
+        const groupSubs = this.groupSubmissions.get(assignment.CourseID) ?? []
+        const userSubs = this.submissions.get(assignment.CourseID) ?? []
+
+        for (const sub of groupSubs) {
+            if (sub.AssignmentID === assignment.ID) {
+                submissions.push(sub)
+            }
+        }
+
+        for (const sub of userSubs) {
+            if (sub.AssignmentID === assignment.ID) {
+                submissions.push(sub)
+            }
+        }
+        console.log(submissions)
+        return submissions
+    }
+
+    ByID(submissionID: bigint): Submission | undefined {
+        for (const submissions of this.submissions.values()) {
+            const submission = submissions.find(s => s.ID === submissionID)
+            if (submission) {
+                return submission
+            }
+        }
+
+        for (const submissions of this.groupSubmissions.values()) {
+            const submission = submissions.find(s => s.ID === submissionID)
+            if (submission) {
+                return submission
+            }
+        }
+    }
+
+    update(courseID: bigint, submission: Submission) {
+        if (submission.groupID > 0) {
+            const subs = this.groupSubmissions.get(courseID) ?? []
+            const index = subs.findIndex(s => s.ID === submission.ID)
+            if (index === -1) {
+                return
+            } else {
+                subs[index] = submission
+            }
+        } else {
+            const subs = this.submissions.get(courseID) ?? []
+            const index = subs.findIndex(s => s.ID === submission.ID)
+            if (index === -1) {
+                return
+            } else {
+                subs[index] = submission
+            }
+        }
+    }
+
+    receive(submission: Submission) {
+        // Check all user submissions
+        for (const [key, value] of this.submissions) {
+            const index = value.findIndex(s => s.ID === submission.ID)
+            if (index !== -1) {
+                value[index] = submission
+                this.submissions.set(key, value)
+                return
+            }
+        }
+        // Check all group submissions
+        for (const [key, value] of this.groupSubmissions) {
+            const index = value.findIndex(s => s.ID === submission.ID)
+            if (index !== -1) {
+                value[index] = submission
+                this.groupSubmissions.set(key, value)
+                return
+            }
+        }
+    }
+
+    setSubmissions(courseID: bigint, type: "USER" | "GROUP", submissions: Submission[]) {
+        if (type === "USER") {
+            this.submissions.set(courseID, submissions)
+        }
+        if (type === "GROUP") {
+            this.groupSubmissions.set(courseID, submissions)
+        }
+    }
+}
