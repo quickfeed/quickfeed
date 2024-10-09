@@ -1,7 +1,7 @@
 import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
-import CourseLabs from "../components/CourseLabs"
+import CourseLabs from "../components/student/CourseLabs"
 import CourseLinks from "../components/CourseLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
@@ -27,6 +27,7 @@ const StudentPage = (): JSX.Element => {
             <Switch>
                 <Route path="/course/:id/group" exact component={GroupPage} />
                 <Route path="/course/:id/lab/:lab" exact component={Lab} />
+                <Route path="/course/:id/group-lab/:lab" exact component={Lab} />
             </Switch>
         </div>
     )
