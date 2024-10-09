@@ -5,7 +5,8 @@ import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useHistory } from "react-router"
 import { Status } from "../../consts"
-import { getStatusByUser, isApproved } from "../../Helpers"
+import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
+import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
 
 
 const NavBarLabs = (): JSX.Element | null => {
@@ -16,21 +17,12 @@ const NavBarLabs = (): JSX.Element | null => {
         return null
     }
 
-    const submissionIcon = (assignment: Assignment, submission: Submission) => {
-        const icon: JSX.Element | null = null
-        if (assignment.isGroupLab) {
-            if (submission.groupID !== 0n) {
-                return <i className={"fa fa-users"} title={"Group assignment"} />
-            }
-            if (submission.userID !== 0n) {
-                return <i className={"fa fa-user"} title={"Solo submission"} />
-            }
-        }
+    const submissionIcon = (submission: Submission) => {
         return (
-            <div>
-                {icon}
+            <>
+                <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
                 {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fa fa-check ml-2" />}
-            </div>
+            </>
         )
     }
 
@@ -44,11 +36,10 @@ const NavBarLabs = (): JSX.Element | null => {
             return null
         }
         return submissions.map(submission => {
-            const groupSubmission = submission.groupID !== 0n
-            if (!assignment.isGroupLab && groupSubmission) {
+            if (!isValidSubmissionForAssignment(submission, assignment)) {
                 return null
             }
-            const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/${groupSubmission ? "group-lab": "lab"}/${assignment.ID}` }, jsx: submissionIcon(assignment, submission) }
+            const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab": "lab"}/${assignment.ID}` }, jsx: submissionIcon(submission) }
             return (
                 <div className={getLinkClass(assignment)} style={{ position: "relative" }} key={assignment.ID.toString()} onClick={() => { history.push(link.link.to) }}>
                     <NavBarLink link={link.link} jsx={link.jsx} />
