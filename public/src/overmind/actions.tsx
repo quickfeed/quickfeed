@@ -41,7 +41,7 @@ export const handleStreamError = (context: Context, error: Error): void => {
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
-    state.submissions.receive(submission)
+    state.submissions.update(submission)
 }
 
 /**

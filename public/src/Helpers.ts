@@ -547,42 +547,23 @@ export class SubmissionsForUser {
         }
     }
 
-    update(courseID: bigint, submission: Submission) {
-        if (submission.groupID > 0) {
-            const subs = this.groupSubmissions.get(courseID) ?? []
-            const index = subs.findIndex(s => s.ID === submission.ID)
-            if (index === -1) {
-                return
-            } else {
-                subs[index] = submission
-            }
-        } else {
-            const subs = this.submissions.get(courseID) ?? []
-            const index = subs.findIndex(s => s.ID === submission.ID)
-            if (index === -1) {
-                return
-            } else {
-                subs[index] = submission
-            }
-        }
-    }
-
-    receive(submission: Submission) {
+    /** update updates the submission in the respective map */
+    update(submission: Submission) {
         // Check all user submissions
-        for (const [key, value] of this.submissions) {
-            const index = value.findIndex(s => s.ID === submission.ID)
+        for (const [courseID, submissions] of this.submissions) {
+            const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
-                value[index] = submission
-                this.submissions.set(key, value)
+                submissions[index] = submission
+                this.submissions.set(courseID, submissions)
                 return
             }
         }
         // Check all group submissions
-        for (const [key, value] of this.groupSubmissions) {
-            const index = value.findIndex(s => s.ID === submission.ID)
+        for (const [courseID, submissions] of this.groupSubmissions) {
+            const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
-                value[index] = submission
-                this.groupSubmissions.set(key, value)
+                submissions[index] = submission
+                this.groupSubmissions.set(courseID, submissions)
                 return
             }
         }
