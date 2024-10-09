@@ -140,6 +140,19 @@ export const isFavorite = (enrollment: Enrollment): boolean => { return enrollme
 
 export const isAuthor = (user: User, review: Review): boolean => { return user.ID === review.ReviewerID }
 
+/** isValidSubmissionForAssignment returns true if the submission is valid for the assignment
+ *  A submission is considered valid if the assignment is a group lab, or the submission is not part of a group.
+ *  This is used to filter out submissions that are not to be displayed in the UI.
+ * 
+ *  - If the assignment is a group lab, all submissions (solo and group) are valid.
+ *  - If the assignment is not a group lab, only submissions that are not part of a group are valid.
+ */
+export const isValidSubmissionForAssignment = (submission: Submission, assignment: Assignment): boolean => {
+    return assignment.isGroupLab || submission.groupID === 0n
+}
+
+export const isGroupSubmission = (submission: Submission): boolean => { return submission.groupID > 0n }
+
 export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.reviewers > 0
 }
@@ -527,7 +540,6 @@ export class SubmissionsForUser {
                 submissions.push(sub)
             }
         }
-        console.log(submissions)
         return submissions
     }
 
