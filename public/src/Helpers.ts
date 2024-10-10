@@ -30,7 +30,22 @@ export enum ConnStatus {
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
-/** Returns a string with a prettier format for a timestamp */
+/** Returns a string with a prettier format for a timestamp
+ * 
+ *  The offset parameter is used to remove the timezone offset from the timestamp.
+ *  For example, deadlines are defined in our `assignment.yaml` files in UTC time (ex. 2023-12-31 23:59:00).
+ *  If we don't remove the timezone offset, the date will be off by the timezone offset (from above: 2024-01-01 00:59:00).
+ *  We want to display the date as it is defined in the assignment file, so we remove the timezone offset.
+ *  - offset: true
+ *      - 2023-12-31T23:59:00Z will be displayed as "31 December 2023 23:59"
+ * 
+ *  In other cases such as the build date for submissions, we want to display the date in the user's local timezone.
+ *  In this case, we *don't* remove the timezone offset. Otherwise the date will be off by the timezone offset.
+ *  - offset: false
+ *      - 2023-12-31T23:59:00Z will be displayed as "1 January 2024 00:59"
+ * 
+ *  Note that in UTC+1 the offset is -60 minutes, adding the offset will effectively subtract 60 minutes from the date.
+ */
 export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: boolean): string => {
     if (!timestamp) {
         return "N/A"
