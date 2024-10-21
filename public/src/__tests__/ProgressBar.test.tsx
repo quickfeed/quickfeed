@@ -90,7 +90,7 @@ describe("ProgressBar", () => {
     test.each(progressBarTests)(`[Progress.NAV] $desc`, (test) => {
         const submissions = new SubmissionsForUser()
         submissions.setSubmissions(1n, "USER", [test.submission])
-        const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions: submissions })
+        const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions })
         const { container } = render(
             <Provider value={overmind}>
                 <ProgressBar courseID={"1"} submission={test.submission} type={Progress.NAV} />
@@ -114,7 +114,7 @@ const labTest = (test: ProgressBarTest, withSubmission: boolean) => {
     if (withSubmission) {
         submissions.setSubmissions(1n, "USER", [test.submission])
     }
-    const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions: submissions })
+    const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions })
 
     const { container } = render(
         <Provider value={overmind}>
