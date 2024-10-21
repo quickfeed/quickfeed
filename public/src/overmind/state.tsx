@@ -226,7 +226,7 @@ export const state: State = {
     }),
     isCourseCreator: derived(({ courses, activeCourse, self }: State) => {
         const course = courses.find(c => c.ID === activeCourse)
-        return course && course.courseCreatorID === self.ID
+        return course !== undefined && course.courseCreatorID === self.ID
     }),
     status: {},
 
