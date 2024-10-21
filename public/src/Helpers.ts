@@ -572,6 +572,8 @@ export class SubmissionsForUser {
                 return submission
             }
         }
+        // No submission found
+        return undefined
     }
 
     /** update updates the submission in the respective map */
