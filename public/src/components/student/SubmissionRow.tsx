@@ -32,6 +32,7 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
             key={submission.ID.toString()}
             className="row clickable mb-1 py-2 align-items-center text-left"
             onClick={() => redirectTo(submission)}
+            role="button"
         >
             <div className="col-8">
                 <ProgressBar courseID={courseID} submission={submission} type={Progress.LAB} />

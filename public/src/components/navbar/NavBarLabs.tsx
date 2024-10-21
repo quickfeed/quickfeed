@@ -58,7 +58,13 @@ const NavBarLabs = (): JSX.Element | null => {
             }
             const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab": "lab"}/${assignment.ID}` }, jsx: submissionIcon(submission) }
             return (
-                <div className={highlightSubmission(submission, assignment)} style={{ position: "relative" }} key={assignment.ID.toString()} onClick={() => { history.push(link.link.to) }}>
+                <div 
+                    className={highlightSubmission(submission, assignment)} 
+                    style={{ position: "relative" }} 
+                    key={assignment.ID.toString()} 
+                    onClick={() => { history.push(link.link.to) }}
+                    role="button"
+                >
                     <NavBarLink link={link.link} jsx={link.jsx} />
                     <ProgressBar courseID={state.activeCourse.toString()} submission={submission} type={Progress.NAV} />
                 </div>
