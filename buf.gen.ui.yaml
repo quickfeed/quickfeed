@@ -5,6 +5,6 @@ plugins:
   - plugin: buf.build/bufbuild/es
     out: public/proto
     opt: target=ts
-  - plugin: buf.build/bufbuild/connect-web
+  - plugin: buf.build/connectrpc/es
     out: public/proto
     opt: target=ts

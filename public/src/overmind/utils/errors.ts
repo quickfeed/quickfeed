@@ -1,4 +1,4 @@
-import { Code } from "@bufbuild/connect"
+import { Code } from "@connectrpc/connect"
 import { AnyMessage } from "@bufbuild/protobuf"
 import { Response } from "../../client"
 

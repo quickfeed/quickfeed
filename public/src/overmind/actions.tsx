@@ -1,4 +1,4 @@
-import { Code, ConnectError } from "@bufbuild/connect"
+import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "."
 import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import {

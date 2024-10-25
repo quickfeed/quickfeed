@@ -1,5 +1,5 @@
-import { CallOptions, ConnectError, Transport, makeAnyClient } from "@bufbuild/connect";
-import { createAsyncIterable } from "@bufbuild/connect/protocol";
+import { CallOptions, ConnectError, Transport, makeAnyClient } from "@connectrpc/connect";
+import { createAsyncIterable } from "@connectrpc/connect/protocol";
 import {
     MethodInfo,
     MethodInfoServerStreaming,
@@ -24,7 +24,7 @@ export type Response<T extends AnyMessage> = {
 export type ResponseClient<T extends ServiceType> = {
     [P in keyof T["methods"]]:
     T["methods"][P] extends MethodInfoUnary<infer I, infer O> ? (request: PartialMessage<I>, options?: CallOptions) => Promise<Response<O>>
-    : T["methods"][P] extends MethodInfoServerStreaming<infer I, infer O> ? (request: PartialMessage<I>, options?: CallOptions) => AsyncIterable<O>
+    : T["methods"][P] extends MethodInfoServerStreaming<infer I, infer O> ? (request: I, options?: CallOptions) => AsyncIterable<O>
     : never;
 };
 
@@ -107,15 +107,13 @@ export function createServerStreamingFn<
     method: MethodInfo<I, O>
 ): ServerStreamingFn<I, O> {
     return async function* (input, options): AsyncIterable<O> {
-        const inputMessage =
-            input instanceof method.I ? input : new method.I(input);
         const response = await transport.stream<I, O>(
             service,
             method,
             options?.signal,
             options?.timeoutMs,
             options?.headers,
-            createAsyncIterable([inputMessage])
+            createAsyncIterable([input])
         );
         options?.onHeader?.(response.header);
         yield* response.message;

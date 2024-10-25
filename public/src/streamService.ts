@@ -1,15 +1,16 @@
 import { QuickFeedService } from '../proto/qf/quickfeed_connectweb'
 import { Submission } from '../proto/qf/types_pb'
-import { Code, createConnectTransport, createPromiseClient, PromiseClient } from "@bufbuild/connect-web"
+import { Code, createClient, Client } from '@connectrpc/connect'
+import { createConnectTransport } from '@connectrpc/connect-web'
 import { ConnStatus } from './Helpers'
 
 
 export class StreamService {
-    private service: PromiseClient<typeof QuickFeedService>
+    private service: Client<typeof QuickFeedService>
     private backoff = 1000
 
     constructor() {
-        this.service = createPromiseClient(QuickFeedService, createConnectTransport({ baseUrl: "https://" + window.location.host }))
+        this.service = createClient(QuickFeedService, createConnectTransport({ baseUrl: "https://" + window.location.host }))
     }
 
     // timeout returns a promise that resolves after the current backoff has elapsed

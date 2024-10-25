@@ -1,4 +1,4 @@
-import { Code } from "@bufbuild/connect"
+import { Code } from "@connectrpc/connect"
 import { Context } from "."
 import { RepositoryRequest } from "../../proto/qf/requests_pb"
 import { Prompt, promptOnErrorResponse } from "./utils/errors"

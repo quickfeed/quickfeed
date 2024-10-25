@@ -1,4 +1,5 @@
-import { ConnectError, createConnectTransport } from "@bufbuild/connect-web"
+import { createConnectTransport } from "@connectrpc/connect-web"
+import { ConnectError } from "@connectrpc/connect"
 import { QuickFeedService } from "../../proto/qf/quickfeed_connectweb"
 import { StreamService } from "../streamService"
 import { ResponseClient, createResponseClient } from "../client"
