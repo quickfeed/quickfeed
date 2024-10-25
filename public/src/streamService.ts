@@ -1,4 +1,4 @@
-import { QuickFeedService } from '../proto/qf/quickfeed_connectweb'
+import { QuickFeedService } from '../proto/qf/quickfeed_pb'
 import { Submission } from '../proto/qf/types_pb'
 import { Code, createClient, Client } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
