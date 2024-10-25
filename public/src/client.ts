@@ -1,72 +1,50 @@
 import { CallOptions, ConnectError, Transport, makeAnyClient } from "@connectrpc/connect";
 import { createAsyncIterable } from "@connectrpc/connect/protocol";
 import {
-    MethodInfo,
-    MethodInfoServerStreaming,
-    MethodInfoUnary,
-    PartialMessage,
-    ServiceType,
+    DescMessage,
+    DescMethodServerStreaming,
+    DescMethodUnary,
+    DescService,
     Message,
-    MethodKind,
-    AnyMessage,
+    MessageInitShape,
+    MessageShape,
 } from "@bufbuild/protobuf";
 
-export type Response<T extends AnyMessage> = {
+export type Response<T extends Message> = {
     error: ConnectError | null
     message: T
 }
 
-/**
- * ResponseClient is a simple client that supports unary and server-streaming
- * methods. Methods will produce a promise for the response message,
- * or an asynchronous iterable of response messages.
- */
-export type ResponseClient<T extends ServiceType> = {
-    [P in keyof T["methods"]]:
-    T["methods"][P] extends MethodInfoUnary<infer I, infer O> ? (request: PartialMessage<I>, options?: CallOptions) => Promise<Response<O>>
-    : T["methods"][P] extends MethodInfoServerStreaming<infer I, infer O> ? (request: I, options?: CallOptions) => AsyncIterable<O>
-    : never;
+export type ResponseClient<Desc extends DescService> = {
+    [P in keyof Desc["method"]]: 
+    Desc["method"][P] extends DescMethodUnary<infer I, infer O> ? (request: MessageInitShape<I>, options?: CallOptions) => Promise<Response<MessageShape<O>>> : 
+    Desc["method"][P] extends DescMethodServerStreaming<infer I, infer O> ? (request: MessageInitShape<I>, options?: CallOptions) => AsyncIterable<MessageShape<O>> :
+    never
 };
-
 /**
  * Create a ResponseClient for the given service, invoking RPCs through the
  * given transport.
  */
-export function createResponseClient<T extends ServiceType>(
-    service: T,
-    transport: Transport,
-    errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void
-) {
+export function createResponseClient<T extends DescService>(service: T, transport: Transport, errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void): ResponseClient<T> {
     return makeAnyClient(service, (method) => {
-        switch (method.kind) {
-            case MethodKind.Unary:
-                return createUnaryFn(transport, service, method, errorHandler);
-            case MethodKind.ServerStreaming:
-                return createServerStreamingFn(transport, service, method);
+        switch (method.methodKind) {
+            case "unary":
+                return createUnaryFn(transport, method as DescMethodUnary, errorHandler);
+            case "server_streaming":
+                return createServerStreamingFn(transport, method as DescMethodServerStreaming);
             default:
                 return null;
         }
     }) as ResponseClient<T>;
 }
-
 /**
  * UnaryFn is the method signature for a unary method of a ResponseClient.
  */
-type UnaryFn<I extends Message<I>, O extends Message<O>> = (
-    request: PartialMessage<I>,
-    options?: CallOptions
-) => Promise<Response<O>>;
-
-function createUnaryFn<I extends Message<I>, O extends Message<O>>(
-    transport: Transport,
-    service: ServiceType,
-    method: MethodInfo<I, O>,
-    errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void
-): UnaryFn<I, O> {
+type UnaryFn<I extends DescMessage, O extends DescMessage> = (request: MessageInitShape<I>, options?: CallOptions) => Promise<Response<MessageShape<O>>>;
+export function createUnaryFn<I extends DescMessage, O extends DescMessage>(transport: Transport, method: DescMethodUnary<I, O>, errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void): UnaryFn<I, O> {
     return async function (input, options) {
         try {
             const response = await transport.unary(
-                service,
                 method,
                 options?.signal,
                 options?.timeoutMs,
@@ -78,37 +56,24 @@ function createUnaryFn<I extends Message<I>, O extends Message<O>>(
             return {
                 error: null,
                 message: response.message
-            } as Response<O>;
+            } as Response<MessageShape<O>>;
         }
         catch (error) {
             errorHandler({ method: method.name, error });
             return {
                 error,
-            } as Response<O>;
+            } as Response<MessageShape<O>>;
         }
     }
 }
-
 /**
  * ServerStreamingFn is the method signature for a server-streaming method of
  * a ResponseClient.
  */
-type ServerStreamingFn<I extends Message<I>, O extends Message<O>> = (
-    request: PartialMessage<I>,
-    options?: CallOptions
-) => AsyncIterable<O>;
-
-export function createServerStreamingFn<
-    I extends Message<I>,
-    O extends Message<O>
->(
-    transport: Transport,
-    service: ServiceType,
-    method: MethodInfo<I, O>
-): ServerStreamingFn<I, O> {
-    return async function* (input, options): AsyncIterable<O> {
+type ServerStreamingFn<I extends DescMessage, O extends DescMessage> = (request: MessageInitShape<I>, options?: CallOptions) => AsyncIterable<MessageShape<O>>;
+export function createServerStreamingFn<I extends DescMessage, O extends DescMessage>(transport: Transport, method: DescMethodServerStreaming<I, O>): ServerStreamingFn<I, O> {
+    return async function* (input, options): AsyncIterable<MessageShape<O>> {
         const response = await transport.stream<I, O>(
-            service,
             method,
             options?.signal,
             options?.timeoutMs,
