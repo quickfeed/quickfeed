@@ -5,7 +5,7 @@ import { Prompt, promptOnErrorResponse } from "./utils/errors"
 
 export const isEmptyRepo = async (
   { effects }: Context,
-  request: Partial<RepositoryRequest>
+  request: RepositoryRequest
 ) => {
   const response = await effects.api.client.isEmptyRepo(request)
   const prompt = request.groupID
