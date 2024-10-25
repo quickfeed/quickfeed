@@ -1,6 +1,7 @@
 import React, { useState } from "react"
-import { Assignment, GradingBenchmark } from "../../../proto/qf/types_pb"
+import { Assignment, GradingBenchmark, GradingBenchmarkSchema } from "../../../proto/qf/types_pb"
 import { useActions } from "../../overmind"
+import { clone, create } from "@bufbuild/protobuf"
 
 
 const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }): JSX.Element => {
@@ -11,8 +12,8 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
 
     // Clone the criterion, or create a new one if none was passed in
     const bm = benchmark
-        ? benchmark.clone()
-        : new GradingBenchmark()
+        ? clone(GradingBenchmarkSchema, benchmark)
+        : create(GradingBenchmarkSchema)
 
     const handleBenchmark = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
