@@ -59,6 +59,9 @@
   },
   "jest": {
     "preset": "ts-jest/presets/js-with-ts",
+    "setupFiles": [
+      "<rootDir>/src/__tests__/setup.jest.js"
+    ],
     "testEnvironment": "jsdom",
     "verbose": true,
     "transform": {
@@ -76,7 +79,8 @@
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)",
       "!**/__tests__/TestHelpers.ts",
-      "!**/__tests__/mock_data/**"
+      "!**/__tests__/mock_data/**",
+      "!**/__tests__/setup.jest.js"
     ],
     "moduleNameMapper": {
       "./types_pb.js": "<rootDir>/proto/qf/types_pb.ts",
