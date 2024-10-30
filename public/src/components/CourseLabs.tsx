@@ -1,9 +1,10 @@
 import { useHistory } from "react-router"
 import { assignmentStatusText, getFormattedTime, getCourseID, getStatusByUser } from "../Helpers"
 import { useAppState } from "../overmind"
-import { Submission } from "../../proto/qf/types_pb"
+import { EnrollmentSchema } from "../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "./ProgressBar"
 import React from "react"
+import { create } from "@bufbuild/protobuf"
 
 
 /* Displays the a list of assignments and related submissions for a course */
@@ -21,7 +22,7 @@ const CourseLabs = (): JSX.Element => {
         state.assignments[courseID].forEach(assignment => {
             const assignmentIndex = assignment.order - 1
             // Submissions are indexed by the assignment order.
-            const submission = state.submissions[courseID][assignmentIndex] ?? new Submission()
+            const submission = state.submissions[courseID][assignmentIndex] ?? create(EnrollmentSchema)
 
             labs.push(
                 <li key={assignment.ID.toString()} className="list-group-item border clickable mb-2 labList" onClick={() => redirectTo(assignment.ID)}>

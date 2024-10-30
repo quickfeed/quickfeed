@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react"
-import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
+import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
 import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import Search from "../Search"
+import { clone, create } from "@bufbuild/protobuf"
 
 
 const GroupForm = (): JSX.Element | null => {
@@ -18,8 +19,8 @@ const GroupForm = (): JSX.Element | null => {
     const group = state.activeGroup
     useEffect(() => {
         if (isStudent(state.enrollmentsByCourseID[courseID.toString()])) {
-            actions.setActiveGroup(new Group())
-            actions.updateGroupUsers(state.self.clone())
+            actions.setActiveGroup(create(GroupSchema))
+            actions.updateGroupUsers(clone(UserSchema, state.self))
         }
         return () => {
             actions.setActiveGroup(null)
@@ -40,7 +41,7 @@ const GroupForm = (): JSX.Element | null => {
         return false
     }
 
-    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => enrollment.clone())
+    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment =>  clone(EnrollmentSchema, enrollment))
 
     // Determine the user's enrollment status (teacher or student)
     const isTeacher = hasTeacher(state.status[courseID.toString()])

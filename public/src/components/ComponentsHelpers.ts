@@ -16,8 +16,8 @@ export const generateSubmissionRows = (elements: Enrollment[] | Group[], generat
 
 export const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
     const row: Row = []
-    const isEnrollment = enrollment instanceof Enrollment
-    const isGroup = enrollment instanceof Group
+    const isEnrollment = enrollment.$typeName === "qf.Enrollment"
+    const isGroup = enrollment.$typeName === "qf.Group"
 
     if (withID) {
         isEnrollment

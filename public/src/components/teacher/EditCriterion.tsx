@@ -1,6 +1,7 @@
 import React, { useState } from "react"
-import { Assignment, GradingCriterion } from "../../../proto/qf/types_pb"
+import { Assignment, GradingCriterion, GradingCriterionSchema } from "../../../proto/qf/types_pb"
 import { useActions } from "../../overmind"
+import { clone, create } from "@bufbuild/protobuf"
 
 
 const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }): JSX.Element => {
@@ -11,8 +12,8 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
 
     // Clone the criterion, or create a new one if none was passed in
     const criterion = originalCriterion
-        ? originalCriterion.clone()
-        : new GradingCriterion()
+        ? clone(GradingCriterionSchema, originalCriterion)
+        : create(GradingCriterionSchema)
 
     const handleCriteria = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget

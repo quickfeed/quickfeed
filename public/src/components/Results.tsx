@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from "react"
 import { useHistory, useLocation } from 'react-router-dom'
-import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
+import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
@@ -11,6 +11,7 @@ import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
+import { clone } from "@bufbuild/protobuf"
 
 
 const Results = ({ review }: { review: boolean }): JSX.Element => {
@@ -86,8 +87,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
                 actions.setSelectedSubmission(submission)
-                if (owner instanceof Enrollment) {
-                    actions.setActiveEnrollment(owner.clone())
+                if (owner.$typeName === "qf.Enrollment") {
+                    actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
                 actions.setSubmissionOwner(owner)
                 actions.review.setSelectedReview(-1)
@@ -105,8 +106,8 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
                 actions.setSelectedSubmission(submission)
-                if (owner instanceof Enrollment) {
-                    actions.setActiveEnrollment(owner.clone())
+                if (owner.$typeName === "qf.Enrollment") {
+                    actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
                 actions.setSubmissionOwner(owner)
                 handleLabClick(submission.ID)

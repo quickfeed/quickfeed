@@ -1,7 +1,8 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, User, UserSchema } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
+import { create } from "@bufbuild/protobuf"
 
 export interface CourseGroup {
     courseID: bigint
@@ -16,13 +17,6 @@ export interface Alert {
     color: Color
     // The delay in milliseconds before the alert is removed
     delay?: number
-}
-
-interface GroupOrEnrollment {
-    ID: bigint,
-    name?: string,
-    user?: User,
-    status?: Enrollment_UserStatus | Group_GroupStatus
 }
 
 type EnrollmentsByCourse = { [CourseID: string]: Enrollment }
@@ -202,7 +196,7 @@ export type State = {
 /* Initial State */
 /* To add to state, extend the State type and initialize the variable below */
 export const state: State = {
-    self: new User(),
+    self: create(UserSchema),
     isLoggedIn: derived(({ self }: State) => {
         return Number(self.ID) !== 0
     }),
@@ -280,7 +274,7 @@ export const state: State = {
             numAssignments = assignments[activeCourse.toString()]?.length ?? 0
         }
 
-        let filtered: GroupOrEnrollment[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
+        let filtered: (Group | Enrollment)[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
         for (const filter of submissionFilters) {
             switch (filter) {
                 case "teachers":
@@ -333,7 +327,7 @@ export const state: State = {
 
             switch (sortSubmissionsBy) {
                 case SubmissionSort.ID: {
-                    if (a instanceof Enrollment && b instanceof Enrollment) {
+                    if (a.$typeName === "qf.Enrollment" && b.$typeName === "qf.Enrollment") {
                         return sortOrder * (Number(a.userID) - Number(b.userID))
                     } else {
                         return sortOrder * (Number(a.ID) - Number(b.ID))
@@ -365,8 +359,16 @@ export const state: State = {
                     return sortOrder * (aApproved - bApproved)
                 }
                 case SubmissionSort.Name: {
-                    const nameA = groupView ? a.name ?? "" : a.user?.Name ?? ""
-                    const nameB = groupView ? b.name ?? "" : b.user?.Name ?? ""
+                    let nameA = ""
+                    let nameB = ""
+                    if (!groupView && a.$typeName === "qf.Enrollment" && b.$typeName === "qf.Enrollment") {
+                        nameA = a.user?.Name ?? ""
+                        nameB = b.user?.Name ?? ""
+                    } 
+                    else if (groupView && a.$typeName === "qf.Group" && b.$typeName === "qf.Group") {
+                        nameA = a.name ?? ""
+                        nameB = b.name ?? ""
+                    }
                     return sortOrder * (nameA.localeCompare(nameB))
                 }
                 default:

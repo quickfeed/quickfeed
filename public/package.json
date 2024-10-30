@@ -3,9 +3,10 @@
   "version": "0.2.0",
   "private": true,
   "dependencies": {
-    "@bufbuild/connect": "^0.8.4",
-    "@bufbuild/connect-web": "^0.8.4",
-    "@bufbuild/protobuf": "^1.2.0",
+    "@bufbuild/protobuf": "^2.2.0",
+    "@bufbuild/protoc-gen-es": "^2.2.0",
+    "@connectrpc/connect": "^2.0.0-rc.1",
+    "@connectrpc/connect-web": "^2.0.0-rc.1",
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
     "overmind": "^28.0.1",
@@ -58,6 +59,9 @@
   },
   "jest": {
     "preset": "ts-jest/presets/js-with-ts",
+    "setupFiles": [
+      "<rootDir>/src/__tests__/setup.jest.js"
+    ],
     "testEnvironment": "jsdom",
     "verbose": true,
     "transform": {
@@ -75,7 +79,8 @@
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)",
       "!**/__tests__/TestHelpers.ts",
-      "!**/__tests__/mock_data/**"
+      "!**/__tests__/mock_data/**",
+      "!**/__tests__/setup.jest.js"
     ],
     "moduleNameMapper": {
       "./types_pb.js": "<rootDir>/proto/qf/types_pb.ts",
