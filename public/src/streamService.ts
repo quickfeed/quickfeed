@@ -6,11 +6,11 @@ import { ConnStatus } from './Helpers'
 
 
 export class StreamService {
-    private service: Client<typeof QuickFeedService>
+    private readonly service: Client<typeof QuickFeedService>
     private backoff = 1000
 
     constructor() {
-        this.service = createClient(QuickFeedService, createConnectTransport({ baseUrl: "https://" + window.location.host }))
+        this.service = createClient(QuickFeedService, createConnectTransport({ baseUrl: `https://${window.location.host}` }))
     }
 
     // timeout returns a promise that resolves after the current backoff has elapsed
