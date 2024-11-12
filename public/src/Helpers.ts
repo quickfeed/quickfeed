@@ -30,18 +30,34 @@ export enum ConnStatus {
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
-/** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (timestamp: Timestamp | undefined): string => {
+/** Returns a string with a prettier format for a timestamp
+ * 
+ *  The offset parameter is used to remove the timezone offset from the timestamp.
+ *  For example, deadlines are defined in our `assignment.yaml` files in UTC time (ex. 2023-12-31 23:59:00).
+ *  If we don't remove the timezone offset, the date will be off by the timezone offset (from above: 2024-01-01 00:59:00).
+ *  We want to display the date as it is defined in the assignment file, so we remove the timezone offset.
+ *  - offset: true
+ *      - 2023-12-31T23:59:00Z will be displayed as "31 December 2023 23:59"
+ * 
+ *  In other cases such as the build date for submissions, we want to display the date in the user's local timezone.
+ *  In this case, we *don't* remove the timezone offset. Otherwise the date will be off by the timezone offset.
+ *  - offset: false
+ *      - 2023-12-31T23:59:00Z will be displayed as "1 January 2024 00:59"
+ * 
+ *  Note that in UTC+1 the offset is -60 minutes, adding the offset will effectively subtract 60 minutes from the date.
+ */
+export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: boolean): string => {
     if (!timestamp) {
         return "N/A"
     }
     const date = timestamp.toDate()
     
-    // dates are stored in UTC, so we need to adjust for the local timezone
+    // dates are stored in UTC, so we might need to adjust for the local timezone
     // otherwise the date will be off by the timezone offset, e.g. 
     // 2024-02-08T23:59:00Z will be displayed to users in UTC+1 as "9 February 2024 00:59"
     // not "8 February 2024 23:59" as expected
-    const deadline = new Date(date.getTime() + date.getTimezoneOffset() * 60000)
+    const tzOffset = offset ? date.getTimezoneOffset() * 60000 : 0
+    const deadline = new Date(date.getTime() + tzOffset)
     const minutes = deadline.getMinutes()
     const zero = minutes < 10 ? "0" : ""
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
@@ -138,6 +154,19 @@ export const isVisible = (enrollment: Enrollment): boolean => { return enrollmen
 export const isFavorite = (enrollment: Enrollment): boolean => { return enrollment.state === Enrollment_DisplayState.FAVORITE }
 
 export const isAuthor = (user: User, review: Review): boolean => { return user.ID === review.ReviewerID }
+
+/** isValidSubmissionForAssignment returns true if the submission is valid for the assignment
+ *  A submission is considered valid if the assignment is a group lab, or the submission is not part of a group.
+ *  This is used to filter out submissions that are not to be displayed in the UI.
+ * 
+ *  - If the assignment is a group lab, all submissions (solo and group) are valid.
+ *  - If the assignment is not a group lab, only submissions that are not part of a group are valid.
+ */
+export const isValidSubmissionForAssignment = (submission: Submission, assignment: Assignment): boolean => {
+    return assignment.isGroupLab || submission.groupID === 0n
+}
+
+export const isGroupSubmission = (submission: Submission): boolean => { return submission.groupID > 0n }
 
 export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.reviewers > 0
@@ -498,6 +527,83 @@ export class SubmissionsForCourse {
             case "GROUP":
                 this.groupSubmissions = map
                 break
+        }
+    }
+}
+
+export class SubmissionsForUser {
+    submissions: Map<bigint, Submission[]> = new Map()
+    groupSubmissions: Map<bigint, Submission[]> = new Map()
+    /** ForGroup returns group submissions for the given group */
+    ForGroup(courseID: bigint): Submission[] {
+        return this.groupSubmissions.get(courseID) ?? []
+    }
+
+    ForAssignment(assignment: Assignment): Submission[] {
+        const submissions: Submission[] = []
+        const groupSubs = this.groupSubmissions.get(assignment.CourseID) ?? []
+        const userSubs = this.submissions.get(assignment.CourseID) ?? []
+
+        for (const sub of groupSubs) {
+            if (sub.AssignmentID === assignment.ID) {
+                submissions.push(sub)
+            }
+        }
+
+        for (const sub of userSubs) {
+            if (sub.AssignmentID === assignment.ID) {
+                submissions.push(sub)
+            }
+        }
+        return submissions
+    }
+
+    ByID(submissionID: bigint): Submission | undefined {
+        for (const submissions of this.submissions.values()) {
+            const submission = submissions.find(s => s.ID === submissionID)
+            if (submission) {
+                return submission
+            }
+        }
+
+        for (const submissions of this.groupSubmissions.values()) {
+            const submission = submissions.find(s => s.ID === submissionID)
+            if (submission) {
+                return submission
+            }
+        }
+        // No submission found
+        return undefined
+    }
+
+    /** update updates the submission in the respective map */
+    update(submission: Submission) {
+        // Check all user submissions
+        for (const [courseID, submissions] of this.submissions) {
+            const index = submissions.findIndex(s => s.ID === submission.ID)
+            if (index !== -1) {
+                submissions[index] = submission
+                this.submissions.set(courseID, submissions)
+                return
+            }
+        }
+        // Check all group submissions
+        for (const [courseID, submissions] of this.groupSubmissions) {
+            const index = submissions.findIndex(s => s.ID === submission.ID)
+            if (index !== -1) {
+                submissions[index] = submission
+                this.groupSubmissions.set(courseID, submissions)
+                return
+            }
+        }
+    }
+
+    setSubmissions(courseID: bigint, type: "USER" | "GROUP", submissions: Submission[]) {
+        if (type === "USER") {
+            this.submissions.set(courseID, submissions)
+        }
+        if (type === "GROUP") {
+            this.groupSubmissions.set(courseID, submissions)
         }
     }
 }

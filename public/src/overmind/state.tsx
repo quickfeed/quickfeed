@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint
@@ -57,7 +57,7 @@ export type State = {
 
     /* Contains all submissions for the user, indexed by course ID */
     // The individual submissions for a given course are indexed by assignment order - 1
-    submissions: { [courseID: string]: Submission[] },
+    submissions: SubmissionsForUser,
 
     /* Current enrollment status of the user for a given course */
     status: { [courseID: string]: Enrollment_UserStatus }
@@ -219,7 +219,7 @@ export const state: State = {
         }
         return enrollmentsByCourseID
     }),
-    submissions: {},
+    submissions: new SubmissionsForUser(),
     userGroup: {},
 
     isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
@@ -230,10 +230,7 @@ export const state: State = {
     }),
     isCourseCreator: derived(({ courses, activeCourse, self }: State) => {
         const course = courses.find(c => c.ID === activeCourse)
-        if (course && course.courseCreatorID === self.ID) {
-            return true
-        }
-        return false
+        return course !== undefined && course.courseCreatorID === self.ID
     }),
     status: {},
 

@@ -46,7 +46,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
         if (!assignment) {
             return ""
         }
-        const user = state.courseEnrollments[assignment.CourseID.toString()].find(user => user.ID === userID)?.user
+        const user = state.courseEnrollments[assignment.CourseID.toString()].find(enrollment => enrollment.userID === userID)?.user
         if (!user) {
             return ""
         }
