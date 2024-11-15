@@ -333,9 +333,14 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	for _, enrollment := range course.Enrollments {
 		var totalApproved uint64
 		var submissionDate time.Time
+		duplicateAssignments := make(map[uint64]struct{})
 		for _, submission := range submissions.For(enrollment.ID) {
+			if _, ok := duplicateAssignments[submission.AssignmentID]; ok {
+				continue
+			}
 			if submission.IsApproved(enrollment.UserID) {
 				totalApproved++
+				duplicateAssignments[submission.AssignmentID] = struct{}{}
 			}
 			if enrollment.LastActivityDate == nil {
 				submissionDate = submission.NewestSubmissionDate(submissionDate)
