@@ -281,7 +281,13 @@ func (s *QuickFeedService) updateSubmission(submissionID uint64, grades []*qf.Gr
 	if score > 0 {
 		submission.Score = score
 	}
-	return s.db.UpdateSubmission(submission)
+	if err := s.db.UpdateSubmission(submission); err != nil {
+		return err
+	}
+	if submission.Released {
+		s.streams.Submission.SendTo(submission, submission.GetUserIDs()...)
+	}
+	return nil
 }
 
 // updateSubmissions updates status and release state of multiple submissions for the
