@@ -14,7 +14,7 @@ func (g *Group) UserNames() []string {
 // Contains returns true if the given user is in the group.
 func (g *Group) Contains(user *User) bool {
 	for _, u := range g.GetUsers() {
-		if user.ID == u.ID {
+		if user.GetID() == u.GetID() {
 			return true
 		}
 	}
