@@ -65,8 +65,8 @@ func TestGroupContains(t *testing.T) {
 				Users: tt.groupUsers,
 			}
 			got := group.Contains(tt.user)
-			if got != tt.want {
-				t.Errorf("Group.Contains() = %v, want %v", got, tt.want)
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
+				t.Errorf("GetUserSubset() mismatch (-wantSubset, +gotSubset):\n%s", diff)
 			}
 		})
 	}
