@@ -19,3 +19,55 @@ func TestGetUserSubset(t *testing.T) {
 		t.Errorf("GetUserSubset() mismatch (-wantSubset, +gotSubset):\n%s", diff)
 	}
 }
+
+func TestGroupContains(t *testing.T) {
+	tests := []struct {
+		name       string
+		groupUsers []*qf.User
+		user       *qf.User
+		want       bool
+	}{
+		{
+			name:       "User in group",
+			groupUsers: []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}},
+			user:       &qf.User{ID: 2},
+			want:       true,
+		},
+		{
+			name:       "User not in group",
+			groupUsers: []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}},
+			user:       &qf.User{ID: 4},
+			want:       false,
+		},
+		{
+			name:       "Empty group",
+			groupUsers: []*qf.User{},
+			user:       &qf.User{ID: 1},
+			want:       false,
+		},
+		{
+			name:       "Nil user",
+			groupUsers: []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}},
+			user:       nil,
+			want:       false,
+		},
+		{
+			name:       "Nil group and nil user",
+			groupUsers: nil,
+			user:       nil,
+			want:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			group := &qf.Group{
+				Users: tt.groupUsers,
+			}
+			got := group.Contains(tt.user)
+			if got != tt.want {
+				t.Errorf("Group.Contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
