@@ -48,13 +48,6 @@ func TestGroup_UserNames(t *testing.T) {
 			group: nil,
 			want:  nil,
 		},
-		{
-			name: "Nil user",
-			group: &qf.Group{
-				Users: []*qf.User{nil},
-			},
-			want: nil,
-		},
 	}
 
 	for _, tt := range tests {
@@ -286,7 +279,6 @@ func TestGroup_GetUsersExcept(t *testing.T) {
 			},
 		},
 		{
-			// Test case where the specified userID is present.
 			name: "User ID present",
 			group: &qf.Group{
 				Users: []*qf.User{
@@ -299,6 +291,20 @@ func TestGroup_GetUsersExcept(t *testing.T) {
 				{ID: 1},
 			},
 		},
+		{
+			name:   "Nil group",
+			group:  nil,
+			userID: 3,
+			want:   []*qf.User{},
+		},
+		{
+			name: "Nil user list in group",
+			group: &qf.Group{
+				Users: nil,
+			},
+			userID: 3,
+			want:   []*qf.User{},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -307,6 +313,54 @@ func TestGroup_GetUsersExcept(t *testing.T) {
 			got := tt.group.GetUsersExcept(tt.userID)
 			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("Group.GetUsersExcept() mismatch (-wantSubset, +gotSubset):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGroup_UserIDs(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		group *qf.Group
+		want  []uint64
+	}{
+		{
+			name:  "Empty group",
+			group: &qf.Group{},
+			want:  []uint64{},
+		},
+		{
+			name: "Non empty group",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1},
+					{ID: 2},
+					{ID: 3},
+				},
+			},
+			want: []uint64{1, 2, 3},
+		},
+		{
+			name:  "Nil group",
+			group: nil,
+			want:  []uint64{1, 2, 3},
+		},
+		{
+			name: "Nil user list in group",
+			group: &qf.Group{
+				Users: nil,
+			},
+			want: []uint64{1, 2, 3},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.group.UserIDs()
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
+				t.Errorf("Group.UserIDs() mismatch (-wantSubset, +gotSubset):\n%s", diff)
 			}
 		})
 	}
