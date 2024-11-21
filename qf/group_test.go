@@ -155,14 +155,14 @@ func TestGroup_ContainsAll(t *testing.T) {
 			name: "Identical groups",
 			g1: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
-					{ID: 2, Name: "user-2"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			g2: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
-					{ID: 2, Name: "user-2"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			want: true,
@@ -171,14 +171,14 @@ func TestGroup_ContainsAll(t *testing.T) {
 			name: "Different order same users",
 			g1: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
-					{ID: 2, Name: "user-2"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			g2: &qf.Group{
 				Users: []*qf.User{
-					{ID: 2, Name: "user-2"},
-					{ID: 1, Name: "user-1"},
+					{ID: 2},
+					{ID: 1},
 				},
 			},
 			want: true,
@@ -187,14 +187,14 @@ func TestGroup_ContainsAll(t *testing.T) {
 			name: "Different users",
 			g1: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
-					{ID: 2, Name: "user-2"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			g2: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
-					{ID: 3, Name: "user-3"},
+					{ID: 1},
+					{ID: 3},
 				},
 			},
 			want: false,
@@ -203,13 +203,13 @@ func TestGroup_ContainsAll(t *testing.T) {
 			name: "Different number of users",
 			g1: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
-					{ID: 2, Name: "user-2"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			g2: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "user-1"},
+					{ID: 1},
 				},
 			},
 			want: false,
@@ -222,6 +222,61 @@ func TestGroup_ContainsAll(t *testing.T) {
 			got := tt.g1.ContainsAll(tt.g2)
 			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("Group.ContainsAll() mismatch (-wantSubset, +gotSubset):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGroup_GetUsersExcept(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name   string
+		group  *qf.Group
+		userID uint64
+		want   []*qf.User
+	}{
+		{
+			name:   "Empty group",
+			group:  &qf.Group{},
+			userID: 1,
+			want:   []*qf.User{},
+		},
+		{
+			name: "User ID not present",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "Alice"},
+					{ID: 2, Name: "Bob"},
+				},
+			},
+			userID: 3,
+			want: []*qf.User{
+				{ID: 1, Name: "Alice"},
+				{ID: 2, Name: "Bob"},
+			},
+		},
+		{
+			// Test case where the specified userID is present.
+			name: "UserIDPresent",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "Alice"},
+					{ID: 2, Name: "Bob"},
+				},
+			},
+			userID: 2,
+			want: []*qf.User{
+				{ID: 1, Name: "Alice"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.group.GetUsersExcept(tt.userID)
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
+				t.Errorf("Group.GetUsersExcept() mismatch (-wantSubset, +gotSubset):\n%s", diff)
 			}
 		})
 	}
