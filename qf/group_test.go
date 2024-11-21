@@ -20,53 +20,69 @@ func TestGetUserSubset(t *testing.T) {
 	}
 }
 
-func TestGroupContains(t *testing.T) {
+func TestGroup_Contains(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
-		name       string
-		groupUsers []*qf.User
-		user       *qf.User
-		want       bool
+		name  string
+		group *qf.Group
+		user  *qf.User
+		want  bool
 	}{
 		{
-			name:       "User in group",
-			groupUsers: []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}},
-			user:       &qf.User{ID: 2},
-			want:       true,
+			name:  "Empty group",
+			group: &qf.Group{},
+			user:  &qf.User{ID: 1},
+			want:  false,
 		},
 		{
-			name:       "User not in group",
-			groupUsers: []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}},
-			user:       &qf.User{ID: 4},
-			want:       false,
+			name: "User not in group",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1},
+					{ID: 2},
+				},
+			},
+			user: &qf.User{ID: 3},
+			want: false,
 		},
 		{
-			name:       "Empty group",
-			groupUsers: []*qf.User{},
-			user:       &qf.User{ID: 1},
-			want:       false,
+			name: "User in group",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1},
+					{ID: 2},
+				},
+			},
+			user: &qf.User{ID: 2},
+			want: true,
 		},
 		{
-			name:       "Nil user",
-			groupUsers: []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}},
-			user:       nil,
-			want:       false,
+			name: "Nil user",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1},
+					{ID: 2},
+					{ID: 3},
+				},
+			},
+			user: nil,
+			want: false,
 		},
 		{
-			name:       "Nil group and nil user",
-			groupUsers: nil,
-			user:       nil,
-			want:       false,
+			name:  "Nil group and nil user",
+			group: nil,
+			user:  nil,
+			want:  false,
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			group := &qf.Group{
-				Users: tt.groupUsers,
-			}
-			got := group.Contains(tt.user)
+			t.Parallel()
+			got := tt.group.Contains(tt.user)
 			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
-				t.Errorf("GetUserSubset() mismatch (-wantSubset, +gotSubset):\n%s", diff)
+				t.Errorf("Group.Contains() mismatch (-wantSubset, +gotSubset):\n%s", diff)
 			}
 		})
 	}
