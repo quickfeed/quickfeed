@@ -34,10 +34,10 @@ func loadDockerfile(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
+func setupRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	dockerfile := loadDockerfile(t)
 	qfTestOrg := scm.GetTestOrganization(t)
-	// Only used to fetch the user's GitHub login (user name)
+	// Only used to fetch the user's GitHub login (username)
 	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
@@ -80,7 +80,7 @@ func TestRunTests(t *testing.T) {
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
 
-	runData := testRunData(t, runner)
+	runData := setupRunData(t, runner)
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
@@ -99,8 +99,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
 
-	runData := testRunData(t, runner)
-	// Note that this timeout value is susceptible to variation
+	runData := setupRunData(t, runner)
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
 
@@ -389,9 +388,9 @@ func TestStreamRecordResults(t *testing.T) {
 
 	var streams []*qtest.MockStream[qf.Submission]
 	for _, user := range group.Users {
-		stream := qtest.NewMockStream[qf.Submission](t)
-		streamService.Submission.Add(stream, user.ID)
-		streams = append(streams, stream)
+		mockStream := qtest.NewMockStream[qf.Submission](t)
+		streamService.Submission.Add(mockStream, user.ID)
+		streams = append(streams, mockStream)
 	}
 
 	// Add a stream for the admin user
@@ -435,8 +434,8 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 	streamService.Submission.SendTo(rebuiltSubmission, owners...)
 
-	for _, stream := range streams {
-		stream.Close()
+	for _, mockStream := range streams {
+		mockStream.Close()
 	}
 	adminStream.Close()
 	// Wait for all streams to be closed
@@ -449,8 +448,8 @@ func TestStreamRecordResults(t *testing.T) {
 
 	// We should have received three submissions for each stream
 	numSubmissions := 0
-	for _, stream := range streams {
-		numSubmissions += len(stream.Messages)
+	for _, mockStream := range streams {
+		numSubmissions += len(mockStream.Messages)
 	}
 	if numSubmissions != 9 {
 		t.Errorf("Expected 9 messages, got %d", numSubmissions)
@@ -458,10 +457,10 @@ func TestStreamRecordResults(t *testing.T) {
 
 	// Check that the messages are correct
 	submissions := []*qf.Submission{submission, updatedSubmission, rebuiltSubmission}
-	for _, stream := range streams {
+	for _, mockStream := range streams {
 		for i, submission := range submissions {
-			if diff := cmp.Diff(stream.Messages[i], submission, protocmp.Transform()); diff != "" {
-				t.Errorf("Incorrect submission. Want: %+v, got %+v", submission, stream.Messages[i])
+			if diff := cmp.Diff(mockStream.Messages[i], submission, protocmp.Transform()); diff != "" {
+				t.Errorf("Incorrect submission. Want: %+v, got %+v", submission, mockStream.Messages[i])
 			}
 		}
 	}
