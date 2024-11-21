@@ -344,14 +344,14 @@ func TestGroup_UserIDs(t *testing.T) {
 		{
 			name:  "Nil group",
 			group: nil,
-			want:  []uint64{1, 2, 3},
+			want:  []uint64{},
 		},
 		{
 			name: "Nil user list in group",
 			group: &qf.Group{
 				Users: nil,
 			},
-			want: []uint64{1, 2, 3},
+			want: []uint64{},
 		},
 	}
 	for _, tt := range tests {

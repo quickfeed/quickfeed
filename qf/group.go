@@ -40,8 +40,8 @@ func (g *Group) GetUsersExcept(userID uint64) []*User {
 
 // UserIDs returns the user IDs of this group.
 func (g *Group) UserIDs() []uint64 {
-	userIDs := make([]uint64, 0, len(g.Users))
-	for _, user := range g.Users {
+	userIDs := make([]uint64, 0, len(g.GetUsers()))
+	for _, user := range g.GetUsers() {
 		userIDs = append(userIDs, user.GetID())
 	}
 	return userIDs
