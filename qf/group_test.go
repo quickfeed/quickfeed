@@ -136,3 +136,93 @@ func TestGroup_Contains(t *testing.T) {
 		})
 	}
 }
+
+func TestGroup_ContainsAll(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		g1   *qf.Group
+		g2   *qf.Group
+		want bool
+	}{
+		{
+			name: "Two empty groups",
+			g1:   &qf.Group{},
+			g2:   &qf.Group{},
+			want: true,
+		},
+		{
+			name: "Identical groups",
+			g1: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+					{ID: 2, Name: "user-2"},
+				},
+			},
+			g2: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+					{ID: 2, Name: "user-2"},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "Different order same users",
+			g1: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+					{ID: 2, Name: "user-2"},
+				},
+			},
+			g2: &qf.Group{
+				Users: []*qf.User{
+					{ID: 2, Name: "user-2"},
+					{ID: 1, Name: "user-1"},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "Different users",
+			g1: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+					{ID: 2, Name: "user-2"},
+				},
+			},
+			g2: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+					{ID: 3, Name: "user-3"},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "Different number of users",
+			g1: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+					{ID: 2, Name: "user-2"},
+				},
+			},
+			g2: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1, Name: "user-1"},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.g1.ContainsAll(tt.g2)
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
+				t.Errorf("Group.ContainsAll() mismatch (-wantSubset, +gotSubset):\n%s", diff)
+			}
+		})
+	}
+}
