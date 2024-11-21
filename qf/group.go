@@ -25,7 +25,7 @@ func (g *Group) Contains(user *User) bool {
 
 // ContainsAll compares group members
 func (g *Group) ContainsAll(group *Group) bool {
-	return reflect.DeepEqual(g.Users, group.Users)
+	return reflect.DeepEqual(g.GetUsers(), group.GetUsers())
 }
 
 // GetUsersExcept returns a list of all users in a group, except the one with the given userID.
