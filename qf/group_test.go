@@ -20,6 +20,55 @@ func TestGetUserSubset(t *testing.T) {
 	}
 }
 
+func TestGroup_UserNames(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		group *qf.Group
+		want  []string
+	}{
+		{
+			name:  "Empty group",
+			group: &qf.Group{},
+			want:  nil,
+		},
+		{
+			name: "Non empty group",
+			group: &qf.Group{
+				Users: []*qf.User{
+					{Login: "adityaa"},
+					{Login: "tootsy-tiger"},
+					{Login: "rhea"},
+				},
+			},
+			want: []string{"adityaa", "tootsy-tiger", "rhea"},
+		},
+		{
+			name:  "Nil group",
+			group: nil,
+			want:  nil,
+		},
+		{
+			name: "Nil user",
+			group: &qf.Group{
+				Users: []*qf.User{nil},
+			},
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.group.UserNames()
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
+				t.Errorf("Group.Usernames() mismatch (-wantSubset, +gotSubset):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestGroup_Contains(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
