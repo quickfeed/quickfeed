@@ -214,6 +214,36 @@ func TestGroup_ContainsAll(t *testing.T) {
 			},
 			want: false,
 		},
+		{
+			name: "Nil argument group",
+			g1: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1},
+					{ID: 2},
+					{ID: 3},
+				},
+			},
+			g2:   nil,
+			want: false,
+		},
+		{
+			name: "Nil receiver group",
+			g1: &qf.Group{
+				Users: []*qf.User{
+					{ID: 1},
+					{ID: 2},
+					{ID: 3},
+				},
+			},
+			g2:   nil,
+			want: false,
+		},
+		{
+			name: "Nil all group",
+			g1:   nil,
+			g2:   nil,
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -245,28 +275,28 @@ func TestGroup_GetUsersExcept(t *testing.T) {
 			name: "User ID not present",
 			group: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "Alice"},
-					{ID: 2, Name: "Bob"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			userID: 3,
 			want: []*qf.User{
-				{ID: 1, Name: "Alice"},
-				{ID: 2, Name: "Bob"},
+				{ID: 1},
+				{ID: 2},
 			},
 		},
 		{
 			// Test case where the specified userID is present.
-			name: "UserIDPresent",
+			name: "User ID present",
 			group: &qf.Group{
 				Users: []*qf.User{
-					{ID: 1, Name: "Alice"},
-					{ID: 2, Name: "Bob"},
+					{ID: 1},
+					{ID: 2},
 				},
 			},
 			userID: 2,
 			want: []*qf.User{
-				{ID: 1, Name: "Alice"},
+				{ID: 1},
 			},
 		},
 	}
