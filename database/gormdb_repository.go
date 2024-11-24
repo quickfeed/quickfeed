@@ -4,19 +4,19 @@ import "github.com/quickfeed/quickfeed/qf"
 
 // CreateRepository creates a new repository record.
 func (db *GormDB) CreateRepository(repo *qf.Repository) error {
-	if repo.ScmOrganizationID == 0 || repo.ScmRepositoryID == 0 {
+	if repo.GetScmOrganizationID() == 0 || repo.GetScmRepositoryID() == 0 {
 		// both organization and repository must be non-zero
 		return ErrCreateRepo
 	}
 	switch {
-	case repo.UserID > 0:
+	case repo.GetUserID() > 0:
 		// check that user exists before creating repo in database
-		if err := db.conn.First(&qf.User{}, repo.UserID).Error; err != nil {
+		if err := db.conn.First(&qf.User{}, repo.GetUserID()).Error; err != nil {
 			return err
 		}
-	case repo.GroupID > 0:
+	case repo.GetGroupID() > 0:
 		// check that group exists before creating repo in database
-		if err := db.conn.First(&qf.Group{}, repo.GroupID).Error; err != nil {
+		if err := db.conn.First(&qf.Group{}, repo.GetGroupID()).Error; err != nil {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():

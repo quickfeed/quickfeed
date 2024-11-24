@@ -42,21 +42,21 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 		if err := tx.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
 			return err // will rollback transaction
 		}
-		if submission.ID != 0 {
-			if err := tx.First(&qf.Submission{}, &qf.Submission{ID: submission.ID}).Error; err != nil {
+		if submission.GetID() != 0 {
+			if err := tx.First(&qf.Submission{}, &qf.Submission{ID: submission.GetID()}).Error; err != nil {
 				return err // will rollback transaction
 			}
-			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
+			if err := tx.Where("submission_id = ?", submission.GetID()).Delete(&score.Score{}).Error; err != nil {
 				return err // will rollback transaction
 			}
-			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.BuildInfo{}).Error; err != nil {
+			if err := tx.Where("submission_id = ?", submission.GetID()).Delete(&score.BuildInfo{}).Error; err != nil {
 				return err // will rollback transaction
 			}
 			if submission.BuildInfo != nil {
-				submission.BuildInfo.SubmissionID = submission.ID
+				submission.BuildInfo.SubmissionID = submission.GetID()
 			}
-			for _, sc := range submission.Scores {
-				sc.SubmissionID = submission.ID
+			for _, sc := range submission.GetScores() {
+				sc.SubmissionID = submission.GetID()
 			}
 		}
 		// Full save associations is required to save any nested grades
@@ -70,19 +70,19 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 // check returns an error if the submission query is invalid; otherwise nil is returned.
 func (db *GormDB) check(submission *qf.Submission) error {
 	// Foreign key must be greater than 0.
-	if submission.AssignmentID < 1 {
+	if submission.GetAssignmentID() < 1 {
 		return ErrInvalidAssignmentID
 	}
 
 	// Either user or group id must be set, but not both.
 	var m *gorm.DB
 	switch {
-	case submission.UserID > 0 && submission.GroupID > 0:
+	case submission.GetUserID() > 0 && submission.GetGroupID() > 0:
 		return ErrInvalidSubmission
-	case submission.UserID > 0:
-		m = db.conn.First(&qf.User{ID: submission.UserID})
-	case submission.GroupID > 0:
-		m = db.conn.First(&qf.Group{ID: submission.GroupID})
+	case submission.GetUserID() > 0:
+		m = db.conn.First(&qf.User{ID: submission.GetUserID()})
+	case submission.GetGroupID() > 0:
+		m = db.conn.First(&qf.Group{ID: submission.GetGroupID()})
 	default:
 		// neither UserID nor GroupID are not set
 		return ErrInvalidSubmission
@@ -91,19 +91,19 @@ func (db *GormDB) check(submission *qf.Submission) error {
 	// Check that user/group with given ID exists.
 	var idCount int64
 	if err := m.Count(&idCount).Error; err != nil {
-		if submission.UserID > 0 {
-			return fmt.Errorf("user %d not found for submission: %+v: %w", submission.UserID, submission, err)
+		if submission.GetUserID() > 0 {
+			return fmt.Errorf("user %d not found for submission: %+v: %w", submission.GetUserID(), submission, err)
 		} else {
-			return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GroupID, submission, err)
+			return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GetGroupID(), submission, err)
 		}
 	}
 
 	// Checks that the assignment exists.
 	var assignment int64
 	if err := db.conn.Model(&qf.Assignment{}).Where(&qf.Assignment{
-		ID: submission.AssignmentID,
+		ID: submission.GetAssignmentID(),
 	}).Count(&assignment).Error; err != nil {
-		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
+		return fmt.Errorf("assignment %d not found: %w", submission.GetAssignmentID(), err)
 	}
 
 	// Exactly one assignment and user/group must exist together.
@@ -138,7 +138,7 @@ func (db *GormDB) GetLastSubmission(courseID uint64, query *qf.Submission) (*qf.
 	}
 	var assignment qf.Assignment
 	if err := db.conn.Model(&qf.Assignment{}).Where(
-		&qf.Assignment{ID: submission.AssignmentID, CourseID: courseID},
+		&qf.Assignment{ID: submission.GetAssignmentID(), CourseID: courseID},
 	).First(&assignment).Error; err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
 	return db.conn.Transaction(func(tx *gorm.DB) error {
 		var submissionIDs []*uint64
 		if err := tx.Model(&qf.Submission{}).
-			Where("assignment_id = ? AND score >= ?", query.AssignmentID, query.Score).
+			Where("assignment_id = ? AND score >= ?", query.GetAssignmentID(), query.GetScore()).
 			Pluck("id", &submissionIDs).Error; err != nil {
 			return err
 		}
@@ -198,7 +198,7 @@ func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
 			// Update the released status of all submissions that have score equal or above the provided score
 			Where("id IN (?)", submissionIDs).
 			Updates(&qf.Submission{
-				Released: query.Released,
+				Released: query.GetReleased(),
 			}).Error; err != nil {
 			return err
 		}
@@ -226,7 +226,7 @@ func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
 func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 	var review qf.Review
 	if err := db.conn.Where(query).
-		Preload("GradingBenchmarks", "review_id = (?)", query.ID).
+		Preload("GradingBenchmarks", "review_id = (?)", query.GetID()).
 		Preload("GradingBenchmarks.Criteria").
 		First(&review).Error; err != nil {
 		return nil, err
@@ -245,13 +245,13 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 	// Therefore we use Select before the Updates call. For additional context, see
 	// https://github.com/quickfeed/quickfeed/issues/569#issuecomment-1013729572
 	return db.conn.Model(&query).Select("*").Updates(&qf.Review{
-		ID:           query.ID,
-		SubmissionID: query.SubmissionID,
-		Feedback:     query.Feedback,
-		Ready:        query.Ready,
-		Score:        query.Score,
-		ReviewerID:   query.ReviewerID,
-		Edited:       query.Edited,
+		ID:           query.GetID(),
+		SubmissionID: query.GetSubmissionID(),
+		Feedback:     query.GetFeedback(),
+		Ready:        query.GetReady(),
+		Score:        query.GetScore(),
+		ReviewerID:   query.GetReviewerID(),
+		Edited:       query.GetEdited(),
 	}).Error
 }
 
