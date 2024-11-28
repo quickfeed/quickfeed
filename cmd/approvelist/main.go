@@ -173,22 +173,6 @@ func (o *output) Print(showAll bool) {
 	fmt.Printf("FS: %d, QF: %d, Both: %d\n", len(o.fs), len(o.qf), len(o.both))
 }
 
-func numApproved(enrollment *qf.Enrollment, submissions []*qf.Submission) int {
-	numApproved := 0
-	duplicateAssignments := make(map[uint64]struct{})
-	for _, s := range submissions {
-		// ignore duplicate approved assignments
-		if _, ok := duplicateAssignments[s.GetAssignmentID()]; ok {
-			continue
-		}
-		if s.IsApproved(enrollment.GetUserID()) {
-			duplicateAssignments[s.GetAssignmentID()] = struct{}{}
-			numApproved++
-		}
-	}
-	return numApproved
-}
-
 func approved(numApproved, passLimit int) bool {
 	return numApproved >= passLimit
 }
