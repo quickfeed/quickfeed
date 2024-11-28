@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -331,26 +329,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	}
 	var enrollmentsWithActivity []*qf.Enrollment
 	for _, enrollment := range course.Enrollments {
-		var totalApproved uint64
-		var submissionDate time.Time
-		duplicateAssignments := make(map[uint64]struct{})
-		for _, submission := range submissions.For(enrollment.ID) {
-			if _, ok := duplicateAssignments[submission.AssignmentID]; ok {
-				continue
-			}
-			if submission.IsApproved(enrollment.UserID) {
-				totalApproved++
-				duplicateAssignments[submission.AssignmentID] = struct{}{}
-			}
-			if enrollment.LastActivityDate == nil {
-				submissionDate = submission.NewestSubmissionDate(submissionDate)
-			}
-		}
-
-		enrollment.TotalApproved = totalApproved
-		if enrollment.LastActivityDate == nil && !submissionDate.IsZero() {
-			enrollment.LastActivityDate = timestamppb.New(submissionDate)
-		}
+		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()), true)
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
 	}
 	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)

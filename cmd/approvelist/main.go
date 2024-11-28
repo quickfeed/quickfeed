@@ -76,8 +76,8 @@ func main() {
 		}
 		quickfeedStudents[studID] = student
 
-		submissions := courseSubmissions.For(enroll.ID)
-		numApproved := numApproved(enroll.UserID, submissions)
+		enroll.CountApprovedSubmissions(courseSubmissions.For(enroll.GetID()), false)
+		numApproved := int(enroll.GetTotalApproved())
 		approvedValue := fail
 		if approved(numApproved, *passLimit) {
 			approvedValue = pass
@@ -173,16 +173,16 @@ func (o *output) Print(showAll bool) {
 	fmt.Printf("FS: %d, QF: %d, Both: %d\n", len(o.fs), len(o.qf), len(o.both))
 }
 
-func numApproved(userID uint64, submissions []*qf.Submission) int {
+func numApproved(enrollment *qf.Enrollment, submissions []*qf.Submission) int {
 	numApproved := 0
 	duplicateAssignments := make(map[uint64]struct{})
 	for _, s := range submissions {
 		// ignore duplicate approved assignments
-		if _, ok := duplicateAssignments[s.AssignmentID]; ok {
+		if _, ok := duplicateAssignments[s.GetAssignmentID()]; ok {
 			continue
 		}
-		if s.IsApproved(userID) {
-			duplicateAssignments[s.AssignmentID] = struct{}{}
+		if s.IsApproved(enrollment.GetUserID()) {
+			duplicateAssignments[s.GetAssignmentID()] = struct{}{}
 			numApproved++
 		}
 	}
