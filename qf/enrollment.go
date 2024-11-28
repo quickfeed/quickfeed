@@ -139,7 +139,7 @@ func (m *Enrollments) UserIDs() []uint64 {
 	return userIDs
 }
 
-func (m *Enrollment) CountApprovedSubmissions(submissions []*Submission, withActivityDate bool) {
+func (m *Enrollment) CountApprovedSubmissions(submissions []*Submission) {
 	var totalApproved uint64
 	var submissionDate time.Time
 	duplicateAssignments := make(map[uint64]struct{})
@@ -154,15 +154,14 @@ func (m *Enrollment) CountApprovedSubmissions(submissions []*Submission, withAct
 			totalApproved++
 
 			// Update submissionDate if needed
-			if withActivityDate && m.GetLastActivityDate() == nil {
+			if m.GetLastActivityDate() == nil {
 				submissionDate = s.NewestSubmissionDate(submissionDate)
 			}
 		}
 	}
-	if withActivityDate {
-		if m.LastActivityDate == nil && !submissionDate.IsZero() {
-			m.LastActivityDate = timestamppb.New(submissionDate)
-		}
+
+	if m.LastActivityDate == nil && !submissionDate.IsZero() {
+		m.LastActivityDate = timestamppb.New(submissionDate)
 	}
 	m.TotalApproved = totalApproved
 }

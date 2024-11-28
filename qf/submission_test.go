@@ -202,7 +202,7 @@ func TestCountApprovedSubmissions(t *testing.T) {
 
 	for _, test := range tests {
 		enrollment := test.enrollment
-		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()), false)
+		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
 		if enrollment.GetTotalApproved() != test.want {
 			t.Errorf("expected enrollment(id=%d) total approved %d, got %d", enrollment.GetID(), test.want, enrollment.GetTotalApproved())
 		}

@@ -329,7 +329,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	}
 	var enrollmentsWithActivity []*qf.Enrollment
 	for _, enrollment := range course.Enrollments {
-		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()), true)
+		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
 	}
 	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)

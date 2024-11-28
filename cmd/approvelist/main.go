@@ -76,7 +76,7 @@ func main() {
 		}
 		quickfeedStudents[studID] = student
 
-		enroll.CountApprovedSubmissions(courseSubmissions.For(enroll.GetID()), false)
+		enroll.CountApprovedSubmissions(courseSubmissions.For(enroll.GetID()))
 		numApproved := int(enroll.GetTotalApproved())
 		approvedValue := fail
 		if approved(numApproved, *passLimit) {
