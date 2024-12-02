@@ -16,7 +16,7 @@ func (s *Score) Fail() {
 
 // Inc increments score if score is less than MaxScore.
 func (s *Score) Inc() {
-	if s.Score < s.MaxScore {
+	if s.GetScore() < s.GetMaxScore() {
 		s.Score++
 	}
 }
@@ -24,16 +24,16 @@ func (s *Score) Inc() {
 // IncBy increments score n times or until score equals MaxScore.
 func (s *Score) IncBy(n int) {
 	m := int32(n)
-	if s.Score+m < s.MaxScore {
+	if s.GetScore()+m < s.GetMaxScore() {
 		s.Score += m
 	} else {
-		s.Score = s.MaxScore
+		s.Score = s.GetMaxScore()
 	}
 }
 
 // Dec decrements score if score is greater than zero.
 func (s *Score) Dec() {
-	if s.Score > 0 {
+	if s.GetScore() > 0 {
 		s.Score--
 	}
 }
@@ -41,7 +41,7 @@ func (s *Score) Dec() {
 // DecBy decrements score n times or until Score equals zero.
 func (s *Score) DecBy(n int) {
 	m := int32(n)
-	if s.Score-m > 0 {
+	if s.GetScore()-m > 0 {
 		s.Score -= m
 	} else {
 		s.Score = 0
@@ -51,29 +51,29 @@ func (s *Score) DecBy(n int) {
 // Normalize the score to the given maxScore.
 func (s *Score) Normalize(maxScore int) {
 	f := float64(maxScore) / float64(s.MaxScore)
-	normScore := float64(s.Score) * f
+	normScore := float64(s.GetScore()) * f
 	s.Score = int32(math.Round(normScore))
 	s.MaxScore = int32(maxScore)
 }
 
 // weightedScore returns the weighted score for this test score.
 func (s *Score) weightedScore(totalWeight float64) float64 {
-	return weightedScore(float64(s.Score), float64(s.MaxScore), float64(s.Weight), totalWeight)
+	return weightedScore(float64(s.GetScore()), float64(s.GetMaxScore()), float64(s.GetWeight()), totalWeight)
 }
 
 // Equal returns true if s equals other. Ignores the Secret field.
 func (s *Score) Equal(other *Score) bool {
 	return other != nil &&
-		s.TestName == other.TestName &&
-		s.Score == other.Score &&
-		s.MaxScore == other.MaxScore &&
-		s.Weight == other.Weight
+		s.TestName == other.GetTestName() &&
+		s.Score == other.GetScore() &&
+		s.MaxScore == other.GetMaxScore() &&
+		s.Weight == other.GetWeight()
 }
 
 // RelativeScore returns a string with the following format:
 // "TestName: score = x/y = s".
 func (s *Score) RelativeScore() string {
-	return fmt.Sprintf("%s: score = %d/%d = %.1f", s.TestName, s.Score, s.MaxScore, float32(s.Score)/float32(s.MaxScore))
+	return fmt.Sprintf("%s: score = %d/%d = %.1f", s.GetTestName(), s.GetScore(), s.GetMaxScore(), float32(s.GetScore())/float32(s.GetMaxScore()))
 }
 
 // Print prints a JSON representation of the score that can be picked up by QuickFeed.

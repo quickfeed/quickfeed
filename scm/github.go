@@ -163,7 +163,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Repo:    path,
-			Owner:   org.ScmOrganizationName,
+			Owner:   org.GetScmOrganizationName(),
 			Private: private,
 		}
 		repo, err := s.createRepository(ctx, repoOptions)

@@ -92,11 +92,11 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	check(err)
 
 	fmt.Println("***********************")
-	fmt.Println(results.BuildInfo.BuildLog)
+	fmt.Println(results.BuildInfo.GetBuildLog())
 	fmt.Println("***********************")
 	// TODO print with tab writer
 	for _, score := range results.Scores {
-		fmt.Printf("%s: %d/%d (%d)\n", score.TestName, score.Score, score.MaxScore, score.Weight)
+		fmt.Printf("%s: %d/%d (%d)\n", score.GetTestName(), score.GetScore(), score.GetMaxScore(), score.GetWeight())
 	}
 	fmt.Printf("Score sum: %d\n", results.Sum())
 }

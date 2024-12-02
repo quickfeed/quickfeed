@@ -91,7 +91,7 @@ func MultipleChoice(t *testing.T, sc *score.Score, answerFile string, correct ma
 	}
 	_, incorrectAnswers := CheckMultipleChoice(answers, correct)
 	for _, incorrect := range incorrectAnswers {
-		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.GetTestName(), incorrect)
 		sc.Dec()
 	}
 }

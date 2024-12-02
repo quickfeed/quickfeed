@@ -49,16 +49,16 @@ func (sc *Score) isValid(secret string) error {
 	if tName == "" {
 		return test.ErrMsg("", ErrEmptyTestName.Error())
 	}
-	if sc.MaxScore <= 0 {
+	if sc.GetMaxScore() <= 0 {
 		return test.ErrMsg(tName, ErrMaxScore.Error())
 	}
-	if sc.Weight <= 0 {
+	if sc.GetWeight() <= 0 {
 		return test.ErrMsg(tName, ErrWeight.Error())
 	}
-	if sc.Score < 0 || sc.Score > sc.MaxScore {
+	if sc.GetScore() < 0 || sc.Score > sc.MaxScore {
 		return test.ErrMsg(tName, ErrScoreInterval.Error())
 	}
-	if sc.Secret != secret {
+	if sc.GetSecret() != secret {
 		return test.ErrMsg(tName, ErrSecret.Error())
 	}
 	sc.Secret = "" // redact the secret session key

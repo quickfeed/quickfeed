@@ -76,8 +76,8 @@ func main() {
 		}
 		quickfeedStudents[studID] = student
 
-		submissions := courseSubmissions.For(enroll.ID)
-		numApproved := numApproved(enroll.UserID, submissions)
+		submissions := courseSubmissions.For(enroll.GetID())
+		numApproved := numApproved(enroll.GetUserID(), submissions)
 		approvedValue := fail
 		if approved(numApproved, *passLimit) {
 			approvedValue = pass
@@ -178,11 +178,11 @@ func numApproved(userID uint64, submissions []*qf.Submission) int {
 	duplicateAssignments := make(map[uint64]struct{})
 	for _, s := range submissions {
 		// ignore duplicate approved assignments
-		if _, ok := duplicateAssignments[s.AssignmentID]; ok {
+		if _, ok := duplicateAssignments[s.GetAssignmentID()]; ok {
 			continue
 		}
 		if s.IsApproved(userID) {
-			duplicateAssignments[s.AssignmentID] = struct{}{}
+			duplicateAssignments[s.GetAssignmentID()] = struct{}{}
 			numApproved++
 		}
 	}
@@ -264,7 +264,7 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get enrollments for course %s: %w", courseCode, err)
 	}
-	return submissions.Msg, enrollments.Msg.Enrollments, err
+	return submissions.Msg, enrollments.Msg.GetEnrollments(), err
 }
 
 func partialMatch(name string, studentMap map[string]int) (int, error) {

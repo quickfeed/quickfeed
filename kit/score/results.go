@@ -95,21 +95,21 @@ func (r *Results) internalSum(taskName string) (float64, float64) {
 	totalWeight := float64(0)
 	var max, score, weight []float64
 	for _, ts := range r.Scores {
-		if taskName != "" && taskName != ts.TaskName {
+		if taskName != "" && taskName != ts.GetTaskName() {
 			continue
 		}
-		testScore := ts.Score
-		if ts.Score < 0 {
+		testScore := ts.GetScore()
+		if ts.GetScore() < 0 {
 			// If the score is negative, it means that the test is faulty (e.g. duplicate).
 			// We need to set the score to zero to avoid certain edge cases where
 			// the total score would end up being -1 or lower. If not, the total score
 			// would end up being uint32(-1) = 4294967295. See #975
 			testScore = 0
 		}
-		totalWeight += float64(ts.Weight)
-		weight = append(weight, float64(ts.Weight))
+		totalWeight += float64(ts.GetWeight())
+		weight = append(weight, float64(ts.GetWeight()))
 		score = append(score, float64(testScore))
-		max = append(max, float64(ts.MaxScore))
+		max = append(max, float64(ts.GetMaxScore()))
 	}
 	total := float64(0)
 	for i := 0; i < len(score); i++ {

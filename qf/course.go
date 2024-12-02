@@ -24,9 +24,9 @@ func (course *Course) UpdateDockerfile(dockerfile string) bool {
 	// Always cache the dockerfile even if it has not been updated.
 	// This ensures that the calls to GetDockerfile() can return it
 	// even after a restart of the server.
-	courseDockerfileCache[course.ID] = dockerfile
+	courseDockerfileCache[course.GetID()] = dockerfile
 	dockerDigest := digest(dockerfile)
-	updated := course.DockerfileDigest != dockerDigest
+	updated := course.GetDockerfileDigest() != dockerDigest
 	if updated {
 		course.DockerfileDigest = dockerDigest
 	}
@@ -34,7 +34,7 @@ func (course *Course) UpdateDockerfile(dockerfile string) bool {
 }
 
 func (course *Course) GetDockerfile() string {
-	return courseDockerfileCache[course.ID]
+	return courseDockerfileCache[course.GetID()]
 }
 
 func (course *Course) DockerImage() string {
@@ -56,7 +56,7 @@ func (course *Course) CloneDir() string {
 
 func (course *Course) TeacherEnrollments() []*Enrollment {
 	enrolledTeachers := []*Enrollment{}
-	for _, enrollment := range course.Enrollments {
+	for _, enrollment := range course.GetEnrollments() {
 		if enrollment.IsTeacher() {
 			enrolledTeachers = append(enrolledTeachers, enrollment)
 		}

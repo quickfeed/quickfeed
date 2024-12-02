@@ -102,7 +102,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			if err != nil {
 				return nil, "", err
 			}
-			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].Tasks, task)
+			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].GetTasks(), task)
 		}
 	}
 
@@ -110,11 +110,11 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
 		sort.Slice(assignment.Tasks, func(i, j int) bool {
-			return assignment.Tasks[i].Title < assignment.Tasks[j].Title
+			return assignment.Tasks[i].Title < assignment.GetTasks()[j].GetTitle()
 		})
 	}
 	sort.Slice(assignments, func(i, j int) bool {
-		return assignments[i].Order < assignments[j].Order
+		return assignments[i].GetOrder() < assignments[j].GetOrder()
 	})
 
 	return assignments, courseDockerfile, nil
