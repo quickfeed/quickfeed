@@ -76,9 +76,11 @@ func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserSt
 		}
 		m = m.Preload("Assignments").
 			Preload("Enrollments", "status in (?)", userStates, func(db *gorm.DB) *gorm.DB {
-				return db.Omit("UsedSlipDays").Omit("LastActivityDate")
+				return db.Omit("UsedSlipDays", "LastActivityDate")
 			}).
-			Preload("Enrollments.User")
+			Preload("Enrollments.User", func(db *gorm.DB) *gorm.DB {
+				return db.Omit("Login", "UpdateToken", "Email")
+			})
 	case qf.Enrollment_TEACHER:
 		// Preload all data
 		modelGroup := &qf.Group{Status: qf.Group_APPROVED, CourseID: courseID}
