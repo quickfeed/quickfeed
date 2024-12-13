@@ -483,7 +483,7 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
 func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	course, err := s.db.GetCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
@@ -538,7 +538,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
 func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	course, err := s.db.GetCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
@@ -568,7 +568,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted.
 func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	course, err := s.db.GetCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
