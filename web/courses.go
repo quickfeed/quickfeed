@@ -311,7 +311,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
-func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64, isTeacher bool) ([]*qf.Enrollment, error) {
+func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
 	submissions, err := s.getAllCourseSubmissions(
 		&qf.SubmissionRequest{
 			CourseID: courseID,
