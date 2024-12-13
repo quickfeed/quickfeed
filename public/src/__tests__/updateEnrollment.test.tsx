@@ -64,8 +64,8 @@ describe("UpdateEnrollment", () => {
     beforeAll(async () => {
         // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(2), statuses: [] })
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(1), statuses: [] })
+        await mockedOvermind.actions.getCourseData({ courseID: BigInt(2) })
+        await mockedOvermind.actions.getCourseData({ courseID: BigInt(1) })
     })
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
