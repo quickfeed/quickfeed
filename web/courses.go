@@ -311,7 +311,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
-func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
+func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64, isTeacher bool) ([]*qf.Enrollment, error) {
 	submissions, err := s.getAllCourseSubmissions(
 		&qf.SubmissionRequest{
 			CourseID: courseID,
@@ -323,22 +323,14 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(courseID, true)
+	course, err := s.db.GetCourseByStatus(courseID, qf.Enrollment_TEACHER)
 	if err != nil {
 		return nil, err
 	}
-	var enrollmentsWithActivity []*qf.Enrollment
 	for _, enrollment := range course.Enrollments {
 		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
-		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
 	}
-	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
-	if err != nil {
-		return nil, err
-	}
-	// append pending users
-	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
-	return enrollmentsWithActivity, nil
+	return course.Enrollments, nil
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
