@@ -102,8 +102,9 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 }
 
 // GetCourse returns course information for the given course.
-func (s *QuickFeedService) GetCourse(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+func (s *QuickFeedService) GetCourse(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
+	status := courseStatus(ctx, in.Msg.GetCourseID())
+	course, err := s.db.GetCourseByStatus(in.Msg.GetCourseID(), status)
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
