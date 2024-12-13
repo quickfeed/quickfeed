@@ -318,10 +318,10 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	if err != nil {
 		return nil, err
 	}
-	for _, enrollment := range course.Enrollments {
+	for _, enrollment := range course.GetEnrollments() {
 		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
 	}
-	return course.Enrollments, nil
+	return course.GetEnrollments(), nil
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
