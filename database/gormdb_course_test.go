@@ -211,7 +211,7 @@ func TestGormDBGetCourse(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
-	gotCourse, err := db.GetCourse(wantCourse.ID, false)
+	gotCourse, err := db.GetCourse(wantCourse.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +225,7 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if _, err := db.GetCourse(10, false); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetCourse(10); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -261,7 +261,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	}
 
 	// Get the updated course.
-	gotCourse, err := db.GetCourse(course.ID, false)
+	gotCourse, err := db.GetCourse(course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -329,7 +329,7 @@ func TestGormDBCourseUniqueConstraint(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotCourse, err := db.GetCourse(wantCourse.ID, false)
+	gotCourse, err := db.GetCourse(wantCourse.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

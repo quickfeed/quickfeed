@@ -178,7 +178,7 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(request.GetCourseID(), true)
+	course, err := s.db.GetCourseByStatus(request.GetCourseID(), qf.Enrollment_TEACHER)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 // updateCourse updates an existing course.
 func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
 	// ensure the course exists
-	_, err := s.db.GetCourse(request.ID, false)
+	_, err := s.db.GetCourse(request.ID)
 	if err != nil {
 		return err
 	}

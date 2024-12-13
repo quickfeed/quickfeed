@@ -18,7 +18,7 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) error {
 	if err != nil {
 		return err
 	}
-	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID}, false)
+	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID})
 	if err != nil {
 		return err
 	}
