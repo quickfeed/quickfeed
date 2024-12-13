@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"gorm.io/gorm"
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
@@ -53,8 +54,14 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 	return tx.Commit().Error
 }
 
-// GetCourse fetches course by ID. If withInfo is true, preloads course
-// assignments, active enrollments and groups.
+// GetCourse fetches course by ID.
+func (db *GormDB) GetCourse(courseID uint64) (*qf.Course, error) {
+	var course qf.Course
+	if err := db.conn.First(&course, courseID).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
 
 func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserStatus) (*qf.Course, error) {
 	m := db.conn
