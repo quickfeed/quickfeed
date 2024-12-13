@@ -8,6 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"testing"
+
+	"github.com/quickfeed/quickfeed/kit/internal/test"
 )
 
 // MustRun runs the given command with wd as the working directory,
@@ -69,6 +72,18 @@ func OutputErrA(cmd string, args ...string) (string, string, error) {
 	return strings.TrimSuffix(stdout.String(), "\n"), strings.TrimSuffix(stderr.String(), "\n"), err
 }
 
+// RunCountTest runs the given test count times.
+// It returns the test output and false if the test passed.
+func RunCountTest(tst func(*testing.T), count, tags string) (s string, fail bool) {
+	testName := test.Name(tst)
+	if tags != "" {
+		s, _ = OutputA("go", "test", "-run", testName, "-count", count, "-tags", tags)
+	} else {
+		s, _ = OutputA("go", "test", "-run", testName, "-count", count)
+	}
+	return s, strings.Contains(s, "FAIL")
+}
+
 // RunRaceTest runs the given test with the race detector enabled.
 // It returns the test output and false if there weren't any data races.
 // Otherwise, it returns the stack trace and true if there was a data race.
@@ -77,7 +92,8 @@ func OutputErrA(cmd string, args ...string) (string, string, error) {
 // the race build tag. See the race_test.go file in this package for an example.
 //
 // If the tags argument is non-zero, it is passed to the go test command.
-func RunRaceTest(testName, tags string) (s string, race bool) {
+func RunRaceTest(tst func(*testing.T), tags string) (s string, race bool) {
+	testName := test.Name(tst)
 	if tags != "" {
 		s, _ = OutputA("go", "test", "-v", "-race", "-run", testName, "-tags", tags)
 	} else {
