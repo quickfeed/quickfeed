@@ -150,18 +150,15 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
     }
 }
 
-export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: bigint, statuses: Enrollment_UserStatus[] }): Promise<void> => {
-    const response = await effects.api.client.getEnrollments({
-        FetchMode: {
-            case: "courseID",
-            value: value.courseID,
-        },
-        statuses: value.statuses,
+export const getCourseData = async ({ state, effects }: Context, { courseID }: { courseID: bigint }): Promise<void> => {
+    const response = await effects.api.client.getCourse({
+        courseID,
     })
     if (response.error) {
         return
     }
-    state.courseEnrollments[value.courseID.toString()] = response.message.enrollments
+    state.courseEnrollments[courseID.toString()] = response.message.enrollments
+    state.groups[courseID.toString()] = response.message.groups
 }
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
