@@ -11,15 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) ([]*qf.Enrollment, error) {
-	enrollments, err := s.getEnrollmentsWithActivity(request.GetCourseID())
-	if err != nil {
-		return nil, err
-	}
-	return enrollments, nil
-}
-
 // updateEnrollment changes the status of the given course enrollment.
 func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)

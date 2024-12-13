@@ -187,7 +187,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 }
 
 // GetEnrollments returns all enrollments for the given course ID or user ID and enrollment status.
-func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+func (s *QuickFeedService) GetEnrollments(ctx context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	var enrollments []*qf.Enrollment
 	var err error
 	switch in.Msg.GetFetchMode().(type) {
@@ -198,7 +198,12 @@ func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
 		}
 	case *qf.EnrollmentRequest_CourseID:
-		enrollments, err = s.getEnrollmentsByCourse(in.Msg)
+		courseID := in.Msg.GetCourseID()
+		if isTeacher(ctx, courseID) {
+			enrollments, err = s.getEnrollmentsWithActivity(courseID)
+		} else {
+			enrollments, err = s.db.GetEnrollmentsByCourse(courseID, in.Msg.GetStatuses()...)
+		}
 		if err != nil {
 			s.logger.Errorf("GetEnrollments failed: course %d: %v", in.Msg.GetCourseID(), err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollments for course"))
