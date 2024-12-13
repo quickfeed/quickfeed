@@ -55,28 +55,40 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 
 // GetCourse fetches course by ID. If withInfo is true, preloads course
 // assignments, active enrollments and groups.
-func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, error) {
+
+func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserStatus) (*qf.Course, error) {
 	m := db.conn
 	var course qf.Course
-
-	if withEnrollments {
-		// we only want submission from users enrolled in the course
+	switch status {
+	case qf.Enrollment_NONE, qf.Enrollment_PENDING:
+		// no preloaded data
+	case qf.Enrollment_STUDENT:
 		userStates := []qf.Enrollment_UserStatus{
 			qf.Enrollment_STUDENT,
 			qf.Enrollment_TEACHER,
 		}
-		// and only group submissions from approved groups
+		m = m.Preload("Assignments").
+			Preload("Enrollments", "status in (?)", userStates, func(db *gorm.DB) *gorm.DB {
+				return db.Omit("UsedSlipDays").Omit("LastActivityDate")
+			}).
+			Preload("Enrollments.User")
+	case qf.Enrollment_TEACHER:
+		// Preload all data
 		modelGroup := &qf.Group{Status: qf.Group_APPROVED, CourseID: courseID}
-		if err := m.Preload("Assignments").
-			Preload("Enrollments", "status in (?)", userStates).
+		m = m.Preload("Assignments").
+			Preload("Enrollments").
 			Preload("Enrollments.User").
 			Preload("Enrollments.Group").
 			Preload("Enrollments.UsedSlipDays").
 			Preload("Groups", modelGroup).
-			First(&course, courseID).Error; err != nil {
-			return nil, err
-		}
-
+			Preload("Groups.Users")
+	default:
+		return nil, errors.New("invalid enrollment status")
+	}
+	if err := m.First(&course, courseID).Error; err != nil {
+		return nil, err
+	}
+	if status == qf.Enrollment_TEACHER {
 		// Set number of remaining slip days for each course enrollment
 		for _, e := range course.Enrollments {
 			e.SetSlipDays(&course)
@@ -86,10 +98,6 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, 
 			for _, e := range g.Enrollments {
 				e.SetSlipDays(&course)
 			}
-		}
-	} else {
-		if err := m.First(&course, courseID).Error; err != nil {
-			return nil, err
 		}
 	}
 	return &course, nil
