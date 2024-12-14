@@ -198,6 +198,7 @@ Studentnr
 subtest
 subtests
 swiftui
+testcache
 testdata
 testdb
 Testersen

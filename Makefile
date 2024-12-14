@@ -43,7 +43,7 @@ install:
 	@echo go install
 	@go install
 ifeq ($(OS),linux)
-	@echo "Setting priviledged ports capabilities for quickfeed"
+	@echo "Setting privileged ports capabilities for quickfeed"
 	@sudo setcap 'cap_net_bind_service=+ep' `which quickfeed`
 endif
 
