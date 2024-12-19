@@ -91,6 +91,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 	if err := db.conn.Preload("User").
 		Preload("Course").
 		Preload("Group").
+		Preload("Group.Users").
 		Preload("UsedSlipDays").
 		Model(model).
 		Where("status in (?)", statuses).

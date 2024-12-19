@@ -135,18 +135,15 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
     }
 }
 
-export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: bigint, statuses: Enrollment_UserStatus[] }): Promise<void> => {
-    const response = await effects.api.client.getEnrollments({
-        FetchMode: {
-            case: "courseID",
-            value: value.courseID,
-        },
-        statuses: value.statuses,
+export const getCourseData = async ({ state, effects }: Context, { courseID }: { courseID: bigint }): Promise<void> => {
+    const response = await effects.api.client.getCourse({
+        courseID,
     })
     if (response.error) {
         return
     }
-    state.courseEnrollments[value.courseID.toString()] = response.message.enrollments
+    state.courseEnrollments[courseID.toString()] = response.message.enrollments
+    state.groups[courseID.toString()] = response.message.groups
 }
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
@@ -329,7 +326,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
     const response = await effects.api.client.updateEnrollments({ enrollments })
     if (response.error) {
         // Fetch enrollments again if update failed in case the user was able to approve some enrollments
-        await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment_UserStatus.PENDING] })
+        await actions.getCourseData({ courseID: state.activeCourse })
         return
     }
     for (const enrollment of state.pendingEnrollments) {
@@ -371,14 +368,6 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
         }
         state.repositories[courseID.toString()] = response.message.URLs
     }))
-}
-
-export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
-    if (response.error) {
-        return
-    }
-    state.userGroup[enrollment.courseID.toString()] = response.message
 }
 
 export const createGroup = async ({ state, actions, effects }: Context, group: CourseGroup): Promise<void> => {
@@ -764,14 +753,6 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         if (isStudent(enrollment) || isTeacher(enrollment)) {
             results.push(actions.getUserSubmissions(courseID))
             results.push(actions.getGroupSubmissions(courseID))
-            const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
-            results.push(actions.getEnrollmentsByCourse({ courseID, statuses }))
-            if (enrollment.groupID > 0) {
-                results.push(actions.getGroup(enrollment))
-            }
-        }
-        if (isTeacher(enrollment)) {
-            results.push(actions.getGroupsByCourse(courseID))
         }
     }
     await Promise.all(results)

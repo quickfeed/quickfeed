@@ -157,6 +157,8 @@ func TestEnrollmentProcess(t *testing.T) {
 			CourseID: course.ID,
 		},
 	}
+
+	// enrollments fetched with FetchMode CourseID will not have the course field preloaded.
 	courseEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollReq, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
@@ -171,7 +173,11 @@ func TestEnrollmentProcess(t *testing.T) {
 			}
 		}
 	}
-	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Enrollment{}, "course"),
+	}); diff != "" {
+		t.Errorf("%v, %v", pendingUserEnrollment, pendingCourseEnrollment)
 		t.Errorf("EnrollmentProcess mismatch (-pendingUserEnrollment +pendingCourseEnrollment):\n%s", diff)
 	}
 
@@ -185,7 +191,10 @@ func TestEnrollmentProcess(t *testing.T) {
 		User:         stud1,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	}
-	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Enrollment{}, "course"),
+	}); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
 

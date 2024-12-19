@@ -19,6 +19,7 @@ const CoursePage = (): JSX.Element => {
             actions.toggleFavorites()
         }
         actions.setActiveCourse(courseID)
+        actions.getCourseData({ courseID })
     }, [courseID])
 
     if (state.enrollmentsByCourseID[courseID.toString()] && isEnrolled(enrollment)) {

@@ -11,15 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) ([]*qf.Enrollment, error) {
-	enrollments, err := s.getEnrollmentsWithActivity(request.GetCourseID())
-	if err != nil {
-		return nil, err
-	}
-	return enrollments, nil
-}
-
 // updateEnrollment changes the status of the given course enrollment.
 func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
@@ -178,7 +169,7 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(request.GetCourseID(), true)
+	course, err := s.db.GetCourseByStatus(request.GetCourseID(), qf.Enrollment_TEACHER)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +288,7 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 // updateCourse updates an existing course.
 func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
 	// ensure the course exists
-	_, err := s.db.GetCourse(request.ID, false)
+	_, err := s.db.GetCourse(request.ID)
 	if err != nil {
 		return err
 	}
@@ -323,22 +314,14 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(courseID, true)
+	course, err := s.db.GetCourseByStatus(courseID, qf.Enrollment_TEACHER)
 	if err != nil {
 		return nil, err
 	}
-	var enrollmentsWithActivity []*qf.Enrollment
-	for _, enrollment := range course.Enrollments {
+	for _, enrollment := range course.GetEnrollments() {
 		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
-		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
 	}
-	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
-	if err != nil {
-		return nil, err
-	}
-	// append pending users
-	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
-	return enrollmentsWithActivity, nil
+	return course.GetEnrollments(), nil
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.

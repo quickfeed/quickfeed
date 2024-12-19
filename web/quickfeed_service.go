@@ -102,8 +102,9 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 }
 
 // GetCourse returns course information for the given course.
-func (s *QuickFeedService) GetCourse(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+func (s *QuickFeedService) GetCourse(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
+	status := courseStatus(ctx, in.Msg.GetCourseID())
+	course, err := s.db.GetCourseByStatus(in.Msg.GetCourseID(), status)
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
@@ -187,7 +188,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 }
 
 // GetEnrollments returns all enrollments for the given course ID or user ID and enrollment status.
-func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+func (s *QuickFeedService) GetEnrollments(ctx context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	var enrollments []*qf.Enrollment
 	var err error
 	switch in.Msg.GetFetchMode().(type) {
@@ -198,7 +199,12 @@ func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
 		}
 	case *qf.EnrollmentRequest_CourseID:
-		enrollments, err = s.getEnrollmentsByCourse(in.Msg)
+		courseID := in.Msg.GetCourseID()
+		if isTeacher(ctx, courseID) {
+			enrollments, err = s.getEnrollmentsWithActivity(courseID)
+		} else {
+			enrollments, err = s.db.GetEnrollmentsByCourse(courseID, in.Msg.GetStatuses()...)
+		}
 		if err != nil {
 			s.logger.Errorf("GetEnrollments failed: course %d: %v", in.Msg.GetCourseID(), err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollments for course"))
@@ -478,7 +484,7 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
 func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	course, err := s.db.GetCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
@@ -533,7 +539,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
 func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	course, err := s.db.GetCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
@@ -563,7 +569,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted.
 func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
+	course, err := s.db.GetCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
