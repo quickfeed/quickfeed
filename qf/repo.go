@@ -60,17 +60,17 @@ func (t Repository_Type) IsGroupRepo() bool {
 
 // IsTestsRepo returns true if the repository is a 'tests' repository.
 func (t *Repository) IsTestsRepo() bool {
-	return t.RepoType == Repository_TESTS
+	return t.GetRepoType() == Repository_TESTS
 }
 
 // IsAssignmentsRepo returns true if the repository is an 'assignments' repository.
 func (t *Repository) IsAssignmentsRepo() bool {
-	return t.RepoType == Repository_ASSIGNMENTS
+	return t.GetRepoType() == Repository_ASSIGNMENTS
 }
 
 // IsStudentRepo returns true if the repository is a user or group repo type.
 func (t *Repository) IsStudentRepo() bool {
-	return t.RepoType == Repository_USER || t.RepoType == Repository_GROUP
+	return t.GetRepoType() == Repository_USER || t.GetRepoType() == Repository_GROUP
 }
 
 // IsStudentRepo returns true if the repository is a user repo type.
@@ -80,12 +80,12 @@ func (t Repository_Type) IsStudentRepo() bool {
 
 // IsGroupRepo returns true if the repository is a group repo type.
 func (t *Repository) IsGroupRepo() bool {
-	return t.RepoType == Repository_GROUP
+	return t.GetRepoType() == Repository_GROUP
 }
 
 // IsUserRepo returns true if the repository is a user repo type.
 func (t *Repository) IsUserRepo() bool {
-	return t.RepoType == Repository_USER
+	return t.GetRepoType() == Repository_USER
 }
 
 // GetTestURL returns the tests repository string for this repository.

@@ -14,16 +14,16 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 	if err != nil {
 		return err
 	}
-	if !courseCreator.IsAdmin {
+	if !courseCreator.GetIsAdmin() {
 		return ErrInsufficientAccess
 	}
 
 	var courses int64
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
-		ScmOrganizationID: course.ScmOrganizationID,
+		ScmOrganizationID: course.GetScmOrganizationID(),
 	}).Or(&qf.Course{
-		Code: course.Code,
-		Year: course.Year,
+		Code: course.GetCode(),
+		Year: course.GetYear(),
 	}).Count(&courses).Error; err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 	// enroll course creator as teacher for course and mark as visible
 	if err := tx.Create(&qf.Enrollment{
 		UserID:   courseCreatorID,
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Status:   qf.Enrollment_TEACHER,
 		State:    qf.Enrollment_VISIBLE,
 	}).Error; err != nil {
@@ -78,12 +78,12 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, 
 		}
 
 		// Set number of remaining slip days for each course enrollment
-		for _, e := range course.Enrollments {
+		for _, e := range course.GetEnrollments() {
 			e.SetSlipDays(&course)
 		}
-		for _, g := range course.Groups {
+		for _, g := range course.GetGroups() {
 			// Set number of remaining slip days for each group enrollment
-			for _, e := range g.Enrollments {
+			for _, e := range g.GetEnrollments() {
 				e.SetSlipDays(&course)
 			}
 		}
@@ -131,8 +131,8 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...qf.Enrollment_User
 	var courseIDs []uint64
 	m := make(map[uint64]*qf.Enrollment)
 	for _, enrollment := range enrollments {
-		m[enrollment.CourseID] = enrollment
-		courseIDs = append(courseIDs, enrollment.CourseID)
+		m[enrollment.GetCourseID()] = enrollment
+		courseIDs = append(courseIDs, enrollment.GetCourseID())
 	}
 
 	if len(statuses) == 0 {
@@ -148,8 +148,8 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...qf.Enrollment_User
 
 	for _, course := range courses {
 		course.Enrolled = qf.Enrollment_NONE
-		if enrollment, ok := m[course.ID]; ok {
-			course.Enrolled = enrollment.Status
+		if enrollment, ok := m[course.GetID()]; ok {
+			course.Enrolled = enrollment.GetStatus()
 		}
 	}
 	return courses, nil

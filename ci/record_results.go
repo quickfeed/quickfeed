@@ -81,19 +81,19 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 }
 
 func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
-	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
+	if r.Rebuild && previous != nil && previous.GetBuildInfo() != nil {
 		// Keep previous submission's delivery date if this is a rebuild.
-		results.BuildInfo.SubmissionDate = previous.BuildInfo.SubmissionDate
+		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
-	score := results.Sum()
+	resultScore := results.Sum()
 	return &qf.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
-		Score:        score,
-		Grades:       r.Assignment.SubmissionStatus(previous, score),
+		Score:        resultScore,
+		Grades:       r.Assignment.SubmissionStatus(previous, resultScore),
 		BuildInfo:    results.BuildInfo,
 		Scores:       results.Scores,
 	}
@@ -101,26 +101,27 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 
 func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
 	enrollments := make([]*qf.Enrollment, 0)
-	if submission.GroupID > 0 {
-		group, err := db.GetGroup(submission.GroupID)
+
+	if submission.GetGroupID() > 0 {
+		group, err := db.GetGroup(submission.GetGroupID())
 		if err != nil {
-			return fmt.Errorf("failed to get group %d: %w", submission.GroupID, err)
+			return fmt.Errorf("failed to get group %d: %w", submission.GetGroupID(), err)
 		}
-		enrollments = append(enrollments, group.Enrollments...)
+		enrollments = group.GetEnrollments()
 	} else {
-		enrol, err := db.GetEnrollmentByCourseAndUser(r.Assignment.CourseID, submission.UserID)
+		enroll, err := db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
 		if err != nil {
-			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.UserID, r.Assignment.CourseID, err)
+			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
-		enrollments = append(enrollments, enrol)
+		enrollments = []*qf.Enrollment{enroll}
 	}
 
-	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(r.Assignment, submission); err != nil {
-			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enrol.UserID, r.Assignment.CourseID, err)
+	for _, enroll := range enrollments {
+		if err := enroll.UpdateSlipDays(r.Assignment, submission); err != nil {
+			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enroll.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
-		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {
-			return fmt.Errorf("failed to update slip days for enrollment %d (user %d) (course %d): %w", enrol.ID, enrol.UserID, enrol.CourseID, err)
+		if err := db.UpdateSlipDays(enroll.GetUsedSlipDays()); err != nil {
+			return fmt.Errorf("failed to update slip days for enrollment %d (user %d) (course %d): %w", enroll.GetID(), enroll.GetUserID(), enroll.GetCourseID(), err)
 		}
 	}
 	return nil
