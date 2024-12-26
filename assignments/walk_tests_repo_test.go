@@ -22,6 +22,8 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab1/run.sh":               {},
 		"testdata/tests/lab2/assignment.yml":       {},
 		"testdata/tests/lab3/assignment.yml":       {},
+		"testdata/tests/lab4/assignment.yml":       {},
+		"testdata/tests/lab4/criteria.json":        {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
@@ -39,25 +41,26 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 RUN apk update && apk add --no-cache git bash build-base
 WORKDIR /quickfeed
 `
+	courseID := uint64(1)
 
 	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
-			CourseID:   1,
+			CourseID:   courseID,
 			Order:      1,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-01-24T14:00:00"),
 		},
 		{
 			Name:       "lab2",
-			CourseID:   1,
+			CourseID:   courseID,
 			Order:      2,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-01-31T16:00:00"),
 		},
 		{
 			Name:       "lab3",
-			CourseID:   1,
+			CourseID:   courseID,
 			Order:      3,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-02-14T23:00:00"),
@@ -80,9 +83,27 @@ WORKDIR /quickfeed
 				},
 			},
 		},
+		{
+			Name:       "lab4",
+			CourseID:   courseID,
+			Order:      4,
+			ScoreLimit: 80,
+			Deadline:   qtest.Timestamp(t, "2019-03-15T16:00:00"),
+			IsGroupLab: true,
+			GradingBenchmarks: []*qf.GradingBenchmark{
+				{
+					CourseID: courseID, // Confirm that courseID is set
+					Criteria: []*qf.GradingCriterion{
+						{
+							CourseID: courseID, // Confirm that courseID is set
+						},
+					},
+				},
+			},
+		},
 	}
 
-	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, courseID)
 	if err != nil {
 		t.Fatal(err)
 	}
