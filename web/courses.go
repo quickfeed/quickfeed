@@ -11,15 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) ([]*qf.Enrollment, error) {
-	enrollments, err := s.getEnrollmentsWithActivity(request.GetCourseID())
-	if err != nil {
-		return nil, err
-	}
-	return enrollments, nil
-}
-
 // updateEnrollment changes the status of the given course enrollment.
 func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
@@ -311,7 +302,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
-func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
+func (s *QuickFeedService) GetEnrollmentsWithActivityByCourse(courseID uint64, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error) {
 	submissions, err := s.getAllCourseSubmissions(
 		&qf.SubmissionRequest{
 			CourseID: courseID,
@@ -332,12 +323,12 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
 	}
-	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
+	enrollments, err := s.db.GetEnrollmentsByCourse(courseID, statuses...)
 	if err != nil {
 		return nil, err
 	}
 	// append pending users
-	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
+	enrollmentsWithActivity = append(enrollmentsWithActivity, enrollments...)
 	return enrollmentsWithActivity, nil
 }
 

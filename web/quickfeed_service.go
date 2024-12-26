@@ -190,21 +190,28 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 func (s *QuickFeedService) GetEnrollments(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	var enrollments []*qf.Enrollment
 	var err error
-	switch in.Msg.GetFetchMode().(type) {
+
+	msg := in.Msg
+	fetchMode := msg.GetFetchMode()
+	statuses := msg.GetStatuses()
+
+	switch fetchMode.(type) {
 	case *qf.EnrollmentRequest_UserID:
-		enrollments, err = s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
+		userId := msg.GetUserID()
+		enrollments, err = s.db.GetEnrollmentsByUser(userId, statuses...)
 		if err != nil {
-			s.logger.Errorf("GetEnrollments failed: user %d: %v", in.Msg.GetUserID(), err)
+			s.logger.Errorf("GetEnrollments failed: user %d: %v", userId, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
 		}
 	case *qf.EnrollmentRequest_CourseID:
-		enrollments, err = s.getEnrollmentsByCourse(in.Msg)
+		courseId := msg.GetCourseID()
+		enrollments, err = s.GetEnrollmentsWithActivityByCourse(courseId, statuses...)
 		if err != nil {
-			s.logger.Errorf("GetEnrollments failed: course %d: %v", in.Msg.GetCourseID(), err)
+			s.logger.Errorf("GetEnrollments failed: course %d: %v", courseId, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollments for course"))
 		}
 	default:
-		s.logger.Errorf("GetEnrollments failed: unknown message type: %v", in.Msg.GetFetchMode())
+		s.logger.Errorf("GetEnrollments failed: unknown message type: %v", fetchMode)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get enrollments"))
 	}
 	return connect.NewResponse(&qf.Enrollments{
