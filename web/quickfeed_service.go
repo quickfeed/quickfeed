@@ -109,6 +109,14 @@ func (s *QuickFeedService) GetCourse(ctx context.Context, in *connect.Request[qf
 		s.logger.Errorf("GetCourse failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
+	if isTeacher(ctx, in.Msg.GetCourseID()) {
+		course.Enrollments, err = s.getEnrollmentsWithActivity(in.Msg.GetCourseID())
+		if err != nil {
+			s.logger.Errorf("GetCourse failed: %v", err)
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get course enrollments"))
+		}
+	}
+
 	return connect.NewResponse(course), nil
 }
 
