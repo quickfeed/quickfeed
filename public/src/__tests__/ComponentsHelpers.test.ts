@@ -60,7 +60,7 @@ describe("generateRow", () => {
 
     const { state } = initializeOvermind({ courses: MockData.mockedCourses(), assignments: MockData.mockedCourseAssignments(), activeCourse: 1n, submissionsForCourse: MockData.mockedCourseSubmissions(1n) })
     test.each(tests)(`$desc`, (test) => {
-        const rows = generateRow(test.enrollment, state.getAssignmentsMap(state.activeCourse), state.submissionsForCourse, test.generator, state.courses.find(c => c.ID === state.activeCourse), false)
+        const rows = generateRow(test.enrollment, state.getAssignmentsMap(state.activeCourse), state.submissionsForCourse, test.generator, state.individualSubmissionView, state.courses.find(c => c.ID === state.activeCourse), false)
         expect(rows).toEqual(test.want)
     })
 

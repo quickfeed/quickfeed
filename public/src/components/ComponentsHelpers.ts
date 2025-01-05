@@ -10,11 +10,19 @@ export const generateSubmissionRows = (elements: Enrollment[] | Group[], generat
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course, state.isCourseManuallyGraded)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, state.individualSubmissionView, course, state.isCourseManuallyGraded)
     })
 }
 
-export const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
+export const generateRow = (
+    enrollment: Enrollment | Group,
+    assignments: AssignmentsMap,
+    submissions: SubmissionsForCourse,
+    generator: (s: Submission, e?: Enrollment | Group) => RowElement,
+    individual: boolean,
+    course?: Course,
+    withID?: boolean
+): Row => {
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
@@ -43,7 +51,7 @@ export const generateRow = (enrollment: Enrollment | Group, assignments: Assignm
             // If we're dealing with a group assignment, and the enrollment is not part of a group
             // we should try to find an individual submission instead
             submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
-        } else if (isGroupLab) {
+        } else if (isGroupLab && isEnrollment && individual) {
             // If the previous conditions are not met, we have this situation:
             // - The assignment is a group assignment
             // - We're either dealing with an enrollment that is part of a group
