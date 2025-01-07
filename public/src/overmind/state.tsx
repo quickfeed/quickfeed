@@ -177,6 +177,10 @@ export type State = {
 
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
+
+    /* Can be used to determine whether or not to show only individual submissions */
+    individualSubmissionView: boolean,
+
     showFavorites: boolean,
 
 
@@ -421,6 +425,7 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
+    individualSubmissionView: false,
     groupView: false,
     activeGroup: null,
     hasGroup: derived(({ userGroup }: State) => courseID => {

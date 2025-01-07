@@ -891,6 +891,10 @@ export const setSubmissionFilter = ({ state }: Context, filter: string): void =>
     }
 }
 
+export const setIndividualSubmissionsView = ({ state }: Context, view: boolean): void => {
+    state.individualSubmissionView = view
+}
+
 export const setGroupView = ({ state }: Context, groupView: boolean): void => {
     state.groupView = groupView
 }
