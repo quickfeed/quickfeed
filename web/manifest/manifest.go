@@ -153,11 +153,16 @@ func (m *Manifest) conversion() http.HandlerFunc {
 
 		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
-			appID:         strconv.FormatInt(*config.ID, 10),
-			appKey:        appKeyFile,
-			clientID:      *config.ClientID,
-			clientSecret:  *config.ClientSecret,
-			webhookSecret: *config.WebhookSecret,
+			appID:        strconv.FormatInt(*config.ID, 10),
+			appKey:       appKeyFile,
+			clientID:     *config.ClientID,
+			clientSecret: *config.ClientSecret,
+		}
+
+		// The WebhookSecret may be nil in cases where the server is run
+		// on localhost, or other local IP variants.
+		if config.WebhookSecret != nil {
+			envToUpdate[webhookSecret] = *config.WebhookSecret
 		}
 		if err := env.Save(env.RootEnv(m.envFile), envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
