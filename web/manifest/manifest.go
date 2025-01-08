@@ -144,7 +144,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Write PEM file
-		if err := os.WriteFile(appKeyFile, []byte(*config.PEM), 0o600); err != nil {
+		if err := os.WriteFile(appKeyFile, []byte(config.GetPEM()), 0o600); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -153,17 +153,13 @@ func (m *Manifest) conversion() http.HandlerFunc {
 
 		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
-			appID:        strconv.FormatInt(*config.ID, 10),
-			appKey:       appKeyFile,
-			clientID:     *config.ClientID,
-			clientSecret: *config.ClientSecret,
+			appID:         strconv.FormatInt(config.GetID(), 10),
+			appKey:        appKeyFile,
+			clientID:      config.GetClientID(),
+			clientSecret:  config.GetClientSecret(),
+			webhookSecret: config.GetWebhookSecret(),
 		}
 
-		// The WebhookSecret may be nil in cases where the server is run
-		// on localhost, or other local IP variants.
-		if config.WebhookSecret != nil {
-			envToUpdate[webhookSecret] = *config.WebhookSecret
-		}
 		if err := env.Save(env.RootEnv(m.envFile), envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
@@ -234,12 +230,12 @@ body {
 </script>
 `
 
-	log.Printf("Successfully created the %s GitHub App.", *config.Name)
+	log.Printf("Successfully created the %s GitHub App.", config.GetName())
 
 	data := struct {
 		Name string
 	}{
-		Name: *config.Name,
+		Name: config.GetName(),
 	}
 	t := template.Must(template.New("success").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {
@@ -247,11 +243,11 @@ body {
 	}
 	publicEnvFile := env.PublicEnv(m.envFile)
 	if err := env.Save(publicEnvFile, map[string]string{
-		"QUICKFEED_APP_URL": *config.HTMLURL,
+		"QUICKFEED_APP_URL": config.GetHTMLURL(),
 	}); err != nil {
 		return err
 	}
-	log.Printf("App URL saved in %s: %s", publicEnvFile, *config.HTMLURL)
+	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
 	go runWebpack()
 	return nil
 }
