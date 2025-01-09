@@ -128,3 +128,7 @@ func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 	request.Header().Set("cookie", cookie)
 	return request
 }
+
+func Ptr[T any](t T) *T {
+	return &t
+}
