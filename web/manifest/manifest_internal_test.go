@@ -152,7 +152,7 @@ func TestConversion(t *testing.T) {
 	manifest := Manifest{
 		domain:  "localhost",
 		client:  scmClient.Client(),
-		envFile: "testdata/.env",
+		envFile: "testdata/test.env",
 		done:    make(chan error, 1),
 		compile: false,
 	}
@@ -188,7 +188,7 @@ func TestConversion(t *testing.T) {
 			os.Unsetenv(k)
 		}
 
-		if err := env.Load(path.Join(testDataPath, ".env")); err != nil {
+		if err := env.Load(path.Join(testDataPath, "test.env")); err != nil {
 			t.Fatalf("failed to load .env file: %v", err)
 		}
 		for k, v := range tt.want {
