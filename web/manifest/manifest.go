@@ -63,13 +63,17 @@ type Manifest struct {
 	envFile string
 	handler http.Handler
 	done    chan error
+	client  *github.Client // optional, for testing
+	compile bool
 }
 
 func New(domain, envFile string) *Manifest {
 	m := &Manifest{
 		domain:  domain,
 		envFile: envFile,
+		client:  github.NewClient(nil),
 		done:    make(chan error),
+		compile: true,
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -119,7 +123,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 			return
 		}
 		ctx := context.Background()
-		config, resp, err := github.NewClient(nil).Apps.CompleteAppManifest(ctx, code)
+		config, resp, err := m.client.Apps.CompleteAppManifest(ctx, code)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "Error: %s", err)
@@ -248,7 +252,9 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	go runWebpack()
+	if m.compile {
+		go runWebpack()
+	}
 	return nil
 }
 
