@@ -23,4 +23,5 @@ const (
 	postReposIssuesCommentsByOwnerByRepoByIssueNumber         = "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"          // CreateIssueComment
 	patchReposIssuesCommentsByOwnerByRepoByCommentID          = "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"           // UpdateIssueComment
 	postReposPullsRequestedReviewersByOwnerByRepoByPullNumber = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers" // RequestReviewers
+	postAppManifestsByCodeConversions                         = "POST /app-manifests/{code}/conversions"                             // CreateCourse
 )

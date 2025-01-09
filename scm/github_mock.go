@@ -570,6 +570,20 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, pr)
 		}),
 	)
+	postAppManifestsByCodeConversionsHandler := WithRequestMatchHandler(
+		postAppManifestsByCodeConversions,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			code := r.PathValue("code")
+			logger.Debug(replaceArgs(postAppManifestsByCodeConversions, code))
+			config, ok := s.appConfigs[code]
+			if !ok {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+			mustWrite(w, config)
+		}),
+	)
 	// Mock query handler for fetching the issue ID based on issue number
 	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
 		owner := vars["repositoryOwner"].(string)
@@ -676,6 +690,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler,
 		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
+		postAppManifestsByCodeConversionsHandler,
 		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{
