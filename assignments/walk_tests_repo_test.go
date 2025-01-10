@@ -29,6 +29,8 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab5/criteria.json":        {},
 		"testdata/tests/lab6/assignment.yml":       {},
 		"testdata/tests/lab6/criteria.json":        {},
+		"testdata/tests/lab7/assignment.yml":       {},
+		"testdata/tests/lab7/criteria.json":        {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
