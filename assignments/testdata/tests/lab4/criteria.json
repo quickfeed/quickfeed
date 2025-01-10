@@ -1,9 +1,12 @@
 [
     {
-        "CourseID": 0,
+        "heading": "Assignment 1",
         "criteria": [
             {
-                "CourseID": 0
+                "description": "Links work"
+            },
+            {
+                "description": "Images are links, opening in a new tab"
             }
         ]
     }
