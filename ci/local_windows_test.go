@@ -1,3 +1,5 @@
+//go:build windows
+
 package ci_test
 
 import (
@@ -29,4 +31,9 @@ func runCmd(t *testing.T, cmds []string) string {
 		t.Fatal(err)
 	}
 	return out
+}
+
+func checkOwner(t *testing.T, _ string) {
+	t.Helper()
+	t.Log("Skipping checkOwner on Windows")
 }
