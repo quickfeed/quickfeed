@@ -28,6 +28,10 @@ const TableSort = ({ review }: { review: boolean }) => {
         actions.setSubmissionSort(sort)
     }
 
+    const toggleIndividualSubmissions = () => {
+        actions.setIndividualSubmissionsView(!state.individualSubmissionView)
+    }
+
     return (
         <div className="p-1 mb-2 bg-dark text-white d-flex flex-row">
             <div className="d-inline-flex flex-row justify-content-center">
@@ -60,6 +64,11 @@ const TableSort = ({ review }: { review: boolean }) => {
                     </div>
                     : null
                 }
+            </div>
+            <div className="d-inline-flex flex-row">
+                <div className="p-2" role={"button"} onClick={toggleIndividualSubmissions}>
+                    {state.individualSubmissionView ? "Individual" : "Group"}
+                </div>
             </div>
         </div>
     )
