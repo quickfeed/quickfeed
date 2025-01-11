@@ -395,18 +395,13 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 		return E(op, m, fmt.Errorf("missing ID"))
 	}
 
-	// if ID provided, get path and owner from github
-	if id > 0 {
-		repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
-		if err != nil {
-			return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
-		}
-		var repo_name = repo.GetName()
-		var repo_owner = repo.Owner.GetLogin()
+	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
+	if err != nil {
+		return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
+	}
 
-		if _, err := s.client.Repositories.Delete(ctx, repo_owner, repo_name); err != nil {
-			return E(op, M("failed to delete repository %s/%s", repo_owner, repo_name), err)
-		}
+	if _, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+		return E(op, M("failed to delete repository %s/%s", repo.GetOwner().GetLogin(), repo.GetName()), err)
 	}
 
 	return nil
