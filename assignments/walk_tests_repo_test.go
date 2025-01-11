@@ -27,10 +27,6 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab4/criteria.json":        {},
 		"testdata/tests/lab5/assignment.yml":       {},
 		"testdata/tests/lab5/criteria.json":        {},
-		"testdata/tests/lab6/assignment.yml":       {},
-		"testdata/tests/lab6/criteria.json":        {},
-		"testdata/tests/lab7/assignment.yml":       {},
-		"testdata/tests/lab7/criteria.json":        {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
@@ -130,31 +126,10 @@ WORKDIR /quickfeed
 				},
 			},
 		},
-		{
-			Name:              "lab6",
-			CourseID:          1,
-			Order:             6,
-			ScoreLimit:        80,
-			Deadline:          qtest.Timestamp(t, "2024-07-11T16:00:00"),
-			IsGroupLab:        false,
-			GradingBenchmarks: []*qf.GradingBenchmark{},
-		},
-		{
-			Name:              "lab7",
-			CourseID:          1,
-			Order:             6,
-			ScoreLimit:        80,
-			Deadline:          qtest.Timestamp(t, "2023-07-21T16:00:00"),
-			IsGroupLab:        false,
-			GradingBenchmarks: []*qf.GradingBenchmark{},
-		},
 	}
 
 	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
-		if IsUnmarshalError(err) {
-			return
-		}
 		t.Fatal(err)
 	}
 	if gotDockerfile != wantDockerfile {
@@ -165,7 +140,27 @@ WORKDIR /quickfeed
 	}
 }
 
+const invalidTypesFolder = "testdata/invalidJsonTests/invalidTypes"
+const negativeIntegerFolder = "testdata/invalidJsonTests/negativeInteger"
+
+func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
+	checkLabWithInvalidCriteriaFile(t, invalidTypesFolder)
+	checkLabWithInvalidCriteriaFile(t, negativeIntegerFolder)
+}
+
+func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
+	_, _, err := readTestsRepositoryContent(folder, 1)
+
+	if err == nil {
+		t.Errorf("expected error")
+	}
+
+	if !isUnmarshalError(err) {
+		t.Errorf("expected unmarshal error, got: %v", err)
+	}
+}
+
 // Check if the error is related to invalid JSON unmarshalling.
-func IsUnmarshalError(e error) bool {
-	return strings.Contains(e.Error(), "failed to unmarshal \"criteria.json\"")
+func isUnmarshalError(e error) bool {
+	return strings.Contains(e.Error(), "failed to unmarshal")
 }
