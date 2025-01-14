@@ -199,11 +199,13 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 func (s *QuickFeedService) GetEnrollments(ctx context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	var enrollments []*qf.Enrollment
 	var err error
+	statuses := in.Msg.GetStatuses()
 	switch in.Msg.GetFetchMode().(type) {
 	case *qf.EnrollmentRequest_UserID:
-		enrollments, err = s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
+		userID := in.Msg.GetUserID()
+		enrollments, err = s.db.GetEnrollmentsByUser(userID, statuses...)
 		if err != nil {
-			s.logger.Errorf("GetEnrollments failed: user %d: %v", in.Msg.GetUserID(), err)
+			s.logger.Errorf("GetEnrollments failed: user %d: %v", userID, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
 		}
 	case *qf.EnrollmentRequest_CourseID:
@@ -211,10 +213,10 @@ func (s *QuickFeedService) GetEnrollments(ctx context.Context, in *connect.Reque
 		if isTeacher(ctx, courseID) {
 			enrollments, err = s.getEnrollmentsWithActivity(courseID)
 		} else {
-			enrollments, err = s.db.GetEnrollmentsByCourse(courseID, in.Msg.GetStatuses()...)
+			enrollments, err = s.db.GetEnrollmentsByCourse(courseID, statuses...)
 		}
 		if err != nil {
-			s.logger.Errorf("GetEnrollments failed: course %d: %v", in.Msg.GetCourseID(), err)
+			s.logger.Errorf("GetEnrollments failed: course %d: %v", courseID, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollments for course"))
 		}
 	default:
