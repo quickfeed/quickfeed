@@ -59,21 +59,21 @@ func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error
 }
 
 type Manifest struct {
-	domain  string
-	envFile string
-	handler http.Handler
-	done    chan error
-	client  *github.Client // optional, for testing
-	compile bool
+	domain     string
+	envFile    string
+	handler    http.Handler
+	done       chan error
+	client     *github.Client // optional, for testing
+	runWebpack bool           // run webpack only for production
 }
 
 func New(domain, envFile string) *Manifest {
 	m := &Manifest{
-		domain:  domain,
-		envFile: envFile,
-		client:  github.NewClient(nil),
-		done:    make(chan error),
-		compile: true,
+		domain:     domain,
+		envFile:    envFile,
+		client:     github.NewClient(nil),
+		done:       make(chan error),
+		runWebpack: true,
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -252,7 +252,7 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	if m.compile {
+	if m.runWebpack {
 		go runWebpack()
 	}
 	return nil
