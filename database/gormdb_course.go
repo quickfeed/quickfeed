@@ -98,16 +98,7 @@ func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserSt
 		return nil, err
 	}
 	if status == qf.Enrollment_TEACHER {
-		// Set number of remaining slip days for each course enrollment
-		for _, e := range course.Enrollments {
-			e.SetSlipDays(&course)
-		}
-		for _, g := range course.Groups {
-			// Set number of remaining slip days for each group enrollment
-			for _, e := range g.Enrollments {
-				e.SetSlipDays(&course)
-			}
-		}
+		course.PopulateSlipDays()
 	}
 	return &course, nil
 }
