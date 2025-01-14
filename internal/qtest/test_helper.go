@@ -129,6 +129,22 @@ func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 	return request
 }
 
+// Ptr returns a pointer to the given value.
+//
+// How to use:
+//   - Use this function to create a pointer to a value.
+//   - This function is useful when initializing a struct with a pointer field.
+//
+// Example:
+//
+//	type MyStruct struct {
+//		Field *int
+//	    Src   *string
+//	}
+//	myStruct := MyStruct{
+//		Field: Ptr(10),
+//		Src:   Ptr("hello"),
+//	}
 func Ptr[T any](t T) *T {
 	return &t
 }
