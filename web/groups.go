@@ -226,7 +226,7 @@ func (s *QuickFeedService) getCourseGroup(request *qf.GroupRequest) (*qf.Course,
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, nil, err
 	}
