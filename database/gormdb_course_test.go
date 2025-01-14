@@ -391,3 +391,113 @@ func TestGetCourseTeachers(t *testing.T) {
 		})
 	}
 }
+
+func TestGetCourseByStatus(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{
+		ID: 1,
+	}
+	adminUser := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, adminUser, course)
+	teacherEnrollment := &qf.Enrollment{
+		ID:       1,
+		UserID:   adminUser.ID,
+		CourseID: course.ID,
+		Status:   qf.Enrollment_TEACHER,
+	}
+	studentEnrollment := qtest.EnrollUser(t, db, qtest.CreateFakeUser(t, db), course, qf.Enrollment_STUDENT)
+	pendingEnrollment := qtest.EnrollUser(t, db, qtest.CreateFakeUser(t, db), course, qf.Enrollment_PENDING)
+	noneEnrollment := qtest.EnrollUser(t, db, qtest.CreateFakeUser(t, db), course, qf.Enrollment_NONE)
+
+	type args struct {
+		courseID uint64
+		status   qf.Enrollment_UserStatus
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *qf.Course
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "none: no preloaded data",
+			args: args{
+				courseID: course.ID,
+				status:   qf.Enrollment_NONE,
+			},
+			want: course,
+		},
+		{
+			name: "pending: no preloaded data",
+			args: args{
+				courseID: course.ID,
+				status:   qf.Enrollment_PENDING,
+			},
+			want: course,
+		},
+		{
+			name: "student: preloaded assignments, active enrollments and groups",
+			args: args{
+				courseID: course.ID,
+				status:   qf.Enrollment_STUDENT,
+			},
+			want: &qf.Course{
+				Enrollments: []*qf.Enrollment{
+					teacherEnrollment,
+					studentEnrollment,
+				},
+			},
+		},
+		{
+			name: "teacher: preloaded assignments, active enrollments and groups with detailed information",
+			args: args{
+				courseID: course.ID,
+				status:   qf.Enrollment_TEACHER,
+			},
+			want: &qf.Course{
+				Enrollments: []*qf.Enrollment{
+					teacherEnrollment,
+					studentEnrollment,
+					pendingEnrollment,
+					noneEnrollment,
+				},
+			},
+		},
+		{
+			name: "invalid status",
+			args: args{
+				courseID: course.ID,
+				// invalid status
+				status: qf.Enrollment_UserStatus(10),
+			},
+			wantErr: true,
+		},
+		{
+			name: "no course",
+			args: args{
+				courseID: 10,
+				status:   qf.Enrollment_TEACHER,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := db.GetCourseByStatus(tt.args.courseID, tt.args.status)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GormDB.GetCourseByStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform(),
+				protocmp.IgnoreFields(&qf.Enrollment{}, "user", "state"),
+				protocmp.IgnoreFields(&qf.Course{}, "courseCreatorID", "ID"),
+			); diff != "" {
+				t.Errorf("GormDB.GetCourseByStatus() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
