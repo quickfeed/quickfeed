@@ -169,19 +169,20 @@ func TestConversion(t *testing.T) {
 			t.Fatalf("failed to send request: %v", err)
 		}
 
-		select {
-		case err := <-manifest.done:
-			if err != nil && !tt.fail {
-				t.Errorf("unexpected error in done channel: %v", err)
-			}
-			if err == nil && tt.fail {
-				t.Error("expected error in done channel")
-			}
-			if tt.fail {
-				continue
-			}
-		case <-time.After(2 * time.Second): // Timeout to prevent hanging tests
-			t.Error("timed out waiting for done channel")
+		// Wait for the conversion flow to finish
+		err = <-manifest.done
+		if err != nil && !tt.fail {
+			t.Errorf("unexpected error in done channel: %v", err)
+		}
+		if err == nil && tt.fail {
+			t.Error("expected error in done channel")
+		}
+
+		// In some cases we expect the conversion flow to fail,
+		// such as when the code is invalid or the status is not "created",
+		// so we skip the environment variable checks
+		if tt.fail {
+			continue
 		}
 
 		for k := range tt.want {
