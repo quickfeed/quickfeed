@@ -1,4 +1,4 @@
-import { Enrollment, Enrollment_UserStatus, Enrollments, User } from "../../proto/qf/types_pb"
+import { Course, Enrollment, Enrollment_UserStatus, User } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
@@ -12,28 +12,20 @@ import { Void } from "../../proto/qf/requests_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
 import { ApiClient } from "../overmind/effects"
 import { Timestamp } from "@bufbuild/protobuf"
+import { ConnectError } from "@bufbuild/connect"
 
 
 describe("UpdateEnrollment", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
-        getEnrollments: mock("getEnrollments", async (request) => {
-            const enrollments: Enrollment[] = []
-            MockData.mockedEnrollments().enrollments.forEach(e => {
-                if (request.FetchMode?.case === "courseID") {
-                    if (e.courseID === request.FetchMode.value) {
-                        enrollments.push(e)
-                    }
-                } else if (request.FetchMode?.case === "userID") {
-                    if (e.userID === request.FetchMode.value) {
-                        enrollments.push(e)
-                    }
-                } else {
-                    enrollments.push(e)
-                }
-            })
-            return { message: new Enrollments({ enrollments }), error: null }
+        getCourse: mock("getCourse", async (request) => {
+            const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
+            if (!course) {
+                return { message: new Course(), error: new ConnectError("course not found") }
+            }
+            course.enrollments = MockData.mockedEnrollments().enrollments.filter(e => e.courseID === request.courseID)
+            return { message: course, error: null }
         }),
         updateEnrollments: mock("updateEnrollments", async (request) => {
             const enrollments = request.enrollments ?? []
