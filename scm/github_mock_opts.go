@@ -18,7 +18,7 @@ type mockOptions struct {
 	issues     map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
 	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
-	appConfigs map[string]github.AppConfig
+	appConfigs map[string]github.AppConfig                           // map: code -> app config
 }
 
 // DumpState returns a string representation of the mock state.
