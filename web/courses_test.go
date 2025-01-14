@@ -173,10 +173,10 @@ func TestEnrollmentProcess(t *testing.T) {
 			}
 		}
 	}
-	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment, cmp.Options{
+	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment,
 		protocmp.Transform(),
 		protocmp.IgnoreFields(&qf.Enrollment{}, "course"),
-	}); diff != "" {
+	); diff != "" {
 		t.Errorf("%v, %v", pendingUserEnrollment, pendingCourseEnrollment)
 		t.Errorf("EnrollmentProcess mismatch (-pendingUserEnrollment +pendingCourseEnrollment):\n%s", diff)
 	}
