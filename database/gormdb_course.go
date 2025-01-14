@@ -63,6 +63,8 @@ func (db *GormDB) GetCourse(courseID uint64) (*qf.Course, error) {
 	return &course, nil
 }
 
+// GetCourseByStatus fetches course by ID. Depending on the enrollment status,
+// it preloads course assignments, active enrollments, users, and groups.
 func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserStatus) (*qf.Course, error) {
 	m := db.conn
 	var course qf.Course
