@@ -192,6 +192,7 @@ export const hasReviews = (submission: Submission): boolean => { return submissi
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return obj.gradingBenchmarks.length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return benchmark.criteria.length > 0 }
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
+export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
 
 export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
     if (!submission) {

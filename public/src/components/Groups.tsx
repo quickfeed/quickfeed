@@ -1,6 +1,6 @@
 import React from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
-import { Color, getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { Color, getCourseID, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
@@ -70,15 +70,15 @@ const Groups = (): JSX.Element => {
     }
 
     const GroupMembers = ({ group }: { group: Group }) => {
-        if (!hasEnrollments(group)) {
+        if (!hasUsers(group)) {
             return <td>No members</td>
         }
 
-        const members = group.enrollments.map((enrollment, index) => {
+        const members = group.users.map((user, index) => {
             return (
-                <span key={enrollment.ID.toString()} className="inline-block">
-                    <a href={`https://github.com/${enrollment.user?.Login}`} target="_blank" rel="noopener noreferrer">{enrollment.user?.Name}</a>
-                    {index >= group.enrollments.length - 1 ? "" : ", "}
+                <span key={user.ID.toString()} className="inline-block">
+                    <a href={`https://github.com/${user.Login}`} target="_blank" rel="noopener noreferrer">{user.Name}</a>
+                    {index >= group.users.length - 1 ? "" : ", "}
                 </span>
             )
         })
