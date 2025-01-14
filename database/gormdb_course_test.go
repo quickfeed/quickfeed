@@ -421,7 +421,6 @@ func TestGetCourseByStatus(t *testing.T) {
 		want    *qf.Course
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "none: no preloaded data",
 			args: args{
