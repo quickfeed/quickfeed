@@ -140,21 +140,26 @@ WORKDIR /quickfeed
 	}
 }
 
-const invalidTypesFolder = "testdata/invalidJsonTests/invalidTypes"
-const negativeIntegerFolder = "testdata/invalidJsonTests/negativeInteger"
-
 func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
-	checkLabWithInvalidCriteriaFile(t, invalidTypesFolder)
-	checkLabWithInvalidCriteriaFile(t, negativeIntegerFolder)
+	tests := []struct {
+		name   string
+		folder string
+	}{
+		{name: "invalidTypes", folder: "testdata/invalidJsonTests/invalidTypes"},
+		{name: "negativeInteger", folder: "testdata/invalidJsonTests/negativeInteger"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			checkLabWithInvalidCriteriaFile(t, tc.folder)
+		})
+	}
 }
 
 func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
 	_, _, err := readTestsRepositoryContent(folder, 1)
-
 	if err == nil {
 		t.Errorf("expected error")
 	}
-
 	if !isUnmarshalError(err) {
 		t.Errorf("expected unmarshal error, got: %v", err)
 	}
