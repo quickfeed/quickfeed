@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
@@ -82,6 +81,8 @@ func TestConversion(t *testing.T) {
 
 	tests := []struct {
 		name string
+		// code is used to simulate the received code from the GitHub callback
+		// and is used to fetch the corresponding app config from the mock SCM client.
 		code string
 		want map[string]string
 		fail bool
@@ -150,11 +151,11 @@ func TestConversion(t *testing.T) {
 
 	scmClient := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockAppConfig(config))
 	manifest := Manifest{
-		domain:  "localhost",
-		client:  scmClient.Client(),
-		envFile: "testdata/test.env",
-		done:    make(chan error, 1),
-		compile: false,
+		domain:     "localhost",
+		client:     scmClient.Client(),
+		envFile:    "testdata/test.env",
+		done:       make(chan error, 1),
+		runWebpack: false, // Disable webpack for testing
 	}
 
 	mux := http.NewServeMux()
@@ -163,6 +164,9 @@ func TestConversion(t *testing.T) {
 	defer server.Close()
 
 	for _, tt := range tests {
+		// Send a POST request to our conversion handler
+		// This will simulate the callback from GitHub
+		// with the code from the test case.
 		url := fmt.Sprintf("%s/manifest/callback?code=%s", server.URL, tt.code)
 		_, err := server.Client().Post(url, "application/json", nil)
 		if err != nil {
@@ -186,13 +190,21 @@ func TestConversion(t *testing.T) {
 		}
 
 		for k := range tt.want {
+			// Unset all relevant environment variables
+			// to prevent interference between tests
 			os.Unsetenv(k)
 		}
 
+		// Load the environment variables from the updated .env file
+		// after the conversion flow.
+		// This is done by the StartAppCreationFlow function in production,
+		// but for testing purposes we need to do it manually.
 		if err := env.Load(path.Join(testDataPath, "test.env")); err != nil {
 			t.Fatalf("failed to load .env file: %v", err)
 		}
 		for k, v := range tt.want {
+			// We expect the environment variables to be correctly set
+			// after the conversion flow
 			if got := os.Getenv(k); got != v {
 				t.Errorf("os.Getenv(%q) = %q, wanted %q", k, got, v)
 			}
