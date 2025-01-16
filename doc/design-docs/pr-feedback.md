@@ -40,7 +40,7 @@ If a student accidentally or on purpose merges their branch into `main`, will re
 
 If a PR is to be reviewed by one or more co-students, how do we handle the fact that those students now will have access to everything on that students repository.
 
-#### Possible solution
+#### Possible solution - 1
 
 One solution could be to create a clone repository of the student repository that only contains the given assignment in question. This way, any co-student assigned to review a students code would only have access to that specific assignment.
 This solution does seem to have its own range of problems and complications however. For example, if an assignment has multiple tasks, a PR would be created for each of them (maybe each one with its own set of reviewers), how do we in this
@@ -49,7 +49,7 @@ One approach could be to always create a clone repository for each assignment. T
 This solution though seems like it creates more problems than it solves, given that it would give rise to a myriad of complexity and potential problems.
 Another solution would be to give co-students access to the repositories they are reviewing, and then removing it after the assignment is completed.
 
-#### Hein's response
+#### Hein's response - 1
 
 I agree with the assessment that the first two solutions are too complex.
 Of these solutions, I would go for the last solution to manage this via teams with (temporary) access to the repository.
@@ -64,11 +64,11 @@ One idea is that each assignment could have _X_ tasks of similar difficulty, whe
 
 If an assignment has been pushed, then quickfeed will automatically create issues based on the tasks in that assignment. If a student enrolls to the course after this has happened, they will be left without these issues created.
 
-#### Possible solution
+#### Possible solution - 2
 
 If we save tasks in the database, we can create issues on enrolling students as part of the function handling their enrollment.
 
-#### Hein's response
+#### Hein's response - 2
 
 I think it makes sense to save tasks in the database.
 Another solution could be to git clone the tests repository every time a student enrolls to get the tasks.
@@ -83,7 +83,7 @@ Instead we would have to deal with the same problem for late-to-enroll groups.
 When a student creates a pull request for a certain task, reviewers will have to be assigned to that pull request. Questions arise as to who these reviewers should be, and how they are to be assigned.
 Should a teacher always be assigned, should co-students? And if so, how are these selected? Would it be automatically done by quickfeed, or more manually by the teachers themselves?
 
-#### Hein's response
+#### Hein's response - 3
 
 If we go with the group-only feature as described above, I see two options that we should support:
 
@@ -107,7 +107,7 @@ The purpose of using pull requests is to give the student a more accessible hub 
 feel they are ready for approval. This question is also somewhat related to the previous one, in the sense of when are the `review` and the `approval` processes supposed to begin, and is there any difference between them?
 If there is a difference between them, when are reviewers assigned, and when do we go from the `review` to the `approval` phase? When the automatic tests give the student a passing score?
 
-#### Hein's response
+#### Hein's response - 4
 
 I do think it makes sense to separate the two into a review process and approval.
 I think this is sort of already part of the PR process.
@@ -126,7 +126,7 @@ There are three stages:
 Maybe in the initial stage, the PR is marked as draft; only when the all tests pass will the PR be moved out of draft mode to be reviewed.
 Moving the PR out of draft mode could be automatic, but students can do it manually also.
 
-### Oje's notes on responses
+### Ole's notes on responses
 
 - How do we know that a task is completed? Currently quickfeed grades only based on the entire assignment.
 - If group assignments are to be separated into individual tasks, one drawback would be that these tasks would have to be independent of each other. Otherwise one task can not be implemented before another is complete.

@@ -7,9 +7,7 @@
 
 ## Documentation
 
-- Teachers that wants to use QuickFeed may wish to review the [User Manual](doc/teacher.md).
-- Teachers may also want to copy the [sign up instructions](doc/templates/signup.md) and [lab submission instructions](doc/templates/lab-submission.md), and make the necessary adjustments for your course.
-- [Installation instructions for QuickFeed](doc/deploy.md).
+[Click to view documentation](main-doc.md)
 
 ### Install Development Tools
 
@@ -17,7 +15,7 @@ On Unix systems with homebrew you should be able to install development tools us
 
 ```shell
 % make brew
-% make devtools
+% make tools
 # Make sure the bin folder with our tools is in your PATH.
 % export PATH=$PATH:$PWD/bin
 ```
