@@ -20,7 +20,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/quickfeed/quickfeed/internal/multierr"
 	"go.uber.org/zap"
 )
 
@@ -60,7 +59,7 @@ func (d *Docker) Close() error {
 		syncErr = d.logger.Sync()
 	}
 	closeErr := d.client.Close()
-	return multierr.Join(syncErr, closeErr)
+	return errors.Join(syncErr, closeErr)
 }
 
 // Run implements the CI interface. This method blocks until the job has been

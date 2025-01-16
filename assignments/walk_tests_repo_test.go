@@ -1,6 +1,7 @@
 package assignments
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -22,6 +23,10 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab1/run.sh":               {},
 		"testdata/tests/lab2/assignment.yml":       {},
 		"testdata/tests/lab3/assignment.yml":       {},
+		"testdata/tests/lab4/assignment.yml":       {},
+		"testdata/tests/lab4/criteria.json":        {},
+		"testdata/tests/lab5/assignment.yml":       {},
+		"testdata/tests/lab5/criteria.json":        {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
@@ -39,7 +44,6 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 RUN apk update && apk add --no-cache git bash build-base
 WORKDIR /quickfeed
 `
-
 	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
@@ -80,6 +84,48 @@ WORKDIR /quickfeed
 				},
 			},
 		},
+		{
+			Name:       "lab4",
+			CourseID:   1,
+			Order:      4,
+			ScoreLimit: 80,
+			Deadline:   qtest.Timestamp(t, "2019-03-15T16:00:00"),
+			IsGroupLab: true,
+			GradingBenchmarks: []*qf.GradingBenchmark{
+				{
+					Heading:  "Assignment 1",
+					CourseID: 1,
+					Criteria: []*qf.GradingCriterion{
+						{
+							CourseID:    1,
+							Description: "Links work",
+						},
+						{
+							CourseID:    1,
+							Description: "Images are links, opening in a new tab",
+						},
+					},
+				},
+			},
+		},
+		{
+			Name:       "lab5",
+			CourseID:   1,
+			Order:      5,
+			ScoreLimit: 80,
+			Deadline:   qtest.Timestamp(t, "2025-07-21T16:00:00"),
+			IsGroupLab: true,
+			GradingBenchmarks: []*qf.GradingBenchmark{
+				{
+					CourseID: 1,
+					Criteria: []*qf.GradingCriterion{
+						{
+							CourseID: 1,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
@@ -92,4 +138,34 @@ WORKDIR /quickfeed
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
+}
+
+func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
+	tests := []struct {
+		name   string
+		folder string
+	}{
+		{name: "invalidTypes", folder: "testdata/invalidJsonTests/invalidTypes"},
+		{name: "negativeInteger", folder: "testdata/invalidJsonTests/negativeInteger"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			checkLabWithInvalidCriteriaFile(t, tc.folder)
+		})
+	}
+}
+
+func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
+	_, _, err := readTestsRepositoryContent(folder, 1)
+	if err == nil {
+		t.Errorf("expected error")
+	}
+	if !isUnmarshalError(err) {
+		t.Errorf("expected unmarshal error, got: %v", err)
+	}
+}
+
+// Check if the error is related to invalid JSON unmarshalling.
+func isUnmarshalError(e error) bool {
+	return strings.Contains(e.Error(), "failed to unmarshal")
 }
