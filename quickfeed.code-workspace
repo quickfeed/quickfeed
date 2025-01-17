@@ -24,7 +24,7 @@
 			]
 		},
 		"cSpell.enabled": true,
-		"cSpell.enableFiletypes": [
+		"#cSpell.enableFiletypes#": [
 			"plaintext"
 		],
 		"files.exclude": {
