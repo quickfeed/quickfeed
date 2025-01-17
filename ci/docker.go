@@ -26,6 +26,7 @@ import (
 var (
 	DefaultContainerTimeout = time.Duration(10 * time.Minute)
 	QuickFeedPath           = "/quickfeed"
+	GoModCache              = "/quickfeed-go-mod-cache"
 	maxToScan               = 1_000_000 // bytes
 	maxLogSize              = 30_000    // bytes
 	lastSegmentSize         = 1_000     // bytes
@@ -137,12 +138,21 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 	var hostConfig *container.HostConfig
 	if job.BindDir != "" {
+		goModCacheSrc, err := moduleCachePath()
+		if err != nil {
+			return nil, err
+		}
 		hostConfig = &container.HostConfig{
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
 					Source: job.BindDir,
 					Target: QuickFeedPath,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: goModCacheSrc,
+					Target: GoModCache,
 				},
 			},
 		}
