@@ -242,3 +242,5 @@ LOGFILE
 featurename
 norestart
 distro
+sourcegraph
+deepsource
