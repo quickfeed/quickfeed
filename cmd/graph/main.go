@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -32,19 +31,16 @@ func main() {
 	var symbols []symbol
 	lines := strings.Split(string(output), "\n")
 
-	re := regexp.MustCompile(`^(\S+)\s+(\S+)\s+(\d+:\d+-\d+:\d+)$`)
-
 	for _, line := range lines {
-		match := re.FindStringSubmatch(line)
-		if match != nil {
-			// Parse the match into the Symbol struct
-			symbol := symbol{
-				name:     match[1],
-				kind:     match[2],
-				position: match[3],
-			}
+		args := strings.Split(line, " ")
+		// Skip, if the line does not contain the expected number of arguments
+		if len(args) == 3 { // There a cases of arrays with a single empty string entry
 			// Append the symbol to the slice
-			symbols = append(symbols, symbol)
+			symbols = append(symbols, symbol{
+				name:     args[0],
+				kind:     args[1],
+				position: args[2],
+			})
 		}
 	}
 
