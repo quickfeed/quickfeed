@@ -29,6 +29,23 @@ func MustRun(output bool, wd, cmd string, args ...string) {
 	}
 }
 
+// MustRun runs the given command with wd as the working directory,
+// and prints the output to stdout/stderr if output is true.
+// If the command fails, MustRun panics.
+func MustRunEnv(output bool, env []string, wd, cmd string, args ...string) {
+	c := exec.Command(cmd, args...)
+	c.Env = append(c.Environ(), env...)
+	c.Dir = wd
+	if output {
+		c.Stderr = os.Stderr
+		c.Stdout = os.Stdout
+		log.Println("running:", cmd, strings.Join(args, " "))
+	}
+	if err := c.Run(); err != nil {
+		panic(fmt.Sprintf("failed to run %s %v: %v", cmd, args, err))
+	}
+}
+
 // Run runs the given command, directing stderr to the command's stderr and
 // printing stdout to stdout. Run returns an error if any.
 func Run(cmd string) error {

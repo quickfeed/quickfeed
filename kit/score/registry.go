@@ -3,6 +3,7 @@ package score
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"sort"
 
@@ -14,6 +15,7 @@ import (
 type registry struct {
 	testNames []string          // testNames in registration order
 	scores    map[string]*Score // map from TestName to score object
+	conn      net.Conn          // connection to session socket
 }
 
 func NewRegistry() *registry { // skipcq: RVV-B0011
@@ -56,7 +58,7 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 	// iterate over the test names in registration or sorted order
 	for _, name := range s.testNames {
 		if sc, ok := s.scores[name]; ok {
-			fmt.Println(sc.json())
+			fmt.Println(sc.JSON())
 		}
 	}
 	// force exit after printing test info if SCORE_INIT is set
