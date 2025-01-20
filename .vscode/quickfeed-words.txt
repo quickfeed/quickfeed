@@ -252,3 +252,4 @@ norestart
 distro
 sourcegraph
 deepsource
+subfolders

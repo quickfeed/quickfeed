@@ -9,41 +9,42 @@ import (
 	"strings"
 )
 
-/*
-	This program is highly dependent on the gopls library.
-*/
-
 func main() {
-	fmt.Println("Creating visual graph of Quickfeed, this will take a while...")
+	const rePath = "../../../" // Relative path to Quickfeed folder
 
-	const pathToQuickfeedRoot = "../../"
-	var wantedFiles []string // stores the paths of all wanted files
-	fmt.Println("Extracting files in directory...")
-	if err := extractFilesInDirectory(pathToQuickfeedRoot, &wantedFiles); err != nil {
-		fmt.Println(err)
+	projectMap := make(fMap)
+	if err := getContent(&projectMap, rePath, "", nil); err != nil {
+		fmt.Printf("Error getting content: %v\n", err)
 		return
 	}
-	symbolsMap := make(map[string][]symbol) // Maps symbols to their respective files
-	fmt.Println("Creating symbol map...")
-	if err := createSymbolMap(wantedFiles[0], &symbolsMap); err != nil {
-		fmt.Println(err)
+	if err := clean(projectMap); err != nil {
+		fmt.Printf("Error when cleaning.. err: %s", err)
+		return
+	}
+	if err := populate(projectMap); err != nil {
+		fmt.Printf("Error populating: %v\n", err)
 		return
 	}
 
-	/*
-		Following can be written with any graphing library
+	fmt.Println(projectMap)
+}
 
-		Currently, the graph visualized with graphviz
-	*/
-
-	// Initialize the graph file, delete if it already exists
-	graphFilePath := fmt.Sprintf("%sqf-graph.dot", pathToQuickfeedRoot)
-	if _, err := os.Stat(graphFilePath); !os.IsNotExist(err) {
-		if err := os.Remove(graphFilePath); err != nil {
-			fmt.Println(err)
-			return
+// remove entries with zero files and subfolders
+func clean(fMap fMap) error {
+	var keysToDelete []string
+	for key := range fMap {
+		if len(fMap[key].subFolders) == 0 {
+			if len(fMap[key].files) == 0 {
+				keysToDelete = append(keysToDelete, key)
+			}
+		} else {
+			clean(fMap[key].subFolders)
 		}
 	}
+	for _, key := range keysToDelete {
+		delete(fMap, key)
+	}
+	return nil
 }
 
 const (
@@ -53,25 +54,27 @@ const (
 	method   = "Method"
 )
 
-type position struct {
-	line      string
-	charRange string
-}
-
-func (p position) getPos() string {
-	return fmt.Sprintf("%s:%s", p.line, p.charRange)
-}
-
-type ref struct {
-	symbolPath string
-	parent     symbol
-}
-
-type symbol struct {
-	name     string
-	kind     string
-	position position
-	refs     []ref
+// Populate gathers all the symbols and references in the project and structures them relative to where the reference is found
+// If the reference is outside the folder, its stored in the ref slice in the folder struct
+// If the reference is found in a different file but same parent folder, its stored in the ref slice in the file struct
+// If the reference is found in the same file, its stored in the ref slice in the symbol struct
+func populate(fMap fMap) error {
+	for key := range fMap {
+		for i, file := range fMap[key].files {
+			fmt.Printf("Operating on file:  %s, File path: %s\n", file.name, file.path)
+			symbols, err := fMap.getSymbols(file.path)
+			if err != nil {
+				return err
+			}
+			fMap[key].files[i].symbols = symbols
+			fmt.Println("Finding all references in file")
+			if err := fMap[key].findRefs(file.path, i, fMap); err != nil {
+				return err
+			}
+		}
+		populate(fMap[key].subFolders)
+	}
+	return nil
 }
 
 // runs the gopls command with the given arguments
@@ -80,137 +83,14 @@ func runGopls(args ...string) ([]byte, error) {
 	return exec.Command("gopls", append(_args, args...)...).Output()
 }
 
-// creates a map of all symbols in the wanted files
-// the key is the file path and the value is a slice of symbols in the file
-func createSymbolMap(filePath string, symbolsMap *map[string][]symbol) error {
-	/*for _, filePath := range wantedFiles {*/
-
-	fmt.Printf("Operating on file:  %s, File path: %s\n", getLastEntry(filePath, "/"), filePath)
-	if err := getSymbols(symbolsMap, filePath); err != nil {
-		return err
-	}
-
-	fmt.Println("Finding all references in file")
-	if err := findRefs(symbolsMap, filePath); err != nil {
-		return err
-	}
-	/*}*/
-	return nil
-}
-
 // gets all symbols in a file if the file is not already in the symbols map
-func getSymbols(symbolsMap *map[string][]symbol, filePath string) error {
-	get := func(filePath string) ([]symbol, error) {
-		if output, err := runGopls("symbols", filePath); err != nil {
-			return []symbol{}, err
-		} else {
-			fmt.Println("Extracting symbols from file")
-			return extractSymbols(string(output)), nil
-		}
-	}
-	if (*symbolsMap)[filePath] == nil {
-		if symbols, err := get(filePath); err != nil {
-			return err
-		} else {
-			(*symbolsMap)[filePath] = symbols
-		}
-	}
-	return nil
-}
-
-// returns the last entry of a string array with a given delimiter
-func getLastEntry(str string, delimiter string) string {
-	split := strings.Split(str, delimiter)
-	return split[len(split)-1]
-}
-
-func parseStringToInt(s string) (int, error) {
-	return strconv.Atoi(s)
-}
-
-// Loops through all symbols and finds references for each symbol
-// Cases where the symbol is a function, the call hierarchy is also extracted
-func findRefs(symbolsMap *map[string][]symbol, filePath string) error {
-	for i := range (*symbolsMap)[filePath] {
-		fmt.Printf("Executing references command for symbol: %s\n", (*symbolsMap)[filePath][i].name)
-		pathToSymbol := fmt.Sprintf("%s:%s", filePath, (*symbolsMap)[filePath][i].position.getPos())
-		fmt.Printf("Path to symbol: %s\n", pathToSymbol)
-		if output, err := runGopls("references", pathToSymbol); err != nil {
-			return err
-		} else {
-			// (*symbolsMap)[filePath][i].refs
-			fmt.Println("Finding parent methods of references")
-			if err := findParentsForRefs(symbolsMap, parseRefs(string(output)), i, filePath); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// finds the parent method for each reference
-func findParentsForRefs(symbolMap *map[string][]symbol, refs []string, i int, originalFile string) error {
-	for _, ref := range refs {
-		args := strings.Split(ref, ":")
-		refFile := args[0]
-		refLinePos := args[1]
-		// get symbols in the reference file
-		// if the file is not already in the symbol map
-		if err := getSymbols(symbolMap, refFile); err != nil {
-			return err
-		}
-		// closest method above symbol, initial value is a symbol with line 0
-		refParent := symbol{position: position{line: "0"}}
-		if err := getRelatedMethod(&refParent, symbolMap, refFile, refLinePos); err != nil {
-			return err
-		}
-		(*symbolMap)[originalFile][i].refs = append((*symbolMap)[originalFile][i].refs, createRef(ref, refParent))
-	}
-	return nil
-}
-
-// getRelatedMethod finds the closest method above the reference
-func getRelatedMethod(refParent *symbol, symbolsMap *map[string][]symbol, refFile string, refLinePos string) error {
-	_refLinePos, err := parseStringToInt(refLinePos)
+func (fMap *fMap) getSymbols(filePath string) ([]symbol, error) {
+	output, err := runGopls("symbols", filePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// loop through potential parent symbols
-	for _, p_symbol := range (*symbolsMap)[refFile] {
-		// skip if the symbol is not a function
-		if p_symbol.kind != function && p_symbol.kind != method {
-			continue
-		}
-		newMethodLinePos, err := parseStringToInt(p_symbol.position.line)
-		if err != nil {
-			return err
-		}
-		currentMethodLinePos, err := parseStringToInt(refParent.position.line)
-		if err != nil {
-			return err
-		}
-		newMethodIsFurtherDown := currentMethodLinePos < newMethodLinePos
-		newMethodIsAboveRef := newMethodLinePos < _refLinePos
-		if newMethodIsFurtherDown && newMethodIsAboveRef {
-			*refParent = p_symbol
-		}
-	}
-	return nil
-}
-
-func createRef(s string, p symbol) ref {
-	return ref{symbolPath: s, parent: p}
-}
-
-func parseRefs(output string) []string {
-	var refs []string
-	for _, line := range strings.Split(string(output), "\n") {
-		if line == "" {
-			continue
-		}
-		refs = append(refs, line)
-	}
-	return refs
+	fmt.Printf("Extracting symbols from file, path: %s\n", filePath)
+	return extractSymbols(string(output)), nil
 }
 
 // parses the output of the gopls symbols command and extracts the name, kind, and position of each symbol
@@ -218,8 +98,9 @@ func extractSymbols(output string) []symbol {
 	// Gets the line and character range position of the symbol
 	createPosition := func(_position string) position {
 		args := strings.Split(_position, "-")
-		sLineP := strings.Split(args[0], ":")[0] // starting line position
-		sCharP := strings.Split(args[0], ":")[1] // starting character position
+		args2 := strings.Split(args[0], ":")
+		sLineP := args2[0]                       // starting line position
+		sCharP := args2[1]                       // starting character position
 		eCharP := strings.Split(args[1], ":")[1] // ending character position
 		return position{line: sLineP, charRange: fmt.Sprintf("%s-%s", sCharP, eCharP)}
 	}
@@ -243,21 +124,179 @@ func extractSymbols(output string) []symbol {
 	return symbols
 }
 
-// extractFilesInDirectory extracts all files with the extensions .go, .ts, and .tsx in the given directory.
-// function is recursive and will traverse all subdirectories.
-func extractFilesInDirectory(dirPath string, wantedFiles *[]string) error {
+func parseStringToInt(s string) (int, error) {
+	return strconv.Atoi(s)
+}
+
+// Loops through all symbols and finds references for each symbol
+// Cases where the symbol is a function, the call hierarchy is also extracted
+func (folder folder) findRefs(filePath string, fileIndex int, fMap fMap) error {
+	for i := range folder.files[fileIndex].symbols {
+		symbol := folder.files[fileIndex].symbols[i]
+		fmt.Printf("Executing references command for symbol: %s\n", symbol.name)
+		pathToSymbol := fmt.Sprintf("%s:%s", filePath, symbol.position.getPos())
+		fmt.Printf("Path to symbol: %s\n", pathToSymbol)
+		if output, err := runGopls("references", pathToSymbol); err != nil {
+			return err
+		} else {
+			fmt.Println("Finding parent methods of references")
+			if err := folder.findParentsForRefs(parseRefs(string(output)), i, fileIndex, fMap); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func parseRefs(output string) []string {
+	var refs []string
+	for _, line := range strings.Split(string(output), "\n") {
+		if line == "" {
+			continue
+		}
+		refs = append(refs, line)
+	}
+	return refs
+}
+
+// finds the parent method for each reference
+func (folder *folder) findParentsForRefs(refs []string, symbolIndex int, fileIndex int, fMap fMap) error {
+	for _, _ref := range refs {
+		args := strings.Split(_ref, ":")
+		refFile := args[0]
+		refLinePos := args[1]
+		// get symbols in the reference file
+		// if the file is not already in the symbol map
+		/*
+			TODO: extract the directories and key into the map and check if the symbols are already in the map, if not, get the symbols.
+			This can improve performance
+		*/
+		if symbols, err := fMap.getSymbols(refFile); err != nil {
+			return err
+		} else {
+			// closest method above symbol, initial value is a symbol with line 0
+			refParent := symbol{position: position{line: "0"}}
+			if err := getRelatedMethod(symbols, &refParent, refLinePos); err != nil {
+				return err
+			}
+			ref := ref{symbolPath: _ref, parent: refParent}
+			folder.files[fileIndex].symbols[symbolIndex].refs = append(folder.files[fileIndex].symbols[symbolIndex].refs, ref)
+		}
+	}
+	return nil
+}
+
+// getRelatedMethod finds the closest method above the reference
+func getRelatedMethod(symbols []symbol, refParent *symbol, refLinePos string) error {
+	_refLinePos, err := parseStringToInt(refLinePos)
+	if err != nil {
+		return err
+	}
+	// loop through potential parent symbols
+	for _, p_symbol := range symbols {
+		// skip if the symbol is not a function
+		if p_symbol.kind != function && p_symbol.kind != method {
+			continue
+		}
+		newMethodLinePos, err := parseStringToInt(p_symbol.position.line)
+		if err != nil {
+			return err
+		}
+		currentMethodLinePos, err := parseStringToInt(refParent.position.line)
+		if err != nil {
+			return err
+		}
+		newMethodIsFurtherDown := currentMethodLinePos < newMethodLinePos
+		newMethodIsAboveRef := newMethodLinePos < _refLinePos
+		if newMethodIsFurtherDown && newMethodIsAboveRef {
+			*refParent = p_symbol
+		}
+	}
+	return nil
+}
+
+type fMap map[string]folder
+
+type folder struct {
+	folderPath string
+	refs       []ref
+	files      []file
+	subFolders fMap
+}
+
+type file struct {
+	name    string
+	path    string
+	refs    []ref
+	symbols []symbol
+}
+
+type folderRef struct {
+	filePath string
+	symbols  []symbol
+}
+
+type symbol struct {
+	name     string
+	kind     string
+	position position
+	refs     []ref
+}
+
+type ref struct {
+	symbolPath string
+	parent     symbol
+}
+
+type position struct {
+	line      string
+	charRange string
+}
+
+func (p position) getPos() string {
+	return fmt.Sprintf("%s:%s", p.line, p.charRange)
+}
+
+// getContent recursively reads the content of a directory and its subdirectories
+// Should be refactored... but not sure how atm
+func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap *fMap) error {
 	entities, err := os.ReadDir(dirPath)
 	if err != nil {
 		return fmt.Errorf("Error reading directory: %v", err)
 	}
 	for _, entity := range entities {
-		entityPath := filepath.Join(dirPath, entity.Name())
-		if entity.IsDir() {
-			extractFilesInDirectory(entityPath, wantedFiles)
+		if !isValid(entity) {
 			continue
+		}
+		name := entity.Name()
+		if entity.IsDir() {
+			subDirPath := filepath.Join(dirPath, name)
+			(*childMap)[name] = folder{folderPath: subDirPath}
+			if entry, ok := (*childMap)[name]; ok {
+				entry.subFolders = make(fMap)
+				if err := getContent(&entry.subFolders, subDirPath, name, childMap); err != nil {
+					return err
+				}
+				/*
+					Get the updated entry from childMap and combine with parentMap updates.
+					The files are added concurrently to the parentMap which is pointing to the same map as the childMap.
+					This is needed to get the updated entry (after running getContent recursively) from the common method which is initialized in the main method.
+
+					There is probably a better way to do this, but I will leave it as is for now.
+				*/
+				if second_entry, ok := (*childMap)[name]; ok {
+					second_entry.subFolders = entry.subFolders
+					(*childMap)[name] = second_entry
+				}
+			}
 		} else {
-			if validateFile(entity) {
-				*wantedFiles = append(*wantedFiles, entityPath)
+			subDirPath := filepath.Join(dirPath, name)
+			if parentDirName == "" {
+				return fmt.Errorf("Parent directory name can't be empty..")
+			}
+			if folder, ok := (*parentMap)[parentDirName]; ok {
+				folder.files = append(folder.files, file{name: name, path: subDirPath})
+				(*parentMap)[parentDirName] = folder
 			}
 		}
 	}
@@ -265,16 +304,27 @@ func extractFilesInDirectory(dirPath string, wantedFiles *[]string) error {
 }
 
 // checks if the file is of type .go, .ts, or .tsx
-func validateFile(file os.DirEntry) bool {
-	fileName := file.Name()
-	// return early if file does not contain a file extension
-	if !strings.Contains(fileName, ".") {
-		return false
+func isValid(dirEntry os.DirEntry) bool {
+	name := dirEntry.Name()
+	// return early if directory entry does not contain a file extension
+	if !strings.Contains(name, ".") {
+		// limit to only include directories with the following names
+		// includeDirs := map[string]bool{"assignments": true, "quickfeed": true}
+		// return includeDirs[name]
+		excludedDirs := map[string]bool{"node_modules": true}
+		if excludedDirs[name] {
+			return false
+		} else {
+			// Some files without a period is for some reason a directory
+			// This will exclude those files
+			// For example LICENSE does not contain a period and is a file, os thinks it's a directory
+			return dirEntry.IsDir()
+		}
 	}
 	// using bool map to easily check if file is of wanted extension
 	// there probably a simpler way to define this map
 	wantedExtensions := map[string]bool{"go": true, "ts": true, "tsx": true}
-	return wantedExtensions[getFileExtension(fileName)]
+	return wantedExtensions[getFileExtension(name)]
 }
 
 // splits the file name and returns the file extension
