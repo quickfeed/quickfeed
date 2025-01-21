@@ -463,9 +463,9 @@ func isValid(dirEntry os.DirEntry) bool {
 	// return early if directory entry does not contain a file extension
 	if !strings.Contains(name, ".") {
 		// limit to only include directories with the following names
-		includeDirs := map[string]bool{"assignments": true, rootFolderName: true}
-		return includeDirs[name]
-		/*excludedDirs := map[string]bool{"node_modules": true}
+		// includeDirs := map[string]bool{"assignments": true, rootFolderName: true}
+		// return includeDirs[name]
+		excludedDirs := map[string]bool{"node_modules": true}
 		if excludedDirs[name] {
 			return false
 		} else {
@@ -473,7 +473,7 @@ func isValid(dirEntry os.DirEntry) bool {
 			// This will exclude those files
 			// For example LICENSE does not contain a period and is a file, os thinks it's a directory
 			return dirEntry.IsDir()
-		}*/
+		}
 	}
 	// using bool map to easily check if file is of wanted extension
 	// there probably a simpler way to define this map
