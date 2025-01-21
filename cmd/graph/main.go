@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+const (
+	rootFolderName = "quickfeed"
+	function       = "Function"
+	method         = "Method"
+)
+
 func main() {
 	old := flag.Bool("old", false, "create map with old data")
 	flag.Parse()
@@ -101,13 +107,6 @@ func clean(fMap *fMap) error {
 	}
 	return nil
 }
-
-const (
-	constant = "Constant"
-	variable = "Variable"
-	function = "Function"
-	method   = "Method"
-)
 
 // Populate gathers all the symbols and references in the project and structures them relative to where the reference is found
 // If the reference is outside the folder, its stored in the ref slice in the folder struct
@@ -245,7 +244,7 @@ func createRefInfo(filePath string, symbolName string) refInfo {
 func getKeys(filePath string) ([]string, error) {
 	args := strings.Split(filePath, "/")
 	for i := len(args) - 1; i >= 0; i-- {
-		if args[i] == "quickfeed" {
+		if args[i] == rootFolderName {
 			return args[i : len(args)-1], nil
 		}
 	}
@@ -418,10 +417,6 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 			if folder, ok := (*parentMap)[parentDirName]; ok {
 				folder.Files = append(folder.Files, file{Name: name, Path: subDirPath})
 				(*parentMap)[parentDirName] = folder
-
-				if len(folder.Files) == 1 {
-					return nil
-				}
 			}
 		}
 	}
@@ -434,9 +429,9 @@ func isValid(dirEntry os.DirEntry) bool {
 	// return early if directory entry does not contain a file extension
 	if !strings.Contains(name, ".") {
 		// limit to only include directories with the following names
-		includeDirs := map[string]bool{"assignments": true, "quickfeed": true}
-		return includeDirs[name]
-		/*excludedDirs := map[string]bool{"node_modules": true}
+		// includeDirs := map[string]bool{"assignments": true, rootFolderName: true}
+		// return includeDirs[name]
+		excludedDirs := map[string]bool{"node_modules": true}
 		if excludedDirs[name] {
 			return false
 		} else {
@@ -444,7 +439,7 @@ func isValid(dirEntry os.DirEntry) bool {
 			// This will exclude those files
 			// For example LICENSE does not contain a period and is a file, os thinks it's a directory
 			return dirEntry.IsDir()
-		}*/
+		}
 	}
 	// using bool map to easily check if file is of wanted extension
 	// there probably a simpler way to define this map
