@@ -43,7 +43,7 @@ These are the envisioned (automated) workflows for QuickFeed after integrating w
 
 ### 1. Course Creation
 
-- A teacher authenticate via LDAP/FEIDE to grant QuickFeed access his/her courses.
+- A teacher authenticate via LDAP/FEIDE to grant QuickFeed access to the teacher's courses.
 - QuickFeed queries FS to fetch course details and class roster.
 - QuickFeed creates the course, and is ready for student signup.
 
@@ -51,12 +51,12 @@ These are the envisioned (automated) workflows for QuickFeed after integrating w
 
 #### Option 1: User-Based Enrollment
 
-- When a user logs in via LDAP/FEIDE, QuickFeed queries FS to fetch their enrolled courses.
+- When a user logs in via LDAP/FEIDE, QuickFeed queries FS to fetch the user's enrolled courses.
 - If the user is enrolled in a course already created in QuickFeed, they are automatically added to the course.
 
 #### Option 2: Course-Based Enrollment
 
-- When a course is created in QuickFeed, class roster (e.g., name, student numbers, roles) is fetched from FS.
+- When a course is created in QuickFeed, course details (e.g., names, student numbers, roles) is fetched from FS.
 - QuickFeed stores this data and automatically grants access when users log in.
 
 ### 3. Registration of Approved Coursework Requirements
