@@ -254,3 +254,5 @@ sourcegraph
 deepsource
 subfolders
 smap
+studentname
+reviewee's

@@ -34,21 +34,21 @@ Each Student has a Separate replica `[student-name-labs repository]` of the assi
 
 Each course has multiple assignments. For each assignment, the teacher will create issues on "student-name-labs" repository which has to be solved by students.
 
-#### Choice 1
+#### Choice
 
 Each assignment will consist of multiple tasks, and for each task Quick Feed will create an issue on a student GitHub Repository. The students should create a PR for every issue created on their repository.
 
-#### Choice 2
+#### Choice
 
 Another approach, Quick Feed will create only one issue on student repository for all the tasks in an assignment. Therefore, student must create only one pull request per assignment.
 
-#### Challenges with Choice 1
+#### Challenges with Choice
 
 If there are several tasks in an assignment, it will create individual issues for each task. All students will create pull request for each issue which will lead to creation of multiple pull requests which has to be reviewed by the teacher.
 
 Scenario: If an assignment has 4 tasks, and there are 10 students. There will be 40 pull requests to be reviewed.
 
-#### Challenges with Choice 2
+#### Challenges with Choice
 
 If there are multiple tasks, the pull request will be long as it contains the solution for all the tasks and is also difficult for the reviewer to review the code.
 Also, it will be difficult to differentiate the implementation of each task in the pull request.
