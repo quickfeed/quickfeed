@@ -253,3 +253,4 @@ distro
 sourcegraph
 deepsource
 subfolders
+smap
