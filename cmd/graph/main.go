@@ -124,7 +124,9 @@ func populate(fMap *fMap) error {
 				return err
 			}
 		}
-		populate(&folder.SubFolders)
+		if err := populate(&folder.SubFolders); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -199,15 +201,13 @@ func (folder folder) findRefs(filePath string, fileIndex int, fMap fMap) error {
 			if err := findParentsForRefs(&refs, createRefInfo(filePath, symbols[i].Name), parseRefs(string(output)), fMap); err != nil {
 				return err
 			}
-			if err := folder.assignRefsToMap(fileIndex, i, refs); err != nil {
-				return err
-			}
+			folder.assignRefsToMap(fileIndex, i, refs)
 		}
 	}
 	return nil
 }
 
-func (folder folder) assignRefsToMap(fileIndex int, symbolIndex int, refs []ref) error {
+func (folder folder) assignRefsToMap(fileIndex int, symbolIndex int, refs []ref) {
 	for _, ref := range refs {
 		if ref.Source.FolderName == ref.Info.FolderName {
 			if ref.Source.FileName == ref.Info.FileName {
@@ -219,7 +219,6 @@ func (folder folder) assignRefsToMap(fileIndex int, symbolIndex int, refs []ref)
 			folder.Refs = append(folder.Refs, ref)
 		}
 	}
-	return nil
 }
 
 func parseRefs(output string) []string {
@@ -248,7 +247,7 @@ func getKeys(filePath string) ([]string, error) {
 			return args[i : len(args)-1], nil
 		}
 	}
-	return nil, fmt.Errorf("Could not find quickfeed directory in path: %s", filePath)
+	return nil, fmt.Errorf("Could not find %s directory in path: %s", rootFolderName, filePath)
 }
 
 func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder, int, error) {
@@ -261,7 +260,7 @@ func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder
 		folder = fMap[key]
 		// if the folder has subfolders, update the folder to the subfolder
 		// only if the current key is not the last key
-		if folder.SubFolders != nil && i < len(keys)-1 {
+		if folder.SubFolders != nil && i < len(keys) {
 			fMap = folder.SubFolders
 		}
 	}
@@ -296,7 +295,6 @@ func findParentsForRefs(parent_refs *[]ref, source_refInfo refInfo, refs []strin
 		}
 		refInfo := createRefInfo(filePath, refParent.Name)
 		*parent_refs = append(*parent_refs, ref{Source: source_refInfo, Info: refInfo})
-
 	}
 	return nil
 }
