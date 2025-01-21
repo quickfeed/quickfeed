@@ -257,8 +257,13 @@ func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder
 		return folder{}, 0, err
 	}
 	var folder folder
-	for _, key := range keys {
+	for i, key := range keys {
 		folder = fMap[key]
+		// if the folder has subfolders, update the folder to the subfolder
+		// only if the current key is not the last key
+		if folder.SubFolders != nil && i < len(keys)-1 {
+			fMap = folder.SubFolders
+		}
 	}
 	for i, file := range folder.Files {
 		if file.Name == fileName {
