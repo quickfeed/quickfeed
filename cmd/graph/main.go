@@ -264,6 +264,7 @@ func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder
 			break
 		}
 	}
+	rootFolder := fMap.Folder[fMap.Key]
 	var folder folder
 	keys, err := getKeys(filePath)
 	if err != nil {
@@ -282,7 +283,7 @@ func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder
 			return folder, i, nil
 		}
 	}
-	return folder, 0, fmt.Errorf("Could not find file: %s in folder: %s", fileName, folder.FolderPath)
+	return rootFolder, 0, fmt.Errorf("Could not find file: %s in folder: %s", fileName, folder.FolderPath)
 }
 
 // finds the parent method for each reference
@@ -292,11 +293,12 @@ func findParentsForRefs(parent_refs *[]ref, source_refInfo refInfo, refs []strin
 		filePath := args[0]
 		fileName := getLastEntry(filePath, "/", 0)
 		linePos := args[1]
-		// get symbols in the reference file
-		// if the file is not already in the symbol map
 		folder, fileIndex, err := fMap.getFolderAndFileIndex(filePath, fileName)
 		if err != nil {
-			return fmt.Errorf("Error when getting folder and file index: %s", err)
+			err = fmt.Errorf("Error when getting folder and file index: %s", err)
+			folder.Errors = append(folder.Errors, goPlsError{Error: err, Command: "getFolderAndFileIndex", Input: filePath, Output: ""})
+			continue
+			// Skip if the file is not found
 		}
 		if err := folder.setSymbols(filePath, fileIndex); err != nil {
 			return fmt.Errorf("Error when setting symbols: %s", err)
@@ -461,9 +463,9 @@ func isValid(dirEntry os.DirEntry) bool {
 	// return early if directory entry does not contain a file extension
 	if !strings.Contains(name, ".") {
 		// limit to only include directories with the following names
-		// includeDirs := map[string]bool{"assignments": true, rootFolderName: true}
-		// return includeDirs[name]
-		excludedDirs := map[string]bool{"node_modules": true}
+		includeDirs := map[string]bool{"assignments": true, rootFolderName: true}
+		return includeDirs[name]
+		/*excludedDirs := map[string]bool{"node_modules": true}
 		if excludedDirs[name] {
 			return false
 		} else {
@@ -471,7 +473,7 @@ func isValid(dirEntry os.DirEntry) bool {
 			// This will exclude those files
 			// For example LICENSE does not contain a period and is a file, os thinks it's a directory
 			return dirEntry.IsDir()
-		}
+		}*/
 	}
 	// using bool map to easily check if file is of wanted extension
 	// there probably a simpler way to define this map
