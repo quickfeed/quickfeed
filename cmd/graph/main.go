@@ -480,6 +480,9 @@ func isValid(dirEntry os.DirEntry) bool {
 }
 
 // splits the file name and returns the file extension
+// return the last element in the split array
+// quickfeed.connect.go will get the extension go instead of connect
 func getFileExtension(fileName string) string {
-	return strings.Split(fileName, ".")[1]
+	args := strings.Split(fileName, ".")
+	return args[len(args)-1]
 }
