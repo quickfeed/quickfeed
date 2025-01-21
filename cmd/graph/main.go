@@ -53,10 +53,10 @@ func main() {
 
 func (fMap *fMap) getContentFromCache(cacheFilePath string) error {
 	if bytes, err := os.ReadFile(cacheFilePath); err != nil {
-		return err
+		return fmt.Errorf("Get content from cache error: %s", err)
 	} else {
 		if err := json.Unmarshal(bytes, &fMap); err != nil {
-			return err
+			return fmt.Errorf("Unmarshalling error: %s", err)
 		}
 	}
 	return nil
@@ -72,21 +72,18 @@ func (fMap *fMap) createMap(rePath string, cacheFilePath string) error {
 	if err := populate(*fMap); err != nil {
 		return fmt.Errorf("Error populating: %v", err)
 	}
-
-	/* TODO: Fix marshalling of the map */
 	projectMapJSON, err := json.MarshalIndent(*fMap, "", "\t")
 	if err != nil {
 		return fmt.Errorf("Error marshalling projectMap: %v", err)
 	}
 	if _, err := os.Stat(cacheFilePath); !os.IsNotExist(err) {
 		if err := os.Remove(cacheFilePath); err != nil {
-			return err
+			return fmt.Errorf("Error when removing cache file: %s", err)
 		}
 	}
 	if err := os.WriteFile(cacheFilePath, projectMapJSON, 0o644); err != nil {
-		return err
+		return fmt.Errorf("Error when writing to file: %s, err: %s", cacheFilePath, err)
 	}
-
 	return nil
 }
 
@@ -117,15 +114,15 @@ func populate(fMap fMap) error {
 		for i, file := range folder.Files {
 			fmt.Printf("Operating on file:  %s, File path: %s\n", file.Name, file.Path)
 			if err := folder.setSymbols(file.Path, i); err != nil {
-				return err
+				return fmt.Errorf("Error when setting symbols: %s", err)
 			}
 			fmt.Println("Finding all references to symbols in file")
 			if err := folder.findRefs(file.Path, i, fMap); err != nil {
-				return err
+				return fmt.Errorf("Error when finding refs: %s", err)
 			}
 		}
 		if err := populate(folder.SubFolders); err != nil {
-			return err
+			return fmt.Errorf("Error when populating map: %s", err)
 		}
 	}
 	return nil
@@ -141,13 +138,13 @@ func runGopls(args ...string) ([]byte, error) {
 // TODO: fix issue of modifying the folder map in the for loop?
 func (f folder) setSymbols(filePath string, fileIndex int) error {
 	if len(f.Files[fileIndex].Symbols) == 0 {
-		output, err := runGopls("symbols", filePath)
-		if err != nil {
-			// TODO: Handle error, and don't return an error
-			return err
+		command := "symbols"
+		if output, err := runGopls(command, filePath); err != nil {
+			f.Errors = append(f.Errors, goPlsError{Error: err, Command: command, Input: filePath, Output: string(output)})
+		} else {
+			fmt.Printf("Extracting symbols from file, path: %s\n", filePath)
+			f.Files[fileIndex].Symbols = extractSymbols(string(output))
 		}
-		fmt.Printf("Extracting symbols from file, path: %s\n", filePath)
-		f.Files[fileIndex].Symbols = extractSymbols(string(output))
 	}
 	return nil
 }
@@ -196,13 +193,14 @@ func (folder folder) findRefs(filePath string, fileIndex int, fMap fMap) error {
 	symbols := folder.Files[fileIndex].Symbols
 	for i := range symbols {
 		pathToSymbol := fmt.Sprintf("%s:%s", filePath, symbols[i].Position.getPos())
-		if output, err := runGopls("references", pathToSymbol); err != nil {
-			// TODO: Handle error, and continue to next symbol
-			return err
+		command := "references"
+		if output, err := runGopls(command, pathToSymbol); err != nil {
+			folder.Errors = append(folder.Errors, goPlsError{Error: err, Command: command, Input: pathToSymbol, Output: string(output)})
+			continue
 		} else {
 			var refs []ref
 			if err := findParentsForRefs(&refs, createRefInfo(filePath, symbols[i].Name), parseRefs(string(output)), fMap); err != nil {
-				return err
+				return fmt.Errorf("Error when finding parents for refs: %s", err)
 			}
 			folder.assignRefsToMap(fileIndex, i, refs)
 		}
@@ -298,15 +296,15 @@ func findParentsForRefs(parent_refs *[]ref, source_refInfo refInfo, refs []strin
 		// if the file is not already in the symbol map
 		folder, fileIndex, err := fMap.getFolderAndFileIndex(filePath, fileName)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error when getting folder and file index: %s", err)
 		}
 		if err := folder.setSymbols(filePath, fileIndex); err != nil {
-			return err
+			return fmt.Errorf("Error when setting symbols: %s", err)
 		}
 		// closest method above symbol, initial value is a symbol with line 0
 		refParent := symbol{Position: position{Line: "0"}}
 		if err := getRelatedMethod(folder.Files[fileIndex].Symbols, &refParent, linePos); err != nil {
-			return err
+			return fmt.Errorf("Error when getting related method: %s", err)
 		}
 		refInfo := createRefInfo(filePath, refParent.Name)
 		*parent_refs = append(*parent_refs, ref{Source: source_refInfo, Info: refInfo})
@@ -324,7 +322,7 @@ func getLastEntry(str string, delimiter string, i int) string {
 func getRelatedMethod(symbols []symbol, refParent *symbol, refLinePos string) error {
 	_refLinePos, err := parseStringToInt(refLinePos)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error when parsing line position: %s", err)
 	}
 	// loop through potential parent symbols
 	for _, p_symbol := range symbols {
@@ -334,11 +332,11 @@ func getRelatedMethod(symbols []symbol, refParent *symbol, refLinePos string) er
 		}
 		newMethodLinePos, err := parseStringToInt(p_symbol.Position.Line)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error when parsing line position: %s", err)
 		}
 		currentMethodLinePos, err := parseStringToInt(refParent.Position.Line)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error when parsing line position: %s", err)
 		}
 		newMethodIsFurtherDown := currentMethodLinePos < newMethodLinePos
 		newMethodIsAboveRef := newMethodLinePos < _refLinePos
@@ -355,11 +353,19 @@ type fMap struct {
 }
 
 type folder struct {
-	FolderPath   string `json:"folderPath"`
-	Refs         []ref  `json:"refs"`
-	Files        []file `json:"files"`
-	SubFolders   fMap   `json:"subFolders"`
-	ParentFolder fMap   `json:"parentFolder"`
+	FolderPath   string       `json:"folderPath"`
+	Refs         []ref        `json:"refs"`
+	Files        []file       `json:"files"`
+	SubFolders   fMap         `json:"subFolders"`
+	ParentFolder fMap         `json:"parentFolder"`
+	Errors       []goPlsError `json:"errors"`
+}
+
+type goPlsError struct {
+	Error   error  `json:"error"`
+	Command string `json:"command"`
+	Input   string `json:"filePath"`
+	Output  string `json:"output"`
 }
 
 type file struct {
@@ -421,7 +427,7 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 			if entry, ok := (*childMap).Folder[name]; ok {
 				entry.SubFolders = fMap{Folder: make(map[string]folder)}
 				if err := getContent(&entry.SubFolders, subDirPath, name, childMap); err != nil {
-					return err
+					return fmt.Errorf("Error when getting content recursively: %s", err)
 				}
 				/*
 					Get the updated entry from childMap and combine with parentMap updates.
