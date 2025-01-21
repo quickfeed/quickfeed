@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 	const rePath = "../../../" // Relative path to Quickfeed folder
 	cacheFilePath := "map.json"
-	projectMap := make(fMap)
+	projectMap := &fMap{Key: rootFolderName, Folder: make(map[string]folder)}
 	if *old {
 		if err := projectMap.getContentFromCache(cacheFilePath); err != nil {
 			fmt.Printf("Error getting content from cache: %v\n", err)
@@ -63,13 +63,13 @@ func (fMap *fMap) getContentFromCache(cacheFilePath string) error {
 }
 
 func (fMap *fMap) createMap(rePath string, cacheFilePath string) error {
-	if err := getContent(fMap, rePath, "", nil); err != nil {
+	if err := getContent(fMap, rePath, rootFolderName, nil); err != nil {
 		return fmt.Errorf("Error when getting content: %v", err)
 	}
 	if err := clean(fMap); err != nil {
 		return fmt.Errorf("Error when cleaning.. err: %s", err)
 	}
-	if err := populate(fMap); err != nil {
+	if err := populate(*fMap); err != nil {
 		return fmt.Errorf("Error populating: %v", err)
 	}
 
@@ -93,8 +93,8 @@ func (fMap *fMap) createMap(rePath string, cacheFilePath string) error {
 // remove entries with zero files and subfolders
 func clean(fMap *fMap) error {
 	var keysToDelete []string
-	for key, folder := range *fMap {
-		if len(folder.SubFolders) == 0 {
+	for key, folder := range (*fMap).Folder {
+		if len(folder.SubFolders.Folder) == 0 {
 			if len(folder.Files) == 0 {
 				keysToDelete = append(keysToDelete, key)
 			}
@@ -103,7 +103,7 @@ func clean(fMap *fMap) error {
 		}
 	}
 	for _, key := range keysToDelete {
-		delete(*fMap, key)
+		delete((*fMap).Folder, key)
 	}
 	return nil
 }
@@ -112,19 +112,19 @@ func clean(fMap *fMap) error {
 // If the reference is outside the folder, its stored in the ref slice in the folder struct
 // If the reference is found in a different file but same parent folder, its stored in the ref slice in the file struct
 // If the reference is found in the same file, its stored in the ref slice in the symbol struct
-func populate(fMap *fMap) error {
-	for _, folder := range *fMap {
+func populate(fMap fMap) error {
+	for _, folder := range fMap.Folder {
 		for i, file := range folder.Files {
 			fmt.Printf("Operating on file:  %s, File path: %s\n", file.Name, file.Path)
 			if err := folder.setSymbols(file.Path, i); err != nil {
 				return err
 			}
 			fmt.Println("Finding all references to symbols in file")
-			if err := folder.findRefs(file.Path, i, *fMap); err != nil {
+			if err := folder.findRefs(file.Path, i, fMap); err != nil {
 				return err
 			}
 		}
-		if err := populate(&folder.SubFolders); err != nil {
+		if err := populate(folder.SubFolders); err != nil {
 			return err
 		}
 	}
@@ -138,10 +138,12 @@ func runGopls(args ...string) ([]byte, error) {
 }
 
 // gets all symbols in a file if the file is not already in the symbols map
+// TODO: fix issue of modifying the folder map in the for loop?
 func (f folder) setSymbols(filePath string, fileIndex int) error {
 	if len(f.Files[fileIndex].Symbols) == 0 {
 		output, err := runGopls("symbols", filePath)
 		if err != nil {
+			// TODO: Handle error, and don't return an error
 			return err
 		}
 		fmt.Printf("Extracting symbols from file, path: %s\n", filePath)
@@ -195,6 +197,7 @@ func (folder folder) findRefs(filePath string, fileIndex int, fMap fMap) error {
 	for i := range symbols {
 		pathToSymbol := fmt.Sprintf("%s:%s", filePath, symbols[i].Position.getPos())
 		if output, err := runGopls("references", pathToSymbol); err != nil {
+			// TODO: Handle error, and continue to next symbol
 			return err
 		} else {
 			var refs []ref
@@ -207,6 +210,8 @@ func (folder folder) findRefs(filePath string, fileIndex int, fMap fMap) error {
 	return nil
 }
 
+// adds references to the correct ref slice in the map
+// TODO: fix issue of modifying the folder map in the for loop
 func (folder folder) assignRefsToMap(fileIndex int, symbolIndex int, refs []ref) {
 	for _, ref := range refs {
 		if ref.Source.FolderName == ref.Info.FolderName {
@@ -250,17 +255,27 @@ func getKeys(filePath string) ([]string, error) {
 	return nil, fmt.Errorf("Could not find %s directory in path: %s", rootFolderName, filePath)
 }
 
+// getFolderAndFileIndex finds the folder and file index of a given file
+// Traverse the folder map until the root folder is found
+// Pretty sure the map is traversed because the folder map is modified in the for loop
+// TODO: Refactor to only modify the folder map outside of the for loop
 func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder, int, error) {
-	keys, err := getKeys(filePath)
-	if err != nil {
-		return folder{}, 0, err
+	for fMap.Key != rootFolderName {
+		for key := range fMap.Folder {
+			fMap = fMap.Folder[key].ParentFolder
+			break
+		}
 	}
 	var folder folder
+	keys, err := getKeys(filePath)
+	if err != nil {
+		return folder, 0, err
+	}
 	for i, key := range keys {
-		folder = fMap[key]
+		folder = fMap.Folder[key]
 		// if the folder has subfolders, update the folder to the subfolder
 		// only if the current key is not the last key
-		if folder.SubFolders != nil && i < len(keys) {
+		if folder.SubFolders.Folder != nil && i < len(keys)-1 {
 			fMap = folder.SubFolders
 		}
 	}
@@ -334,13 +349,17 @@ func getRelatedMethod(symbols []symbol, refParent *symbol, refLinePos string) er
 	return nil
 }
 
-type fMap map[string]folder
+type fMap struct {
+	Key    string
+	Folder map[string]folder
+}
 
 type folder struct {
-	FolderPath string `json:"folderPath"`
-	Refs       []ref  `json:"refs"`
-	Files      []file `json:"files"`
-	SubFolders fMap   `json:"subFolders"`
+	FolderPath   string `json:"folderPath"`
+	Refs         []ref  `json:"refs"`
+	Files        []file `json:"files"`
+	SubFolders   fMap   `json:"subFolders"`
+	ParentFolder fMap   `json:"parentFolder"`
 }
 
 type file struct {
@@ -394,9 +413,13 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 		name := entity.Name()
 		if entity.IsDir() {
 			subDirPath := filepath.Join(dirPath, name)
-			(*childMap)[name] = folder{FolderPath: subDirPath}
-			if entry, ok := (*childMap)[name]; ok {
-				entry.SubFolders = make(fMap)
+			_parentMap := fMap{}
+			if parentMap != nil {
+				_parentMap = *parentMap
+			}
+			(*childMap).Folder[name] = folder{FolderPath: subDirPath, ParentFolder: _parentMap}
+			if entry, ok := (*childMap).Folder[name]; ok {
+				entry.SubFolders = fMap{Folder: make(map[string]folder)}
 				if err := getContent(&entry.SubFolders, subDirPath, name, childMap); err != nil {
 					return err
 				}
@@ -407,9 +430,9 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 
 					There is probably a better way to do this, but I will leave it as is for now.
 				*/
-				if second_entry, ok := (*childMap)[name]; ok {
+				if second_entry, ok := (*childMap).Folder[name]; ok {
 					second_entry.SubFolders = entry.SubFolders
-					(*childMap)[name] = second_entry
+					(*childMap).Folder[name] = second_entry
 				}
 			}
 		} else {
@@ -417,9 +440,9 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 			if parentDirName == "" {
 				return fmt.Errorf("Parent directory name can't be empty..")
 			}
-			if folder, ok := (*parentMap)[parentDirName]; ok {
+			if folder, ok := (*parentMap).Folder[parentDirName]; ok {
 				folder.Files = append(folder.Files, file{Name: name, Path: subDirPath})
-				(*parentMap)[parentDirName] = folder
+				(*parentMap).Folder[parentDirName] = folder
 			}
 		}
 	}
