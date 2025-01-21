@@ -260,7 +260,7 @@ func getKeys(filePath string) ([]string, error) {
 func (fMap fMap) getFolderAndFileIndex(filePath string, fileName string) (folder, int, error) {
 	for fMap.Key != rootFolderName {
 		for key := range fMap.Folder {
-			fMap = fMap.Folder[key].ParentFolder
+			fMap = fMap.Folder[key].parentFolder
 			break
 		}
 	}
@@ -353,18 +353,18 @@ type fMap struct {
 }
 
 type folder struct {
-	FolderPath   string       `json:"folderPath"`
-	Refs         []ref        `json:"refs"`
-	Files        []file       `json:"files"`
-	SubFolders   fMap         `json:"subFolders"`
-	ParentFolder fMap         `json:"parentFolder"`
+	FolderPath   string `json:"folderPath"`
+	Refs         []ref  `json:"refs"`
+	Files        []file `json:"files"`
+	SubFolders   fMap   `json:"subFolders"`
+	parentFolder fMap
 	Errors       []goPlsError `json:"errors"`
 }
 
 type goPlsError struct {
 	Error   error  `json:"error"`
 	Command string `json:"command"`
-	Input   string `json:"filePath"`
+	Input   string `json:"input"`
 	Output  string `json:"output"`
 }
 
@@ -423,7 +423,7 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 			if parentMap != nil {
 				_parentMap = *parentMap
 			}
-			(*childMap).Folder[name] = folder{FolderPath: subDirPath, ParentFolder: _parentMap}
+			(*childMap).Folder[name] = folder{FolderPath: subDirPath, parentFolder: _parentMap}
 			if entry, ok := (*childMap).Folder[name]; ok {
 				entry.SubFolders = fMap{Folder: make(map[string]folder)}
 				if err := getContent(&entry.SubFolders, subDirPath, name, childMap); err != nil {
