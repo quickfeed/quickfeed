@@ -18,16 +18,12 @@ const (
 )
 
 func main() {
-	old := flag.Bool("old", false, "create map with old data")
+	new := flag.Bool("new", false, "create map with old data")
 	flag.Parse()
 	const rePath = "../../../" // Relative path to Quickfeed folder
 	cacheFilePath := "map.json"
 	projectMap := &fMap{Key: rootFolderName, Folder: make(map[string]folder)}
-	if *old {
-		if err := projectMap.getContentFromCache(cacheFilePath); err != nil {
-			fmt.Printf("Error getting content from cache: %v\n", err)
-		}
-	} else {
+	if *new {
 		fmt.Println("Creating visual graph of Quickfeed, this will take a while...")
 		/*
 			TODO: Make the error handling return the gopls log instead of the error status message..
@@ -35,6 +31,10 @@ func main() {
 		if err := projectMap.createMap(rePath, cacheFilePath); err != nil {
 			fmt.Printf("Error creating map: %v\n", err)
 			return
+		}
+	} else {
+		if err := projectMap.getContentFromCache(cacheFilePath); err != nil {
+			fmt.Printf("Error getting content from cache: %v\n", err)
 		}
 	}
 	/*
@@ -72,17 +72,24 @@ func (fMap *fMap) createMap(rePath string, cacheFilePath string) error {
 	if err := populate(*fMap); err != nil {
 		return fmt.Errorf("Error populating: %v", err)
 	}
-	projectMapJSON, err := json.MarshalIndent(*fMap, "", "\t")
-	if err != nil {
-		return fmt.Errorf("Error marshalling projectMap: %v", err)
+	if err := marshalAndWriteToFile(fMap, cacheFilePath); err != nil {
+		return fmt.Errorf("Error when marshalling and writing to file: %s", err)
 	}
-	if _, err := os.Stat(cacheFilePath); !os.IsNotExist(err) {
-		if err := os.Remove(cacheFilePath); err != nil {
-			return fmt.Errorf("Error when removing cache file: %s", err)
+	return nil
+}
+
+func marshalAndWriteToFile(v any, filePath string) error {
+	bytes, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		return fmt.Errorf("Error marshalling: %s", err)
+	}
+	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+		if err := os.Remove(filePath); err != nil {
+			return fmt.Errorf("Error when removing file: %s, err: %s", filePath, err)
 		}
 	}
-	if err := os.WriteFile(cacheFilePath, projectMapJSON, 0o644); err != nil {
-		return fmt.Errorf("Error when writing to file: %s, err: %s", cacheFilePath, err)
+	if err := os.WriteFile(filePath, bytes, 0o644); err != nil {
+		return fmt.Errorf("Error when writing to file: %s, err: %s", filePath, err)
 	}
 	return nil
 }
@@ -112,12 +119,15 @@ func clean(fMap *fMap) error {
 func populate(fMap fMap) error {
 	for _, folder := range fMap.Folder {
 		for i, file := range folder.Files {
-			fmt.Printf("Operating on file:  %s, File path: %s\n", file.Name, file.Path)
-			if err := folder.setSymbols(file.Path, i); err != nil {
+			if file.path == "" {
+				file.path = filepath.Join(folder.FolderPath, file.Name)
+			}
+			fmt.Printf("Operating on file:  %s, File path: %s\n", file.Name, file.path)
+			if err := folder.setSymbols(file.path, i); err != nil {
 				return fmt.Errorf("Error when setting symbols: %s", err)
 			}
 			fmt.Println("Finding all references to symbols in file")
-			if err := folder.findRefs(file.Path, i, fMap); err != nil {
+			if err := folder.findRefs(file.path, i, fMap); err != nil {
 				return fmt.Errorf("Error when finding refs: %s", err)
 			}
 		}
@@ -240,7 +250,7 @@ func createRefInfo(filePath string, symbolName string) refInfo {
 	filePath = args[0]
 	fileName := getLastEntry(filePath, "/", 0)
 	folderName := getLastEntry(filePath, "/", 1)
-	return refInfo{Path: filePath, FolderName: folderName, FileName: fileName, MethodName: symbolName}
+	return refInfo{path: filePath, FolderName: folderName, FileName: fileName, MethodName: symbolName}
 }
 
 func getKeys(filePath string) ([]string, error) {
@@ -350,38 +360,38 @@ func getRelatedMethod(symbols []symbol, refParent *symbol, refLinePos string) er
 }
 
 type fMap struct {
-	Key    string
-	Folder map[string]folder
+	Key    string            `json:"key,omitempty"`
+	Folder map[string]folder `json:"folder,omitempty"`
 }
 
 type folder struct {
 	FolderPath   string `json:"folderPath"`
-	Refs         []ref  `json:"refs"`
-	Files        []file `json:"files"`
-	SubFolders   fMap   `json:"subFolders"`
+	Refs         []ref  `json:"refs,omitempty"`
+	Files        []file `json:"files,omitempty"`
+	SubFolders   fMap   `json:"subFolders,omitempty"`
 	parentFolder fMap
-	Errors       []goPlsError `json:"errors"`
+	Errors       []goPlsError `json:"errors,omitempty"`
 }
 
 type goPlsError struct {
-	Error   error  `json:"error"`
-	Command string `json:"command"`
-	Input   string `json:"input"`
-	Output  string `json:"output"`
+	Error   error  `json:"error,omitempty"`
+	Command string `json:"command,omitempty"`
+	Input   string `json:"input,omitempty"`
+	Output  string `json:"output,omitempty"`
 }
 
 type file struct {
-	Name    string   `json:"name"`
-	Path    string   `json:"path"`
-	Refs    []ref    `json:"refs"`
-	Symbols []symbol `json:"symbols"`
+	Name    string `json:"name"`
+	path    string
+	Refs    []ref    `json:"refs,omitempty"`
+	Symbols []symbol `json:"symbols,omitempty"`
 }
 
 type symbol struct {
 	Name     string   `json:"name"`
 	Kind     string   `json:"kind"`
 	Position position `json:"position"`
-	Refs     []ref    `json:"refs"`
+	Refs     []ref    `json:"refs,omitempty"`
 }
 
 // source is there since the symbol is a reference to a symbol in another file
@@ -392,7 +402,7 @@ type ref struct {
 }
 
 type refInfo struct {
-	Path       string `json:"path"`
+	path       string
 	FolderName string `json:"folderName"`
 	FileName   string `json:"fileName"`
 	MethodName string `json:"methodName"`
@@ -449,7 +459,7 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 				return fmt.Errorf("Parent directory name can't be empty..")
 			}
 			if folder, ok := (*parentMap).Folder[parentDirName]; ok {
-				folder.Files = append(folder.Files, file{Name: name, Path: subDirPath})
+				folder.Files = append(folder.Files, file{Name: name, path: subDirPath})
 				(*parentMap).Folder[parentDirName] = folder
 			}
 		}
