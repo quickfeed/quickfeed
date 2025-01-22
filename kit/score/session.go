@@ -68,7 +68,7 @@ func (s *session) decActiveConnections() {
 // or the context is canceled.
 func NewSocket(ctx context.Context, sessionSecret string) error {
 	// ensure the root socket directory exists
-	if err := os.MkdirAll(rootSocketDir, 0o755); err != nil {
+	if err := os.MkdirAll(rootSocketDir, 0o700); err != nil {
 		return fmt.Errorf("failed to create root socket directory: %w", err)
 	}
 
@@ -97,7 +97,7 @@ func NewSocket(ctx context.Context, sessionSecret string) error {
 
 		go func(conn net.Conn) {
 			defer sess.decActiveConnections()
-			defer conn.Close()
+			defer func() { _ = conn.Close() }() // ignore any errors on close
 
 			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
