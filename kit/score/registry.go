@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"sort"
+	"testing"
 
 	"github.com/quickfeed/quickfeed/kit/internal/test"
 )
@@ -18,10 +20,18 @@ type registry struct {
 	conn      net.Conn          // connection to session socket
 }
 
+// NewRegistry creates a new score registry that connects to the session socket
+// for the current session. If the connection fails, it falls back to standard
+// stdout score reporting.
 func NewRegistry() *registry { // skipcq: RVV-B0011
+	socketPath := filepath.Join(rootSocketDir, sessionSecret+".sock")
+	conn, _ := net.Dial("unix", socketPath)
+	// if we failed to connect, we fall back to standard stdout score reporting
+
 	return &registry{
 		testNames: make([]string, 0),
 		scores:    make(map[string]*Score),
+		conn:      conn,
 	}
 }
 
@@ -35,6 +45,23 @@ func (s *registry) Validate() error {
 		}
 	}
 	return nil
+}
+
+// Print prints the score object to the session socket.
+func (s *registry) Print(t *testing.T, sc *Score) {
+	if s.conn == nil {
+		// fall back to standard stdout score reporting
+		sc.Print(t)
+		return
+	}
+
+	if r := recover(); r != nil {
+		sc.internalFail(t)
+		printPanicMessage(sc.TestName, "", r)
+	}
+	// print JSON score object: {"Secret":"my secret code","TestName": ...}
+	fmt.Fprintln(s.conn, sc.json())
+	s.conn.Close()
 }
 
 // PrintTestInfo prints a JSON representation of all registered tests

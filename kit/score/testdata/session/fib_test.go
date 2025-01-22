@@ -28,7 +28,7 @@ var fibonacciTests = []struct {
 
 func TestFibonacci(t *testing.T) {
 	sc := scores.Max()
-	defer scores.PrintToSocket(t, sc)
+	defer scores.Print(t, sc)
 
 	for _, ft := range fibonacciTests {
 		got := fibonacci(ft.in)

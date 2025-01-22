@@ -8,7 +8,7 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 )
 
-var scores = score.NewSocketRegistry()
+var scores = score.NewRegistry()
 
 func TestMain(m *testing.M) {
 	scores.PrintTestInfo()
