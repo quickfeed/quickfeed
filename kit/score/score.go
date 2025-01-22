@@ -120,7 +120,7 @@ func (s *Score) internalFail(t *testing.T) {
 	t.Fail()
 }
 
-// json returns a json string for the score object.
+// json returns a JSON string for the score object.
 func (s *Score) json() string {
 	b, err := json.Marshal(s)
 	if err != nil {
