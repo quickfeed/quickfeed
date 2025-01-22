@@ -256,3 +256,6 @@ subfolders
 smap
 studentname
 reviewee's
+rankdir
+labelloc
+tintinweb

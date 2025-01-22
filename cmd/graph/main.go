@@ -27,6 +27,8 @@ func main() {
 		fmt.Println("Creating visual graph of Quickfeed, this will take a while...")
 		/*
 			TODO: Make the error handling return the gopls log instead of the error status message..
+			TODO: refactor, and fix issue of losing refs.. probably due to the map being modified in the for loop
+			TODO: implement libraries which finds references for typescript and javascript .tsx and .ts files
 		*/
 		if err := projectMap.createMap(rePath, cacheFilePath); err != nil {
 			fmt.Printf("Error creating map: %v\n", err)
@@ -39,6 +41,7 @@ func main() {
 	}
 	// Following can be written with any graphing library
 	// Currently, the graph is visualized with graphviz
+	// Extension: tintinweb.graphviz-interactive-preview, can display the graph in vscode
 	visualizeWithGraphViz(projectMap)
 }
 
@@ -54,7 +57,7 @@ func visualizeWithGraphViz(projectMap *fMap) {
 	var graphContent string
 	for folderName, folder := range projectMap.Folder {
 		fmt.Printf("Creating graph for folder: %s%s\n", folderName, folder)
-		graphContent = fmt.Sprintf("digraph %s {\n\t", folderName)
+		graphContent = fmt.Sprintf("digraph %s {\n", folderName)
 		writeSubGraph(&graphContent, folder.SubFolders)
 		graphContent += "}\n"
 	}
@@ -67,27 +70,35 @@ func visualizeWithGraphViz(projectMap *fMap) {
 // Writes the subgraph syntax for each subfolder, recursively
 func writeSubGraph(graphContent *string, subFolders fMap) {
 	for folderName, folder := range subFolders.Folder {
-		*graphContent += fmt.Sprintf("subgraph cluster_%s {\n\tlabel ='%s (folder);'\n", folderName, folderName)
+		*graphContent += fmt.Sprintf("\tsubgraph cluster_%s {\n\t\tlabel = \"%s (folder)\";\n", strings.ReplaceAll(folderName, "-", "_"), folderName)
+		*graphContent += fmt.Sprintf("\t\trankdir=TB;\n")
 		for _, file := range folder.Files {
-			nameWithUnderScore := strings.Replace(file.Name, ".", "_", 1)
-			*graphContent += fmt.Sprintf("subgraph cluster_%s {\n\tlabel ='%s;'\n", nameWithUnderScore, file.Name)
+			nameWithUnderScore := strings.ReplaceAll(strings.ReplaceAll(file.Name, ".", "_"), "-", "_")
+			*graphContent += fmt.Sprintf("\t\tsubgraph cluster_%s {\n\t\t\tlabel = \"%s\";\n", nameWithUnderScore, file.Name)
+			*graphContent += fmt.Sprintf("\t\t\tlabelloc=\"t\";\n\t\t\trankdir=TB;\n")
 			for _, symbol := range file.Symbols {
-				*graphContent += fmt.Sprintf("%s_%s [shape = box;];\n", folderName, symbol.Name)
-				writeRefs(graphContent, folder.Refs, folderName)
+				name := strings.TrimSpace(symbol.Name)
+				*graphContent += fmt.Sprintf("\t\t\t%s_%s [label = \"%s, %s\";shape = box;];\n", folderName, name, name, symbol.Kind)
+				*graphContent += writeRefsWithoutDuplicates("\t\t\t", symbol.Refs, folderName)
 			}
-			*graphContent += "}\n"
-			writeRefs(graphContent, folder.Refs, folderName)
+			*graphContent += "\t\t}\n"
+			*graphContent += writeRefsWithoutDuplicates("\t\t", file.Refs, folderName)
 		}
-		writeRefs(graphContent, folder.Refs, folderName)
-		*graphContent += "}\n"
+		*graphContent += writeRefsWithoutDuplicates("\t", folder.Refs, folderName)
+		*graphContent += "\t}\n"
 		writeSubGraph(graphContent, folder.SubFolders)
 	}
 }
 
-func writeRefs(graphContent *string, refs []ref, folderName string) {
+func writeRefsWithoutDuplicates(tabs string, refs []ref, folderName string) string {
+	var _refs string
 	for _, ref := range refs {
-		*graphContent += fmt.Sprintf("%s_%s -> %s_%s;\n", folderName, ref.Source.MethodName, folderName, ref.Info.MethodName)
+		con := fmt.Sprintf("%s%s_%s -> %s_%s;\n", tabs, folderName, strings.TrimSpace(ref.Source.MethodName), folderName, strings.TrimSpace(ref.Info.MethodName))
+		if !strings.Contains(_refs, con) {
+			_refs += con
+		}
 	}
+	return _refs
 }
 
 func removeIfExists(filePath string) error {
@@ -481,8 +492,8 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 			if parentMap != nil {
 				_parentMap = *parentMap
 			}
-			(*childMap).Folder[name] = folder{FolderPath: subDirPath, parentFolder: _parentMap}
-			if entry, ok := (*childMap).Folder[name]; ok {
+			childMap.Folder[name] = folder{FolderPath: subDirPath, parentFolder: _parentMap}
+			if entry, ok := childMap.Folder[name]; ok {
 				entry.SubFolders = fMap{Folder: make(map[string]folder)}
 				if err := getContent(&entry.SubFolders, subDirPath, name, childMap); err != nil {
 					return fmt.Errorf("Error when getting content recursively: %s", err)
@@ -514,14 +525,14 @@ func getContent(childMap *fMap, dirPath string, parentDirName string, parentMap 
 }
 
 // checks if the file is of type .go, .ts, or .tsx
+// excludes node_modules, doc and files which os thinks is a directory but is a file
 func isValid(dirEntry os.DirEntry) bool {
 	name := dirEntry.Name()
-	// return early if directory entry does not contain a file extension
 	if !strings.Contains(name, ".") {
 		// limit to only include directories with the following names
 		// includeDirs := map[string]bool{"assignments": true, rootFolderName: true}
 		// return includeDirs[name]
-		excludedDirs := map[string]bool{"node_modules": true}
+		excludedDirs := map[string]bool{"node_modules": true, "doc": true}
 		if excludedDirs[name] {
 			return false
 		} else {
