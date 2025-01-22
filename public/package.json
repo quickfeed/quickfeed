@@ -60,6 +60,9 @@
     "preset": "ts-jest/presets/js-with-ts",
     "testEnvironment": "jsdom",
     "verbose": true,
+    "transformIgnorePatterns": [
+      "!node_modules/(?!@src/*.)"
+    ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
