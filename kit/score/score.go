@@ -91,7 +91,7 @@ func (s *Score) Print(t *testing.T, msg ...string) {
 	// scanning long student generated output lines can be costly.
 	fmt.Println()
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
-	fmt.Println(s.JSON())
+	fmt.Println(s.json())
 }
 
 // PanicHandler recovers from a panicking test, resets the score to zero and
@@ -120,8 +120,8 @@ func (s *Score) internalFail(t *testing.T) {
 	t.Fail()
 }
 
-// JSON returns a JSON string for the score object.
-func (s *Score) JSON() string {
+// json returns a json string for the score object.
+func (s *Score) json() string {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("json.Marshal error: %v\n", err)

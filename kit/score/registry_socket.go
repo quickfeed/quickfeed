@@ -27,6 +27,6 @@ func NewSocketRegistry() *registry { // skipcq: RVV-B0011
 // PrintToSocket prints the score object to the session socket.
 func (s *registry) PrintToSocket(t *testing.T, sc *Score) {
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
-	fmt.Fprintln(s.conn, sc.JSON())
+	fmt.Fprintln(s.conn, sc.json())
 	s.conn.Close()
 }
