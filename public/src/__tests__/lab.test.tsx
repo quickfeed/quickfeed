@@ -78,7 +78,7 @@ const api = new ApiClient()
     test("No submission", async () => {
         // Lab should show "Assignment not found" if the assignment is not found
         assertContent("Assignment not found")
-        fetchAssignments()
+        await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "No submission found"
         assertContent("No submission found")
@@ -88,7 +88,7 @@ const api = new ApiClient()
         // TODO:  The previous tests are covered here, we could remove them
         // Lab should show "Assignment not found" if the assignment is not found
         assertContent("Assignment not found")
-        fetchAssignments()
+        await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "No submission found"
         assertContent("No submission found")
