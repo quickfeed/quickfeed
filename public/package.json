@@ -19,7 +19,8 @@
   },
   "scripts": {
     "tsc": "tsc",
-    "test": "jest --testPathIgnorePatterns=e2e --maxWorkers=1",
+    "test": "jest --testPathIgnorePatterns=e2e",
+    "test:ci": "jest --testPathIgnorePatterns=e2e --maxWorkers=1",
     "test:selenium": "jest --testPathPattern=e2e",
     "build": "webpack",
     "build:watch": "webpack --watch --mode development",
