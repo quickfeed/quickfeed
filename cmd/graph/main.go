@@ -18,7 +18,7 @@ const (
 )
 
 func main() {
-	new := flag.Bool("new", false, "create map with old data")
+	new := flag.Bool("new", false, "create map with new data")
 	flag.Parse()
 	const rePath = "../../../" // Relative path to Quickfeed folder
 	cacheFilePath := "map.json"
@@ -37,18 +37,66 @@ func main() {
 			fmt.Printf("Error getting content from cache: %v\n", err)
 		}
 	}
-	/*
-		Following can be written with any graphing library
-		Currently, the graph is visualized with graphviz
-	*/
+	// Following can be written with any graphing library
+	// Currently, the graph is visualized with graphviz
+	visualizeWithGraphViz(projectMap)
+}
+
+func visualizeWithGraphViz(projectMap *fMap) {
 	// Initialize the graph file, delete if it already exists
 	graphFilePath := "qf-graph.dot"
-	if _, err := os.Stat(graphFilePath); !os.IsNotExist(err) {
-		if err := os.Remove(graphFilePath); err != nil {
-			fmt.Println(err)
-			return
+	if err := removeIfExists(graphFilePath); err != nil {
+		fmt.Println(err)
+		return
+	}
+	// Initial map has only one entry, the root folder
+	// creating one digraph for every subfolder
+	var graphContent string
+	for folderName, folder := range projectMap.Folder {
+		fmt.Printf("Creating graph for folder: %s%s\n", folderName, folder)
+		graphContent = fmt.Sprintf("digraph %s {\n\t", folderName)
+		writeSubGraph(&graphContent, folder.SubFolders)
+		graphContent += "}\n"
+	}
+	// Write the graph content to the graph file
+	if err := os.WriteFile(graphFilePath, []byte(graphContent), 0o644); err != nil {
+		fmt.Printf("Error writing to file: %s, err: %s", graphFilePath, err)
+	}
+}
+
+// Writes the subgraph syntax for each subfolder, recursively
+func writeSubGraph(graphContent *string, subFolders fMap) {
+	for folderName, folder := range subFolders.Folder {
+		*graphContent += fmt.Sprintf("subgraph cluster_%s {\n\tlabel ='%s (folder);'\n", folderName, folderName)
+		for _, file := range folder.Files {
+			nameWithUnderScore := strings.Replace(file.Name, ".", "_", 1)
+			*graphContent += fmt.Sprintf("subgraph cluster_%s {\n\tlabel ='%s;'\n", nameWithUnderScore, file.Name)
+			for _, symbol := range file.Symbols {
+				*graphContent += fmt.Sprintf("%s_%s [shape = box;];\n", folderName, symbol.Name)
+				writeRefs(graphContent, folder.Refs, folderName)
+			}
+			*graphContent += "}\n"
+			writeRefs(graphContent, folder.Refs, folderName)
+		}
+		writeRefs(graphContent, folder.Refs, folderName)
+		*graphContent += "}\n"
+		writeSubGraph(graphContent, folder.SubFolders)
+	}
+}
+
+func writeRefs(graphContent *string, refs []ref, folderName string) {
+	for _, ref := range refs {
+		*graphContent += fmt.Sprintf("%s_%s -> %s_%s;\n", folderName, ref.Source.MethodName, folderName, ref.Info.MethodName)
+	}
+}
+
+func removeIfExists(filePath string) error {
+	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+		if err := os.Remove(filePath); err != nil {
+			return fmt.Errorf("Error when removing file: %s, err: %s", filePath, err)
 		}
 	}
+	return nil
 }
 
 func (fMap *fMap) getContentFromCache(cacheFilePath string) error {
@@ -83,10 +131,8 @@ func marshalAndWriteToFile(v any, filePath string) error {
 	if err != nil {
 		return fmt.Errorf("Error marshalling: %s", err)
 	}
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		if err := os.Remove(filePath); err != nil {
-			return fmt.Errorf("Error when removing file: %s, err: %s", filePath, err)
-		}
+	if err := removeIfExists(filePath); err != nil {
+		return err
 	}
 	if err := os.WriteFile(filePath, bytes, 0o644); err != nil {
 		return fmt.Errorf("Error when writing to file: %s, err: %s", filePath, err)
