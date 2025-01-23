@@ -11,8 +11,8 @@ import { initializeOvermind, mock } from "./TestHelpers"
 import { ConnectError } from "@bufbuild/connect"
 
 
-describe("Labs", () => {
-const api = new ApiClient()
+describe("Lab view correctly re-renders on state change", () => {
+    const api = new ApiClient()
     api.client = {
         ...api.client,
         getAssignments: mock("getAssignments", async (request) => {
@@ -21,7 +21,7 @@ const api = new ApiClient()
                 return { message: new Assignments(), error: new ConnectError("course not found") }
             }
             const assignments = MockData.mockedAssignments().filter(a => a.CourseID === request.courseID)
-            return { message: new Assignments({assignments}), error: null }
+            return { message: new Assignments({ assignments }), error: null }
         }),
         getSubmissions: mock("getSubmissions", async (request) => {
             const course = MockData.mockedCourses().find(c => c.ID === request.CourseID)
@@ -29,24 +29,24 @@ const api = new ApiClient()
                 return { message: new Submissions(), error: new ConnectError("course not found") }
             }
             const submissions = MockData.mockedSubmissions().submissions.filter(s => s.userID === request.FetchMode?.value)
-            return { message: new Submissions({submissions}), error: null }
+            return { message: new Submissions({ submissions }), error: null }
         })
-        
+
     }
     const history = createMemoryHistory()
     let mockedOvermind = initializeOvermind({}, api)
 
     beforeEach(() => {
         mockedOvermind = initializeOvermind({
-        self: new User({
-            ID: BigInt(1),
-            Name: "Test User",
-            IsAdmin: true,
-        }),
-        enrollments: MockData.mockedEnrollments().enrollments,
-        courses: MockData.mockedCourses(),
-        repositories: MockData.mockedRepositories()
-    }, api)
+            self: new User({
+                ID: BigInt(1),
+                Name: "Test User",
+                IsAdmin: true,
+            }),
+            enrollments: MockData.mockedEnrollments().enrollments,
+            courses: MockData.mockedCourses(),
+            repositories: MockData.mockedRepositories()
+        }, api)
         history.push("/course/1/lab/1")
         render(
             <Provider value={mockedOvermind}>
@@ -92,11 +92,12 @@ const api = new ApiClient()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "No submission found"
         assertContent("No submission found")
-        // fetch submissions
+
+        // fetch submissions for the user
         await act(async () => {
             await mockedOvermind.actions.getUserSubmissions(1n)
         })
-        const submissions = mockedOvermind.state.submissions.ForAssignment(new Assignment({ID: 1n, CourseID: 1n}))
+        const submissions = mockedOvermind.state.submissions.ForAssignment(new Assignment({ ID: 1n, CourseID: 1n }))
         expect(submissions).toBeDefined()
         expect(submissions.length).toBe(1)
 
