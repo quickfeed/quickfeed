@@ -35,6 +35,10 @@ func (r RepoURL) StudentRepoURL(userName string) string {
 	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, StudentRepoName(userName))
 }
 
+func (r RepoURL) GroupRepoURL(groupName string) string {
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, groupName)
+}
+
 func (r RepoURL) TestsRepoURL() string {
 	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, TestsRepo)
 }

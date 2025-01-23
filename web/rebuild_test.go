@@ -4,13 +4,18 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -59,14 +64,64 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 	}
 }
 
+// prepareGitRepo creates copies src/repo folder to dst and initializes
+// dst/repo as a git repository and adds a single file lab1/lab1.go.
+func prepareGitRepo(src, dst, repo string) error {
+	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
+		return err
+	}
+	gitRepo := filepath.Join(dst, repo)
+	r, err := git.PlainInit(gitRepo, false)
+	if err != nil {
+		return err
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	_, err = w.Add("lab1")
+	if err != nil {
+		return err
+	}
+	_, err = w.Commit("added lab1", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Test",
+			Email: "test@itest.run",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestRebuildSubmissions(t *testing.T) {
-	_, mgr := scm.MockSCMManager(t)
+	repoPath := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", repoPath)
+
+	src := filepath.Join(env.TestdataPath(), qtest.MockOrg)
+	dst := filepath.Join(repoPath, qtest.MockOrg)
+	err := prepareGitRepo(src, dst, qf.StudentRepoName("user"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = prepareGitRepo(src, dst, qf.TestsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = prepareGitRepo(src, dst, qf.AssignmentsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	teacher := qtest.CreateFakeUser(t, db)
-	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
+	err = db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,9 +131,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		ScmOrganizationID:   1,
 		ScmOrganizationName: qtest.MockOrg,
 	}
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, teacher, &course)
 	student1 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student1, &course)
 
@@ -143,7 +196,6 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Errorf("Expected error: record not found")
 	}
 
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {

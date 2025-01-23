@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
 )
@@ -29,7 +29,7 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
 		config:      cfg,
-		providerURL: "github.com",
+		providerURL: "https://github.com",
 		tokenURL:    fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID()),
 	}, nil
 }

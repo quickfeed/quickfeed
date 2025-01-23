@@ -43,7 +43,7 @@ install:
 	@echo go install
 	@go install
 ifeq ($(OS),linux)
-	@echo "Setting priviledged ports capabilities for quickfeed"
+	@echo "Setting privileged ports capabilities for quickfeed"
 	@sudo setcap 'cap_net_bind_service=+ep' `which quickfeed`
 endif
 
@@ -79,7 +79,3 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
-
-scm:
-	@echo "Compiling the scm tool"
-	@cd cmd/scm; go install

@@ -63,9 +63,6 @@ const (
 	// QuickFeedServiceGetCoursesProcedure is the fully-qualified name of the QuickFeedService's
 	// GetCourses RPC.
 	QuickFeedServiceGetCoursesProcedure = "/qf.QuickFeedService/GetCourses"
-	// QuickFeedServiceCreateCourseProcedure is the fully-qualified name of the QuickFeedService's
-	// CreateCourse RPC.
-	QuickFeedServiceCreateCourseProcedure = "/qf.QuickFeedService/CreateCourse"
 	// QuickFeedServiceUpdateCourseProcedure is the fully-qualified name of the QuickFeedService's
 	// UpdateCourse RPC.
 	QuickFeedServiceUpdateCourseProcedure = "/qf.QuickFeedService/UpdateCourse"
@@ -156,7 +153,6 @@ var (
 	quickFeedServiceDeleteGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteGroup")
 	quickFeedServiceGetCourseMethodDescriptor              = quickFeedServiceServiceDescriptor.Methods().ByName("GetCourse")
 	quickFeedServiceGetCoursesMethodDescriptor             = quickFeedServiceServiceDescriptor.Methods().ByName("GetCourses")
-	quickFeedServiceCreateCourseMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("CreateCourse")
 	quickFeedServiceUpdateCourseMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCourse")
 	quickFeedServiceUpdateCourseVisibilityMethodDescriptor = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCourseVisibility")
 	quickFeedServiceGetAssignmentsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetAssignments")
@@ -197,7 +193,6 @@ type QuickFeedServiceClient interface {
 	DeleteGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error)
 	GetCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error)
 	GetCourses(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error)
-	CreateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Course], error)
 	UpdateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Void], error)
 	UpdateCourseVisibility(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error)
 	GetAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error)
@@ -297,12 +292,6 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			httpClient,
 			baseURL+QuickFeedServiceGetCoursesProcedure,
 			connect.WithSchema(quickFeedServiceGetCoursesMethodDescriptor),
-			connect.WithClientOptions(opts...),
-		),
-		createCourse: connect.NewClient[qf.Course, qf.Course](
-			httpClient,
-			baseURL+QuickFeedServiceCreateCourseProcedure,
-			connect.WithSchema(quickFeedServiceCreateCourseMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		updateCourse: connect.NewClient[qf.Course, qf.Void](
@@ -470,7 +459,6 @@ type quickFeedServiceClient struct {
 	deleteGroup            *connect.Client[qf.GroupRequest, qf.Void]
 	getCourse              *connect.Client[qf.CourseRequest, qf.Course]
 	getCourses             *connect.Client[qf.Void, qf.Courses]
-	createCourse           *connect.Client[qf.Course, qf.Course]
 	updateCourse           *connect.Client[qf.Course, qf.Void]
 	updateCourseVisibility *connect.Client[qf.Enrollment, qf.Void]
 	getAssignments         *connect.Client[qf.CourseRequest, qf.Assignments]
@@ -546,11 +534,6 @@ func (c *quickFeedServiceClient) GetCourse(ctx context.Context, req *connect.Req
 // GetCourses calls qf.QuickFeedService.GetCourses.
 func (c *quickFeedServiceClient) GetCourses(ctx context.Context, req *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error) {
 	return c.getCourses.CallUnary(ctx, req)
-}
-
-// CreateCourse calls qf.QuickFeedService.CreateCourse.
-func (c *quickFeedServiceClient) CreateCourse(ctx context.Context, req *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	return c.createCourse.CallUnary(ctx, req)
 }
 
 // UpdateCourse calls qf.QuickFeedService.UpdateCourse.
@@ -691,7 +674,6 @@ type QuickFeedServiceHandler interface {
 	DeleteGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error)
 	GetCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error)
 	GetCourses(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error)
-	CreateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Course], error)
 	UpdateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Void], error)
 	UpdateCourseVisibility(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error)
 	GetAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error)
@@ -787,12 +769,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		QuickFeedServiceGetCoursesProcedure,
 		svc.GetCourses,
 		connect.WithSchema(quickFeedServiceGetCoursesMethodDescriptor),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceCreateCourseHandler := connect.NewUnaryHandler(
-		QuickFeedServiceCreateCourseProcedure,
-		svc.CreateCourse,
-		connect.WithSchema(quickFeedServiceCreateCourseMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateCourseHandler := connect.NewUnaryHandler(
@@ -967,8 +943,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceGetCourseHandler.ServeHTTP(w, r)
 		case QuickFeedServiceGetCoursesProcedure:
 			quickFeedServiceGetCoursesHandler.ServeHTTP(w, r)
-		case QuickFeedServiceCreateCourseProcedure:
-			quickFeedServiceCreateCourseHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateCourseProcedure:
 			quickFeedServiceUpdateCourseHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateCourseVisibilityProcedure:
@@ -1066,10 +1040,6 @@ func (UnimplementedQuickFeedServiceHandler) GetCourse(context.Context, *connect.
 
 func (UnimplementedQuickFeedServiceHandler) GetCourses(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourses is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) CreateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateCourse is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) UpdateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {

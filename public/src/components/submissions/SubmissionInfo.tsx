@@ -1,5 +1,5 @@
 import React from "react"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isApproved, isManuallyGraded } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 
@@ -16,7 +16,8 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     const built = getFormattedTime(buildInfo?.BuildDate)
     const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
     
-    const className = isApproved(submission) ? "passed" : "failed"
+    const status = getStatusByUser(submission, enrollment.userID)
+    const className = isAllApproved(submission) ? "passed" : "failed"
     return (
         <table className="table table-curved table-striped">
             <thead className="thead-dark">
@@ -30,7 +31,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     <td colSpan={2} className={className}>
                         Status
                     </td>
-                    <td>{assignmentStatusText(assignment, submission)}</td>
+                    <td>{assignmentStatusText(assignment, submission, status)}</td>
                 </tr>
                 <tr>
                     <td colSpan={2}>Delivered</td>
@@ -51,7 +52,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                 }
                 <tr>
                     <td colSpan={2}>Deadline</td>
-                    <td>{getFormattedTime(assignment.deadline)}</td>
+                    <td>{getFormattedTime(assignment.deadline, true)}</td>
                 </tr>
 
                 {!isManuallyGraded(assignment) ? (

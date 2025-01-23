@@ -2,11 +2,13 @@ package interceptor_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -30,7 +32,7 @@ func TestAccessControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := web.MockClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),
 	))
@@ -53,9 +55,7 @@ func TestAccessControl(t *testing.T) {
 		ScmOrganizationName: "test",
 		CourseCreatorID:     courseAdmin.ID,
 	}
-	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, courseAdmin, course)
 	qtest.EnrollStudent(t, db, groupStudent, course)
 	qtest.EnrollStudent(t, db, student, course)
 	group := &qf.Group{
@@ -287,8 +287,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.Organization{ScmOrganizationName: "test"}, tt.cookie))
 			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
-			_, err = client.CreateCourse(ctx, qtest.RequestWithCookie(course, tt.cookie))
-			checkAccess(t, "CreateCourse", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 
@@ -381,7 +379,8 @@ func TestAccessControl(t *testing.T) {
 
 func checkAccess(t *testing.T, method string, err error, wantCode connect.Code, wantAccess bool) {
 	t.Helper()
-	if connErr, ok := err.(*connect.Error); ok {
+	var connErr *connect.Error
+	if errors.As(err, &connErr) {
 		gotCode := connErr.Code()
 		gotAccess := gotCode == wantCode
 		if gotAccess == wantAccess {

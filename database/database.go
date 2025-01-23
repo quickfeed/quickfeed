@@ -21,9 +21,14 @@ type Database interface {
 
 	// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 	CreateCourse(uint64, *qf.Course) error
-	// GetCourse fetches course by ID. If withInfo is true, preloads course
+	GetCourse(uint64) (*qf.Course, error)
+	// GetCourseByStatus fetches course by ID. Depending on the enrollment status, preloads course
 	// assignments, active enrollments and groups.
-	GetCourse(uint64, bool) (*qf.Course, error)
+	// 	- NONE (or 0): returns the course with no preloaded data.
+	//  - PENDING: returns the course with no preloaded data.
+	// 	- STUDENT: returns the course with preloaded assignments, active enrollments and groups
+	// 	- TEACHER: returns the course with preloaded assignments, active enrollments and groups with detailed information.
+	GetCourseByStatus(uint64, qf.Enrollment_UserStatus) (*qf.Course, error)
 	// GetCourseByOrganizationID fetches course by organization ID.
 	GetCourseByOrganizationID(organizationID uint64) (*qf.Course, error)
 	// GetCourses returns a list of courses. If one or more course IDs are provided,
@@ -103,8 +108,9 @@ type Database interface {
 	GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
-	// UpdateSubmissions releases and/or approves all submissions with a certain score
-	UpdateSubmissions(*qf.Submission) error
+	// UpdateSubmissions releases and/or approves all submissions with a certain score.
+	// The boolean argument determines whether to approve or reject the submissions.
+	UpdateSubmissions(*qf.Submission, bool) error
 	// GetReview returns a single review matching the given query.
 	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.

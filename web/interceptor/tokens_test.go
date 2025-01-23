@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -23,7 +24,7 @@ func TestRefreshTokens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := web.MockClient(t, db, connect.WithInterceptors(
+	client := web.MockClient(t, db, scm.WithMockOrgs("admin"), connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewTokenInterceptor(tm),
 	))
@@ -38,7 +39,7 @@ func TestRefreshTokens(t *testing.T) {
 	}
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
-	user := qtest.CreateFakeUser(t, db)
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
 	adminCookie := f(t, admin.ID)
 	userCookie := f(t, user.ID)
 	adminClaims := &auth.Claims{
@@ -88,12 +89,7 @@ func TestRefreshTokens(t *testing.T) {
 			user,
 		},
 	}
-	if _, err := client.CreateCourse(ctx, qtest.RequestWithCookie(course, adminCookie)); err != nil {
-		t.Fatal(err)
-	}
-	if !updateRequired(t, tm, adminClaims) {
-		t.Error("Admin must be in the token update list after creating a new course")
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	qtest.EnrollStudent(t, db, user, course)
 	if _, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, adminCookie)); err != nil {
 		t.Fatal(err)

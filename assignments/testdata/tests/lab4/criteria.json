@@ -1,0 +1,13 @@
+[
+    {
+        "heading": "Assignment 1",
+        "criteria": [
+            {
+                "description": "Links work"
+            },
+            {
+                "description": "Images are links, opening in a new tab"
+            }
+        ]
+    }
+]

@@ -29,7 +29,7 @@ const EditCourse = (): JSX.Element => {
     return (
         <div className={"box"}>
             <DynamicTable header={["Course", "Code", "Tag", "Year", "Slipdays", "Edit"]} data={courses} />
-            {course ? <CourseForm editCourse={course} /> : null}
+            {course ? <CourseForm courseToEdit={course} /> : null}
         </div>
     )
 }

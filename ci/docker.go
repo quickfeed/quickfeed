@@ -15,16 +15,18 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/quickfeed/quickfeed/internal/multierr"
 	"go.uber.org/zap"
 )
 
 var (
 	DefaultContainerTimeout = time.Duration(10 * time.Minute)
 	QuickFeedPath           = "/quickfeed"
+	GoModCache              = "/quickfeed-go-mod-cache"
 	maxToScan               = 1_000_000 // bytes
 	maxLogSize              = 30_000    // bytes
 	lastSegmentSize         = 1_000     // bytes
@@ -58,7 +60,7 @@ func (d *Docker) Close() error {
 		syncErr = d.logger.Sync()
 	}
 	closeErr := d.client.Close()
-	return multierr.Join(syncErr, closeErr)
+	return errors.Join(syncErr, closeErr)
 }
 
 // Run implements the CI interface. This method blocks until the job has been
@@ -117,7 +119,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 	}
 	if job.Dockerfile != "" {
 		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
-		resp, err := d.client.ImageRemove(ctx, job.Image, types.ImageRemoveOptions{Force: true})
+		resp, err := d.client.ImageRemove(ctx, job.Image, image.RemoveOptions{Force: true})
 		if err != nil {
 			d.logger.Debugf("Expected error (continuing): %v", err)
 			// continue because we may not have an image to remove
@@ -136,12 +138,21 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 	var hostConfig *container.HostConfig
 	if job.BindDir != "" {
+		goModCacheSrc, err := moduleCachePath()
+		if err != nil {
+			return nil, err
+		}
 		hostConfig = &container.HostConfig{
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
 					Source: job.BindDir,
 					Target: QuickFeedPath,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: goModCacheSrc,
+					Target: GoModCache,
 				},
 			},
 		}
@@ -157,8 +168,12 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 	}
 
 	resp, err := create()
-	if err != nil {
-		d.logger.Infof("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
+	switch {
+	case errdefs.IsConflict(err):
+		d.logger.Errorf("Image '%s' already being built for '%s': %v", job.Image, job.Name, err)
+		return nil, ErrConflict
+	case err != nil:
+		d.logger.Errorf("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
 		d.logger.Infof("Trying to pull image: '%s' from remote repository", job.Image)
 		if err := d.pullImage(ctx, job.Image); err != nil {
 			return nil, err
@@ -201,8 +216,8 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 
 // pullImage pulls an image from docker hub.
 // This can be slow and should be avoided if possible.
-func (d *Docker) pullImage(ctx context.Context, image string) error {
-	progress, err := d.client.ImagePull(ctx, image, types.ImagePullOptions{})
+func (d *Docker) pullImage(ctx context.Context, imageName string) error {
+	progress, err := d.client.ImagePull(ctx, imageName, image.PullOptions{})
 	if err != nil {
 		return err
 	}

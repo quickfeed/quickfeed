@@ -5,22 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
-
-// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) ([]*qf.Enrollment, error) {
-	enrollments, err := s.getEnrollmentsWithActivity(request.GetCourseID())
-	if err != nil {
-		return nil, err
-	}
-	return enrollments, nil
-}
 
 // updateEnrollment changes the status of the given course enrollment.
 func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
@@ -74,7 +63,7 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		RepositoryID:   repo.ScmRepositoryID,
 	}
 	if err := sc.RejectEnrollment(ctx, opt); err != nil {
-		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
+		s.logger.Debugf("rejectEnrollment: failed to remove %s from %q (expected behavior): %v", user.Login, course.Code, err)
 	}
 	return nil
 }
@@ -97,16 +86,16 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
 	}
-	// create user scmRepo, user team, and add user to students team
+	// create user scmRepo and add user to course organization as a member
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
 		Organization: course.ScmOrganizationName,
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.Code, user.Login, err)
 	}
-	s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
+	s.logger.Debugf("Enrolling student %q in %s; repo update done", user.Login, course.Code)
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
@@ -138,7 +127,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, query 
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_TEACHER,
 	}); err != nil {
-		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to update %s repository membership for teacher %q: %w", course.Code, user.Login, err)
 	}
 	return s.db.UpdateEnrollment(query)
 }
@@ -180,7 +169,7 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(request.GetCourseID(), true)
+	course, err := s.db.GetCourseByStatus(request.GetCourseID(), qf.Enrollment_TEACHER)
 	if err != nil {
 		return nil, err
 	}
@@ -268,13 +257,15 @@ func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Subm
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
+func (s *QuickFeedService) updateSubmission(submissionID uint64, grades []*qf.Grade, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
 
-	submission.Status = status
+	for _, grade := range grades {
+		submission.SetGrade(grade.UserID, grade.Status)
+	}
 	submission.Released = released
 	if score > 0 {
 		submission.Score = score
@@ -290,16 +281,14 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 		Score:        request.ScoreLimit,
 		Released:     request.Release,
 	}
-	if request.Approve {
-		query.Status = qf.Submission_APPROVED
-	}
-	return s.db.UpdateSubmissions(query)
+
+	return s.db.UpdateSubmissions(query, true)
 }
 
 // updateCourse updates an existing course.
 func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
 	// ensure the course exists
-	_, err := s.db.GetCourse(request.ID, false)
+	_, err := s.db.GetCourse(request.ID)
 	if err != nil {
 		return err
 	}
@@ -325,36 +314,14 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(courseID, true)
+	course, err := s.db.GetCourseByStatus(courseID, qf.Enrollment_TEACHER)
 	if err != nil {
 		return nil, err
 	}
-	var enrollmentsWithActivity []*qf.Enrollment
-	for _, enrollment := range course.Enrollments {
-		var totalApproved uint64
-		var submissionDate time.Time
-		for _, submission := range submissions.For(enrollment.ID) {
-			if submission.IsApproved() {
-				totalApproved++
-			}
-			if enrollment.LastActivityDate == nil {
-				submissionDate = submission.NewestSubmissionDate(submissionDate)
-			}
-		}
-
-		enrollment.TotalApproved = totalApproved
-		if enrollment.LastActivityDate == nil && !submissionDate.IsZero() {
-			enrollment.LastActivityDate = timestamppb.New(submissionDate)
-		}
-		enrollmentsWithActivity = append(enrollmentsWithActivity, enrollment)
+	for _, enrollment := range course.GetEnrollments() {
+		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
 	}
-	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
-	if err != nil {
-		return nil, err
-	}
-	// append pending users
-	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
-	return enrollmentsWithActivity, nil
+	return course.GetEnrollments(), nil
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.

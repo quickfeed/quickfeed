@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 
@@ -353,18 +352,8 @@ WORKDIR /quickfeed
 	if err != nil {
 		t.Fatal(err)
 	}
-	fInfo, err := os.Stat(filepath.Join(dir, "hello.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	stat := fInfo.Sys().(*syscall.Stat_t)
-	if int(stat.Uid) != os.Getuid() {
-		t.Errorf("hello.txt has owner %d, expected %d", stat.Uid, os.Getuid())
-	}
-	if int(stat.Gid) != os.Getgid() {
-		t.Errorf("hello.txt has group %d, expected %d", stat.Gid, os.Getgid())
-	}
 
+	checkOwner(t, filepath.Join(dir, "hello.txt"))
 	for _, line := range wantOut {
 		if !strings.Contains(out, line) {
 			t.Errorf("Expected %q not found in output: %q", line, out)

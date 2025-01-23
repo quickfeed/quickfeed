@@ -104,7 +104,6 @@ This approach prevents accidentally revealing commit history from old course ins
 - Promote them to your course's teacher on course members page
 
 Assistants will automatically be given organization `owner` role to be able to accept student enrollments, approve student groups and access all course repositories.
-They will also be added to the `allteachers` team.
 
 ## Student Enrollments
 
@@ -112,7 +111,6 @@ Students enroll in your course by logging in on QuickFeed with their GitHub acco
 You can access the full list of students (both already enrolled and those waiting for approval) in the `Members` menu of your course page, and accept their enrollments.
 
 After a student's enrollment has been accepted into a course, the student will have access to the course's `assignment` repository and the student's personal repository, e.g., `student-labs`.
-All students in a course will be added to the `allstudents` team in the course's GitHub organization.
 
 Note that the student may receive three invitation emails from `quickfeed-uis[bot]`.
 These emails can be ignored.
@@ -120,9 +118,9 @@ These emails can be ignored.
 ## Student Groups
 
 Students can create groups with other students on QuickFeed, which later can be approved, rejected or edited by teacher or teacher assistants.
-When approved, the group will have a corresponding GitHub team created on your course organization, along with a repository for group assignments. After that the group name cannot be changed.
+When approved, the group will have a corresponding GitHub repository created in your course organization for handing in group assignments. After the repository is created the group name cannot be changed.
 
-Group names cannot be reused: as long as a group team/repository with a certain name exists on your course organization, a new group with that name cannot be created.
+Group names cannot be reused: as long as a group repository with a certain name exists on your course organization, a new group with that name cannot be created.
 
 ## Assignments and Tests
 

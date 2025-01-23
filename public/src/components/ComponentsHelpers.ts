@@ -2,7 +2,7 @@ import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/q
 import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { AssignmentsMap } from "../overmind/state"
-import { RowElement, Row } from "./DynamicTable"
+import { Row, RowElement } from "./DynamicTable"
 
 
 export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
@@ -10,11 +10,19 @@ export const generateSubmissionRows = (elements: Enrollment[] | Group[], generat
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course, state.isCourseManuallyGraded)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, state.individualSubmissionView, course, state.isCourseManuallyGraded)
     })
 }
 
-const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
+export const generateRow = (
+    enrollment: Enrollment | Group,
+    assignments: AssignmentsMap,
+    submissions: SubmissionsForCourse,
+    generator: (s: Submission, e?: Enrollment | Group) => RowElement,
+    individual: boolean,
+    course?: Course,
+    withID?: boolean
+): Row => {
     const row: Row = []
     const isEnrollment = enrollment instanceof Enrollment
     const isGroup = enrollment instanceof Group
@@ -38,11 +46,25 @@ const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap
             // we should exit early without adding to the row.
             return
         }
-        if (isGroupLab) {
+
+        if (isGroup && isGroupLab) {
+            // If we're dealing with a group assignment and a group, we should try to find a group submission
             submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
-        } else if (isEnrollment) {
-            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
         }
+
+        if (isEnrollment) {
+            if (isGroupLab && enrollment.groupID === 0n) {
+                // If we're dealing with a group assignment, and the enrollment is not part of a group
+                // we should try to find an individual submission instead
+                submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            } else if (isGroupLab && !individual) {
+                // If we're dealing with a group assignment, and the user is not viewing individual submissions
+                submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            } else {
+                submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            }
+        }
+
         if (submission) {
             row.push(generator(submission, enrollment))
             return

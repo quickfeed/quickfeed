@@ -23,6 +23,7 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.Users":                    {cleaner: T, validator: F},
 		"qf.Submission":               {cleaner: F, validator: F},
 		"qf.Submissions":              {cleaner: F, validator: F},
+		"qf.Grade":                    {cleaner: F, validator: F},
 		"qf.Enrollment":               {cleaner: T, validator: T},
 		"qf.Enrollments":              {cleaner: T, validator: T},
 		"qf.Assignment":               {cleaner: F, validator: F},

@@ -9,7 +9,6 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/steinfletcher/apitest"
-	"gotest.tools/assert"
 )
 
 const (
@@ -58,7 +57,10 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 				return err
 			}
 			redirectURL := fullURL.Path
-			assert.Equal(t, redirectURL, "/login/oauth/authorize")
+			wantRedirectURL := "/login/oauth/authorize"
+			if redirectURL != wantRedirectURL {
+				t.Errorf("got redirect URL: %v, want %v", redirectURL, wantRedirectURL)
+			}
 			return nil
 		}).
 		End()

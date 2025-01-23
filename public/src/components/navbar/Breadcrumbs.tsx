@@ -1,19 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { useActions, useAppState } from '../../overmind'
+import useWindowSize from "../../hooks/windowsSize"
+import { ScreenSize } from "../../consts"
 
 
 const Breadcrumbs = () => {
     const state = useAppState()
     const actions = useActions()
     const location = useLocation()
+    const { width } = useWindowSize();
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)
 
     const getCourseNameById = (id: string): string | null => {
         const course = state.courses.find(course => course.ID.toString() === id)
-        return course ? course.name : null
+        if (!course) {
+            return null
+        }
+        if (width < ScreenSize.ExtraLarge) {
+            return course.code
+        }
+        return course.name
     }
 
     const getAssignmentNameById = (id: string): string | null => {
@@ -35,7 +44,7 @@ const Breadcrumbs = () => {
         if (pathnames[2] === 'lab' && pathnames[3]) {
             setAssignmentName(getAssignmentNameById(pathnames[3]))
         }
-    }, [pathnames])
+    }, [pathnames, width])
 
     return (
         <nav aria-label="breadcrumb">

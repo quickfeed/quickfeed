@@ -101,7 +101,7 @@ export function mock<T extends keyof Methods>(
     _method: T,
     mockFn: (req: Parameters<Methods[T]>[0]) => ReturnType<Methods[T]>
 ): Methods[T] {
-    return async function (...args: any[]): Promise<any> {
+    return async function (args: Parameters<Methods[T]>[0]): Promise<any> {
         return mockFn(args);
     };
 }

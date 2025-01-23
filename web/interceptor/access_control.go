@@ -69,7 +69,6 @@ var accessRolesFor = map[string]roles{
 	"GetSubmissionsByCourse": {teacher},
 	"GetUsers":               {admin},
 	"GetOrganization":        {admin},
-	"CreateCourse":           {admin},
 }
 
 type AccessControlInterceptor struct {

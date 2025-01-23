@@ -2,6 +2,7 @@ package ci
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -86,6 +87,9 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
 		testsFailedCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
+		if errors.Is(err, ErrConflict) {
+			return nil, err
+		}
 		return nil, fmt.Errorf("test execution failed without output: %w", err)
 	}
 	if err != nil {

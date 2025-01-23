@@ -8,6 +8,8 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -15,14 +17,11 @@ func TestApproveSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
-	err := db.CreateCourse(admin.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	student := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student, course)
@@ -32,7 +31,7 @@ func TestApproveSubmission(t *testing.T) {
 		Name:     "test lab",
 		Order:    1,
 	}
-	if err = db.CreateAssignment(lab); err != nil {
+	if err := db.CreateAssignment(lab); err != nil {
 		t.Fatal(err)
 	}
 
@@ -41,17 +40,17 @@ func TestApproveSubmission(t *testing.T) {
 		UserID:       student.ID,
 		Score:        17,
 	}
-	if err = db.CreateSubmission(wantSubmission); err != nil {
+	if err := db.CreateSubmission(wantSubmission); err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.Background()
 	cookie := Cookie(t, tm, admin)
 
-	if _, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
+	if _, err := client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Status:       qf.Submission_APPROVED,
+		Grades:       []*qf.Grade{{UserID: student.ID, Status: qf.Submission_APPROVED}},
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
@@ -60,17 +59,17 @@ func TestApproveSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSubmission.Status = qf.Submission_APPROVED
+	wantSubmission.Grades = []*qf.Grade{{UserID: student.ID, Status: qf.Submission_APPROVED}}
 	wantSubmission.ApprovedDate = gotApprovedSubmission.ApprovedDate
 
-	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Grade{}, "SubmissionID")); diff != "" {
 		t.Errorf("UpdateSubmission(approve) mismatch (-wantSubmission, +gotApprovedSubmission):\n%s", diff)
 	}
 
 	if _, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Status:       qf.Submission_REJECTED,
+		Grades:       []*qf.Grade{{UserID: student.ID, Status: qf.Submission_REJECTED}},
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
@@ -79,10 +78,10 @@ func TestApproveSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSubmission.Status = qf.Submission_REJECTED
+	wantSubmission.SetGrade(student.ID, qf.Submission_REJECTED)
 	// Note that the approved date is not set when the submission is rejected
 
-	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Grade{}, "SubmissionID")); diff != "" {
 		t.Errorf("UpdateSubmission(reject) mismatch (-wantSubmission, +gotRejectedSubmission):\n%s", diff)
 	}
 }
@@ -91,7 +90,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[2]
@@ -263,18 +262,14 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 
 	course1 := qtest.MockCourses[2]
 	course2 := qtest.MockCourses[3]
-	if err := db.CreateCourse(admin.ID, course1); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateCourse(admin.ID, course2); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course1)
+	qtest.CreateCourse(t, db, admin, course2)
 
 	student := qtest.CreateFakeUser(t, db)
 	enrolC1 := qtest.EnrollUser(t, db, student, course1, qf.Enrollment_STUDENT)
@@ -486,14 +481,12 @@ func TestCreateApproveList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 
 	course := qtest.MockCourses[2]
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Leslie Lamport", Login: "Leslie Lamport"})
 	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Hein Meling", Login: "Hein Meling"})
 	student3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "John Doe", Login: "John Doe"})
@@ -537,52 +530,52 @@ func TestCreateApproveList(t *testing.T) {
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[0].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[1].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[2].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student1.ID,
 			AssignmentID: assignments[3].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student1.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student2.ID,
 			AssignmentID: assignments[0].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student2.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student2.ID,
 			AssignmentID: assignments[2].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student2.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student2.ID,
 			AssignmentID: assignments[3].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student2.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student3.ID,
 			AssignmentID: assignments[0].ID,
-			Status:       qf.Submission_APPROVED,
+			Grades:       []*qf.Grade{{UserID: student3.ID, Status: qf.Submission_APPROVED}},
 		},
 		{
 			UserID:       student3.ID,
 			AssignmentID: assignments[1].ID,
-			Status:       qf.Submission_REJECTED,
+			Grades:       []*qf.Grade{{UserID: student3.ID, Status: qf.Submission_REJECTED}},
 		},
 		{
 			UserID:       student3.ID,
 			AssignmentID: assignments[2].ID,
-			Status:       qf.Submission_REVISION,
+			Grades:       []*qf.Grade{{UserID: student3.ID, Status: qf.Submission_REVISION}},
 		},
 	}
 	for _, s := range submissions {
@@ -661,7 +654,7 @@ func TestCreateApproveList(t *testing.T) {
 		}
 		approved := make([]bool, len(submissions.Submissions))
 		for i, s := range submissions.Submissions {
-			approved[i] = s.IsApproved()
+			approved[i] = s.IsApproved(id)
 		}
 		for _, test := range testCases {
 			if test.student.ID == id {
@@ -679,14 +672,12 @@ func TestReleaseApproveAll(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	admin := qtest.CreateFakeUser(t, db)
 
 	course := qtest.MockCourses[2]
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Leslie Lamport", Login: "Leslie Lamport"})
 	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Hein Meling", Login: "Hein Meling"})
 	student3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "John Doe", Login: "John Doe"})
@@ -890,7 +881,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	for _, submission := range gotStudentSubmissions.Msg.Submissions {
 		// For submissions that have not been released
 		// the score should be 0, and any reviews should be nil
-		if submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != qf.Submission_NONE {
+		if submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.IsApproved(student1.GetID()) {
 			t.Errorf("Expected submission to not be released, have score, and have no reviews")
 		}
 	}
@@ -938,7 +929,7 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	for _, submission := range gotSubmissions5 {
 		// Check that all submissions for assignment 1 have been approved
-		if submission.Status != qf.Submission_APPROVED {
+		if !submission.IsAllApproved() {
 			t.Errorf("Expected submission to be approved")
 		}
 	}
@@ -960,7 +951,7 @@ func TestReleaseApproveAll(t *testing.T) {
 		}
 
 		// Submissions for assignment 2 should be released, have score, and have reviews
-		if submission.ID == assignments[1].ID && !(submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != qf.Submission_NONE) {
+		if submission.ID == assignments[1].ID && !(submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.GetStatusByUser(student1.GetID()) != qf.Submission_NONE) {
 			t.Error("Expected submission to be released, have score, and have reviews", submission.Score, submission.Reviews, submission.Released)
 		}
 	}

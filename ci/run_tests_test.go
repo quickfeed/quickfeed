@@ -178,7 +178,7 @@ func TestRecordResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submission.IsApproved() {
+	if submission.IsApproved(runData.Repo.GetUserID()) {
 		t.Error("Submission must not be auto approved")
 	}
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
@@ -267,7 +267,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       admin.ID,
 		Score:        80,
-		Status:       qf.Submission_APPROVED,
+		Grades:       []*qf.Grade{{UserID: admin.ID, Status: qf.Submission_APPROVED}},
 		Released:     true,
 	}
 	if err := db.CreateSubmission(initialSubmission); err != nil {
@@ -415,7 +415,7 @@ func TestStreamRecordResults(t *testing.T) {
 		t.Fatal(err)
 	}
 	streamService.Submission.SendTo(submission, owners...)
-	if submission.IsApproved() {
+	if submission.IsAllApproved() {
 		t.Error("Submission must not be auto approved")
 	}
 

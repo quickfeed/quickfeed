@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint
@@ -57,7 +57,7 @@ export type State = {
 
     /* Contains all submissions for the user, indexed by course ID */
     // The individual submissions for a given course are indexed by assignment order - 1
-    submissions: { [courseID: string]: Submission[] },
+    submissions: SubmissionsForUser,
 
     /* Current enrollment status of the user for a given course */
     status: { [courseID: string]: Enrollment_UserStatus }
@@ -111,6 +111,10 @@ export type State = {
 
     /* Contains all groups for a given course */
     groups: { [courseID: string]: Group[] },
+
+    /* Number of groups in the course */
+    // derived from groups
+    numGroups: number,
 
     /* Number of enrolled users */
     // derived from courseEnrollments
@@ -173,6 +177,10 @@ export type State = {
 
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
+
+    /* Can be used to determine whether or not to show only individual submissions */
+    individualSubmissionView: boolean,
+
     showFavorites: boolean,
 
 
@@ -215,9 +223,16 @@ export const state: State = {
         }
         return enrollmentsByCourseID
     }),
-    submissions: {},
-    userGroup: {},
-
+    submissions: new SubmissionsForUser(),
+    userGroup: derived(({ enrollments }: State) => {
+        const userGroup: { [courseID: string]: Group } = {}
+        for (const enrollment of enrollments) {
+            if (enrollment.group) {
+                userGroup[enrollment.courseID.toString()] = enrollment.group
+            }
+        }
+        return userGroup
+    }),
     isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
         if (activeCourse > 0 && enrollmentsByCourseID[activeCourse.toString()]) {
             return isTeacher(enrollmentsByCourseID[activeCourse.toString()])
@@ -226,10 +241,7 @@ export const state: State = {
     }),
     isCourseCreator: derived(({ courses, activeCourse, self }: State) => {
         const course = courses.find(c => c.ID === activeCourse)
-        if (course && course.courseCreatorID === self.ID) {
-            return true
-        }
-        return false
+        return course !== undefined && course.courseCreatorID === self.ID
     }),
     status: {},
 
@@ -290,11 +302,11 @@ export const state: State = {
                         if (assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
                             const sub = submissions.get(el.ID)?.submissions?.find(s => s.AssignmentID === assignmentID)
-                            return sub !== undefined && !isApproved(sub)
+                            return sub !== undefined && !isAllApproved(sub)
                         }
                         const numApproved = submissions.get(el.ID)?.submissions?.reduce((acc, cur) => {
                             return acc + ((cur &&
-                                isApproved(cur)) ? 1 : 0)
+                                isAllApproved(cur)) ? 1 : 0)
                         }, 0) ?? 0
                         return numApproved < numAssignments
                     })
@@ -352,8 +364,8 @@ export const state: State = {
                 }
                 case SubmissionSort.Approved: {
                     if (assignmentID > 0) {
-                        const sA = subA && isApproved(subA) ? 1 : 0
-                        const sB = subB && isApproved(subB) ? 1 : 0
+                        const sA = subA && isAllApproved(subA) ? 1 : 0
+                        const sB = subB && isAllApproved(subB) ? 1 : 0
                         return sortOrder * (sA - sB)
                     }
                     const aApproved = subsA ? getNumApproved(subsA) : 0
@@ -398,6 +410,12 @@ export const state: State = {
         }
         return []
     }),
+    numGroups: derived(({ groups, activeCourse }: State) => {
+        if (activeCourse > 0 && groups[activeCourse.toString()]) {
+            return groups[activeCourse.toString()]?.filter(group => !isPendingGroup(group)).length
+        }
+        return 0
+    }),
     numEnrolled: derived(({ activeCourse, courseEnrollments }: State) => {
         if (activeCourse > 0 && courseEnrollments[activeCourse.toString()]) {
             return courseEnrollments[activeCourse.toString()]?.filter(enrollment => !isPending(enrollment)).length
@@ -414,6 +432,7 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
+    individualSubmissionView: false,
     groupView: false,
     activeGroup: null,
     hasGroup: derived(({ userGroup }: State) => courseID => {

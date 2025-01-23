@@ -1,14 +1,25 @@
-import { Color, ConnStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
-import {
-    User, Enrollment, Submission, Course, Group, GradingCriterion, Assignment, GradingBenchmark, Enrollment_UserStatus, Submission_Status, Enrollment_DisplayState, Group_GroupStatus
-} from "../../proto/qf/types_pb"
-import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
-import { Alert, CourseGroup, SubmissionOwner } from "./state"
-import * as internalActions from "./internalActions"
-import { Context } from "."
-import { Response } from "../client"
 import { Code, ConnectError } from "@bufbuild/connect"
-import { PartialMessage } from "@bufbuild/protobuf"
+import { Context } from "."
+import { Organization, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import {
+    Assignment,
+    Course,
+    Enrollment,
+    Enrollment_DisplayState,
+    Enrollment_UserStatus,
+    Grade,
+    GradingBenchmark,
+    GradingCriterion,
+    Group,
+    Group_GroupStatus,
+    Submission,
+    Submission_Status,
+    User
+} from "../../proto/qf/types_pb"
+import { Response } from "../client"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import * as internalActions from "./internalActions"
+import { Alert, CourseGroup, SubmissionOwner } from "./state"
 
 export const internal = internalActions
 
@@ -30,22 +41,7 @@ export const handleStreamError = (context: Context, error: Error): void => {
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
-    let courseID = 0n
-    let assignmentOrder = 0
-    Object.entries(state.assignments).forEach(
-        ([, assignments]) => {
-            const assignment = assignments.find(a => a.ID === submission.AssignmentID)
-            if (assignment && assignment.CourseID !== 0n) {
-                assignmentOrder = assignment.order
-                courseID = assignment.CourseID
-                return
-            }
-        }
-    )
-    if (courseID === 0n) {
-        return
-    }
-    Object.assign(state.submissions[courseID.toString()][assignmentOrder - 1], submission)
+    state.submissions.update(submission)
 }
 
 /**
@@ -139,18 +135,15 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
     }
 }
 
-export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: bigint, statuses: Enrollment_UserStatus[] }): Promise<void> => {
-    const response = await effects.api.client.getEnrollments({
-        FetchMode: {
-            case: "courseID",
-            value: value.courseID,
-        },
-        statuses: value.statuses,
+export const getCourseData = async ({ state, effects }: Context, { courseID }: { courseID: bigint }): Promise<void> => {
+    const response = await effects.api.client.getCourse({
+        courseID,
     })
     if (response.error) {
         return
     }
-    state.courseEnrollments[value.courseID.toString()] = response.message.enrollments
+    state.courseEnrollments[courseID.toString()] = response.message.enrollments
+    state.groups[courseID.toString()] = response.message.groups
 }
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
@@ -165,8 +158,22 @@ export const setEnrollmentState = async ({ effects }: Context, enrollment: Enrol
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
 export const updateSubmission = async ({ state, effects }: Context, { owner, submission, status }: { owner: SubmissionOwner, submission: Submission | null, status: Submission_Status }): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
-    if (!submission || submission.status === status) {
+    if (!submission) {
         return
+    }
+
+    switch (owner.type) {
+        // Take no action if there is no change in status
+        case "ENROLLMENT":
+            if (getStatusByUser(submission, submission.userID) === status) {
+                return
+            }
+            break
+        case "GROUP":
+            if (hasAllStatus(submission, status)) {
+                return
+            }
+            break
     }
 
     /* Confirm that user really wants to change submission status */
@@ -174,21 +181,67 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
         return
     }
 
-    const clone = submission.clone()
-    clone.status = status
+    let clone = submission.clone()
+    switch (owner.type) {
+        case "ENROLLMENT":
+            clone = setStatusByUser(clone, submission.userID, status)
+            break
+        case "GROUP":
+            clone = setStatusAll(clone, status)
+            break
+    }
     /* Update the submission status */
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
-        status: clone.status,
+        grades: clone.Grades,
         released: submission.released,
         score: submission.score,
     })
     if (response.error) {
         return
     }
-    submission.status = status
+    submission.Grades = clone.Grades
     state.submissionsForCourse.update(owner, submission)
+}
+
+export const updateGrade = async ({ state, effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
+    if (grade.Status === status || !state.selectedSubmission) {
+        return
+    }
+
+    if (!confirm(`Are you sure you want to set status ${SubmissionStatus[status]} on this grade?`)) {
+        return
+    }
+
+    const clone = state.selectedSubmission.clone()
+    clone.Grades = clone.Grades.map(g => {
+        if (g.UserID === grade.UserID) {
+            g.Status = status
+        }
+        return g
+    })
+    const response = await effects.api.client.updateSubmission({
+        courseID: state.activeCourse,
+        submissionID: state.selectedSubmission.ID,
+        grades: clone.Grades,
+        released: state.selectedSubmission.released,
+        score: state.selectedSubmission.score,
+    })
+    if (response.error) {
+        return
+    }
+
+    state.selectedSubmission.Grades = clone.Grades
+    const type = clone.userID ? "ENROLLMENT" : "GROUP"
+    switch (type) {
+        case "ENROLLMENT":
+            state.submissionsForCourse.update({ type, id: clone.userID }, clone)
+            break
+        case "GROUP":
+            state.submissionsForCourse.update({ type, id: clone.groupID }, clone)
+            break
+    }
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
@@ -273,7 +326,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
     const response = await effects.api.client.updateEnrollments({ enrollments })
     if (response.error) {
         // Fetch enrollments again if update failed in case the user was able to approve some enrollments
-        await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment_UserStatus.PENDING] })
+        await actions.getCourseData({ courseID: state.activeCourse })
         return
     }
     for (const enrollment of state.pendingEnrollments) {
@@ -317,14 +370,6 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
     }))
 }
 
-export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
-    if (response.error) {
-        return
-    }
-    state.userGroup[enrollment.courseID.toString()] = response.message
-}
-
 export const createGroup = async ({ state, actions, effects }: Context, group: CourseGroup): Promise<void> => {
     const check = validateGroup(group)
     if (!check.valid) {
@@ -349,25 +394,6 @@ export const createGroup = async ({ state, actions, effects }: Context, group: C
 /** getOrganization returns the organization object for orgName retrieved from the server. */
 export const getOrganization = async ({ effects }: Context, orgName: string): Promise<Response<Organization>> => {
     return await effects.api.client.getOrganization({ ScmOrganizationName: orgName })
-}
-
-/* createCourse creates a new course */
-export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, org: Organization }): Promise<boolean> => {
-    const course: PartialMessage<Course> = { ...value.course }
-    /* Fill in required fields */
-    course.ScmOrganizationID = value.org.ScmOrganizationID
-    course.ScmOrganizationName = value.org.ScmOrganizationName
-    course.courseCreatorID = state.self.ID
-    /* Send the course to the server */
-    const response = await effects.api.client.createCourse(course)
-    if (response.error) {
-        return false
-    }
-    /* If successful, add the course to the state */
-    state.courses.push(response.message)
-    /* User that created the course is automatically enrolled in the course. Refresh the enrollment list */
-    await actions.getEnrollmentsByUser()
-    return true
 }
 
 /** Updates a given course and refreshes courses in state if successful  */
@@ -395,7 +421,7 @@ export const refreshCourseSubmissions = async ({ state, effects }: Context, cour
         CourseID: courseID,
         FetchMode: {
             case: "Type",
-            value: SubmissionRequest_SubmissionType.USER
+            value: SubmissionRequest_SubmissionType.ALL
         }
     })
     const groupResponse = await effects.api.client.getSubmissionsByCourse({
@@ -429,10 +455,6 @@ export const getGroupsByCourse = async ({ state, effects }: Context, courseID: b
 }
 
 export const getUserSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const id = courseID.toString()
-    if (!state.submissions[id]) {
-        state.submissions[id] = []
-    }
     const response = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
@@ -443,13 +465,7 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
     if (response.error) {
         return
     }
-    // Insert submissions into state.submissions by the assignment order
-    state.assignments[id]?.forEach(assignment => {
-        const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
-        if (!state.submissions[id][assignment.order - 1]) {
-            state.submissions[id][assignment.order - 1] = submission ? submission : new Submission()
-        }
-    })
+    state.submissions.setSubmissions(courseID, "USER", response.message.submissions)
 }
 
 export const getGroupSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
@@ -467,12 +483,7 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
     if (response.error) {
         return
     }
-    state.assignments[courseID.toString()]?.forEach(assignment => {
-        const submission = response.message.submissions.find(sbm => sbm.AssignmentID === assignment.ID)
-        if (submission && assignment.isGroupLab) {
-            state.submissions[courseID.toString()][assignment.order - 1] = submission
-        }
-    })
+    state.submissions.setSubmissions(courseID, "GROUP", response.message.submissions)
 }
 
 export const setActiveCourse = ({ state }: Context, courseID: bigint): void => {
@@ -742,14 +753,6 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         if (isStudent(enrollment) || isTeacher(enrollment)) {
             results.push(actions.getUserSubmissions(courseID))
             results.push(actions.getGroupSubmissions(courseID))
-            const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
-            results.push(actions.getEnrollmentsByCourse({ courseID, statuses }))
-            if (enrollment.groupID > 0) {
-                results.push(actions.getGroup(enrollment))
-            }
-        }
-        if (isTeacher(enrollment)) {
-            results.push(actions.getGroupsByCourse(courseID))
         }
     }
     await Promise.all(results)
@@ -867,6 +870,10 @@ export const setSubmissionFilter = ({ state }: Context, filter: string): void =>
     } else {
         state.submissionFilters.push(filter)
     }
+}
+
+export const setIndividualSubmissionsView = ({ state }: Context, view: boolean): void => {
+    state.individualSubmissionView = view
 }
 
 export const setGroupView = ({ state }: Context, groupView: boolean): void => {
