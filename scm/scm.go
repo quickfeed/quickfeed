@@ -31,7 +31,7 @@ type SCM interface {
 	// UpdateGroupMembers adds or removes members of an existing group.
 	UpdateGroupMembers(context.Context, *GroupOptions) error
 	// DeleteGroup deletes group's repository.
-	DeleteGroup(context.Context, *RepositoryOptions) error
+	DeleteGroup(context.Context, uint64) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the

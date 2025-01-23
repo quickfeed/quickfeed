@@ -583,10 +583,10 @@ func TestMockDeleteGroup(t *testing.T) {
 		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "foo"}, wantErr: true},
 		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{ID: 432}, wantErr: true}, // Repo ID 432 does not exist
 
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "foo", Repo: "groupX"}, wantErr: false}, // ID 6
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                        // ID 5 is josie-labs
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "bar", Repo: "groupY"}, wantErr: false}, // ID 7
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                        // ID 8 is groupZ
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 6, Owner: "foo", Repo: "groupX"}, wantErr: false}, // ID 6
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                               // ID 5 is josie-labs
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 7, Owner: "bar", Repo: "groupY"}, wantErr: false}, // ID 7
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                               // ID 8 is groupZ
 
 		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 6}, wantErr: true},                        // ID 6 already deleted
 		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 7}, wantErr: true},                        // ID 7 already deleted
@@ -596,7 +596,7 @@ func TestMockDeleteGroup(t *testing.T) {
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if err := s.DeleteGroup(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+			if err := s.DeleteGroup(context.Background(), tt.opt.ID); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteGroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			// verify the state of the groups after the test

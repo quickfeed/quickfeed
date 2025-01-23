@@ -239,7 +239,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if _, err := s.client.Organizations.RemoveMember(ctx, org.ScmOrganizationName, opt.User); err != nil {
 		return E(op, m, fmt.Errorf("failed to remove user: %w", err))
 	}
-	if err := s.deleteRepository(ctx, &RepositoryOptions{ID: opt.RepositoryID}); err != nil {
+	if err := s.deleteRepository(ctx, opt.RepositoryID); err != nil {
 		return E(op, m, err)
 	}
 	return nil
@@ -321,11 +321,11 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 }
 
 // DeleteGroup deletes a group's repository.
-func (s *GithubSCM) DeleteGroup(ctx context.Context, opt *RepositoryOptions) error {
+func (s *GithubSCM) DeleteGroup(ctx context.Context, id uint64) error {
 	const op Op = "DeleteGroup"
 
 	// options will be checked in deleteRepository
-	if err := s.deleteRepository(ctx, opt); err != nil {
+	if err := s.deleteRepository(ctx, id); err != nil {
 		return E(op, M("failed to delete group repository"), err)
 	}
 	return nil
@@ -388,26 +388,22 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 }
 
 // deleteRepository deletes repository by name or ID.
-func (s *GithubSCM) deleteRepository(ctx context.Context, opt *RepositoryOptions) error {
+func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 	const op Op = "deleteRepository"
 	m := M("failed to delete repository")
-	if !opt.valid() {
-		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
+	if id == 0 {
+		return E(op, m, fmt.Errorf("missing ID"))
 	}
 
-	// if ID provided, get path and owner from github
-	if opt.ID > 0 {
-		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
-		if err != nil {
-			return E(op, m, fmt.Errorf("failed to get repository %d: %w", opt.ID, err))
-		}
-		opt.Repo = repo.GetName()
-		opt.Owner = repo.Owner.GetLogin()
+	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
+	if err != nil {
+		return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
 	}
 
-	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Repo); err != nil {
-		return E(op, M("failed to delete repository %s/%s", opt.Owner, opt.Repo), err)
+	if _, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+		return E(op, M("failed to delete repository %s/%s", repo.GetOwner().GetLogin(), repo.GetName()), err)
 	}
+
 	return nil
 }
 

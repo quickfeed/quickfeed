@@ -177,6 +177,10 @@ export type State = {
 
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
+
+    /* Can be used to determine whether or not to show only individual submissions */
+    individualSubmissionView: boolean,
+
     showFavorites: boolean,
 
 
@@ -220,8 +224,15 @@ export const state: State = {
         return enrollmentsByCourseID
     }),
     submissions: new SubmissionsForUser(),
-    userGroup: {},
-
+    userGroup: derived(({ enrollments }: State) => {
+        const userGroup: { [courseID: string]: Group } = {}
+        for (const enrollment of enrollments) {
+            if (enrollment.group) {
+                userGroup[enrollment.courseID.toString()] = enrollment.group
+            }
+        }
+        return userGroup
+    }),
     isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
         if (activeCourse > 0 && enrollmentsByCourseID[activeCourse.toString()]) {
             return isTeacher(enrollmentsByCourseID[activeCourse.toString()])
@@ -421,6 +432,7 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
+    individualSubmissionView: false,
     groupView: false,
     activeGroup: null,
     hasGroup: derived(({ userGroup }: State) => courseID => {

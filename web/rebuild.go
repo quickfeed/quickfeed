@@ -18,21 +18,21 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) error {
 	if err != nil {
 		return err
 	}
-	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID}, false)
+	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID})
 	if err != nil {
 		return err
 	}
 	name := s.lookupName(submission)
 
 	var repo *qf.Repository
-	if assignment.IsGroupLab {
+	if assignment.IsGroupLab && submission.GetGroupID() > 0 {
+		repo, err = s.getRepo(course, submission.GetGroupID(), qf.Repository_GROUP)
 		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getRepo(course, submission.GetGroupID(), qf.Repository_GROUP)
 	} else {
+		repo, err = s.getRepo(course, submission.GetUserID(), qf.Repository_USER)
 		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getRepo(course, submission.GetUserID(), qf.Repository_USER)
 	}
 	if err != nil {
 		return err
