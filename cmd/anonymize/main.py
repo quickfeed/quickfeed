@@ -59,13 +59,14 @@ class DatabaseAnonymizer:
             ),
             Statement(
                 f"SELECT * FROM users WHERE id != {self.excludeUser}",
-                "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=? WHERE id=?",
+                "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=?, refresh_token=? WHERE id=?",
                 (
                     self.fake.name,
                     self.fake.email,
                     self.fake.user_name,
                     partial(self.fake.random_number, digits=6),
                     self.fake.url,
+                    self.fake.password,
                 ),
             ),
             Statement(
