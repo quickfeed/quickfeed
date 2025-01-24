@@ -31,8 +31,17 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 
 // SubmissionStatus returns the existing grade submission status, or an approved submission status
 // if the score of the latest submission is sufficient to autoapprove the assignment.
-func (a *Assignment) SubmissionStatus(latest *Submission, score uint32) []*Grade {
-	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
+func (a *Assignment) SubmissionStatus(latest *Submission, score uint32, rebuild bool) []*Grade {
+	if a.GetAutoApprove() && latest.GetScore() >= score && rebuild {
+		// if assignment is set to autoapprove, and the latest submission has a score
+		// equal to or higher than the new score, and the submission is being rebuilt,
+		// then set the submission to revision and set a comment to indicate that the
+		// submission has been rebuilt resulting in a lower score.
+		latest.SetGradeAll(Submission_REVISION)
+		latest.SetCommentAll("As a result of a rebuild, the score has been lowered.")
+	} else if a.GetAutoApprove() && score >= a.GetScoreLimit() {
+		// if assignment is set to autoapprove, and the latest submission has a score
+		// equal to or higher than the score limit, then set the submission to approved.
 		latest.SetGradeAll(Submission_APPROVED)
 	}
 	// keep existing status if already approved/revision/rejected
