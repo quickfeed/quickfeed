@@ -1449,6 +1449,11 @@ export class Grade extends Message<Grade> {
    */
   Status = Submission_Status.NONE;
 
+  /**
+   * @generated from field: string Comment = 4;
+   */
+  Comment = "";
+
   constructor(data?: PartialMessage<Grade>) {
     super();
     proto3.util.initPartial(data, this);
@@ -1460,6 +1465,7 @@ export class Grade extends Message<Grade> {
     { no: 1, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "UserID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "Status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+    { no: 4, name: "Comment", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Grade {
