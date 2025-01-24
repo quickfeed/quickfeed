@@ -56,7 +56,7 @@ func TestSubmissionStatus(t *testing.T) {
 	for _, test := range tests {
 		name := qtest.Name("User/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.AutoApprove, test.assignment.ScoreLimit, test.submission.GetGrades(), test.submission.GetScore(), test.score)
 		t.Run(name, func(t *testing.T) {
-			got := test.assignment.SubmissionStatus(test.submission, test.score)
+			got := test.assignment.SubmissionStatus(test.submission, test.score, false)
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
 				t.Errorf("SubmissionStatus(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
 			}
@@ -113,7 +113,7 @@ func TestSubmissionStatus(t *testing.T) {
 	for _, test := range groupTests {
 		name := qtest.Name("Group/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.AutoApprove, test.assignment.ScoreLimit, test.submission.GetGrades(), test.submission.GetScore(), test.score)
 		t.Run(name, func(t *testing.T) {
-			got := test.assignment.SubmissionStatus(test.submission, test.score)
+			got := test.assignment.SubmissionStatus(test.submission, test.score, false)
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
 				t.Errorf("SubmissionStatus(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
 			}
