@@ -176,6 +176,19 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
             break
     }
 
+    // TODO: Temporary solution to prompt for a comment when changing submission status.
+    // TODO: Should be replaced with a proper comment system.
+    const comment = prompt("Enter a comment for the submission")
+
+    if (comment !== null) {
+        submission.Grades = submission.Grades.map(g => {
+            if (g.UserID === submission.userID) {
+                g.Comment = comment
+            }
+            return g
+        })
+    }
+
     /* Confirm that user really wants to change submission status */
     if (!confirm(`Are you sure you want to set status ${SubmissionStatus[status]} on this submission?`)) {
         return

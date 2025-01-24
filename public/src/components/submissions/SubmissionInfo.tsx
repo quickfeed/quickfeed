@@ -33,6 +33,14 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     </td>
                     <td>{assignmentStatusText(assignment, submission, status)}</td>
                 </tr>
+
+                {/* TODO: Find a better way to display comments. */ }
+                <tr>
+                    <td colSpan={2}>Comment</td>
+                    <td>{submission.Grades.map(
+                        grade => grade.Comment
+                    )}</td>
+                </tr>
                 <tr>
                     <td colSpan={2}>Delivered</td>
                     <td>{delivered}</td>
