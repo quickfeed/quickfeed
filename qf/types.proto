@@ -233,6 +233,7 @@ message Grade {
     uint64 SubmissionID = 1 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
     uint64 UserID       = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
     qf.Submission.Status Status = 3;
+    string Comment = 4;
 }
 
 //   MANUAL GRADING   //
