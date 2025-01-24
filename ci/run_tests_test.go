@@ -239,6 +239,105 @@ func TestRecordResults(t *testing.T) {
 	}
 }
 
+func TestRecordResultsRebuild(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{
+		Name:              "Test",
+		Code:              "DAT320",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
+	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &qf.Assignment{
+		CourseID:         course.ID,
+		Name:             "lab1",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		AutoApprove:      true,
+		ScoreLimit:       70,
+		Order:            1,
+		IsGroupLab:       false,
+		ContainerTimeout: 1,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	buildInfo := &score.BuildInfo{
+		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildLog:       "Testing",
+		ExecTime:       33333,
+	}
+	testScores := []*score.Score{
+		{
+			Secret:   "secret",
+			TestName: "Test",
+			Score:    100,
+			MaxScore: 100,
+			Weight:   1,
+		},
+	}
+	// Must create a new submission with correct scores and build info, not approved
+	results := &score.Results{
+		BuildInfo: buildInfo,
+		Scores:    testScores,
+	}
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo: &qf.Repository{
+			RepoType: qf.Repository_USER,
+			UserID:   1,
+		},
+		JobOwner: "test",
+		CommitID: "deadbeef",
+	}
+
+	// Check that submission is recorded correctly
+	if score := results.Sum(); score != 100 {
+		t.Errorf("incorrect score: got %d, want 100", score)
+	}
+	if results.Sum() < assignment.ScoreLimit {
+		t.Errorf("score is below limit: got %d, want %d", results.Sum(), assignment.ScoreLimit)
+	}
+	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: The submission should be auto-approved, but is not. This is a bug.
+	if !submission.IsApproved(runData.Repo.GetUserID()) {
+		t.Error("Submission must be auto approved", submission)
+	}
+	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
+		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
+		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
+		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
+	}
+
+	// Set scores to zero and rebuild
+	runData.Rebuild = true
+	for i := range results.Scores {
+		results.Scores[i].Score = 0
+	}
+	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if updatedSubmission.IsAllApproved() || updatedSubmission.GetCommentByUser(runData.Repo.GetUserID()) == "" {
+		// TODO: This currently works as expected, but the TODO above must be resolved first.
+		t.Error("Submission must not be auto approved and must have a comment")
+	}
+}
+
 func TestRecordResultsForManualReview(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
