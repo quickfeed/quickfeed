@@ -264,7 +264,8 @@ func (s *QuickFeedService) updateSubmission(submissionID uint64, grades []*qf.Gr
 	}
 
 	for _, grade := range grades {
-		submission.SetGrade(grade.UserID, grade.Status)
+		submission.SetGrade(grade.GetUserID(), grade.GetStatus())
+		submission.SetComment(grade.GetUserID(), grade.GetComment())
 	}
 	submission.Released = released
 	if score > 0 {
