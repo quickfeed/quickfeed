@@ -42,6 +42,30 @@ func (s *Submission) GetStatusByUser(userID uint64) Submission_Status {
 	return Submission_NONE
 }
 
+func (s *Submission) GetCommentByUser(userID uint64) string {
+	for _, grade := range s.GetGrades() {
+		if grade.GetUserID() == userID {
+			return grade.GetComment()
+		}
+	}
+	return ""
+}
+
+func (s *Submission) SetComment(userID uint64, comment string) {
+	for idx, grade := range s.GetGrades() {
+		if grade.GetUserID() == userID {
+			s.Grades[idx].Comment = comment
+			return
+		}
+	}
+}
+
+func (s *Submission) SetCommentAll(comment string) {
+	for idx := range s.GetGrades() {
+		s.Grades[idx].Comment = comment
+	}
+}
+
 func (s *Submission) SetGrade(userID uint64, status Submission_Status) {
 	for idx, grade := range s.GetGrades() {
 		if grade.GetUserID() == userID {
@@ -84,6 +108,7 @@ func (s *Submissions) Clean(userID uint64) {
 			UserID:       userID,
 			SubmissionID: submission.GetID(),
 			Status:       submission.GetStatusByUser(userID),
+			Comment:      submission.GetCommentByUser(userID),
 		}}
 		// Released submissions, or submissions with no reviews need no cleaning.
 		if submission.GetReleased() || len(submission.GetReviews()) == 0 {
