@@ -89,14 +89,15 @@ type ref struct {
 }
 
 const (
-	function      = "Function"
-	method        = "Method"
-	cacheFilePath = "map.json"
-	fileMapPath   = "fileMap.json"
-	mapFolderPath = "maps"
-	symbols       = "symbols"
-	references    = "references"
-	both          = "both"
+	function           = "Function"
+	method             = "Method"
+	cacheFilePath      = "map.json"
+	fileMapPath        = "fileMap.json"
+	mapFolderPath      = "maps"
+	symbols            = "symbols"
+	references         = "references"
+	both               = "both"
+	graphvizFolderPath = "graphviz"
 )
 
 type sbMap map[string]bool
@@ -119,20 +120,25 @@ TODO: implement libraries which finds references for typescript and react .tsx a
 */
 
 func main() {
-	list := flag.Bool("list", false, "list all map")
-	new := flag.Bool("new", false, "create map")
+	graphviz := flag.String("graphviz", "", "generate graphviz file with the given map")
+	list := flag.Bool("list", false, "list all maps")
+	create := flag.String("create", "", "create map")
+	delete := flag.String("delete", "", "delete map")
 	scan := flag.Bool("scan", false, "scan the project for symbols")
 	references := flag.Bool("references", false, "when scanning, also find references")
 	content := flag.String("content", "", "name of file or folder to scan, default is everything")
 	flag.Parse()
 	if *scan {
-		var isDir bool
 		scanAll := *content == ""
-		if err := handleContentInput(scanAll, content, &isDir); err != nil {
+		if scanAll {
+			*content = rootFolderName
+		}
+		var isDir bool
+		if err := handleContentInput(&isDir, scanAll, content); err != nil {
 			fmt.Printf("Error handling content input: %v\n", err)
 			return
 		}
-		if err := scanContent(scanAll, references, content, &isDir); err != nil {
+		if err := scanContent(&isDir, references, content); err != nil {
 			fmt.Printf("Error scanning content: %v\n", err)
 			return
 		}
@@ -146,42 +152,76 @@ func main() {
 		for _, m := range maps {
 			fmt.Println(m.Name())
 		}
+		return
 	}
-	if *new {
-	} else {
-		if err := projectMap.getCache(); err != nil {
-			fmt.Printf("Error getting content from cache: %v\n", err)
+	if *create != "" {
+		if err := createMap(create); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Map created")
+		return
+	}
+	if *delete != "" {
+		if err := deleteMap(delete); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Map deleted")
+		return
+	}
+	if *graphviz != "" {
+		// Following can be written with any graphing library
+		// Currently, the graph is visualized with graphviz
+		// Extension: tintinweb.graphviz-interactive-preview, can display the graph in vscode
+		if err := createGraphvizFile(graphviz); err != nil {
+			fmt.Println(err)
+			return
 		}
 	}
-	// Following can be written with any graphing library
-	// Currently, the graph is visualized with graphviz
-	// Extension: tintinweb.graphviz-interactive-preview, can display the graph in vscode
-	createGraphvizFile()
 }
 
-func scanContent(scanAll bool, scanForRefs *bool, content *string, isDir *bool) error {
-	if scanAll {
-		*isDir = true
-		*content = rootFolderName
+func createMap(name *string) error {
+	if _, err := os.Create(getMapPath(name)); err != nil {
+		return fmt.Errorf("Error creating map: %v", err)
 	}
+	return nil
+}
+
+func getMapPath(name *string) string {
+	return filepath.Join(mapFolderPath, fmt.Sprintf("%s.json", *name))
+}
+
+func deleteMap(name *string) error {
+	if err := os.Remove(getMapPath(name)); err != nil {
+		return fmt.Errorf("Error deleting map: %v", err)
+	}
+	return nil
+}
+
+func scanContent(isDir *bool, scanForRefs *bool, content *string) error {
 	// render file map
 	if err := getCache(fileMapPath, &fMap); err != nil {
-		return fmt.Errorf("Error getting symbols from cache: %s, err: %v\n", fileMapPath, err)
+		return fmt.Errorf("Error getting symbols from cache: %s, err: %v", fileMapPath, err)
 	}
 	if *isDir {
 		if err := filepath.WalkDir(*content, func(path string, d os.DirEntry, err error) error {
-			if err := isValid(d, &path, nil); err != nil {
-				return fmt.Errorf("Error: %s is not a valid entity, err: %v\n", path, err)
+			if err := isValid(d.IsDir(), &path); err != nil {
+				return fmt.Errorf("Error: %s is not a valid entity, err: %v", path, err)
 			}
 			if !d.IsDir() {
-				getContent(&path, scanForRefs)
+				if err := getContent(&path, scanForRefs); err != nil {
+					return fmt.Errorf("Error getting content: %s, err: %v", path, err)
+				}
 			}
 			return nil
 		}); err != nil {
-			return fmt.Errorf("Error walking through directory: %s, err: %v\n", *content, err)
+			return fmt.Errorf("Error walking through directory: %s, err: %v", *content, err)
 		}
 	} else {
-		getContent(content, scanForRefs)
+		if err := getContent(content, scanForRefs); err != nil {
+			return fmt.Errorf("Error getting content: %s, err: %v", *content, err)
+		}
 	}
 	return nil
 }
@@ -189,27 +229,29 @@ func scanContent(scanAll bool, scanForRefs *bool, content *string, isDir *bool) 
 func getContent(content *string, scanForRefs *bool) error {
 	absPath, err := filepath.Abs(*content)
 	if err != nil {
-		return fmt.Errorf("Error getting absolute path of file: %s, err: %v\n", *content, err)
+		return fmt.Errorf("Error getting absolute path of file: %s, err: %v", *content, err)
 	}
 	var symbols []*symbol
 	if err := getSymbols(absPath, &symbols); err != nil {
-		return fmt.Errorf("Error getting symbols: %s, err: %v\n", *content, err)
+		return fmt.Errorf("Error getting symbols: %s, err: %v", *content, err)
 	}
 	if *scanForRefs {
 		for _, s := range symbols {
 			if err := getRefs(absPath, s.Position.getPos(), s.Refs); err != nil {
-				return fmt.Errorf("Error getting references: %s, err: %v\n", *content, err)
+				return fmt.Errorf("Error getting references: %s, err: %v", *content, err)
 			}
 		}
 	}
-	addSymbolsToFile(&symbols, content)
+	if err := addSymbolsToFile(&symbols, &absPath); err != nil {
+		return fmt.Errorf("Error adding symbols to file: %s, err: %v", *content, err)
+	}
 	return nil
 }
 
 func addSymbolsToFile(symbols *[]*symbol, content *string) error {
 	f, err := os.Stat(*content)
 	if err != nil {
-		return fmt.Errorf("Error analyzing content: %s, err: %v\n", *content, err)
+		return fmt.Errorf("Error analyzing content: %s, err: %v", *content, err)
 	}
 	name := f.Name()
 	if entry, ok := (*fMap)[name]; ok {
@@ -220,37 +262,40 @@ func addSymbolsToFile(symbols *[]*symbol, content *string) error {
 		entry.Symbols = symbols
 		(*fMap)[name] = entry
 	} else {
-		return fmt.Errorf("Error: %s not found in file map\n", name)
+		return fmt.Errorf("Error: %s not found in file map", name)
 	}
-	marshalAndWriteToFile(fMap, fileMapPath)
+	if err := marshalAndWriteToFile(fMap, fileMapPath); err != nil {
+		return err
+	}
 	return nil
 }
 
 func getRelPath(filePath string) (string, error) {
 	relPath, err := filepath.Rel(rootFolderRelPath, filePath)
 	if err != nil {
-		return "", fmt.Errorf("Error getting relative path of file: %s, err: %v\n", filePath, err)
+		return "", fmt.Errorf("Error getting relative path of file: %s, err: %v", filePath, err)
 	}
 	return relPath, nil
 }
 
-func handleContentInput(inputIsEmpty bool, content *string, isDir *bool) error {
+func handleContentInput(isDir *bool, inputIsEmpty bool, content *string) error {
 	if inputIsEmpty {
 		return nil
 	}
 	entity, err := os.Stat(*content)
+	*isDir = entity.IsDir()
 	if err != nil {
-		return fmt.Errorf("Error analyzing content: %s, err: %v\n", *content, err)
+		return fmt.Errorf("Error analyzing content: %s, err: %v", *content, err)
 	}
-	if err := isValid(entity, content, isDir); err != nil {
-		return fmt.Errorf("Error: %s is not a valid entity, err: %v\n", *content, err)
+	if err := isValid(*isDir, content); err != nil {
+		return fmt.Errorf("Error: %s is not a valid entity, err: %v", *content, err)
 	}
 	return nil
 }
 
 func getCache(filePath string, v any) error {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		os.Create(filePath)
+		os.WriteFile(filePath, []byte("{}"), 0o644)
 	}
 	if bytes, err := os.ReadFile(filePath); err != nil {
 		return fmt.Errorf("Get content from cache error: %s", err)
@@ -398,27 +443,24 @@ func getRelatedMethod(symbols []symbol, refParent *symbol, refLinePos string) er
 }
 
 // checks if the directory or file is valid
-func isValid(d interface{ IsDir() bool }, content *string, isDir *bool) error {
-	if d.IsDir() {
+func isValid(isDir bool, content *string) error {
+	if isDir {
 		if exDirs[*content] {
-			return fmt.Errorf("Error: %s is an excluded directory\n", *content)
-		}
-		if isDir != nil {
-			*isDir = true
+			return fmt.Errorf("Error: %s is an excluded directory", *content)
 		}
 	} else {
 		if exFiles[*content] {
-			return fmt.Errorf("Error: %s is an excluded file\n", *content)
+			return fmt.Errorf("Error: %s is an excluded file", *content)
 		}
 		if !inExt[filepath.Ext(*content)] {
-			return fmt.Errorf("Error: File is not in a supported extension\n")
+			return fmt.Errorf("Error: File is not in a supported extension")
 		}
 		// bools are initialized to false, so no need to set it to false
 	}
 	return nil
 }
 
-func createGraphvizFile() {
+func createGraphvizFile(mapName *string) error {
 	// https://golang.org/pkg/text/template/
 	// recursive template with nested definitions
 	// Whitespace control: https://golang.org/pkg/text/template/#hdr-Text_and_spaces, its a bit tricky
@@ -467,15 +509,24 @@ digraph {{$folderName}} {
 	}
 	t, err := template.New("graph").Funcs(funcMap).Parse(tmpl)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("Error parsing template: %v", err)
 	}
-	file, err := os.Create("test-graph.dot")
+	dotFileName := fmt.Sprintf("%s.dot", *mapName)
+	dotFilePath := filepath.Join(graphvizFolderPath, dotFileName)
+	file, err := os.Create(dotFilePath)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("Error creating dot file: %v", err)
 	}
 	defer file.Close()
-	err = t.Execute(file, projectMap)
-	if err != nil {
-		panic(err)
+	// Needs to be converted to an graphviz type to be able to use the template
+	mapFilePath := getMapPath(mapName)
+	customMap := &graphMap{}
+	if err := getCache(mapFilePath, customMap); err != nil {
+		return fmt.Errorf("Error getting map from cache: %v", err)
 	}
+	err = t.Execute(file, customMap)
+	if err != nil {
+		return fmt.Errorf("Error executing template: %v", err)
+	}
+	return nil
 }
