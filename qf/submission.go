@@ -157,5 +157,15 @@ func (s *Submission) BeforeCreate(tx *gorm.DB) error {
 			}
 		}
 	}
+
+	// Find the assignment associated with the submission
+	assignment := &Assignment{}
+	if err := tx.First(assignment, s.GetAssignmentID()).Error; err != nil {
+		return errors.New("submission must have an associated assignment")
+	}
+
+	// Set the submission status based on the assignment's auto-approve settings
+	s.Grades = assignment.SubmissionStatus(s, s.GetScore(), false)
+
 	return nil
 }
