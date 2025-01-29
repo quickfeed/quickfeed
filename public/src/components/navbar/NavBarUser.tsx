@@ -12,8 +12,8 @@ const NavBarUser = (): JSX.Element => {
     if (!isLoggedIn) {
         return (
             <ul>
-                <a href="/auth/github" className="signIn" style={{ textAlign: "right", color: "#d4d4d4", marginRight: "55px" }}>
-                    <i className="fa fa-2x fa-github align-middle ms-auto " id="github" />
+                <a href="/auth/github" className="signIn" style={{ textAlign: "right", color: "#d4d4d4", marginRight: "30px" }}>Login
+                    <i className="fa fa-2x fa-github align-middle ms-auto " id="github" style={{marginLeft: "10px"}}/>
                 </a>
             </ul>
         )
