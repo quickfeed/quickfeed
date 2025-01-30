@@ -108,6 +108,7 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 
 func DevHandler(handler http.Handler) http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("/", handler)
 	// Initialize file watcher
 	watcher := reload.NewWatcher("./public/dist")
 	mux.HandleFunc("/watch", watcher.Handler)
