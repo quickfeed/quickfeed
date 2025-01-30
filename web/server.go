@@ -11,6 +11,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/reload"
 	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -84,8 +85,15 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 		log.Println("Existing credentials successfully loaded.")
 	}
 
+	mux := http.NewServeMux()
+	if handler != nil {
+		mux.Handle("/", handler)
+	}
+	// Initialize file watcher
+	watcher := reload.NewWatcher("./public/dist")
+	mux.HandleFunc("/watch", watcher.Handler)
 	httpServer := &http.Server{
-		Handler:           handler,
+		Handler:           mux,
 		Addr:              addr,
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 		WriteTimeout:      2 * time.Minute,
