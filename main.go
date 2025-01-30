@@ -48,6 +48,7 @@ func main() {
 		public   = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
+		watch    = flag.Bool("watch", false, "watch for changes and reload")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
 	)
 	flag.Parse()
@@ -120,6 +121,12 @@ func main() {
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
+
+	if *dev {
+		// Wrap handler with file watcher
+		// for live-reloading in development mode.
+		handler = web.DevHandler(*watch, handler)
+	}
 
 	srv, err := srvFn(*httpAddr, handler)
 	if err != nil {

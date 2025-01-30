@@ -85,15 +85,8 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 		log.Println("Existing credentials successfully loaded.")
 	}
 
-	mux := http.NewServeMux()
-	if handler != nil {
-		mux.Handle("/", handler)
-	}
-	// Initialize file watcher
-	watcher := reload.NewWatcher("./public/dist")
-	mux.HandleFunc("/watch", watcher.Handler)
 	httpServer := &http.Server{
-		Handler:           mux,
+		Handler:           handler,
 		Addr:              addr,
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 		WriteTimeout:      2 * time.Minute,
@@ -111,6 +104,20 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 		keyFile:       env.KeyFile(),
 		certFile:      env.CertFile(),
 	}, nil
+}
+
+func DevHandler(watch bool, handler http.Handler) http.Handler {
+	if !watch {
+		return handler
+	}
+	mux := http.NewServeMux()
+	if handler != nil {
+		mux.Handle("/", handler)
+	}
+	// Initialize file watcher
+	watcher := reload.NewWatcher("./public/dist")
+	mux.HandleFunc("/watch", watcher.Handler)
+	return mux
 }
 
 func metricsServer() *http.Server {
