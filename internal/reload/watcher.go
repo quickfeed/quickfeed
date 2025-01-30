@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os/exec"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -23,6 +24,7 @@ func NewWatcher(path string) *Watcher {
 		clients: make(map[chan string]bool),
 	}
 	go watcher.watch(path)
+	go watcher.webpack() // Start webpack in watch mode
 	return watcher
 }
 
@@ -109,5 +111,15 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 			watcher.removeClient(client)
 			return
 		}
+	}
+}
+
+func (w *Watcher) webpack() {
+	log.Println("Running webpack...")
+	c := exec.Command("webpack", "--mode=development", "--watch")
+	c.Dir = "public"
+	if err := c.Run(); err != nil {
+		log.Print(c.Output())
+		log.Print(err)
 	}
 }
