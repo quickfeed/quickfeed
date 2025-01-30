@@ -122,10 +122,10 @@ func main() {
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
 
-	if *dev {
+	if *dev && *watch {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
-		handler = web.DevHandler(*watch, handler)
+		handler = web.DevHandler(handler)
 	}
 
 	srv, err := srvFn(*httpAddr, handler)
