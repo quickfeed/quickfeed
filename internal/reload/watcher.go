@@ -12,6 +12,7 @@ import (
 
 type Watcher struct {
 	clients map[chan string]bool
+	watcher *fsnotify.Watcher
 	mu      sync.Mutex
 }
 
@@ -19,31 +20,33 @@ type Watcher struct {
 // The watcher listens for file changes and broadcasts them to all connected clients.
 // Note: Usually you only ever have one client as this is intended for live-reloading
 // a web page in a development environment.
-func NewWatcher(path string) *Watcher {
+func NewWatcher(path string) (*Watcher, error) {
 	watcher := &Watcher{
 		clients: make(map[chan string]bool),
 	}
-	go watcher.watch(path)
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Printf("Failed to create watcher: %v", err)
+		return nil, err
+	}
+	defer w.Close()
+	// Start watching the given path.
+	err = w.Add(path)
+	if err != nil {
+		log.Printf("Failed to watch path %s: %v", path, err)
+		return nil, err
+	}
+	watcher.watcher = w
+	go watcher.watch()
 	go watcher.webpack() // Start webpack in watch mode
-	return watcher
+	return watcher, nil
 }
 
-func (w *Watcher) watch(path string) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer watcher.Close()
-	// Start watching the given path.
-	err = watcher.Add(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func (w *Watcher) watch() {
 	// Start listening for events.
 	for {
 		select {
-		case event, ok := <-watcher.Events:
+		case event, ok := <-w.watcher.Events:
 			if !ok {
 				return
 			}
@@ -53,7 +56,7 @@ func (w *Watcher) watch(path string) {
 				w.broadcastMessage(event.Name)
 			}
 
-		case err := <-watcher.Errors:
+		case err := <-w.watcher.Errors:
 			if err != nil {
 				log.Println("error:", err)
 			}

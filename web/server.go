@@ -107,10 +107,13 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 }
 
 func DevHandler(handler http.Handler) http.Handler {
+	watcher, err := reload.NewWatcher("./public/dist")
+	if err != nil {
+		log.Printf("Failed to create watcher: %v", err)
+		return handler
+	}
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
-	// Initialize file watcher
-	watcher := reload.NewWatcher("./public/dist")
 	mux.HandleFunc("/watch", watcher.Handler)
 	return mux
 }
