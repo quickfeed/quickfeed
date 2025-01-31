@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/internal/rand"
 )
 
 const (
@@ -50,6 +52,17 @@ func Whitelist() ([]string, error) {
 		return nil, errors.New("required whitelist is undefined")
 	}
 	return domainList, nil
+}
+
+// AuthSecret returns the secret used to sign JWT tokens.
+// If QUICKFEED_AUTH_SECRET is not set, a random secret is generated.
+// Allows for a custom secret to be set.
+func AuthSecret() string {
+	authSecret := os.Getenv("QUICKFEED_AUTH_SECRET")
+	if authSecret == "" {
+		return rand.String()
+	}
+	return authSecret
 }
 
 // CertFile returns the full path to the certificate file.
