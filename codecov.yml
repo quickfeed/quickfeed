@@ -6,4 +6,3 @@ coverage:
         threshold: 1%
 ignore:
   - "**/*.pb.go" # ignore generated protobuf files
-  - "internal/env/authSecret.go"
