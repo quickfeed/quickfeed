@@ -66,7 +66,6 @@ func CertFile() string {
 // KeyFile returns the full path to the certificate key file.
 // To specify a different key, use the QUICKFEED_KEY_FILE environment variable.
 func KeyFile() string {
-	// pragma: no cover
 	keyFile := os.Getenv("QUICKFEED_KEY_FILE")
 	if keyFile == "" {
 		// If cert key is not specified, use the default cert key.
