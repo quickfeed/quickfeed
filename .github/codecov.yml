@@ -4,5 +4,3 @@ coverage:
       default:
         target: auto
         threshold: 0.25%
-  ignore:
-    - "internal/env/authSecret.go"
