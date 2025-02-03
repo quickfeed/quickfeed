@@ -255,7 +255,7 @@ Note that ngrok generates a new URL every time it is restarted and you will need
 
 The `QUICKFEED_AUTH_SECRET` env variable can be set to a custom value.
 
-The secret used to sign jwt tokens and assigning it a value not equal an empty string, prevents all jwt tokens from being invalid after restarting the server.
+The secret is used to sign jwt tokens and assigning it a value not equal an empty string, prevents all jwt tokens from being invalid after restarting the server.
 
 View variable `signedToken` in [jwt.go](../web/auth/jwt.go) inside of method: `NewAuthCookie`, for related logic
 
