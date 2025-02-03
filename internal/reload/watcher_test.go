@@ -81,7 +81,7 @@ func TestWatcher(t *testing.T) {
 	select {
 	case msg := <-eventChan:
 		if msg != want {
-			t.Error("Expected event message: %s, got: %s", want, msg)
+			t.Errorf("Expected event message: %s, got: %s", want, msg)
 		}
 		return
 	case <-time.After(10 * time.Second):
