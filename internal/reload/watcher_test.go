@@ -44,7 +44,7 @@ func TestWatcher(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			// write to the file to trigger the watcher
 			// to send an event to the client
-			_, err = file.Write([]byte(rand.String()))
+			_, err = file.WriteString(rand.String())
 			if err != nil {
 				t.Errorf("failed to write to file: %v", err)
 			}

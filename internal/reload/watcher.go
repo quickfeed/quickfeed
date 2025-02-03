@@ -118,7 +118,7 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (w *Watcher) webpack() {
+func (*Watcher) webpack() {
 	log.Println("Running webpack...")
 	c := exec.Command("webpack", "--mode=development", "--watch")
 	c.Dir = "public"
