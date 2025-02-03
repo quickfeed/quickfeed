@@ -16,6 +16,7 @@
     - [Flags](#flags)
     - [Running Server on a Privileged Port](#running-server-on-a-privileged-port)
     - [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost)
+  - [Custom authentication secret](#custom-authentication-secret)
   - [Troubleshooting](#troubleshooting)
 
 ## Technology Stack
@@ -249,6 +250,17 @@ After that it will be possible to receive webhook events on QuickFeed server run
 After that any webhook events your GitHub app is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
 
 Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
+
+## Custom authentication secret
+
+The `QUICKFEED_AUTH_SECRET` env variable can be set to a custom value.
+
+The secret used to sign jwt tokens and assigning it a value not equal an empty string, prevents all jwt tokens from being invalid after restarting the server.
+
+View variable `signedToken` in [jwt.go](../web/auth/jwt.go) inside of method: `NewAuthCookie`, for related logic
+
+Keep in mind if the secret is revealed, or easily guessed, no JWT can be trusted. i.e, with a secret set to `secret`, anyone who knows this can modify and sign their own JWT.
+
 
 ## Troubleshooting
 
