@@ -107,7 +107,9 @@ describe("Lab view correctly re-renders on state change", () => {
         // trigger a receive event (this is what happens when a submission is received via streaming)
         await act(async () => {
             const modifiedSubmission = submissions[0].clone()
-            modifiedSubmission.BuildInfo!.BuildLog = "This is a build log"
+            if (modifiedSubmission.BuildInfo) {
+                modifiedSubmission.BuildInfo.BuildLog = "This is a build log"
+            }
             mockedOvermind.actions.receiveSubmission(modifiedSubmission)
         })
         // verify that the updated submission is shown
