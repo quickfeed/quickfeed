@@ -81,11 +81,11 @@ func TestWatcher(t *testing.T) {
 	select {
 	case msg := <-eventChan:
 		if msg != want {
-			t.Fatalf("Expected event message: %s, got: %s", want, msg)
+			t.Error("Expected event message: %s, got: %s", want, msg)
 		}
 		return
 	case <-time.After(10 * time.Second):
 		// if we don't receive an event in 10 seconds, fail the test
-		t.Fatal("Timeout: No event received")
+		t.Error("Timeout: No event received")
 	}
 }
