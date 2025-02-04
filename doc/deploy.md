@@ -259,7 +259,13 @@ The secret is used to sign jwt tokens and assigning it a value not equal an empt
 
 View variable `signedToken` in [jwt.go](../web/auth/jwt.go) inside of method: `NewAuthCookie`, for related logic
 
-Keep in mind if the secret is revealed, or easily guessed, no JWT can be trusted. i.e, with a secret set to `secret`, anyone who knows this can modify and sign their own JWT.
+**Keep in mind** if the secret is revealed, or easily guessed, no JWT can be trusted. i.e, with a secret set to `secret`, anyone who knows this can modify and sign their own JWT.
+
+**To generate your own secret**, run:
+
+```sh
+% make secret
+```
 
 
 ## Troubleshooting

@@ -79,3 +79,6 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
+
+secret:
+	@go run cmd/secret/main.go
