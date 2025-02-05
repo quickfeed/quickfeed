@@ -44,6 +44,7 @@ datetime
 deadcode
 Debugf
 dhparams
+distro
 dockerd
 Docroot
 doesnotexist
