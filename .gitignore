@@ -10,7 +10,6 @@ backups
 scratchpad
 proto-include
 bin
-/tmp-air
 
 # Environment and shell scripts
 cyclone.sh
