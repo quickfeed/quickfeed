@@ -85,6 +85,7 @@ func main() {
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
 		log.Fatalf("Can't connect to database: %v", err)
+		return
 	}
 
 	// Holds references for activated providers for current user token
