@@ -10,6 +10,16 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}"
+        },
+        {
+            "name": "Launch quickfeed",
+            "type": "go",
+            "request": "launch",
+            "mode": "exec",
+            "program": "quickfeed",
+            "args": [
+                "-dev"
+            ]
         }
     ]
 }
