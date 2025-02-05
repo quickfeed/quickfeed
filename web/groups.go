@@ -63,7 +63,7 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 	opt := &scm.RepositoryOptions{
 		ID: repo.GetScmRepositoryID(),
 	}
-	return sc.DeleteGroup(ctx, opt)
+	return sc.DeleteGroup(ctx, opt.ID)
 }
 
 // createGroup creates a new group for the given course and users.
@@ -226,7 +226,7 @@ func (s *QuickFeedService) getCourseGroup(request *qf.GroupRequest) (*qf.Course,
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, nil, err
 	}

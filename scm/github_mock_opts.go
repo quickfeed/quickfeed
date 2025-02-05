@@ -11,13 +11,14 @@ import (
 )
 
 type mockOptions struct {
-	orgs      []github.Organization
-	repos     []github.Repository
-	members   []github.Membership
-	groups    map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
-	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
-	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
-	reviewers map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	orgs       []github.Organization
+	repos      []github.Repository
+	members    []github.Membership
+	groups     map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
+	issues     map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
+	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
+	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	appConfigs map[string]github.AppConfig                           // map: code -> app config
 }
 
 // DumpState returns a string representation of the mock state.
@@ -192,6 +193,12 @@ func WithMockCourses() MockOption {
 				opts.repos = append(opts.repos, toRepo(&ghOrg, repo))
 			}
 		}
+	}
+}
+
+func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
+	return func(opts *mockOptions) {
+		opts.appConfigs = configs
 	}
 }
 

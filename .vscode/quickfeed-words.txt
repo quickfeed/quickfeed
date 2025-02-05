@@ -1,4 +1,5 @@
 addstore
+adduser
 agpath
 alecthomas
 Alloc
@@ -15,6 +16,7 @@ Autograder
 backports
 baserepo
 beatlabs
+binutils
 bitlab
 Bobsen
 Buf's
@@ -60,6 +62,7 @@ Etternavn
 excelize
 extendee
 featurename
+extldflags
 fileop
 Fornavn
 Frøyland
@@ -76,6 +79,7 @@ gofumpt
 goimports
 golangci
 Gollum
+GOMODCACHE
 googleapis
 gopath
 gopb
@@ -83,9 +87,11 @@ gopls
 gorelease
 Gorm
 gormlogger
+GOROOT
 gosecret
 gosimple
 gotest
+GOTOOLCHAIN
 goveralls
 Grafana
 Grafana's
@@ -123,6 +129,7 @@ keyout
 killall
 labstack
 Lamport
+ldflags
 letsencrypt
 Lindhom
 linuxbrew
@@ -139,7 +146,6 @@ maxage
 meling
 migueleliasweb
 mkdir
-multierr
 newkey
 ngrok
 nocheck
@@ -149,6 +155,7 @@ npmwebpack
 NTNU
 oldbackups
 oneof
+openrc
 Operativsystemer
 opsys
 orgs

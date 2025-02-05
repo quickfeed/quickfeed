@@ -99,12 +99,12 @@ func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
 	return review, nil
 }
 
-func (s *QuickFeedService) getAssignmentWithCourse(query *qf.Assignment, withCourseInfo bool) (*qf.Assignment, *qf.Course, error) {
+func (s *QuickFeedService) getAssignmentWithCourse(query *qf.Assignment) (*qf.Assignment, *qf.Course, error) {
 	assignment, err := s.db.GetAssignment(query)
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(assignment.CourseID, withCourseInfo)
+	course, err := s.db.GetCourse(assignment.CourseID)
 	if err != nil {
 		return nil, nil, err
 	}

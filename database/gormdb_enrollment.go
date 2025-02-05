@@ -53,7 +53,7 @@ func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
-func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error) {
+func (db *GormDB) GetEnrollmentByCourseAndUser(courseID, userID uint64) (*qf.Enrollment, error) {
 	var enrollment qf.Enrollment
 	m := db.conn.Preload("Course").Preload("User").Preload("UsedSlipDays")
 	if err := m.
@@ -91,6 +91,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 	if err := db.conn.Preload("User").
 		Preload("Course").
 		Preload("Group").
+		Preload("Group.Users").
 		Preload("UsedSlipDays").
 		Model(model).
 		Where("status in (?)", statuses).

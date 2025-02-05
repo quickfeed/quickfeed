@@ -192,6 +192,7 @@ export const hasReviews = (submission: Submission): boolean => { return submissi
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return obj.gradingBenchmarks.length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return benchmark.criteria.length > 0 }
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
+export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
 
 export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
     if (!submission) {
@@ -583,7 +584,8 @@ export class SubmissionsForUser {
             const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
                 submissions[index] = submission
-                this.submissions.set(courseID, submissions)
+                const clone = new Map(this.submissions)
+                this.submissions = clone.set(courseID, submissions)
                 return
             }
         }
@@ -592,7 +594,8 @@ export class SubmissionsForUser {
             const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
                 submissions[index] = submission
-                this.groupSubmissions.set(courseID, submissions)
+                const clone = new Map(this.groupSubmissions)
+                this.groupSubmissions = clone.set(courseID, submissions)
                 return
             }
         }
@@ -600,10 +603,12 @@ export class SubmissionsForUser {
 
     setSubmissions(courseID: bigint, type: "USER" | "GROUP", submissions: Submission[]) {
         if (type === "USER") {
-            this.submissions.set(courseID, submissions)
+            const clone = new Map(this.submissions)
+            this.submissions = clone.set(courseID, submissions)
         }
         if (type === "GROUP") {
-            this.groupSubmissions.set(courseID, submissions)
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(courseID, submissions)
         }
     }
 }

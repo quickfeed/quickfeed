@@ -224,8 +224,15 @@ export const state: State = {
         return enrollmentsByCourseID
     }),
     submissions: new SubmissionsForUser(),
-    userGroup: {},
-
+    userGroup: derived(({ enrollments }: State) => {
+        const userGroup: { [courseID: string]: Group } = {}
+        for (const enrollment of enrollments) {
+            if (enrollment.group) {
+                userGroup[enrollment.courseID.toString()] = enrollment.group
+            }
+        }
+        return userGroup
+    }),
     isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
         if (activeCourse > 0 && enrollmentsByCourseID[activeCourse.toString()]) {
             return isTeacher(enrollmentsByCourseID[activeCourse.toString()])
