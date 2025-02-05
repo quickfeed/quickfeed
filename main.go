@@ -59,10 +59,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
-	}
-
 	var srvFn web.ServerType
 	if *dev {
 		srvFn = web.NewDevelopmentServer
