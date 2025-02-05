@@ -1,0 +1,7 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "443:443"
