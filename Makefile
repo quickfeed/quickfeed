@@ -81,4 +81,4 @@ qcm:
 	@cd cmd/qcm; go install
 
 air:
-	@sudo air -c .air.toml
+	@sudo $(shell go env GOPATH)/bin/air -c .air.toml
