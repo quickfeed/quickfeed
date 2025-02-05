@@ -6,4 +6,11 @@ services:
     ports:
       - 443:443
     volumes:
-      - .:/app
+      - vol:/app
+volumes:
+  vol:
+    driver: local
+    driver_opts:
+      type: none
+      device: .
+      o: bind

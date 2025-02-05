@@ -17,8 +17,9 @@ EXPOSE 443
 # Install air package for live reloading
 RUN go install github.com/air-verse/air@latest
 
-# Copy the current directory contents into the container at /app
-COPY . .
+# Copy the local package files to the container's workspace
+COPY go.mod go.sum ./
+COPY ./kit/go.mod ./kit/go.sum ./kit/
 
 # Download dependencies
 RUN go mod download
