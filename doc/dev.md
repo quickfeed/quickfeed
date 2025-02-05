@@ -1,6 +1,8 @@
 # QuickFeed Developer Guide
 
-This developer guide assumes that you have [installed and configured QuickFeed](./deploy.md) and its dependent components.
+This developer guide assumes that you have [installed go](./templates/setup-go.md), [installed and configured QuickFeed](./deploy.md) and its dependent components.
+
+If you wish to run quickfeed through Wsl view [setup wsl](./templates/setup-wsl.md).
 
 ## Makefile
 
