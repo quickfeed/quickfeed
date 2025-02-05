@@ -9,6 +9,6 @@ fi
 
 go build -o ./tmp-air/quickfeed .
 
-if [ $(uname) == "Linux" ]; then
+if [ "$(uname)" == "Linux" ]; then
     setcap cap_net_bind_service=+ep ./tmp-air/quickfeed
 fi
