@@ -79,3 +79,6 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
+
+air:
+	@sudo air -c .air.toml
