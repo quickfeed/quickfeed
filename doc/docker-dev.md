@@ -6,13 +6,13 @@
 
 To create github app for local development, run:
 
-```bash
+```sh
 make new-githubApp
 ```
 
 ## Run quickfeed in development mode
 
-```bash
+```sh
 quickfeed -dev
 ```
 
@@ -40,7 +40,7 @@ go install github.com/air-verse/air@latest
 
 To create image and create container, run:
 
-```bash
+```sh
 docker-compose up --build
 ```
 
@@ -48,7 +48,7 @@ docker-compose up --build
 
 To create container of already created image, run:
 
-```bash
+```sh
 docker-compose up
 ```
 
@@ -60,11 +60,17 @@ Run `docker-compose --help` for more details
 
 Run:
 
-```bash
+```sh
 export QUICKFEED=/path/to/quickfeed-repository
 ```
 
 The variable can be any string to suppress it, but needs to be a valid path for the repository if the quickfeed binary is in a different directory
+
+To persist the suppress, run:
+
+```sh
+echo 'export QUICKFEED=' >> $HOME/.bashrc
+```
 
 ### 'The command 'docker-compose' could not be found in this WSL 2 distro'
 

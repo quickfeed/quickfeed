@@ -48,6 +48,7 @@ Debugf
 dhparams
 distro
 dockerd
+dockerenv
 Docroot
 doesnotexist
 Eivind
