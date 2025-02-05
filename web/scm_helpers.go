@@ -21,7 +21,7 @@ func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm
 
 // getSCMForCourse returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
-	course, err := q.db.GetCourse(courseID, false)
+	course, err := q.db.GetCourse(courseID)
 	if err != nil {
 		return nil, err
 	}

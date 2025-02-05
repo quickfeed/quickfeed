@@ -19,6 +19,7 @@ import {
     Group,
     Group_GroupStatus,
     Groups,
+    Repository_Type,
     Review,
     Submission,
     Submission_Status,
@@ -598,6 +599,18 @@ export class MockData {
         return templateBenchmarks
     }
 
+    public static mockedRepositories() {
+        const repositories: { [courseid: string]: { [repo: number]: string } } = {
+            "1": {
+                [Repository_Type.INFO]: "info",
+                [Repository_Type.ASSIGNMENTS]: "assignments",
+                [Repository_Type.USER]: "user",
+                [Repository_Type.GROUP]: "group",
+                [Repository_Type.TESTS]: "tests",
+            }
+        }
+        return repositories
+    }
     public static computeScore(r: Review) {
         let score = 0
         let totalApproved = 0

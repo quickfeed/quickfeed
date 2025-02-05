@@ -64,6 +64,20 @@ func (course *Course) TeacherEnrollments() []*Enrollment {
 	return enrolledTeachers
 }
 
+// PopulateSlipDays populates the slip days for all enrollments in the course.
+func (course *Course) PopulateSlipDays() {
+	// Set number of remaining slip days for each course enrollment
+	for _, enrollment := range course.GetEnrollments() {
+		enrollment.SetSlipDays(course)
+	}
+	for _, group := range course.GetGroups() {
+		// Set number of remaining slip days for each group enrollment
+		for _, enrollment := range group.GetEnrollments() {
+			enrollment.SetSlipDays(course)
+		}
+	}
+}
+
 // Dummy implementation of the interceptor.userIDs interface.
 // Marks this message type to be evaluated for token refresh.
 func (*Course) UserIDs() []uint64 {
