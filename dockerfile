@@ -1,17 +1,27 @@
 # syntax=docker/dockerfile:1
 
-# Set language to Go, bullseye is the latest version of Debian
-FROM golang:1.23-bullseye
+# Bookworm has GLIBC 2.34, which is required for the air package
+FROM golang:1.23-bookworm
+
+# Update working directory from /go to /app
+# Not doing so will cause this warning: 'go: warning: ignoring go.mod in $GOPATH /go'
+WORKDIR /app
+
+# Set the environment variable for the quickfeed application
+ENV QUICKFEED=/app
 
 # Set the port number the container should expose
 # 443 is the default port for HTTPS
 EXPOSE 443
 
+# Install air package for live reloading
+RUN go install github.com/air-verse/air@latest
+
 # Copy the current directory contents into the container at /app
 COPY . .
 
-# Install dependencies
-RUN go install
+# Download dependencies
+RUN go mod download
 
 # Running the quickfeed application in development mode
 CMD ["air", "-c", ".air.toml"]
