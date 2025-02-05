@@ -65,7 +65,7 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
+	log.Printf("Starting QuickFeed on https://%s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
