@@ -3,5 +3,10 @@ services:
     build:
       context: .
       dockerfile: dockerfile
+    working_dir: /quickfeed
     ports:
-      - "443:443"
+      - 443:443
+    volumes:
+      - ./:/quickfeed
+    environment:
+      - ENV_QUICKFEED=/quickfeed

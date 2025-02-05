@@ -18,7 +18,15 @@ quickfeed -dev
 
 ## Docker
 
-[Docker docs](<https://docs.docker.com/>), [View the dockerfile](/dockerfile)
+Useful sources: [Docker docs](<https://docs.docker.com/>), [View the dockerfile](/dockerfile)
+
+Docker is executed with [air-verse](https://github.com/air-verse/air) and [volumes](https://docs.docker.com/engine/storage/volumes/), enabling live-reload.
+
+To install air, run:
+
+```sh
+go install github.com/air-verse/air@latest
+```
 
 ### Run quickfeed with Docker
 
@@ -42,16 +50,6 @@ To create container of already created image, run:
 
 ```bash
 docker-compose up
-```
-
-To start or stop a container:
-
-```bash
-docker-compose start
-```
-
-```bash
-docker-compose stop
 ```
 
 Run `docker-compose --help` for more details
