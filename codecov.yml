@@ -6,3 +6,4 @@ coverage:
         threshold: 1%
 ignore:
   - "**/*.pb.go" # ignore generated protobuf files
+  - "main.go"
