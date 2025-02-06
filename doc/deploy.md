@@ -16,7 +16,7 @@
     - [Flags](#flags)
     - [Running Server on a Privileged Port](#running-server-on-a-privileged-port)
     - [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost)
-  - [Custom authentication secret](#custom-authentication-secret)
+  - [Authentication Secret Handling in QuickFeed](#authentication-secret-handling-in-quickfeed)
   - [Troubleshooting](#troubleshooting)
 
 ## Technology Stack
@@ -251,22 +251,27 @@ After that any webhook events your GitHub app is subscribed to will send payload
 
 Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
 
-## Custom authentication secret
+## Authentication Secret Handling in QuickFeed
 
-The `QUICKFEED_AUTH_SECRET` env variable can be set to a custom value.
+QuickFeed uses the `QUICKFEED_AUTH_SECRET` environment variable to sign JWT tokens for user authentication.
+Two modes are supported for handling the authentication secret:
 
-The secret is used to sign jwt tokens and assigning it a value not equal an empty string, prevents all jwt tokens from being invalid after restarting the server.
+1. Starting the server with the `-secret` flag; this will
+   - Generate a new random authentication secret.
+   - Save the new secret in the `.env` file, making it the default for future server restarts.
+   - Log out all currently logged-in users, requiring them to sign in again.
+   - This mode is useful for deployments where periodic secret rotation is necessary.
+2. Starting the server without the `-secret` flag; this will
+   - Use the previously saved secret from the `.env` file.
+   - Allow server restarts without logging users out.
+   - Ensure that existing JWT tokens remain valid across restarts.
 
-View variable `signedToken` in [jwt.go](../web/auth/jwt.go) inside of method: `NewAuthCookie`, for related logic
+For custom secret management, users can manually set the `QUICKFEED_AUTH_SECRET` environment variable.
+This will override the secret saved in the `.env` file and is useful for deployments where the secret is managed externally.
 
-**Keep in mind** if the secret is revealed, or easily guessed, no JWT can be trusted. i.e, with a secret set to `secret`, anyone who knows this can modify and sign their own JWT.
-
-**To generate your own secret**, run:
-
-```sh
-% make secret
-```
-
+**Security Warning:**
+It is important that this secret is kept secure, as exposure can lead to compromised JWT tokens.
+Always use a long randomly generated secret value to maintain security.
 
 ## Troubleshooting
 
