@@ -1,6 +1,7 @@
 package reload
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,52 +21,53 @@ type Watcher struct {
 // The watcher listens for file changes and broadcasts them to all connected clients.
 // Note: Usually you only ever have one client as this is intended for live-reloading
 // a web page in a development environment.
-func NewWatcher(path string) (*Watcher, error) {
+func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 	watcher := &Watcher{
 		clients: make(map[chan string]bool),
-		err:     make(chan error),
 	}
-	go watcher.watch(path)
-	go watcher.webpack() // Start webpack in watch mode
-	return watcher, <-watcher.err
+	watchFunc, err := watcher.start(path)
+	if err != nil {
+		return nil, err
+	}
+	go watchFunc(ctx) // Start watching for file changes
+	go webpack()      // Start webpack in watch mode
+	return watcher, nil
 }
 
-func (w *Watcher) watch(path string) {
+func (w *Watcher) start(path string) (func(ctx context.Context), error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		w.err <- err
-		return
+		return nil, err
 	}
-	defer watcher.Close()
 	err = watcher.Add(path)
 	if err != nil {
-		w.err <- err
-		return
+		return nil, err
 	}
-	// Send nil to indicate that the watcher is ready.
-	w.err <- nil
 
 	// Start listening for events.
-	for {
-		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
+	return func(ctx context.Context) {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return // Watcher closed
+				}
+				// We only care about writes and creates.
+				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+					// Broadcast event to all clients.
+					w.broadcastMessage(event.Name)
+				}
+			case err := <-watcher.Errors:
+				log.Println("error watching files:", err)
+			case <-ctx.Done():
+				watcher.Close()
 				return
 			}
-			// We only care about writes and creates.
-			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-				// Broadcast event to all clients.
-				w.broadcastMessage(event.Name)
-			}
-
-		case err := <-watcher.Errors:
-			if err != nil {
-				log.Println("error watching files:", err)
-			}
 		}
-	}
+	}, nil
 }
 
+// Add a new client
 func (w *Watcher) addClient(ch chan string) {
 	w.mu.Lock()
 	w.clients[ch] = true
@@ -89,7 +91,7 @@ func (w *Watcher) broadcastMessage(msg string) {
 		case ch <- msg:
 			continue
 		default:
-			log.Println("Failed to send message to client")
+			// do nothing
 		}
 	}
 }
@@ -100,15 +102,12 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 
 	// Create a new channel for this client
-	client := make(chan string)
+	client := make(chan string, 1)
 	watcher.addClient(client)
 	// Listen for changes and send updates
 	for {
 		select {
-		case msg, ok := <-client:
-			if !ok {
-				return
-			}
+		case msg := <-client:
 			fmt.Fprintf(w, "data: %s\n\n", msg)
 			w.(http.Flusher).Flush()
 		case <-r.Context().Done(): // Client disconnected
@@ -118,7 +117,7 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (*Watcher) webpack() {
+func webpack() {
 	log.Println("Running webpack...")
 	c := exec.Command("webpack", "--mode=development", "--watch")
 	c.Dir = "public"
