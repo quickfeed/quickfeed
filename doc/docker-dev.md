@@ -2,23 +2,17 @@
 
 ## Create github app (required)
 
-**IMPORTANT**: The following is required for running quickfeed in DEV mode directly or through a docker container
+**IMPORTANT**: The following is required for running quickfeed directly or with a docker container
 
-To create github app for local development, run:
-
-```sh
-make new-githubApp
-```
-
-## Run quickfeed in development mode
+To create github app for local development create .env files for root and public folder, and run:
 
 ```sh
-quickfeed -dev
+quickfeed -dev -new
 ```
 
 ## Docker
 
-Useful sources: [Docker docs](<https://docs.docker.com/>), [View the dockerfile](/dockerfile)
+Useful sources: [Docker docs](<https://docs.docker.com/>), [dockerfile](/dockerfile), [setup docker desktop for WSL 2](<https://docs.docker.com/desktop/features/wsl/>), [Guide for installing WSL 2](<https://learn.microsoft.com/en-us/windows/wsl/install>)
 
 Docker is executed with [air-verse](https://github.com/air-verse/air) and [volumes](https://docs.docker.com/engine/storage/volumes/), enabling live-reload.
 
@@ -28,37 +22,73 @@ To install air, run:
 go install github.com/air-verse/air@latest
 ```
 
-### Run quickfeed with Docker
+PS: required to run air directly, air is installed in the docker image
 
-#### Use docker desktop through the App/interface
+## Run quickfeed with Docker
 
-**It is important** to map the docker port to 443 (default https port, different https port causes issues on the callback from the github app). The app does internally use 443 by default which forces you to use the port 443, you have to set the flag -http.addr manually if you'd like to run the container on a different port (btw will cause issues on callback), and keep in mind that you have to create a new image, and remember which port the application runs on (the -http.addr flag in the CMD, [here](/dockerfile#L27))
+### Use docker desktop
 
-#### Use docker desktop through CLI
+**It is important** to map the docker port to 443 (default https port, different https port causes issues on the callback from the github app). The app internally use port 443 by default which forces you to use the port 443, you have to set the flag -http.addr manually if you'd like to run the container on a different port (will cause issues on callback). TODO (joachim): Update when <https://github.com/quickfeed/quickfeed/issues/1195> is closed
 
-[Setup docker desktop for WSL 2](<https://docs.docker.com/desktop/features/wsl/>) - [Guide for installing WSL 2](<https://learn.microsoft.com/en-us/windows/wsl/install>)
+**To run a container with volume**, please use one of the following methods to create the container. The docker desktop doesn't provide a way of starting a container with a volume.
 
-To create image and create container, run:
+### Use docker-compose
 
-```sh
-docker-compose up --build
-```
-
-[View docker-compose file](/docker-compose.yml)
-
-To create container of already created image, run:
+To create an image and/or create a container, run:
 
 ```sh
 docker-compose up
 ```
 
-Run `docker-compose --help` for more details
+Docker will build the image if it doesn't exist.
+
+View [docker-compose file](/docker-compose.yml), and run `docker-compose --help` for more details
+
+### Use docker CLI
+
+To create an image, run:
+
+```sh
+docker build -t quickfeed-web .
+```
+
+To create a volume bound to the quickfeed directory, run:
+
+```sh
+docker volume create --driver local --opt type=none --opt device=. --opt o=bind vol
+```
+
+Vol is a partial name of the volume, which results in full name: quickfeed_vol, and `device` value: . is equal to current directory - `pwd`
+
+To create a container with a volume, run:
+
+```sh
+docker run -p 443:443 --mount src=quickfeed_vol,dst=/app quickfeed-web
+```
+
+To create a container with bind mount, run:
+
+```sh
+docker run -p 443:443 --mount type=bind,src=$(pwd),dst=/app quickfeed-web
+```
+
+To show all containers, run:
+
+```sh
+docker container ls -a
+```
+
+To sh into a container, run:
+
+```sh
+docker exec -it *container ID* sh
+```
+
+Theres many more useful CLI commands, please view `docker --help`
 
 ### Issues and warnings
 
-### To suppress warning: **The "QUICKFEED" variable is not set. Defaulting to a blank string**
-
-Run:
+#### To suppress warning: **The "QUICKFEED" variable is not set. Defaulting to a blank string**, run
 
 ```sh
 export QUICKFEED=/path/to/quickfeed-repository
@@ -72,10 +102,10 @@ To persist the suppress, run:
 echo 'export QUICKFEED=' >> $HOME/.bashrc
 ```
 
-### 'The command 'docker-compose' could not be found in this WSL 2 distro'
+### The command 'docker-compose' could not be found in this WSL 2 distro
 
 You are most likely getting this message because docker isn't running on your computer.
 
-### '/usr/local/bin/docker-compose: line 1: Not: command not found'
+### /usr/local/bin/docker-compose: line 1: Not: command not found
 
 Weird issue of most likely broken binary or non existent one.. advise you to restart wsl/linux.
