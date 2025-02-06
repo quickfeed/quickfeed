@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Bookworm has GLIBC 2.34, which is required for the air package
-FROM golang:1.23-bookworm
+FROM golang:1.23-alpine
 
 # Update working directory from /go to /app
 # Not doing so will cause this warning: 'go: warning: ignoring go.mod in $GOPATH /go'
