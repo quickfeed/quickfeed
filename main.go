@@ -137,8 +137,6 @@ func main() {
 		log.Fatalf("Failed to start QuickFeed server: %v", err)
 	}
 	log.Println("QuickFeed shut down gracefully")
-
-	_ = logger.Sync()
 }
 
 func checkDomain() error {
