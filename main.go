@@ -122,10 +122,12 @@ func main() {
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	if *dev && *watch {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
-		handler = web.DevHandler(handler)
+		handler = web.DevHandler(ctx, handler)
 	}
 
 	srv, err := srvFn(*httpAddr, handler)
@@ -133,8 +135,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	go func() {
 		<-ctx.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
