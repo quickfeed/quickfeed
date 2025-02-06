@@ -80,12 +80,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
 	}
-	defer func() { _ = logger.Sync() }()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
 		log.Fatalf("Can't connect to database: %v", err)
-		return
 	}
 
 	// Holds references for activated providers for current user token
@@ -138,6 +136,8 @@ func main() {
 		log.Fatalf("Failed to start QuickFeed server: %v", err)
 	}
 	log.Println("QuickFeed shut down gracefully")
+
+	logger.Sync()
 }
 
 func checkDomain() error {
