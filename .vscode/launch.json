@@ -12,11 +12,11 @@
             "program": "${fileDirname}"
         },
         {
-            "name": "Launch quickfeed",
+            "name": "Launch binary",
             "type": "go",
             "request": "launch",
             "mode": "exec",
-            "program": "quickfeed",
+            "program": "${env:GOPATH}/bin/quickfeed",
             "args": [
                 "-dev"
             ]
