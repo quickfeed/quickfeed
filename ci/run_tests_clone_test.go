@@ -11,7 +11,7 @@ import (
 )
 
 func TestCloneAndCopyRunTests(t *testing.T) {
-	t.Setenv("QUICKFEED_REPOSITORY_PATH", "QUICKFEED_REPOSITORY_PATH")
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
 	qfTestOrg := scm.GetTestOrganization(t)
 	sc, qfUserName := scm.GetTestSCM(t)
 
