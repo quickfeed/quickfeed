@@ -80,6 +80,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
 	}
+	defer func() { _ = logger.Sync() }()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
@@ -137,7 +138,7 @@ func main() {
 	}
 	log.Println("QuickFeed shut down gracefully")
 
-	logger.Sync()
+	_ = logger.Sync()
 }
 
 func checkDomain() error {
