@@ -2,6 +2,7 @@ package reload
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -25,7 +26,9 @@ func TestWatcher(t *testing.T) {
 	}
 	defer file.Close()
 
-	watcher, err := NewWatcher(dir)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	watcher, err := NewWatcher(ctx, dir)
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
