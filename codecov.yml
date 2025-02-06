@@ -8,3 +8,4 @@ ignore:
   - "**/*.pb.go" # ignore generated protobuf files
   - "internal/env/auth_secret.go"
   - "cmd/**"
+  - "main.go"
