@@ -44,7 +44,7 @@ func TestWatcher(t *testing.T) {
 		time.Sleep(2 * time.Second)
 		// try to write to the file multiple times
 		// in case the server is slow to start
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			// write to the file to trigger the watcher
 			// to send an event to the client
 			_, err = file.WriteString(rand.String())
@@ -61,7 +61,7 @@ func TestWatcher(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	// continously read from the response body
+	// continuously read from the response body
 	eventChan := make(chan string, 1)
 	go func() {
 		reader := bufio.NewReader(resp.Body)
@@ -70,12 +70,9 @@ func TestWatcher(t *testing.T) {
 			if err != nil {
 				break
 			}
-			// ignore empty lines; not all received messages contain data
-			if line != "" {
-				// send the message to the event channel
-				eventChan <- line
-				break
-			}
+			// send the message to the event channel
+			eventChan <- line
+			break
 		}
 	}()
 
