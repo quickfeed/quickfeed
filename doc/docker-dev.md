@@ -110,6 +110,10 @@ You are most likely getting this message because docker isn't running on your co
 
 Weird issue of most likely broken binary or non existent one.. advise you to restart wsl/linux.
 
+### Failed to mount volume; no such file or directory
+
+Not sure how this can happen, but can be resolved by deleting the volume
+
 ### Please go back to [step one](#create-github-app-required) if you got any of the following issues
 
 - open /app/.env: no such file or directory
