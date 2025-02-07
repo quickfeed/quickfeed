@@ -4,10 +4,10 @@
 
 **IMPORTANT**: The following is required for running quickfeed directly or with a docker container
 
-To create github app for local development create .env files for root and public folder, and run:
+To create github app for local development create .env files for root and public folder, then run:
 
 ```sh
-quickfeed -dev -new
+quickfeed -dev -new -secret
 ```
 
 ## Docker
@@ -109,3 +109,9 @@ You are most likely getting this message because docker isn't running on your co
 ### /usr/local/bin/docker-compose: line 1: Not: command not found
 
 Weird issue of most likely broken binary or non existent one.. advise you to restart wsl/linux.
+
+### Please go back to [step one](#create-github-app-required) if you got any of the following issues
+
+- open /app/.env: no such file or directory
+- Required QUICKFEED_AUTH_SECRET is not set
+- missing application ID for provider github
