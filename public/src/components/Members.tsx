@@ -1,11 +1,11 @@
 import React, { useState } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, getFormattedTime, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
-import { ButtonType } from "./admin/Button"
+import Button, { ButtonType } from "./admin/Button"
 
 const Members = (): JSX.Element => {
     const state = useAppState()
@@ -46,33 +46,43 @@ const Members = (): JSX.Element => {
         data.push(enrollment.user ? enrollment.user.Name : "")
         data.push(enrollment.user ? enrollment.user.Email : "")
         data.push(enrollment.user ? enrollment.user.StudentID : "")
-        data.push(enrollment.lastActivityDate)
+        data.push(getFormattedTime(enrollment.lastActivityDate))
         data.push(enrollment.totalApproved.toString())
         data.push(enrollment.slipDaysRemaining.toString())
 
         if (isPending(enrollment)) {
             data.push(
-                <div>
-                    <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => { actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT }) }}>
-                        Accept
-                    </i>
-                    <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}>
-                        Reject
-                    </i>
+                <div className="d-flex">
+                    <DynamicButton
+                        text={"Accept"}
+                        color={Color.GREEN}
+                        type={ButtonType.BADGE}
+                        className="mr-2"
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT })}
+                    />
+                    <DynamicButton
+                        text={"Reject"}
+                        color={Color.RED}
+                        type={ButtonType.BADGE}
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
+                    />
                 </div>)
         } else {
             data.push(edit ? (
-                <div>
-                    <i className={`badge badge-${isTeacher(enrollment) ? "warning" : "primary"} clickable`}
-                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}>
-                        {isTeacher(enrollment) ? "Demote" : "Promote"}
-                    </i>
-                    <i className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}>
-                        Reject
-                    </i>
+                <div className="d-flex">
+                    <DynamicButton
+                        text={isTeacher(enrollment) ? "Demote" : "Promote"}
+                        color={isTeacher(enrollment) ? Color.YELLOW : Color.BLUE}
+                        type={ButtonType.BADGE}
+                        className="mr-2"
+                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}
+                    />
+                    <DynamicButton
+                        text={"Reject"}
+                        color={Color.RED}
+                        type={ButtonType.BADGE}
+                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
+                    />
                 </div>) :
                 <i className={EnrollmentStatusBadge[enrollment.status]}>
                     {EnrollmentStatus[enrollment.status]}
@@ -89,13 +99,21 @@ const Members = (): JSX.Element => {
                     <Search />
                 </div>
                 <div className="ml-auto">
-                    <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>
-                        {edit ? "Done" : "Edit"}
-                    </div>
+                    <Button
+                        text={edit ? "Done" : "Edit"}
+                        color={edit ? Color.RED : Color.BLUE}
+                        type={ButtonType.BUTTON}
+                        onClick={() => setEditing(!edit)}
+                    />
                 </div>
                 {pending?.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
-                        <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} text="Approve All" onClick={() => actions.approvePendingEnrollments()} />
+                        <DynamicButton
+                            text="Approve All"
+                            color={Color.GREEN}
+                            type={ButtonType.BUTTON}
+                            onClick={() => actions.approvePendingEnrollments()}
+                        />
                     </div> : null}
             </div>
 

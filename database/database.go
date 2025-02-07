@@ -21,9 +21,14 @@ type Database interface {
 
 	// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 	CreateCourse(uint64, *qf.Course) error
-	// GetCourse fetches course by ID. If withInfo is true, preloads course
+	GetCourse(uint64) (*qf.Course, error)
+	// GetCourseByStatus fetches course by ID. Depending on the enrollment status, preloads course
 	// assignments, active enrollments and groups.
-	GetCourse(uint64, bool) (*qf.Course, error)
+	// 	- NONE (or 0): returns the course with no preloaded data.
+	//  - PENDING: returns the course with no preloaded data.
+	// 	- STUDENT: returns the course with preloaded assignments, active enrollments and groups
+	// 	- TEACHER: returns the course with preloaded assignments, active enrollments and groups with detailed information.
+	GetCourseByStatus(uint64, qf.Enrollment_UserStatus) (*qf.Course, error)
 	// GetCourseByOrganizationID fetches course by organization ID.
 	GetCourseByOrganizationID(organizationID uint64) (*qf.Course, error)
 	// GetCourses returns a list of courses. If one or more course IDs are provided,
@@ -70,7 +75,7 @@ type Database interface {
 	// GetAssignment returns assignment matching the given query.
 	GetAssignment(query *qf.Assignment) (*qf.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
-	GetAssignmentsByCourse(uint64, bool) ([]*qf.Assignment, error)
+	GetAssignmentsByCourse(uint64) ([]*qf.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*qf.Assignment) error
 	// CreateBenchmark creates a new grading benchmark.
@@ -99,12 +104,13 @@ type Database interface {
 	GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error)
 	// GetSubmissions returns all submissions matching the query.
 	GetSubmissions(*qf.Submission) ([]*qf.Submission, error)
-	// GetAssignmentsWithSubmissions returns a list of assignments with the latest submissions for the given course.
-	GetAssignmentsWithSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Assignment, error)
+	// GetCourseSubmissions returns the latest course submissions of the requested submission type.
+	GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
-	// UpdateSubmissions releases and/or approves all submissions with a certain score
-	UpdateSubmissions(uint64, *qf.Submission) error
+	// UpdateSubmissions releases and/or approves all submissions with a certain score.
+	// The boolean argument determines whether to approve or reject the submissions.
+	UpdateSubmissions(*qf.Submission, bool) error
 	// GetReview returns a single review matching the given query.
 	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.

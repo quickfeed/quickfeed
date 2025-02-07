@@ -3,19 +3,14 @@ package assignments
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/testing/protocmp"
-	"gorm.io/gorm"
 )
 
 // MaxWait is the maximum time allowed for updating a course's assignments
@@ -34,7 +29,7 @@ var updateMutex = sync.Mutex{}
 // caller for an extended period, since it may involve cloning the tests repository,
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *qf.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
 	updateMutex.Lock()
 	defer updateMutex.Unlock()
 
@@ -43,7 +38,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 	defer cancel()
 
 	clonedTestsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationName(),
+		Organization: course.GetScmOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      course.CloneDir(),
 	})
@@ -59,19 +54,14 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 		logger.Errorf("Failed to parse assignments from '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
-	for _, assignment := range assignments {
-		updateGradingCriteria(logger, db, assignment)
-	}
 
-	if course.HasUpdatedDockerfile(dockerfile) {
-		// The course's Dockerfile was added or updated in the tests repository
-		course.Dockerfile = dockerfile
+	if course.UpdateDockerfile(dockerfile) {
 		// Rebuild the Docker image for the course tagged with the course code
-		if err = buildDockerImage(ctx, logger, course); err != nil {
+		if err = buildDockerImage(ctx, logger, runner, course); err != nil {
 			logger.Error(err)
 			return
 		}
-		// Update the course's Dockerfile in the database
+		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Errorf("Failed to update Dockerfile for course %s: %v", course.GetCode(), err)
 			return
@@ -95,17 +85,11 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 }
 
 // buildDockerImage builds the Docker image for the given course.
-func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf.Course) error {
-	docker, err := ci.NewDockerCI(logger)
-	if err != nil {
-		return fmt.Errorf("failed to set up docker client: %w", err)
-	}
-	defer func() { _ = docker.Close() }()
-
+func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.Runner, course *qf.Course) error {
 	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
-	out, err := docker.Run(ctx, &ci.Job{
-		Name:       course.GetCode() + "-" + rand.String(),
-		Image:      strings.ToLower(course.GetCode()),
+	out, err := runner.Run(ctx, &ci.Job{
+		Name:       course.JobName(),
+		Image:      course.DockerImage(),
 		Dockerfile: course.GetDockerfile(),
 		Commands:   []string{`echo -n "Hello from Dockerfile"`},
 	})
@@ -114,45 +98,4 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf
 		return fmt.Errorf("failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
 	}
 	return nil
-}
-
-// updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
-func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *qf.Assignment) {
-	if len(assignment.GetGradingBenchmarks()) > 0 {
-		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
-			CourseID: assignment.CourseID,
-			Order:    assignment.Order,
-		})
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// a new assignment, no actions required
-				return
-			}
-			logger.Debugf("Failed to fetch assignment %s from database: %s", assignment.Name, err)
-			return
-		}
-		if len(gradingBenchmarks) > 0 {
-			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
-				protocmp.Transform(),
-				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
-				protocmp.IgnoreEnums(),
-			}) {
-				for _, bm := range gradingBenchmarks {
-					for _, c := range bm.Criteria {
-						if err := db.DeleteCriterion(c); err != nil {
-							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
-							return
-						}
-					}
-					if err := db.DeleteBenchmark(bm); err != nil {
-						logger.Errorf("Failed to delete benchmark %v: %s\n", bm, err)
-						return
-					}
-				}
-			} else {
-				assignment.GradingBenchmarks = nil
-			}
-		}
-	}
 }

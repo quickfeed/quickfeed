@@ -5,8 +5,8 @@ printf "*** Initializing Tests for %s ***\n" "$CURRENT"
 
 # Move to folder with assignment handout code for the current assignment to test.
 cd "$ASSIGNMENTS/$CURRENT"
-# Remove assignment handout tests to avoid interference
-find . -name '*_test.go' -exec rm -rf {} \;
+# Remove assignment handout tests, if any, to avoid interference, but keep quickfeed tests.
+find . \( -name '*_test.go' -and -not -name '*_ag_test.go' \) -exec rm -rf {} \;
 
 # Copy tests into the base assignments folder for initializing test scores
 cp -r "$TESTS"/* "$ASSIGNMENTS"/

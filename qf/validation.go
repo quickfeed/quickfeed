@@ -14,7 +14,7 @@ func (grp *Group) IsValid() bool {
 func (c *Course) IsValid() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
-		c.GetOrganizationID() != 0 &&
+		c.GetScmOrganizationID() != 0 &&
 		c.GetYear() != 0 &&
 		c.GetTag() != ""
 }
@@ -33,29 +33,6 @@ func (req *Enrollment) IsValid() bool {
 // IsValid ensures that course ID is set
 func (req *CourseRequest) IsValid() bool {
 	return req.GetCourseID() > 0
-}
-
-// IsValid ensures that user ID is set
-func (req *EnrollmentStatusRequest) IsValid() bool {
-	return req.GetUserID() > 0
-}
-
-// IsValid checks whether OrgRequest fields are valid
-func (req *OrgRequest) IsValid() bool {
-	return req.GetOrgName() != ""
-}
-
-// IsValid checks that all requested repo types are valid types and course ID field is set
-func (req *URLRequest) IsValid() bool {
-	if req.GetCourseID() < 1 {
-		return false
-	}
-	for _, r := range req.GetRepoTypes() {
-		if r <= Repository_NONE {
-			return false
-		}
-	}
-	return true
 }
 
 // IsValid checks that the request has positive course ID
@@ -103,7 +80,13 @@ func (req *GroupRequest) IsValid() bool {
 
 // IsValid checks that course ID is positive.
 func (req *EnrollmentRequest) IsValid() bool {
-	return req.GetCourseID() > 0
+	switch req.GetFetchMode().(type) {
+	case *EnrollmentRequest_CourseID:
+		return req.GetCourseID() > 0
+	case *EnrollmentRequest_UserID:
+		return req.GetUserID() > 0
+	}
+	return false
 }
 
 // IsValid ensures that both course and assignment IDs are set.
@@ -114,8 +97,8 @@ func (req *RebuildRequest) IsValid() bool {
 
 // IsValid checks that either ID or path field is set
 func (org *Organization) IsValid() bool {
-	id, path := org.GetID(), org.GetName()
-	return id > 0 || path != ""
+	// only check the name; the ID is only used in the response
+	return org.GetScmOrganizationName() != ""
 }
 
 // IsValid ensures that a review always has a reviewer and a submission IDs.

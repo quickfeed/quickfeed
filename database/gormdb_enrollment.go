@@ -1,6 +1,8 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
@@ -38,13 +40,20 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 
 // UpdateEnrollment changes status and display state of the given enrollment.
 func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
+	// If enrol.ID is zero, Select("*").Updates() would update ID of the Enrollment record to zero.
+	if enrol.ID == 0 {
+		return errors.New("enrollment query missing primary key: ID")
+	}
 	return db.conn.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
-		Updates(&qf.Enrollment{State: enrol.State, Status: enrol.Status, LastActivityDate: enrol.LastActivityDate}).Error
+		Select("*").
+		Where(&qf.Enrollment{
+			CourseID: enrol.CourseID,
+			UserID:   enrol.UserID,
+		}).Updates(enrol).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
-func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error) {
+func (db *GormDB) GetEnrollmentByCourseAndUser(courseID, userID uint64) (*qf.Enrollment, error) {
 	var enrollment qf.Enrollment
 	m := db.conn.Preload("Course").Preload("User").Preload("UsedSlipDays")
 	if err := m.
@@ -82,6 +91,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 	if err := db.conn.Preload("User").
 		Preload("Course").
 		Preload("Group").
+		Preload("Group.Users").
 		Preload("UsedSlipDays").
 		Model(model).
 		Where("status in (?)", statuses).

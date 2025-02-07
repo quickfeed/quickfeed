@@ -17,23 +17,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
         return null
     }
 
-    // handleChange saves the comment when clicking outside the text area, or when pressing enter.
-    // Clicking outside, pressing enter, or pressing escape will set editing to false.
-    // Changes are discarded if the user presses escape.
-    const handleChange = (event: React.FormEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
-        // Handle if event is keyboard event
-        if ("key" in event) {
-            if (event.key !== "Escape" && event.key !== "Enter") {
-                // Exit early if the key is not an escape or enter key
-                return
-            }
-            if (event.key === "Escape") {
-                setEditing(false)
-                return
-            }
-        }
-
-        const { value } = event.currentTarget
+    const updateComment = (value: string) => {
         setEditing(false)
         // Exit early if the value is unchanged
         if (value === grade.comment) {
@@ -42,10 +26,29 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
         actions.review.updateComment({ grade: grade, comment: value })
     }
 
+    // handleBlur saves the comment when clicking outside the text area.
+    const handleBlur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
+        const { value } = event.currentTarget
+        updateComment(value)
+    }
+
+    // handleKeyUp saves the comment when pressing Ctrl/Cmd+Enter or Ctrl/Cmd+Q/q.
+    // It also cancels the edit when pressing Escape.
+    const handleKeyUp = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (event.key === "Escape") {
+            setEditing(false)
+            return
+        }
+        if ((event.key === "Enter" || event.key === "q" || event.key === "Q") && (event.ctrlKey || event.metaKey)) {
+            const { value } = event.currentTarget
+            updateComment(value)
+        }
+    }
+
     return (
         <tr>
             <th colSpan={3}>
-                <input autoFocus onBlur={handleChange} onKeyUp={handleChange} defaultValue={grade.comment} className="form-control" type="text" />
+                <textarea rows={20} autoFocus onBlur={handleBlur} onKeyUp={handleKeyUp} defaultValue={grade.comment} className="form-control"></textarea>
             </th>
         </tr>
     )

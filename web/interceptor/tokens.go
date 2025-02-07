@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
@@ -30,15 +30,6 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 	"UpdateUser":        defaultTokenUpdater, // User has been promoted to admin or demoted.
 	"UpdateGroup":       defaultTokenUpdater, // Users added to a group or removed from a group.
 	"UpdateEnrollments": defaultTokenUpdater, // User enrolled into a new course or promoted to TA.
-
-	"CreateCourse": // The signed in user gets the teacher role in the new course.
-	func(ctx context.Context, tm *auth.TokenManager, _ userIDs) error {
-		claims, ok := auth.ClaimsFromContext(ctx)
-		if !ok {
-			return fmt.Errorf("CreateCourse: missing claims in context")
-		}
-		return tm.Add(claims.UserID)
-	},
 
 	"DeleteGroup": // Group members removed from the group.
 	func(ctx context.Context, tm *auth.TokenManager, msg userIDs) error {

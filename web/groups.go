@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
@@ -54,17 +55,15 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 		return nil
 	}
 
-	// when deleting an approved group, remove github repository and team as well
-	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+	// when deleting an approved group, remove github repository as well
+	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
 		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, group.Name, err)
 		// continue with other delete operations
 	}
-	opt := &scm.GroupOptions{
-		OrganizationID: repo.GetOrganizationID(),
-		RepositoryID:   repo.GetRepositoryID(),
-		TeamID:         group.GetTeamID(),
+	opt := &scm.RepositoryOptions{
+		ID: repo.GetScmRepositoryID(),
 	}
-	return sc.DeleteGroup(ctx, opt)
+	return sc.DeleteGroup(ctx, opt.ID)
 }
 
 // createGroup creates a new group for the given course and users.
@@ -108,22 +107,9 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
-	if group.Name != request.Name && group.Status == qf.Group_PENDING {
-		// return error to user if group name is invalid
-		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
-			return err
-		}
-		group.Name = request.Name
-	}
-
-	newGroup := &qf.Group{
-		ID:          group.ID,
-		Name:        group.Name,
-		CourseID:    group.CourseID,
-		TeamID:      group.TeamID,
-		Status:      group.Status,
-		Users:       users,
-		Enrollments: group.Enrollments,
+	newGroup, err := s.newGroup(group, request, users)
+	if err != nil {
+		return err
 	}
 
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
@@ -131,31 +117,20 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
 	}
 	if repo == nil {
-		// no group repository exists; create new repository for group
-		if request.Name != "" && newGroup.TeamID < 1 {
-			// update group name only if team not already created on SCM
-			newGroup.Name = request.Name
-		}
-		repo, team, err := createRepoAndTeam(ctx, sc, course, newGroup)
+		repo, err := createRepo(ctx, sc, course, newGroup)
 		if err != nil {
 			return err
 		}
-		s.logger.Debugf("Creating group repo in the database: %+v", repo)
+		s.logger.Debugf("Created group repo on SCM: %+v", repo)
 		if err := s.db.CreateRepository(repo); err != nil {
 			return err
 		}
-		newGroup.TeamID = team.ID
-		// when updating a group for an existing team, name changes are not allowed.
-		// this to avoid a mismatch between database group name and SCM team name
-		s.logger.Debugf("updateGroup: SCM team name: %s, requested group name: %s", team.Name, request.Name)
-		if team.Name != request.Name {
-			newGroup.Name = team.Name
-		}
+		s.logger.Debugf("Created group repo in database: %+v", repo)
 	}
 
-	// if there are changes in group membership, update SCM team
+	// if there are changes in group membership, update group repository
 	if !group.ContainsAll(newGroup) {
-		if err := updateGroupTeam(ctx, sc, newGroup, course.GetOrganizationID()); err != nil {
+		if err := updateGroupMembers(ctx, sc, newGroup, course.GetScmOrganizationName()); err != nil {
 			return err
 		}
 	}
@@ -163,6 +138,24 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 	// approve and update the group in the database
 	newGroup.Status = qf.Group_APPROVED
 	return s.db.UpdateGroup(newGroup)
+}
+
+// newGroup returns a new group based on the request and the existing group.
+func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) (*qf.Group, error) {
+	if group.Name != request.Name && group.Status == qf.Group_PENDING {
+		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
+			return nil, err // group name is invalid
+		}
+		group.Name = request.Name
+	}
+	return &qf.Group{
+		ID:          group.ID,
+		Name:        group.Name,
+		CourseID:    group.CourseID,
+		Status:      group.Status,
+		Users:       users,
+		Enrollments: group.Enrollments,
+	}, nil
 }
 
 // getGroupUsers returns the users of the specified group request, and checks
@@ -220,7 +213,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 		return err
 	}
 	for _, group := range courseGroups {
-		if group.GetName() == groupName {
+		if strings.EqualFold(group.GetName(), groupName) {
 			return ErrGroupNameDuplicate
 		}
 	}
@@ -233,7 +226,7 @@ func (s *QuickFeedService) getCourseGroup(request *qf.GroupRequest) (*qf.Course,
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, nil, err
 	}

@@ -1,13 +1,12 @@
 package assignments
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -31,7 +30,16 @@ name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
-
+	y3 = `order: 3
+name: "Nested loops"
+deadline: "27-08-2018 12:00"
+autoapprove: false
+`
+	yOldAssignmentIDField = `assignmentid: 3
+name: "Big salary"
+deadline: "27-08-2019 12:00"
+autoapprove: false
+`
 	yUnknownFields = `order: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
@@ -71,45 +79,31 @@ autoapprove: false
 	]`
 )
 
+func writeFile(t *testing.T, testsDir, path, filename, content string) {
+	t.Helper()
+	dir := filepath.Join(testsDir, path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, filename), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParse(t *testing.T) {
 	testsDir := t.TempDir()
 
-	job := &ci.Job{
-		Commands: []string{
-			"cd " + testsDir,
-			"mkdir lab1",
-			"mkdir lab2",
-			"mkdir scripts",
-		},
-	}
-	runner := ci.Local{}
-	_, err := runner.Run(context.Background(), job)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o600)
-	if err != nil {
-		t.Fatal(err)
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yaml", y1},
+		{"lab2", "assignment.yaml", y2},
+		{"scripts", "run.sh", script},
+		{"lab1", "run.sh", script1},
+		{"scripts", "Dockerfile", df},
+		{"lab2", "criteria.json", criteria},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
 	wantCriteria := []*qf.GradingBenchmark{
@@ -141,7 +135,7 @@ func TestParse(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &qf.Assignment{
 		Name:        "lab1",
-		Deadline:    "2017-08-27T12:00:00",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		ScoreLimit:  80,
@@ -149,7 +143,7 @@ func TestParse(t *testing.T) {
 
 	wantAssignment2 := &qf.Assignment{
 		Name:              "lab2",
-		Deadline:          "2018-08-27T12:00:00",
+		Deadline:          qtest.Timestamp(t, "2018-08-27T12:00:00"),
 		AutoApprove:       false,
 		Order:             2,
 		ScoreLimit:        80,
@@ -177,30 +171,61 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestParseOldAssignmentIDField(t *testing.T) {
+	testsDir := t.TempDir()
+
+	// test for use of assignmentid: 3 instead of order
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab3", "assignment.yaml", yOldAssignmentIDField},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	if err == nil {
+		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
+	}
+}
+
+func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
+	testsDir := t.TempDir()
+
+	// lab1 and lab2 are correct
+	// lab3 contains an old assignmentid field
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yml", y1},
+		{"lab2", "assignment.yml", y2},
+		{"lab3", "assignment.yml", yOldAssignmentIDField},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+
+	// Since lab3 contains an old assignmentid field, this will return an error
+	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	if err == nil {
+		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
+	}
+}
+
 func TestParseUnknownFields(t *testing.T) {
 	testsDir := t.TempDir()
 
-	job := &ci.Job{
-		Commands: []string{
-			"cd " + testsDir,
-			"mkdir lab1",
-		},
-	}
-	runner := ci.Local{}
-	_, err := runner.Run(context.Background(), job)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o600)
-	if err != nil {
-		t.Fatal(err)
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yaml", yUnknownFields},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
 	// We expect assignment names to be set based on
 	// assignment folder names.
 	wantAssignment1 := &qf.Assignment{
 		Name:        "lab1",
-		Deadline:    "2017-08-27T12:00:00",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		ScoreLimit:  80,
@@ -214,6 +239,87 @@ func TestParseUnknownFields(t *testing.T) {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseAndSaveAssignment(t *testing.T) {
+	testsDir := t.TempDir()
+
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yml", y1},
+		{"lab2", "assignment.yml", y2},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+	course := &qf.Course{
+		ID:   1,
+		Name: "Test course",
+	}
+
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 2 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
+	}
+
+	// Save the assignments to the database
+	if err := db.UpdateAssignments(assignments); err != nil {
+		t.Fatal(err)
+	}
+
+	// Read the assignments from the database
+	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(assignments, gotAssignments, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Add a new assignment to the list of assignments we expect to get from the database
+	writeFile(t, testsDir, "lab3", "assignment.yml", y3)
+
+	// Parse the new assignment
+	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should be 3 assignments in the database now
+	if len(newAssignments) != 3 {
+		t.Errorf("len(assignments) = %d, want %d", len(newAssignments), 3)
+	}
+
+	// Save the new assignments to the database
+	if err := db.UpdateAssignments(newAssignments); err != nil {
+		t.Fatal(err)
+	}
+
+	// Read the assignments from the database
+	gotNewAssignments, err := db.GetAssignmentsByCourse(course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should be 3 assignments now
+	if len(gotNewAssignments) != 3 {
+		t.Errorf("len(assignments) = %d, want %d", len(gotNewAssignments), 3)
+	}
+
+	// Check that the new assignments are the same as the ones we parsed
+	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -302,7 +408,12 @@ func TestFixDeadline(t *testing.T) {
 		{"1-12-2020 6:59:30pm", "2020-12-01T18:59:30"},
 	}
 	for _, c := range deadlineTests {
-		got := FixDeadline(c.in)
+		fixed, err := FixDeadline(c.in)
+		if err != nil {
+			t.Errorf("FixDeadline(%q) returned error %v", c.in, err)
+		}
+		// format deadline to match wanted layout
+		got := fixed.AsTime().Format(qf.TimeLayout)
 		if got != c.want {
 			t.Errorf("FixDeadline(%q) == %q, want %q", c.in, got, c.want)
 		}

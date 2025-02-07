@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -45,8 +44,8 @@ func init() {
 
 func main() {
 	var (
-		dbFile   = flag.String("database.file", "qf.db", "database file")
-		public   = flag.String("http.public", "public", "path to content to serve")
+		dbFile   = flag.String("database.file", env.DatabasePath(), "database file")
+		public   = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
@@ -55,7 +54,8 @@ func main() {
 
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
-	if err := env.Load(""); err != nil {
+	const envFile = ".env"
+	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
 
@@ -72,7 +72,10 @@ func main() {
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
-		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
+		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
+			log.Fatal(err)
+		}
+		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -140,23 +143,16 @@ func main() {
 	log.Println("QuickFeed shut down gracefully")
 }
 
-func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
-	if env.HasAppID() {
-		return errors.New(".env already contains App information")
-	}
-	// Check for missing .env file and if .env.bak already exists
-	for _, envFile := range []string{".env", "public/.env"} {
-		if err := env.Prepared(envFile); err != nil {
-			return err
-		}
-	}
-
+func checkDomain() error {
 	if env.Domain() == "127.0.0.1" {
-		fmt.Printf("WARNING: You are creating a GitHub app on %s. Only for development purposes.\n", env.Domain())
-		fmt.Println("In this mode, QuickFeed will not be able to receive webhook events from GitHub.")
-		fmt.Println("To enable receiving webhook events, you must run QuickFeed on a public domain.")
+		msg := `
+WARNING: You are creating a GitHub app on "127.0.0.1".
+This is only for development purposes.
+In this mode, QuickFeed will not be able to receive webhook events from GitHub.
+To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.
+`
+		fmt.Println(msg)
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
-
 		fmt.Print("Do you want to continue? (Y/n) ")
 		var answer string
 		fmt.Scanln(&answer)
@@ -164,11 +160,5 @@ func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
 			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 		}
 	}
-
-	m := manifest.New(env.Domain())
-	server, err := srvFn(httpAddr, m.Handler())
-	if err != nil {
-		return err
-	}
-	return m.StartAppCreationFlow(server)
+	return nil
 }

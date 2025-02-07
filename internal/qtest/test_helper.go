@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -42,34 +42,25 @@ func TestDB(t *testing.T) (database.Database, func()) {
 	}
 }
 
-// CreateFakeUser is a test helper to create a user in the database
-// with the given remote id and the fake scm provider.
-func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *qf.User {
+// CreateFakeUser is a test helper to create a user in the database.
+func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 	t.Helper()
-	user := &qf.User{
-		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
-	}
+	user := &qf.User{}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
 }
 
-func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *qf.User {
+func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf.User {
 	t.Helper()
-	user := &qf.User{
-		Name:         name,
-		Login:        name,
-		ScmRemoteID:  remoteID,
-		RefreshToken: "token",
-	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
 	return user
 }
 
+// CreateCourse is a test helper to create a course in the database; it updates the course with the ID.
 func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
 	if err := db.CreateCourse(user.ID, course); err != nil {
@@ -79,30 +70,48 @@ func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.
 
 func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   student.ID,
 		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
+		t.Fatal(err)
+	}
+	query.Status = qf.Enrollment_STUDENT
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   student.ID,
 		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
+	query.Status = qf.Enrollment_TEACHER
+	if err := db.UpdateEnrollment(query); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Course, status qf.Enrollment_UserStatus) *qf.Enrollment {
+	t.Helper()
+	enrollment := &qf.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}
+	if err := db.CreateEnrollment(enrollment); err != nil {
+		t.Fatal(err)
+	}
+	enrollment.Status = status
+	if err := db.UpdateEnrollment(enrollment); err != nil {
+		t.Fatal(err)
+	}
+	return enrollment
 }
 
 func RandomString(t *testing.T) string {
@@ -114,39 +123,28 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-// AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
-func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
-	return []*qf.Assignment{
-		{
-			CourseID:    courseID,
-			Name:        "lab1",
-			Deadline:    "12.01.2022",
-			AutoApprove: false,
-			Order:       1,
-			IsGroupLab:  false,
-			Tasks: []*qf.Task{
-				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
-				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
-			},
-		},
-		{
-			CourseID:    courseID,
-			Name:        "lab2",
-			Deadline:    "12.12.2021",
-			AutoApprove: false,
-			Order:       2,
-			IsGroupLab:  false,
-			Tasks: []*qf.Task{
-				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
-				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
-				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
-			},
-		},
-	}
-}
-
 func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 	request := connect.NewRequest(message)
 	request.Header().Set("cookie", cookie)
 	return request
+}
+
+// Ptr returns a pointer to the given value.
+//
+// How to use:
+//   - Use this function to create a pointer to a value.
+//   - This function is useful when initializing a struct with a pointer field.
+//
+// Example:
+//
+//	type MyStruct struct {
+//		Field *int
+//	    Src   *string
+//	}
+//	myStruct := MyStruct{
+//		Field: Ptr(10),
+//		Src:   Ptr("hello"),
+//	}
+func Ptr[T any](t T) *T {
+	return &t
 }

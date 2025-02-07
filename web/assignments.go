@@ -2,25 +2,16 @@ package web
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-const reviewLayout = "02 Jan 15:04"
 
 // getAssignments lists the assignments for the provided course.
 func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, error) {
-	allAssignments, err := s.db.GetAssignmentsByCourse(courseID, true)
+	allAssignments, err := s.db.GetAssignmentsByCourse(courseID)
 	if err != nil {
 		return nil, err
-	}
-	// Hack to ensure that assignments stored in database with wrong format
-	// is displayed correctly in the frontend. This should ideally be removed
-	// when the database no longer contains any incorrectly formatted dates.
-	for _, assignment := range allAssignments {
-		assignment.Deadline = assignments.FixDeadline(assignment.GetDeadline())
 	}
 	return &qf.Assignments{Assignments: allAssignments}, nil
 }
@@ -50,7 +41,7 @@ func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
 		return nil, fmt.Errorf("failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
-	review.Edited = time.Now().Format(reviewLayout)
+	review.Edited = timestamppb.Now()
 	review.ComputeScore()
 
 	benchmarks, err := s.db.GetBenchmarks(&qf.Assignment{ID: submission.AssignmentID})
@@ -81,7 +72,7 @@ func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
 		return nil, err
 	}
 
-	review.Edited = time.Now().Format(reviewLayout)
+	review.Edited = timestamppb.Now()
 	review.ComputeScore()
 
 	if err := s.db.UpdateReview(review); err != nil {
@@ -108,12 +99,12 @@ func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
 	return review, nil
 }
 
-func (s *QuickFeedService) getAssignmentWithCourse(query *qf.Assignment, withCourseInfo bool) (*qf.Assignment, *qf.Course, error) {
+func (s *QuickFeedService) getAssignmentWithCourse(query *qf.Assignment) (*qf.Assignment, *qf.Course, error) {
 	assignment, err := s.db.GetAssignment(query)
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(assignment.CourseID, withCourseInfo)
+	course, err := s.db.GetCourse(assignment.CourseID)
 	if err != nil {
 		return nil, nil, err
 	}

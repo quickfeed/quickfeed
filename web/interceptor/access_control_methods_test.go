@@ -29,12 +29,11 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"CreateEnrollment":       true,
 		"UpdateCourseVisibility": true,
 		"UpdateUser":             true,
-		"GetEnrollmentsByUser":   true,
+		"GetEnrollments":         true,
 		"GetSubmissions":         true,
 		"CreateGroup":            true,
 		"GetGroup":               true,
 		"GetAssignments":         true,
-		"GetEnrollmentsByCourse": true,
 		"GetRepositories":        true,
 		"UpdateGroup":            true,
 		"DeleteGroup":            true,
@@ -57,7 +56,6 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"GetSubmissionsByCourse": true,
 		"GetUsers":               true,
 		"GetOrganization":        true,
-		"CreateCourse":           true,
 		"GetSubmission":          true,
 		"SubmissionStream":       true,
 	}
@@ -65,11 +63,11 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		t.Error(err)
 	}
 
-	// Disable CreateCourse method in the serviceMethods map;
+	// Disable CreateGroup method in the serviceMethods map;
 	// make it appear as if it was removed from the service interface.
-	serviceMethods["CreateCourse"] = false
+	serviceMethods["CreateGroup"] = false
 	err := checkAccessControlMethods(serviceMethods)
-	expectedErr := "superfluous method(s) in access control table: [CreateCourse]"
+	expectedErr := "superfluous method(s) in access control table: [CreateGroup]"
 	if err == nil {
 		t.Errorf("Expected error: %q, got nil", expectedErr)
 	}

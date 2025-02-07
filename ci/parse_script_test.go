@@ -1,7 +1,6 @@
 package ci
 
 import (
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -17,9 +16,9 @@ func testRunData(qfTestOrg string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	runData := &RunData{
 		Course: &qf.Course{
-			ID:               1,
-			Code:             "DAT320",
-			OrganizationName: qfTestOrg,
+			ID:                  1,
+			Code:                "DAT320",
+			ScmOrganizationName: qfTestOrg,
 		},
 		Assignment: &qf.Assignment{
 			Name: "lab3",
@@ -35,12 +34,12 @@ func testRunData(qfTestOrg string) *RunData {
 }
 
 func TestLoadRunScript(t *testing.T) {
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 	runData := &RunData{
 		Course: &qf.Course{
-			ID:               1,
-			Code:             "qf104",
-			OrganizationName: "qf104-2022",
+			ID:                  1,
+			Code:                "qf104",
+			ScmOrganizationName: "qf104-2022",
 		},
 		Assignment: &qf.Assignment{
 			Name: "lab1",
@@ -64,7 +63,7 @@ func TestLoadRunScript(t *testing.T) {
 }
 
 func TestParseTestRunnerScript(t *testing.T) {
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 
 	const (
 		qfTestOrg        = "qf104-2022"
@@ -119,7 +118,7 @@ echo "$QUICKFEED_SESSION_SECRET"
 }
 
 func TestParseBadTestRunnerScript(t *testing.T) {
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 
 	const qfTestOrg = "qf104-2022"
 	randomSecret := rand.String()

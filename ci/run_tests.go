@@ -2,6 +2,7 @@ package ci
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -86,6 +87,9 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
 		testsFailedCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
+		if errors.Is(err, ErrConflict) {
+			return nil, err
+		}
 		return nil, fmt.Errorf("test execution failed without output: %w", err)
 	}
 	if err != nil {
@@ -113,13 +117,13 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	defer timer(r.JobOwner, r.Course.GetCode(), cloneTimeGauge)()
 
 	clonedStudentRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationName(),
+		Organization: r.Course.GetScmOrganizationName(),
 		Repository:   r.Repo.Name(),
 		DestDir:      dstDir,
 		Branch:       r.BranchName,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to clone %s/%s repository: %w", r.Course.GetOrganizationName(), r.Repo.Name(), err)
+		return fmt.Errorf("failed to clone %s/%s repository: %w", r.Course.GetScmOrganizationName(), r.Repo.Name(), err)
 	}
 
 	// Clone the course's tests and assignments repositories if they are missing.

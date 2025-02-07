@@ -2,15 +2,15 @@ package sh_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 func TestRun(t *testing.T) {
-	err := sh.Run("cat doesnotexist.txt")
-	if err == nil {
-		t.Error(err)
+	if err := sh.Run("cat doesnotexist.txt"); err == nil {
+		t.Error("expected: exit status 1")
 	}
 }
 
@@ -23,6 +23,11 @@ func TestOutput(t *testing.T) {
 }
 
 func TestLintAG(t *testing.T) {
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		// since we don't have golangci-lint installed in the GitHub Actions runner
+		t.Skip("Skipping test since it is running in GitHub Actions")
+	}
+
 	// check formatting using goimports
 	s, err := sh.Output("golangci-lint run --tests=false --disable-all --enable goimports")
 	if err != nil {
@@ -42,7 +47,7 @@ func TestLintAG(t *testing.T) {
 	}
 
 	// check many things: probably too aggressive for DAT320
-	s, err = sh.Output("golangci-lint run --tests=true --disable structcheck --disable unused --disable deadcode --disable varcheck")
+	s, err = sh.Output("golangci-lint run --tests=true --disable unused")
 	if err != nil {
 		t.Error(err)
 	}

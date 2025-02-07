@@ -8,8 +8,7 @@ import "qf/types.proto";
 // Message types that are used as requests and responses in API calls.
 
 message CourseSubmissions {
-    Course course                 = 1;  // preloaded assignments
-    repeated EnrollmentLink links = 2;
+    map<uint64, Submissions> submissions = 1;
 }
 
 message ReviewRequest {
@@ -27,31 +26,17 @@ message GroupRequest {
     uint64 groupID  = 3;
 }
 
-message OrgRequest {
-    string orgName = 1;
-}
-
 message Organization {
-    uint64 ID          = 1;
-    string name        = 2;
-    string avatar      = 3;
-    string paymentPlan = 4;
+    uint64 ScmOrganizationID   = 1;
+    string ScmOrganizationName = 2;
 }
 
-// EnrollmentRequest is a request for enrolled users of a given course,
-// whose enrollment status match those provided in the request. To ignore group members
-// that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
-    uint64 courseID                         = 1;
-    bool ignoreGroupMembers                 = 2;
-    bool withActivity                       = 3;
-    repeated Enrollment.UserStatus statuses = 4;
-}
-
-// EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
-message EnrollmentStatusRequest {
-    uint64 userID                           = 1;
-    repeated Enrollment.UserStatus statuses = 2;
+    oneof FetchMode {
+        uint64 courseID = 1;
+        uint64 userID   = 2;
+    }
+    repeated Enrollment.UserStatus statuses = 3;
 }
 
 message SubmissionRequest {
@@ -75,7 +60,7 @@ message UpdateSubmissionRequest {
     uint64 courseID          = 2;
     uint32 score             = 3;
     bool released            = 4;
-    Submission.Status status = 5;
+    repeated qf.Grade grades = 5;
 }
 
 message UpdateSubmissionsRequest {
@@ -86,11 +71,6 @@ message UpdateSubmissionsRequest {
     bool approve        = 5;
 }
 
-message URLRequest {
-    uint64 courseID                    = 1;
-    repeated Repository.Type repoTypes = 2;
-}
-
 // used to check whether student/group submission repo is empty
 message RepositoryRequest {
     uint64 userID   = 1;
@@ -99,12 +79,7 @@ message RepositoryRequest {
 }
 
 message Repositories {
-    map<string, string> URLs = 1;
-}
-
-message Status {
-    uint64 Code  = 1;
-    string Error = 2;
+    map<uint32, string> URLs = 1;  // Map key is the Repository.Type
 }
 
 message RebuildRequest {
@@ -113,8 +88,4 @@ message RebuildRequest {
     uint64 submissionID = 3;
 }
 
-// Void contains no fields. A server response with a Void still contains a gRPC status code,
-// which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
-// whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from
-// the server.
 message Void {}

@@ -1,5 +1,5 @@
 import React from 'react'
-import Alert from '../components/Alert'
+import Alerts from '../components/alerts/Alerts'
 
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
@@ -23,7 +23,7 @@ const AboutPage = (): JSX.Element => {
                     </div>
                 </div>
             </div>
-            <Alert />
+            <Alerts />
             <div key="container" className="container">
 
                 <div key="rowheader" className="row marketing">
@@ -155,7 +155,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c2r3" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/assets/img/intro4.png"
+                                src="/assets/img/intro2.png"
                                 alt="Generic placeholder image" />
                         </div>
                     </div>
@@ -168,7 +168,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c1r4" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/assets/img/intro2.png"
+                                src="/assets/img/intro4.png"
                                 alt="Generic placeholder image" />
                         </div>
                         <div key="c2r4" className="col-md-7">

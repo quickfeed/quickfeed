@@ -32,17 +32,17 @@ const StreamStatus = () => {
     // Show stream status based on connection status
     switch (status) {
         case ConnStatus.CONNECTED:
-            return <i className="fa fa-circle text-success pl-2" title="Connected" />
+            return <i className="fa fa-circle text-success" title="Connected" />
         case ConnStatus.RECONNECTING:
             return (
-                <span className="fa-stack fa-lg pl-2">
+                <span className="fa-stack fa-lg2">
                     <i className="fa fa-circle fa-stack-1x text-warning" title="Attempting to re-establish stream connection" onMouseEnter={handleMouseEnter} />
                     {streamStarter}
                 </span>
             )
         default:
             return (
-                <span className="fa-stack pl-2">
+                <span className="fa-stack">
                     <i className="fa fa-circle fa-stack-1x text-danger" title="No stream connection" onMouseEnter={handleMouseEnter} />
                     {streamStarter}
                 </span>

@@ -6,26 +6,19 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"golang.org/x/oauth2"
 )
 
 const (
 	qf101Org   = "qf101"
 	qf101OrdID = 77283363
-	secret     = "the-secret-quickfeed-test"
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
-
-// These tests only test listing existing hooks and creating a new one.
-// They do not cover processing push events on a server.
-// See web/hooks package for tests involving processing push events.
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -38,8 +31,8 @@ func TestGetOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if qfTestOrg == qf101Org {
-		if org.ID != qf101OrdID {
-			t.Errorf("GetOrganization(%q) = %d, expected %d", qfTestOrg, org.ID, qf101OrdID)
+		if org.GetScmOrganizationID() != qf101OrdID {
+			t.Errorf("GetOrganization(%q) = %d, expected %d", qfTestOrg, org.GetScmOrganizationID(), qf101OrdID)
 		}
 	} else {
 		// Otherwise, we just print the organization result
@@ -60,59 +53,19 @@ func TestCreateIssue(t *testing.T) {
 	}
 }
 
-func TestGetIssues(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	s.Repositories = map[uint64]*scm.Repository{
-		1: {
-			ID:    1,
-			OrgID: 1,
-			Owner: qtest.MockOrg,
-			Path:  qf.StudentRepoName("test"),
-		},
-	}
-
-	ctx := context.Background()
-	opt := &scm.RepositoryOptions{
-		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("test"),
-	}
-
-	wantIssueIDs := []int{}
-	for i := 1; i <= 5; i++ {
-		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
-		defer cleanup()
-		wantIssueIDs = append(wantIssueIDs, issue.Number)
-	}
-
-	gotIssueIDs := []int{}
-	gotIssues, err := s.GetIssues(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, issue := range gotIssues {
-		gotIssueIDs = append(gotIssueIDs, issue.Number)
-	}
-
-	less := func(a, b int) bool { return a < b }
-	if equal := cmp.Equal(wantIssueIDs, gotIssueIDs, cmpopts.SortSlices(less)); !equal {
-		t.Errorf("scm.GetIssues() mismatch wantIssueIDs: %v, gotIssueIDs: %v", wantIssueIDs, gotIssueIDs)
-	}
-}
-
 func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, qfTestUser := scm.GetTestSCM(t)
 
-	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Repo:  qf.StudentRepoName(qfTestUser),
 	}
 
-	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
+	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Repo)
 	defer cleanup()
 
-	gotIssue, err := s.GetIssue(ctx, opt, wantIssue.Number)
+	gotIssue, err := s.GetIssue(context.Background(), opt, wantIssue.Number)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,8 +80,6 @@ func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, qfTestUser := scm.GetTestSCM(t)
 
-	ctx := context.Background()
-
 	opt := &scm.IssueOptions{
 		Organization: qfTestOrg,
 		Repository:   qf.StudentRepoName(qfTestUser),
@@ -140,13 +91,31 @@ func TestUpdateIssue(t *testing.T) {
 	defer cleanup()
 
 	opt.Number = issue.Number
-	gotIssue, err := s.UpdateIssue(ctx, opt)
+	gotIssue, err := s.UpdateIssue(context.Background(), opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if gotIssue.Title != opt.Title || gotIssue.Body != opt.Body {
-		t.Fatalf("scm.TestUpdateIssue() want (title: %s, body: %s), got (title: %s, body: %s)", opt.Title, opt.Body, gotIssue.Title, gotIssue.Body)
+		t.Errorf("scm.TestUpdateIssue() want (title: %s, body: %s), got (title: %s, body: %s)", opt.Title, opt.Body, gotIssue.Title, gotIssue.Body)
+	}
+}
+
+// This test will delete all open and closed issues for the test user and organization.
+// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestDeleteAllIssues
+func TestDeleteAllIssues(t *testing.T) {
+	if os.Getenv("SCM_TESTS") == "" {
+		t.SkipNow()
+	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	s, qfTestUser := scm.GetTestSCM(t)
+
+	opt := &scm.RepositoryOptions{
+		Owner: qfTestOrg,
+		Repo:  qf.StudentRepoName(qfTestUser),
+	}
+	if err := s.DeleteIssues(context.Background(), opt); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -169,9 +138,8 @@ func TestRequestReviewers(t *testing.T) {
 
 	testReqReviewersBranch := "test-request-reviewers"
 
-	client := githubTestClient(t)
 	ctx := context.Background()
-	pullReq, _, err := client.PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
+	pullReq, _, err := s.Client().PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
 		Title: github.String("Test Request Reviewers"),
 		Body:  github.String("Test Request Reviewers Body"),
 		Head:  github.String(testReqReviewersBranch),
@@ -202,19 +170,13 @@ func TestRequestReviewers(t *testing.T) {
 	}
 	t.Logf("PullRequest %d created with reviewer %v", *pullReq.Number, reviewer)
 
-	_, _, err = client.PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
+	_, _, err = s.Client().PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
 		State: github.String("closed"),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("PullRequest %d closed", *pullReq.Number)
-}
-
-func githubTestClient(t *testing.T) *github.Client {
-	t.Helper()
-	src := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: scm.GetAccessToken(t)})
-	return github.NewClient(oauth2.NewClient(context.Background(), src))
 }
 
 func TestCreateIssueComment(t *testing.T) {
@@ -234,43 +196,6 @@ func TestCreateIssueComment(t *testing.T) {
 	opt.Number = issue.Number
 	_, err := s.CreateIssueComment(context.Background(), opt)
 	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestUpdateIssueComment(t *testing.T) {
-	s := scm.NewMockSCMClient()
-	repo := &scm.Repository{
-		ID:    1,
-		OrgID: 1,
-		Owner: qtest.MockOrg,
-		Path:  qf.StudentRepoName("user"),
-	}
-	s.Repositories = map[uint64]*scm.Repository{
-		1: repo,
-	}
-
-	body := "Issue Comment"
-	opt := &scm.IssueCommentOptions{
-		Organization: repo.Owner,
-		Repository:   repo.Path,
-		Body:         body,
-	}
-
-	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
-	defer cleanup()
-
-	opt.Number = issue.Number
-	// The created comment will be deleted when the parent issue is deleted.
-	commentID, err := s.CreateIssueComment(context.Background(), opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// NOTE: We do not currently return the updated comment, so we cannot verify its content.
-	opt.Body = "Updated Issue Comment"
-	opt.CommentID = commentID
-	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -325,42 +250,25 @@ func TestFeedbackCommentFormat(t *testing.T) {
 func TestEmptyRepo(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, _ := scm.GetTestSCM(t)
-	ctx := context.Background()
 
 	tests := []struct {
 		name      string
 		opt       *scm.RepositoryOptions
 		wantEmpty bool
 	}{
-		{
-			"tests repo, assume not empty",
-			&scm.RepositoryOptions{
-				Path:  "tests",
-				Owner: qfTestOrg,
-			},
-			false,
-		},
-		{
-			"info repo, assume empty",
-			&scm.RepositoryOptions{
-				Path:  "info",
-				Owner: qfTestOrg,
-			},
-			true,
-		},
-		{
-			"non-existent repo, handle as empty",
-			&scm.RepositoryOptions{
-				Path:  "some-other-repo",
-				Owner: qfTestOrg,
-			},
-			true,
-		},
+		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{Repo: "tests", Owner: qfTestOrg}, wantEmpty: false},
+		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{ID: 328688692}, wantEmpty: false},
+		{name: "EmptyRepo", opt: &scm.RepositoryOptions{Repo: "info", Owner: qfTestOrg}, wantEmpty: true},
+		{name: "EmptyRepo", opt: &scm.RepositoryOptions{ID: 328688666}, wantEmpty: true},
+		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Repo: "some-other-repo", Owner: qfTestOrg}, wantEmpty: true}, // treat non-existent repo as empty
 	}
 	for _, tt := range tests {
-		if empty := s.RepositoryIsEmpty(ctx, tt.opt); empty != tt.wantEmpty {
-			t.Errorf("%s: expected empty repository: %v, got = %v, ", tt.name, tt.wantEmpty, empty)
-		}
+		name := qtest.Name(tt.name, []string{"ID", "Owner", "Repo"}, tt.opt.ID, tt.opt.Owner, tt.opt.Repo)
+		t.Run(name, func(t *testing.T) {
+			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
+				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			}
+		})
 	}
 }
 
@@ -379,7 +287,7 @@ func createIssue(t *testing.T, s scm.SCM, org, repo string) (*scm.Issue, func())
 
 	return issue, func() {
 		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{
-			Owner: org, Path: repo,
+			Owner: org, Repo: repo,
 		}, issue.Number); err != nil {
 			t.Fatal(err)
 		}

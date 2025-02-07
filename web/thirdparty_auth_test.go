@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/oauth2"
@@ -20,7 +21,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 	defer cleanup()
 	user := fillDatabase(t, db, token)
 
-	client, _, _ := MockClientWithUser(t, db, connect.WithInterceptors(
+	client, _ := web.MockClientWithOption(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
 		interceptor.NewTokenAuthClientInterceptor(token),
 	))
 	ctx := context.Background()
@@ -38,7 +39,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 func fillDatabase(t *testing.T, db database.Database, token string) *qf.User {
 	t.Helper()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		Code: "DAT320",
 		Name: "Operating Systems and Systems Programming",

@@ -59,7 +59,8 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 				sc.SubmissionID = submission.ID
 			}
 		}
-		if err := tx.Save(submission).Error; err != nil {
+		// Full save associations is required to save any nested grades
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(submission).Error; err != nil {
 			return err // will rollback transaction
 		}
 		return nil // will commit transaction
@@ -118,6 +119,7 @@ func (db *GormDB) GetSubmission(query *qf.Submission) (*qf.Submission, error) {
 	if err := db.conn.Preload("Reviews").
 		Preload("BuildInfo").
 		Preload("Scores").
+		Preload("Grades").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").
 		Where(query).Last(&submission).Error; err != nil {
@@ -169,7 +171,7 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*
 // GetSubmissions returns all submissions matching the query.
 func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error) {
 	var submissions []*qf.Submission
-	if err := db.conn.Find(&submissions, &query).Error; err != nil {
+	if err := db.conn.Preload("Grades").Find(&submissions, &query).Error; err != nil {
 		return nil, err
 	}
 	return submissions, nil
@@ -177,20 +179,47 @@ func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error)
 
 // UpdateSubmission updates submission with the given approved status.
 func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
-	return db.conn.Save(query).Error
+	// full save associations is required to update the nested grades
+	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Updates(query).Error
 }
 
 // UpdateSubmissions approves and/or releases all submissions that have score
 // equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(_ uint64, query *qf.Submission) error {
-	return db.conn.
-		Model(query).
-		Where("assignment_id = ?", query.AssignmentID).
-		Where("score >= ?", query.Score).
-		Updates(&qf.Submission{
-			Status:   query.Status,
-			Released: query.Released,
-		}).Error
+func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		var submissionIDs []*uint64
+		if err := tx.Model(&qf.Submission{}).
+			Where("assignment_id = ? AND score >= ?", query.AssignmentID, query.Score).
+			Pluck("id", &submissionIDs).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(query).
+			// Update the released status of all submissions that have score equal or above the provided score
+			Where("id IN (?)", submissionIDs).
+			Updates(&qf.Submission{
+				Released: query.Released,
+			}).Error; err != nil {
+			return err
+		}
+
+		status := qf.Submission_APPROVED
+		if !approve {
+			status = qf.Submission_REJECTED
+		}
+
+		// Approve all Grades for the submissions
+		err := tx.Model(&qf.Grade{}).
+			Where("submission_id IN (?)", submissionIDs).
+			Updates(&qf.Grade{
+				Status: status,
+			}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // GetReview fetches a review
@@ -205,12 +234,12 @@ func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 	return &review, nil
 }
 
-// CreateReview creates a new submission review
+// CreateReview creates a new submission review.
 func (db *GormDB) CreateReview(query *qf.Review) error {
 	return db.conn.Create(query).Error
 }
 
-// UpdateReview updates feedback text, review and ready status
+// UpdateReview updates a review.
 func (db *GormDB) UpdateReview(query *qf.Review) error {
 	// By default, Gorm will not update zero value fields; such as the Ready bool field.
 	// Therefore we use Select before the Updates call. For additional context, see
@@ -226,7 +255,7 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 	}).Error
 }
 
-// DeleteReview removes all reviews matching the query
+// DeleteReview removes all reviews matching the query.
 func (db *GormDB) DeleteReview(query *qf.Review) error {
 	return db.conn.Delete(&qf.Review{}, &query).Error
 }

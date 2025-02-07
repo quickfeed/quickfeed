@@ -1,18 +1,16 @@
 package web
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 
 func (s *QuickFeedService) getRepo(course *qf.Course, id uint64, repoType qf.Repository_Type) (*qf.Repository, error) {
 	query := &qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       repoType,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		RepoType:          repoType,
 	}
 	switch repoType {
 	case qf.Repository_USER:
@@ -30,23 +28,17 @@ func (s *QuickFeedService) getRepo(course *qf.Course, id uint64, repoType qf.Rep
 	return repos[0], nil
 }
 
-// isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
-// returns an error otherwise.
-func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *qf.RepositoryRequest) error {
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
-	if err != nil {
-		return err
+func repoTypes(enrollment *qf.Enrollment) []qf.Repository_Type {
+	repositories := []qf.Repository_Type{
+		qf.Repository_INFO,
+		qf.Repository_ASSIGNMENTS,
+		qf.Repository_USER,
 	}
-	repos, err := s.db.GetRepositories(&qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		UserID:         request.GetUserID(),
-		GroupID:        request.GetGroupID(),
-	})
-	if err != nil {
-		return err
+	if enrollment.IsTeacher() {
+		repositories = append(repositories, qf.Repository_TESTS)
 	}
-	if len(repos) < 1 {
-		return fmt.Errorf("no repositories found")
+	if enrollment.GroupID > 0 {
+		repositories = append(repositories, qf.Repository_GROUP)
 	}
-	return isEmpty(ctx, sc, repos)
+	return repositories
 }

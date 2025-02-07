@@ -6,11 +6,10 @@
 
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
-proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 protopatch			:= patch/go.proto
 protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
 toolsdir			:= bin
-tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
+tool-pkgs			:= $(shell go list -e -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 export PATH			:= $(shell pwd)/$(toolsdir):$(PATH)
 
@@ -43,6 +42,10 @@ version-check:
 install:
 	@echo go install
 	@go install
+ifeq ($(OS),linux)
+	@echo "Setting privileged ports capabilities for quickfeed"
+	@sudo setcap 'cap_net_bind_service=+ep' `which quickfeed`
+endif
 
 ui: version-check
 	@echo "Running npm ci and webpack"
@@ -61,29 +64,10 @@ proto: $(protopatch)
 	buf generate --template buf.gen.yaml
 
 proto-swift:
-	@echo "Compiling QuickFeed's proto definitions for Swift"
-	@protoc \
-	-I . \
-	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
-	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
-	--swift_out=:$(proto-swift-path) \
-	--grpc-swift_out=$(proto-swift-path) \
-	qf/quickfeed.proto
-
-# protoset is a file used as a server reflection to mock-testing of grpc methods via command line
-protoset:
-	@echo "Compiling protoset for grpcurl"
-	@protoc \
-	-I . \
-	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
-	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
-	--proto_path=qf \
-	--descriptor_set_out=qf/qf.protoset \
-	--include_imports \
-	qf/quickfeed.proto
+	buf generate --template buf.gen.swift.yaml --exclude-path patch
 
 test:
-	@go clean -testcache ./...
+	@go clean -testcache
 	@go test ./...
 
 webpack-dev-server:
@@ -95,7 +79,3 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
-
-scm:
-	@echo "Compiling the scm tool"
-	@cd cmd/scm; go install

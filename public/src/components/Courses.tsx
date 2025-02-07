@@ -25,8 +25,19 @@ const Courses = (overview: overview): JSX.Element => {
                 <h3>There are currently no available courses.</h3>
                 {state.self.IsAdmin ?
                     <div>
-                        <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
-                        <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} />
+                        <Button
+                            text="Go to course creation"
+                            color={Color.GREEN}
+                            type={ButtonType.BUTTON}
+                            className="mr-3"
+                            onClick={() => history.push("/admin/create")}
+                        />
+                        <Button
+                            text="Manage users"
+                            color={Color.BLUE}
+                            type={ButtonType.BUTTON}
+                            onClick={() => history.push("/admin/manage")}
+                        />
                     </div>
                     : null}
             </div>

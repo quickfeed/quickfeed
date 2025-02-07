@@ -7,11 +7,7 @@ export type ReviewState = {
     selectedReview: number
 
     /* Contains all reviews for the different courses, indexed by the course id and submission id */
-    reviews: {
-        [courseID: string]: {
-            [submissionID: number]: Review[]
-        }
-    }
+    reviews: Map<bigint, Review[]>
 
     /* The current review */
     // derived from reviews and selectedReview
@@ -41,31 +37,31 @@ export type ReviewState = {
 export const state: ReviewState = {
     selectedReview: -1,
 
-    reviews: {},
+    reviews: new Map(),
 
-    currentReview: derived(({ reviews, selectedReview }: ReviewState, rootState: Context["state"]) => {
-        if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
+    currentReview: derived(({ reviews, selectedReview }: ReviewState, { selectedSubmission, activeCourse }: Context["state"]) => {
+        if (!(activeCourse > 0 && selectedSubmission !== null)) {
             return null
         }
-        const check = reviews[rootState.activeCourse.toString()][rootState.activeSubmission]
+        const check = reviews.get(selectedSubmission.ID)
         return check ? check[selectedReview] : null
     }),
 
-    reviewer: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
+    reviewer: derived(({ currentReview }: ReviewState, { courseTeachers }: Context["state"]) => {
         if (!currentReview) {
             return null
         }
-        return rootState.users[currentReview.ReviewerID.toString()]
+        return courseTeachers[currentReview.ReviewerID.toString()]
     }),
 
-    canUpdate: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
-        return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.ID > 0
+    canUpdate: derived(({ currentReview }: ReviewState, { activeCourse, selectedSubmission }: Context["state"]) => {
+        return currentReview !== null && activeCourse > 0 && currentReview?.ID > 0 && selectedSubmission !== null
     }),
 
     criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {
         let total = 0
-        if (rootState.currentSubmission, rootState.activeCourse) {
-            const assignment = rootState.assignments[rootState.activeCourse.toString()]?.find(a => a.ID === rootState.currentSubmission?.AssignmentID)
+        if (rootState.selectedSubmission && rootState.activeCourse) {
+            const assignment = rootState.assignments[rootState.activeCourse.toString()]?.find(a => a.ID === rootState.selectedSubmission?.AssignmentID)
             if (assignment) {
                 assignment.gradingBenchmarks.forEach(bm => {
                     bm.criteria.forEach(() => {

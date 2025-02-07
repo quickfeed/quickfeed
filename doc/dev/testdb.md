@@ -22,5 +22,5 @@ Hence, the `DisableForeignKeyConstraintWhenMigrating` (`gormdb.go:48`) should no
   ```
 
 - Course with ID 1 is based on the [qf406](https://github.com/qf406) organization created specifically for testing purposes.
-  This organization can be used for any kind of testing: adding or removing users and groups/teams, adding assignments and tests, pushing submissions to student repos and so on.
+  This organization can be used for any kind of testing: adding or removing users and groups, adding assignments and tests, pushing submissions to student repos and so on.
   Request an invite to the repository if you want to use it for testing.

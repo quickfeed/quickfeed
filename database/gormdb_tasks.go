@@ -33,7 +33,7 @@ func (db *GormDB) CreateIssues(issues []*qf.Issue) error {
 func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint32]map[string]*qf.Task) (createdTasks, updatedTasks []*qf.Task, err error) {
 	createdTasks = []*qf.Task{}
 	updatedTasks = []*qf.Task{}
-	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
+	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,7 +66,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 					existingTask.Title = task.Title
 					existingTask.Body = task.Body
 					updatedTasks = append(updatedTasks, existingTask)
-					err = tx.Model(&qf.Task{}).
+					err = tx.Model(&qf.Task{}).Select("*").
 						Where(&qf.Task{ID: existingTask.GetID()}).
 						Updates(existingTask).Error
 					if err != nil {
@@ -138,7 +138,7 @@ func (db *GormDB) HandleMergingPR(pullRequest *qf.PullRequest) error {
 
 // DeletePullRequest updates the pull request matching the given query
 func (db *GormDB) UpdatePullRequest(pullRequest *qf.PullRequest) error {
-	return db.conn.Model(&qf.PullRequest{}).
+	return db.conn.Model(&qf.PullRequest{}).Select("*").
 		Where(&qf.PullRequest{ID: pullRequest.GetID()}).
 		Updates(pullRequest).Error
 }

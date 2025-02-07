@@ -13,29 +13,29 @@ import (
 const maxContainers = 10
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Submission, error) {
+func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID}, false)
+	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	name := s.lookupName(submission)
 
 	var repo *qf.Repository
-	if assignment.IsGroupLab {
+	if assignment.IsGroupLab && submission.GetGroupID() > 0 {
+		repo, err = s.getRepo(course, submission.GetGroupID(), qf.Repository_GROUP)
 		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getRepo(course, submission.GetGroupID(), qf.Repository_GROUP)
 	} else {
+		repo, err = s.getRepo(course, submission.GetUserID(), qf.Repository_USER)
 		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getRepo(course, submission.GetUserID(), qf.Repository_USER)
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	runData := &ci.RunData{
@@ -48,23 +48,25 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	sc, err := s.getSCM(ctx, course.OrganizationName)
+	sc, err := s.getSCM(ctx, course.ScmOrganizationName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	results, err := runData.RunTests(ctx, s.logger, sc, s.runner)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	submission, err = runData.RecordResults(s.logger, s.db, results)
 	if err != nil {
-		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
+		return fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
 	}
 	// If we fail to get owners, we ignore sending on the stream.
 	if userIDs, err := runData.GetOwners(s.db); err == nil {
+		// Note that streaming the submission as-is sends all grades
+		// to all participants for a given group submission.
 		s.streams.Submission.SendTo(submission, userIDs...)
 	}
-	return submission, nil
+	return nil
 }
 
 func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error {
@@ -91,7 +93,7 @@ func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error 
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {
 			sem <- struct{}{} // acquire semaphore
-			_, err := s.rebuildSubmission(rebuildReq)
+			err := s.rebuildSubmission(rebuildReq)
 			if err != nil {
 				atomic.AddInt32(&errCnt, 1)
 				s.logger.Errorf("Failed to rebuild submission %d: %v\n", rebuildReq.GetSubmissionID(), err)

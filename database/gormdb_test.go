@@ -34,25 +34,12 @@ func TestDBGetUserWithEnrollments(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 11)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	student := qtest.CreateFakeUser(t, db, 13)
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		CourseID: course.ID,
-		UserID:   student.ID,
-	}); err != nil {
-		t.Error(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   student.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Error(err)
-	}
+	student := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student, course)
 
 	// user entries from the database will have to be enrolled as
 	// teacher and student respectively
@@ -175,11 +162,11 @@ func TestDBCreateEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 10)
+	user := qtest.CreateFakeUser(t, db)
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -199,15 +186,16 @@ func TestDBAcceptRejectEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateEnrollment(&qf.Enrollment{
+	user := qtest.CreateFakeUser(t, db)
+	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-	}); err != nil {
+	}
+	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -222,11 +210,7 @@ func TestDBAcceptRejectEnrollment(t *testing.T) {
 	}
 
 	// Accept enrollment.
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
+	query.Status = qf.Enrollment_STUDENT
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
@@ -328,17 +312,17 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &qf.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
-	c2 := &qf.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
+	admin := qtest.CreateFakeUser(t, db)
+	c1 := &qf.Course{ScmOrganizationID: 1, Code: "DAT101", Year: 1}
+	c2 := &qf.Course{ScmOrganizationID: 2, Code: "DAT101", Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
 	var users []*qf.User
 	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
-	for i := 0; i < len(enrollments); i++ {
-		user := qtest.CreateFakeUser(t, db, uint64(i))
+	for range enrollments {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	// enroll users in course
@@ -346,19 +330,16 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 		if enrollments[i] == qf.Enrollment_PENDING {
 			continue
 		}
-		if err := db.CreateEnrollment(&qf.Enrollment{
+		query := &qf.Enrollment{
 			CourseID: c1.ID,
 			UserID:   users[i].ID,
-		}); err != nil {
+		}
+		if err := db.CreateEnrollment(query); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		if enrollments[i] == qf.Enrollment_STUDENT {
-			query := &qf.Enrollment{
-				UserID:   users[i].ID,
-				CourseID: c1.ID,
-				Status:   qf.Enrollment_STUDENT,
-			}
+			query.Status = qf.Enrollment_STUDENT
 			err = db.UpdateEnrollment(query)
 		}
 		if err != nil {
@@ -469,15 +450,15 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
 	var users []*qf.User
 	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
-	for i := 0; i < len(enrollments); i++ {
-		user := qtest.CreateFakeUser(t, db, uint64(i))
+	for range enrollments {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	// enroll users in course
@@ -485,19 +466,16 @@ func TestDeleteGroup(t *testing.T) {
 		if enrollments[i] == qf.Enrollment_PENDING {
 			continue
 		}
-		if err := db.CreateEnrollment(&qf.Enrollment{
+		query := &qf.Enrollment{
 			CourseID: course.ID,
 			UserID:   users[i].ID,
-		}); err != nil {
+		}
+		if err := db.CreateEnrollment(query); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		if enrollments[i] == qf.Enrollment_STUDENT {
-			query := &qf.Enrollment{
-				UserID:   users[i].ID,
-				CourseID: course.ID,
-				Status:   qf.Enrollment_STUDENT,
-			}
+			query.Status = qf.Enrollment_STUDENT
 			err = db.UpdateEnrollment(query)
 		}
 		if err != nil {

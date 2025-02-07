@@ -1,7 +1,9 @@
 import React from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
-import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { Color, getCourseID, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
+import Button, { ButtonType } from "./admin/Button"
+import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 
@@ -33,31 +35,50 @@ const Groups = (): JSX.Element => {
         return true
     }
 
-    const updateGroupStatus = (group: Group, status: Group_GroupStatus) => {
-        actions.updateGroupStatus({ group, status })
-    }
-
     const GroupButtons = ({ group }: { group: Group }) => {
         const buttons: JSX.Element[] = []
         if (isPendingGroup(group)) {
-            buttons.push(<span onClick={() => updateGroupStatus(group, Group_GroupStatus.APPROVED)} className="badge badge-primary clickable">Approve</span>)
+            buttons.push(
+                <DynamicButton
+                    text={"Approve"}
+                    color={Color.BLUE}
+                    type={ButtonType.BADGE}
+                    onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
+                />
+            )
         }
-        buttons.push(<span className="badge badge-info clickable ml-2" onClick={() => actions.setActiveGroup(group)}>Edit</span>)
-        buttons.push(<span onClick={() => actions.deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>)
+        buttons.push(
+            <Button
+                text={"Edit"}
+                color={Color.YELLOW}
+                type={ButtonType.BADGE}
+                className="ml-2"
+                onClick={() => actions.setActiveGroup(group)}
+            />
+        )
+        buttons.push(
+            <DynamicButton
+                text={"Delete"}
+                color={Color.RED}
+                type={ButtonType.BADGE}
+                className="ml-2"
+                onClick={() => actions.deleteGroup(group)}
+            />
+        )
 
-        return <td>{buttons}</td>
+        return <td className="d-flex">{buttons}</td>
     }
 
     const GroupMembers = ({ group }: { group: Group }) => {
-        if (!hasEnrollments(group)) {
+        if (!hasUsers(group)) {
             return <td>No members</td>
         }
 
-        const members = group.enrollments.map((enrollment, index) => {
+        const members = group.users.map((user, index) => {
             return (
-                <span key={enrollment.ID.toString()} className="inline-block">
-                    <a href={`https://github.com/${enrollment.user?.Login}`} target="_blank" rel="noopener noreferrer">{enrollment.user?.Name}</a>
-                    {index >= group.enrollments.length - 1 ? "" : ", "}
+                <span key={user.ID.toString()} className="inline-block">
+                    <a href={`https://github.com/${user.Login}`} target="_blank" rel="noopener noreferrer">{user.Name}</a>
+                    {index >= group.users.length - 1 ? "" : ", "}
                 </span>
             )
         })

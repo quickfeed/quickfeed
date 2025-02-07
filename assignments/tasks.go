@@ -68,19 +68,15 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 	}
 
 	repos, err := db.GetRepositoriesWithIssues(&qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
+		ScmOrganizationID: course.GetScmOrganizationID(),
 	})
 	if err != nil {
 		return err
 	}
 
-	// TODO(espeland): Update this for GitHub web app.
-	// Currently this will create all tasks in the course creator's name.
-	// A possible workaround is to create a new scm client for every repo, and create the issues in one of the students name.
-	// See Espeland's report for discussion about these topics.
-
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
-	createdIssues := []*qf.Issue{}
+	// The created issues will be created by the QuickFeed user (the App owner).
+	var createdIssues []*qf.Issue
 	for _, repo := range repos {
 		if !repo.IsGroupRepo() {
 			continue
@@ -100,10 +96,10 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 
 // createIssues creates issues on scm based on repository, course and tasks. Returns created issues.
 func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.Repository, tasks []*qf.Task) ([]*qf.Issue, error) {
-	createdIssues := []*qf.Issue{}
+	var createdIssues []*qf.Issue
 	for _, task := range tasks {
 		issueOptions := &scm.IssueOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
@@ -113,9 +109,9 @@ func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 			return nil, err
 		}
 		createdIssues = append(createdIssues, &qf.Issue{
-			RepositoryID: repo.ID,
-			TaskID:       task.ID,
-			IssueNumber:  uint64(scmIssue.Number),
+			RepositoryID:   repo.ID,
+			TaskID:         task.ID,
+			ScmIssueNumber: uint64(scmIssue.Number),
 		})
 	}
 	return createdIssues, nil
@@ -131,11 +127,11 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 			continue
 		}
 		issueOptions := &scm.IssueOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
-			Number:       int(issue.IssueNumber),
+			Number:       int(issue.ScmIssueNumber),
 		}
 		if task.IsDeleted() {
 			issueOptions.State = "closed"

@@ -5,9 +5,9 @@
 package qfconnect
 
 import (
+	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	connect_go "github.com/bufbuild/connect-go"
 	qf "github.com/quickfeed/quickfeed/qf"
 	http "net/http"
 	strings "strings"
@@ -18,55 +18,210 @@ import (
 // generated with a version of connect newer than the one compiled into your binary. You can fix the
 // problem by either regenerating this code with an older version of connect or updating the connect
 // version compiled into your binary.
-const _ = connect_go.IsAtLeastVersion0_1_0
+const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// QuickFeedServiceName is the fully-qualified name of the QuickFeedService service.
 	QuickFeedServiceName = "qf.QuickFeedService"
 )
 
+// These constants are the fully-qualified names of the RPCs defined in this package. They're
+// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+//
+// Note that these are different from the fully-qualified method names used by
+// google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
+// reflection-formatted method names, remove the leading slash and convert the remaining slash to a
+// period.
+const (
+	// QuickFeedServiceGetUserProcedure is the fully-qualified name of the QuickFeedService's GetUser
+	// RPC.
+	QuickFeedServiceGetUserProcedure = "/qf.QuickFeedService/GetUser"
+	// QuickFeedServiceGetUsersProcedure is the fully-qualified name of the QuickFeedService's GetUsers
+	// RPC.
+	QuickFeedServiceGetUsersProcedure = "/qf.QuickFeedService/GetUsers"
+	// QuickFeedServiceUpdateUserProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateUser RPC.
+	QuickFeedServiceUpdateUserProcedure = "/qf.QuickFeedService/UpdateUser"
+	// QuickFeedServiceGetGroupProcedure is the fully-qualified name of the QuickFeedService's GetGroup
+	// RPC.
+	QuickFeedServiceGetGroupProcedure = "/qf.QuickFeedService/GetGroup"
+	// QuickFeedServiceGetGroupsByCourseProcedure is the fully-qualified name of the QuickFeedService's
+	// GetGroupsByCourse RPC.
+	QuickFeedServiceGetGroupsByCourseProcedure = "/qf.QuickFeedService/GetGroupsByCourse"
+	// QuickFeedServiceCreateGroupProcedure is the fully-qualified name of the QuickFeedService's
+	// CreateGroup RPC.
+	QuickFeedServiceCreateGroupProcedure = "/qf.QuickFeedService/CreateGroup"
+	// QuickFeedServiceUpdateGroupProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateGroup RPC.
+	QuickFeedServiceUpdateGroupProcedure = "/qf.QuickFeedService/UpdateGroup"
+	// QuickFeedServiceDeleteGroupProcedure is the fully-qualified name of the QuickFeedService's
+	// DeleteGroup RPC.
+	QuickFeedServiceDeleteGroupProcedure = "/qf.QuickFeedService/DeleteGroup"
+	// QuickFeedServiceGetCourseProcedure is the fully-qualified name of the QuickFeedService's
+	// GetCourse RPC.
+	QuickFeedServiceGetCourseProcedure = "/qf.QuickFeedService/GetCourse"
+	// QuickFeedServiceGetCoursesProcedure is the fully-qualified name of the QuickFeedService's
+	// GetCourses RPC.
+	QuickFeedServiceGetCoursesProcedure = "/qf.QuickFeedService/GetCourses"
+	// QuickFeedServiceUpdateCourseProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateCourse RPC.
+	QuickFeedServiceUpdateCourseProcedure = "/qf.QuickFeedService/UpdateCourse"
+	// QuickFeedServiceUpdateCourseVisibilityProcedure is the fully-qualified name of the
+	// QuickFeedService's UpdateCourseVisibility RPC.
+	QuickFeedServiceUpdateCourseVisibilityProcedure = "/qf.QuickFeedService/UpdateCourseVisibility"
+	// QuickFeedServiceGetAssignmentsProcedure is the fully-qualified name of the QuickFeedService's
+	// GetAssignments RPC.
+	QuickFeedServiceGetAssignmentsProcedure = "/qf.QuickFeedService/GetAssignments"
+	// QuickFeedServiceUpdateAssignmentsProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateAssignments RPC.
+	QuickFeedServiceUpdateAssignmentsProcedure = "/qf.QuickFeedService/UpdateAssignments"
+	// QuickFeedServiceGetEnrollmentsProcedure is the fully-qualified name of the QuickFeedService's
+	// GetEnrollments RPC.
+	QuickFeedServiceGetEnrollmentsProcedure = "/qf.QuickFeedService/GetEnrollments"
+	// QuickFeedServiceCreateEnrollmentProcedure is the fully-qualified name of the QuickFeedService's
+	// CreateEnrollment RPC.
+	QuickFeedServiceCreateEnrollmentProcedure = "/qf.QuickFeedService/CreateEnrollment"
+	// QuickFeedServiceUpdateEnrollmentsProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateEnrollments RPC.
+	QuickFeedServiceUpdateEnrollmentsProcedure = "/qf.QuickFeedService/UpdateEnrollments"
+	// QuickFeedServiceGetSubmissionProcedure is the fully-qualified name of the QuickFeedService's
+	// GetSubmission RPC.
+	QuickFeedServiceGetSubmissionProcedure = "/qf.QuickFeedService/GetSubmission"
+	// QuickFeedServiceGetSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
+	// GetSubmissions RPC.
+	QuickFeedServiceGetSubmissionsProcedure = "/qf.QuickFeedService/GetSubmissions"
+	// QuickFeedServiceGetSubmissionsByCourseProcedure is the fully-qualified name of the
+	// QuickFeedService's GetSubmissionsByCourse RPC.
+	QuickFeedServiceGetSubmissionsByCourseProcedure = "/qf.QuickFeedService/GetSubmissionsByCourse"
+	// QuickFeedServiceUpdateSubmissionProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateSubmission RPC.
+	QuickFeedServiceUpdateSubmissionProcedure = "/qf.QuickFeedService/UpdateSubmission"
+	// QuickFeedServiceUpdateSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateSubmissions RPC.
+	QuickFeedServiceUpdateSubmissionsProcedure = "/qf.QuickFeedService/UpdateSubmissions"
+	// QuickFeedServiceRebuildSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
+	// RebuildSubmissions RPC.
+	QuickFeedServiceRebuildSubmissionsProcedure = "/qf.QuickFeedService/RebuildSubmissions"
+	// QuickFeedServiceCreateBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
+	// CreateBenchmark RPC.
+	QuickFeedServiceCreateBenchmarkProcedure = "/qf.QuickFeedService/CreateBenchmark"
+	// QuickFeedServiceUpdateBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateBenchmark RPC.
+	QuickFeedServiceUpdateBenchmarkProcedure = "/qf.QuickFeedService/UpdateBenchmark"
+	// QuickFeedServiceDeleteBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
+	// DeleteBenchmark RPC.
+	QuickFeedServiceDeleteBenchmarkProcedure = "/qf.QuickFeedService/DeleteBenchmark"
+	// QuickFeedServiceCreateCriterionProcedure is the fully-qualified name of the QuickFeedService's
+	// CreateCriterion RPC.
+	QuickFeedServiceCreateCriterionProcedure = "/qf.QuickFeedService/CreateCriterion"
+	// QuickFeedServiceUpdateCriterionProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateCriterion RPC.
+	QuickFeedServiceUpdateCriterionProcedure = "/qf.QuickFeedService/UpdateCriterion"
+	// QuickFeedServiceDeleteCriterionProcedure is the fully-qualified name of the QuickFeedService's
+	// DeleteCriterion RPC.
+	QuickFeedServiceDeleteCriterionProcedure = "/qf.QuickFeedService/DeleteCriterion"
+	// QuickFeedServiceCreateReviewProcedure is the fully-qualified name of the QuickFeedService's
+	// CreateReview RPC.
+	QuickFeedServiceCreateReviewProcedure = "/qf.QuickFeedService/CreateReview"
+	// QuickFeedServiceUpdateReviewProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateReview RPC.
+	QuickFeedServiceUpdateReviewProcedure = "/qf.QuickFeedService/UpdateReview"
+	// QuickFeedServiceGetOrganizationProcedure is the fully-qualified name of the QuickFeedService's
+	// GetOrganization RPC.
+	QuickFeedServiceGetOrganizationProcedure = "/qf.QuickFeedService/GetOrganization"
+	// QuickFeedServiceGetRepositoriesProcedure is the fully-qualified name of the QuickFeedService's
+	// GetRepositories RPC.
+	QuickFeedServiceGetRepositoriesProcedure = "/qf.QuickFeedService/GetRepositories"
+	// QuickFeedServiceIsEmptyRepoProcedure is the fully-qualified name of the QuickFeedService's
+	// IsEmptyRepo RPC.
+	QuickFeedServiceIsEmptyRepoProcedure = "/qf.QuickFeedService/IsEmptyRepo"
+	// QuickFeedServiceSubmissionStreamProcedure is the fully-qualified name of the QuickFeedService's
+	// SubmissionStream RPC.
+	QuickFeedServiceSubmissionStreamProcedure = "/qf.QuickFeedService/SubmissionStream"
+)
+
+// These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
+var (
+	quickFeedServiceServiceDescriptor                      = qf.File_qf_quickfeed_proto.Services().ByName("QuickFeedService")
+	quickFeedServiceGetUserMethodDescriptor                = quickFeedServiceServiceDescriptor.Methods().ByName("GetUser")
+	quickFeedServiceGetUsersMethodDescriptor               = quickFeedServiceServiceDescriptor.Methods().ByName("GetUsers")
+	quickFeedServiceUpdateUserMethodDescriptor             = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateUser")
+	quickFeedServiceGetGroupMethodDescriptor               = quickFeedServiceServiceDescriptor.Methods().ByName("GetGroup")
+	quickFeedServiceGetGroupsByCourseMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("GetGroupsByCourse")
+	quickFeedServiceCreateGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("CreateGroup")
+	quickFeedServiceUpdateGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateGroup")
+	quickFeedServiceDeleteGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteGroup")
+	quickFeedServiceGetCourseMethodDescriptor              = quickFeedServiceServiceDescriptor.Methods().ByName("GetCourse")
+	quickFeedServiceGetCoursesMethodDescriptor             = quickFeedServiceServiceDescriptor.Methods().ByName("GetCourses")
+	quickFeedServiceUpdateCourseMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCourse")
+	quickFeedServiceUpdateCourseVisibilityMethodDescriptor = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCourseVisibility")
+	quickFeedServiceGetAssignmentsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetAssignments")
+	quickFeedServiceUpdateAssignmentsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateAssignments")
+	quickFeedServiceGetEnrollmentsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetEnrollments")
+	quickFeedServiceCreateEnrollmentMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("CreateEnrollment")
+	quickFeedServiceUpdateEnrollmentsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateEnrollments")
+	quickFeedServiceGetSubmissionMethodDescriptor          = quickFeedServiceServiceDescriptor.Methods().ByName("GetSubmission")
+	quickFeedServiceGetSubmissionsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetSubmissions")
+	quickFeedServiceGetSubmissionsByCourseMethodDescriptor = quickFeedServiceServiceDescriptor.Methods().ByName("GetSubmissionsByCourse")
+	quickFeedServiceUpdateSubmissionMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateSubmission")
+	quickFeedServiceUpdateSubmissionsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateSubmissions")
+	quickFeedServiceRebuildSubmissionsMethodDescriptor     = quickFeedServiceServiceDescriptor.Methods().ByName("RebuildSubmissions")
+	quickFeedServiceCreateBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("CreateBenchmark")
+	quickFeedServiceUpdateBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateBenchmark")
+	quickFeedServiceDeleteBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteBenchmark")
+	quickFeedServiceCreateCriterionMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("CreateCriterion")
+	quickFeedServiceUpdateCriterionMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCriterion")
+	quickFeedServiceDeleteCriterionMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteCriterion")
+	quickFeedServiceCreateReviewMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("CreateReview")
+	quickFeedServiceUpdateReviewMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateReview")
+	quickFeedServiceGetOrganizationMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("GetOrganization")
+	quickFeedServiceGetRepositoriesMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("GetRepositories")
+	quickFeedServiceIsEmptyRepoMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("IsEmptyRepo")
+	quickFeedServiceSubmissionStreamMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("SubmissionStream")
+)
+
 // QuickFeedServiceClient is a client for the qf.QuickFeedService service.
 type QuickFeedServiceClient interface {
-	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
-	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
-	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
+	GetUser(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.User], error)
+	GetUsers(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Users], error)
+	UpdateUser(context.Context, *connect.Request[qf.User]) (*connect.Response[qf.Void], error)
 	// GetGroup returns a group with the given group ID or user ID. Course ID is required.
-	GetGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
-	GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error)
-	CreateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
-	UpdateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
-	DeleteGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Void], error)
-	GetCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Course], error)
-	GetCourses(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error)
-	CreateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error)
-	UpdateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Void], error)
-	UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
-	GetAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Assignments], error)
-	UpdateAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Void], error)
-	GetEnrollmentsByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error)
-	GetEnrollmentsByCourse(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error)
-	CreateEnrollment(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
-	UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error)
-	GetSubmission(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submission], error)
+	GetGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error)
+	GetGroupsByCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error)
+	CreateGroup(context.Context, *connect.Request[qf.Group]) (*connect.Response[qf.Group], error)
+	UpdateGroup(context.Context, *connect.Request[qf.Group]) (*connect.Response[qf.Group], error)
+	DeleteGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error)
+	GetCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error)
+	GetCourses(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error)
+	UpdateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Void], error)
+	UpdateCourseVisibility(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error)
+	GetAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error)
+	UpdateAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error)
+	GetEnrollments(context.Context, *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error)
+	CreateEnrollment(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error)
+	UpdateEnrollments(context.Context, *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error)
+	GetSubmission(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submission], error)
 	// Get latest submissions for all course assignments for a user or a group.
-	GetSubmissions(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error)
+	GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error)
 	// Get lab submissions for every course user or every course group
-	GetSubmissionsByCourse(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.CourseSubmissions], error)
-	UpdateSubmission(context.Context, *connect_go.Request[qf.UpdateSubmissionRequest]) (*connect_go.Response[qf.Void], error)
-	UpdateSubmissions(context.Context, *connect_go.Request[qf.UpdateSubmissionsRequest]) (*connect_go.Response[qf.Void], error)
-	RebuildSubmissions(context.Context, *connect_go.Request[qf.RebuildRequest]) (*connect_go.Response[qf.Void], error)
-	CreateBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.GradingBenchmark], error)
-	UpdateBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error)
-	DeleteBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error)
-	CreateCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.GradingCriterion], error)
-	UpdateCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
-	DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
-	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
-	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
-	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
-	SubmissionStream(context.Context, *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error)
+	GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error)
+	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
+	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
+	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
+	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
+	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
+	DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
+	CreateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error)
+	UpdateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
+	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
+	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
+	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
+	// GetOrganization returns the organization with the given organization name.
+	// Note that organization ID is not used in the request, but it is populated in the response.
+	GetOrganization(context.Context, *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error)
+	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
+	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
+	SubmissionStream(context.Context, *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Submission], error)
 }
 
 // NewQuickFeedServiceClient constructs a client for the qf.QuickFeedService service. By default, it
@@ -76,465 +231,478 @@ type QuickFeedServiceClient interface {
 //
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
-func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) QuickFeedServiceClient {
+func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) QuickFeedServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &quickFeedServiceClient{
-		getUser: connect_go.NewClient[qf.Void, qf.User](
+		getUser: connect.NewClient[qf.Void, qf.User](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetUser",
-			opts...,
+			baseURL+QuickFeedServiceGetUserProcedure,
+			connect.WithSchema(quickFeedServiceGetUserMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getUsers: connect_go.NewClient[qf.Void, qf.Users](
+		getUsers: connect.NewClient[qf.Void, qf.Users](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetUsers",
-			opts...,
+			baseURL+QuickFeedServiceGetUsersProcedure,
+			connect.WithSchema(quickFeedServiceGetUsersMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateUser: connect_go.NewClient[qf.User, qf.Void](
+		updateUser: connect.NewClient[qf.User, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateUser",
-			opts...,
+			baseURL+QuickFeedServiceUpdateUserProcedure,
+			connect.WithSchema(quickFeedServiceUpdateUserMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getGroup: connect_go.NewClient[qf.GroupRequest, qf.Group](
+		getGroup: connect.NewClient[qf.GroupRequest, qf.Group](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetGroup",
-			opts...,
+			baseURL+QuickFeedServiceGetGroupProcedure,
+			connect.WithSchema(quickFeedServiceGetGroupMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getGroupsByCourse: connect_go.NewClient[qf.CourseRequest, qf.Groups](
+		getGroupsByCourse: connect.NewClient[qf.CourseRequest, qf.Groups](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetGroupsByCourse",
-			opts...,
+			baseURL+QuickFeedServiceGetGroupsByCourseProcedure,
+			connect.WithSchema(quickFeedServiceGetGroupsByCourseMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		createGroup: connect_go.NewClient[qf.Group, qf.Group](
+		createGroup: connect.NewClient[qf.Group, qf.Group](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/CreateGroup",
-			opts...,
+			baseURL+QuickFeedServiceCreateGroupProcedure,
+			connect.WithSchema(quickFeedServiceCreateGroupMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateGroup: connect_go.NewClient[qf.Group, qf.Group](
+		updateGroup: connect.NewClient[qf.Group, qf.Group](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateGroup",
-			opts...,
+			baseURL+QuickFeedServiceUpdateGroupProcedure,
+			connect.WithSchema(quickFeedServiceUpdateGroupMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		deleteGroup: connect_go.NewClient[qf.GroupRequest, qf.Void](
+		deleteGroup: connect.NewClient[qf.GroupRequest, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/DeleteGroup",
-			opts...,
+			baseURL+QuickFeedServiceDeleteGroupProcedure,
+			connect.WithSchema(quickFeedServiceDeleteGroupMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getCourse: connect_go.NewClient[qf.CourseRequest, qf.Course](
+		getCourse: connect.NewClient[qf.CourseRequest, qf.Course](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetCourse",
-			opts...,
+			baseURL+QuickFeedServiceGetCourseProcedure,
+			connect.WithSchema(quickFeedServiceGetCourseMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getCourses: connect_go.NewClient[qf.Void, qf.Courses](
+		getCourses: connect.NewClient[qf.Void, qf.Courses](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetCourses",
-			opts...,
+			baseURL+QuickFeedServiceGetCoursesProcedure,
+			connect.WithSchema(quickFeedServiceGetCoursesMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		createCourse: connect_go.NewClient[qf.Course, qf.Course](
+		updateCourse: connect.NewClient[qf.Course, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/CreateCourse",
-			opts...,
+			baseURL+QuickFeedServiceUpdateCourseProcedure,
+			connect.WithSchema(quickFeedServiceUpdateCourseMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateCourse: connect_go.NewClient[qf.Course, qf.Void](
+		updateCourseVisibility: connect.NewClient[qf.Enrollment, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateCourse",
-			opts...,
+			baseURL+QuickFeedServiceUpdateCourseVisibilityProcedure,
+			connect.WithSchema(quickFeedServiceUpdateCourseVisibilityMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateCourseVisibility: connect_go.NewClient[qf.Enrollment, qf.Void](
+		getAssignments: connect.NewClient[qf.CourseRequest, qf.Assignments](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateCourseVisibility",
-			opts...,
+			baseURL+QuickFeedServiceGetAssignmentsProcedure,
+			connect.WithSchema(quickFeedServiceGetAssignmentsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getAssignments: connect_go.NewClient[qf.CourseRequest, qf.Assignments](
+		updateAssignments: connect.NewClient[qf.CourseRequest, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetAssignments",
-			opts...,
+			baseURL+QuickFeedServiceUpdateAssignmentsProcedure,
+			connect.WithSchema(quickFeedServiceUpdateAssignmentsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateAssignments: connect_go.NewClient[qf.CourseRequest, qf.Void](
+		getEnrollments: connect.NewClient[qf.EnrollmentRequest, qf.Enrollments](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateAssignments",
-			opts...,
+			baseURL+QuickFeedServiceGetEnrollmentsProcedure,
+			connect.WithSchema(quickFeedServiceGetEnrollmentsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getEnrollmentsByUser: connect_go.NewClient[qf.EnrollmentStatusRequest, qf.Enrollments](
+		createEnrollment: connect.NewClient[qf.Enrollment, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetEnrollmentsByUser",
-			opts...,
+			baseURL+QuickFeedServiceCreateEnrollmentProcedure,
+			connect.WithSchema(quickFeedServiceCreateEnrollmentMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getEnrollmentsByCourse: connect_go.NewClient[qf.EnrollmentRequest, qf.Enrollments](
+		updateEnrollments: connect.NewClient[qf.Enrollments, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetEnrollmentsByCourse",
-			opts...,
+			baseURL+QuickFeedServiceUpdateEnrollmentsProcedure,
+			connect.WithSchema(quickFeedServiceUpdateEnrollmentsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		createEnrollment: connect_go.NewClient[qf.Enrollment, qf.Void](
+		getSubmission: connect.NewClient[qf.SubmissionRequest, qf.Submission](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/CreateEnrollment",
-			opts...,
+			baseURL+QuickFeedServiceGetSubmissionProcedure,
+			connect.WithSchema(quickFeedServiceGetSubmissionMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateEnrollments: connect_go.NewClient[qf.Enrollments, qf.Void](
+		getSubmissions: connect.NewClient[qf.SubmissionRequest, qf.Submissions](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateEnrollments",
-			opts...,
+			baseURL+QuickFeedServiceGetSubmissionsProcedure,
+			connect.WithSchema(quickFeedServiceGetSubmissionsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getSubmission: connect_go.NewClient[qf.SubmissionRequest, qf.Submission](
+		getSubmissionsByCourse: connect.NewClient[qf.SubmissionRequest, qf.CourseSubmissions](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetSubmission",
-			opts...,
+			baseURL+QuickFeedServiceGetSubmissionsByCourseProcedure,
+			connect.WithSchema(quickFeedServiceGetSubmissionsByCourseMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getSubmissions: connect_go.NewClient[qf.SubmissionRequest, qf.Submissions](
+		updateSubmission: connect.NewClient[qf.UpdateSubmissionRequest, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetSubmissions",
-			opts...,
+			baseURL+QuickFeedServiceUpdateSubmissionProcedure,
+			connect.WithSchema(quickFeedServiceUpdateSubmissionMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getSubmissionsByCourse: connect_go.NewClient[qf.SubmissionRequest, qf.CourseSubmissions](
+		updateSubmissions: connect.NewClient[qf.UpdateSubmissionsRequest, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetSubmissionsByCourse",
-			opts...,
+			baseURL+QuickFeedServiceUpdateSubmissionsProcedure,
+			connect.WithSchema(quickFeedServiceUpdateSubmissionsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateSubmission: connect_go.NewClient[qf.UpdateSubmissionRequest, qf.Void](
+		rebuildSubmissions: connect.NewClient[qf.RebuildRequest, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateSubmission",
-			opts...,
+			baseURL+QuickFeedServiceRebuildSubmissionsProcedure,
+			connect.WithSchema(quickFeedServiceRebuildSubmissionsMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateSubmissions: connect_go.NewClient[qf.UpdateSubmissionsRequest, qf.Void](
+		createBenchmark: connect.NewClient[qf.GradingBenchmark, qf.GradingBenchmark](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateSubmissions",
-			opts...,
+			baseURL+QuickFeedServiceCreateBenchmarkProcedure,
+			connect.WithSchema(quickFeedServiceCreateBenchmarkMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		rebuildSubmissions: connect_go.NewClient[qf.RebuildRequest, qf.Void](
+		updateBenchmark: connect.NewClient[qf.GradingBenchmark, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/RebuildSubmissions",
-			opts...,
+			baseURL+QuickFeedServiceUpdateBenchmarkProcedure,
+			connect.WithSchema(quickFeedServiceUpdateBenchmarkMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		createBenchmark: connect_go.NewClient[qf.GradingBenchmark, qf.GradingBenchmark](
+		deleteBenchmark: connect.NewClient[qf.GradingBenchmark, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/CreateBenchmark",
-			opts...,
+			baseURL+QuickFeedServiceDeleteBenchmarkProcedure,
+			connect.WithSchema(quickFeedServiceDeleteBenchmarkMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateBenchmark: connect_go.NewClient[qf.GradingBenchmark, qf.Void](
+		createCriterion: connect.NewClient[qf.GradingCriterion, qf.GradingCriterion](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateBenchmark",
-			opts...,
+			baseURL+QuickFeedServiceCreateCriterionProcedure,
+			connect.WithSchema(quickFeedServiceCreateCriterionMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		deleteBenchmark: connect_go.NewClient[qf.GradingBenchmark, qf.Void](
+		updateCriterion: connect.NewClient[qf.GradingCriterion, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/DeleteBenchmark",
-			opts...,
+			baseURL+QuickFeedServiceUpdateCriterionProcedure,
+			connect.WithSchema(quickFeedServiceUpdateCriterionMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		createCriterion: connect_go.NewClient[qf.GradingCriterion, qf.GradingCriterion](
+		deleteCriterion: connect.NewClient[qf.GradingCriterion, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/CreateCriterion",
-			opts...,
+			baseURL+QuickFeedServiceDeleteCriterionProcedure,
+			connect.WithSchema(quickFeedServiceDeleteCriterionMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateCriterion: connect_go.NewClient[qf.GradingCriterion, qf.Void](
+		createReview: connect.NewClient[qf.ReviewRequest, qf.Review](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateCriterion",
-			opts...,
+			baseURL+QuickFeedServiceCreateReviewProcedure,
+			connect.WithSchema(quickFeedServiceCreateReviewMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		deleteCriterion: connect_go.NewClient[qf.GradingCriterion, qf.Void](
+		updateReview: connect.NewClient[qf.ReviewRequest, qf.Review](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/DeleteCriterion",
-			opts...,
+			baseURL+QuickFeedServiceUpdateReviewProcedure,
+			connect.WithSchema(quickFeedServiceUpdateReviewMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		createReview: connect_go.NewClient[qf.ReviewRequest, qf.Review](
+		getOrganization: connect.NewClient[qf.Organization, qf.Organization](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/CreateReview",
-			opts...,
+			baseURL+QuickFeedServiceGetOrganizationProcedure,
+			connect.WithSchema(quickFeedServiceGetOrganizationMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		updateReview: connect_go.NewClient[qf.ReviewRequest, qf.Review](
+		getRepositories: connect.NewClient[qf.CourseRequest, qf.Repositories](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/UpdateReview",
-			opts...,
+			baseURL+QuickFeedServiceGetRepositoriesProcedure,
+			connect.WithSchema(quickFeedServiceGetRepositoriesMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getOrganization: connect_go.NewClient[qf.OrgRequest, qf.Organization](
+		isEmptyRepo: connect.NewClient[qf.RepositoryRequest, qf.Void](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetOrganization",
-			opts...,
+			baseURL+QuickFeedServiceIsEmptyRepoProcedure,
+			connect.WithSchema(quickFeedServiceIsEmptyRepoMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
-		getRepositories: connect_go.NewClient[qf.URLRequest, qf.Repositories](
+		submissionStream: connect.NewClient[qf.Void, qf.Submission](
 			httpClient,
-			baseURL+"/qf.QuickFeedService/GetRepositories",
-			opts...,
-		),
-		isEmptyRepo: connect_go.NewClient[qf.RepositoryRequest, qf.Void](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/IsEmptyRepo",
-			opts...,
-		),
-		submissionStream: connect_go.NewClient[qf.Void, qf.Submission](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/SubmissionStream",
-			opts...,
+			baseURL+QuickFeedServiceSubmissionStreamProcedure,
+			connect.WithSchema(quickFeedServiceSubmissionStreamMethodDescriptor),
+			connect.WithClientOptions(opts...),
 		),
 	}
 }
 
 // quickFeedServiceClient implements QuickFeedServiceClient.
 type quickFeedServiceClient struct {
-	getUser                *connect_go.Client[qf.Void, qf.User]
-	getUsers               *connect_go.Client[qf.Void, qf.Users]
-	updateUser             *connect_go.Client[qf.User, qf.Void]
-	getGroup               *connect_go.Client[qf.GroupRequest, qf.Group]
-	getGroupsByCourse      *connect_go.Client[qf.CourseRequest, qf.Groups]
-	createGroup            *connect_go.Client[qf.Group, qf.Group]
-	updateGroup            *connect_go.Client[qf.Group, qf.Group]
-	deleteGroup            *connect_go.Client[qf.GroupRequest, qf.Void]
-	getCourse              *connect_go.Client[qf.CourseRequest, qf.Course]
-	getCourses             *connect_go.Client[qf.Void, qf.Courses]
-	createCourse           *connect_go.Client[qf.Course, qf.Course]
-	updateCourse           *connect_go.Client[qf.Course, qf.Void]
-	updateCourseVisibility *connect_go.Client[qf.Enrollment, qf.Void]
-	getAssignments         *connect_go.Client[qf.CourseRequest, qf.Assignments]
-	updateAssignments      *connect_go.Client[qf.CourseRequest, qf.Void]
-	getEnrollmentsByUser   *connect_go.Client[qf.EnrollmentStatusRequest, qf.Enrollments]
-	getEnrollmentsByCourse *connect_go.Client[qf.EnrollmentRequest, qf.Enrollments]
-	createEnrollment       *connect_go.Client[qf.Enrollment, qf.Void]
-	updateEnrollments      *connect_go.Client[qf.Enrollments, qf.Void]
-	getSubmission          *connect_go.Client[qf.SubmissionRequest, qf.Submission]
-	getSubmissions         *connect_go.Client[qf.SubmissionRequest, qf.Submissions]
-	getSubmissionsByCourse *connect_go.Client[qf.SubmissionRequest, qf.CourseSubmissions]
-	updateSubmission       *connect_go.Client[qf.UpdateSubmissionRequest, qf.Void]
-	updateSubmissions      *connect_go.Client[qf.UpdateSubmissionsRequest, qf.Void]
-	rebuildSubmissions     *connect_go.Client[qf.RebuildRequest, qf.Void]
-	createBenchmark        *connect_go.Client[qf.GradingBenchmark, qf.GradingBenchmark]
-	updateBenchmark        *connect_go.Client[qf.GradingBenchmark, qf.Void]
-	deleteBenchmark        *connect_go.Client[qf.GradingBenchmark, qf.Void]
-	createCriterion        *connect_go.Client[qf.GradingCriterion, qf.GradingCriterion]
-	updateCriterion        *connect_go.Client[qf.GradingCriterion, qf.Void]
-	deleteCriterion        *connect_go.Client[qf.GradingCriterion, qf.Void]
-	createReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
-	updateReview           *connect_go.Client[qf.ReviewRequest, qf.Review]
-	getOrganization        *connect_go.Client[qf.OrgRequest, qf.Organization]
-	getRepositories        *connect_go.Client[qf.URLRequest, qf.Repositories]
-	isEmptyRepo            *connect_go.Client[qf.RepositoryRequest, qf.Void]
-	submissionStream       *connect_go.Client[qf.Void, qf.Submission]
+	getUser                *connect.Client[qf.Void, qf.User]
+	getUsers               *connect.Client[qf.Void, qf.Users]
+	updateUser             *connect.Client[qf.User, qf.Void]
+	getGroup               *connect.Client[qf.GroupRequest, qf.Group]
+	getGroupsByCourse      *connect.Client[qf.CourseRequest, qf.Groups]
+	createGroup            *connect.Client[qf.Group, qf.Group]
+	updateGroup            *connect.Client[qf.Group, qf.Group]
+	deleteGroup            *connect.Client[qf.GroupRequest, qf.Void]
+	getCourse              *connect.Client[qf.CourseRequest, qf.Course]
+	getCourses             *connect.Client[qf.Void, qf.Courses]
+	updateCourse           *connect.Client[qf.Course, qf.Void]
+	updateCourseVisibility *connect.Client[qf.Enrollment, qf.Void]
+	getAssignments         *connect.Client[qf.CourseRequest, qf.Assignments]
+	updateAssignments      *connect.Client[qf.CourseRequest, qf.Void]
+	getEnrollments         *connect.Client[qf.EnrollmentRequest, qf.Enrollments]
+	createEnrollment       *connect.Client[qf.Enrollment, qf.Void]
+	updateEnrollments      *connect.Client[qf.Enrollments, qf.Void]
+	getSubmission          *connect.Client[qf.SubmissionRequest, qf.Submission]
+	getSubmissions         *connect.Client[qf.SubmissionRequest, qf.Submissions]
+	getSubmissionsByCourse *connect.Client[qf.SubmissionRequest, qf.CourseSubmissions]
+	updateSubmission       *connect.Client[qf.UpdateSubmissionRequest, qf.Void]
+	updateSubmissions      *connect.Client[qf.UpdateSubmissionsRequest, qf.Void]
+	rebuildSubmissions     *connect.Client[qf.RebuildRequest, qf.Void]
+	createBenchmark        *connect.Client[qf.GradingBenchmark, qf.GradingBenchmark]
+	updateBenchmark        *connect.Client[qf.GradingBenchmark, qf.Void]
+	deleteBenchmark        *connect.Client[qf.GradingBenchmark, qf.Void]
+	createCriterion        *connect.Client[qf.GradingCriterion, qf.GradingCriterion]
+	updateCriterion        *connect.Client[qf.GradingCriterion, qf.Void]
+	deleteCriterion        *connect.Client[qf.GradingCriterion, qf.Void]
+	createReview           *connect.Client[qf.ReviewRequest, qf.Review]
+	updateReview           *connect.Client[qf.ReviewRequest, qf.Review]
+	getOrganization        *connect.Client[qf.Organization, qf.Organization]
+	getRepositories        *connect.Client[qf.CourseRequest, qf.Repositories]
+	isEmptyRepo            *connect.Client[qf.RepositoryRequest, qf.Void]
+	submissionStream       *connect.Client[qf.Void, qf.Submission]
 }
 
 // GetUser calls qf.QuickFeedService.GetUser.
-func (c *quickFeedServiceClient) GetUser(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error) {
+func (c *quickFeedServiceClient) GetUser(ctx context.Context, req *connect.Request[qf.Void]) (*connect.Response[qf.User], error) {
 	return c.getUser.CallUnary(ctx, req)
 }
 
 // GetUsers calls qf.QuickFeedService.GetUsers.
-func (c *quickFeedServiceClient) GetUsers(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error) {
+func (c *quickFeedServiceClient) GetUsers(ctx context.Context, req *connect.Request[qf.Void]) (*connect.Response[qf.Users], error) {
 	return c.getUsers.CallUnary(ctx, req)
 }
 
 // UpdateUser calls qf.QuickFeedService.UpdateUser.
-func (c *quickFeedServiceClient) UpdateUser(ctx context.Context, req *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateUser(ctx context.Context, req *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
 	return c.updateUser.CallUnary(ctx, req)
 }
 
 // GetGroup calls qf.QuickFeedService.GetGroup.
-func (c *quickFeedServiceClient) GetGroup(ctx context.Context, req *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error) {
+func (c *quickFeedServiceClient) GetGroup(ctx context.Context, req *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
 	return c.getGroup.CallUnary(ctx, req)
 }
 
 // GetGroupsByCourse calls qf.QuickFeedService.GetGroupsByCourse.
-func (c *quickFeedServiceClient) GetGroupsByCourse(ctx context.Context, req *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error) {
+func (c *quickFeedServiceClient) GetGroupsByCourse(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error) {
 	return c.getGroupsByCourse.CallUnary(ctx, req)
 }
 
 // CreateGroup calls qf.QuickFeedService.CreateGroup.
-func (c *quickFeedServiceClient) CreateGroup(ctx context.Context, req *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error) {
+func (c *quickFeedServiceClient) CreateGroup(ctx context.Context, req *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
 	return c.createGroup.CallUnary(ctx, req)
 }
 
 // UpdateGroup calls qf.QuickFeedService.UpdateGroup.
-func (c *quickFeedServiceClient) UpdateGroup(ctx context.Context, req *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error) {
+func (c *quickFeedServiceClient) UpdateGroup(ctx context.Context, req *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
 	return c.updateGroup.CallUnary(ctx, req)
 }
 
 // DeleteGroup calls qf.QuickFeedService.DeleteGroup.
-func (c *quickFeedServiceClient) DeleteGroup(ctx context.Context, req *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) DeleteGroup(ctx context.Context, req *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error) {
 	return c.deleteGroup.CallUnary(ctx, req)
 }
 
 // GetCourse calls qf.QuickFeedService.GetCourse.
-func (c *quickFeedServiceClient) GetCourse(ctx context.Context, req *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Course], error) {
+func (c *quickFeedServiceClient) GetCourse(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
 	return c.getCourse.CallUnary(ctx, req)
 }
 
 // GetCourses calls qf.QuickFeedService.GetCourses.
-func (c *quickFeedServiceClient) GetCourses(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error) {
+func (c *quickFeedServiceClient) GetCourses(ctx context.Context, req *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error) {
 	return c.getCourses.CallUnary(ctx, req)
 }
 
-// CreateCourse calls qf.QuickFeedService.CreateCourse.
-func (c *quickFeedServiceClient) CreateCourse(ctx context.Context, req *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error) {
-	return c.createCourse.CallUnary(ctx, req)
-}
-
 // UpdateCourse calls qf.QuickFeedService.UpdateCourse.
-func (c *quickFeedServiceClient) UpdateCourse(ctx context.Context, req *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateCourse(ctx context.Context, req *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
 	return c.updateCourse.CallUnary(ctx, req)
 }
 
 // UpdateCourseVisibility calls qf.QuickFeedService.UpdateCourseVisibility.
-func (c *quickFeedServiceClient) UpdateCourseVisibility(ctx context.Context, req *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateCourseVisibility(ctx context.Context, req *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
 	return c.updateCourseVisibility.CallUnary(ctx, req)
 }
 
 // GetAssignments calls qf.QuickFeedService.GetAssignments.
-func (c *quickFeedServiceClient) GetAssignments(ctx context.Context, req *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Assignments], error) {
+func (c *quickFeedServiceClient) GetAssignments(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error) {
 	return c.getAssignments.CallUnary(ctx, req)
 }
 
 // UpdateAssignments calls qf.QuickFeedService.UpdateAssignments.
-func (c *quickFeedServiceClient) UpdateAssignments(ctx context.Context, req *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateAssignments(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
 	return c.updateAssignments.CallUnary(ctx, req)
 }
 
-// GetEnrollmentsByUser calls qf.QuickFeedService.GetEnrollmentsByUser.
-func (c *quickFeedServiceClient) GetEnrollmentsByUser(ctx context.Context, req *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return c.getEnrollmentsByUser.CallUnary(ctx, req)
-}
-
-// GetEnrollmentsByCourse calls qf.QuickFeedService.GetEnrollmentsByCourse.
-func (c *quickFeedServiceClient) GetEnrollmentsByCourse(ctx context.Context, req *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return c.getEnrollmentsByCourse.CallUnary(ctx, req)
+// GetEnrollments calls qf.QuickFeedService.GetEnrollments.
+func (c *quickFeedServiceClient) GetEnrollments(ctx context.Context, req *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+	return c.getEnrollments.CallUnary(ctx, req)
 }
 
 // CreateEnrollment calls qf.QuickFeedService.CreateEnrollment.
-func (c *quickFeedServiceClient) CreateEnrollment(ctx context.Context, req *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) CreateEnrollment(ctx context.Context, req *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
 	return c.createEnrollment.CallUnary(ctx, req)
 }
 
 // UpdateEnrollments calls qf.QuickFeedService.UpdateEnrollments.
-func (c *quickFeedServiceClient) UpdateEnrollments(ctx context.Context, req *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateEnrollments(ctx context.Context, req *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error) {
 	return c.updateEnrollments.CallUnary(ctx, req)
 }
 
 // GetSubmission calls qf.QuickFeedService.GetSubmission.
-func (c *quickFeedServiceClient) GetSubmission(ctx context.Context, req *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submission], error) {
+func (c *quickFeedServiceClient) GetSubmission(ctx context.Context, req *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submission], error) {
 	return c.getSubmission.CallUnary(ctx, req)
 }
 
 // GetSubmissions calls qf.QuickFeedService.GetSubmissions.
-func (c *quickFeedServiceClient) GetSubmissions(ctx context.Context, req *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error) {
+func (c *quickFeedServiceClient) GetSubmissions(ctx context.Context, req *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error) {
 	return c.getSubmissions.CallUnary(ctx, req)
 }
 
 // GetSubmissionsByCourse calls qf.QuickFeedService.GetSubmissionsByCourse.
-func (c *quickFeedServiceClient) GetSubmissionsByCourse(ctx context.Context, req *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.CourseSubmissions], error) {
+func (c *quickFeedServiceClient) GetSubmissionsByCourse(ctx context.Context, req *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
 	return c.getSubmissionsByCourse.CallUnary(ctx, req)
 }
 
 // UpdateSubmission calls qf.QuickFeedService.UpdateSubmission.
-func (c *quickFeedServiceClient) UpdateSubmission(ctx context.Context, req *connect_go.Request[qf.UpdateSubmissionRequest]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateSubmission(ctx context.Context, req *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	return c.updateSubmission.CallUnary(ctx, req)
 }
 
 // UpdateSubmissions calls qf.QuickFeedService.UpdateSubmissions.
-func (c *quickFeedServiceClient) UpdateSubmissions(ctx context.Context, req *connect_go.Request[qf.UpdateSubmissionsRequest]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateSubmissions(ctx context.Context, req *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
 	return c.updateSubmissions.CallUnary(ctx, req)
 }
 
 // RebuildSubmissions calls qf.QuickFeedService.RebuildSubmissions.
-func (c *quickFeedServiceClient) RebuildSubmissions(ctx context.Context, req *connect_go.Request[qf.RebuildRequest]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) RebuildSubmissions(ctx context.Context, req *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	return c.rebuildSubmissions.CallUnary(ctx, req)
 }
 
 // CreateBenchmark calls qf.QuickFeedService.CreateBenchmark.
-func (c *quickFeedServiceClient) CreateBenchmark(ctx context.Context, req *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.GradingBenchmark], error) {
+func (c *quickFeedServiceClient) CreateBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
 	return c.createBenchmark.CallUnary(ctx, req)
 }
 
 // UpdateBenchmark calls qf.QuickFeedService.UpdateBenchmark.
-func (c *quickFeedServiceClient) UpdateBenchmark(ctx context.Context, req *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
 	return c.updateBenchmark.CallUnary(ctx, req)
 }
 
 // DeleteBenchmark calls qf.QuickFeedService.DeleteBenchmark.
-func (c *quickFeedServiceClient) DeleteBenchmark(ctx context.Context, req *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) DeleteBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
 	return c.deleteBenchmark.CallUnary(ctx, req)
 }
 
 // CreateCriterion calls qf.QuickFeedService.CreateCriterion.
-func (c *quickFeedServiceClient) CreateCriterion(ctx context.Context, req *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.GradingCriterion], error) {
+func (c *quickFeedServiceClient) CreateCriterion(ctx context.Context, req *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
 	return c.createCriterion.CallUnary(ctx, req)
 }
 
 // UpdateCriterion calls qf.QuickFeedService.UpdateCriterion.
-func (c *quickFeedServiceClient) UpdateCriterion(ctx context.Context, req *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateCriterion(ctx context.Context, req *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
 	return c.updateCriterion.CallUnary(ctx, req)
 }
 
 // DeleteCriterion calls qf.QuickFeedService.DeleteCriterion.
-func (c *quickFeedServiceClient) DeleteCriterion(ctx context.Context, req *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) DeleteCriterion(ctx context.Context, req *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
 	return c.deleteCriterion.CallUnary(ctx, req)
 }
 
 // CreateReview calls qf.QuickFeedService.CreateReview.
-func (c *quickFeedServiceClient) CreateReview(ctx context.Context, req *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error) {
+func (c *quickFeedServiceClient) CreateReview(ctx context.Context, req *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	return c.createReview.CallUnary(ctx, req)
 }
 
 // UpdateReview calls qf.QuickFeedService.UpdateReview.
-func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error) {
+func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	return c.updateReview.CallUnary(ctx, req)
 }
 
 // GetOrganization calls qf.QuickFeedService.GetOrganization.
-func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error) {
+func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
 	return c.getOrganization.CallUnary(ctx, req)
 }
 
 // GetRepositories calls qf.QuickFeedService.GetRepositories.
-func (c *quickFeedServiceClient) GetRepositories(ctx context.Context, req *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error) {
+func (c *quickFeedServiceClient) GetRepositories(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	return c.getRepositories.CallUnary(ctx, req)
 }
 
 // IsEmptyRepo calls qf.QuickFeedService.IsEmptyRepo.
-func (c *quickFeedServiceClient) IsEmptyRepo(ctx context.Context, req *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) IsEmptyRepo(ctx context.Context, req *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
 	return c.isEmptyRepo.CallUnary(ctx, req)
 }
 
 // SubmissionStream calls qf.QuickFeedService.SubmissionStream.
-func (c *quickFeedServiceClient) SubmissionStream(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.ServerStreamForClient[qf.Submission], error) {
+func (c *quickFeedServiceClient) SubmissionStream(ctx context.Context, req *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Submission], error) {
 	return c.submissionStream.CallServerStream(ctx, req)
 }
 
 // QuickFeedServiceHandler is an implementation of the qf.QuickFeedService service.
 type QuickFeedServiceHandler interface {
-	GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error)
-	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
-	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
+	GetUser(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.User], error)
+	GetUsers(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Users], error)
+	UpdateUser(context.Context, *connect.Request[qf.User]) (*connect.Response[qf.Void], error)
 	// GetGroup returns a group with the given group ID or user ID. Course ID is required.
-	GetGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
-	GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error)
-	CreateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
-	UpdateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error)
-	DeleteGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Void], error)
-	GetCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Course], error)
-	GetCourses(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error)
-	CreateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error)
-	UpdateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Void], error)
-	UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
-	GetAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Assignments], error)
-	UpdateAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Void], error)
-	GetEnrollmentsByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error)
-	GetEnrollmentsByCourse(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error)
-	CreateEnrollment(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error)
-	UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error)
-	GetSubmission(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submission], error)
+	GetGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error)
+	GetGroupsByCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error)
+	CreateGroup(context.Context, *connect.Request[qf.Group]) (*connect.Response[qf.Group], error)
+	UpdateGroup(context.Context, *connect.Request[qf.Group]) (*connect.Response[qf.Group], error)
+	DeleteGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error)
+	GetCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error)
+	GetCourses(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error)
+	UpdateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Void], error)
+	UpdateCourseVisibility(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error)
+	GetAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error)
+	UpdateAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error)
+	GetEnrollments(context.Context, *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error)
+	CreateEnrollment(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error)
+	UpdateEnrollments(context.Context, *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error)
+	GetSubmission(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submission], error)
 	// Get latest submissions for all course assignments for a user or a group.
-	GetSubmissions(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error)
+	GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error)
 	// Get lab submissions for every course user or every course group
-	GetSubmissionsByCourse(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.CourseSubmissions], error)
-	UpdateSubmission(context.Context, *connect_go.Request[qf.UpdateSubmissionRequest]) (*connect_go.Response[qf.Void], error)
-	UpdateSubmissions(context.Context, *connect_go.Request[qf.UpdateSubmissionsRequest]) (*connect_go.Response[qf.Void], error)
-	RebuildSubmissions(context.Context, *connect_go.Request[qf.RebuildRequest]) (*connect_go.Response[qf.Void], error)
-	CreateBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.GradingBenchmark], error)
-	UpdateBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error)
-	DeleteBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error)
-	CreateCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.GradingCriterion], error)
-	UpdateCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
-	DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error)
-	CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error)
-	GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error)
-	GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error)
-	IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error)
-	SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error
+	GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error)
+	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
+	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
+	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
+	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
+	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
+	DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
+	CreateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error)
+	UpdateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
+	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
+	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
+	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
+	// GetOrganization returns the organization with the given organization name.
+	// Note that organization ID is not used in the request, but it is populated in the response.
+	GetOrganization(context.Context, *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error)
+	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
+	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
+	SubmissionStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Submission]) error
 }
 
 // NewQuickFeedServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -542,343 +710,434 @@ type QuickFeedServiceHandler interface {
 //
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
-func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
-	mux := http.NewServeMux()
-	mux.Handle("/qf.QuickFeedService/GetUser", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetUser",
+func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	quickFeedServiceGetUserHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetUserProcedure,
 		svc.GetUser,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetUsers", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetUsers",
+		connect.WithSchema(quickFeedServiceGetUserMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetUsersHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetUsersProcedure,
 		svc.GetUsers,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateUser", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateUser",
+		connect.WithSchema(quickFeedServiceGetUsersMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateUserHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateUserProcedure,
 		svc.UpdateUser,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetGroup", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetGroup",
+		connect.WithSchema(quickFeedServiceUpdateUserMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetGroupHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetGroupProcedure,
 		svc.GetGroup,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetGroupsByCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetGroupsByCourse",
+		connect.WithSchema(quickFeedServiceGetGroupMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetGroupsByCourseHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetGroupsByCourseProcedure,
 		svc.GetGroupsByCourse,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/CreateGroup", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/CreateGroup",
+		connect.WithSchema(quickFeedServiceGetGroupsByCourseMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceCreateGroupHandler := connect.NewUnaryHandler(
+		QuickFeedServiceCreateGroupProcedure,
 		svc.CreateGroup,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateGroup", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateGroup",
+		connect.WithSchema(quickFeedServiceCreateGroupMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateGroupHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateGroupProcedure,
 		svc.UpdateGroup,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/DeleteGroup", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/DeleteGroup",
+		connect.WithSchema(quickFeedServiceUpdateGroupMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceDeleteGroupHandler := connect.NewUnaryHandler(
+		QuickFeedServiceDeleteGroupProcedure,
 		svc.DeleteGroup,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetCourse",
+		connect.WithSchema(quickFeedServiceDeleteGroupMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetCourseHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetCourseProcedure,
 		svc.GetCourse,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetCourses", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetCourses",
+		connect.WithSchema(quickFeedServiceGetCourseMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetCoursesHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetCoursesProcedure,
 		svc.GetCourses,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/CreateCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/CreateCourse",
-		svc.CreateCourse,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateCourse",
+		connect.WithSchema(quickFeedServiceGetCoursesMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateCourseHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateCourseProcedure,
 		svc.UpdateCourse,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateCourseVisibility", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateCourseVisibility",
+		connect.WithSchema(quickFeedServiceUpdateCourseMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateCourseVisibilityHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateCourseVisibilityProcedure,
 		svc.UpdateCourseVisibility,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetAssignments", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetAssignments",
+		connect.WithSchema(quickFeedServiceUpdateCourseVisibilityMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetAssignmentsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetAssignmentsProcedure,
 		svc.GetAssignments,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateAssignments", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateAssignments",
+		connect.WithSchema(quickFeedServiceGetAssignmentsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateAssignmentsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateAssignmentsProcedure,
 		svc.UpdateAssignments,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetEnrollmentsByUser", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetEnrollmentsByUser",
-		svc.GetEnrollmentsByUser,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetEnrollmentsByCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetEnrollmentsByCourse",
-		svc.GetEnrollmentsByCourse,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/CreateEnrollment", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/CreateEnrollment",
+		connect.WithSchema(quickFeedServiceUpdateAssignmentsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetEnrollmentsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetEnrollmentsProcedure,
+		svc.GetEnrollments,
+		connect.WithSchema(quickFeedServiceGetEnrollmentsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceCreateEnrollmentHandler := connect.NewUnaryHandler(
+		QuickFeedServiceCreateEnrollmentProcedure,
 		svc.CreateEnrollment,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateEnrollments", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateEnrollments",
+		connect.WithSchema(quickFeedServiceCreateEnrollmentMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateEnrollmentsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateEnrollmentsProcedure,
 		svc.UpdateEnrollments,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetSubmission", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetSubmission",
+		connect.WithSchema(quickFeedServiceUpdateEnrollmentsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetSubmissionHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetSubmissionProcedure,
 		svc.GetSubmission,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetSubmissions", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetSubmissions",
+		connect.WithSchema(quickFeedServiceGetSubmissionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetSubmissionsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetSubmissionsProcedure,
 		svc.GetSubmissions,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetSubmissionsByCourse", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetSubmissionsByCourse",
+		connect.WithSchema(quickFeedServiceGetSubmissionsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetSubmissionsByCourseHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetSubmissionsByCourseProcedure,
 		svc.GetSubmissionsByCourse,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateSubmission", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateSubmission",
+		connect.WithSchema(quickFeedServiceGetSubmissionsByCourseMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateSubmissionHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateSubmissionProcedure,
 		svc.UpdateSubmission,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateSubmissions", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateSubmissions",
+		connect.WithSchema(quickFeedServiceUpdateSubmissionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateSubmissionsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateSubmissionsProcedure,
 		svc.UpdateSubmissions,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/RebuildSubmissions", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/RebuildSubmissions",
+		connect.WithSchema(quickFeedServiceUpdateSubmissionsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceRebuildSubmissionsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceRebuildSubmissionsProcedure,
 		svc.RebuildSubmissions,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/CreateBenchmark", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/CreateBenchmark",
+		connect.WithSchema(quickFeedServiceRebuildSubmissionsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceCreateBenchmarkHandler := connect.NewUnaryHandler(
+		QuickFeedServiceCreateBenchmarkProcedure,
 		svc.CreateBenchmark,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateBenchmark", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateBenchmark",
+		connect.WithSchema(quickFeedServiceCreateBenchmarkMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateBenchmarkHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateBenchmarkProcedure,
 		svc.UpdateBenchmark,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/DeleteBenchmark", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/DeleteBenchmark",
+		connect.WithSchema(quickFeedServiceUpdateBenchmarkMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceDeleteBenchmarkHandler := connect.NewUnaryHandler(
+		QuickFeedServiceDeleteBenchmarkProcedure,
 		svc.DeleteBenchmark,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/CreateCriterion", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/CreateCriterion",
+		connect.WithSchema(quickFeedServiceDeleteBenchmarkMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceCreateCriterionHandler := connect.NewUnaryHandler(
+		QuickFeedServiceCreateCriterionProcedure,
 		svc.CreateCriterion,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateCriterion", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateCriterion",
+		connect.WithSchema(quickFeedServiceCreateCriterionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateCriterionHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateCriterionProcedure,
 		svc.UpdateCriterion,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/DeleteCriterion", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/DeleteCriterion",
+		connect.WithSchema(quickFeedServiceUpdateCriterionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceDeleteCriterionHandler := connect.NewUnaryHandler(
+		QuickFeedServiceDeleteCriterionProcedure,
 		svc.DeleteCriterion,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/CreateReview", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/CreateReview",
+		connect.WithSchema(quickFeedServiceDeleteCriterionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceCreateReviewHandler := connect.NewUnaryHandler(
+		QuickFeedServiceCreateReviewProcedure,
 		svc.CreateReview,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/UpdateReview", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/UpdateReview",
+		connect.WithSchema(quickFeedServiceCreateReviewMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateReviewHandler := connect.NewUnaryHandler(
+		QuickFeedServiceUpdateReviewProcedure,
 		svc.UpdateReview,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetOrganization", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetOrganization",
+		connect.WithSchema(quickFeedServiceUpdateReviewMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetOrganizationHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetOrganizationProcedure,
 		svc.GetOrganization,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/GetRepositories", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/GetRepositories",
+		connect.WithSchema(quickFeedServiceGetOrganizationMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetRepositoriesHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetRepositoriesProcedure,
 		svc.GetRepositories,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/IsEmptyRepo", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/IsEmptyRepo",
+		connect.WithSchema(quickFeedServiceGetRepositoriesMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceIsEmptyRepoHandler := connect.NewUnaryHandler(
+		QuickFeedServiceIsEmptyRepoProcedure,
 		svc.IsEmptyRepo,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/SubmissionStream", connect_go.NewServerStreamHandler(
-		"/qf.QuickFeedService/SubmissionStream",
+		connect.WithSchema(quickFeedServiceIsEmptyRepoMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceSubmissionStreamHandler := connect.NewServerStreamHandler(
+		QuickFeedServiceSubmissionStreamProcedure,
 		svc.SubmissionStream,
-		opts...,
-	))
-	return "/qf.QuickFeedService/", mux
+		connect.WithSchema(quickFeedServiceSubmissionStreamMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	return "/qf.QuickFeedService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case QuickFeedServiceGetUserProcedure:
+			quickFeedServiceGetUserHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetUsersProcedure:
+			quickFeedServiceGetUsersHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateUserProcedure:
+			quickFeedServiceUpdateUserHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetGroupProcedure:
+			quickFeedServiceGetGroupHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetGroupsByCourseProcedure:
+			quickFeedServiceGetGroupsByCourseHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCreateGroupProcedure:
+			quickFeedServiceCreateGroupHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateGroupProcedure:
+			quickFeedServiceUpdateGroupHandler.ServeHTTP(w, r)
+		case QuickFeedServiceDeleteGroupProcedure:
+			quickFeedServiceDeleteGroupHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetCourseProcedure:
+			quickFeedServiceGetCourseHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetCoursesProcedure:
+			quickFeedServiceGetCoursesHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateCourseProcedure:
+			quickFeedServiceUpdateCourseHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateCourseVisibilityProcedure:
+			quickFeedServiceUpdateCourseVisibilityHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetAssignmentsProcedure:
+			quickFeedServiceGetAssignmentsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateAssignmentsProcedure:
+			quickFeedServiceUpdateAssignmentsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetEnrollmentsProcedure:
+			quickFeedServiceGetEnrollmentsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCreateEnrollmentProcedure:
+			quickFeedServiceCreateEnrollmentHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateEnrollmentsProcedure:
+			quickFeedServiceUpdateEnrollmentsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetSubmissionProcedure:
+			quickFeedServiceGetSubmissionHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetSubmissionsProcedure:
+			quickFeedServiceGetSubmissionsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetSubmissionsByCourseProcedure:
+			quickFeedServiceGetSubmissionsByCourseHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateSubmissionProcedure:
+			quickFeedServiceUpdateSubmissionHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateSubmissionsProcedure:
+			quickFeedServiceUpdateSubmissionsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceRebuildSubmissionsProcedure:
+			quickFeedServiceRebuildSubmissionsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCreateBenchmarkProcedure:
+			quickFeedServiceCreateBenchmarkHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateBenchmarkProcedure:
+			quickFeedServiceUpdateBenchmarkHandler.ServeHTTP(w, r)
+		case QuickFeedServiceDeleteBenchmarkProcedure:
+			quickFeedServiceDeleteBenchmarkHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCreateCriterionProcedure:
+			quickFeedServiceCreateCriterionHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateCriterionProcedure:
+			quickFeedServiceUpdateCriterionHandler.ServeHTTP(w, r)
+		case QuickFeedServiceDeleteCriterionProcedure:
+			quickFeedServiceDeleteCriterionHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCreateReviewProcedure:
+			quickFeedServiceCreateReviewHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateReviewProcedure:
+			quickFeedServiceUpdateReviewHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetOrganizationProcedure:
+			quickFeedServiceGetOrganizationHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetRepositoriesProcedure:
+			quickFeedServiceGetRepositoriesHandler.ServeHTTP(w, r)
+		case QuickFeedServiceIsEmptyRepoProcedure:
+			quickFeedServiceIsEmptyRepoHandler.ServeHTTP(w, r)
+		case QuickFeedServiceSubmissionStreamProcedure:
+			quickFeedServiceSubmissionStreamHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	})
 }
 
 // UnimplementedQuickFeedServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedQuickFeedServiceHandler struct{}
 
-func (UnimplementedQuickFeedServiceHandler) GetUser(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.User], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetUser is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetUser(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.User], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetUser is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetUsers is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetUsers(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Users], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetUsers is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateUser is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateUser(context.Context, *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateUser is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetGroup is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetGroup is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetGroupsByCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetGroupsByCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetGroupsByCourse is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateGroup is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) CreateGroup(context.Context, *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateGroup is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateGroup(context.Context, *connect_go.Request[qf.Group]) (*connect_go.Response[qf.Group], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateGroup is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateGroup(context.Context, *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateGroup is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) DeleteGroup(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteGroup is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) DeleteGroup(context.Context, *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteGroup is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Course], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetCourse(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourse is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetCourses(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Courses], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourses is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetCourses(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourses is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Course], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateCourse(context.Context, *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCourse is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateCourse(context.Context, *connect_go.Request[qf.Course]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateCourseVisibility(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCourseVisibility is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateCourseVisibility(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCourseVisibility is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetAssignments is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Assignments], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetAssignments is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateAssignments(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateAssignments is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateAssignments(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateAssignments is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetEnrollments(context.Context, *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetEnrollments is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetEnrollmentsByUser(context.Context, *connect_go.Request[qf.EnrollmentStatusRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetEnrollmentsByUser is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) CreateEnrollment(context.Context, *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateEnrollment is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetEnrollmentsByCourse(context.Context, *connect_go.Request[qf.EnrollmentRequest]) (*connect_go.Response[qf.Enrollments], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetEnrollmentsByCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateEnrollments(context.Context, *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateEnrollments is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateEnrollment(context.Context, *connect_go.Request[qf.Enrollment]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateEnrollment is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetSubmission(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submission], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmission is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateEnrollments is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissions is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetSubmission(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submission], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmission is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissionsByCourse is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetSubmissions(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissions is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmission is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetSubmissionsByCourse(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.CourseSubmissions], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissionsByCourse is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmissions is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateSubmission(context.Context, *connect_go.Request[qf.UpdateSubmissionRequest]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmission is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.RebuildSubmissions is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateSubmissions(context.Context, *connect_go.Request[qf.UpdateSubmissionsRequest]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmissions is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateBenchmark is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) RebuildSubmissions(context.Context, *connect_go.Request[qf.RebuildRequest]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.RebuildSubmissions is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateBenchmark is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.GradingBenchmark], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateBenchmark is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteBenchmark is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateBenchmark is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) CreateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateCriterion is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) DeleteBenchmark(context.Context, *connect_go.Request[qf.GradingBenchmark]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteBenchmark is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCriterion is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.GradingCriterion], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateCriterion is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteCriterion is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCriterion is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateReview is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) DeleteCriterion(context.Context, *connect_go.Request[qf.GradingCriterion]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteCriterion is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateReview is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetOrganization is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *connect_go.Request[qf.ReviewRequest]) (*connect_go.Response[qf.Review], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetRepositories is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *connect_go.Request[qf.OrgRequest]) (*connect_go.Response[qf.Organization], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetOrganization is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.IsEmptyRepo is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *connect_go.Request[qf.URLRequest]) (*connect_go.Response[qf.Repositories], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetRepositories is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) IsEmptyRepo(context.Context, *connect_go.Request[qf.RepositoryRequest]) (*connect_go.Response[qf.Void], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.IsEmptyRepo is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) SubmissionStream(context.Context, *connect_go.Request[qf.Void], *connect_go.ServerStream[qf.Submission]) error {
-	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.SubmissionStream is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) SubmissionStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Submission]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.SubmissionStream is not implemented"))
 }

@@ -4,7 +4,7 @@ import "github.com/quickfeed/quickfeed/qf"
 
 // CreateRepository creates a new repository record.
 func (db *GormDB) CreateRepository(repo *qf.Repository) error {
-	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
+	if repo.ScmOrganizationID == 0 || repo.ScmRepositoryID == 0 {
 		// both organization and repository must be non-zero
 		return ErrCreateRepo
 	}
@@ -38,7 +38,7 @@ func (db *GormDB) GetRepositories(query *qf.Repository) ([]*qf.Repository, error
 
 // DeleteRepository deletes the repository for the given remote provider's repository ID.
 func (db *GormDB) DeleteRepository(scmRepositoryID uint64) error {
-	return db.conn.Delete(&qf.Repository{}, &qf.Repository{RepositoryID: scmRepositoryID}).Error
+	return db.conn.Delete(&qf.Repository{}, &qf.Repository{ScmRepositoryID: scmRepositoryID}).Error
 }
 
 // GetRepositoriesWithIssues gets repositories with issues

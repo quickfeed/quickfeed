@@ -26,7 +26,6 @@ service QuickFeedService {
 
     rpc GetCourse(CourseRequest) returns (Course) {}
     rpc GetCourses(Void) returns (Courses) {}
-    rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
     rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
 
@@ -37,8 +36,7 @@ service QuickFeedService {
 
     // enrollments //
 
-    rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
-    rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
+    rpc GetEnrollments(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {}
     rpc UpdateEnrollments(Enrollments) returns (Void) {}
 
@@ -68,8 +66,10 @@ service QuickFeedService {
 
     // misc //
 
-    rpc GetOrganization(OrgRequest) returns (Organization) {}
-    rpc GetRepositories(URLRequest) returns (Repositories) {}
+    // GetOrganization returns the organization with the given organization name.
+    // Note that organization ID is not used in the request, but it is populated in the response.
+    rpc GetOrganization(Organization) returns (Organization) {}
+    rpc GetRepositories(CourseRequest) returns (Repositories) {}
     rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
     rpc SubmissionStream(Void) returns (stream Submission) {}
 }

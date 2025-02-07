@@ -12,17 +12,6 @@ func (opt CourseOptions) valid() bool {
 	return opt.OrganizationID > 0 && opt.CourseCreator != ""
 }
 
-// GroupOptions contain information about group.
-type GroupOptions struct {
-	OrganizationID uint64
-	RepositoryID   uint64
-	TeamID         uint64
-}
-
-func (opt *GroupOptions) valid() bool {
-	return opt.OrganizationID > 0 && opt.RepositoryID > 0 && opt.TeamID > 0
-}
-
 // UpdateEnrollmentOptions contain information about enrollment.
 type UpdateEnrollmentOptions struct {
 	Organization string
@@ -41,18 +30,16 @@ type RejectEnrollmentOptions struct {
 	User           string
 }
 
-func (opt *RejectEnrollmentOptions) valid() bool {
+func (opt RejectEnrollmentOptions) valid() bool {
 	return opt.OrganizationID > 0 && opt.RepositoryID > 0 && opt.User != ""
 }
 
 // OrganizationOptions contain information about organization.
 type OrganizationOptions struct {
-	ID   uint64
-	Name string
-	// Username field is used to filter organizations
-	// where the given user has a certain role.
-	Username  string
-	NewCourse bool // Get organization for a new course
+	ID        uint64
+	Name      string
+	Username  string // Username, if provide, must be owner of the organization
+	NewCourse bool   // Get organization for a new course
 }
 
 func (opt OrganizationOptions) valid() bool {
@@ -63,46 +50,34 @@ func (opt OrganizationOptions) valid() bool {
 // Either ID or both Path and Owner fields must be set.
 type RepositoryOptions struct {
 	ID    uint64
-	Path  string
+	Repo  string
 	Owner string
 }
 
 func (opt RepositoryOptions) valid() bool {
-	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
+	return opt.ID > 0 || (opt.Repo != "" && opt.Owner != "")
 }
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization string
-	Path         string
-	Private      bool
-	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
+	Owner   string
+	Repo    string
+	Private bool
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
-	return opt.Organization != "" && opt.Path != ""
+	return opt.Owner != "" && opt.Repo != ""
 }
 
-// TeamOptions used when creating a new team
-type TeamOptions struct {
-	Organization string
-	TeamName     string
-	Users        []string
+// GroupOptions is used when creating or modifying a group.
+type GroupOptions struct {
+	Organization string   // Organization is the owner of the repository
+	GroupName    string   // GroupName is the name of the repository
+	Users        []string // Users are group collaborators (GitHub usernames)
 }
 
-func (opt TeamOptions) valid() bool {
-	return opt.TeamName != "" && opt.Organization != ""
-}
-
-// UpdateTeamOptions used when updating team members.
-type UpdateTeamOptions struct {
-	OrganizationID uint64
-	TeamID         uint64
-	Users          []string
-}
-
-func (opt UpdateTeamOptions) valid() bool {
-	return opt.TeamID > 0 && opt.OrganizationID > 0
+func (opt GroupOptions) valid() bool {
+	return opt.GroupName != "" && opt.Organization != ""
 }
 
 // IssueOptions contains information for creating or updating an Issue.
@@ -118,11 +93,11 @@ type IssueOptions struct {
 	Number       int
 }
 
-func (opt *IssueOptions) valid() bool {
+func (opt IssueOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
 }
 
-// RequestReviewersOptions contains information on how to create or edit a pull request comment.
+// IssueCommentOptions contains information for creating or updating an IssueComment.
 type IssueCommentOptions struct {
 	Organization string
 	Repository   string

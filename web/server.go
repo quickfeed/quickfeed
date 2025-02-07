@@ -11,7 +11,6 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/multierr"
 	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -158,5 +157,5 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 		metricsShutdownErr = srv.metricsServer.Shutdown(ctx)
 	}
 	srvShutdownErr := srv.httpServer.Shutdown(ctx)
-	return multierr.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
+	return errors.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
 }

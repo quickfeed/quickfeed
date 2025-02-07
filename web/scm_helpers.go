@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -14,21 +14,6 @@ import (
 // and not because of some application error
 var ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
 
-// InitSCMs creates and saves SCM clients for each course without an active SCM client.
-func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
-	courses, err := q.db.GetCourses()
-	if err != nil {
-		return err
-	}
-	for _, course := range courses {
-		_, err := q.getSCM(ctx, course.GetOrganizationName())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // GetSCM returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
 	return q.scmMgr.GetOrCreateSCM(ctx, q.logger, organization)
@@ -36,51 +21,51 @@ func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm
 
 // getSCMForCourse returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
-	course, err := q.db.GetCourse(courseID, false)
+	course, err := q.db.GetCourse(courseID)
 	if err != nil {
 		return nil, err
 	}
-	return q.getSCM(ctx, course.OrganizationName)
+	return q.getSCM(ctx, course.ScmOrganizationName)
 }
 
-// createRepoAndTeam invokes the SCM to create a repository and team for the
-// specified course (represented with organization ID). The SCM team name
-// is also used as the group name and repository path. The provided user names represent the SCM group members.
+// createRepo invokes the SCM to create a repository for the
+// specified course (represented with organization ID). The group name
+// is used as the repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	opt := &scm.TeamOptions{
-		Organization: course.OrganizationName,
-		TeamName:     group.GetName(),
+func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, error) {
+	opt := &scm.GroupOptions{
+		Organization: course.ScmOrganizationName,
+		GroupName:    group.GetName(),
 		Users:        group.UserNames(),
 	}
-	repo, team, err := sc.CreateGroup(ctx, opt)
+	repo, err := sc.CreateGroup(ctx, opt)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	groupRepo := &qf.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepositoryID:   repo.ID,
-		GroupID:        group.GetID(),
-		HTMLURL:        repo.HTMLURL,
-		RepoType:       qf.Repository_GROUP,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		ScmRepositoryID:   repo.ID,
+		GroupID:           group.GetID(),
+		HTMLURL:           repo.HTMLURL,
+		RepoType:          qf.Repository_GROUP,
 	}
-	return groupRepo, team, nil
+	return groupRepo, nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uint64) error {
-	opt := &scm.UpdateTeamOptions{
-		TeamID:         group.TeamID,
-		OrganizationID: orgID,
-		Users:          group.UserNames(),
+func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
+	opt := &scm.GroupOptions{
+		GroupName:    group.Name,
+		Organization: orgName,
+		Users:        group.UserNames(),
 	}
-	return sc.UpdateTeamMembers(ctx, opt)
+	return sc.UpdateGroupMembers(ctx, opt)
 }
 
 // isEmpty ensured that all of the provided repositories are empty
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
-		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
+		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetScmRepositoryID()}) {
 			return fmt.Errorf("repository %s is not empty", r.Name())
 		}
 	}
@@ -105,9 +90,16 @@ func ctxErr(ctx context.Context) error {
 // Returns true and formatted error if error type is SCM error
 // designed to be shown to user
 func parseSCMError(err error) (bool, error) {
-	errStruct, ok := err.(scm.ErrFailedSCM)
-	if ok {
-		return ok, connect.NewError(connect.CodeNotFound, errors.New(errStruct.Message))
+	var scmErr *scm.SCMError
+	if errors.As(err, &scmErr) {
+		userErr := scmErr.UserError()
+		if errors.Is(err, scm.ErrAlreadyExists) {
+			return true, connect.NewError(connect.CodeAlreadyExists, userErr)
+		}
+		if errors.Is(err, scm.ErrNotOwner) {
+			return true, connect.NewError(connect.CodePermissionDenied, userErr)
+		}
+		return true, connect.NewError(connect.CodeNotFound, userErr)
 	}
-	return ok, nil
+	return false, nil
 }

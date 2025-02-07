@@ -15,7 +15,7 @@ import (
 func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db, uint64(1))
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
@@ -30,7 +30,7 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 		}
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
+	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -188,7 +188,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 			defer cleanup()
-			admin := qtest.CreateFakeUser(t, db, 1)
+			admin := qtest.CreateFakeUser(t, db)
 			course := &qf.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 

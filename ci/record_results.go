@@ -2,18 +2,23 @@ package ci
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
 func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
+	defer func() {
+		if m := recover(); m != nil {
+			logger.Errorf("Recovered from panic: %v", m)
+		}
+	}()
 	logger.Debugf("Fetching (if any) previous submission for %s", r)
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -29,7 +34,7 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 	if err = db.CreateSubmission(newSubmission); err != nil {
 		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
 	}
-	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatus(), newSubmission.GetScore())
+	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatuses(), newSubmission.GetScore())
 
 	if !r.Rebuild {
 		if err := r.updateSlipDays(db, newSubmission); err != nil {
@@ -64,11 +69,11 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
-		Status:       previous.GetStatus(),
+		Grades:       previous.GetGrades(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
-			SubmissionDate: time.Now().Format(qf.TimeLayout),
-			BuildDate:      time.Now().Format(qf.TimeLayout),
+			SubmissionDate: timestamppb.Now(),
+			BuildDate:      timestamppb.Now(),
 			BuildLog:       "No automated tests for this assignment",
 			ExecTime:       1,
 		},
@@ -88,19 +93,13 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        score,
-		Status:       r.Assignment.IsApproved(previous, score),
+		Grades:       r.Assignment.SubmissionStatus(previous, score),
 		BuildInfo:    results.BuildInfo,
 		Scores:       results.Scores,
 	}
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	submissionDate := submission.GetBuildInfo().GetSubmissionDate()
-	submissionTime, err := time.Parse(qf.TimeLayout, submissionDate)
-	if err != nil {
-		return fmt.Errorf("failed to parse time from submission date (%s): %w", submissionDate, err)
-	}
-
 	enrollments := make([]*qf.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
@@ -117,7 +116,7 @@ func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission)
 	}
 
 	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(submissionTime, r.Assignment, submission); err != nil {
+		if err := enrol.UpdateSlipDays(r.Assignment, submission); err != nil {
 			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enrol.UserID, r.Assignment.CourseID, err)
 		}
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {

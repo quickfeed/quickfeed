@@ -2,14 +2,16 @@ package hooks
 
 import (
 	"context"
+	"errors"
 	"strings"
-	"time"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm"
 )
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
@@ -23,12 +25,12 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
-	if !isDefaultBranch(payload) && !repo.IsGroupRepo() {
+	if wh.ignorePush(payload, repo) {
 		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
 		return
 	}
 
-	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
+	course, err := wh.db.GetCourseByOrganizationID(repo.ScmOrganizationID)
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
@@ -40,9 +42,9 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 
 	ctx := context.Background()
-	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
+	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetScmOrganizationName())
 	if err != nil {
-		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
+		wh.logger.Errorf("handlePush: could not create scm client for course %s: %v", course.GetScmOrganizationName(), err)
 		return
 	}
 
@@ -50,12 +52,12 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, scmClient, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
 
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
 		clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
-			Organization: course.GetOrganizationName(),
+			Organization: course.GetScmOrganizationName(),
 			Repository:   qf.AssignmentsRepo,
 			DestDir:      course.CloneDir(),
 		})
@@ -75,6 +77,29 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
+}
+
+// ignorePush returns true if the push event should be ignored.
+// Push events should be ignored if they are not for the default branch
+// of a student or group repository. However, a push event on a non-default branch
+// is allowed for a group repository with an associated pull request.
+func (wh GitHubWebHook) ignorePush(payload *github.PushEvent, repo *qf.Repository) bool {
+	hasPR := false
+	_, err := wh.db.GetPullRequest(&qf.PullRequest{
+		SourceBranch:    branchName(payload.GetRef()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
+	})
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			wh.logger.Errorf("Failed to get pull request for %q branch in repository %q: %v", branchName(payload.GetRef()), repo.Name(), err)
+			// Ignore this error and continue processing the push event.
+		}
+		// No pull request found for the branch.
+	} else {
+		wh.logger.Debugf("Received push event for %q branch with pull request in repository %q", branchName(payload.GetRef()), repo.Name())
+		hasPR = true
+	}
+	return !(isDefaultBranch(payload) || (repo.IsGroupRepo() && hasPR))
 }
 
 // extractAssignments extracts information from the push payload from github
@@ -132,10 +157,12 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 	}
 	// If we fail to get owners, we ignore sending on the stream.
 	if userIDs, err := runData.GetOwners(wh.db); err == nil {
+		// Note that streaming the submission as-is will send all grades
+		// to all participants for a given group submission.
 		wh.streams.Submission.SendTo(submission, userIDs...)
 	}
-	// Non-default branch indicates push to a group repo.
-	if !isDefaultBranch(payload) {
+	// Non-default branch indicates push to a group repo with an associated pull request.
+	if !isDefaultBranch(payload) && repo.IsGroupRepo() {
 		// Attempt to find the pull request for the branch, if it exists,
 		// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
 		wh.handlePullRequestPush(ctx, scmClient, payload, results, runData)
@@ -145,23 +172,26 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
 func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
-	query := &qf.Enrollment{
-		UserID:           repo.UserID,
-		CourseID:         course.ID,
-		LastActivityDate: time.Now().Format("02 Jan"),
-	}
-
-	if repo.IsGroupRepo() {
+	userID := repo.UserID
+	if userID < 1 && repo.IsGroupRepo() {
 		user, err := wh.db.GetUserByCourse(course, login)
 		if err != nil {
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 			return
 		}
-		query.UserID = user.ID
+		userID = user.ID
 	}
+	// We want to fetch the original enrollment to ensure all Enrollment fields are set to correct values
+	// to ensure gorm Select.Updates behave correctly.
+	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.ID, userID)
+	if err != nil {
+		wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
+		return
+	}
+	enrol.LastActivityDate = timestamppb.Now()
 
-	if err := wh.db.UpdateEnrollment(query); err != nil {
-		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", query.UserID, err)
+	if err := wh.db.UpdateEnrollment(enrol); err != nil {
+		wh.logger.Errorf("Failed to update the last activity date for user %d (%s): %v", userID, login, err)
 	}
 }
 

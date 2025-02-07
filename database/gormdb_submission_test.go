@@ -24,7 +24,7 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 
 func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment) {
 	// create a course and an assignment
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 	assignment := &qf.Assignment{
@@ -36,21 +36,8 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	}
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 11)
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
+	user := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user, course)
 	return user, course, assignment
 }
 
@@ -79,7 +66,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        80,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -105,7 +92,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        0,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -143,7 +130,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -151,7 +138,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
-	if submissions[0].GetStatus() != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
@@ -165,10 +152,10 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if submissions[0].GetStatus() != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].Status = qf.Submission_APPROVED
+	submissions[0].SetGrade(user.ID, qf.Submission_APPROVED)
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
@@ -177,7 +164,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetStatus() != qf.Submission_APPROVED {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_APPROVED {
 		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }
@@ -234,6 +221,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		ID:           gotSubmission.ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: gotSubmission.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -290,30 +278,17 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &qf.Course{OrganizationID: 1, Year: 1}
-	c2 := &qf.Course{OrganizationID: 2, Year: 2}
+	admin := qtest.CreateFakeUser(t, db)
+	c1 := &qf.Course{ScmOrganizationID: 1, Year: 1}
+	c2 := &qf.Course{ScmOrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 
 	// enroll student in course c1
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: c1.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: c1.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user, c1)
 
 	// Create some assignments
 	assignment1 := qf.Assignment{
@@ -400,7 +375,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 
 	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
 		BuildLog:  "Testing",
 		ExecTime:  33333,
 	}
@@ -453,7 +428,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	// of saving a duplicate
 	oldSubmissionID := submissions[0].ID
 	updatedBuildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T15:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T15:00:00"),
 		BuildLog:  "Updated",
 		ExecTime:  12345,
 	}
@@ -491,15 +466,62 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	}
 }
 
+func TestGormDBSubmissionWithBuildDate(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, course, assignment := setupCourseAssignment(t, db)
+
+	if err := db.CreateSubmission(&qf.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		BuildInfo: &score.BuildInfo{
+			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	want := &qf.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
+		Reviews:      []*qf.Review{},
+		Scores:       []*score.Score{},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+		},
+	}
+	submission, err := db.GetSubmission(&qf.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.ID = submission.ID
+	want.Grades[0].SubmissionID = submission.ID
+	want.BuildInfo.ID = 1
+	want.BuildInfo.SubmissionID = submission.ID
+	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+
+	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.ID = submissions[0].ID
+	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+}
+
 // TestGormDBGetLastSubmission tests that the GetLastSubmission function returns the correct submission
 // GetLastSubmission should return an error if the provided course ID is not related to the submission
 // or if the submission does not exist.
 func TestGormDBGetLastSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &qf.Course{OrganizationID: 1, Year: 1}
-	c2 := &qf.Course{OrganizationID: 2, Year: 2}
+	admin := qtest.CreateFakeUser(t, db)
+	c1 := &qf.Course{ScmOrganizationID: 1, Year: 1}
+	c2 := &qf.Course{ScmOrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 	// Create some assignments
@@ -526,7 +548,7 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	}
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db)
 	// create a new submission
 	submission := qf.Submission{
 		AssignmentID: assignment1.ID,

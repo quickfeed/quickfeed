@@ -48,6 +48,9 @@ func (e *Enrollments) RemoveRemoteID() {
 
 // RemoveRemoteID removes remote identities for all course groups and enrollments
 func (c *Course) RemoveRemoteID() {
+	if c != nil {
+		c.DockerfileDigest = ""
+	}
 	for _, enr := range c.GetEnrollments() {
 		enr.RemoveRemoteID()
 	}
@@ -60,17 +63,5 @@ func (c *Course) RemoveRemoteID() {
 func (c *Courses) RemoveRemoteID() {
 	for _, crs := range c.GetCourses() {
 		crs.RemoveRemoteID()
-	}
-}
-
-// RemoveRemoteID removes remote identities for enrollment in lab link
-func (l *EnrollmentLink) RemoveRemoteID() {
-	l.GetEnrollment().RemoveRemoteID()
-}
-
-// RemoveRemoteID removes remote identities for all lab links
-func (l *CourseSubmissions) RemoveRemoteID() {
-	for _, link := range l.GetLinks() {
-		link.RemoveRemoteID()
 	}
 }

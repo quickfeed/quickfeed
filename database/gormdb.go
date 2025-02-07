@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 var (
@@ -41,12 +42,16 @@ type GormDB struct {
 
 // NewGormDB creates a new gorm database using the provided driver.
 func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
-	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
-		Logger: NewGORMLogger(logger),
+	// We are conservative and use transactions for create/update/delete operations.
+	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{ // skipcq: GO-W1004
+		Logger:                 NewGORMLogger(logger),
+		SkipDefaultTransaction: false,
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	schema.RegisterSerializer("timestamp", &TimestampSerializer{})
 
 	if err := conn.AutoMigrate(
 		&qf.User{},
@@ -54,6 +59,7 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 		&qf.Enrollment{},
 		&qf.Assignment{},
 		&qf.Submission{},
+		&qf.Grade{},
 		&qf.Group{},
 		&qf.Repository{},
 		&qf.UsedSlipDays{},

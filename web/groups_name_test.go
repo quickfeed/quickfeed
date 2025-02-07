@@ -4,18 +4,18 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestBadGroupNames(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		Name: "Distributed Systems",
 		Code: "DAT520",
@@ -23,7 +23,7 @@ func TestBadGroupNames(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	client := MockClient(t, db, nil)
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 	groupNames := []struct {
 		name      string
 		wantError *connect.Error
@@ -48,12 +48,13 @@ func TestBadGroupNames(t *testing.T) {
 		{"Å", web.ErrGroupNameInvalid},
 		{"DuplicateGroupName", nil},
 		{"DuplicateGroupName", web.ErrGroupNameDuplicate},
+		{"duplicateGroupName", web.ErrGroupNameDuplicate},
+		{"duplicateGroupname", web.ErrGroupNameDuplicate},
 	}
-	for i, tt := range groupNames {
-		ii := uint64(i) * 10
+	for _, tt := range groupNames {
 		t.Run(tt.name, func(t *testing.T) {
-			user1 := qtest.CreateFakeUser(t, db, ii+2)
-			user2 := qtest.CreateFakeUser(t, db, ii+3)
+			user1 := qtest.CreateFakeUser(t, db)
+			user2 := qtest.CreateFakeUser(t, db)
 			qtest.EnrollStudent(t, db, user1, course)
 			qtest.EnrollStudent(t, db, user2, course)
 
@@ -62,9 +63,16 @@ func TestBadGroupNames(t *testing.T) {
 				Name:     tt.name,
 				Users:    []*qf.User{user1, user2},
 			}
-			// current user1 (in context) must be in group being created
-			ctx := auth.WithUserContext(context.Background(), user1)
-			_, err := client.CreateGroup(ctx, connect.NewRequest(group))
+			_, err := client.CreateGroup(context.Background(), connect.NewRequest(group))
+			if tt.wantError == nil {
+				if err != nil {
+					t.Errorf("got error %v, want nil", err)
+				}
+				return
+			}
+			if err == nil && tt.wantError != nil {
+				t.Errorf("got no error, want %v", tt.wantError)
+			}
 			if connErr, ok := err.(*connect.Error); ok {
 				if connErr.Code() != tt.wantError.Code() {
 					t.Errorf("got error code %v, want %v", connErr.Code(), tt.wantError.Code())

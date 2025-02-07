@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
@@ -52,7 +52,7 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 
 	// Create a test results feedback comment on the pull request
 	opt := &scm.IssueCommentOptions{
-		Organization: rd.Course.GetOrganizationName(),
+		Organization: rd.Course.GetScmOrganizationName(),
 		Repository:   repoName,
 		Body:         results.MarkdownComment(task.GetName(), scoreLimit),
 		Number:       int(prNumber),
@@ -202,7 +202,7 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 // When created, it is initially in the "draft" stage, signaling that it is not yet ready for review.
 func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, associatedIssue *qf.Issue) {
 	wh.logger.Debugf("Creating pull request (issue #%d) for repository: %s",
-		associatedIssue.GetIssueNumber(), payload.GetRepo().GetFullName())
+		associatedIssue.GetScmIssueNumber(), payload.GetRepo().GetFullName())
 
 	associatedTask, err := wh.getTask(associatedIssue.GetTaskID())
 	if err != nil {
@@ -246,7 +246,7 @@ func findIssue(body string, issues []*qf.Issue) (*qf.Issue, error) {
 		// ignore error since regular expression ensure it is a positive number
 		issueNum, _ := strconv.ParseUint(issue, 10, 64)
 		for _, issue := range issues {
-			if issue.IssueNumber == issueNum {
+			if issue.ScmIssueNumber == issueNum {
 				return issue, nil
 			}
 		}

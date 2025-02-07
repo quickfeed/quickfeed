@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,33 +9,24 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestNewGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
-	course.OrganizationName = "test"
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	course.ScmOrganizationID = 1
+	course.ScmOrganizationName = "test"
+	qtest.CreateCourse(t, db, admin, &course)
+	user := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user, &course)
 
 	ctx := context.Background()
 	// current user must be in the group being created
@@ -58,26 +48,15 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	course.ScmOrganizationID = 1
+	qtest.CreateCourse(t, db, admin, &course)
+	user := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user, &course)
 
 	users := []*qf.User{{ID: user.ID}}
 
@@ -105,39 +84,19 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	course.ScmOrganizationID = 1
+	qtest.CreateCourse(t, db, admin, &course)
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	user := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user, &course)
 
 	users := []*qf.User{{ID: user.ID}}
 	ctx := context.Background()
@@ -173,39 +132,19 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.OrganizationID = 1
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	course.ScmOrganizationID = 1
+	qtest.CreateCourse(t, db, admin, &course)
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	user := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user, &course)
 
 	// current user must be in the group being created
 	group_req := qtest.RequestWithCookie(&qf.Group{
@@ -225,59 +164,22 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{OrganizationID: 1, OrganizationName: qtest.MockOrg}
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db)
+	course := qf.Course{ScmOrganizationID: 1, ScmOrganizationName: qtest.MockOrg}
+	qtest.CreateCourse(t, db, admin, &course)
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	user1 := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user1.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	user2 := qtest.CreateFakeUser(t, db, 4)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user2.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	user3 := qtest.CreateFakeUser(t, db, 5)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user3.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user3.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	// create named users; needed for group creation
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
+	user3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user3"})
+	qtest.EnrollStudent(t, db, user1, &course)
+	qtest.EnrollStudent(t, db, user2, &course)
+	qtest.EnrollStudent(t, db, user3, &course)
 
 	// set user1 in cookie, which is a group member
 	// group with two students
@@ -334,7 +236,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup = gotGroup
 	wantGroup.Msg.Name = updateGroupRequest.Msg.Name
 	wantGroup.Msg.Users = grpUsers
-	wantGroup.Msg.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
 	// Ignore enrollments in check
@@ -348,7 +249,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// ******************* Teacher UpdateGroup *******************
 
 	// change group to only one student
-	// name must not update because group team and repo already exist
+	// name must not update because group repo already exist
 	updateGroupRequest1 := qtest.RequestWithCookie(&qf.Group{
 		ID:       gotGroup.Msg.ID,
 		Name:     "Hein's single member Group",
@@ -374,7 +275,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 	wantGroup.Msg = updateGroupRequest.Msg
 	wantGroup.Msg.Users = grpUsers
-	wantGroup.Msg.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
 	gotUpdatedGroup.Msg.Enrollments = nil
@@ -389,46 +289,28 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
-
-	testCourse := qf.Course{
-		Name:             "Distributed Systems",
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		OrganizationID:   1,
-		OrganizationName: "test",
-		ID:               1,
-	}
-	admin := qtest.CreateNamedUser(t, db, 1, "admin")
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 
 	ctx := context.Background()
-	if _, err := client.CreateCourse(ctx, qtest.RequestWithCookie(&testCourse, Cookie(t, tm, admin))); err != nil {
-		t.Error(err)
-	}
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
 
 	// create user and enroll as pending (teacher)
-	teacher := qtest.CreateFakeUser(t, db, 3)
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   teacher.ID,
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 	}, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)
 	}
-
-	if os.Getenv("TODO") == "" {
-		t.Skip("See TODO description")
-	}
-	// TODO(meling) Calling UpdateEnrollments will trigger enrollStudent and acceptRepositoryInvites
-	// This requires a real or fake SCMInvite App that implements invite handling
-	// Specifically, the Config.ExchangeToken() method should have a fake implementation.
 
 	// update enrollment from pending->student->teacher; must be done by admin
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   teacher.ID,
-				CourseID: testCourse.ID,
+				CourseID: course.ID,
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
@@ -441,7 +323,7 @@ func TestDeleteGroup(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   teacher.ID,
-				CourseID: testCourse.ID,
+				CourseID: course.ID,
 				Status:   qf.Enrollment_TEACHER,
 			},
 		},
@@ -450,10 +332,10 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create user and enroll as pending (student)
-	user := qtest.CreateFakeUser(t, db, 2)
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   user.ID,
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 	}, Cookie(t, tm, user))); err != nil {
 		t.Error(err)
 	}
@@ -463,7 +345,7 @@ func TestDeleteGroup(t *testing.T) {
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   user.ID,
-				CourseID: testCourse.ID,
+				CourseID: course.ID,
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
@@ -472,16 +354,16 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create group as student user
-	group := &qf.Group{Name: "TestDeleteGroup", CourseID: testCourse.ID, Users: []*qf.User{user}}
+	group := &qf.Group{Name: "TestDeleteGroup", CourseID: course.ID, Users: []*qf.User{user}}
 	respGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	// delete group as teacher
 	_, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		GroupID:  respGroup.Msg.ID,
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 	}, Cookie(t, tm, teacher)))
 	if err != nil {
 		t.Error(err)
@@ -492,43 +374,32 @@ func TestGetGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	testCourse := qf.Course{
-		Name:           "Distributed Systems",
-		Code:           "DAT520",
-		Year:           2018,
-		Tag:            "Spring",
-		OrganizationID: 1,
+	course := qf.Course{
+		Name:              "Distributed Systems",
+		Code:              "DAT520",
+		Year:              2018,
+		Tag:               "Spring",
+		ScmOrganizationID: 1,
 	}
-	admin := qtest.CreateFakeUser(t, db, 1)
-	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, &course)
 
 	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	user := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user, &course)
 
 	ctx := context.Background()
 
-	group := &qf.Group{Name: "TestGroup", CourseID: testCourse.ID, Users: []*qf.User{user}}
+	group := &qf.Group{Name: "TestGroup", CourseID: course.ID, Users: []*qf.User{user}}
 	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
 
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		CourseID: testCourse.ID,
+		CourseID: course.ID,
 		GroupID:  wantGroup.Msg.ID,
 	}, Cookie(t, tm, user)))
 	if err != nil {
@@ -543,78 +414,44 @@ func TestPatchGroupStatus(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	course := qf.Course{
-		Name:             "Distributed Systems",
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		OrganizationID:   1,
-		OrganizationName: qtest.MockOrg,
-		ID:               1,
+		Name:                "Distributed Systems",
+		Code:                "DAT520",
+		Year:                2018,
+		Tag:                 "Spring",
+		ScmOrganizationID:   1,
+		ScmOrganizationName: qtest.MockOrg,
+		ID:                  1,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
-	err := db.CreateCourse(admin.ID, &course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, &course)
 
-	teacher := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, &course)
+
 	if err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true}); err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.Background()
 
-	user1 := qtest.CreateFakeUser(t, db, 3)
-	user2 := qtest.CreateFakeUser(t, db, 4)
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
 
 	// enroll users in course and group
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user1.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user2.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, &course)
+	qtest.EnrollStudent(t, db, user2, &course)
 
 	group := &qf.Group{
 		ID:       1,
 		Name:     "Test Group",
 		CourseID: course.ID,
 		Users:    []*qf.User{user1, user2},
-		TeamID:   1,
 	}
-	err = db.CreateGroup(group)
+	err := db.CreateGroup(group)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -639,60 +476,34 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	course := qf.Course{
-		Name:           "Distributed Systems",
-		Code:           "DAT520",
-		Year:           2018,
-		Tag:            "Spring",
-		OrganizationID: 1,
-		ID:             1,
+		Name:              "Distributed Systems",
+		Code:              "DAT520",
+		Year:              2018,
+		Tag:               "Spring",
+		ScmOrganizationID: 1,
+		ID:                1,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 1)
-	err := db.CreateCourse(admin.ID, &course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, &course)
 
 	ctx := context.Background()
 
-	user1 := qtest.CreateFakeUser(t, db, 2)
-	user2 := qtest.CreateFakeUser(t, db, 3)
+	user1 := qtest.CreateFakeUser(t, db)
+	user2 := qtest.CreateFakeUser(t, db)
 
 	// enroll users in course and group
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user1.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user2.ID, CourseID: course.ID, GroupID: 1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, &course)
+	qtest.EnrollStudent(t, db, user2, &course)
 
 	group := &qf.Group{
-		ID:       1,
 		CourseID: course.ID,
 		Users:    []*qf.User{user1, user2},
 	}
-	err = db.CreateGroup(group)
+	err := db.CreateGroup(group)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -720,50 +531,18 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
-	admin := qtest.CreateFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
-	err := db.CreateCourse(admin.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
-	user1 := qtest.CreateFakeUser(t, db, 2)
-	user2 := qtest.CreateFakeUser(t, db, 3)
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
 
 	// enroll users in course and group
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user1.ID, CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID: user2.ID, CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   user2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   admin.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, user1, course)
+	qtest.EnrollStudent(t, db, user2, course)
 
 	group := &qf.Group{
 		ID:       1,
@@ -830,36 +609,22 @@ func TestGetGroups(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm, _ := MockClientWithUser(t, db)
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
 
 	var users []*qf.User
-	for _, u := range allUsers {
-		user := qtest.CreateFakeUser(t, db, u.remoteID)
+	for i := 0; i < 10; i++ {
+		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
 	admin := users[0]
 
 	// admin will be enrolled as teacher because of course creation below
 	course := qtest.MockCourses[1]
-	err := db.CreateCourse(admin.ID, course)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	// enroll all users in course
 	for _, user := range users[1:] {
-		if err := db.CreateEnrollment(&qf.Enrollment{
-			UserID: user.ID, CourseID: course.ID,
-		}); err != nil {
-			t.Fatal(err)
-		}
-		if err := db.UpdateEnrollment(&qf.Enrollment{
-			UserID:   user.ID,
-			CourseID: course.ID,
-			Status:   qf.Enrollment_STUDENT,
-		}); err != nil {
-			t.Fatal(err)
-		}
+		qtest.EnrollStudent(t, db, user, course)
 	}
 	// place some students in groups
 	// current user must be in the group being created

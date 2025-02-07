@@ -2,6 +2,7 @@
 import React, { useState } from "react"
 import { Review } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
+import CriterionComment from "./Comment"
 
 
 const SummaryFeedback = ({ review }: { review: Review }) => {
@@ -9,13 +10,13 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
     const actions = useActions()
     const [editing, setEditing] = useState<boolean>(false)
 
-    const summaryFeedback = <td colSpan={3}>{review.feedback.length > 0 ? review.feedback : "No summary feedback"}</td>
+    const summaryFeedback = <td colSpan={3}><CriterionComment comment={review.feedback.length > 0 ? review.feedback : "No summary feedback"} /></td>
 
     if (!state.isTeacher) {
-        return summaryFeedback
+        return <tr>{summaryFeedback}</tr>
     }
 
-    const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
+    const handleChange = (event: React.FormEvent<HTMLTextAreaElement>) => {
         const { value } = event.currentTarget
         setEditing(false)
         // Exit early if the value is unchanged
@@ -32,9 +33,9 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
             </tr>
             {editing &&
                 <tr>
-                    <th colSpan={3}>
-                        <input autoFocus onBlur={handleChange} defaultValue={review.feedback} className="form-control" type="text" />
-                    </th>
+                    <td colSpan={3}>
+                        <textarea rows={20} autoFocus onBlur={handleChange} defaultValue={review.feedback} className="form-control" />
+                    </td>
                 </tr>
             }
         </>

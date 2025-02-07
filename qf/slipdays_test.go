@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -27,7 +29,7 @@ var (
 		return &qf.Assignment{
 			CourseID:   course.ID,
 			ScoreLimit: 60,
-			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(qf.TimeLayout),
+			Deadline:   timestamppb.New(testNow.Add(time.Duration(daysFromNow) * days)),
 		}
 	}
 )
@@ -99,22 +101,27 @@ func TestSlipDays(t *testing.T) {
 					if len(sd.submissions[i]) != len(sd.remaining[i]) {
 						t.Fatalf("faulty test case: len(sd.submissions[%d])=%d != len(sd.remaining[%d])=%d", i, len(sd.submissions[i]), i, len(sd.remaining[i]))
 					}
-					submission := &qf.Submission{
-						AssignmentID: sd.labs[i].ID,
-						Status:       qf.Submission_NONE,
-						Score:        50,
-					}
+
 					// emulate advancing time for this submission
 					testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
+					submission := &qf.Submission{
+						AssignmentID: sd.labs[i].ID,
+						Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
+						Score:        50,
+						BuildInfo: &score.BuildInfo{
+							BuildDate:      timestamppb.New(testNow),
+							SubmissionDate: timestamppb.New(testNow),
+						},
+					}
 
 					// functions to test
-					err := enrol.UpdateSlipDays(testNow, sd.labs[i], submission)
+					err := enrol.UpdateSlipDays(sd.labs[i], submission)
 					if err != nil {
 						t.Fatal(err)
 					}
 					remaining := enrol.RemainingSlipDays(course)
 					if remaining != sd.remaining[i][j] {
-						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(qf.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
+						t.Errorf("UpdateSlipDays(%q, %q, %q, %q) == %d, want %d", testNow.Format(qf.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
 					}
 				}
 			})
@@ -135,49 +142,49 @@ func TestScoreLimitSlipDays(t *testing.T) {
 		{
 			name:       "DeadlineNotPassed,NotApproved,NoScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_NONE, Score: 50},
+			submission: &qf.Submission{AssignmentID: a2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}}, Score: 50},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlineNotPassed,NotApproved,ScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_NONE, Score: 60},
+			submission: &qf.Submission{AssignmentID: a2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}}, Score: 60},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlineNotPassed,Approved,NoScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_APPROVED, Score: 50},
+			submission: &qf.Submission{AssignmentID: a2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}}, Score: 50},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlineNotPassed,Approved,ScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_APPROVED, Score: 60},
+			submission: &qf.Submission{AssignmentID: a2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}}, Score: 60},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlinePassed,NotApproved,NoScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_NONE, Score: 50},
+			submission: &qf.Submission{AssignmentID: neg2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}}, Score: 50},
 			remaining:  course.SlipDays - 2,
 		},
 		{
 			name:       "DeadlinePassed,Approved,NoScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_APPROVED, Score: 50},
+			submission: &qf.Submission{AssignmentID: neg2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}}, Score: 50},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlinePassed,NotApproved,ScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_NONE, Score: 60},
+			submission: &qf.Submission{AssignmentID: neg2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}}, Score: 60},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlinePassed,Approved,ScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_APPROVED, Score: 60},
+			submission: &qf.Submission{AssignmentID: neg2.ID, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}}, Score: 60},
 			remaining:  course.SlipDays,
 		},
 	}
@@ -186,36 +193,22 @@ func TestScoreLimitSlipDays(t *testing.T) {
 			Course:       course,
 			CourseID:     course.ID,
 			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+			UserID:       1,
 		}
 		t.Run(test.name, func(t *testing.T) {
-			err := enrol.UpdateSlipDays(testNow, test.assignment, test.submission)
+			test.submission.BuildInfo = &score.BuildInfo{
+				BuildDate:      timestamppb.New(testNow),
+				SubmissionDate: timestamppb.New(testNow),
+			}
+			err := enrol.UpdateSlipDays(test.assignment, test.submission)
 			if err != nil {
 				t.Fatal(err)
 			}
 			remaining := enrol.RemainingSlipDays(course)
 			if uint32(remaining) != test.remaining {
-				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) = %d, want %d", testNow.Format(qf.TimeLayout), test.assignment, test.submission, enrol, remaining, test.remaining)
+				t.Errorf("UpdateSlipDays(%q, %q, %q, %q) = %d, want %d", testNow.Format(qf.TimeLayout), test.assignment, test.submission, enrol, remaining, test.remaining)
 			}
 		})
-	}
-}
-
-func TestBadDeadlineFormat(t *testing.T) {
-	enrol := &qf.Enrollment{
-		Course:       course,
-		CourseID:     course.ID,
-		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
-	}
-	// lab1's deadline is incorrectly formatted
-	lab1 := &qf.Assignment{
-		CourseID: course.ID,
-		Deadline: "14-Sep-2020",
-	}
-	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
-	if err == nil {
-		t.Errorf("expected parsing error due to incorrect deadline date format")
 	}
 }
 
@@ -224,15 +217,23 @@ func TestMismatchingAssignmentID(t *testing.T) {
 		Course:       course,
 		CourseID:     course.ID,
 		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UserID:       1,
 	}
 	// lab1's deadline is incorrectly formatted
 	lab1 := &qf.Assignment{
 		CourseID: course.ID,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(qf.TimeLayout),
+		Deadline: timestamppb.New(testNow.Add(time.Duration(2) * days)),
 	}
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID + 1}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	submission := &qf.Submission{
+		Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
+		AssignmentID: lab1.ID + 1,
+		BuildInfo: &score.BuildInfo{
+			BuildDate:      timestamppb.New(testNow),
+			SubmissionDate: timestamppb.New(testNow),
+		},
+	}
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (assignment.ID != submission.AssignmentID)")
 	}
@@ -243,15 +244,23 @@ func TestMismatchingCourseID(t *testing.T) {
 		Course:       course,
 		CourseID:     course.ID,
 		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UserID:       1,
 	}
 	// lab1's deadline is incorrectly formatted
 	lab1 := &qf.Assignment{
 		CourseID: course.ID + 1,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(qf.TimeLayout),
+		Deadline: timestamppb.New(testNow.Add(time.Duration(2) * days)),
 	}
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	submission := &qf.Submission{
+		AssignmentID: lab1.ID,
+		Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
+		BuildInfo: &score.BuildInfo{
+			BuildDate:      timestamppb.New(testNow),
+			SubmissionDate: timestamppb.New(testNow),
+		},
+	}
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (enrollment.CourseID != assignment.CourseID)")
 	}
@@ -262,16 +271,24 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 		Course:       course,
 		CourseID:     course.ID,
 		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UserID:       1,
 	}
 	// lab1's deadline passed two days ago
 	lab1 := a(-2)
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID}
+	submission := &qf.Submission{
+		AssignmentID: lab1.ID,
+		Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
+		BuildInfo: &score.BuildInfo{
+			BuildDate:      timestamppb.New(testNow),
+			SubmissionDate: timestamppb.New(testNow),
+		},
+	}
 	usedSlipDays := enrol.GetUsedSlipDays()
 	if len(usedSlipDays) != 0 {
 		t.Errorf("len(usedSlipDays) = %d, expected 0", len(usedSlipDays))
 	}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err != nil {
 		t.Error(err)
 	}
@@ -293,11 +310,8 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 func TestSlipDaysWGracePeriod(t *testing.T) {
 	lab := a(0)
 	lab.ID = 1
-	timeOfDeadline, err := time.Parse(qf.TimeLayout, lab.Deadline)
-	if err != nil {
-		t.Fatal(err)
-	}
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab.ID}
+	timeOfDeadline := lab.GetDeadline().AsTime()
+	submission := &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}}, AssignmentID: lab.ID}
 	submissionTimes := []struct {
 		delivered    time.Time
 		comment      string
@@ -345,9 +359,14 @@ func TestSlipDaysWGracePeriod(t *testing.T) {
 			Course:       course,
 			CourseID:     course.ID,
 			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+			UserID:       1,
 		}
 		t.Run(fmt.Sprintf("%s/Want UsedSlipDays:%d", test.comment, test.wantSlipDays), func(t *testing.T) {
-			err := enrol.UpdateSlipDays(test.delivered, lab, submission)
+			submission.BuildInfo = &score.BuildInfo{
+				BuildDate:      timestamppb.New(test.delivered),
+				SubmissionDate: timestamppb.New(test.delivered),
+			}
+			err := enrol.UpdateSlipDays(lab, submission)
 			if err != nil {
 				t.Fatal(err)
 			}

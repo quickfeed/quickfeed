@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"go.uber.org/zap"
 
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -32,7 +32,7 @@ func (u *UserInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc
 		if updatedCookie != nil {
 			conn.ResponseHeader().Set(auth.SetCookie, updatedCookie.String())
 		}
-		return next(claims.ClaimsContext(ctx), conn)
+		return next(claims.Context(ctx), conn)
 	})
 }
 
@@ -53,7 +53,7 @@ func (u *UserInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		if err != nil {
 			return nil, err
 		}
-		response, err := next(claims.ClaimsContext(ctx), request)
+		response, err := next(claims.Context(ctx), request)
 		if err != nil {
 			return nil, err
 		}

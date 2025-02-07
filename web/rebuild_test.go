@@ -4,20 +4,22 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
@@ -62,74 +64,106 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 	}
 }
 
+// prepareGitRepo creates copies src/repo folder to dst and initializes
+// dst/repo as a git repository and adds a single file lab1/lab1.go.
+func prepareGitRepo(src, dst, repo string) error {
+	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
+		return err
+	}
+	gitRepo := filepath.Join(dst, repo)
+	r, err := git.PlainInit(gitRepo, false)
+	if err != nil {
+		return err
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	_, err = w.Add("lab1")
+	if err != nil {
+		return err
+	}
+	_, err = w.Commit("added lab1", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Test",
+			Email: "test@itest.run",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestRebuildSubmissions(t *testing.T) {
-	_, mgr := scm.MockSCMManager(t)
+	repoPath := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", repoPath)
+
+	src := filepath.Join(env.TestdataPath(), qtest.MockOrg)
+	dst := filepath.Join(repoPath, qtest.MockOrg)
+	err := prepareGitRepo(src, dst, qf.StudentRepoName("user"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = prepareGitRepo(src, dst, qf.TestsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = prepareGitRepo(src, dst, qf.AssignmentsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
+	teacher := qtest.CreateFakeUser(t, db)
+	err = db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	course := qf.Course{
-		Name:             "QuickFeed Test Course",
-		Code:             "qf101",
-		OrganizationID:   1,
-		OrganizationName: qtest.MockOrg,
+		Name:                "QuickFeed Test Course",
+		Code:                "qf101",
+		ScmOrganizationID:   1,
+		ScmOrganizationName: qtest.MockOrg,
 	}
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-	student1 := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   student1.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	student2 := qtest.CreateFakeUser(t, db, 4)
-	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&qf.Enrollment{
-		UserID:   student2.ID,
-		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.OrganizationName}
+	qtest.CreateCourse(t, db, teacher, &course)
+	student1 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student1, &course)
+
+	student2 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student2, &course)
+
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.ScmOrganizationName}
 	repo1 := qf.Repository{
-		OrganizationID: 1,
-		RepositoryID:   1,
-		UserID:         student1.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        repo.StudentRepoURL("user"),
+		ScmOrganizationID: 1,
+		ScmRepositoryID:   1,
+		UserID:            student1.ID,
+		RepoType:          qf.Repository_USER,
+		HTMLURL:           repo.StudentRepoURL("user"),
 	}
 	if err := db.CreateRepository(&repo1); err != nil {
 		t.Fatal(err)
 	}
 	repo2 := qf.Repository{
-		OrganizationID: 1,
-		RepositoryID:   2,
-		UserID:         student2.ID,
-		RepoType:       qf.Repository_USER,
+		ScmOrganizationID: 1,
+		ScmRepositoryID:   2,
+		UserID:            student2.ID,
+		RepoType:          qf.Repository_USER,
 	}
 	if err := db.CreateRepository(&repo2); err != nil {
 		t.Fatal(err)
 	}
 
-	ctx := auth.WithUserContext(context.Background(), teacher)
+	ctx := context.Background()
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "lab1",
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,
@@ -162,7 +196,6 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Errorf("Expected error: record not found")
 	}
 
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {

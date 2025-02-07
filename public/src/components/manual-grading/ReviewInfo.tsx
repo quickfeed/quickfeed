@@ -1,9 +1,10 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import { Review, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
-import { Color, SubmissionStatus } from "../../Helpers"
+import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType } from "../admin/Button"
+import { ButtonType } from "../admin/Button"
+import DynamicButton from "../DynamicButton"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 import MarkReadyButton from "./MarkReadyButton"
 
@@ -16,19 +17,35 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
         return null
     }
 
-    const assignment = state.activeSubmissionLink?.assignment
-    const submission = state.activeSubmissionLink?.submission
+    const assignment = state.selectedAssignment
+    const submission = state.selectedSubmission
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
 
+    const user = state.selectedEnrollment?.user
+    let status = Submission_Status.NONE
+    let userLi = null
+    if (user) {
+        status = getStatusByUser(submission, user.ID)
+        // List item for the user that submitted the selected submission
+        userLi = (
+            <li className="list-group-item">
+                <span className="w-25 mr-5 float-left">User: </span>
+                {user.Name}
+            </li>
+        )
+    }
+
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { state.isCourseCreator && actions.review.release(!submission?.released) }}
-            classname={`float-right ${!state.isCourseCreator && "disabled"} `}
+        <DynamicButton
             text={submission?.released ? "Released" : "Release"}
             color={submission?.released ? Color.WHITE : Color.YELLOW}
-            type={ButtonType.BUTTON} />
+            type={ButtonType.BUTTON}
+            className={`float-right ${!state.isCourseCreator && "disabled"} `}
+            onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
+        />
     )
     return (
         <ul className="list-group">
@@ -38,13 +55,14 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
                     {releaseButton}
                 </span>
             </li>
+            {userLi}
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
                 {state.review.reviewer?.Name}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[submission.status] : { NoSubmission }}
+                {submission ? SubmissionStatus[status] : { NoSubmission }}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>
@@ -57,7 +75,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element | null => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Updated: </span>
-                {review.edited}
+                {getFormattedTime(review.edited)}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Graded: </span>

@@ -1,6 +1,9 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, Grade } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import { CourseGroup, SubmissionOwner } from "./overmind/state"
+import { Timestamp } from "@bufbuild/protobuf"
+import { CourseSubmissions } from "../proto/qf/requests_pb"
 
 export enum Color {
     RED = "danger",
@@ -27,10 +30,37 @@ export enum ConnStatus {
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
-/** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (deadline_string: string): string => {
-    const deadline = new Date(deadline_string)
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" : ""}${deadline.getMinutes()}`
+/** Returns a string with a prettier format for a timestamp
+ * 
+ *  The offset parameter is used to remove the timezone offset from the timestamp.
+ *  For example, deadlines are defined in our `assignment.yaml` files in UTC time (ex. 2023-12-31 23:59:00).
+ *  If we don't remove the timezone offset, the date will be off by the timezone offset (from above: 2024-01-01 00:59:00).
+ *  We want to display the date as it is defined in the assignment file, so we remove the timezone offset.
+ *  - offset: true
+ *      - 2023-12-31T23:59:00Z will be displayed as "31 December 2023 23:59"
+ * 
+ *  In other cases such as the build date for submissions, we want to display the date in the user's local timezone.
+ *  In this case, we *don't* remove the timezone offset. Otherwise the date will be off by the timezone offset.
+ *  - offset: false
+ *      - 2023-12-31T23:59:00Z will be displayed as "1 January 2024 00:59"
+ * 
+ *  Note that in UTC+1 the offset is -60 minutes, adding the offset will effectively subtract 60 minutes from the date.
+ */
+export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: boolean): string => {
+    if (!timestamp) {
+        return "N/A"
+    }
+    const date = timestamp.toDate()
+    
+    // dates are stored in UTC, so we might need to adjust for the local timezone
+    // otherwise the date will be off by the timezone offset, e.g. 
+    // 2024-02-08T23:59:00Z will be displayed to users in UTC+1 as "9 February 2024 00:59"
+    // not "8 February 2024 23:59" as expected
+    const tzOffset = offset ? date.getTimezoneOffset() * 60000 : 0
+    const deadline = new Date(date.getTime() + tzOffset)
+    const minutes = deadline.getMinutes()
+    const zero = minutes < 10 ? "0" : ""
+    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
 export interface Deadline {
@@ -39,10 +69,14 @@ export interface Deadline {
     daysUntil: number,
 }
 
-/** Utility function for LandingPageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-// layoutTime = "2021-03-20T23:59:00"
-export const timeFormatter = (deadline: string): Deadline => {
-    const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()
+/**
+ * Utility function for LandingPageTable to format the output string and class/css
+ * depending on how far into the future the deadline is.
+ *
+ * layoutTime = "2021-03-20T23:59:00"
+ */
+export const timeFormatter = (deadline: Timestamp): Deadline => {
+    const timeToDeadline = deadline.toDate().getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -76,55 +110,13 @@ export const EnrollmentStatus = {
     3: "Teacher",
 }
 
-/*
-    arr: Any array, ex. Enrollment[], User[],
-    funcs: an array of functions that will be applied in order to reach the field to sort on
-    by: A function returning an element to sort on
-
-    Example:
-        To sort state.enrollmentsByCourseId[2].getUser().getName() by name, call like
-        (state.enrollmentsByCourseId[2], [Enrollment.prototype.getUser], User.prototype.getName)
-
-    Returns an array of the same type as arr, sorted by the by-function
-*/
-export const sortByField = (arr: any[], funcs: Function[], by: Function, descending?: boolean) => {
-    const unsortedArray = Object.assign([], arr)
-    const sortedArray = unsortedArray.sort((a, b) => {
-        let x: any
-        let y: any
-        if (!a || !b) {
-            return 0
-        }
-        if (funcs.length > 0) {
-            funcs.forEach(func => {
-                x = x ? func.call(x) : func.call(a)
-                y = y ? func.call(y) : func.call(b)
-            })
-        } else {
-            x = a
-            y = b
-        }
-        if (by.call(x) === by.call(y)) {
-            return 0
-        }
-        if (by.call(x) < by.call(y)) {
-            return descending ? 1 : -1
-        }
-        if (by.call(x) > by.call(y)) {
-            return descending ? -1 : 1
-        }
-        return -1
-    })
-    return sortedArray
-}
-
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
 /** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
 export const getPassedTestsCount = (score: Score[]): string => {
     let totalTests = 0
     let passedTests = 0
-    score.forEach(score => {
-        if (score.Score === score.MaxScore) {
+    score.forEach(s => {
+        if (s.Score === s.MaxScore) {
             passedTests++
         }
         totalTests++
@@ -133,16 +125,6 @@ export const getPassedTestsCount = (score: Score[]): string => {
         return ""
     }
     return `${passedTests}/${totalTests}`
-}
-
-export const isValid = (elm: User | EnrollmentLink): boolean => {
-    if (elm instanceof User) {
-        return elm.Name.length > 0 && elm.Email.length > 0 && elm.StudentID.length > 0
-    }
-    if (elm instanceof EnrollmentLink) {
-        return elm.enrollment?.user !== undefined && elm.submissions.length > 0
-    }
-    return true
 }
 
 /** hasEnrollment returns true if any of the provided has been approved */
@@ -160,11 +142,6 @@ export const isApprovedGroup = (group: Group): boolean => { return group.status 
 /** isEnrolled returns true if the user is enrolled in the course, and is no longer pending. */
 export const isEnrolled = (enrollment: Enrollment): boolean => { return enrollment.status >= Enrollment_UserStatus.STUDENT }
 
-/** toggleUserStatus switches between teacher and student status. */
-export const toggleUserStatus = (enrollment: Enrollment): Enrollment_UserStatus => {
-    return isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER
-}
-
 export const hasNone = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.NONE }
 export const hasPending = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.PENDING }
 export const hasStudent = (status: Enrollment_UserStatus): boolean => { return status === Enrollment_UserStatus.STUDENT }
@@ -176,21 +153,74 @@ export const hasEnrolled = (status: Enrollment_UserStatus): boolean => { return 
 export const isVisible = (enrollment: Enrollment): boolean => { return enrollment.state === Enrollment_DisplayState.VISIBLE }
 export const isFavorite = (enrollment: Enrollment): boolean => { return enrollment.state === Enrollment_DisplayState.FAVORITE }
 
-export const isCourseCreator = (user: User, course: Course): boolean => { return user.ID === course.courseCreatorID }
 export const isAuthor = (user: User, review: Review): boolean => { return user.ID === review.ReviewerID }
+
+/** isValidSubmissionForAssignment returns true if the submission is valid for the assignment
+ *  A submission is considered valid if the assignment is a group lab, or the submission is not part of a group.
+ *  This is used to filter out submissions that are not to be displayed in the UI.
+ * 
+ *  - If the assignment is a group lab, all submissions (solo and group) are valid.
+ *  - If the assignment is not a group lab, only submissions that are not part of a group are valid.
+ */
+export const isValidSubmissionForAssignment = (submission: Submission, assignment: Assignment): boolean => {
+    return assignment.isGroupLab || submission.groupID === 0n
+}
+
+export const isGroupSubmission = (submission: Submission): boolean => { return submission.groupID > 0n }
 
 export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.reviewers > 0
 }
 
-export const isApproved = (submission: Submission): boolean => { return submission.status === Submission_Status.APPROVED }
-export const isRevision = (submission: Submission): boolean => { return submission.status === Submission_Status.REVISION }
-export const isRejected = (submission: Submission): boolean => { return submission.status === Submission_Status.REJECTED }
+export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
+export const isAllRevision = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REVISION) }
+export const isAllRejected = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REJECTED) }
+
+export const isApproved = (status: Submission_Status): boolean => { return status === Submission_Status.APPROVED }
+export const isRevision = (status: Submission_Status): boolean => { return status === Submission_Status.REVISION }
+export const isRejected = (status: Submission_Status): boolean => { return status === Submission_Status.REJECTED }
+
+export const hasAllStatus = (submission: Submission, status: Submission_Status): boolean => {
+    return submission.Grades.every(grade => grade.Status === status)
+}
+
+export const userHasStatus = (submission: Submission, userID: bigint, status: Submission_Status): boolean => {
+    return submission.Grades.some(grade => grade.UserID === userID && grade.Status === status)
+}
 
 export const hasReviews = (submission: Submission): boolean => { return submission.reviews.length > 0 }
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return obj.gradingBenchmarks.length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return benchmark.criteria.length > 0 }
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
+export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
+
+export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
+    if (!submission) {
+        return Submission_Status.NONE
+    }
+    const grade = submission.Grades.find(grade => grade.UserID === userID)
+    if (!grade) {
+        return Submission_Status.NONE
+    }
+    return grade.Status
+}
+
+export const setStatusByUser = (submission: Submission, userID: bigint, status: Submission_Status): Submission => {
+    const grades = submission.Grades.map(grade => {
+        if (grade.UserID === userID) {
+            return new Grade({ ...grade, Status: status })
+        }
+        return grade
+    })
+    return new Submission({ ...submission, Grades: grades })
+}
+
+export const setStatusAll = (submission: Submission, status: Submission_Status): Submission => {
+    const grades = submission.Grades.map(grade => {
+        return new Grade({ ...grade, Status: status })
+    })
+    return new Submission({ ...submission, Grades: grades })
+}
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): bigint => {
@@ -202,34 +232,24 @@ export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 
-/** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
-export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+/** getSubmissionsScore calculates the total score of all submissions */
+export const getSubmissionsScore = (submissions: Submission[]): number => {
     let score = 0
-    submissions.forEach(link => {
-        if (!link.submission) {
-            return
-        }
-        score += link.submission.score
+    submissions.forEach(submission => {
+        score += submission.score
     })
     return score
 }
 
-/** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
-export const getNumApproved = (submissions: SubmissionLink[]): number => {
+/** getNumApproved returns the number of approved submissions */
+export const getNumApproved = (submissions: Submission[]): number => {
     let num = 0
     submissions.forEach(submission => {
-        if (!submission.submission) {
-            return
-        }
-        if (isApproved(submission.submission)) {
+        if (isAllApproved(submission)) {
             num++
         }
     })
     return num
-}
-
-export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: bigint): Submission | undefined => {
-    return submissions?.find(submission => submission.assignment?.ID === assignmentID)?.submission
 }
 
 export const EnrollmentStatusBadge = {
@@ -249,9 +269,9 @@ export const SubmissionStatus = {
 
 // TODO: This could possibly be done on the server. Would need to add a field to the proto submission/score model.
 /** assignmentStatusText returns a string that is used to tell the user what the status of their submission is */
-export const assignmentStatusText = (assignment: Assignment, submission: Submission): string => {
+export const assignmentStatusText = (assignment: Assignment, submission: Submission, status: Submission_Status): string => {
     // If the submission is not graded, return a descriptive text
-    if (submission.status === Submission_Status.NONE) {
+    if (status === Submission_Status.NONE) {
         // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
         if (!assignment.autoApprove && submission.score >= assignment.scoreLimit) {
             return "Awaiting approval"
@@ -261,7 +281,7 @@ export const assignmentStatusText = (assignment: Assignment, submission: Submiss
         }
     }
     // If the submission is graded, return the status
-    return SubmissionStatus[submission.status]
+    return SubmissionStatus[status]
 }
 
 // Helper functions for default values for new courses
@@ -277,26 +297,80 @@ export const userLink = (user: User): string => {
     return `https://github.com/${user.Login}`
 }
 
-export const userRepoLink = (course: Course, user: User): string => {
-    return `https://github.com/${course.organizationName}/${user.Login}-labs`
+export const userRepoLink = (user: User, course?: Course): string => {
+    if (!course) {
+        return userLink(user)
+    }
+    return `https://github.com/${course.ScmOrganizationName}/${user.Login}-labs`
 }
 
-export const groupRepoLink = (course: Course, group: Group): string => {
-    return `https://github.com/${course.organizationName}/${group.name}`
+export const groupRepoLink = (group: Group, course?: Course): string => {
+    if (!course) {
+        return ""
+    }
+    return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
-export const getSubmissionCellColor = (submission: Submission): string => {
-    if (isApproved(submission)) {
-        return "result-approved"
-    }
-    if (isRevision(submission)) {
-        return "result-revision"
-    }
-    if (isRejected(submission)) {
-        return "result-rejected"
+export const getSubmissionCellColor = (submission: Submission, owner:  Enrollment | Group): string => {
+    if (owner instanceof Group) {
+        if (isAllApproved(submission)) {
+            return "result-approved"
+        }
+        if (isAllRevision(submission)) {
+            return "result-revision"
+        }
+        if (isAllRejected(submission)) {
+            return "result-rejected"
+        }
+        if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {
+            return "result-mixed"
+        }
+    } else {
+        if (userHasStatus(submission, owner.userID, Submission_Status.APPROVED)) {
+            return "result-approved"
+        }
+        if (userHasStatus(submission, owner.userID, Submission_Status.REVISION)) {
+            return "result-revision"
+        }
+        if (userHasStatus(submission, owner.userID, Submission_Status.REJECTED)) {
+            return "result-rejected"
+        }
     }
     return "clickable"
 }
+
+// pattern for group name validation. Only letters, numbers, underscores and dashes are allowed.
+const pattern = /^[a-zA-Z0-9_-]+$/
+export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
+    if (group.name.length === 0) {
+        return { valid: false, message: "Group name cannot be empty" }
+    }
+    if (group.name.length > 20) {
+        return { valid: false, message: "Group name cannot be longer than 20 characters" }
+    }
+    if (group.name.includes(" ")) {
+        // Explicitly warn the user that spaces are not allowed.
+        // Common mistake is to use spaces instead of underscores.
+        return { valid: false, message: "Group name cannot contain spaces" }
+    }
+    if (!pattern.test(group.name)) {
+        return { valid: false, message: "Group name can only contain letters (a-z, A-Z), numbers, underscores and dashes" }
+    }
+    if (group.users.length === 0) {
+        return { valid: false, message: "Group must have at least one user" }
+    }
+    return { valid: true, message: "" }
+}
+
+// newID returns a new auto-incrementing ID
+// Can be used to generate IDs for client-only objects
+// such as the Alert object
+export const newID = (() => {
+    let id: number = 0
+    return () => {
+        return id++
+    }
+})()
 
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
@@ -316,6 +390,7 @@ export enum EnrollmentSort {
 }
 
 export enum SubmissionSort {
+    ID,
     Name,
     Status,
     Score,
@@ -339,7 +414,10 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
             return sortOrder * (emailA.localeCompare(emailB))
         }
         case EnrollmentSort.Activity:
-            return sortOrder * (new Date(a.lastActivityDate).getTime() - new Date(b.lastActivityDate).getTime())
+            if (a.lastActivityDate && b.lastActivityDate) {
+                return sortOrder * (a.lastActivityDate.toDate().getTime() - b.lastActivityDate.toDate().getTime())
+            }
+            return 0
         case EnrollmentSort.Slipdays:
             return sortOrder * (a.slipDaysRemaining - b.slipDaysRemaining)
         case EnrollmentSort.Approved:
@@ -358,4 +436,179 @@ export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSor
     return enrollments.sort((a, b) => {
         return enrollmentCompare(a, b, sortBy, descending)
     })
+}
+
+export class SubmissionsForCourse {
+    userSubmissions: Map<bigint, Submissions> = new Map()
+    groupSubmissions: Map<bigint, Submissions> = new Map()
+
+    /** ForUser returns user submissions for the given enrollment */
+    ForUser(enrollment: Enrollment): Submission[] {
+        return this.userSubmissions.get(enrollment.ID)?.submissions ?? []
+    }
+
+    /** ForGroup returns group submissions for the given group or enrollment */
+    ForGroup(group: Group | Enrollment): Submission[] {
+        if (group instanceof Group) {
+            return this.groupSubmissions.get(group.ID)?.submissions ?? []
+        }
+        return this.groupSubmissions.get(group.groupID)?.submissions ?? []
+    }
+
+    /** ForOwner returns all submissions related to the passed in owner.
+     * This is usually the selected group or user. */
+    ForOwner(owner: SubmissionOwner): Submission[] {
+        if (owner.type === "GROUP") {
+            return this.groupSubmissions.get(owner.id)?.submissions ?? []
+        }
+        return this.userSubmissions.get(owner.id)?.submissions ?? []
+    }
+
+    ByID(id: bigint): Submission | undefined {
+        for (const submissions of this.userSubmissions.values()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return submission
+            }
+        }
+        for (const submissions of this.groupSubmissions.values()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return submission
+            }
+        }
+        return undefined
+    }
+
+    OwnerByID(id: bigint): SubmissionOwner | undefined {
+        for (const [key, submissions] of this.userSubmissions.entries()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                if (submission.groupID > 0) {
+                    return { type: "GROUP", id: submission.groupID }
+                }
+                return { type: "ENROLLMENT", id: key }
+            }
+        }
+        for (const [key, submissions] of this.groupSubmissions.entries()) {
+            const submission = submissions.submissions.find(s => s.ID === id)
+            if (submission) {
+                return { type: "GROUP", id: key }
+            }
+        }
+        return undefined
+    }
+
+    update(owner: SubmissionOwner, submission: Submission) {
+        const submissions = this.ForOwner(owner)
+        const index = submissions.findIndex(s => s.AssignmentID === submission.AssignmentID)
+        if (index === -1) {
+            return
+        } else {
+            submissions[index] = submission
+        }
+        if (owner.type === "GROUP") {
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+        } else {
+            const clone = new Map(this.userSubmissions)
+            this.userSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+        }
+    }
+
+    setSubmissions(type: "USER" | "GROUP", submissions: CourseSubmissions) {
+        const map = new Map<bigint, Submissions>()
+        for (const [key, value] of Object.entries(submissions.submissions)) {
+            map.set(BigInt(key), value)
+        }
+        switch (type) {
+            case "USER":
+                this.userSubmissions = map
+                break
+            case "GROUP":
+                this.groupSubmissions = map
+                break
+        }
+    }
+}
+
+export class SubmissionsForUser {
+    submissions: Map<bigint, Submission[]> = new Map()
+    groupSubmissions: Map<bigint, Submission[]> = new Map()
+    /** ForGroup returns group submissions for the given group */
+    ForGroup(courseID: bigint): Submission[] {
+        return this.groupSubmissions.get(courseID) ?? []
+    }
+
+    ForAssignment(assignment: Assignment): Submission[] {
+        const submissions: Submission[] = []
+        const groupSubs = this.groupSubmissions.get(assignment.CourseID) ?? []
+        const userSubs = this.submissions.get(assignment.CourseID) ?? []
+
+        for (const sub of groupSubs) {
+            if (sub.AssignmentID === assignment.ID) {
+                submissions.push(sub)
+            }
+        }
+
+        for (const sub of userSubs) {
+            if (sub.AssignmentID === assignment.ID) {
+                submissions.push(sub)
+            }
+        }
+        return submissions
+    }
+
+    ByID(submissionID: bigint): Submission | undefined {
+        for (const submissions of this.submissions.values()) {
+            const submission = submissions.find(s => s.ID === submissionID)
+            if (submission) {
+                return submission
+            }
+        }
+
+        for (const submissions of this.groupSubmissions.values()) {
+            const submission = submissions.find(s => s.ID === submissionID)
+            if (submission) {
+                return submission
+            }
+        }
+        // No submission found
+        return undefined
+    }
+
+    /** update updates the submission in the respective map */
+    update(submission: Submission) {
+        // Check all user submissions
+        for (const [courseID, submissions] of this.submissions) {
+            const index = submissions.findIndex(s => s.ID === submission.ID)
+            if (index !== -1) {
+                submissions[index] = submission
+                const clone = new Map(this.submissions)
+                this.submissions = clone.set(courseID, submissions)
+                return
+            }
+        }
+        // Check all group submissions
+        for (const [courseID, submissions] of this.groupSubmissions) {
+            const index = submissions.findIndex(s => s.ID === submission.ID)
+            if (index !== -1) {
+                submissions[index] = submission
+                const clone = new Map(this.groupSubmissions)
+                this.groupSubmissions = clone.set(courseID, submissions)
+                return
+            }
+        }
+    }
+
+    setSubmissions(courseID: bigint, type: "USER" | "GROUP", submissions: Submission[]) {
+        if (type === "USER") {
+            const clone = new Map(this.submissions)
+            this.submissions = clone.set(courseID, submissions)
+        }
+        if (type === "GROUP") {
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(courseID, submissions)
+        }
+    }
 }

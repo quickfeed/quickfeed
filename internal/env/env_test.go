@@ -46,8 +46,8 @@ func TestLoad(t *testing.T) {
 		"QUICKFEED_TEST_ENV4": "test4 xyz",
 		"QUICKFEED_TEST_ENV5": "test5 = zyx",
 		"SOME_CERT_FILE":      "/quickfeed/root/cert/fullchain.pem",
-		"SOME_KEY_FILE":       filepath.Join(os.Getenv("QUICKFEED"), "cert/fullchain.pem"),
-		"WITHOUT_QUOTES":      filepath.Join(os.Getenv("QUICKFEED"), "cert/fullchain.pem"),
+		"SOME_KEY_FILE":       filepath.Join(os.Getenv("QUICKFEED"), "cert", "fullchain.pem"),
+		"WITHOUT_QUOTES":      filepath.Join(os.Getenv("QUICKFEED"), "cert", "fullchain.pem"),
 	}
 
 	input := `QUICKFEED_TEST_ENV=test
@@ -220,6 +220,8 @@ func TestWhitelist(t *testing.T) {
 		{"localhost", nil, true},
 		{"localhost,example.com", nil, true},
 		{"123.12.1.1", nil, true},
+		{"172.31.120.166", nil, true},
+		{"84.22.1.92", nil, true},
 		{"example.com, www.example.com, localhost", nil, true},
 		{"example.com, www.example.com,127.0.0.1:8080", nil, true},
 		{"a.com, b.com, c.com", []string{"a.com", "b.com", "c.com"}, false},

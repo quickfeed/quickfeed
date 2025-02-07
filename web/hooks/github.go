@@ -3,11 +3,12 @@ package hooks
 import (
 	"net/http"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"go.uber.org/zap"
 )
@@ -25,10 +26,11 @@ type GitHubWebHook struct {
 	streams *stream.StreamServices
 	sem     chan struct{} // counting semaphore: limit concurrent test runs to maxConcurrentTestRuns
 	dup     *Duplicates
+	tm      *auth.TokenManager
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string, streams *stream.StreamServices) *GitHubWebHook {
+func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string, streams *stream.StreamServices, tm *auth.TokenManager) *GitHubWebHook {
 	return &GitHubWebHook{
 		logger:  logger,
 		db:      db,
@@ -38,6 +40,7 @@ func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.
 		streams: streams,
 		sem:     make(chan struct{}, maxConcurrentTestRuns),
 		dup:     NewDuplicateMap(),
+		tm:      tm,
 	}
 }
 
@@ -93,6 +96,14 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 
 		case *github.PullRequestReviewEvent:
 			wh.handlePullRequestReview(e)
+
+		case *github.InstallationEvent:
+			switch e.GetAction() {
+			case "created":
+				wh.handleInstallationCreated(e)
+			default:
+				// either "deleted", "suspend", "unsuspend", "new_permissions_accepted"
+			}
 
 		default:
 			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))

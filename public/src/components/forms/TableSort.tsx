@@ -11,7 +11,7 @@ import { useActions, useAppState } from "../../overmind"
  *  sorting and filtering functions based on the modified values.
  *  TODO: We could modify the state to react to changes coming from this component.
  */
-const TableSort = () => {
+const TableSort = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
 
@@ -26,6 +26,10 @@ const TableSort = () => {
 
     const handleChange = (sort: SubmissionSort) => {
         actions.setSubmissionSort(sort)
+    }
+
+    const toggleIndividualSubmissions = () => {
+        actions.setIndividualSubmissionsView(!state.individualSubmissionView)
     }
 
     return (
@@ -53,6 +57,17 @@ const TableSort = () => {
                 </div>
                 <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("approved")}>
                     {state.submissionFilters.includes("approved") ? <del>Graded</del> : "Graded"}
+                </div>
+                {review ?
+                    <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("released")}>
+                        {state.submissionFilters.includes("released") ? <del>Released</del> : "Released"}
+                    </div>
+                    : null
+                }
+            </div>
+            <div className="d-inline-flex flex-row">
+                <div className="p-2" role={"button"} onClick={toggleIndividualSubmissions}>
+                    {state.individualSubmissionView ? "Individual" : "Group"}
                 </div>
             </div>
         </div>

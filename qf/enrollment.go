@@ -3,6 +3,8 @@ package qf
 import (
 	"fmt"
 	"time"
+
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // gracePeriod is the grace period for submissions after the deadline.
@@ -11,19 +13,17 @@ import (
 const gracePeriod time.Duration = time.Duration(2 * time.Hour)
 
 // UpdateSlipDays updates the number of slip days for the given assignment/submission.
-func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
+func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
 		return fmt.Errorf("invariant violation (enrollment.CourseID != assignment.CourseID) (%d != %d)", m.CourseID, assignment.CourseID)
 	}
 	if assignment.GetID() != submission.GetAssignmentID() {
 		return fmt.Errorf("invariant violation (assignment.ID != submission.AssignmentID) (%d != %d)", assignment.ID, submission.AssignmentID)
 	}
-	sinceDeadline, err := assignment.SinceDeadline(start)
-	if err != nil {
-		return err
-	}
+	sinceDeadline := assignment.SinceDeadline(submission.GetBuildInfo().GetSubmissionDate().AsTime())
+
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
-	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
+	if submission.Score < assignment.ScoreLimit && !submission.IsApproved(m.GetUserID()) && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slip days for this assignment
 		slpDays, slpHours := uint32(sinceDeadline/days), sinceDeadline%days
 		// slpHours is hours after deadline, excluding subsequent full-day slip days after deadline
@@ -137,4 +137,31 @@ func (m *Enrollments) UserIDs() []uint64 {
 		userIDs = append(userIDs, enrollment.GetUserID())
 	}
 	return userIDs
+}
+
+func (m *Enrollment) CountApprovedSubmissions(submissions []*Submission) {
+	var totalApproved uint64
+	var submissionDate time.Time
+	duplicateAssignments := make(map[uint64]struct{})
+
+	for _, s := range submissions {
+		// Ignore duplicate approved assignments
+		if _, ok := duplicateAssignments[s.GetAssignmentID()]; ok {
+			continue
+		}
+		if s.IsApproved(m.GetUserID()) {
+			duplicateAssignments[s.GetAssignmentID()] = struct{}{}
+			totalApproved++
+
+			// Update submissionDate if needed
+			if m.GetLastActivityDate() == nil {
+				submissionDate = s.NewestSubmissionDate(submissionDate)
+			}
+		}
+	}
+
+	if m.LastActivityDate == nil && !submissionDate.IsZero() {
+		m.LastActivityDate = timestamppb.New(submissionDate)
+	}
+	m.TotalApproved = totalApproved
 }

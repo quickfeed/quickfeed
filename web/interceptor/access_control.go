@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
@@ -41,13 +41,12 @@ var accessRolesFor = map[string]roles{
 	"CreateEnrollment":       {user},
 	"UpdateCourseVisibility": {user},
 	"UpdateUser":             {user, admin},
-	"GetEnrollmentsByUser":   {user, admin},
+	"GetEnrollments":         {user, student, teacher, admin},
 	"GetSubmissions":         {student, group, teacher},
 	"GetSubmission":          {teacher},
 	"CreateGroup":            {group, teacher},
 	"GetGroup":               {group, teacher},
 	"GetAssignments":         {student, teacher},
-	"GetEnrollmentsByCourse": {student, teacher},
 	"GetRepositories":        {student, teacher},
 	"UpdateGroup":            {teacher},
 	"DeleteGroup":            {teacher},
@@ -70,7 +69,6 @@ var accessRolesFor = map[string]roles{
 	"GetSubmissionsByCourse": {teacher},
 	"GetUsers":               {admin},
 	"GetOrganization":        {admin},
-	"CreateCourse":           {admin},
 }
 
 type AccessControlInterceptor struct {

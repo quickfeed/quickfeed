@@ -2,6 +2,8 @@ package env
 
 import (
 	"errors"
+	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,7 +11,6 @@ import (
 )
 
 const (
-	defaultCertPath = "internal/config/certs"
 	defaultDomain   = "127.0.0.1"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
@@ -31,9 +32,6 @@ func Whitelist() ([]string, error) {
 	if domains == "" {
 		return nil, errors.New("required whitelist is undefined")
 	}
-	if strings.Contains(domains, "localhost") {
-		return nil, errors.New("whitelist contains localhost")
-	}
 	if regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`).MatchString(domains) {
 		return nil, errors.New("whitelist contains IP addresses")
 	}
@@ -42,6 +40,9 @@ func Whitelist() ([]string, error) {
 	for _, domain := range strings.Split(strings.ReplaceAll(domains, " ", ""), ",") {
 		if domain == "" {
 			continue
+		}
+		if IsLocal(domain) {
+			return nil, fmt.Errorf("whitelist contains local/private domain: %s", domain)
 		}
 		domainList = append(domainList, domain)
 	}
@@ -73,10 +74,25 @@ func KeyFile() string {
 	return keyFile
 }
 
+// CertPath returns the full path to the directory containing the certificates.
+// If QUICKFEED_CERT_PATH is not set, the default path $QUICKFEED/internal/config/certs is used.
 func CertPath() string {
 	certPath := os.Getenv("QUICKFEED_CERT_PATH")
 	if certPath == "" {
-		certPath = defaultCertPath
+		certPath = filepath.Join(Root(), "internal", "config", "certs")
 	}
 	return certPath
+}
+
+func IsLocal(domain string) bool {
+	ips, err := net.LookupIP(domain)
+	if err != nil {
+		return false
+	}
+	for _, ip := range ips {
+		if !(ip.IsLoopback() || ip.IsPrivate()) {
+			return false
+		}
+	}
+	return true
 }
