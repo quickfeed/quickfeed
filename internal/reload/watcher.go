@@ -14,7 +14,6 @@ import (
 type Watcher struct {
 	clients map[chan string]bool
 	mu      sync.Mutex
-	err     chan error
 }
 
 // NewWatcher creates a new watcher for the given path.
