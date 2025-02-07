@@ -127,7 +127,7 @@ func main() {
 	if *dev && *watch {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
-		handler = web.DevHandler(ctx, handler)
+		handler = web.WatchHandler(ctx, handler)
 	}
 
 	srv, err := srvFn(*httpAddr, handler)

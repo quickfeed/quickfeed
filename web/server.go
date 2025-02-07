@@ -107,7 +107,7 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 	}, nil
 }
 
-func DevHandler(ctx context.Context, handler http.Handler) http.Handler {
+func WatchHandler(ctx context.Context, handler http.Handler) http.Handler {
 	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "dist"))
 	if err != nil {
 		log.Printf("Failed to create watcher: %v", err)
