@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useActions } from "../../overmind"
-import { UserCourseSubmissions } from "../../overmind/state"
 import SubmissionSearchResults from "./SubmissionSearchResults"
+import { Submission } from "../../../proto/qf/types_pb"
 
 
 // SearchSubmissionLogs is a component that displays the results of a search for submission build logs.
@@ -9,7 +9,7 @@ import SubmissionSearchResults from "./SubmissionSearchResults"
 const SearchSubmissionLogs = () => {
     const actions = useActions()
 
-    const [searchResult, setSearchResult] = React.useState<UserCourseSubmissions[]>([])
+    const [searchResult, setSearchResult] = React.useState<Submission[]>([])
     const [searching, setSearching] = React.useState<boolean>(false)
     const [query, setQuery] = React.useState<string>("")
 
@@ -36,7 +36,7 @@ const SearchSubmissionLogs = () => {
         <div>
             <input type="text" onChange={handleSearchChange} />
             {searching ? <p>Searching...</p> : null}
-            <SubmissionSearchResults courseSubmissions={searchResult} />
+            <SubmissionSearchResults submissions={searchResult} />
         </div>
     )
 }

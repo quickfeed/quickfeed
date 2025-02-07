@@ -1,37 +1,19 @@
 import React from "react"
-import { UserCourseSubmissions } from "../../overmind/state"
 import SubmissionLogs from "./SubmissionLogs"
+import { Submission } from "../../../proto/qf/types_pb"
 
 
-const SubmissionSearchResults = ({ courseSubmissions }: { courseSubmissions: UserCourseSubmissions[] }) => {
+const SubmissionSearchResults = ({ submissions }: { submissions: Submission[] }) => {
 
-    if (courseSubmissions.length === 0) {
+    if (submissions.length === 0) {
         return <p>No results found</p>
     }
 
     return (
         <ul>
-            {courseSubmissions.map((userSubmissions, idx) => {
-                return <BuildLogs key={idx} link={userSubmissions} />
+            {submissions.map(submission => {
+                return <SubmissionLogs key={submission.ID.toString()} submission={submission} />
             })}
-        </ul>
-    )
-}
-
-const BuildLogs = ({ link }: { link: UserCourseSubmissions }) => {
-
-    if (!link.user || !link.submissions) {
-        return null
-    }
-
-    const submissions = link.submissions.map((subLink, idx) => {
-        return <SubmissionLogs key={idx} subLink={subLink} />
-    })
-
-    return (
-        <ul>
-            <h3>{link.user.Name}</h3>
-            {submissions}
         </ul>
     )
 }
