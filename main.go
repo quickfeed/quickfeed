@@ -67,6 +67,9 @@ func main() {
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
+	if env.AuthSecret() == "" {
+		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
+	}
 
 	if env.Domain() == "localhost" {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
