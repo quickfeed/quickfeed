@@ -20,7 +20,6 @@ import (
 
 const (
 	appID         = "QUICKFEED_APP_ID"
-	appKey        = "QUICKFEED_APP_KEY"
 	clientID      = "QUICKFEED_CLIENT_ID"
 	clientSecret  = "QUICKFEED_CLIENT_SECRET"  // skipcq: SCT-A000
 	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
@@ -158,7 +157,6 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
 			appID:         strconv.FormatInt(config.GetID(), 10),
-			appKey:        appKeyFile,
 			clientID:      config.GetClientID(),
 			clientSecret:  config.GetClientSecret(),
 			webhookSecret: config.GetWebhookSecret(),
