@@ -16,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -49,14 +50,25 @@ func main() {
 		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
+		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
-
+	const envFile = ".env"
+	if *secret {
+		log.Println("Generating new random secret for signing JWT tokens...")
+		if err := env.Save(env.RootEnv(envFile), map[string]string{
+			"QUICKFEED_AUTH_SECRET": rand.String(),
+		}); err != nil {
+			log.Fatal(err)
+		}
+	}
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
-	const envFile = ".env"
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
+	}
+	if env.AuthSecret() == "" {
+		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
 	var srvFn web.ServerType
