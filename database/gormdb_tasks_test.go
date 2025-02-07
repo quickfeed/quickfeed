@@ -195,7 +195,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			previousTasks := make(map[uint32]map[string]*qf.Task)
 
 			for _, foundAssignments := range tt.foundAssignmentSequence {
-				wantTasks := []*qf.Task{}
+				var wantTasks []*qf.Task
 				for _, assignment := range foundAssignments {
 					assignment.CourseID = course.GetID()
 					if err := db.CreateAssignment(assignment); err != nil {
@@ -212,8 +212,8 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				wantCreatedTasks := []*qf.Task{}
-				wantUpdatedTasks := []*qf.Task{}
+				var wantCreatedTasks []*qf.Task
+				var wantUpdatedTasks []*qf.Task
 				for _, wantTask := range wantTasks {
 					taskMap, ok := previousTasks[wantTask.GetAssignmentOrder()]
 					if !ok {
