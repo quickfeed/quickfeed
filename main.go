@@ -53,21 +53,8 @@ func main() {
 		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
-	const envFile = ".env"
-	if *secret {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.Save(env.RootEnv(envFile), map[string]string{
-			"QUICKFEED_AUTH_SECRET": rand.String(),
-		}); err != nil {
-			log.Fatal(err)
-		}
-	}
-	// Load environment variables from $QUICKFEED/.env.
-	// Will not override variables already defined in the environment.
-	if err := env.Load(env.RootEnv(envFile)); err != nil {
-		log.Fatal(err)
-	}
-	if env.AuthSecret() == "" {
+
+	if env.AuthSecret() == "" && !*secret {
 		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
