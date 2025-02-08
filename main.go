@@ -81,6 +81,12 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
+	const envFile = ".env"
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(env.RootEnv(envFile)); err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
@@ -88,6 +94,15 @@ func main() {
 			log.Fatal(err)
 		}
 		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if *secret {
+		log.Println("Generating new random secret for signing JWT tokens...")
+		if err := env.Save(env.RootEnv(envFile), map[string]string{
+			"QUICKFEED_AUTH_SECRET": rand.String(),
+		}); err != nil {
 			log.Fatal(err)
 		}
 	}
