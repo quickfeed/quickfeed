@@ -584,7 +584,8 @@ export class SubmissionsForUser {
             const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
                 submissions[index] = submission
-                this.submissions.set(courseID, submissions)
+                const clone = new Map(this.submissions)
+                this.submissions = clone.set(courseID, submissions)
                 return
             }
         }
@@ -593,7 +594,8 @@ export class SubmissionsForUser {
             const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
                 submissions[index] = submission
-                this.groupSubmissions.set(courseID, submissions)
+                const clone = new Map(this.groupSubmissions)
+                this.groupSubmissions = clone.set(courseID, submissions)
                 return
             }
         }
@@ -601,10 +603,12 @@ export class SubmissionsForUser {
 
     setSubmissions(courseID: bigint, type: "USER" | "GROUP", submissions: Submission[]) {
         if (type === "USER") {
-            this.submissions.set(courseID, submissions)
+            const clone = new Map(this.submissions)
+            this.submissions = clone.set(courseID, submissions)
         }
         if (type === "GROUP") {
-            this.groupSubmissions.set(courseID, submissions)
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(courseID, submissions)
         }
     }
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -39,7 +38,7 @@ type TokenManager struct {
 func NewTokenManager(db database.Database) (*TokenManager, error) {
 	manager := &TokenManager{
 		db:     db,
-		secret: rand.String(),
+		secret: env.AuthSecret(),
 	}
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err

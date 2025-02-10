@@ -16,7 +16,7 @@ func (db *GormDB) GetTasks(query *qf.Task) ([]*qf.Task, error) {
 		return nil, err
 	}
 	if len(tasks) == 0 {
-		return tasks, gorm.ErrRecordNotFound
+		return nil, gorm.ErrRecordNotFound
 	}
 	return tasks, err
 }
@@ -31,8 +31,6 @@ func (db *GormDB) CreateIssues(issues []*qf.Issue) error {
 
 // SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
 func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint32]map[string]*qf.Task) (createdTasks, updatedTasks []*qf.Task, err error) {
-	createdTasks = []*qf.Task{}
-	updatedTasks = []*qf.Task{}
 	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		return nil, nil, err

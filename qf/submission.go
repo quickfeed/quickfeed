@@ -115,7 +115,7 @@ func (s *Submission) BeforeCreate(tx *gorm.DB) error {
 	if s.GetGroupID() > 0 {
 		// If the submission is for a group, create a new grade for each user in the group.
 		// Get all the user IDs in the group
-		userIDs := []uint64{}
+		var userIDs []uint64
 		tx.Model(&Enrollment{}).Where("group_id = ?", s.GetGroupID()).Pluck("user_id", &userIDs)
 
 		if len(userIDs) == 0 {
