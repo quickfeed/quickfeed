@@ -31,20 +31,14 @@ const (
 // e.g., if the envFile already contains App information or if the .env is
 // missing and there is a corresponding .env.bak file. The optional chkFn
 // functions are called to perform additional checks.
-func ReadyForAppCreation(envFile string, dev bool, domain string, chkFns ...func() error) error {
+func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	if env.HasAppID() {
 		return fmt.Errorf("%s already contains App information", envFile)
 	}
 	// Check for missing .env file and if .env.bak already exists
-	for i, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
+	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
 		if err := env.Prepared(envFile); err != nil {
 			return err
-		}
-		if i == 0 {
-			// root env file
-			if err := updateDomain(envFile, domain, dev); err != nil {
-				return err
-			}
 		}
 	}
 	for _, checker := range chkFns {
@@ -55,17 +49,18 @@ func ReadyForAppCreation(envFile string, dev bool, domain string, chkFns ...func
 	return nil
 }
 
-// updateDomain updates the domain if its a valid domain
+// ConfigureDomain updates the domain if its a valid domain
 // The domain can't be equal to current domain and default domain - example.com
 // Required to be local in development mode and public in production mode
 // Quickfeed whitelist is also updated along with the domain
 // The whitelist will be overwritten to default if in development
-func updateDomain(envFile string, domain string, dev bool) error {
+func ConfigureDomain(rootEnvFile string, domain string, dev bool) error {
+	domainWithQuotes := fmt.Sprintf("\"%s\"", domain)
 	envVariables := map[string]string{
-		"DOMAIN":              domain,
-		"QUICKFEED_WHITELIST": domain,
+		"DOMAIN":              domainWithQuotes,
+		"QUICKFEED_WHITELIST": domainWithQuotes,
 	}
-	defaultWhiteList := "www.example.com,example.com"
+	defaultWhiteList := fmt.Sprintf("\"%s\"", "www.example.com,example.com")
 	if dev {
 		envVariables["QUICKFEED_WHITELIST"] = defaultWhiteList
 	}
@@ -74,9 +69,10 @@ func updateDomain(envFile string, domain string, dev bool) error {
 	localAndDev := isLocal && dev
 	publicAndProd := !isLocal && !dev
 	if env.DomainEqual("example.com") || !env.DomainEqual(domain) && (localAndDev || publicAndProd) {
-		if err := env.Save(envFile, envVariables); err != nil {
+		if err := env.Save(rootEnvFile, envVariables); err != nil {
 			return err
 		}
+		return env.Load(rootEnvFile)
 	}
 	return nil
 }
