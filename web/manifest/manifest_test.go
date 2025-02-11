@@ -25,7 +25,7 @@ func TestCreateQuickFeedApp(t *testing.T) {
 	if env.Domain() == "localhost" {
 		t.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
 	}
-	if err := manifest.ReadyForAppCreation(envFile, false, ""); err != nil {
+	if err := manifest.ReadyForAppCreation(envFile); err != nil {
 		t.Fatal(err)
 	}
 	if err := manifest.CreateNewQuickFeedApp(web.NewDevelopmentServer, ":443", envFile); err != nil {
