@@ -3,7 +3,7 @@ import Alerts from '../components/alerts/Alerts'
 
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
-const AboutPage = (): JSX.Element => {
+const AboutPage = () => {
     return (
         <div>
             <div className="banner">

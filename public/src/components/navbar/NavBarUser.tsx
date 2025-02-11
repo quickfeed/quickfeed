@@ -6,7 +6,7 @@ import ProfileButton from "../navbar-buttons/ProfileButton"
 import LogoutButton from "../navbar-buttons/LogoutButton"
 import StreamStatus from "./StreamStatus"
 
-const NavBarUser = (): JSX.Element => {
+const NavBarUser = () => {
     const { self, isLoggedIn } = useAppState()
 
     if (!isLoggedIn) {

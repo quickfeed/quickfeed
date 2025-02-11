@@ -3,7 +3,7 @@ import { Assignment, GradingBenchmark } from "../../../proto/qf/types_pb"
 import { useActions } from "../../overmind"
 
 
-const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }): JSX.Element => {
+const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }) => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)
