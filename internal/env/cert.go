@@ -26,6 +26,16 @@ func Domain() string {
 	return domain
 }
 
+func DomainEqual(domain string) bool {
+	return Domain() == domain
+}
+
+func ValidateDomain(domain string) bool {
+	// https://stackoverflow.com/questions/10306690/what-is-a-regular-expression-which-will-match-a-valid-domain-name-without-a-subd
+	pattern := `^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$`
+	return regexp.MustCompile(pattern).MatchString(domain)
+}
+
 // WhiteList returns a list of domains that the server will create certificates for.
 func Whitelist() ([]string, error) {
 	domains := os.Getenv("QUICKFEED_WHITELIST")
