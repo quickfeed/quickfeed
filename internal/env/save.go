@@ -94,9 +94,6 @@ func update(filename, content string, env map[string]string) error {
 		return err
 	}
 
-	// Map of updated environment variables
-	updated := make(map[string]bool)
-
 	// Scan existing file's content and update existing environment variables.
 	for _, line := range strings.Split(content, "\n") {
 		key, val, found := strings.Cut(line, "=")
@@ -110,16 +107,13 @@ func update(filename, content string, env map[string]string) error {
 		if v, ok := env[key]; ok {
 			// Replace old value with new value.
 			val = v
+			delete(env, key)
 		}
 		fmt.Fprintf(file, "%s=%s\n", key, val)
-		updated[key] = true
 	}
 
 	// Write new lines for any new environment variables.
 	for key, val := range env {
-		if _, ok := updated[key]; ok {
-			continue
-		}
 		if _, err = fmt.Fprintf(file, "%s=%s\n", key, val); err != nil {
 			return err
 		}
