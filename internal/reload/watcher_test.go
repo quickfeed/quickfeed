@@ -70,6 +70,9 @@ func TestWatcher(t *testing.T) {
 			if err != nil {
 				break
 			}
+			if line == "" {
+				continue
+			}
 			// send the message to the event channel
 			eventChan <- line
 			break

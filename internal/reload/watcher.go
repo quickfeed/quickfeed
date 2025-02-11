@@ -102,7 +102,8 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-client:
-			fmt.Fprintf(w, "data: %s\n", msg)
+			// message must end with \n\n to mark the end of the event
+			fmt.Fprintf(w, "data: %s\n\n", msg)
 			w.(http.Flusher).Flush()
 		case <-r.Context().Done(): // Client disconnected
 			watcher.removeClient(client)
