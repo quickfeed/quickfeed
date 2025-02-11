@@ -51,9 +51,13 @@ func main() {
 		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
 		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
+		domain   = flag.String("domain", "localhost", "domain name for the QuickFeed instance")
 	)
 	flag.Parse()
 	const envFile = ".env"
+
+	env.SetupEnvFiles(envFile)
+
 	if *secret {
 		log.Println("Generating new random secret for signing JWT tokens...")
 		if err := env.Save(env.RootEnv(envFile), map[string]string{
@@ -84,7 +88,7 @@ func main() {
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
-		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
+		if err := manifest.ReadyForAppCreation(envFile, *dev, *domain, checkDomain); err != nil {
 			log.Fatal(err)
 		}
 		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
