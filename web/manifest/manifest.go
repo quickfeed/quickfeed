@@ -31,18 +31,54 @@ const (
 // e.g., if the envFile already contains App information or if the .env is
 // missing and there is a corresponding .env.bak file. The optional chkFn
 // functions are called to perform additional checks.
-func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
+func ReadyForAppCreation(envFile string, dev bool, domain string, chkFns ...func() error) error {
 	if env.HasAppID() {
 		return fmt.Errorf("%s already contains App information", envFile)
 	}
 	// Check for missing .env file and if .env.bak already exists
-	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
+	for i, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
 		if err := env.Prepared(envFile); err != nil {
 			return err
+		}
+		if i == 0 {
+			// root env file
+			if err := updateDomain(envFile, domain, dev); err != nil {
+				return err
+			}
 		}
 	}
 	for _, checker := range chkFns {
 		if err := checker(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// updateDomain updates the domain if its a valid domain
+// The domain can't be equal to current domain and default domain - example.com
+// Required to be local in development mode and public in production mode
+// Quickfeed whitelist is also updated along with the domain
+// The whitelist will be overwritten to default if in development
+func updateDomain(envFile string, domain string, dev bool) error {
+	if !env.ValidateDomain(domain) {
+		return nil // no domain to update
+	}
+
+	envVariables := map[string]string{
+		"DOMAIN":              domain,
+		"QUICKFEED_WHITELIST": domain,
+	}
+	defaultWhiteList := "www.example.com,example.com"
+	if dev {
+		envVariables["QUICKFEED_WHITELIST"] = defaultWhiteList
+	}
+
+	isLocal := env.IsLocal(domain)
+	localAndDev := isLocal && dev
+	publicAndProd := !isLocal && !dev
+	if env.DomainEqual("example.com") || !env.DomainEqual(domain) && (localAndDev || publicAndProd) {
+		if err := env.Save(envFile, envVariables); err != nil {
 			return err
 		}
 	}
