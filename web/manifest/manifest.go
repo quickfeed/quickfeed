@@ -72,6 +72,9 @@ func ConfigureDomain(rootEnvFile string, domain string, dev bool) error {
 		if err := env.Save(rootEnvFile, envVariables); err != nil {
 			return err
 		}
+		// Force reload from .env
+		os.Unsetenv("DOMAIN")
+		os.Unsetenv("QUICKFEED_WHITELIST")
 		return env.Load(rootEnvFile)
 	}
 	return nil
