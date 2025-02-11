@@ -53,11 +53,15 @@ func main() {
 		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
-
+	const envFile = ".env"
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(env.RootEnv(envFile)); err != nil {
+		log.Fatal(err)
+	}
 	if env.AuthSecret() == "" && !*secret {
 		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
-
 	if env.Domain() == "localhost" {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
 	}
@@ -67,12 +71,6 @@ func main() {
 		srvFn = web.NewDevelopmentServer
 	} else {
 		srvFn = web.NewProductionServer
-	}
-	const envFile = ".env"
-	// Load environment variables from $QUICKFEED/.env.
-	// Will not override variables already defined in the environment.
-	if err := env.Load(env.RootEnv(envFile)); err != nil {
-		log.Fatal(err)
 	}
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
