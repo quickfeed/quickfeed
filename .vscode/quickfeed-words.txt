@@ -62,6 +62,7 @@ fileop
 Fornavn
 Frøyland
 fullchain
+getent
 Getwd
 githubv
 GOBIN
