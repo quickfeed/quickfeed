@@ -73,9 +73,6 @@ func main() {
 	if err := manifest.ConfigureDomain(env.RootEnv(envFile), *domain, *dev); err != nil {
 		log.Fatal(err)
 	}
-	if err := checkDomain(); err != nil {
-		log.Fatal(err)
-	}
 
 	var srvFn web.ServerType
 	if *dev {
@@ -86,6 +83,9 @@ func main() {
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
+		if err := checkDomain(); err != nil {
+			log.Fatal(err)
+		}
 		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
 			log.Fatal(err)
 		}
