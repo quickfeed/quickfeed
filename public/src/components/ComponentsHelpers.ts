@@ -1,12 +1,11 @@
 import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
-import { AssignmentsMap } from "../overmind/state"
+import { useActions } from "../overmind"
+import { AssignmentsMap, State } from "../overmind/state"
 import { Row, RowElement } from "./DynamicTable"
 
 
-export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
-    const state = useAppState()
+export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
@@ -74,9 +73,7 @@ export const generateRow = (
     return row
 }
 
-export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean): Row => {
-    const isCourseManuallyGraded = useAppState((state) => state.isCourseManuallyGraded)
-    const actions = useActions()
+export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
     const base: Row = [
         { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
     ]
