@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultDomain   = "127.0.0.1"
+	defaultDomain   = "localhost"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
 )
