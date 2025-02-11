@@ -1,6 +1,5 @@
+import { createRoot } from "react-dom/client";
 import React from 'react'
-import { render } from 'react-dom'
-
 import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
 import { config } from './overmind'
@@ -18,11 +17,16 @@ const overmind = createOvermind(config, {
     devtools: "localhost:3301",
 })
 
+const rootDocument = document.getElementById('root')
+if (rootDocument) {
+    const root = createRoot(rootDocument);
 
-render((
-    <Provider value={overmind}>
+    root.render((<Provider value={overmind}>
         <BrowserRouter>
             <App />
         </BrowserRouter>
-    </Provider>
-), document.getElementById('root'))
+    </Provider>))
+} else {
+    throw new Error('Could not find root element with id "root"')
+}
+
