@@ -61,10 +61,6 @@ func ReadyForAppCreation(envFile string, dev bool, domain string, chkFns ...func
 // Quickfeed whitelist is also updated along with the domain
 // The whitelist will be overwritten to default if in development
 func updateDomain(envFile string, domain string, dev bool) error {
-	if !env.ValidateDomain(domain) {
-		return nil // no domain to update
-	}
-
 	envVariables := map[string]string{
 		"DOMAIN":              domain,
 		"QUICKFEED_WHITELIST": domain,
