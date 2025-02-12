@@ -91,8 +91,8 @@ func TestExtractResultsWithMultipleZeroScoreLines(t *testing.T) {
 		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
 	}
 	for _, score := range res.Scores {
-		if score.Score != 50 {
-			t.Errorf("ExtractResult() expected 50, got %d", score.Score)
+		if score.GetScore() != 50 {
+			t.Errorf("ExtractResult() expected 50, got %d", score.GetScore())
 		}
 	}
 }
@@ -118,8 +118,8 @@ func TestExtractResultsWithMultipleNonZeroScoreLines(t *testing.T) {
 		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
 	}
 	for _, score := range res.Scores {
-		if score.Score != -1 {
-			t.Errorf("ExtractResult() expected -1, got %d", score.Score)
+		if score.GetScore() != -1 {
+			t.Errorf("ExtractResult() expected -1, got %d", score.GetScore())
 		}
 	}
 }
