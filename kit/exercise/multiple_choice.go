@@ -15,7 +15,7 @@ import (
 // compile regular expressions only once
 var (
 	qNumRegExp      = regexp.MustCompile(`^(\d+)\.\s.*$`)
-	selectionRegExp = regexp.MustCompile(`^\s+\-\s\[(x|X)\]\s+([a-f])\)\s.*$`)
+	selectionRegExp = regexp.MustCompile(`^\s+\-\s\[([xX])\]\s+([a-f])\)\s.*$`)
 )
 
 // ParseMarkdownAnswers returns a map of the answers found in the given answer file.
@@ -53,7 +53,7 @@ func ParseMarkdownAnswers(answerFile string) (map[int]string, error) {
 // The answers and correct maps from keys representing the question number to the labels (answer value).
 // The question numbers (keys) in the correct map must contain all question numbers in the range 1 - len(correct).
 // The returned slices contain question numbers deemed correctly and incorrectly answered, respectively.
-func CheckMultipleChoice(answers, correct map[int]string) (correctA []int, incorrectA []int) {
+func CheckMultipleChoice(answers, correct map[int]string) (correctA, incorrectA []int) {
 	for qNum, label := range correct {
 		if answers[qNum] == label {
 			correctA = append(correctA, qNum)
