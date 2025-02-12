@@ -85,7 +85,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			// for access control checks.
 			for _, bm := range benchmarks {
 				bm.CourseID = courseID
-				for _, c := range bm.Criteria {
+				for _, c := range bm.GetCriteria() {
 					c.CourseID = courseID
 				}
 			}
@@ -109,8 +109,8 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 	assignments := make([]*qf.Assignment, 0)
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
-		sort.Slice(assignment.Tasks, func(i, j int) bool {
-			return assignment.Tasks[i].Title < assignment.GetTasks()[j].GetTitle()
+		sort.Slice(assignment.GetTasks(), func(i, j int) bool {
+			return assignment.GetTasks()[i].GetTitle() < assignment.GetTasks()[j].GetTitle()
 		})
 	}
 	sort.Slice(assignments, func(i, j int) bool {
