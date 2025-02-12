@@ -324,14 +324,14 @@ func (*Organization) Descriptor() ([]byte, []int) {
 
 func (x *Organization) GetScmOrganizationID() uint64 {
 	if x != nil {
-		return x.GetScmOrganizationID()
+		return x.ScmOrganizationID
 	}
 	return 0
 }
 
 func (x *Organization) GetScmOrganizationName() string {
 	if x != nil {
-		return x.GetScmOrganizationName()
+		return x.ScmOrganizationName
 	}
 	return ""
 }
