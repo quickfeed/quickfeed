@@ -147,42 +147,42 @@ func TestCountApprovedSubmissions(t *testing.T) {
 
 	submissions := qf.CourseSubmissions{
 		Submissions: map[uint64]*qf.Submissions{
-			enroll1.ID: {
+			enroll1.GetID(): {
 				Submissions: []*qf.Submission{
 					// total approved = 3
-					{ID: 1, AssignmentID: 1, UserID: enroll1.UserID, Grades: []*qf.Grade{{UserID: enroll1.UserID, Status: qf.Submission_APPROVED}}},
-					{ID: 2, AssignmentID: 2, GroupID: 20, Grades: []*qf.Grade{{UserID: enroll1.UserID, Status: qf.Submission_APPROVED}}},
-					{ID: 3, AssignmentID: 3, UserID: enroll1.UserID, Grades: []*qf.Grade{{UserID: 3, Status: qf.Submission_APPROVED}}},
+					{ID: 1, AssignmentID: 1, UserID: enroll1.GetUserID(), Grades: []*qf.Grade{{UserID: enroll1.GetUserID(), Status: qf.Submission_APPROVED}}},
+					{ID: 2, AssignmentID: 2, GroupID: 20, Grades: []*qf.Grade{{UserID: enroll1.GetUserID(), Status: qf.Submission_APPROVED}}},
+					{ID: 3, AssignmentID: 3, UserID: enroll1.GetUserID(), Grades: []*qf.Grade{{UserID: 3, Status: qf.Submission_APPROVED}}},
 					// duplicate approved assignment should be ignored
-					{ID: 2, AssignmentID: 3, UserID: enroll1.UserID, Grades: []*qf.Grade{{UserID: enroll1.UserID, Status: qf.Submission_APPROVED}}},
+					{ID: 2, AssignmentID: 3, UserID: enroll1.GetUserID(), Grades: []*qf.Grade{{UserID: enroll1.GetUserID(), Status: qf.Submission_APPROVED}}},
 				},
 			},
-			enroll2.ID: {
+			enroll2.GetID(): {
 				Submissions: []*qf.Submission{
 					// total approved = 4
-					{ID: 1, AssignmentID: 1, GroupID: 30, Grades: []*qf.Grade{{UserID: enroll2.UserID, Status: qf.Submission_APPROVED}}},
-					{ID: 2, AssignmentID: 2, UserID: enroll2.UserID, Grades: []*qf.Grade{{UserID: enroll2.UserID, Status: qf.Submission_APPROVED}}},
-					{ID: 3, AssignmentID: 3, UserID: enroll2.UserID, Grades: []*qf.Grade{{UserID: enroll2.UserID, Status: qf.Submission_APPROVED}}},
-					{ID: 4, AssignmentID: 4, UserID: enroll2.UserID, Grades: []*qf.Grade{{UserID: enroll2.UserID, Status: qf.Submission_APPROVED}}},
+					{ID: 1, AssignmentID: 1, GroupID: 30, Grades: []*qf.Grade{{UserID: enroll2.GetUserID(), Status: qf.Submission_APPROVED}}},
+					{ID: 2, AssignmentID: 2, UserID: enroll2.GetUserID(), Grades: []*qf.Grade{{UserID: enroll2.GetUserID(), Status: qf.Submission_APPROVED}}},
+					{ID: 3, AssignmentID: 3, UserID: enroll2.GetUserID(), Grades: []*qf.Grade{{UserID: enroll2.GetUserID(), Status: qf.Submission_APPROVED}}},
+					{ID: 4, AssignmentID: 4, UserID: enroll2.GetUserID(), Grades: []*qf.Grade{{UserID: enroll2.GetUserID(), Status: qf.Submission_APPROVED}}},
 				},
 			},
-			enroll3.ID: {
+			enroll3.GetID(): {
 				Submissions: []*qf.Submission{
 					// total approved = 1
-					{ID: 1, AssignmentID: 1, UserID: enroll3.UserID, Grades: []*qf.Grade{
-						{UserID: enroll3.UserID, Status: qf.Submission_APPROVED},
+					{ID: 1, AssignmentID: 1, UserID: enroll3.GetUserID(), Grades: []*qf.Grade{
+						{UserID: enroll3.GetUserID(), Status: qf.Submission_APPROVED},
 						// duplicate grade should be ignored
-						{UserID: enroll3.UserID, Status: qf.Submission_APPROVED},
+						{UserID: enroll3.GetUserID(), Status: qf.Submission_APPROVED},
 					}},
 				},
 			},
-			enroll4.ID: {
+			enroll4.GetID(): {
 				Submissions: []*qf.Submission{
 					// total approved = 1
-					{ID: 1, AssignmentID: 1, UserID: enroll4.UserID, Grades: []*qf.Grade{{UserID: enroll4.UserID, Status: qf.Submission_APPROVED}}},
+					{ID: 1, AssignmentID: 1, UserID: enroll4.GetUserID(), Grades: []*qf.Grade{{UserID: enroll4.GetUserID(), Status: qf.Submission_APPROVED}}},
 					// duplicate assignment should be ignored
-					{ID: 1, AssignmentID: 1, GroupID: 40, Grades: []*qf.Grade{{UserID: enroll4.UserID, Status: qf.Submission_APPROVED}}},
-					{ID: 2, AssignmentID: 2, UserID: enroll4.UserID, Grades: []*qf.Grade{{UserID: enroll4.UserID, Status: qf.Submission_NONE}}},
+					{ID: 1, AssignmentID: 1, GroupID: 40, Grades: []*qf.Grade{{UserID: enroll4.GetUserID(), Status: qf.Submission_APPROVED}}},
+					{ID: 2, AssignmentID: 2, UserID: enroll4.GetUserID(), Grades: []*qf.Grade{{UserID: enroll4.GetUserID(), Status: qf.Submission_NONE}}},
 					// user has no grade for this assignment
 					{ID: 3, AssignmentID: 3, GroupID: 40, Grades: []*qf.Grade{{UserID: 10, Status: qf.Submission_APPROVED}}},
 				},
