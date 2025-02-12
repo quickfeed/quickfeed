@@ -1,7 +1,5 @@
 package qf
 
-import "reflect"
-
 // UserNames returns the SCM user names of the group.
 func (g *Group) UserNames() []string {
 	var gitUserNames []string
@@ -23,7 +21,15 @@ func (g *Group) Contains(user *User) bool {
 
 // ContainsAll compares group members
 func (g *Group) ContainsAll(group *Group) bool {
-	return reflect.DeepEqual(g.GetUsers(), group.GetUsers())
+	if len(g.GetUsers()) != len(group.GetUsers()) {
+		return false
+	}
+	for _, u := range group.GetUsers() {
+		if !g.Contains(u) {
+			return false
+		}
+	}
+	return true
 }
 
 // GetUsersExcept returns a list of all users in a group, except the one with the given userID.

@@ -221,14 +221,14 @@ func TestGroup_ContainsAll(t *testing.T) {
 		},
 		{
 			name: "Nil receiver group",
-			g1: &qf.Group{
+			g2: &qf.Group{
 				Users: []*qf.User{
 					{ID: 1},
 					{ID: 2},
 					{ID: 3},
 				},
 			},
-			g2:   nil,
+			g1:   nil,
 			want: false,
 		},
 		{
