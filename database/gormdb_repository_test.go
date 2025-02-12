@@ -30,7 +30,7 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 	repo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   100,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
@@ -72,8 +72,8 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !gotRepos[0].RepoType.IsCourseRepo() {
-		t.Fatalf("Expected course info repo (%v), but got: %v", qf.Repository_INFO, gotRepos[0].RepoType)
+	if !gotRepos[0].GetRepoType().IsCourseRepo() {
+		t.Fatalf("Expected course info repo (%v), but got: %v", qf.Repository_INFO, gotRepos[0].GetRepoType())
 	}
 }
 
@@ -121,7 +121,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	repoCourseInfo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   100,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_INFO,
 		HTMLURL:           "http://repoCourseInfo.com/",
 	}
@@ -133,7 +133,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	repoAssignment := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   102,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_ASSIGNMENTS,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -176,7 +176,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	repoCourseInfo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   100,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_INFO,
 		HTMLURL:           "http://repoCourseInfo.com/",
 	}
@@ -188,7 +188,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	repoAssignment := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   102,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_ASSIGNMENTS,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -200,7 +200,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	repoUser := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   103,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_USER,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -212,7 +212,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	repoUserTwo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   104,
-		UserID:            userTwo.ID,
+		UserID:            userTwo.GetID(),
 		RepoType:          qf.Repository_USER,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -223,8 +223,8 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	wantRepo := []*qf.Repository{&repoUserTwo}
 
 	repoQuery := &qf.Repository{
-		ScmOrganizationID: course.ScmOrganizationID,
-		UserID:            userTwo.ID,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		UserID:            userTwo.GetID(),
 		RepoType:          qf.Repository_USER,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
@@ -259,7 +259,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	repoCourseInfo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   100,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_INFO,
 		HTMLURL:           "http://repoCourseInfo.com/",
 	}
@@ -271,7 +271,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	repoAssignment := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   102,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_ASSIGNMENTS,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -283,7 +283,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	repoUser := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   103,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_USER,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -295,7 +295,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	repoUserTwo := qf.Repository{
 		ScmOrganizationID: 120,
 		ScmRepositoryID:   104,
-		UserID:            userTwo.ID,
+		UserID:            userTwo.GetID(),
 		RepoType:          qf.Repository_USER,
 		HTMLURL:           "http://repoAssignment.com/",
 	}
@@ -306,8 +306,8 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	wantRepo := []*qf.Repository{&repoUserTwo}
 
 	repoQuery := &qf.Repository{
-		ScmOrganizationID: course.ScmOrganizationID,
-		UserID:            userTwo.ID,
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		UserID:            userTwo.GetID(),
 		RepoType:          qf.Repository_USER,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
@@ -341,7 +341,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	repoCourseInfo := qf.Repository{
 		ScmOrganizationID: 1234,
 		ScmRepositoryID:   100,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_INFO,
 		HTMLURL:           "http://repoCourseInfo.com/",
 	}
@@ -353,7 +353,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	repoAssignment := qf.Repository{
 		ScmOrganizationID: 1234,
 		ScmRepositoryID:   102,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		RepoType:          qf.Repository_ASSIGNMENTS,
 		HTMLURL:           "http://repoAssignment.com/",
 	}

@@ -85,7 +85,7 @@ func TestUpdateAssignment(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	if err := db.CreateAssignment(&qf.Assignment{
-		CourseID:    course.ID,
+		CourseID:    course.GetID(),
 		Name:        "lab1",
 		Deadline:    qtest.Timestamp(t, "2022-11-11T23:59:00"),
 		AutoApprove: false,
@@ -96,7 +96,7 @@ func TestUpdateAssignment(t *testing.T) {
 	}
 
 	if err := db.CreateAssignment(&qf.Assignment{
-		CourseID:    course.ID,
+		CourseID:    course.GetID(),
 		Name:        "lab2",
 		Deadline:    qtest.Timestamp(t, "2022-11-11T23:59:00"),
 		AutoApprove: false,
@@ -106,7 +106,7 @@ func TestUpdateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(course.ID)
+	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -117,8 +117,8 @@ func TestUpdateAssignment(t *testing.T) {
 		a.Deadline = &timestamppb.Timestamp{}
 		a.ScoreLimit = 0
 		a.Reviewers = 0
-		a.AutoApprove = !a.AutoApprove
-		a.IsGroupLab = !a.IsGroupLab
+		a.AutoApprove = !a.GetAutoApprove()
+		a.IsGroupLab = !a.GetIsGroupLab()
 		wantAssignments[i] = (proto.Clone(assignments[i])).(*qf.Assignment)
 	}
 
@@ -126,7 +126,7 @@ func TestUpdateAssignment(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
+	gotAssignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -146,8 +146,8 @@ func TestGetCourseSubmissions(t *testing.T) {
 	user, course, assignment := setupCourseAssignment(t, db)
 
 	wantStruct := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		Score:        42,
 		Reviews:      []*qf.Review{},
 		BuildInfo: &score.BuildInfo{
@@ -164,21 +164,21 @@ func TestGetCourseSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err := db.GetCourseSubmissions(course.ID, qf.SubmissionRequest_ALL)
+	submissions, err := db.GetCourseSubmissions(course.GetID(), qf.SubmissionRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantStruct.BuildInfo = nil
 	wantAssignment := (proto.Clone(assignment)).(*qf.Assignment)
-	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
-	if diff := cmp.Diff(wantAssignment.Submissions, submissions, protocmp.Transform()); diff != "" {
+	wantAssignment.Submissions = append(wantAssignment.GetSubmissions(), wantStruct)
+	if diff := cmp.Diff(wantAssignment.GetSubmissions(), submissions, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourseSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Submission with Review
 	wantReview := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		Score:        45,
 		Reviews: []*qf.Review{
 			{
@@ -197,13 +197,13 @@ func TestGetCourseSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantReview); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetCourseSubmissions(course.ID, qf.SubmissionRequest_ALL)
+	submissions, err = db.GetCourseSubmissions(course.GetID(), qf.SubmissionRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantAssignment = (proto.Clone(assignment)).(*qf.Assignment)
-	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantReview)
-	if diff := cmp.Diff(wantAssignment.Submissions, submissions, protocmp.Transform()); diff != "" {
+	wantAssignment.Submissions = append(wantAssignment.GetSubmissions(), wantStruct, wantReview)
+	if diff := cmp.Diff(wantAssignment.GetSubmissions(), submissions, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourseSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -217,7 +217,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		CourseID:    course.ID,
+		CourseID:    course.GetID(),
 		Name:        "Assignment 1",
 		Deadline:    qtest.Timestamp(t, "2021-12-12T19:00:00"),
 		AutoApprove: false,
@@ -231,7 +231,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 	benchmarks := []*qf.GradingBenchmark{
 		{
 			ID:           1,
-			AssignmentID: assignment.ID,
+			AssignmentID: assignment.GetID(),
 			Heading:      "Test benchmark 1",
 			Criteria: []*qf.GradingCriterion{
 				{
@@ -250,7 +250,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		},
 		{
 			ID:           2,
-			AssignmentID: assignment.ID,
+			AssignmentID: assignment.GetID(),
 			Heading:      "Test benchmark 2",
 			Criteria: []*qf.GradingCriterion{
 				{
@@ -269,7 +269,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		}
 	}
 
-	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
+	gotAssignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -286,7 +286,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		if err := db.UpdateBenchmark(bm); err != nil {
 			t.Fatal(err)
 		}
-		for _, c := range bm.Criteria {
+		for _, c := range bm.GetCriteria() {
 			c.Description = "Updated description"
 			if err := db.UpdateCriterion(c); err != nil {
 				t.Fatal(err)
@@ -294,7 +294,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		}
 	}
 	assignment.GradingBenchmarks = benchmarks
-	gotAssignments, err = db.GetAssignmentsByCourse(course.ID)
+	gotAssignments, err = db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Error(err)
 	}
