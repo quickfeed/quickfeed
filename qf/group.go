@@ -29,7 +29,7 @@ func (g *Group) ContainsAll(group *Group) bool {
 // GetUsersExcept returns a list of all users in a group, except the one with the given userID.
 func (g *Group) GetUsersExcept(userID uint64) []*User {
 	var subset []*User
-	for _, user := range g.Users {
+	for _, user := range g.GetUsers() {
 		if user.GetID() == userID {
 			continue
 		}

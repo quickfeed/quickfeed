@@ -125,7 +125,7 @@ func (s *Submission) BeforeCreate(tx *gorm.DB) error {
 		s.Grades = make([]*Grade, len(userIDs))
 		for idx, id := range userIDs {
 			// Create a grade for each user in the group
-			s.Grades[idx] = &Grade{
+			s.GetGrades()[idx] = &Grade{
 				UserID:       id,
 				SubmissionID: s.GetID(),
 				Status:       s.GetStatusByUser(id),

@@ -15,10 +15,10 @@ const gracePeriod time.Duration = time.Duration(2 * time.Hour)
 // UpdateSlipDays updates the number of slip days for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
-		return fmt.Errorf("invariant violation (enrollment.CourseID != assignment.CourseID) (%d != %d)", m.GetCourseID(), assignment.GetCourseID())
+		return fmt.Errorf("invariant violation (enrollment.GetCourseID() != assignment.GetCourseID()) (%d != %d)", m.GetCourseID(), assignment.GetCourseID())
 	}
 	if assignment.GetID() != submission.GetAssignmentID() {
-		return fmt.Errorf("invariant violation (assignment.ID != submission.AssignmentID) (%d != %d)", assignment.GetID(), submission.GetAssignmentID())
+		return fmt.Errorf("invariant violation (assignment.GetID() != submission.GetAssignmentID()) (%d != %d)", assignment.GetID(), submission.GetAssignmentID())
 	}
 	sinceDeadline := assignment.SinceDeadline(submission.GetBuildInfo().GetSubmissionDate().AsTime())
 
@@ -160,7 +160,7 @@ func (m *Enrollment) CountApprovedSubmissions(submissions []*Submission) {
 		}
 	}
 
-	if m.LastActivityDate == nil && !submissionDate.IsZero() {
+	if m.GetLastActivityDate() == nil && !submissionDate.IsZero() {
 		m.LastActivityDate = timestamppb.New(submissionDate)
 	}
 	m.TotalApproved = totalApproved
