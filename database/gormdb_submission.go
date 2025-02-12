@@ -52,7 +52,7 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 			if err := tx.Where("submission_id = ?", submission.GetID()).Delete(&score.BuildInfo{}).Error; err != nil {
 				return err // will rollback transaction
 			}
-			if submission.BuildInfo != nil {
+			if submission.GetBuildInfo() != nil {
 				submission.BuildInfo.SubmissionID = submission.GetID()
 			}
 			for _, sc := range submission.GetScores() {
@@ -154,7 +154,7 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*
 	}
 
 	var latestSubs []*qf.Submission
-	for _, a := range course.Assignments {
+	for _, a := range course.GetAssignments() {
 		query.AssignmentID = a.GetID()
 		temp, err := db.GetSubmission(query)
 		if err != nil {

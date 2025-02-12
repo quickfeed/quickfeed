@@ -66,7 +66,7 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, e
 		return nil, err
 	}
 	for _, a := range course.GetAssignments() {
-		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.ID})
+		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.GetID()})
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +159,7 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
 		}
 		if len(gradingBenchmarks) > 0 {
-			if cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
+			if cmp.Equal(assignment.GetGradingBenchmarks(), gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
@@ -274,7 +274,7 @@ func (db *GormDB) GetBenchmarks(query *qf.Assignment) ([]*qf.GradingBenchmark, e
 
 	for _, b := range benchmarks {
 		var criteria []*qf.GradingCriterion
-		if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
+		if err := db.conn.Where("benchmark_id = ?", b.GetID()).Find(&criteria).Error; err != nil {
 			return nil, err
 		}
 		b.Criteria = criteria

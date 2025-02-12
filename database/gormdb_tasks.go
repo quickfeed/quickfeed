@@ -61,8 +61,8 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 				}
 				if existingTask.HasChanged(task) {
 					// Task has been changed and must be updated.
-					existingTask.Title = task.Title
-					existingTask.Body = task.Body
+					existingTask.Title = task.GetTitle()
+					existingTask.Body = task.GetBody()
 					updatedTasks = append(updatedTasks, existingTask)
 					err = tx.Model(&qf.Task{}).Select("*").
 						Where(&qf.Task{ID: existingTask.GetID()}).
@@ -71,7 +71,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 						return err // will rollback transaction
 					}
 				}
-				delete(taskMap[assignment.Order], existingTask.Name)
+				delete(taskMap[assignment.GetOrder()], existingTask.GetName())
 			}
 
 			// Find new tasks to be created for the current assignment
@@ -83,7 +83,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 
 		// Tasks to be created must be sorted since map iteration order is non-deterministic
 		sort.Slice(createdTasks, func(i, j int) bool {
-			return createdTasks[i].ID < createdTasks[j].GetID()
+			return createdTasks[i].GetID() < createdTasks[j].GetID()
 		})
 
 		// Create tasks that are not in the database

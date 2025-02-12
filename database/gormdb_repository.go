@@ -19,7 +19,7 @@ func (db *GormDB) CreateRepository(repo *qf.Repository) error {
 		if err := db.conn.First(&qf.Group{}, repo.GetGroupID()).Error; err != nil {
 			return err
 		}
-	case !repo.RepoType.IsCourseRepo():
+	case !repo.GetRepoType().IsCourseRepo():
 		// both user and group unset, then repository type must be an QuickFeed repo type
 		return ErrCreateRepo
 	}
