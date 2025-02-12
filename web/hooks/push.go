@@ -137,7 +137,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	if assignment.GradedManually() {
-		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
+		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.GetName(), course.GetName())
 		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
 			wh.logger.Error(err)
 		}
@@ -179,11 +179,11 @@ func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repos
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 			return
 		}
-		userID = user.ID
+		userID = user.GetID()
 	}
 	// We want to fetch the original enrollment to ensure all Enrollment fields are set to correct values
 	// to ensure gorm Select.Updates behave correctly.
-	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.ID, userID)
+	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.GetID(), userID)
 	if err != nil {
 		wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 		return
