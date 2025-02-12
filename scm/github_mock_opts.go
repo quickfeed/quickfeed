@@ -204,8 +204,8 @@ func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
 
 var toOrg = func(course *qf.Course) github.Organization {
 	return github.Organization{
-		ID:    github.Int64(int64(course.ScmOrganizationID)),
-		Login: github.String(slug.Make(course.ScmOrganizationName)),
+		ID:    github.Int64(int64(course.GetScmOrganizationID())),
+		Login: github.String(slug.Make(course.GetScmOrganizationName())),
 	}
 }
 
