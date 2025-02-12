@@ -81,7 +81,7 @@ func (r *RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submiss
 }
 
 func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
-	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
+	if r.Rebuild && previous != nil && previous.GetBuildInfo() != nil {
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
