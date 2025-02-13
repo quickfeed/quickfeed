@@ -1,8 +1,8 @@
-# Setup development environment
+# Setup Docker development environment
 
 ## Create github app (required)
 
-**IMPORTANT**: The following is required for running Quickfeed directly or with a docker container
+**IMPORTANT**: The following is required for running Quickfeed directly or with a Docker container
 
 To create github app for local development create .env files for root and public folder, then run:
 
@@ -12,19 +12,29 @@ quickfeed -dev -new -secret
 
 ## Docker
 
-Useful sources: [Docker docs](<https://docs.docker.com/>), [dockerfile](/dockerfile), [setup docker desktop for WSL 2](<https://docs.docker.com/desktop/features/wsl/>), [Guide for installing WSL 2](<https://learn.microsoft.com/en-us/windows/wsl/install>)
+View [Docker docs](<https://docs.docker.com/>) to learn about Docker, and please view the [dockerfile](/dockerfile) to understand how the image is constructed.
 
-Docker is executed with [air-verse](https://github.com/air-verse/air) and [volumes](https://docs.docker.com/engine/storage/volumes/), utilizing the `-watch` flag for Quickfeed, enabling live-reload.
+The combination of [Air-verse](https://github.com/air-verse/air) and Quickfeed's `watch` flag, enables live-reload for both front- and backend. A volume or bind mount is required for running a container since only `go.mod` and `go.sum` in root and kit folder is copied into the image.
+
+The environment created in the image has every dependency Quickfeed requires, and will improve your development experience.
 
 ## Run Quickfeed with Docker
 
-### Use docker desktop
+### Docker Desktop
 
-**It is important** to map the docker port to 443 - default https port, a different https port causes issues on the callback from the github app.
+**It is important** to map the Docker port to 443 - default https port, a different https port causes issues on the callback from the github app.
 
-**To run a container with volume**, please use one of the following methods to create the container. The docker desktop doesn't provide a way of starting a container with a volume.
+**To run a container with volume**, please use one of the following methods to create the container. Note that Docker Desktop doesn't provide a way to start a container with a volume, but you can configure a bind mount as an alternative.
 
-### Use docker-compose
+### Docker-compose
+
+To setup environment, run:
+
+```sh
+docker-compose up
+```
+
+Note `docker-compose up` will create an image if it does not exist, and create a container with a volume.
 
 To create/update image:
 
@@ -32,17 +42,9 @@ To create/update image:
 docker-compose build
 ```
 
-To create a container, run:
-
-```sh
-docker-compose up
-```
-
-Docker will build the image if it doesn't exist.
-
 View [docker-compose file](/docker-compose.yml), and run `docker-compose --help` for more details
 
-### Use docker CLI
+### Docker CLI
 
 To create an image, run:
 
@@ -55,24 +57,26 @@ docker build -t quickfeed-web .
 To create a volume bound to the Quickfeed directory, run:
 
 ```sh
-docker volume create --driver local --opt type=none --opt device=$(pwd) --opt o=bind quickfeed_vol
+docker volume create --driver local --opt type=none --opt device=*/path/to/quickfeed* --opt o=bind quickfeed_vol
 ```
+
+Note that the [volume](https://docs.docker.com/engine/storage/volumes/) is configured to operate like a [bind mount](https://docs.docker.com/engine/storage/bind-mounts/), with the primary difference being the indirect connection; **container** -> **volume folder** -> **Quickfeed folder**. Additionally, the volume is persistent and can be reused, whereas a bind mount is typically one-time use.
 
 #### Create a container
 
-With a volume, run:
+To create with a volume, run:
 
 ```sh
 docker run -p 443:443 --mount src=quickfeed_vol,dst=/quickfeed quickfeed-web
 ```
 
-With bind mount, run:
+To create with bind mount, run:
 
 ```sh
-docker run -p 443:443 --mount type=bind,src=$(pwd),dst=/quickfeed quickfeed-web
+docker run -p 443:443 --mount type=bind,src=*/path/to/quickfeed*,dst=/quickfeed quickfeed-web
 ```
 
-#### Commands
+#### Useful Commands
 
 To show all containers, run:
 
@@ -92,7 +96,7 @@ To view details, run:
 docker inspect *ID/Name*
 ```
 
-There are more useful CLI commands, please view `docker --help` or [Notes on using docker](./docker.md)
+There are more CLI commands, please view `docker --help` or [Notes on using docker](./docker.md)
 
 ### Issues and warnings
 
@@ -114,7 +118,7 @@ Set the environment variable to an empty string.
 
 ### The command 'docker-compose' could not be found
 
-Docker desktop is not running on your computer. `Docker-compose` requires the docker engine to be active.
+Docker desktop is not running on your computer. `Docker-compose` requires the Docker engine to be active.
 
 ### Please go back to [step one](#create-github-app-required) if you got any of the following issues
 
