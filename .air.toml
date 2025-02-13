@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp-air"
 
 [build]
-  args_bin = ["-dev"]
+  args_bin = ["-dev", "-watch"]
   bin = "./tmp-air/quickfeed"
   cmd = "bash air-build.sh"
   delay = 1000
