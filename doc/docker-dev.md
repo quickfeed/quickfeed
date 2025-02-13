@@ -57,10 +57,10 @@ docker build -t quickfeed-web .
 To create a volume bound to the Quickfeed directory, run:
 
 ```sh
-docker volume create --driver local --opt type=none --opt device=*/path/to/quickfeed* --opt o=bind quickfeed_vol
+docker volume create --opt type=none --opt device=*/path/to/quickfeed* --opt o=bind quickfeed_vol
 ```
 
-Note that the [volume](https://docs.docker.com/engine/storage/volumes/) is configured to operate like a [bind mount](https://docs.docker.com/engine/storage/bind-mounts/), with the primary difference being the indirect connection; **container** -> **volume folder** -> **Quickfeed folder**. Additionally, the volume is persistent and can be reused, whereas a bind mount is typically one-time use.
+Note that the [volume](https://docs.docker.com/engine/storage/volumes/) is configured to operate like a [bind mount](https://docs.docker.com/engine/storage/bind-mounts/), with the primary difference being the indirect connection; **container** -> **volume folder** -> **Quickfeed folder**. Additionally, the volume is persistent and can be reused, whereas a bind mount requires configuration each time you create a container.
 
 #### Create a container
 
