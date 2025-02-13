@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 
 FROM golang:1.23-alpine
-RUN apk update && apk add --no-cache bash build-base
 
-# Update working directory from /go to /app
-# Not doing so will cause this warning: 'go: warning: ignoring go.mod in $GOPATH /go'
-WORKDIR /app
+# Update and install build-base, npm and webpack
+RUN apk update && apk add --no-cache build-base npm && npm install webpack
+
+WORKDIR /quickfeed
 
 # Set the environment variable for the quickfeed application
-ENV QUICKFEED=/app
+ENV QUICKFEED=/quickfeed
 
 # Set the port number the container should expose
 # 443 is the default port for HTTPS
