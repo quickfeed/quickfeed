@@ -2,7 +2,7 @@
 
 ## Create github app (required)
 
-**IMPORTANT**: The following is required for running quickfeed directly or with a docker container
+**IMPORTANT**: The following is required for running Quickfeed directly or with a docker container
 
 To create github app for local development create .env files for root and public folder, then run:
 
@@ -14,27 +14,25 @@ quickfeed -dev -new -secret
 
 Useful sources: [Docker docs](<https://docs.docker.com/>), [dockerfile](/dockerfile), [setup docker desktop for WSL 2](<https://docs.docker.com/desktop/features/wsl/>), [Guide for installing WSL 2](<https://learn.microsoft.com/en-us/windows/wsl/install>)
 
-Docker is executed with [air-verse](https://github.com/air-verse/air) and [volumes](https://docs.docker.com/engine/storage/volumes/), enabling live-reload.
+Docker is executed with [air-verse](https://github.com/air-verse/air) and [volumes](https://docs.docker.com/engine/storage/volumes/), utilizing the `-watch` flag for Quickfeed, enabling live-reload.
 
-To install air, run:
-
-```sh
-go install github.com/air-verse/air@latest
-```
-
-PS: required to run air directly, air is installed in the docker image
-
-## Run quickfeed with Docker
+## Run Quickfeed with Docker
 
 ### Use docker desktop
 
-**It is important** to map the docker port to 443 (default https port, different https port causes issues on the callback from the github app). The app internally use port 443 by default which forces you to use the port 443, you have to set the flag -http.addr manually if you'd like to run the container on a different port (will cause issues on callback). TODO (joachim): Update when <https://github.com/quickfeed/quickfeed/issues/1195> is closed
+**It is important** to map the docker port to 443 - default https port, a different https port causes issues on the callback from the github app.
 
 **To run a container with volume**, please use one of the following methods to create the container. The docker desktop doesn't provide a way of starting a container with a volume.
 
 ### Use docker-compose
 
-To create an image and/or create a container, run:
+To create/update image:
+
+```sh
+docker-compose build
+```
+
+To create a container, run:
 
 ```sh
 docker-compose up
@@ -52,39 +50,49 @@ To create an image, run:
 docker build -t quickfeed-web .
 ```
 
-To create a volume bound to the quickfeed directory, run:
+#### Volume
+
+To create a volume bound to the Quickfeed directory, run:
 
 ```sh
-docker volume create --driver local --opt type=none --opt device=. --opt o=bind vol
+docker volume create --driver local --opt type=none --opt device=$(pwd) --opt o=bind quickfeed_vol
 ```
 
-Vol is a partial name of the volume, which results in full name: quickfeed_vol, and `device` value: . is equal to current directory - `pwd`
+#### Create a container
 
-To create a container with a volume, run:
+With a volume, run:
 
 ```sh
-docker run -p 443:443 --mount src=quickfeed_vol,dst=/app quickfeed-web
+docker run -p 443:443 --mount src=quickfeed_vol,dst=/quickfeed quickfeed-web
 ```
 
-To create a container with bind mount, run:
+With bind mount, run:
 
 ```sh
-docker run -p 443:443 --mount type=bind,src=$(pwd),dst=/app quickfeed-web
+docker run -p 443:443 --mount type=bind,src=$(pwd),dst=/quickfeed quickfeed-web
 ```
+
+#### Commands
 
 To show all containers, run:
 
 ```sh
-docker container ls -a
+docker ps -a
 ```
 
 To sh into a container, run:
 
 ```sh
-docker exec -it *container ID* sh
+docker exec -it *ID/Name* sh
 ```
 
-Theres many more useful CLI commands, please view `docker --help`
+To view details, run:
+
+```sh
+docker inspect *ID/Name*
+```
+
+There are more useful CLI commands, please view `docker --help` or [Notes on using docker](./docker.md)
 
 ### Issues and warnings
 
@@ -94,7 +102,7 @@ Theres many more useful CLI commands, please view `docker --help`
 export QUICKFEED=/path/to/quickfeed-repository
 ```
 
-The variable can be any string to suppress it, but needs to be a valid path for the repository if the quickfeed binary is in a different directory
+The variable can be any string to suppress it, but must be a valid path to the repository for Quickfeed to function.
 
 To persist the suppress, run:
 
@@ -102,17 +110,11 @@ To persist the suppress, run:
 echo 'export QUICKFEED=' >> $HOME/.bashrc
 ```
 
-### The command 'docker-compose' could not be found in this WSL 2 distro
+Set the environment variable to an empty string.
 
-You are most likely getting this message because docker isn't running on your computer.
+### The command 'docker-compose' could not be found
 
-### /usr/local/bin/docker-compose: line 1: Not: command not found
-
-Weird issue of most likely broken binary or non existent one.. advise you to restart wsl/linux.
-
-### Failed to mount volume; no such file or directory
-
-Not sure how this can happen, but can be resolved by deleting the volume
+Docker desktop is not running on your computer. `Docker-compose` requires the docker engine to be active.
 
 ### Please go back to [step one](#create-github-app-required) if you got any of the following issues
 
