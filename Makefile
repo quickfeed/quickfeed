@@ -79,6 +79,3 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
-
-air:
-	@sudo $(shell go env GOPATH)/bin/air -c .air.toml
