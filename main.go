@@ -49,6 +49,7 @@ func main() {
 		public   = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
+		watch    = flag.Bool("watch", false, "watch for changes and reload")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
 		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
@@ -129,13 +130,19 @@ func main() {
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if *dev && *watch {
+		// Wrap handler with file watcher
+		// for live-reloading in development mode.
+		handler = web.WatchHandler(ctx, handler)
+	}
+
 	srv, err := srvFn(*httpAddr, handler)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	go func() {
 		<-ctx.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

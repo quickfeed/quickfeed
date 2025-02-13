@@ -63,6 +63,7 @@ extldflags
 fileop
 Fornavn
 Frøyland
+fsnotify
 fullchain
 Getwd
 githubv
