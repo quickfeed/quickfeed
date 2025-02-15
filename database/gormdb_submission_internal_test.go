@@ -72,8 +72,8 @@ func TestBeforeCreate(t *testing.T) {
 			if err != nil && test.wantErr != nil && err.Error() != test.wantErr.Error() {
 				t.Errorf("Expected err: %v, got: %v\n", err, test.wantErr)
 			}
-			if !cmp.Equal(test.wantResult, test.submission.Grades, protocmp.Transform()) {
-				t.Errorf("Expected grades: %v, got: %v\n", test.wantResult, test.submission.Grades)
+			if !cmp.Equal(test.wantResult, test.submission.GetGrades(), protocmp.Transform()) {
+				t.Errorf("Expected grades: %v, got: %v\n", test.wantResult, test.submission.GetGrades())
 			}
 		})
 	}
