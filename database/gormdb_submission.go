@@ -67,6 +67,46 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 	})
 }
 
+// BeforeCreate is called before a new submission is created.
+// This method adds grades for any user or group related to the submission
+// which are then saved to the database upon creation of the submission.
+func beforeCreate(tx *gorm.DB, s *qf.Submission) error {
+	if s.GetUserID() > 0 {
+		// Add a grade for the user if the submission is not a group submission.
+		// Create a new grade for the user.
+		s.Grades = []*qf.Grade{{
+			UserID: s.GetUserID(),
+			Status: s.GetStatusByUser(s.GetUserID()),
+		}}
+	}
+	if s.GetGroupID() > 0 {
+		// If the submission is for a group, create a new grade for each user in the group.
+		// Get all the user IDs in the group
+		var userIDs []uint64
+		tx.Model(&qf.Enrollment{}).Where("group_id = ?", s.GetGroupID()).Pluck("user_id", &userIDs)
+
+		if len(userIDs) == 0 {
+			return errors.New("group has no users")
+		}
+
+		s.Grades = make([]*qf.Grade, len(userIDs))
+		for idx, id := range userIDs {
+			// Create a grade for each user in the group
+			s.Grades[idx] = &qf.Grade{
+				UserID: id,
+			}
+		}
+	}
+	// Find the assignment associated with the submission
+	var assignment qf.Assignment
+	if err := tx.First(&assignment, s.GetAssignmentID()).Error; err != nil {
+		return errors.New("submission must have an associated assignment")
+	}
+	// Set the submission status based on the assignment's auto-approve settings
+	s.Grades = assignment.SubmissionStatus(s, s.GetScore())
+	return nil
+}
+
 // check returns an error if the submission query is invalid; otherwise nil is returned.
 func (db *GormDB) check(submission *qf.Submission) error {
 	// Foreign key must be greater than 0.
