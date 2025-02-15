@@ -38,7 +38,7 @@ func testGormDB(t *testing.T) (*gorm.DB, func()) {
 	}
 }
 
-func TestBeforeCreate(t *testing.T) {
+func TestSetGrades(t *testing.T) {
 	submission2 := &qf.Submission{GroupID: 2}
 	submission3 := &qf.Submission{GroupID: 1, Score: 1, AssignmentID: 1}
 	submission4 := &qf.Submission{UserID: 2, Score: 1, AssignmentID: 2, Grades: []*qf.Grade{{UserID: 2, Status: qf.Submission_REJECTED}}}
@@ -68,7 +68,7 @@ func TestBeforeCreate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := beforeCreate(gormDB, test.submission)
+			err := setGrades(gormDB, test.submission)
 			if err != nil && test.wantErr != nil && err.Error() != test.wantErr.Error() {
 				t.Errorf("Expected err: %v, got: %v\n", err, test.wantErr)
 			}

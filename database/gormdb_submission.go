@@ -61,7 +61,7 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 		}
 		if submission.ID == 0 {
 			// Initialize grades for the new submission
-			if err := beforeCreate(tx, submission); err != nil {
+			if err := setGrades(tx, submission); err != nil {
 				return err // will rollback transaction
 			}
 		}
@@ -73,10 +73,9 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 	})
 }
 
-// BeforeCreate is called before a new submission is created.
-// This method adds grades for any user or group related to the submission
+// setGrades adds grades for any user or group related to the submission
 // which are then saved to the database upon creation of the submission.
-func beforeCreate(tx *gorm.DB, s *qf.Submission) error {
+func setGrades(tx *gorm.DB, s *qf.Submission) error {
 	if s.GetUserID() > 0 {
 		// Add a grade for the user if the submission is not a group submission.
 		// Create a new grade for the user.
