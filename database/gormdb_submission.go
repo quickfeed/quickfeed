@@ -59,6 +59,12 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 				sc.SubmissionID = submission.ID
 			}
 		}
+		if submission.ID == 0 {
+			// Initialize grades for the new submission
+			if err := beforeCreate(tx, submission); err != nil {
+				return err // will rollback transaction
+			}
+		}
 		// Full save associations is required to save any nested grades
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(submission).Error; err != nil {
 			return err // will rollback transaction
