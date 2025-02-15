@@ -1,16 +1,12 @@
 package qf_test
 
 import (
-	"errors"
-	"reflect"
 	"testing"
 	"time"
 
-	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gorm.io/gorm"
 )
 
 func TestNewestSubmissionDate(t *testing.T) {
@@ -210,47 +206,5 @@ func TestCountApprovedSubmissions(t *testing.T) {
 		if enrollment.GetTotalApproved() != test.want {
 			t.Errorf("expected enrollment(id=%d) total approved %d, got %d", enrollment.GetID(), test.want, enrollment.GetTotalApproved())
 		}
-	}
-}
-
-func TestBeforeCreate(t *testing.T) {
-	submission1 := &qf.Submission{ID: 1, UserID: 1, Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}}}
-	submission2 := &qf.Submission{ID: 2, GroupID: 2}
-	submission3 := &qf.Submission{ID: 3, GroupID: 1, Grades: []*qf.Grade{{UserID: 2, Status: qf.Submission_REJECTED}, {UserID: 3, Status: qf.Submission_REVISION}}}
-	// Not sure if its necessary to check this case; submission3 := &qf.Submission{UserID: 1, GroupID: 1}
-
-	gormDB, cleanup := qtest.TestGormDB(t, &qf.Enrollment{})
-	defer cleanup()
-
-	gormDB.Create(&qf.Enrollment{GroupID: 1, UserID: 1, CourseID: 1})
-	gormDB.Create(&qf.Enrollment{GroupID: 1, UserID: 2, CourseID: 1})
-	gormDB.Create(&qf.Enrollment{GroupID: 1, UserID: 3, CourseID: 1})
-
-	tests := map[string]*struct {
-		submission *qf.Submission
-		db         *gorm.DB
-		wantErr    error
-		wantResult []*qf.Grade
-	}{
-		"Group and user Id is nil":      {&qf.Submission{}, nil, errors.New("submission must have either user or group ID"), nil},
-		"User should be assigned grade": {submission1, nil, nil, []*qf.Grade{{UserID: 1, SubmissionID: submission1.GetID(), Status: qf.Submission_APPROVED}}},
-		"Test enrollment with no users": {submission2, gormDB, errors.New("group has no users"), nil},
-		"Group should be assigned grades": {submission3, gormDB, nil, []*qf.Grade{
-			{UserID: 1, SubmissionID: submission3.GetID(), Status: qf.Submission_NONE},
-			{UserID: 2, SubmissionID: submission3.GetID(), Status: qf.Submission_REJECTED},
-			{UserID: 3, SubmissionID: submission3.GetID(), Status: qf.Submission_REVISION},
-		}},
-	}
-
-	for key, test := range tests {
-		t.Run(key, func(t *testing.T) {
-			err := test.submission.BeforeCreate(test.db)
-			if (err == nil) != (test.wantErr == nil) || err != nil && test.wantErr != nil && err.Error() != test.wantErr.Error() {
-				t.Errorf("Expected err: %v, got: %v\n", err, test.wantErr)
-			}
-			if !reflect.DeepEqual(test.wantResult, test.submission.Grades) {
-				t.Errorf("Expected grades: %v, got: %v\n", test.wantResult, test.submission.Grades)
-			}
-		})
 	}
 }

@@ -10,19 +10,14 @@ import (
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 )
-
-const testDb = "test.db"
 
 // TestDB returns a test database and close function.
 // This function should only be used as a test helper.
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
 
-	f, err := os.CreateTemp(t.TempDir(), testDb)
+	f, err := os.CreateTemp(t.TempDir(), "test.db")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,45 +36,6 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		if err := db.Close(); err != nil {
 			t.Error(err)
 		}
-		if err := os.Remove(f.Name()); err != nil {
-			t.Error(err)
-		}
-	}
-}
-
-func TestGormDB(t *testing.T, tables ...interface{}) (*gorm.DB, func()) {
-	t.Helper()
-
-	f, err := os.CreateTemp(t.TempDir(), testDb)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	conn, err := gorm.Open(sqlite.Open(f.Name()), &gorm.Config{
-		SkipDefaultTransaction: true,
-	})
-	if err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	schema.RegisterSerializer("timestamp", &database.TimestampSerializer{})
-
-	if err := conn.AutoMigrate(tables...); err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	return conn, func() {
-		sqlDB, err := conn.DB()
-		if err != nil {
-			t.Error(err)
-		}
-		sqlDB.Close()
 		if err := os.Remove(f.Name()); err != nil {
 			t.Error(err)
 		}
