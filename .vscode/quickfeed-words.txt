@@ -61,6 +61,7 @@ extldflags
 fileop
 Fornavn
 Frøyland
+fsnotify
 fullchain
 getent
 Getwd
