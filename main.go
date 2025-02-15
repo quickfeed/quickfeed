@@ -93,6 +93,11 @@ func main() {
 		}
 	}
 
+	// Refresh environment variables
+	if err := env.Load(env.RootEnv(envFile)); err != nil {
+		log.Fatal(err)
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)

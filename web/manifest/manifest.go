@@ -105,8 +105,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	if err := server.Shutdown(context.Background()); err != nil {
 		return err
 	}
-	// Refresh environment variables
-	return env.Load(env.RootEnv(m.envFile))
+	return nil
 }
 
 func (m *Manifest) conversion() http.HandlerFunc {
