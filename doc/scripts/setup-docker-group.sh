@@ -21,8 +21,8 @@ fi
 
 # Check if user does not have access, and if the group is configured correctly
 # The three last statements are opposites of previous statements
-if ! docker ps > /dev/null 2>&1 && [ -n "$(getent group docker | grep $USER)" ] && systemctl is-active --quiet docker && [ -n "$(cat /etc/group | grep docker)" ]; then
-    echo "The group was configured, please restart your system for the changes to take effect"
+if ! docker ps > /dev/null 2>&1; then
+    echo "The group is configured, but you may need to restart your system for the changes to take effect"
 else
-    echo "Docker daemon was configured successfully!"
+    echo "Docker is running and properly configured"
 fi
