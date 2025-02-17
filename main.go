@@ -93,9 +93,11 @@ func main() {
 		}
 	}
 
-	// Refresh environment variables
-	if err := env.Load(env.RootEnv(envFile)); err != nil {
-		log.Fatal(err)
+	if *secret || *newApp {
+		// Refresh environment variables
+		if err := env.Load(env.RootEnv(envFile)); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	logger, err := qlog.Zap()
