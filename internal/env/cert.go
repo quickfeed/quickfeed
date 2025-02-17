@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultDomain   = "127.0.0.1"
+	defaultDomain   = "localhost"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
 )
@@ -24,6 +24,10 @@ func Domain() string {
 		domain = defaultDomain
 	}
 	return domain
+}
+
+func DomainEqual(domain string) bool {
+	return Domain() == domain
 }
 
 // WhiteList returns a list of domains that the server will create certificates for.

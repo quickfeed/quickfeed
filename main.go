@@ -52,28 +52,27 @@ func main() {
 		watch    = flag.Bool("watch", false, "watch for changes and reload")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
 		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
+		domain   = flag.String("domain", "localhost", "domain name for the QuickFeed instance")
 	)
 	flag.Parse()
 	const envFile = ".env"
-	if *secret {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.Save(env.RootEnv(envFile), map[string]string{
-			"QUICKFEED_AUTH_SECRET": rand.String(),
-		}); err != nil {
-			log.Fatal(err)
-		}
-	}
+	env.SetupEnvFiles(envFile)
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.AuthSecret() == "" {
+	if env.AuthSecret() == "" && !*secret {
 		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	if *newApp {
+		if err := manifest.ReadyForAppCreation(envFile); err != nil {
+			log.Fatal(err)
+		}
+	}
+	if err := manifest.ConfigureDomain(env.RootEnv(envFile), *domain, *dev); err != nil {
+		log.Fatal(err)
 	}
 
 	var srvFn web.ServerType
@@ -85,10 +84,19 @@ func main() {
 	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
-		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
+		if err := checkDomain(); err != nil {
 			log.Fatal(err)
 		}
 		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if *secret {
+		log.Println("Generating new random secret for signing JWT tokens...")
+		if err := env.Save(env.RootEnv(envFile), map[string]string{
+			"QUICKFEED_AUTH_SECRET": rand.String(),
+		}); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -163,9 +171,9 @@ func main() {
 }
 
 func checkDomain() error {
-	if env.Domain() == "127.0.0.1" {
+	if env.IsLocal(env.Domain()) {
 		msg := `
-WARNING: You are creating a GitHub app on "127.0.0.1".
+WARNING: You are creating a GitHub app on a local domain.
 This is only for development purposes.
 In this mode, QuickFeed will not be able to receive webhook events from GitHub.
 To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.

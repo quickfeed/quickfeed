@@ -49,6 +49,37 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	return nil
 }
 
+// ConfigureDomain updates the domain if its a valid domain
+// The domain can't be equal to current domain and default domain - example.com
+// Required to be local in development mode and public in production mode
+// Quickfeed whitelist is also updated along with the domain
+// The whitelist will be overwritten to default if in development
+func ConfigureDomain(rootEnvFile string, domain string, dev bool) error {
+	domainWithQuotes := fmt.Sprintf("\"%s\"", domain)
+	envVariables := map[string]string{
+		"DOMAIN":              domainWithQuotes,
+		"QUICKFEED_WHITELIST": domainWithQuotes,
+	}
+	defaultWhiteList := fmt.Sprintf("\"%s\"", "www.example.com,example.com")
+	if dev {
+		envVariables["QUICKFEED_WHITELIST"] = defaultWhiteList
+	}
+
+	isLocal := env.IsLocal(domain)
+	localAndDev := isLocal && dev
+	publicAndProd := !isLocal && !dev
+	if env.DomainEqual("example.com") || !env.DomainEqual(domain) && (localAndDev || publicAndProd) {
+		if err := env.Save(rootEnvFile, envVariables); err != nil {
+			return err
+		}
+		// Force reload from .env
+		os.Unsetenv("DOMAIN")
+		os.Unsetenv("QUICKFEED_WHITELIST")
+		return env.Load(rootEnvFile)
+	}
+	return nil
+}
+
 func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error {
 	m := New(env.Domain(), envFile)
 	server, err := srvFn(httpAddr, m.Handler())

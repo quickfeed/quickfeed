@@ -2,7 +2,9 @@ package env
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -19,8 +21,37 @@ func Prepared(filename string) error {
 	if exists(bakFilename) {
 		return ExistsError(bakFilename)
 	}
+
 	if !exists(filename) {
 		return MissingError(filename)
+	}
+	return nil
+}
+
+func SetupEnvFiles(envFile string) {
+	for _, envFile := range []string{RootEnv(envFile), PublicEnv(envFile)} {
+		if !exists(envFile) {
+			// Ignore errors when creating the .env file.
+			// Will be handled by prepared
+			_ = createEnvFile(envFile)
+		}
+	}
+}
+
+// createEnvFile, creates a new .env file from the .env.template in the same directory.
+func createEnvFile(filename string) error {
+	env, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(filename)
+	envTemplate, err := os.Open(filepath.Join(dir, ".env-template"))
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(env, envTemplate)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -63,9 +94,6 @@ func update(filename, content string, env map[string]string) error {
 		return err
 	}
 
-	// Map of updated environment variables
-	updated := make(map[string]bool)
-
 	// Scan existing file's content and update existing environment variables.
 	for _, line := range strings.Split(content, "\n") {
 		key, val, found := strings.Cut(line, "=")
@@ -79,16 +107,13 @@ func update(filename, content string, env map[string]string) error {
 		if v, ok := env[key]; ok {
 			// Replace old value with new value.
 			val = v
+			delete(env, key)
 		}
 		fmt.Fprintf(file, "%s=%s\n", key, val)
-		updated[key] = true
 	}
 
 	// Write new lines for any new environment variables.
 	for key, val := range env {
-		if _, ok := updated[key]; ok {
-			continue
-		}
 		if _, err = fmt.Fprintf(file, "%s=%s\n", key, val); err != nil {
 			return err
 		}
