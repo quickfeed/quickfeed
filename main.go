@@ -83,7 +83,7 @@ func main() {
 	if *secret {
 		log.Println("Generating new random secret for signing JWT tokens...")
 		if err := env.NewAuthSecret(envFile); err != nil {
-			log.Fatalf("Failed to generate new secret: %v", err)
+			log.Fatalf("Failed to save secret: %v", err)
 		}
 	}
 	if *secret || *newApp {
