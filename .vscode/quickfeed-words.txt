@@ -63,6 +63,7 @@ Fornavn
 Frøyland
 fsnotify
 fullchain
+getent
 Getwd
 githubv
 GOBIN
