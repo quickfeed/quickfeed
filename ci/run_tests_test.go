@@ -90,7 +90,7 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
-	t.Logf("%+v", results.BuildInfo.GetBuildLog())
+	t.Logf("%+v", results.GetBuildInfo().GetBuildLog())
 	results.BuildInfo.BuildLog = "removed"
 	t.Logf("%+v\n", qlog.IndentJson(results))
 }
@@ -183,10 +183,10 @@ func TestRecordResults(t *testing.T) {
 	if diff := cmp.Diff(testScores, submission.GetScores(), protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
 		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(buildInfo.BuildDate, submission.GetBuildInfo().GetBuildDate(), protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(buildInfo.GetBuildDate(), submission.GetBuildInfo().GetBuildDate(), protocmp.Transform()); diff != "" {
 		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.GetBuildInfo().GetSubmissionDate(), protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(buildInfo.GetSubmissionDate(), submission.GetBuildInfo().GetSubmissionDate(), protocmp.Transform()); diff != "" {
 		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
 	}
 

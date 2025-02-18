@@ -175,3 +175,11 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	}
 	return res, nil
 }
+
+// GetBuildInfo returns the build info for the results object after nil check.
+func (r *Results) GetBuildInfo() *BuildInfo {
+	if r != nil && r.BuildInfo != nil {
+		return r.BuildInfo
+	}
+	return &BuildInfo{}
+}

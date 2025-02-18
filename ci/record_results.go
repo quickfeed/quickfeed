@@ -85,15 +85,15 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
-	resultScore := results.Sum()
+	score := results.Sum()
 	return &qf.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
-		Score:        resultScore,
-		Grades:       r.Assignment.SubmissionStatus(previous, resultScore),
+		Score:        score,
+		Grades:       r.Assignment.SubmissionStatus(previous, score),
 		BuildInfo:    results.BuildInfo,
 		Scores:       results.Scores,
 	}
@@ -107,13 +107,13 @@ func (r *RunData) updateSlipDays(db database.Database, submission *qf.Submission
 		if err != nil {
 			return fmt.Errorf("failed to get group %d: %w", submission.GetGroupID(), err)
 		}
-		enrollments = group.GetEnrollments()
+		enrollments = append(enrollments, group.GetEnrollments()...)
 	} else {
 		enroll, err := db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
 		if err != nil {
 			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
-		enrollments = []*qf.Enrollment{enroll}
+		enrollments = append(enrollments, enroll)
 	}
 
 	for _, enroll := range enrollments {
