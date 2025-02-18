@@ -821,7 +821,7 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	for _, submission := range gotSubmissions1 {
 		// All submissions should have a score of 20
-		if submission.Score != 20 {
+		if submission.GetScore() != 20 {
 			t.Errorf("Expected score 20, got %d", submission.GetScore())
 		}
 	}

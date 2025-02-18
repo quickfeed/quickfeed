@@ -17,7 +17,7 @@ func (s *QuickFeedService) updateUser(curUser *qf.User, request *qf.User) (*qf.U
 	if request.GetStudentID() != "" {
 		updateUser.StudentID = request.GetStudentID()
 	}
-	if request.Email != "" {
+	if request.GetEmail() != "" {
 		updateUser.Email = request.GetEmail()
 	}
 	if request.GetAvatarURL() != "" {

@@ -138,7 +138,7 @@ func TestLastActivityDate(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !inOneSecondRange(date.GetSeconds(), enrol.GetLastActivityDate().GetSeconds()) {
-			t.Errorf("last activity date mismatch: %d, expected %d", enrol.GetLastActivityDate().Seconds, date.GetSeconds())
+			t.Errorf("last activity date mismatch: %d, expected %d", enrol.GetLastActivityDate().GetSeconds(), date.GetSeconds())
 		}
 		// Remove updated date.
 		if err := db.UpdateEnrollment(&qf.Enrollment{

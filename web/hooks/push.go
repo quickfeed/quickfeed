@@ -30,7 +30,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		return
 	}
 
-	course, err := wh.db.GetCourseByOrganizationID(repo.ScmOrganizationID)
+	course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID())
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
@@ -172,7 +172,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
 func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
-	userID := repo.UserID
+	userID := repo.GetUserID()
 	if userID < 1 && repo.IsGroupRepo() {
 		user, err := wh.db.GetUserByCourse(course, login)
 		if err != nil {

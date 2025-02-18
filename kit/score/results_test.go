@@ -23,7 +23,7 @@ Here are some more logs for the student.
 		// err may contain multiple errors
 		t.Fatal(err)
 	}
-	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
+	if strings.Contains(res.BuildInfo.GetBuildLog(), "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
 		t.Logf("res %+v", res.BuildInfo)
 	}
@@ -42,7 +42,7 @@ Here are some more logs for the student.
 		// err may contain multiple errors
 		t.Fatal(err)
 	}
-	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
+	if strings.Contains(res.BuildInfo.GetBuildLog(), "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
 		t.Logf("res %+v", res.BuildInfo)
 	}
@@ -182,7 +182,7 @@ func TestExtractResultsExecTime(t *testing.T) {
 				// err may contain multiple errors
 				t.Fatal(err)
 			}
-			got := res.BuildInfo.ExecTime
+			got := res.BuildInfo.GetExecTime()
 			if got != tt.want {
 				t.Errorf("ExtractResult(..., %q) = '%v', want '%v'", tt.in, got, tt.want)
 			}

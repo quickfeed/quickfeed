@@ -50,7 +50,7 @@ func (s *Score) DecBy(n int) {
 
 // Normalize the score to the given maxScore.
 func (s *Score) Normalize(maxScore int) {
-	f := float64(maxScore) / float64(s.MaxScore)
+	f := float64(maxScore) / float64(s.GetMaxScore())
 	normScore := float64(s.GetScore()) * f
 	s.Score = int32(math.Round(normScore))
 	s.MaxScore = int32(maxScore)
@@ -64,10 +64,10 @@ func (s *Score) weightedScore(totalWeight float64) float64 {
 // Equal returns true if s equals other. Ignores the Secret field.
 func (s *Score) Equal(other *Score) bool {
 	return other != nil &&
-		s.TestName == other.GetTestName() &&
-		s.Score == other.GetScore() &&
-		s.MaxScore == other.GetMaxScore() &&
-		s.Weight == other.GetWeight()
+		s.GetTestName() == other.GetTestName() &&
+		s.GetScore() == other.GetScore() &&
+		s.GetMaxScore() == other.GetMaxScore() &&
+		s.GetWeight() == other.GetWeight()
 }
 
 // RelativeScore returns a string with the following format:
@@ -85,7 +85,7 @@ func (s *Score) RelativeScore() string {
 func (s *Score) Print(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.internalFail(t)
-		printPanicMessage(s.TestName, msg[0], r)
+		printPanicMessage(s.GetTestName(), msg[0], r)
 	}
 	// We rely on JSON score objects to start on a new line, since otherwise
 	// scanning long student generated output lines can be costly.
