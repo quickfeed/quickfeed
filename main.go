@@ -16,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -54,14 +53,12 @@ func main() {
 		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
-	const envFile = ".env"
+
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
+	const envFile = ".env"
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
-	}
-	if env.AuthSecret() == "" && !*secret {
-		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 	if env.Domain() == "localhost" {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
@@ -83,21 +80,20 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
 	if *secret {
 		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.Save(env.RootEnv(envFile), map[string]string{
-			"QUICKFEED_AUTH_SECRET": rand.String(),
-		}); err != nil {
-			log.Fatal(err)
+		if err := env.NewAuthSecret(envFile); err != nil {
+			log.Fatalf("Failed to generate new secret: %v", err)
 		}
 	}
-
 	if *secret || *newApp {
 		// Refresh environment variables
 		if err := env.Load(env.RootEnv(envFile)); err != nil {
 			log.Fatal(err)
 		}
+	}
+	if env.AuthSecret() == "" {
+		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
 	logger, err := qlog.Zap()
