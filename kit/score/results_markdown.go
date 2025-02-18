@@ -8,12 +8,12 @@ import "fmt"
 //
 //	 ## Test results from latest push
 //
-//		| Test Name | Score | Weight | % of Total |
-//		| :-------- | ----: | -----: | ---------: |
-//	 | Test 1    |   2/4 |      1 |       6.3% |
-//	 | Test 2    |   1/4 |      2 |       6.3% |
-//	 | Test 3    |   3/4 |      5 |      46.9% |
-//	 | Total     |       |        |      59.5% |
+//	| Test Name | Score | Weight | % of Total |
+//	| :--------		  | ----:   | -----: |   ---------: |
+//	| Test 1     	  |   2/4 |       1 |         6.3% |
+//	| Test 2   		  |   1/4 |       2 |         6.3% |
+//	| Test 3		  |   3/4 |       5 |       46.9% |
+//	| Total    	 	  |       	 |          |       59.5% |
 //
 //		Reviewers are assigned once the total score reaches 80%.
 func (r *Results) MarkdownComment(taskLocalName string, scoreLimit uint32) string {

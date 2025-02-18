@@ -36,7 +36,7 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.ScmRepositoryID}); err != nil {
+	if _, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.GetScmRepositoryID()}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -68,7 +68,7 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotRepos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.ScmRepositoryID})
+	gotRepos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.GetScmRepositoryID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,10 +89,10 @@ func TestGormDeleteRepo(t *testing.T) {
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.DeleteRepository(repo.ScmRepositoryID); err != nil {
+	if err := db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
 		t.Fatal(err)
 	}
-	gotRepos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.ScmRepositoryID})
+	gotRepos, err := db.GetRepositories(&qf.Repository{ScmRepositoryID: repo.GetScmRepositoryID()})
 	if err != nil {
 		t.Fatal(err)
 	}

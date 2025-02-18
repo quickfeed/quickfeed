@@ -450,7 +450,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 
-	updatedBuildInfo.ID = submissions[0].BuildInfo.GetID()
+	updatedBuildInfo.ID = submissions[0].GetBuildInfo().GetID()
 	updatedBuildInfo.SubmissionID = oldSubmissionID
 	if diff := cmp.Diff(submissions[0].GetBuildInfo(), updatedBuildInfo, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected updated build info, but got (-sub +want):\n%s", diff)
