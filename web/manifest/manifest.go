@@ -102,11 +102,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	if err := <-m.done; err != nil {
 		return err
 	}
-	if err := server.Shutdown(context.Background()); err != nil {
-		return err
-	}
-	// Refresh environment variables
-	return env.Load(env.RootEnv(m.envFile))
+	return server.Shutdown(context.Background())
 }
 
 func (m *Manifest) conversion() http.HandlerFunc {
