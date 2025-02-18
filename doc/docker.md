@@ -1,13 +1,16 @@
 # Notes on Using Docker
 
-Code submitted by students is being built and run inside Docker containers.
+QuickFeed builds and runs student submitted code within a Docker container.
 After a container exits, the output is parsed and saved as a new submission entry in the database.
+The following provides a brief overview of Docker and how it is used in QuickFeed.
 
-To be able to run docker on linux, and WSL or macOS without docker desktop, the user that is running docker either has to be running as sudo user, execute commands with `sudo`, or must be a part of the docker group. See [Configure a docker group](#configure-a-docker-group) for details.
+To run Docker commands the user must be a part of the docker group.
+See the section [Adding a User to the Docker Group](#adding-a-user-to-the-docker-group) for details.
+This does not apply to the Docker Desktop application, available for Windows and macOS.
 
-## Freeing up space on Docker
+## Freeing up Space Consumed by Docker Containers
 
-If suddenly out of space on the production server, there are few Docker-related steps that can be taken:
+If we run out of space on the production server, there are a few Docker-related steps that can be taken:
 
 - Check if there are containers running for too long with `docker ps`; if necessary, kill them with `docker rm <name/id>`
 - Check if there are too many stopped containers waiting to be removed
@@ -37,70 +40,68 @@ To stop (or delete) **all containers**, use one of these commands:
 % docker rm $(docker ps -a -q)
 ```
 
-## Helpful Tools for dealing with Docker containers and too many open file descriptors
+The following commands are useful for dealing with Docker containers and too many open file descriptors:
 
 ```sh
+# Check the number of open file descriptors for the quickfeed process (linux only)
 % pgrep quickfeed | ls /proc/$(xargs)/fd | wc -l
 % docker ps -a
 % docker stats
+# Delete all stopped containers
 % docker rm $(docker ps -q -f status=exited)
 ```
 
-## Configure a Docker group
+## Adding a User to the Docker Group
 
-There are two sections for setting up a Docker group, a guide and a setup script, choose whichever works best for you.
+We provide a script to automate the process of adding a user to the Docker group on Linux with systemd.
+This script is located in the `scripts` directory.
 
-Once a group is configured and a user gains access to Docker daemon, deleting the Docker group or removing the user from the group will revoke the access. However, the changes will only take effect after the user terminates their session.
-
-### Setup script
-
-To setup Docker daemon move to root directory and run:
+To run the script, execute the following command:
 
 ```sh
 % bash ./doc/scripts/setup-docker-group.sh
 ```
 
-For details, see [setup-script](../setup-daemon.sh)
+For details, see [setup-docker-group.sh](./scripts/setup-docker-group.sh)
 
-### Guide
+### Manual Steps to Add a User to the Docker Group
 
 First check that the `docker` group exists:
 
 ```sh
 % cat /etc/group | grep docker
-```
-
-or:
-
-```sh
+# or
 % getent group docker
 ```
 
-These commands can also be used to check which users are in the Docker group, and thus can run Docker containers.
+These commands can also be used to check which users are in the `docker` group, and can run Docker containers.
 
-#### Missing Docker group
+#### Missing Docker Group
 
-If there isn't a Docker group, add it manually with the command:
+If there isn't a `docker` group, add it manually with the command:
 
 ```sh
 % sudo groupadd docker
 ```
 
-After this command is executed please restart your machine or restart the Docker daemon with the commands:
+After executing this command, you will need to restart the Docker daemon with the command:
 
 ```sh
 % sudo systemctl restart docker.service
-```
-
-or
-
-```sh
+# or
 % sudo service docker restart
 ```
 
-#### Docker group exists
+#### Docker Group Exists
 
-If it does add the user that should be running Docker to this group with the given command
+If the `docker` group exists, check if the user is already in the `docker` group with the command:
+
+```sh
+% groups [username]
+```
+
+If the `docker` group is not listed, the user is not in the `docker` group.
+To add the user to the `docker` group, use the command:
 
 ```sh
 % sudo usermod -aG docker [username]
@@ -109,11 +110,13 @@ If it does add the user that should be running Docker to this group with the giv
 Also make sure that the Docker daemon is running,
 
 ```sh
-% systemctl status docker.service
+% sudo systemctl status docker.service
+# or
+% sudo service docker status
 ```
 
-or with the command
+Check that you can run Docker commands without `sudo`:
 
 ```sh
-% service docker status
+% docker run hello-world
 ```
