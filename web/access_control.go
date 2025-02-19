@@ -48,7 +48,7 @@ func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*
 // isTeacher returns true if the given user is teacher for the given course.
 func (s *QuickFeedService) isTeacher(userID, courseID uint64) bool {
 	return s.hasCourseAccess(userID, courseID, func(e *qf.Enrollment) bool {
-		return e.Status == qf.Enrollment_TEACHER
+		return e.GetStatus() == qf.Enrollment_TEACHER
 	})
 }
 

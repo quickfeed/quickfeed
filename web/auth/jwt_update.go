@@ -69,8 +69,8 @@ func (tm *TokenManager) updateTokenList() error {
 	}
 	var tokens []uint64
 	for _, user := range users {
-		if user.UpdateToken {
-			tokens = append(tokens, user.ID)
+		if user.GetUpdateToken() {
+			tokens = append(tokens, user.GetID())
 		}
 	}
 	tm.tokensToUpdate = tokens

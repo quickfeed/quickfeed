@@ -79,7 +79,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	request := &connect.Request[qf.EnrollmentRequest]{
 		Msg: &qf.EnrollmentRequest{
 			FetchMode: &qf.EnrollmentRequest_CourseID{
-				CourseID: qtest.MockCourses[0].ID,
+				CourseID: qtest.MockCourses[0].GetID(),
 			},
 		},
 	}
@@ -88,8 +88,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		t.Error(err)
 	}
 	var gotUsers []*qf.User
-	for _, e := range gotEnrollments.Msg.Enrollments {
-		gotUsers = append(gotUsers, e.User)
+	for _, e := range gotEnrollments.Msg.GetEnrollments() {
+		gotUsers = append(gotUsers, e.GetUser())
 	}
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
@@ -113,7 +113,7 @@ func TestUpdateUser(t *testing.T) {
 	firstAdminUser := qtest.CreateFakeUser(t, db)
 	nonAdminUser := qtest.CreateFakeUser(t, db)
 
-	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.ID)
+	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,17 +126,17 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	// we expect the nonAdminUser to now be admin
-	admin, err := db.GetUser(nonAdminUser.ID)
+	admin, err := db.GetUser(nonAdminUser.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !admin.IsAdmin {
+	if !admin.GetIsAdmin() {
 		t.Error("expected nonAdminUser to have become admin")
 	}
 
 	nameChangeRequest := connect.NewRequest(&qf.User{
-		ID:        nonAdminUser.ID,
-		IsAdmin:   nonAdminUser.IsAdmin,
+		ID:        nonAdminUser.GetID(),
+		IsAdmin:   nonAdminUser.GetIsAdmin(),
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",
@@ -148,19 +148,19 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	gotUser, err := db.GetUser(nonAdminUser.ID)
+	gotUser, err := db.GetUser(nonAdminUser.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantUser := &qf.User{
-		ID:           gotUser.ID,
+		ID:           gotUser.GetID(),
 		Name:         "Scrooge McDuck",
 		IsAdmin:      true,
 		StudentID:    "99",
 		Email:        "test@test.com",
 		AvatarURL:    "www.hello.com",
-		RefreshToken: nonAdminUser.RefreshToken,
-		ScmRemoteID:  nonAdminUser.ScmRemoteID,
+		RefreshToken: nonAdminUser.GetRefreshToken(),
+		ScmRemoteID:  nonAdminUser.GetScmRemoteID(),
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
@@ -174,11 +174,11 @@ func TestUpdateUserFailures(t *testing.T) {
 	ctx := context.Background()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
-	if !admin.IsAdmin {
+	if !admin.GetIsAdmin() {
 		t.Fatalf("expected user %v to be admin", admin)
 	}
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
-	if user.IsAdmin {
+	if user.GetIsAdmin() {
 		t.Fatalf("expected user %v to be non-admin", user)
 	}
 	userCookie := Cookie(t, tm, user)
@@ -194,12 +194,12 @@ func TestUpdateUserFailures(t *testing.T) {
 			name:   "user demotes admin, must fail",
 			cookie: userCookie,
 			req: &qf.User{
-				ID:        admin.ID,
+				ID:        admin.GetID(),
 				IsAdmin:   false,
-				Name:      admin.Name,
-				Email:     admin.Email,
-				StudentID: admin.StudentID,
-				AvatarURL: admin.AvatarURL,
+				Name:      admin.GetName(),
+				Email:     admin.GetEmail(),
+				StudentID: admin.GetStudentID(),
+				AvatarURL: admin.GetAvatarURL(),
 			},
 			wantErr: true,
 		},
@@ -207,11 +207,11 @@ func TestUpdateUserFailures(t *testing.T) {
 			name:   "user promotes self to admin, must fail",
 			cookie: userCookie,
 			req: &qf.User{
-				ID:        user.ID,
-				Name:      user.Name,
-				Email:     user.Email,
-				StudentID: user.StudentID,
-				AvatarURL: user.AvatarURL,
+				ID:        user.GetID(),
+				Name:      user.GetName(),
+				Email:     user.GetEmail(),
+				StudentID: user.GetStudentID(),
+				AvatarURL: user.GetAvatarURL(),
 				IsAdmin:   true,
 			},
 			wantErr: true,
@@ -220,16 +220,16 @@ func TestUpdateUserFailures(t *testing.T) {
 			name:   "admin changes own name, must pass",
 			cookie: adminCookie,
 			req: &qf.User{
-				ID:   admin.ID,
+				ID:   admin.GetID(),
 				Name: "super user",
 			},
 			wantUser: &qf.User{
-				ID:           admin.ID,
+				ID:           admin.GetID(),
 				IsAdmin:      true,
-				Login:        admin.Login,
+				Login:        admin.GetLogin(),
 				Name:         "super user",
-				RefreshToken: admin.RefreshToken,
-				ScmRemoteID:  admin.ScmRemoteID,
+				RefreshToken: admin.GetRefreshToken(),
+				ScmRemoteID:  admin.GetScmRemoteID(),
 			},
 			wantErr: false,
 		},
@@ -248,7 +248,7 @@ func TestUpdateUserFailures(t *testing.T) {
 					t.Fatal(err)
 				}
 				for _, u := range users.Msg.GetUsers() {
-					if u.ID == tt.wantUser.ID {
+					if u.GetID() == tt.wantUser.GetID() {
 						if diff := cmp.Diff(tt.wantUser, u, protocmp.Transform()); diff != "" {
 							t.Errorf("%s: UpdateUser() mismatch (-wantUser +gotUser):\n%s", tt.name, diff)
 						}

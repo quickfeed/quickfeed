@@ -130,8 +130,8 @@ func toIssue(issue *github.Issue) *Issue {
 		ID:         issue.GetID(),
 		Title:      issue.GetTitle(),
 		Body:       issue.GetBody(),
-		Repository: issue.Repository.GetName(),
-		Assignee:   issue.Assignee.GetName(),
+		Repository: issue.GetRepository().GetName(),
+		Assignee:   issue.GetAssignee().GetName(),
 		Number:     issue.GetNumber(),
 		Status:     issue.GetState(),
 	}

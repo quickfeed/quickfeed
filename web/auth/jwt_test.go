@@ -31,7 +31,7 @@ func TestNewManager(t *testing.T) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 		},
-		UserID:  user1.ID,
+		UserID:  user1.GetID(),
 		Admin:   true,
 		Courses: make(map[uint64]qf.Enrollment_UserStatus, 0),
 	}
@@ -58,7 +58,7 @@ func TestNewManager(t *testing.T) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 		},
-		UserID: user2.ID,
+		UserID: user2.GetID(),
 		Admin:  false,
 	}
 	cookie, err = manager.UpdateCookie(&user2claims)
@@ -79,7 +79,7 @@ func TestNewCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cookie, err := manager.NewAuthCookie(user.ID)
+	cookie, err := manager.NewAuthCookie(user.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	adminCookie, err := manager.NewAuthCookie(admin.ID)
+	adminCookie, err := manager.NewAuthCookie(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,8 +113,8 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if adminClaims.UserID != admin.ID {
-		t.Errorf("Incorrect user ID: expected %d, got %d", admin.ID, adminClaims.UserID)
+	if adminClaims.UserID != admin.GetID() {
+		t.Errorf("Incorrect user ID: expected %d, got %d", admin.GetID(), adminClaims.UserID)
 	}
 	if adminClaims.Issuer != "QuickFeed" {
 		t.Errorf("Incorrect claims issuer: expecter 'QuickFeed', got %s", adminClaims.Issuer)
@@ -146,7 +146,7 @@ func TestUpdateTokenList(t *testing.T) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 		},
-		UserID: admin.ID,
+		UserID: admin.GetID(),
 		Admin:  false,
 	}
 	// Admin should not be in the token update list.
@@ -159,15 +159,15 @@ func TestUpdateTokenList(t *testing.T) {
 	}
 
 	// Adding user must update manager's update list and database record.
-	if err := manager.Add(admin.ID); err != nil {
+	if err := manager.Add(admin.GetID()); err != nil {
 		t.Fatal(err)
 	}
 	// Check database record first.
-	updatedUser, err := db.GetUser(admin.ID)
+	updatedUser, err := db.GetUser(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !updatedUser.UpdateToken {
+	if !updatedUser.GetUpdateToken() {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
 	// UpdateCookie will remove user from token list and update the database record.
@@ -180,18 +180,18 @@ func TestUpdateTokenList(t *testing.T) {
 	}
 
 	// Adding and then removing user from the list.
-	if err := manager.Add(admin.ID); err != nil {
+	if err := manager.Add(admin.GetID()); err != nil {
 		t.Fatal(err)
 	}
-	if err := manager.Remove(admin.ID); err != nil {
+	if err := manager.Remove(admin.GetID()); err != nil {
 		t.Fatal(err)
 	}
 	// Database record should be updated.
-	updatedUser, err = db.GetUser(admin.ID)
+	updatedUser, err = db.GetUser(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updatedUser.UpdateToken {
+	if updatedUser.GetUpdateToken() {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
 	// UpdateCookie must return nil and not an updated cookie.
@@ -216,7 +216,7 @@ func TestUpdateCookie(t *testing.T) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 3).Unix(),
 		},
-		UserID: user.ID,
+		UserID: user.GetID(),
 		Admin:  false,
 	}
 	user.IsAdmin = false
@@ -224,7 +224,7 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	// To trigger cookie update add user to the update list.
-	if err := tm.Add(user.ID); err != nil {
+	if err := tm.Add(user.GetID()); err != nil {
 		t.Error(err)
 	}
 	newCookie, err := tm.UpdateCookie(claims)

@@ -100,9 +100,9 @@ func TestScore100(t *testing.T) {
 	for i, sc100 := range [][]*Score{score100, score100v2} {
 		t.Run(fmt.Sprintf("Sample%d", i), func(t *testing.T) {
 			for _, sc := range sc100 {
-				if sc.Score != sc.MaxScore {
+				if sc.GetScore() != sc.GetMaxScore() {
 					// sanity check; all scores must be max
-					t.Errorf("%s Score=%d, expected %d", sc.TestName, sc.Score, sc.MaxScore)
+					t.Errorf("%s Score=%d, expected %d", sc.GetTestName(), sc.GetScore(), sc.GetMaxScore())
 				}
 			}
 			results := newResults(sc100...)

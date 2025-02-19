@@ -28,11 +28,11 @@ func TestThirdPartyAppAuth(t *testing.T) {
 
 	userInfo, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))
 	check(t, err)
-	if userInfo.Msg.ID != user.ID {
-		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
+	if userInfo.Msg.GetID() != user.GetID() {
+		t.Errorf("expected user id %d, got %d", user.GetID(), userInfo.Msg.GetID())
 	}
-	if userInfo.Msg.Login != user.Login {
-		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Msg.Login)
+	if userInfo.Msg.GetLogin() != user.GetLogin() {
+		t.Errorf("expected user login %s, got %s", user.GetLogin(), userInfo.Msg.GetLogin())
 	}
 }
 

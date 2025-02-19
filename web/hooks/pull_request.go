@@ -246,7 +246,7 @@ func findIssue(body string, issues []*qf.Issue) (*qf.Issue, error) {
 		// ignore error since regular expression ensure it is a positive number
 		issueNum, _ := strconv.ParseUint(issue, 10, 64)
 		for _, issue := range issues {
-			if issue.ScmIssueNumber == issueNum {
+			if issue.GetScmIssueNumber() == issueNum {
 				return issue, nil
 			}
 		}
