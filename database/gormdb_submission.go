@@ -58,8 +58,7 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 			for _, sc := range submission.Scores {
 				sc.SubmissionID = submission.ID
 			}
-		}
-		if submission.ID == 0 {
+		} else {
 			// Initialize grades for the new submission
 			if err := setGrades(tx, submission); err != nil {
 				return err // will rollback transaction
@@ -90,10 +89,6 @@ func setGrades(tx *gorm.DB, s *qf.Submission) error {
 		var userIDs []uint64
 		tx.Model(&qf.Enrollment{}).Where("group_id = ?", s.GetGroupID()).Pluck("user_id", &userIDs)
 
-		if len(userIDs) == 0 {
-			return errors.New("group has no users")
-		}
-
 		s.Grades = make([]*qf.Grade, len(userIDs))
 		for idx, id := range userIDs {
 			// Create a grade for each user in the group
@@ -105,7 +100,7 @@ func setGrades(tx *gorm.DB, s *qf.Submission) error {
 	// Find the assignment associated with the submission
 	var assignment qf.Assignment
 	if err := tx.First(&assignment, s.GetAssignmentID()).Error; err != nil {
-		return errors.New("submission must have an associated assignment")
+		return err
 	}
 	// Set the submission status based on the assignment's auto-approve settings
 	s.Grades = assignment.SubmissionStatus(s, s.GetScore())

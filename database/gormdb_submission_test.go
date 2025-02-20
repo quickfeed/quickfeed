@@ -41,6 +41,64 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	return user, course, assignment
 }
 
+func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, _, assignment := setupCourseAssignment(t, db)
+
+	assignment.AutoApprove = true
+	assignment.ScoreLimit = 1
+
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+		t.Fatal(err)
+	}
+
+	// create a new submission, ensure that it is auto-approved
+
+	submission := &qf.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        1,
+	}
+	if err := db.CreateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+
+	want := &qf.Submission{
+		ID:           submission.ID,
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        1,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submission.ID, Status: qf.Submission_APPROVED}},
+	}
+
+	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+
+	// create a new submission, ensure that it is not auto-approved
+
+	submission1 := &qf.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        0,
+	}
+	if err := db.CreateSubmission(submission1); err != nil {
+		t.Fatal(err)
+	}
+
+	want1 := &qf.Submission{
+		ID:           submission1.ID,
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        0,
+		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submission1.ID, Status: qf.Submission_NONE}},
+	}
+	if diff := cmp.Diff(submission1, want1, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+}
+
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
