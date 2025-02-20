@@ -2,10 +2,9 @@ import React from "react"
 import ReactMarkdown from "react-markdown"
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { CodeProps } from "react-markdown/lib/ast-to-react";
 
 
-const CriterionComment = ({ comment }: { comment: string }): JSX.Element | null => {
+const CriterionComment = ({ comment }: { comment: string }) => {
   if (comment == "" || comment.length == 0) {
     return null
   }
@@ -16,7 +15,7 @@ const CriterionComment = ({ comment }: { comment: string }): JSX.Element | null 
         children={comment}
         components={{
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          code({ node, inline, className, children, ...props }: CodeProps) {
+          code({ node, className, children, ref, ...props }) {
             // Code blocks are rendered with a className of "language-<language>".
             // For example, the following code block:
             //  ```go
@@ -28,7 +27,7 @@ const CriterionComment = ({ comment }: { comment: string }): JSX.Element | null 
             const matchLanguage = /language-(\w+)/.exec(className || '')
             // inline is true if the code block is inline, e.g. `fmt.Println("Hello, world!")`
             // If the code is inline, we don't want to render it with SyntaxHighlighter.
-            return !inline && matchLanguage ? (
+            return matchLanguage ? (
               <SyntaxHighlighter
                 // eslint-disable-next-line react/no-children-prop
                 children={String(children).replace(/\n$/, '')}

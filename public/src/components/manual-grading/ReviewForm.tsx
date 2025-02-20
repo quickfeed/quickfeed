@@ -7,7 +7,7 @@ import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
 
 
-const ReviewForm = (): JSX.Element => {
+const ReviewForm = () => {
     const state = useAppState()
     const actions = useActions()
 
@@ -26,7 +26,7 @@ const ReviewForm = (): JSX.Element => {
 
     const reviewers = assignment.reviewers ?? 0
     const reviews = state.review.reviews.get(state.selectedSubmission.ID) ?? []
-    const selectReviewButton: JSX.Element[] = []
+    const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
         selectReviewButton.push(

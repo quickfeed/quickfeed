@@ -3,7 +3,7 @@ import { Assignment, GradingCriterion } from "../../../proto/qf/types_pb"
 import { useActions } from "../../overmind"
 
 
-const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }): JSX.Element => {
+const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)

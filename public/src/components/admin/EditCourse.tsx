@@ -5,7 +5,7 @@ import DynamicTable, { Row } from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"
 
 
-const EditCourse = (): JSX.Element => {
+const EditCourse = () => {
     const state = useAppState()
     const [course, setCourse] = useState<Course>()
 

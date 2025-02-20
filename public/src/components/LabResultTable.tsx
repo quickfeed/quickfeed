@@ -9,7 +9,7 @@ type LabProps = {
     assignment: Assignment
 }
 
-const LabResultTable = ({ submission, assignment }: LabProps): JSX.Element => {
+const LabResultTable = ({ submission, assignment }: LabProps) => {
     if (submission && assignment) {
         return (
             <div className="pb-2">

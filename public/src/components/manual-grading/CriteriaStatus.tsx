@@ -3,7 +3,7 @@ import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/type
 import { useActions, useAppState } from "../../overmind"
 
 
-const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Element | null => {
+const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()
 

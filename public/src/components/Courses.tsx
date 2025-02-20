@@ -13,7 +13,7 @@ interface overview {
 }
 
 /** This component lists the user's courses and courses available for enrollment. */
-const Courses = (overview: overview): JSX.Element => {
+const Courses = (overview: overview) => {
     const state = useAppState()
     const history = useHistory()
 
@@ -46,11 +46,11 @@ const Courses = (overview: overview): JSX.Element => {
 
     // Push to separate arrays for layout purposes. Favorite - Student - Teacher - Pending
     const courses = () => {
-        const favorite: JSX.Element[] = []
-        const student: JSX.Element[] = []
-        const teacher: JSX.Element[] = []
-        const pending: JSX.Element[] = []
-        const availableCourses: JSX.Element[] = []
+        const favorite: React.JSX.Element[] = []
+        const student: React.JSX.Element[] = []
+        const teacher: React.JSX.Element[] = []
+        const pending: React.JSX.Element[] = []
+        const availableCourses: React.JSX.Element[] = []
         state.courses.map(course => {
             const enrol = state.enrollmentsByCourseID[course.ID.toString()]
             if (enrol) {

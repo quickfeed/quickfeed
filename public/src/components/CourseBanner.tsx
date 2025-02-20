@@ -7,7 +7,7 @@ import RoleSwitch from "./teacher/RoleSwitch"
 
 // TODO: Maybe add route specific information, ex. if user is viewing a lab, show that in the banner. Could use state in components to display.
 // TODO(jostein): This information could possibly be shown in the navbar.
-const CourseBanner = (): JSX.Element => {
+const CourseBanner = () => {
     const state = useAppState()
     const enrollment = state.enrollmentsByCourseID[getCourseID().toString()]
 

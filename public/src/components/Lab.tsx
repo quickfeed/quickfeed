@@ -15,7 +15,7 @@ interface MatchProps {
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
  *  If the user is a teacher, Lab displays the currently selected submission.
  */
-const Lab = (): JSX.Element => {
+const Lab = () => {
 
     const state = useAppState()
     const actions = useActions()
@@ -61,7 +61,7 @@ const Lab = (): JSX.Element => {
         if (assignment && submission) {
             // Confirm both assignment and submission exists before attempting to render
             const review = hasReviews(submission) ? submission.reviews : []
-            let buildLog: JSX.Element[] = []
+            let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
                 buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)

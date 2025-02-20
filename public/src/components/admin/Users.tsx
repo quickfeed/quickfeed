@@ -8,7 +8,7 @@ import { ButtonType } from "./Button"
 import User from "./User"
 
 
-const Users = (): JSX.Element => {
+const Users = () => {
     const state = useAppState()
     const actions = useActions()
 

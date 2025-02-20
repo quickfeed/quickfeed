@@ -5,7 +5,7 @@ import DynamicButton from "./DynamicButton"
 import { Color } from "../Helpers"
 import { ButtonType } from "./admin/Button"
 
-const Release = (): JSX.Element | null => {
+const Release = () => {
     const state = useAppState()
     const actions = useActions()
     const canRelease = state.review.assignmentID > -1

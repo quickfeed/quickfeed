@@ -7,7 +7,7 @@ import DynamicButton from "../DynamicButton"
 import Search from "../Search"
 
 
-const GroupForm = (): JSX.Element | null => {
+const GroupForm = () => {
     const state = useAppState()
     const actions = useActions()
 

@@ -9,18 +9,18 @@ export type CellElement = {
     link?: string
 }
 
-export type RowElement = (string | JSX.Element | CellElement)
+export type RowElement = (string | React.JSX.Element | CellElement)
 export type Row = RowElement[]
 
 const isCellElement = (element: RowElement): element is CellElement => {
     return (element as CellElement).value !== undefined
 }
 
-const isJSXElement = (element: RowElement): element is JSX.Element => {
-    return (element as JSX.Element).type !== undefined
+const isJSXElement = (element: RowElement): element is React.JSX.Element => {
+    return (element as React.JSX.Element).type !== undefined
 }
 
-const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Element | null => {
+const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
 
     const [isMouseDown, setIsMouseDown] = React.useState(false)
     const container = React.useRef<HTMLTableElement>(null)

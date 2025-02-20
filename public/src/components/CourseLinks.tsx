@@ -5,7 +5,7 @@ import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 
 /** CourseLinks displays various repository links for the current course, in addition to links to take the user to the group page. */
-const CourseLinks = (): JSX.Element => {
+const CourseLinks = () => {
     const state = useAppState()
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]

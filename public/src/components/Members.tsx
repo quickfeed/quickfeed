@@ -7,7 +7,7 @@ import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
 
-const Members = (): JSX.Element => {
+const Members = () => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()

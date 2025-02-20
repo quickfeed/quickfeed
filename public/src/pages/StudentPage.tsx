@@ -9,7 +9,7 @@ import RedirectButton from "../components/RedirectButton"
 import Alerts from "../components/alerts/Alerts"
 
 
-const StudentPage = (): JSX.Element => {
+const StudentPage = () => {
     const courseID = getCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`

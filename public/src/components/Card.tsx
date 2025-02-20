@@ -16,7 +16,7 @@ export interface Notification {
  * @param to: (Optional) The path to navigate to when the button is clicked 
  * @param onclick: (Optional) The function to call when the button is clicked 
  */
-const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification,  to?: string, onclick?: () => void }): JSX.Element => {
+const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification,  to?: string, onclick?: () => void }) => {
     const history = useHistory()
 
     const notification = props.notification ? <i className={`badge badge-${props.notification.color} float-right`}>{props.notification.text}</i> : null

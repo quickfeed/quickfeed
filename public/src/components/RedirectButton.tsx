@@ -2,7 +2,7 @@ import React from "react"
 import { useHistory } from "react-router"
 
 
-const RedirectButton = ({ to }: { to: string }): JSX.Element => {
+const RedirectButton = ({ to }: { to: string }) => {
     const history = useHistory()
 
     // The button is hidden if user is currently at the location the button redirects to

@@ -3,7 +3,7 @@ import { getCourseID } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import AssignmentCard from "./AssignmentCard"
 
-const CourseLabs = (): JSX.Element => {
+const CourseLabs = () => {
   const state = useAppState()
   const courseID = getCourseID().toString()
   const assignments = state.assignments[courseID] || []

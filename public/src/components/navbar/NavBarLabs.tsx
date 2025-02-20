@@ -9,7 +9,7 @@ import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAss
 import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
 
 
-const NavBarLabs = (): JSX.Element | null => {
+const NavBarLabs = () => {
     const state = useAppState()
     const history = useHistory()
     const location = useLocation()

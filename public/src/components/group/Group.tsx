@@ -3,7 +3,7 @@ import { getCourseID, isPendingGroup } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
 
-const GroupComponent = (): JSX.Element => {
+const GroupComponent = () => {
     const state = useAppState()
     const courseID = getCourseID()
 

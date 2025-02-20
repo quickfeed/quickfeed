@@ -10,7 +10,7 @@ type FormProps = {
     children?: React.ReactNode,
 }
 
-const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, children }: FormProps): JSX.Element => {
+const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, children }: FormProps) => {
     return (
         <div className={"input-group mb-3"}>
             <div className="input-group-prepend">

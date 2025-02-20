@@ -15,7 +15,7 @@ type ProgressBarProps = {
     type: Progress
 }
 
-const ProgressBar = ({ courseID, submission, type }: ProgressBarProps): JSX.Element => {
+const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
     const state = useAppState()
 
     const assignment = state.assignments[courseID]?.find(assignment => assignment.ID === submission.AssignmentID)

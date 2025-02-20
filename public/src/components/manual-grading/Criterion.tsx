@@ -8,7 +8,7 @@ import UnstyledButton from "../UnstyledButton"
 
 
 /* Criteria component for the manual grading page */
-const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => {
+const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
@@ -37,8 +37,8 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
         : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
 
 
-    let comment: JSX.Element | null = null
-    let button: JSX.Element | null = null
+    let comment: React.JSX.Element | null = null
+    let button: React.JSX.Element | null = null
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment

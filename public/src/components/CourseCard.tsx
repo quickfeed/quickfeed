@@ -18,12 +18,12 @@ const CardColor = [
     "success"
 ]
 
-const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
+const CourseCard = ({ course, enrollment }: CardProps) => {
     const actions = useActions()
     const history = useHistory()
     const status = enrollment.status
 
-    const CourseEnrollmentButton = (): JSX.Element => {
+    const CourseEnrollmentButton = () => {
         if (hasNone(status)) {
             return <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.ID)}>Enroll</div>
         } else if (hasPending(status)) {
@@ -32,7 +32,7 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
         return <div className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</div>
     }
 
-    const CourseEnrollmentStatus = (): JSX.Element | null => {
+    const CourseEnrollmentStatus = () => {
         if (!hasEnrolled(status)) {
             return null
         }
