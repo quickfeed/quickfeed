@@ -22,8 +22,8 @@ const (
 	appID         = "QUICKFEED_APP_ID"
 	appKey        = "QUICKFEED_APP_KEY"
 	clientID      = "QUICKFEED_CLIENT_ID"
-	clientSecret  = "QUICKFEED_CLIENT_SECRET"
-	webhookSecret = "QUICKFEED_WEBHOOK_SECRET"
+	clientSecret  = "QUICKFEED_CLIENT_SECRET"  // skipcq: SCT-A000
+	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
 )
 
 // ReadyForAppCreation returns nil if the environment configuration (envFile)
@@ -102,11 +102,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	if err := <-m.done; err != nil {
 		return err
 	}
-	if err := server.Shutdown(context.Background()); err != nil {
-		return err
-	}
-	// Refresh environment variables
-	return env.Load(env.RootEnv(m.envFile))
+	return server.Shutdown(context.Background())
 }
 
 func (m *Manifest) conversion() http.HandlerFunc {
@@ -181,7 +177,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 }
 
 func (m *Manifest) createApp() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if err := form(w, m.domain); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

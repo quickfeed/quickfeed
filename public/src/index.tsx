@@ -19,6 +19,16 @@ const overmind = createOvermind(config, {
     devtools: "localhost:3301",
 })
 
+if (process.env.NODE_ENV === "development") {
+    // EventSource will automatically try to reconnect if the connection is lost
+    const eventSource = new EventSource("/watch")
+    eventSource.onmessage = () => {
+        setTimeout(() => {
+            location.reload()
+        }, 500)
+    }
+    eventSource.onerror = () => console.error("could not connect to server-sent events")
+}
 
 render((
     <Provider value={overmind}>
