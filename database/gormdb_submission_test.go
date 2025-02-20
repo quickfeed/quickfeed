@@ -61,7 +61,7 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 		Score:        1,
 	}
 	if err := db.CreateSubmission(submission); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	want := &qf.Submission{
@@ -84,7 +84,7 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 		Score:        0,
 	}
 	if err := db.CreateSubmission(submission1); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	want1 := &qf.Submission{
