@@ -24,7 +24,7 @@ Below are the steps needed to prepare a new release of QuickFeed's kit module.
 1. Run `gorelease` to suggested new version number, e.g.:
 
    ```text
-   ... (list of compatability changes) ...
+   ... (list of compatibility changes) ...
    Inferred base version: v0.2.0
    Suggested version: v0.3.0 (with tag kit/v0.3.0)
    ```

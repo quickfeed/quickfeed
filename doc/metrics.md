@@ -6,11 +6,7 @@ Statistics about specific gRPC methods is provided by the QuickFeed via:
 % curl 127.0.0.1:9097/stats
 ```
 
-## Prometheus
-
-Prometheus [documentation](https://prometheus.io/docs/introduction/overview/).
-
-### Installing on macOS or Linux with Homebrew
+## Installing Prometheus on macOS or Linux with Homebrew
 
 ```sh
 % brew install prometheus
@@ -94,7 +90,7 @@ Grafana runs on `localhost:3000` by default.
 
 For additional [documentation](https://grafana.com/docs/grafana/latest/).
 
-### Installing on macOS or Linux with Homebrew
+### Installing Grafana on macOS or Linux with Homebrew
 
 ```sh
 % brew install grafana
