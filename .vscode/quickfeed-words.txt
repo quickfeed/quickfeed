@@ -47,6 +47,7 @@ deadcode
 Debugf
 dhparams
 dockerd
+dockerenv
 Docroot
 doesnotexist
 Eivind
