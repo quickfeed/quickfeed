@@ -26,6 +26,10 @@ func Domain() string {
 	return domain
 }
 
+func DomainWithPort(httpAddr string) string {
+	return Domain() + httpAddr
+}
+
 // WhiteList returns a list of domains that the server will create certificates for.
 func Whitelist() ([]string, error) {
 	domains := os.Getenv("QUICKFEED_WHITELIST")
