@@ -50,7 +50,7 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 }
 
 func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error {
-	m := New(env.DomainWithPort(httpAddr), envFile)
+	m := New(env.DomainWithPort(), envFile)
 	server, err := srvFn(httpAddr, m.Handler())
 	if err != nil {
 		return err
