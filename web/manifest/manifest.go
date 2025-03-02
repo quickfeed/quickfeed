@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
@@ -59,21 +60,21 @@ func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error
 }
 
 type Manifest struct {
-	domain     string
-	envFile    string
-	handler    http.Handler
-	done       chan error
-	client     *github.Client // optional, for testing
-	runWebpack bool           // run webpack only for production
+	domain  string
+	envFile string
+	handler http.Handler
+	done    chan error
+	client  *github.Client // optional, for testing
+	buildUI bool           // build UI is only for production
 }
 
 func New(domain, envFile string) *Manifest {
 	m := &Manifest{
-		domain:     domain,
-		envFile:    envFile,
-		client:     github.NewClient(nil),
-		done:       make(chan error),
-		runWebpack: true,
+		domain:  domain,
+		envFile: envFile,
+		client:  github.NewClient(nil),
+		done:    make(chan error),
+		buildUI: true,
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -216,8 +217,7 @@ body {
   <div class="container">
     <div class="center">
       <h2>{{.Name}} GitHub App created</h2>
-	  <h3>Running webpack in the background</h3>
-	  <h3>Please wait for <b>Done webpack</b> in server logs before logging in...</h3>
+	  <h3>Building the UI, reloading soon..</h3>
     </div>
   </div>
 </body>
@@ -226,7 +226,7 @@ body {
 <script>
 	setTimeout(function() {
 		window.location.href = "/";
-	}, 10000);
+	}, 500);
 </script>
 `
 
@@ -248,25 +248,19 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	if m.runWebpack {
-		go runWebpack()
+	if m.buildUI {
+		if err := ui.Build(); err != nil {
+			if ok := runNpmCi(); !ok {
+				return err
+			}
+			// Attempt to build again
+			if err := ui.Build(); err != nil {
+				return err
+			}
+		}
+		log.Print("UI built successfully")
 	}
 	return nil
-}
-
-func runWebpack() {
-	log.Println("Running webpack...")
-	c := exec.Command("webpack")
-	c.Dir = "public"
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
-		log.Print("Failed to run webpack; trying npm ci")
-		if ok := runNpmCi(); !ok {
-			return
-		}
-	}
-	log.Print("Done webpack")
 }
 
 func runNpmCi() bool {

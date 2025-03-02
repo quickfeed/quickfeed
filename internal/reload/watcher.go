@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/quickfeed/quickfeed/internal/ui"
 )
 
 type Watcher struct {
@@ -34,7 +34,7 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 		clients:   make(map[chan string]bool),
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	go webpack()          // Start webpack in watch mode
+	go ui.Watch()         // Start esbuild in watch mode
 	return watcher, nil
 }
 
@@ -109,15 +109,5 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 			watcher.removeClient(client)
 			return
 		}
-	}
-}
-
-func webpack() {
-	log.Println("Running webpack...")
-	c := exec.Command("npx", "webpack", "--mode=development", "--watch")
-	c.Dir = "public"
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
 	}
 }
