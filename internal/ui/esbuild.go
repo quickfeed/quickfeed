@@ -37,11 +37,13 @@ func Build() error {
 
 // Watch starts a watch process for the UI, rebuilding on changes
 // The log level is set to info, so only warnings and errors are shown
-func Watch() error {
+func Watch(ch chan<- error) {
+	errMsg := "failed to start watch: "
 	ctx, err := api.Context(getOptions())
 	if err != nil {
-		return fmt.Errorf("failed to start watch: %v", err)
+		ch <- fmt.Errorf("%s%v", errMsg, err)
 	}
-	ctx.Watch(api.WatchOptions{})
-	return nil
+	if err := ctx.Watch(api.WatchOptions{}); err != nil {
+		ch <- fmt.Errorf("%s%v", errMsg, err)
+	}
 }

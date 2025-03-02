@@ -34,7 +34,11 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 		clients:   make(map[chan string]bool),
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	go ui.Watch()         // Start esbuild in watch mode
+	ch := make(chan error)
+	go ui.Watch(ch) // Start esbuild in watch mode
+	if err := <-ch; err != nil {
+		return nil, err
+	}
 	return watcher, nil
 }
 
