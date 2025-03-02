@@ -42,8 +42,11 @@ func Watch(ch chan<- error) {
 	ctx, err := api.Context(getOptions())
 	if err != nil {
 		ch <- fmt.Errorf("%s%v", errMsg, err)
+		return
 	}
 	if err := ctx.Watch(api.WatchOptions{}); err != nil {
 		ch <- fmt.Errorf("%s%v", errMsg, err)
+		return
 	}
+	ch <- nil
 }
