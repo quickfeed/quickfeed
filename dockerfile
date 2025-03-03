@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.23-alpine
+FROM golang:1.23-bookworm
 
 # Update and install build-base, npm and webpack
-RUN apk update && apk add --no-cache bash build-base npm && npm install webpack
+RUN apt-get update && apt-get install -y npm && npm install -g webpack
 
 WORKDIR /quickfeed
 
