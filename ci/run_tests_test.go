@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/internal/rand"
@@ -18,6 +19,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
@@ -138,25 +140,9 @@ func TestRecordResults(t *testing.T) {
 		IsGroupLab:       false,
 		ContainerTimeout: 1,
 	}
-	if err := db.CreateAssignment(assignment); err != nil {
-		t.Fatal(err)
-	}
-
-	buildInfo := &score.BuildInfo{
-		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		BuildLog:       "Testing",
-		ExecTime:       33333,
-	}
-	testScores := []*score.Score{
-		{
-			Secret:   "secret",
-			TestName: "Test",
-			Score:    10,
-			MaxScore: 15,
-			Weight:   1,
-		},
-	}
+	qtest.CreateAssignment(t, db, assignment)
+	buildInfo := createBuildInfo(t)
+	testScores := createScores()
 	// Must create a new submission with correct scores and build info, not approved
 	results := &score.Results{
 		BuildInfo: buildInfo,
@@ -181,15 +167,8 @@ func TestRecordResults(t *testing.T) {
 	if submission.IsApproved(runData.Repo.GetUserID()) {
 		t.Error("Submission must not be auto approved")
 	}
-	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
-		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
-		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
-		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
-	}
+	qtest.Diff(t, "submission score mismatch", testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
+	diffBuildAndSubmissionDates(t, buildInfo.BuildDate, buildInfo.SubmissionDate, submission.BuildInfo)
 
 	// When updating submission after deadline: build info (submission and build dates) and slip days must be updated
 	newSubmissionDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
@@ -199,19 +178,11 @@ func TestRecordResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	enrollment := qtest.GetEnrollment(t, db, course.ID, admin.ID)
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
-		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
-		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
-	}
+	diffBuildAndSubmissionDates(t, results.BuildInfo.BuildDate, results.BuildInfo.SubmissionDate, updatedSubmission.BuildInfo)
 
 	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
 	runData.Rebuild = true
@@ -224,19 +195,16 @@ func TestRecordResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(newDate, rebuiltSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
-		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
-		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
-	}
-	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course)); diff != "" {
-		t.Errorf("slip days mismatch: (-want +got):\n%s", diff)
-	}
+	diffBuildAndSubmissionDates(t, newDate, wantSubmissionDate, rebuiltSubmission.BuildInfo)
+
+	updatedEnrollment := qtest.GetEnrollment(t, db, course.ID, admin.ID)
+	qtest.Diff(t, "slip days mismatch", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
+}
+
+func diffBuildAndSubmissionDates(t *testing.T, wantBuildDate, wantSubmissionDate *timestamppb.Timestamp, gotBuildInfo *score.BuildInfo) {
+	t.Helper()
+	qtest.Diff(t, "build date mismatch", wantBuildDate, gotBuildInfo.BuildDate, protocmp.Transform())
+	qtest.Diff(t, "submission date mismatch", wantSubmissionDate, gotBuildInfo.SubmissionDate, protocmp.Transform())
 }
 
 func TestRecordResultsForManualReview(t *testing.T) {
@@ -312,7 +280,6 @@ func TestRecordResultsForManualReview(t *testing.T) {
 func TestStreamRecordResults(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	streamService := stream.NewStreamServices()
 
 	course := &qf.Course{
 		Name:              "Test",
@@ -322,25 +289,7 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
-
-	groupMember1 := qtest.CreateFakeUser(t, db)
-	groupMember2 := qtest.CreateFakeUser(t, db)
-	groupMember3 := qtest.CreateFakeUser(t, db)
-	for _, user := range []*qf.User{groupMember1, groupMember2, groupMember3} {
-		qtest.EnrollStudent(t, db, user, course)
-	}
-	group := &qf.Group{
-		CourseID: course.ID,
-		Name:     "group-1",
-		Users: []*qf.User{
-			groupMember1,
-			groupMember2,
-			groupMember3,
-		},
-	}
-	if err := db.CreateGroup(group); err != nil {
-		t.Fatal(err)
-	}
+	group := qtest.CreateGroup(t, db, course, 3)
 
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
@@ -352,30 +301,13 @@ func TestStreamRecordResults(t *testing.T) {
 		IsGroupLab:       true,
 		ContainerTimeout: 1,
 	}
-	if err := db.CreateAssignment(assignment); err != nil {
-		t.Fatal(err)
-	}
-
-	buildInfo := &score.BuildInfo{
-		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		BuildLog:       "Testing",
-		ExecTime:       33333,
-	}
-	testScores := []*score.Score{
-		{
-			Secret:   "secret",
-			TestName: "Test",
-			Score:    10,
-			MaxScore: 15,
-			Weight:   1,
-		},
-	}
+	qtest.CreateAssignment(t, db, assignment)
 
 	results := &score.Results{
-		BuildInfo: buildInfo,
-		Scores:    testScores,
+		BuildInfo: createBuildInfo(t),
+		Scores:    createScores(),
 	}
+
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -387,58 +319,31 @@ func TestStreamRecordResults(t *testing.T) {
 		CommitID: "deadbeef",
 	}
 
-	var streams []*qtest.MockStream[qf.Submission]
-	for _, user := range group.Users {
-		stream := qtest.NewMockStream[qf.Submission](t)
-		streamService.Submission.Add(stream, user.ID)
-		streams = append(streams, stream)
-	}
+	streamService := stream.NewStreamServices()
+	streams := CreateStreams(t, group.Users, streamService)
 
 	// Add a stream for the admin user
 	adminStream := qtest.NewMockStream[qf.Submission](t)
 	streamService.Submission.Add(adminStream, admin.ID)
 
 	var wg sync.WaitGroup
-	for i := range streams {
-		runStream(streams[i], &wg)
-	}
-	runStream(adminStream, &wg)
-
-	// Check that submission is recorded correctly
-	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
+	runStreams(streams, adminStream, &wg)
 
 	owners, err := runData.GetOwners(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	streamService.Submission.SendTo(submission, owners...)
+
+	// Check that submission is recorded correctly
+	submission := recordResultsAndSendStream(t, runData, db, results, owners, streamService, "", false)
 	if submission.IsAllApproved() {
 		t.Error("Submission must not be auto approved")
 	}
+	updatedSubmission := recordResultsAndSendStream(t, runData, db, results, owners, streamService, "2022-11-12T13:00:00", false)
+	rebuiltSubmission := recordResultsAndSendStream(t, runData, db, results, owners, streamService, "2022-11-13T13:00:00", true)
 
-	newBuildDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
-	results.BuildInfo.BuildDate = newBuildDate
-	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
-	streamService.Submission.SendTo(updatedSubmission, owners...)
+	closeStreams(streams, adminStream)
 
-	runData.Rebuild = true
-	results.BuildInfo.BuildDate = qtest.Timestamp(t, "2022-11-13T13:00:00")
-	rebuiltSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
-	streamService.Submission.SendTo(rebuiltSubmission, owners...)
-
-	for _, stream := range streams {
-		stream.Close()
-	}
-	adminStream.Close()
 	// Wait for all streams to be closed
 	wg.Wait()
 
@@ -449,22 +354,37 @@ func TestStreamRecordResults(t *testing.T) {
 
 	// We should have received three submissions for each stream
 	numSubmissions := 0
-	for _, stream := range streams {
-		numSubmissions += len(stream.Messages)
-	}
-	if numSubmissions != 9 {
-		t.Errorf("Expected 9 messages, got %d", numSubmissions)
-	}
-
-	// Check that the messages are correct
 	submissions := []*qf.Submission{submission, updatedSubmission, rebuiltSubmission}
 	for _, stream := range streams {
+		numSubmissions += len(stream.Messages)
+
+		// Check that the messages are correct
 		for i, submission := range submissions {
 			if diff := cmp.Diff(stream.Messages[i], submission, protocmp.Transform()); diff != "" {
 				t.Errorf("Incorrect submission. Want: %+v, got %+v", submission, stream.Messages[i])
 			}
 		}
 	}
+	if numSubmissions != 9 {
+		t.Errorf("Expected 9 messages, got %d", numSubmissions)
+	}
+}
+
+func CreateStreams(t *testing.T, users []*qf.User, streamService *stream.StreamServices) []*qtest.MockStream[qf.Submission] {
+	var streams []*qtest.MockStream[qf.Submission]
+	for _, user := range users {
+		stream := qtest.NewMockStream[qf.Submission](t)
+		streamService.Submission.Add(stream, user.ID)
+		streams = append(streams, stream)
+	}
+	return streams
+}
+
+func runStreams(streams []*qtest.MockStream[qf.Submission], adminStream *qtest.MockStream[qf.Submission], wg *sync.WaitGroup) {
+	for i := range streams {
+		runStream(streams[i], wg)
+	}
+	runStream(adminStream, wg)
 }
 
 func runStream(stream *qtest.MockStream[qf.Submission], wg *sync.WaitGroup) {
@@ -473,4 +393,45 @@ func runStream(stream *qtest.MockStream[qf.Submission], wg *sync.WaitGroup) {
 		defer wg.Done()
 		_ = stream.Run()
 	}()
+}
+
+func closeStreams(streams []*qtest.MockStream[qf.Submission], adminStream *qtest.MockStream[qf.Submission]) {
+	for i := range streams {
+		streams[i].Close()
+	}
+	adminStream.Close()
+}
+
+func recordResultsAndSendStream(t *testing.T, runData *ci.RunData, db database.Database, results *score.Results, owners []uint64, streamService *stream.StreamServices, buildDate string, rebuild bool) *qf.Submission {
+	if buildDate != "" {
+		results.BuildInfo.BuildDate = qtest.Timestamp(t, buildDate)
+	}
+	runData.Rebuild = rebuild
+	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	if err != nil {
+		t.Fatal(err)
+	}
+	streamService.Submission.SendTo(submission, owners...)
+	return submission
+}
+
+func createBuildInfo(t *testing.T) *score.BuildInfo {
+	return &score.BuildInfo{
+		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildLog:       "Testing",
+		ExecTime:       33333,
+	}
+}
+
+func createScores() []*score.Score {
+	return []*score.Score{
+		{
+			Secret:   "secret",
+			TestName: "Test",
+			Score:    10,
+			MaxScore: 15,
+			Weight:   1,
+		},
+	}
 }

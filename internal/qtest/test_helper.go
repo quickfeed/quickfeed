@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -68,6 +69,32 @@ func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.
 	}
 }
 
+func CreateAssignment(t *testing.T, db database.Database, assignment *qf.Assignment) {
+	t.Helper()
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func CreateGroup(t *testing.T, db database.Database, course *qf.Course, groupSize int) *qf.Group {
+	t.Helper()
+	var users []*qf.User
+	for range groupSize {
+		user := CreateFakeUser(t, db)
+		users = append(users, user)
+		EnrollStudent(t, db, user, course)
+	}
+	group := &qf.Group{
+		CourseID: course.ID,
+		Name:     "group " + RandomString(t),
+		Users:    users,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+	return group
+}
+
 func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
 	query := &qf.Enrollment{
@@ -114,6 +141,15 @@ func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Co
 	return enrollment
 }
 
+func GetEnrollment(t *testing.T, db database.Database, userID, courseID uint64) *qf.Enrollment {
+	t.Helper()
+	enrollment, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return enrollment
+}
+
 func RandomString(t *testing.T) string {
 	t.Helper()
 	randomness := make([]byte, 10)
@@ -147,4 +183,12 @@ func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 //	}
 func Ptr[T any](t T) *T {
 	return &t
+}
+
+// Diff saves two lines of code by calling cmp.Diff with the given message and options.
+func Diff(t *testing.T, msg string, x, y any, opts ...cmp.Option) {
+	t.Helper()
+	if diff := cmp.Diff(x, y, opts...); diff != "" {
+		t.Errorf("%s: (-got +want)\n%s", msg, diff)
+	}
 }
