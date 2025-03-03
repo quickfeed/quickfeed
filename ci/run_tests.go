@@ -85,6 +85,15 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
+	// Append the print score templates to the beginning of the commands
+	// If there are any.
+	if len(scoreTemplates) > 0 {
+		var commands []string
+		for _, scoreTemplate := range scoreTemplates {
+			commands = append(commands, fmt.Sprintf("echo %s", scoreTemplate.Json()))
+		}
+		job.Commands = append(commands, job.Commands...)
+	}
 
 	defer timer(r.JobOwner, r.Course.Code, testExecutionTimeGauge)()
 	logger.Debugf("Running tests for %s", r)

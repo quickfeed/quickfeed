@@ -56,7 +56,7 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 	// iterate over the test names in registration or sorted order
 	for _, name := range s.testNames {
 		if sc, ok := s.scores[name]; ok {
-			fmt.Println(sc.json())
+			fmt.Println(sc.Json())
 		}
 	}
 	// force exit after printing test info if SCORE_INIT is set
