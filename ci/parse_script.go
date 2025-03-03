@@ -21,8 +21,8 @@ import (
 //	SUBMITTED   - to access the student's or group's submitted code (cloned from the student/group repository)
 //	CURRENT     - name of the current assignment folder
 //	QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
-func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
-	scriptContent, err := r.loadRunScript()
+func (r *RunData) parseTestRunnerScript(secret, destDir, scriptFile string) (*Job, error) {
+	scriptContent, err := r.loadRunScript(scriptFile)
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,8 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 	}, nil
 }
 
-func (r *RunData) loadRunScript() (string, error) {
-	const (
-		scriptFile   = "run.sh"
-		scriptFolder = "scripts"
-	)
+func (r *RunData) loadRunScript(scriptFile string) (string, error) {
+	const scriptFolder = "scripts"
 	courseTestsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
 	runScript := filepath.Join(courseTestsDir, r.Assignment.GetName(), scriptFile)
 	if _, err := os.Stat(runScript); os.IsNotExist(err) {

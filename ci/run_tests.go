@@ -21,6 +21,8 @@ import (
 // pattern to prefix the tmp folder for quickfeed tests
 const quickfeedTestsPath = "quickfeed-tests"
 
+var defaultScript = "run.sh"
+
 // RunData stores CI data
 type RunData struct {
 	Course     *qf.Course
