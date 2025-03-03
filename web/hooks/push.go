@@ -56,7 +56,10 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		var defaultUpdateScript = "update_tests.sh"
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		courseAssignments = assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
+		assignments, updateTestsScriptExists := assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
+		if updateTestsScriptExists {
+			courseAssignments = assignments
+		}
 		script = &defaultUpdateScript
 
 	case repo.IsAssignmentsRepo():

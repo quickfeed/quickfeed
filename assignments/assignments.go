@@ -29,7 +29,7 @@ var updateMutex = sync.Mutex{}
 // caller for an extended period, since it may involve cloning the tests repository,
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) []*qf.Assignment {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) ([]*qf.Assignment, bool) {
 	updateMutex.Lock()
 	defer updateMutex.Unlock()
 
@@ -44,27 +44,27 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 	})
 	if err != nil {
 		logger.Errorf("Failed to clone '%s' repository: %v", qf.TestsRepo, err)
-		return nil
+		return nil, false
 	}
 	logger.Debugf("Successfully cloned tests repository to: %s", clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
+	assignments, dockerfile, updateTestsScript, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
 	if err != nil {
 		logger.Errorf("Failed to parse assignments from '%s' repository: %v", qf.TestsRepo, err)
-		return nil
+		return nil, false
 	}
 
 	if course.UpdateDockerfile(dockerfile) {
 		// Rebuild the Docker image for the course tagged with the course code
 		if err = buildDockerImage(ctx, logger, runner, course); err != nil {
 			logger.Error(err)
-			return nil
+			return nil, false
 		}
 		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Errorf("Failed to update Dockerfile for course %s: %v", course.GetCode(), err)
-			return nil
+			return nil, false
 		}
 	}
 
@@ -74,15 +74,15 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 			logger.Debugf("Failed to update database for: %v", assignment)
 		}
 		logger.Errorf("Failed to update assignments in database: %v", err)
-		return nil
+		return nil, false
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), qf.TestsRepo)
 
 	if err = synchronizeTasksWithIssues(ctx, db, sc, course, assignments); err != nil {
 		logger.Errorf("Failed to create tasks on '%s' repository: %v", qf.TestsRepo, err)
-		return nil
+		return nil, false
 	}
-	return assignments
+	return assignments, updateTestsScript != ""
 }
 
 // buildDockerImage builds the Docker image for the given course.

@@ -19,6 +19,7 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab3/task-tour-of-go.md":   {},
 		"testdata/tests/scripts/Dockerfile":        {},
 		"testdata/tests/scripts/run.sh":            {},
+		"testdata/tests/scripts/update_tests.sh":   {},
 		"testdata/tests/lab1/assignment.yml":       {},
 		"testdata/tests/lab1/run.sh":               {},
 		"testdata/tests/lab2/assignment.yml":       {},
@@ -44,6 +45,8 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 RUN apk update && apk add --no-cache git bash build-base
 WORKDIR /quickfeed
 `
+	wantUpdateTestsScript := "#image/quickfeed:go\n\nprintf \"Update tests script\\n\""
+
 	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
@@ -128,12 +131,15 @@ WORKDIR /quickfeed
 		},
 	}
 
-	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotDockerfile, gotUpdateTestsScript, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if gotDockerfile != wantDockerfile {
 		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
+	}
+	if gotUpdateTestsScript != wantUpdateTestsScript {
+		t.Errorf("got update tests script %q, want %q", gotUpdateTestsScript, wantUpdateTestsScript)
 	}
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
@@ -156,7 +162,7 @@ func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
 }
 
 func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
-	_, _, err := readTestsRepositoryContent(folder, 1)
+	_, _, _, err := readTestsRepositoryContent(folder, 1)
 	if err == nil {
 		t.Errorf("expected error")
 	}

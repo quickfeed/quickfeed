@@ -13,7 +13,7 @@ import (
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, _, err := readTestsRepositoryContent(dir, 0)
+	_, _, _, err := readTestsRepositoryContent(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -51,6 +51,7 @@ autoapprove: false
 
 	script   = `Default script`
 	script1  = `Script for Lab1`
+	script2  = `Script for updating tests`
 	df       = `A dockerfile in training`
 	criteria = `
 	[
@@ -98,8 +99,9 @@ func TestParse(t *testing.T) {
 	}{
 		{"lab1", "assignment.yaml", y1},
 		{"lab2", "assignment.yaml", y2},
-		{"scripts", "run.sh", script},
-		{"lab1", "run.sh", script1},
+		{"scripts", runScript, script},
+		{"scripts", updateTestsScript, script2},
+		{"lab1", runScript, script1},
 		{"scripts", "Dockerfile", df},
 		{"lab2", "criteria.json", criteria},
 	} {
@@ -150,7 +152,7 @@ func TestParse(t *testing.T) {
 		GradingBenchmarks: wantCriteria,
 	}
 
-	assignments, dockerfile, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, dockerfile, updateTestsScript, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,6 +161,9 @@ func TestParse(t *testing.T) {
 	}
 	if dockerfile != df {
 		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, dockerfile)
+	}
+	if updateTestsScript != script2 {
+		t.Errorf("Incorrect updateTestsScript\n Want: %s\n Got: %s\n", script2, updateTestsScript)
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
@@ -182,7 +187,7 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
-	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	_, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err == nil {
 		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
 	}
@@ -204,7 +209,7 @@ func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
 	}
 
 	// Since lab3 contains an old assignmentid field, this will return an error
-	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	_, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err == nil {
 		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
 	}
@@ -231,7 +236,7 @@ func TestParseUnknownFields(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +270,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	assignments, _, _, err := readTestsRepositoryContent(testsDir, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +297,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	writeFile(t, testsDir, "lab3", "assignment.yml", y3)
 
 	// Parse the new assignment
-	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	newAssignments, _, _, err := readTestsRepositoryContent(testsDir, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

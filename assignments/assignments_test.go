@@ -42,7 +42,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Fatal(err)
 	}
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
+	assignments, dockerfile, _, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
