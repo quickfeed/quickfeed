@@ -150,19 +150,20 @@ message Enrollments {
 //   LABS    //
 
 message Assignment {
-    uint64 ID                          = 1;
-    uint64 CourseID                    = 2;  // foreign key
-    string name                        = 3;
-    google.protobuf.Timestamp deadline = 4 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
-    bool autoApprove                   = 5;
-    uint32 order                       = 6;
-    bool isGroupLab                    = 7;
-    uint32 scoreLimit                  = 8;   // minimal score limit for auto approval
-    uint32 reviewers                   = 9;   // number of reviewers that will review submissions for this assignment
-    uint32 containerTimeout            = 10;  // container timeout for this assignment
-    repeated Submission submissions    = 11;  // submissions produced for this assignment
-    repeated Task tasks                = 12;  // tasks associated with this assignment
-    repeated GradingBenchmark gradingBenchmarks = 13;  // grading benchmarks for this assignment
+    uint64 ID                                   = 1;
+    uint64 CourseID                             = 2;  // foreign key
+    string name                                 = 3;
+    google.protobuf.Timestamp deadline          = 4 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    bool autoApprove                            = 5;
+    uint32 order                                = 6;
+    bool isGroupLab                             = 7;
+    uint32 scoreLimit                           = 8;   // minimal score limit for auto approval
+    uint32 reviewers                            = 9;   // number of reviewers that will review submissions for this assignment
+    uint32 containerTimeout                     = 10;  // container timeout for this assignment
+    repeated score.Score DefaultScores          = 12;  // list of scores for different tests
+    repeated Submission submissions             = 13;  // submissions produced for this assignment
+    repeated Task tasks                         = 14;  // tasks associated with this assignment
+    repeated GradingBenchmark gradingBenchmarks = 15;  // grading benchmarks for this assignment
 }
 
 message Task {

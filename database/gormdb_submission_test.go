@@ -435,7 +435,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	scores[1].Score = 5
 	for _, sc := range scores {
 		sc.ID = 0
-		sc.SubmissionID = 0
+		sc.SubmissionID = nil
 	}
 	submissions[0].BuildInfo = updatedBuildInfo
 	submissions[0].Scores = scores

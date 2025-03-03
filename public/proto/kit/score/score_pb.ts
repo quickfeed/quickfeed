@@ -18,56 +18,61 @@ export class Score extends Message<Score> {
   ID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 SubmissionID = 2;
+   * @generated from field: optional uint64 AssignmentID = 2;
    */
-  SubmissionID = protoInt64.zero;
+  AssignmentID?: bigint;
+
+  /**
+   * @generated from field: optional uint64 SubmissionID = 3;
+   */
+  SubmissionID?: bigint;
 
   /**
    * the unique identifier for a scoring session
    *
-   * @generated from field: string Secret = 3;
+   * @generated from field: string Secret = 4;
    */
   Secret = "";
 
   /**
    * name of the test
    *
-   * @generated from field: string TestName = 4;
+   * @generated from field: string TestName = 5;
    */
   TestName = "";
 
   /**
    * name of task this score belongs to
    *
-   * @generated from field: string TaskName = 5;
+   * @generated from field: string TaskName = 6;
    */
   TaskName = "";
 
   /**
    * the score obtained
    *
-   * @generated from field: int32 Score = 6;
+   * @generated from field: int32 Score = 7;
    */
   Score = 0;
 
   /**
    * max score possible to get on this specific test
    *
-   * @generated from field: int32 MaxScore = 7;
+   * @generated from field: int32 MaxScore = 8;
    */
   MaxScore = 0;
 
   /**
    * the weight of this test; used to compute final grade
    *
-   * @generated from field: int32 Weight = 8;
+   * @generated from field: int32 Weight = 9;
    */
   Weight = 0;
 
   /**
    * if populated, the frontend may display these details
    *
-   * @generated from field: string TestDetails = 9;
+   * @generated from field: string TestDetails = 10;
    */
   TestDetails = "";
 
@@ -80,14 +85,15 @@ export class Score extends Message<Score> {
   static readonly typeName = "score.Score";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "Secret", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "TestName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "TaskName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "Score", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 7, name: "MaxScore", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 8, name: "Weight", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 9, name: "TestDetails", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "AssignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, opt: true },
+    { no: 3, name: "SubmissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, opt: true },
+    { no: 4, name: "Secret", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "TestName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "TaskName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "Score", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 8, name: "MaxScore", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 9, name: "Weight", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 10, name: "TestDetails", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Score {

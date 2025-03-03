@@ -882,23 +882,30 @@ export class Assignment extends Message<Assignment> {
   containerTimeout = 0;
 
   /**
+   * list of scores for different tests
+   *
+   * @generated from field: repeated score.Score DefaultScores = 12;
+   */
+  DefaultScores: Score[] = [];
+
+  /**
    * submissions produced for this assignment
    *
-   * @generated from field: repeated qf.Submission submissions = 11;
+   * @generated from field: repeated qf.Submission submissions = 13;
    */
   submissions: Submission[] = [];
 
   /**
    * tasks associated with this assignment
    *
-   * @generated from field: repeated qf.Task tasks = 12;
+   * @generated from field: repeated qf.Task tasks = 14;
    */
   tasks: Task[] = [];
 
   /**
    * grading benchmarks for this assignment
    *
-   * @generated from field: repeated qf.GradingBenchmark gradingBenchmarks = 13;
+   * @generated from field: repeated qf.GradingBenchmark gradingBenchmarks = 15;
    */
   gradingBenchmarks: GradingBenchmark[] = [];
 
@@ -920,9 +927,10 @@ export class Assignment extends Message<Assignment> {
     { no: 8, name: "scoreLimit", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 9, name: "reviewers", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 10, name: "containerTimeout", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 11, name: "submissions", kind: "message", T: Submission, repeated: true },
-    { no: 12, name: "tasks", kind: "message", T: Task, repeated: true },
-    { no: 13, name: "gradingBenchmarks", kind: "message", T: GradingBenchmark, repeated: true },
+    { no: 12, name: "DefaultScores", kind: "message", T: Score, repeated: true },
+    { no: 13, name: "submissions", kind: "message", T: Submission, repeated: true },
+    { no: 14, name: "tasks", kind: "message", T: Task, repeated: true },
+    { no: 15, name: "gradingBenchmarks", kind: "message", T: GradingBenchmark, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Assignment {

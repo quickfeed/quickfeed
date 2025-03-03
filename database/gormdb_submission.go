@@ -56,7 +56,7 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 				submission.BuildInfo.SubmissionID = submission.ID
 			}
 			for _, sc := range submission.Scores {
-				sc.SubmissionID = submission.ID
+				sc.SubmissionID = &submission.ID
 			}
 		}
 		// Full save associations is required to save any nested grades
