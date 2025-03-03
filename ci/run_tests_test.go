@@ -85,7 +85,7 @@ func TestRunTests(t *testing.T) {
 	defer cancel()
 
 	scmClient, _ := scm.GetTestSCM(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	defer cancel()
 
 	scmClient, _ := scm.GetTestSCM(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -88,7 +88,7 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
-	results, err := runData.RunTests(ctx, logger, client, runner(logger))
+	results, err := runData.RunTests(ctx, logger, client, runner(logger), nil, nil)
 	check(err)
 
 	fmt.Println("***********************")

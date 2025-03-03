@@ -48,11 +48,16 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		return
 	}
 
+	var courseAssignments []*qf.Assignment
+	var script *string
+
 	switch {
 	case repo.IsTestsRepo():
+		var defaultUpdateScript = "update_tests.sh"
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
+		courseAssignments = assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
+		script = &defaultUpdateScript
 
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
@@ -69,13 +74,16 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsStudentRepo():
 		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
-		assignments := wh.extractAssignments(payload, course)
-		for _, assignment := range assignments {
-			wh.runAssignmentTests(scmClient, assignment, repo, course, payload)
-		}
+		courseAssignments = wh.extractAssignments(payload, course)
 
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
+	}
+
+	// Run tests for each assignment that has been modified in the push event
+	// For either the student or tests repository
+	for _, assignment := range courseAssignments {
+		wh.runAssignmentTests(scmClient, assignment, repo, course, payload, script)
 	}
 }
 
@@ -127,7 +135,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
+func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent, script *string) {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -145,27 +153,33 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, wh.logger, scmClient, wh.runner)
+	results, err := runData.RunTests(ctx, wh.logger, scmClient, wh.runner, script, assignment.DefaultScores)
 	if err != nil {
 		wh.logger.Error(err)
 		return
 	}
-	submission, err := runData.RecordResults(wh.logger, wh.db, results)
-	if err != nil {
-		wh.logger.Error(err)
-		return
-	}
-	// If we fail to get owners, we ignore sending on the stream.
-	if userIDs, err := runData.GetOwners(wh.db); err == nil {
-		// Note that streaming the submission as-is will send all grades
-		// to all participants for a given group submission.
-		wh.streams.Submission.SendTo(submission, userIDs...)
-	}
-	// Non-default branch indicates push to a group repo with an associated pull request.
-	if !isDefaultBranch(payload) && repo.IsGroupRepo() {
-		// Attempt to find the pull request for the branch, if it exists,
-		// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-		wh.handlePullRequestPush(ctx, scmClient, payload, results, runData)
+	if repo.IsStudentRepo() {
+		submission, err := runData.RecordResults(wh.logger, wh.db, results)
+		if err != nil {
+			wh.logger.Error(err)
+			return
+		}
+		// If we fail to get owners, we ignore sending on the stream.
+		if userIDs, err := runData.GetOwners(wh.db); err == nil {
+			// Note that streaming the submission as-is will send all grades
+			// to all participants for a given group submission.
+			wh.streams.Submission.SendTo(submission, userIDs...)
+		}
+		// Non-default branch indicates push to a group repo with an associated pull request.
+		if !isDefaultBranch(payload) && repo.IsGroupRepo() {
+			// Attempt to find the pull request for the branch, if it exists,
+			// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
+			wh.handlePullRequestPush(ctx, scmClient, payload, results, runData)
+		}
+	} else if repo.IsTestsRepo() {
+		// Update the assignment with the default scores from the tests repo.
+		assignment.DefaultScores = results.Scores
+		wh.db.UpdateAssignments([]*qf.Assignment{assignment})
 	}
 }
 

@@ -52,7 +52,7 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) error {
 	if err != nil {
 		return err
 	}
-	results, err := runData.RunTests(ctx, s.logger, sc, s.runner)
+	results, err := runData.RunTests(ctx, s.logger, sc, s.runner, nil, nil)
 	if err != nil {
 		return err
 	}

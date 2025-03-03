@@ -504,7 +504,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetScmOrganizationName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.runner, s.db, scmClient, course)
+	_ = assignments.UpdateFromTestsRepo(s.logger, s.runner, s.db, scmClient, course)
 
 	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetScmOrganizationName(),
