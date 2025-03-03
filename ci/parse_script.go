@@ -10,6 +10,8 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
+var defaultRunScript = "run.sh"
+
 // parseTestRunnerScript returns a job specifying the docker image and commands
 // to be executed by the docker image. The job's commands are extracted from
 // the test runner script (run.sh) associated with the RunData's assignment.
@@ -21,8 +23,11 @@ import (
 //	SUBMITTED   - to access the student's or group's submitted code (cloned from the student/group repository)
 //	CURRENT     - name of the current assignment folder
 //	QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
-func (r *RunData) parseTestRunnerScript(secret, destDir, scriptFile string) (*Job, error) {
-	scriptContent, err := r.loadRunScript(scriptFile)
+func (r *RunData) parseTestRunnerScript(secret, destDir string, script *string) (*Job, error) {
+	if script == nil {
+		script = &defaultRunScript
+	}
+	scriptContent, err := r.loadRunScript(*script)
 	if err != nil {
 		return nil, err
 	}

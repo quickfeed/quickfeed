@@ -179,7 +179,9 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 	} else if repo.IsTestsRepo() {
 		// Update the assignment with the default scores from the tests repo.
 		assignment.DefaultScores = results.Scores
-		wh.db.UpdateAssignments([]*qf.Assignment{assignment})
+		if err := wh.db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+			wh.logger.Error(err)
+		}
 	}
 }
 

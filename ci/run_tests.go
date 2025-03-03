@@ -21,8 +21,6 @@ import (
 // pattern to prefix the tmp folder for quickfeed tests
 const quickfeedTestsPath = "quickfeed-tests"
 
-var defaultScript = "run.sh"
-
 // RunData stores CI data
 type RunData struct {
 	Course     *qf.Course
@@ -78,10 +76,7 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	}
 
 	randomSecret := rand.String()
-	if script == nil {
-		script = &defaultScript
-	}
-	job, err := r.parseTestRunnerScript(randomSecret, dstDir, *script)
+	job, err := r.parseTestRunnerScript(randomSecret, dstDir, script)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}

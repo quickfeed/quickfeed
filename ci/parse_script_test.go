@@ -45,7 +45,7 @@ func TestLoadRunScript(t *testing.T) {
 			Name: "lab1",
 		},
 	}
-	runSh, err := runData.loadRunScript(defaultScript)
+	runSh, err := runData.loadRunScript(defaultRunScript)
 	if err != nil {
 		t.Error(err)
 	}
@@ -53,7 +53,7 @@ func TestLoadRunScript(t *testing.T) {
 		t.Error("run script is empty")
 	}
 	runData.Assignment = &qf.Assignment{Name: "lab2"}
-	runSh, err = runData.loadRunScript(defaultScript)
+	runSh, err = runData.loadRunScript(defaultRunScript)
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,7 +79,7 @@ echo "$QUICKFEED_SESSION_SECRET"
 	randomSecret := rand.String()
 
 	runData := testRunData(qfTestOrg)
-	job, err := runData.parseTestRunnerScript(randomSecret, "", "")
+	job, err := runData.parseTestRunnerScript(randomSecret, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 
 	runData := testRunData(qfTestOrg)
 	runData.Assignment = &qf.Assignment{Name: "lab4-bad-run-script"}
-	job, err := runData.parseTestRunnerScript(randomSecret, "", "")
+	job, err := runData.parseTestRunnerScript(randomSecret, "", nil)
 	if err == nil {
 		t.Fatalf("expected error, got nil: %+v", job)
 	}
@@ -135,7 +135,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	}
 
 	runData.Assignment = &qf.Assignment{Name: "lab5-bad-run-script"}
-	job, err = runData.parseTestRunnerScript(randomSecret, "", "")
+	job, err = runData.parseTestRunnerScript(randomSecret, "", nil)
 	if err == nil {
 		t.Fatalf("expected error, got nil: %+v", job)
 	}
