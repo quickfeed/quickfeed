@@ -34,35 +34,26 @@ func (course *Course) UpdateDockerfile(dockerfile string) bool {
 	return updated
 }
 
-// Mutex for each course
 var (
-	courseMuMap = make(map[uint64]*sync.Mutex)
-	mapMu       = sync.Mutex{}
+	// Mutex for each course
+	courseMutexMap = make(map[uint64]*sync.Mutex)
+	// Mutex for the course mutex map
+	mapMutex = sync.Mutex{}
 )
 
 // Lock indexes the course mutex map with the course ID and locks the mutex.
 // The mutex is initialized if it does not exist.
 // This method is called when concurrently accessing the course.
-func (course *Course) Lock() {
-	mapMu.Lock()
-	if _, ok := courseMuMap[course.ID]; !ok {
-		courseMuMap[course.ID] = &sync.Mutex{}
+func (course *Course) Lock() func() {
+	mapMutex.Lock()
+	if _, ok := courseMutexMap[course.GetID()]; !ok {
+		courseMutexMap[course.GetID()] = &sync.Mutex{}
 	}
-	mu := courseMuMap[course.ID]
-	mapMu.Unlock()
+	mu := courseMutexMap[course.GetID()]
+	mapMutex.Unlock()
 
 	mu.Lock()
-}
-
-// Unlock indexes the course mutex map with the course ID and unlocks the mutex.
-// This method is called when concurrently accessing the course.
-func (course *Course) Unlock() {
-	mapMu.Lock()
-	mu, ok := courseMuMap[course.ID]
-	mapMu.Unlock()
-	if ok { // Will always be true if Lock() has been called.
-		mu.Unlock()
-	}
+	return mu.Unlock
 }
 
 func (course *Course) GetDockerfile() string {

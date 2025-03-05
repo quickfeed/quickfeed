@@ -27,8 +27,8 @@ const MaxWait = 5 * time.Minute
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
-	course.Lock()
-	defer course.Unlock()
+	unlock := course.Lock()
+	defer unlock()
 
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
