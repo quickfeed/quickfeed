@@ -217,7 +217,8 @@ body {
   <div class="container">
     <div class="center">
       <h2>{{.Name}} GitHub App created</h2>
-	  <h3>Building the UI, reloading soon..</h3>
+	  <h3>Building the UI, please wait for "UI built successfully" in server logs before logging in<h3>
+	  <h4>Reloading soon...</h4>
     </div>
   </div>
 </body>
@@ -248,14 +249,18 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
+
 	if m.buildUI {
-		if err := ui.Build(); err != nil {
+		build := func() error { return ui.Build(dev, nil) }
+
+		// Try to build the UI, if it fails, run npm ci and try again
+		if err := build(); err != nil {
 			if ok := runNpmCi(); !ok {
-				return err
+				return fmt.Errorf("failed to run npm ci: %v", err)
 			}
 			// Attempt to build again
-			if err := ui.Build(); err != nil {
-				return err
+			if err := build(); err != nil {
+				return fmt.Errorf("failed to rebuild the UI: %v", err)
 			}
 		}
 		log.Print("UI built successfully")
