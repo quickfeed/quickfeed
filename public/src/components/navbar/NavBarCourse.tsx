@@ -8,7 +8,7 @@ import NavBarLabs from "./NavBarLabs"
 import NavBarTeacher from "./NavBarTeacher"
 
 
-const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element => {
+const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()

@@ -7,7 +7,7 @@ import ProgressBar, { Progress } from "../ProgressBar"
 
 
 /* SubmissionsTable is a component that displays a table of assignments and their submissions for all courses. */
-const SubmissionsTable = (): JSX.Element => {
+const SubmissionsTable = () => {
     const state = useAppState()
     const history = useHistory()
 
@@ -25,8 +25,8 @@ const SubmissionsTable = (): JSX.Element => {
         return assignments
     }
 
-    const NewSubmissionsTable = (): JSX.Element[] => {
-        const table: JSX.Element[] = []
+    const NewSubmissionsTable = () => {
+        const table: React.JSX.Element[] = []
         sortedAssignments().forEach(assignment => {
             const courseID = assignment.CourseID
             const submissions = state.submissions.ForAssignment(assignment)

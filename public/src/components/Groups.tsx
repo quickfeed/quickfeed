@@ -9,7 +9,7 @@ import Search from "./Search"
 
 
 /* Lists all groups for a given course. */
-const Groups = (): JSX.Element => {
+const Groups = () => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -36,7 +36,7 @@ const Groups = (): JSX.Element => {
     }
 
     const GroupButtons = ({ group }: { group: Group }) => {
-        const buttons: JSX.Element[] = []
+        const buttons: React.JSX.Element[] = []
         if (isPendingGroup(group)) {
             buttons.push(
                 <DynamicButton

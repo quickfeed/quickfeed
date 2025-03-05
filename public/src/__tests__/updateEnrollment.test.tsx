@@ -2,7 +2,7 @@ import { Course, Enrollment, Enrollment_UserStatus, User } from "../../proto/qf/
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
-import React from "react"
+import React, { act } from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
@@ -78,7 +78,7 @@ describe("UpdateEnrollment in webpage", () => {
         const enrollment = new Enrollment({
             ID: BigInt(2),
             courseID: BigInt(1),
-            status: 3,
+            status: Enrollment_UserStatus.TEACHER,
             user,
             slipDaysRemaining: 3,
             lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
@@ -102,7 +102,10 @@ describe("UpdateEnrollment in webpage", () => {
         )
 
         const editButton = screen.getByText("Edit")
-        editButton.click()
+        expect(editButton).toBeTruthy()
+        act(() => {
+            editButton.click()
+        })
 
         expect(screen.getByText("Demote")).toBeTruthy()
         expect(screen.queryByText("Promote")).toBeFalsy()
@@ -118,7 +121,7 @@ describe("UpdateEnrollment in webpage", () => {
         const enrollment = new Enrollment({
             ID: BigInt(2),
             courseID: BigInt(1),
-            status: 2,
+            status: Enrollment_UserStatus.STUDENT,
             user,
             slipDaysRemaining: 3,
             lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
@@ -141,7 +144,9 @@ describe("UpdateEnrollment in webpage", () => {
         )
 
         const editButton = screen.getByText("Edit")
-        editButton.click()
+        act(() => {
+            editButton.click()
+        })
 
         expect(screen.getByText("Promote")).toBeTruthy()
         expect(screen.queryByText("Demote")).toBeFalsy()
