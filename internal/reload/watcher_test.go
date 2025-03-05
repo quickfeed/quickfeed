@@ -28,7 +28,7 @@ func TestWatcher(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	watcher, err := NewWatcher(ctx, dir)
+	watcher, err := NewWatcher(ctx, dir, false)
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}

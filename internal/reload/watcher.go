@@ -21,7 +21,7 @@ type Watcher struct {
 // The watcher listens for file changes and broadcasts them to all connected clients.
 // While a single client is the most common use case, multiple clients can connect to
 // the same watcher, e.g., for live-reloading the web page in different browsers.
-func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
+func NewWatcher(ctx context.Context, path string, dev bool) (*Watcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 	}
 	go watcher.start(ctx) // Start watching for file changes
 	ch := make(chan error)
-	go ui.Watch(ch) // Start esbuild in watch mode
+	go ui.Watch(ch, dev, nil) // Start esbuild in watch mode
 	if err := <-ch; err != nil {
 		return nil, err
 	}

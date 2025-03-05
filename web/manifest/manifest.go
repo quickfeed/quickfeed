@@ -50,8 +50,8 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	return nil
 }
 
-func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error {
-	m := New(env.Domain(), envFile)
+func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string, dev bool) error {
+	m := New(env.Domain(), envFile, dev)
 	server, err := srvFn(httpAddr, m.Handler())
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ type Manifest struct {
 	buildUI bool           // build UI is only for production
 }
 
-func New(domain, envFile string) *Manifest {
+func New(domain, envFile string, dev bool) *Manifest {
 	m := &Manifest{
 		domain:  domain,
 		envFile: envFile,
@@ -77,7 +77,7 @@ func New(domain, envFile string) *Manifest {
 		buildUI: true,
 	}
 	router := http.NewServeMux()
-	router.Handle("/manifest/callback", m.conversion())
+	router.Handle("/manifest/callback", m.conversion(dev))
 	router.Handle("/manifest", m.createApp())
 	m.handler = router
 	return m
@@ -106,7 +106,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	return server.Shutdown(context.Background())
 }
 
-func (m *Manifest) conversion() http.HandlerFunc {
+func (m *Manifest) conversion(dev bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var retErr error
 		code := r.URL.Query().Get("code")
@@ -169,7 +169,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Print success message, and redirect to main page
-		if err := m.success(w, config); err != nil {
+		if err := m.success(w, config, dev); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -189,7 +189,7 @@ func (m *Manifest) createApp() http.HandlerFunc {
 	}
 }
 
-func (m *Manifest) success(w http.ResponseWriter, config *github.AppConfig) error {
+func (m *Manifest) success(w http.ResponseWriter, config *github.AppConfig, dev bool) error {
 	const tpl = `<!DOCTYPE html>
 <html>
 <head>

@@ -159,7 +159,7 @@ func TestConversion(t *testing.T) {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/manifest/callback", manifest.conversion())
+	mux.Handle("/manifest/callback", manifest.conversion(false))
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
