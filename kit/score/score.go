@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -127,6 +128,43 @@ func (s *Score) json() string {
 		return fmt.Sprintf("json.Marshal error: %v\n", err)
 	}
 	return string(b)
+}
+
+// Errorf prints an error message and sets the TestDetails field.
+// Calling this method will fail the test.
+func (s *Score) Errorf(t *testing.T, format string, args ...interface{}) {
+	t.Helper()
+	s.addDetails(t, format, args...)
+	t.Errorf(format, args...)
+}
+
+// Fatalf prints an error message and sets the TestDetails field.
+// Calling this method will fail the test and stop the execution of the test.
+func (s *Score) Fatalf(t *testing.T, format string, args ...interface{}) {
+	t.Helper()
+	s.addDetails(t, format, args...)
+	t.Fatalf(format, args...)
+}
+
+func (s *Score) Error(t *testing.T, args ...interface{}) {
+	t.Helper()
+	s.addDetails(t, "%v", args...)
+	t.Error(args...)
+}
+
+// addDetails updates the TestDetails field with the provided error message.
+func (s *Score) addDetails(t *testing.T, format string, args ...interface{}) {
+	t.Helper()
+	// this function is called from Errorf and Error, which are called from tests
+	// we want to get the file and line number of the test function that called Errorf or Error
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		// decorate the error message with file and line number
+		// to make it easier to locate the source of the error
+		s.TestDetails += fmt.Sprintf("%s:%d: %s\n", file, line, fmt.Sprintf(format, args...))
+	} else {
+		s.TestDetails += fmt.Sprintln(fmt.Sprintf(format, args...))
+	}
 }
 
 func printPanicMessage(testName, msg string, recoverVal any) {
