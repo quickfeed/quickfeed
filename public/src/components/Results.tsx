@@ -13,7 +13,7 @@ import Release from "./Release"
 import Search from "./Search"
 
 
-const Results = ({ review }: { review: boolean }): JSX.Element => {
+const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -116,10 +116,10 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
     }
 
     const groupView = state.groupView
-    const header = generateAssignmentsHeader(assignments, groupView)
+    const header = generateAssignmentsHeader(assignments, groupView, actions, state.isCourseManuallyGraded)
 
     const generator = review ? generateReviewCell : getSubmissionCell
-    const rows = generateSubmissionRows(members, generator)
+    const rows = generateSubmissionRows(members, generator, state)
 
 
     return (

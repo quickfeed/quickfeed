@@ -7,7 +7,7 @@ import ProfileInfo from './ProfileInfo'
 import SignupText from './SignupText'
 
 
-const Profile = (): JSX.Element => {
+const Profile = () => {
     const state = useAppState()
     const history = useHistory()
     // Holds a local state to check whether the user is editing their user information or not

@@ -17,6 +17,9 @@ describe("Visibility when logged in", () => {
             ID: BigInt(1),
             Name: "Test User",
             IsAdmin: true,
+            // Set AvatarURL to a valid URL to avoid console errors
+            // In production, we always have a non-empty AvatarURL
+            AvatarURL: "https://example.com/avatar.jpg",
         })
     })
 

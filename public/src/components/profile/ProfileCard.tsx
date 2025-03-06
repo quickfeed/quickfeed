@@ -3,7 +3,7 @@ import { useAppState } from "../../overmind"
 
 
 /** ProfileCard displays the profile information of the provided children as a card. */
-const ProfileCard = ({ children }: { children: React.ReactNode }): JSX.Element => {
+const ProfileCard = ({ children }: { children: React.ReactNode }) => {
     const self = useAppState().self
 
     return (

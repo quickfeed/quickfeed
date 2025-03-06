@@ -12,7 +12,7 @@ import React from "react";
  *
  *  @param alert - The alert to be displayed
  */
-const Alert = ({ alert }: { alert: AlertType }): JSX.Element => {
+const Alert = ({ alert }: { alert: AlertType }) => {
     const circleRef = useRef<SVGCircleElement>(null);
     const actions = useActions();
 
