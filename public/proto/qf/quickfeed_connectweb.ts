@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CourseRequest, CourseSubmissions, EnrollmentRequest, GroupRequest, Organization, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, Void } from "./requests_pb.js";
+import { CourseRequest, CourseSubmissions, EnrollmentRequest, GroupRequest, Organization, RebuildRequest, Repositories, RepositoryRequest, ReviewRequest, SubmissionRequest, UpdateSubmissionRequest, Void } from "./requests_pb.js";
 import { Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submission, Submissions, User, Users } from "./types_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
@@ -215,7 +215,7 @@ export const QuickFeedService = {
      */
     updateSubmissions: {
       name: "UpdateSubmissions",
-      I: UpdateSubmissionsRequest,
+      I: UpdateSubmissionRequest,
       O: Void,
       kind: MethodKind.Unary,
     },

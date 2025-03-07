@@ -1,5 +1,5 @@
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
+import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission, Submission_Status } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor } from '../../../Helpers'
 import { SubmissionOwner } from '../../state'
 
@@ -129,11 +129,11 @@ export const setMinimumScore = ({ state }: Context, minimumScore: number): void 
     state.review.minimumScore = minimumScore
 }
 
-export const releaseAll = async ({ state, actions, effects }: Context, { release, approve }: { release: boolean, approve: boolean }): Promise<void> => {
+export const releaseAll = async ({ state, actions, effects }: Context, { released, approve }: { released: boolean, approve: boolean }): Promise<void> => {
     const assignment = state.assignments[state.activeCourse.toString()].find(a => a.ID === state.review.assignmentID)
 
-    const releaseString = release && approve ? 'release and approve'
-        : release ? 'release'
+    const releaseString = released && approve ? 'release and approve'
+        : released ? 'release'
             : approve ? "approve"
                 : ""
     const confirmText = `Are you sure you want to ${releaseString} all reviews for ${assignment?.name} above ${state.review.minimumScore} score?`
@@ -147,9 +147,9 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const response = await effects.api.client.updateSubmissions({
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
-        scoreLimit: state.review.minimumScore,
-        release,
-        approve,
+        score: state.review.minimumScore,
+        released,
+        status: Submission_Status.APPROVED,
     })
     if (response.error) {
         return

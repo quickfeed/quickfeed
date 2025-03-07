@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
-import { Enrollment_UserStatus, Grade, Review, Submissions } from "./types_pb.js";
+import { Enrollment_UserStatus, Grade, Review, Submission_Status, Submissions } from "./types_pb.js";
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -391,31 +391,51 @@ proto3.util.setEnumType(SubmissionRequest_SubmissionType, "qf.SubmissionRequest.
 ]);
 
 /**
+ * UpdateSubmissionRequest is used to update manually reviewed submissions.
+ *
  * @generated from message qf.UpdateSubmissionRequest
  */
 export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
   /**
-   * @generated from field: uint64 submissionID = 1;
-   */
-  submissionID = protoInt64.zero;
-
-  /**
-   * @generated from field: uint64 courseID = 2;
+   * @generated from field: uint64 courseID = 1;
    */
   courseID = protoInt64.zero;
 
   /**
-   * @generated from field: uint32 score = 3;
+   * if non-zero, update all submissions
+   *
+   * @generated from field: uint64 assignmentID = 2;
+   */
+  assignmentID = protoInt64.zero;
+
+  /**
+   * if non-zero, update single specific submission
+   *
+   * @generated from field: uint64 submissionID = 3;
+   */
+  submissionID = protoInt64.zero;
+
+  /**
+   * only used for single submission
+   *
+   * @generated from field: uint32 score = 4;
    */
   score = 0;
 
   /**
-   * @generated from field: bool released = 4;
+   * indicate whether or not to release submission(s) to students
+   *
+   * @generated from field: bool released = 5;
    */
   released = false;
 
   /**
-   * @generated from field: repeated qf.Grade grades = 5;
+   * @generated from field: qf.Submission.Status status = 6;
+   */
+  status = Submission_Status.NONE;
+
+  /**
+   * @generated from field: repeated qf.Grade grades = 7;
    */
   grades: Grade[] = [];
 
@@ -427,11 +447,13 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "qf.UpdateSubmissionRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "submissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 4, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 5, name: "grades", kind: "message", T: Grade, repeated: true },
+    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "assignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "submissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 4, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 5, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
+    { no: 7, name: "grades", kind: "message", T: Grade, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateSubmissionRequest {
@@ -448,67 +470,6 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
 
   static equals(a: UpdateSubmissionRequest | PlainMessage<UpdateSubmissionRequest> | undefined, b: UpdateSubmissionRequest | PlainMessage<UpdateSubmissionRequest> | undefined): boolean {
     return proto3.util.equals(UpdateSubmissionRequest, a, b);
-  }
-}
-
-/**
- * @generated from message qf.UpdateSubmissionsRequest
- */
-export class UpdateSubmissionsRequest extends Message<UpdateSubmissionsRequest> {
-  /**
-   * @generated from field: uint64 courseID = 1;
-   */
-  courseID = protoInt64.zero;
-
-  /**
-   * @generated from field: uint64 assignmentID = 2;
-   */
-  assignmentID = protoInt64.zero;
-
-  /**
-   * @generated from field: uint32 scoreLimit = 3;
-   */
-  scoreLimit = 0;
-
-  /**
-   * @generated from field: bool release = 4;
-   */
-  release = false;
-
-  /**
-   * @generated from field: bool approve = 5;
-   */
-  approve = false;
-
-  constructor(data?: PartialMessage<UpdateSubmissionsRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "qf.UpdateSubmissionsRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "assignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "scoreLimit", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 4, name: "release", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 5, name: "approve", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateSubmissionsRequest {
-    return new UpdateSubmissionsRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdateSubmissionsRequest {
-    return new UpdateSubmissionsRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdateSubmissionsRequest {
-    return new UpdateSubmissionsRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: UpdateSubmissionsRequest | PlainMessage<UpdateSubmissionsRequest> | undefined, b: UpdateSubmissionsRequest | PlainMessage<UpdateSubmissionsRequest> | undefined): boolean {
-    return proto3.util.equals(UpdateSubmissionsRequest, a, b);
   }
 }
 

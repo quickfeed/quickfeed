@@ -841,11 +841,11 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// Attempt to release all submissions with score >= 80
-	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{
-		CourseID:     course.ID,
-		AssignmentID: assignments[0].ID,
-		Release:      true,
-		ScoreLimit:   80,
+	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
+		CourseID:     course.GetID(),
+		AssignmentID: assignments[0].GetID(),
+		Released:     true,
+		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
@@ -860,7 +860,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	// Only submissions with score >= 80 should be released
 	// All submissions for assignment 1 should have score == 20, and not be released
 	for _, submission := range gotSubmissions3 {
-		if submission.Released {
+		if submission.GetReleased() {
 			t.Errorf("Expected submission to not be released")
 		}
 	}
@@ -887,11 +887,11 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// Attempt to release all submissions with score >= 80
-	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{
+	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.ID,
 		AssignmentID: assignments[1].ID,
-		Release:      true,
-		ScoreLimit:   80,
+		Released:     true,
+		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
@@ -905,17 +905,17 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	for _, submission := range gotSubmissions4 {
-		if !submission.Released {
+		if !submission.GetReleased() {
 			t.Errorf("Expected submission to be released")
 		}
 	}
 
 	// Approve all submissions for assignment 1 with score >= 80
-	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{
+	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.ID,
 		AssignmentID: assignments[1].ID,
-		Approve:      true,
-		ScoreLimit:   80,
+		Status:       qf.Submission_APPROVED,
+		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
