@@ -61,7 +61,7 @@ message UpdateSubmissionRequest {
     uint64 assignmentID = 2; // if non-zero, update all submissions
     uint64 submissionID = 3; // if non-zero, update single specific submission
     uint32 score        = 4; // only used for single submission
-    bool released       = 5; // indicate whether or not to release submission(s) to students
+    bool release       = 5; // indicate whether or not to release submission(s) to students
     Submission.Status status = 6;
     repeated qf.Grade grades = 7;
 }

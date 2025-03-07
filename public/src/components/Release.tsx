@@ -31,7 +31,7 @@ const Release = () => {
                         text="Approve all"
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        onClick={() => actions.review.releaseAll({ approve: true, released: false })}
+                        onClick={() => actions.review.releaseAll({ approve: true, release: false })}
                     />
                 </div>
                 <div className="input-group-append">
@@ -39,7 +39,7 @@ const Release = () => {
                         text="Release all"
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        onClick={() => actions.review.releaseAll({ approve: false, released: true })}
+                        onClick={() => actions.review.releaseAll({ approve: false, release: true })}
                     />
                 </div>
             </FormInput>

@@ -425,9 +425,9 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
   /**
    * indicate whether or not to release submission(s) to students
    *
-   * @generated from field: bool released = 5;
+   * @generated from field: bool release = 5;
    */
-  released = false;
+  release = false;
 
   /**
    * @generated from field: qf.Submission.Status status = 6;
@@ -451,7 +451,7 @@ export class UpdateSubmissionRequest extends Message<UpdateSubmissionRequest> {
     { no: 2, name: "assignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "submissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 4, name: "score", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 5, name: "released", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 5, name: "release", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 6, name: "status", kind: "enum", T: proto3.getEnumType(Submission_Status) },
     { no: 7, name: "grades", kind: "message", T: Grade, repeated: true },
   ]);

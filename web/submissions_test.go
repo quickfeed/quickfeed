@@ -844,7 +844,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
 		AssignmentID: assignments[0].GetID(),
-		Released:     true,
+		Release:      true,
 		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
@@ -890,7 +890,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.ID,
 		AssignmentID: assignments[1].ID,
-		Released:     true,
+		Release:      true,
 		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)

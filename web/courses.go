@@ -279,7 +279,7 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionRequest
 	query := &qf.Submission{
 		AssignmentID: request.GetAssignmentID(),
 		Score:        request.GetScore(),
-		Released:     request.GetReleased(),
+		Released:     request.GetRelease(),
 	}
 
 	return s.db.UpdateSubmissions(query, request.GetStatus())

@@ -129,11 +129,11 @@ export const setMinimumScore = ({ state }: Context, minimumScore: number): void 
     state.review.minimumScore = minimumScore
 }
 
-export const releaseAll = async ({ state, actions, effects }: Context, { released, approve }: { released: boolean, approve: boolean }): Promise<void> => {
+export const releaseAll = async ({ state, actions, effects }: Context, { release, approve }: { release: boolean, approve: boolean }): Promise<void> => {
     const assignment = state.assignments[state.activeCourse.toString()].find(a => a.ID === state.review.assignmentID)
 
-    const releaseString = released && approve ? 'release and approve'
-        : released ? 'release'
+    const releaseString = release && approve ? 'release and approve'
+        : release ? 'release'
             : approve ? "approve"
                 : ""
     const status = approve ? Submission_Status.APPROVED : Submission_Status.NONE
@@ -150,8 +150,8 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
         score: state.review.minimumScore,
-        released,
-        status: status,
+        release,
+        status,
     })
     if (response.error) {
         return
@@ -170,7 +170,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: submission.Grades,
-        released: clone.released,
+        release: clone.released,
         score: submission.score,
     })
     if (response.error) {
