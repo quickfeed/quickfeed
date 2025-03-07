@@ -266,15 +266,18 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 	if !opt.valid() {
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
+	slug.Lowercase = false
+	groupName := slug.Make(opt.GroupName)
+	slug.Lowercase = true
 	if _, err := s.GetOrganization(ctx, &OrganizationOptions{Name: opt.Organization}); err != nil {
 		// organization must exist
 		return nil, E(op, m, err)
 	}
-	if _, err := s.getRepository(ctx, &RepositoryOptions{Owner: opt.Organization, Repo: opt.GroupName}); err == nil {
+	if _, err := s.getRepository(ctx, &RepositoryOptions{Owner: opt.Organization, Repo: groupName}); err == nil {
 		// repository must not exist
-		return nil, E(op, M("%s: repository %s %w", opt.Organization, opt.GroupName, ErrAlreadyExists))
+		return nil, E(op, M("%s: repository %s %w", opt.Organization, groupName, ErrAlreadyExists))
 	}
-	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Owner: opt.Organization, Repo: opt.GroupName, Private: true})
+	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Owner: opt.Organization, Repo: groupName, Private: true})
 	if err != nil {
 		return nil, E(op, m, err)
 	}
@@ -413,7 +416,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, 
 	// if repo is found, it is safe to reuse it
 	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{
 		Owner:   organization,
-		Repo:    qf.StudentRepoName(user),
+		Repo:    slug.Make(qf.StudentRepoName(user)),
 		Private: true,
 	})
 	if err != nil {
