@@ -136,6 +136,8 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         : released ? 'release'
             : approve ? "approve"
                 : ""
+    const status = approve ? Submission_Status.APPROVED : Submission_Status.NONE
+        
     const confirmText = `Are you sure you want to ${releaseString} all reviews for ${assignment?.name} above ${state.review.minimumScore} score?`
     const invalidMinimumScore = state.review.minimumScore < 0 || state.review.minimumScore > 100
 
@@ -149,7 +151,7 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         assignmentID: state.review.assignmentID,
         score: state.review.minimumScore,
         released,
-        status: Submission_Status.APPROVED,
+        status: status,
     })
     if (response.error) {
         return
