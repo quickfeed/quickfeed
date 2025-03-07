@@ -221,7 +221,7 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateAssignments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{SubmissionID: 1, CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "UpdateSubmission", err, tt.wantCode, tt.wantAccess)
-			_, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{AssignmentID: 1, CourseID: tt.courseID}, tt.cookie))
+			_, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{AssignmentID: 1, CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "UpdateSubmissions", err, tt.wantCode, tt.wantAccess)
 			_, err = client.RebuildSubmissions(ctx, qtest.RequestWithCookie(&qf.RebuildRequest{
 				AssignmentID: 1,

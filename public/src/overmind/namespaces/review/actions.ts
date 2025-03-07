@@ -1,5 +1,5 @@
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
+import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission, Submission_Status } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor } from '../../../Helpers'
 import { SubmissionOwner } from '../../state'
 
@@ -136,6 +136,8 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         : release ? 'release'
             : approve ? "approve"
                 : ""
+    const status = approve ? Submission_Status.APPROVED : Submission_Status.NONE
+        
     const confirmText = `Are you sure you want to ${releaseString} all reviews for ${assignment?.name} above ${state.review.minimumScore} score?`
     const invalidMinimumScore = state.review.minimumScore < 0 || state.review.minimumScore > 100
 
@@ -147,9 +149,9 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const response = await effects.api.client.updateSubmissions({
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
-        scoreLimit: state.review.minimumScore,
+        score: state.review.minimumScore,
         release,
-        approve,
+        status,
     })
     if (response.error) {
         return
@@ -168,7 +170,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: submission.Grades,
-        released: clone.released,
+        release: clone.released,
         score: submission.score,
     })
     if (response.error) {
