@@ -16,6 +16,7 @@ func TestBuild(t *testing.T) {
 	}
 }
 
+// The watch function is exited by the main thread after the test is done.
 func TestWatch(t *testing.T) {
 	tmpDir := t.TempDir()
 	defer os.RemoveAll(tmpDir)

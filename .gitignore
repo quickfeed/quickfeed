@@ -3,8 +3,6 @@ node_modules
 .idea
 debug
 !public/.vscode/tasks.json
-public/dist/bundle.js*
-public/dist/bundle.js.map
 ./quickfeed
 backups
 scratchpad
