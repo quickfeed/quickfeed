@@ -15,7 +15,7 @@ func TestGetUserByCourse(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{
 		ID:              1,
-		CourseCreatorID: admin.ID,
+		CourseCreatorID: admin.GetID(),
 		Code:            "DAT320",
 		Name:            "Operating Systems and Systems Programming",
 		Year:            2021,
@@ -32,10 +32,10 @@ func TestGetUserByCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if u.ID != user.ID {
-		t.Errorf("expected user %d, got %d", user.ID, u.ID)
+	if u.GetID() != user.GetID() {
+		t.Errorf("expected user %d, got %d", user.GetID(), u.GetID())
 	}
-	if u.Login != username {
-		t.Errorf("expected user %s, got %s", username, u.Login)
+	if u.GetLogin() != username {
+		t.Errorf("expected user %s, got %s", username, u.GetLogin())
 	}
 }

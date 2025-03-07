@@ -104,8 +104,8 @@ func TestOAuth2Callback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if user.Login != "test" {
-		t.Fatalf("incorrect user login: expected 'test', got %s", user.Name)
+	if user.GetLogin() != "test" {
+		t.Fatalf("incorrect user login: expected 'test', got %s", user.GetName())
 	}
 }
 

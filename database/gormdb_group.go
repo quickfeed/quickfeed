@@ -10,15 +10,15 @@ import (
 
 // CreateGroup creates a new group and assign users to newly created group.
 func (db *GormDB) CreateGroup(group *qf.Group) error {
-	if len(group.Users) == 0 {
+	if len(group.GetUsers()) == 0 {
 		return ErrEmptyGroup
 	}
-	if group.CourseID == 0 {
+	if group.GetCourseID() == 0 {
 		return gorm.ErrRecordNotFound
 	}
 	var course int64
 	if err := db.conn.Model(&qf.Course{}).
-		Where(&qf.Course{ID: group.CourseID}).
+		Where(&qf.Course{ID: group.GetCourseID()}).
 		Count(&course).Error; err != nil {
 		return err
 	}
@@ -36,14 +36,14 @@ func (db *GormDB) CreateGroup(group *qf.Group) error {
 	}
 
 	var userids []uint64
-	for _, u := range group.Users {
-		userids = append(userids, u.ID)
+	for _, u := range group.GetUsers() {
+		userids = append(userids, u.GetID())
 	}
 	query := tx.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: group.CourseID}).
+		Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
 		Where("user_id IN (?) AND status IN (?)", userids,
 			[]qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_TEACHER}).
-		Updates(&qf.Enrollment{GroupID: group.ID})
+		Updates(&qf.Enrollment{GroupID: group.GetID()})
 	if query.Error != nil {
 		tx.Rollback()
 		return query.Error
@@ -59,12 +59,12 @@ func (db *GormDB) CreateGroup(group *qf.Group) error {
 
 // UpdateGroup updates a group with the specified users and enrollments.
 func (db *GormDB) UpdateGroup(group *qf.Group) error {
-	if group.CourseID == 0 {
+	if group.GetCourseID() == 0 {
 		return gorm.ErrRecordNotFound
 	}
 	var course int64
 	if err := db.conn.Model(&qf.Course{}).
-		Where(&qf.Course{ID: group.CourseID}).
+		Where(&qf.Course{ID: group.GetCourseID()}).
 		Count(&course).Error; err != nil {
 		return err
 	}
@@ -81,22 +81,22 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		return err
 	}
 	// Set group ID to zero to remove all enrollments from the given group to safely add all members of the incoming group request.
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
+	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.GetID()).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 
 	var userids []uint64
-	for _, u := range group.Users {
-		userids = append(userids, u.ID)
+	for _, u := range group.GetUsers() {
+		userids = append(userids, u.GetID())
 	}
 	query := tx.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: group.CourseID}).
+		Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
 		Where("user_id IN (?)", userids).
 		Where("status IN (?)", []qf.Enrollment_UserStatus{
 			qf.Enrollment_STUDENT,
 			qf.Enrollment_TEACHER,
-		}).Updates(&qf.Enrollment{GroupID: group.ID})
+		}).Updates(&qf.Enrollment{GroupID: group.GetID()})
 	if query.Error != nil {
 		tx.Rollback()
 		return query.Error
@@ -112,7 +112,7 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 
 // UpdateGroupStatus updates status field of a group.
 func (db *GormDB) UpdateGroupStatus(group *qf.Group) error {
-	return db.conn.Model(group).Update("status", group.Status).Error
+	return db.conn.Model(group).Update("status", group.GetStatus()).Error
 }
 
 // DeleteGroup deletes a group and its corresponding enrollments.

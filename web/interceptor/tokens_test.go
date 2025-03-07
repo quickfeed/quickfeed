@@ -40,17 +40,17 @@ func TestRefreshTokens(t *testing.T) {
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
-	adminCookie := f(t, admin.ID)
-	userCookie := f(t, user.ID)
+	adminCookie := f(t, admin.GetID())
+	userCookie := f(t, user.GetID())
 	adminClaims := &auth.Claims{
-		UserID: admin.ID,
+		UserID: admin.GetID(),
 		Admin:  true,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(1 * time.Minute).Unix(),
 		},
 	}
 	userClaims := &auth.Claims{
-		UserID: user.ID,
+		UserID: user.GetID(),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(1 * time.Minute).Unix(),
 		},
@@ -110,8 +110,8 @@ func TestRefreshTokens(t *testing.T) {
 		t.Error("User should be removed from the token update list after the user's token has been updated")
 	}
 	if _, err := client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		GroupID:  group.ID,
-		CourseID: course.ID,
+		GroupID:  group.GetID(),
+		CourseID: course.GetID(),
 	}, adminCookie)); err != nil {
 		t.Fatal(err)
 	}

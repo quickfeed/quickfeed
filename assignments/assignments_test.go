@@ -42,7 +42,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Fatal(err)
 	}
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
+	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Assignment that will be updated
 	assignment := &qf.Assignment{
-		CourseID:    course.ID,
+		CourseID:    course.GetID(),
 		Name:        "Assignment 1",
 		Deadline:    qtest.Timestamp(t, "2021-12-12T19:00:00"),
 		AutoApprove: false,
@@ -84,7 +84,7 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	assignment2 := &qf.Assignment{
-		CourseID:    course.ID,
+		CourseID:    course.GetID(),
 		Name:        "Assignment 2",
 		Deadline:    qtest.Timestamp(t, "2022-01-12T19:00:00"),
 		AutoApprove: false,
@@ -101,7 +101,7 @@ func TestUpdateCriteria(t *testing.T) {
 	benchmarks := []*qf.GradingBenchmark{
 		{
 			ID:           1,
-			AssignmentID: assignment.ID,
+			AssignmentID: assignment.GetID(),
 			Heading:      "Test benchmark 1",
 			Criteria: []*qf.GradingCriterion{
 				{
@@ -118,7 +118,7 @@ func TestUpdateCriteria(t *testing.T) {
 		},
 		{
 			ID:           2,
-			AssignmentID: assignment.ID,
+			AssignmentID: assignment.GetID(),
 			Heading:      "Test benchmark 2",
 			Criteria: []*qf.GradingCriterion{
 				{
@@ -133,7 +133,7 @@ func TestUpdateCriteria(t *testing.T) {
 	benchmarks2 := []*qf.GradingBenchmark{
 		{
 			ID:           3,
-			AssignmentID: assignment2.ID,
+			AssignmentID: assignment2.GetID(),
 			Heading:      "Test benchmark 3",
 			Criteria: []*qf.GradingCriterion{
 				{
@@ -156,13 +156,13 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment.GradingBenchmarks = benchmarks
 
 	submission := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 	}
 
 	submission2 := &qf.Submission{
-		AssignmentID: assignment2.ID,
-		UserID:       admin.ID,
+		AssignmentID: assignment2.GetID(),
+		UserID:       admin.GetID(),
 	}
 
 	for _, s := range []*qf.Submission{submission, submission2} {
@@ -173,11 +173,11 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Review for assignment that will be updated
 	review := &qf.Review{
-		ReviewerID:   admin.ID,
-		SubmissionID: submission.ID,
+		ReviewerID:   admin.GetID(),
+		SubmissionID: submission.GetID(),
 		GradingBenchmarks: []*qf.GradingBenchmark{
 			{
-				AssignmentID: assignment.ID,
+				AssignmentID: assignment.GetID(),
 				Heading:      "Test benchmark 2",
 				Comment:      "This is a comment",
 				Criteria: []*qf.GradingCriterion{
@@ -195,11 +195,11 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Review for assignment that will *not* be updated
 	review2 := &qf.Review{
-		ReviewerID:   user.ID,
-		SubmissionID: submission2.ID,
+		ReviewerID:   user.GetID(),
+		SubmissionID: submission2.GetID(),
 		GradingBenchmarks: []*qf.GradingBenchmark{
 			{
-				AssignmentID: assignment2.ID,
+				AssignmentID: assignment2.GetID(),
 				Heading:      "Test benchmark 2",
 				Comment:      "This is another comment",
 				Criteria: []*qf.GradingCriterion{
@@ -221,7 +221,7 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 
-	if diff := cmp.Diff(benchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(benchmarks, assignment.GetGradingBenchmarks(), protocmp.Transform()); diff != "" {
 		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
 	}
 
@@ -230,12 +230,12 @@ func TestUpdateCriteria(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Assignment has no added or removed benchmarks, expect nil
-	if assignment.GradingBenchmarks != nil {
-		t.Errorf("Expected nil, got %v", assignment.GradingBenchmarks)
+	if assignment.GetGradingBenchmarks() != nil {
+		t.Errorf("Expected nil, got %v", assignment.GetGradingBenchmarks())
 	}
 
 	for _, wantReview := range []*qf.Review{review, review2} {
-		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.ID})
+		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.GetID()})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -245,7 +245,7 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 
-	gotBenchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
+	gotBenchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignment.GetID(), CourseID: course.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +262,7 @@ func TestUpdateCriteria(t *testing.T) {
 	updatedBenchmarks := []*qf.GradingBenchmark{
 		{
 			ID:           1,
-			AssignmentID: assignment.ID,
+			AssignmentID: assignment.GetID(),
 			Heading:      "Test benchmark 1",
 			Criteria: []*qf.GradingCriterion{
 				{
@@ -276,7 +276,7 @@ func TestUpdateCriteria(t *testing.T) {
 
 	assignment.GradingBenchmarks = updatedBenchmarks
 
-	if diff := cmp.Diff(updatedBenchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(updatedBenchmarks, assignment.GetGradingBenchmarks(), protocmp.Transform()); diff != "" {
 		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
 	}
 
@@ -286,8 +286,8 @@ func TestUpdateCriteria(t *testing.T) {
 		t.Error(err)
 	}
 	// Assignment should still reflect the updated benchmark
-	if assignment.GradingBenchmarks == nil {
-		t.Fatal("Expected assignment.GradingBenchmarks to not be nil")
+	if assignment.GetGradingBenchmarks() == nil {
+		t.Fatal("Expected assignment.GetGradingBenchmarks to not be nil")
 	}
 
 	// Update assignments. GradingBenchmarks should be updated
@@ -297,7 +297,7 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Benchmarks should have been updated to reflect the removal of a benchmark and a criterion
-	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
+	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.GetID(), CourseID: course.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +308,7 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Finally check that reviews are unaffected
 	for _, wantReview := range []*qf.Review{review, review2} {
-		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.ID})
+		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.GetID()})
 		if err != nil {
 			t.Fatal(err)
 		}

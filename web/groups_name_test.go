@@ -59,7 +59,7 @@ func TestBadGroupNames(t *testing.T) {
 			qtest.EnrollStudent(t, db, user2, course)
 
 			group := &qf.Group{
-				CourseID: course.ID,
+				CourseID: course.GetID(),
 				Name:     tt.name,
 				Users:    []*qf.User{user1, user2},
 			}

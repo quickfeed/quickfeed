@@ -132,7 +132,7 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 	// Create a new authentication cookie, which contains
 	// claims for the user associated with the token
 	// received in the request
-	cookie, err := t.tm.NewAuthCookie(user.ID)
+	cookie, err := t.tm.NewAuthCookie(user.GetID())
 	if err != nil {
 		return "", connect.NewError(connect.CodeUnauthenticated, err)
 	}

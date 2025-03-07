@@ -88,7 +88,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 		}
 		logger.Debugf("Fetched full user info for user: %v", user)
 
-		cookie, err := tm.NewAuthCookie(user.ID)
+		cookie, err := tm.NewAuthCookie(user.GetID())
 		if err != nil {
 			authenticationError(logger, w, fmt.Errorf("failed to create authentication cookie for user %q: %w", externalUser.Login, err))
 			return

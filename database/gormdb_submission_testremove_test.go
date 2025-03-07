@@ -27,14 +27,14 @@ func TestGormDBRemoveTest(t *testing.T) {
 		{TestName: "Test3", Score: 3, MaxScore: 5, Weight: 1},
 	}
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		BuildInfo:    buildInfo,
 		Scores:       scores,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,13 +42,13 @@ func TestGormDBRemoveTest(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 
-	buildInfo.SubmissionID = submissions[0].ID
+	buildInfo.SubmissionID = submissions[0].GetID()
 	buildInfo.ID = 1
-	if diff := cmp.Diff(buildInfo, submissions[0].BuildInfo, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(buildInfo, submissions[0].GetBuildInfo(), protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same build info, but got (-got +want):\n%s", diff)
 	}
 	if diff := cmp.Diff(
-		submissions[0].Scores,
+		submissions[0].GetScores(),
 		scores,
 		protocmp.Transform(),
 		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID")); diff != "" {
@@ -57,7 +57,7 @@ func TestGormDBRemoveTest(t *testing.T) {
 
 	// buildInfo record must be updated (have the same ID as before) instead
 	// of saving a duplicate
-	oldSubmissionID := submissions[0].ID
+	oldSubmissionID := submissions[0].GetID()
 	updatedBuildInfo := &score.BuildInfo{
 		BuildDate: qtest.Timestamp(t, "2022-11-10T15:00:00"),
 		BuildLog:  "Updated",
@@ -74,7 +74,7 @@ func TestGormDBRemoveTest(t *testing.T) {
 	if err := db.CreateSubmission(submissions[0]); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err = db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,12 +82,12 @@ func TestGormDBRemoveTest(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 
-	updatedBuildInfo.ID = submissions[0].BuildInfo.ID
+	updatedBuildInfo.ID = submissions[0].GetBuildInfo().GetID()
 	updatedBuildInfo.SubmissionID = oldSubmissionID
-	if diff := cmp.Diff(submissions[0].BuildInfo, updatedBuildInfo, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions[0].GetBuildInfo(), updatedBuildInfo, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected updated build info, but got (-sub +want):\n%s", diff)
 	}
-	if diff := cmp.Diff(submissions[0].Scores, scores, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions[0].GetScores(), scores, protocmp.Transform()); diff != "" {
 		t.Errorf("Incorrect scores after update (-want, +got):\n%s", diff)
 	}
 

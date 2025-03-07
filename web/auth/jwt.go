@@ -111,10 +111,10 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	}
 	userCourses := make(map[uint64]qf.Enrollment_UserStatus)
 	userGroups := make([]uint64, 0)
-	for _, enrol := range usr.Enrollments {
+	for _, enrol := range usr.GetEnrollments() {
 		userCourses[enrol.GetCourseID()] = enrol.GetStatus()
-		if enrol.GroupID != 0 {
-			userGroups = append(userGroups, enrol.GroupID)
+		if enrol.GetGroupID() != 0 {
+			userGroups = append(userGroups, enrol.GetGroupID())
 		}
 	}
 
@@ -125,7 +125,7 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 			Issuer:    "QuickFeed",
 		},
 		UserID:  userID,
-		Admin:   usr.IsAdmin,
+		Admin:   usr.GetIsAdmin(),
 		Courses: userCourses,
 		Groups:  userGroups,
 	}, nil

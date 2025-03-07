@@ -43,34 +43,34 @@ func TestDBGetUserWithEnrollments(t *testing.T) {
 
 	// user entries from the database will have to be enrolled as
 	// teacher and student respectively
-	admin.Enrollments = append(admin.Enrollments, &qf.Enrollment{
+	admin.Enrollments = append(admin.GetEnrollments(), &qf.Enrollment{
 		ID:           1,
-		CourseID:     course.ID,
-		UserID:       admin.ID,
+		CourseID:     course.GetID(),
+		UserID:       admin.GetID(),
 		Status:       qf.Enrollment_TEACHER,
 		State:        qf.Enrollment_VISIBLE,
 		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 
-	student.Enrollments = append(student.Enrollments, &qf.Enrollment{
+	student.Enrollments = append(student.GetEnrollments(), &qf.Enrollment{
 		ID:           2,
-		CourseID:     course.ID,
-		UserID:       student.ID,
+		CourseID:     course.GetID(),
+		UserID:       student.GetID(),
 		Status:       qf.Enrollment_STUDENT,
 		State:        qf.Enrollment_VISIBLE,
 		Course:       course,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 
-	gotTeacher, err := db.GetUserWithEnrollments(admin.ID)
+	gotTeacher, err := db.GetUserWithEnrollments(admin.GetID())
 	if err != nil {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(admin, gotTeacher, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-teacher +gotTeacher):\n%s", diff)
 	}
-	gotStudent, err := db.GetUserWithEnrollments(student.ID)
+	gotStudent, err := db.GetUserWithEnrollments(student.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,7 +118,7 @@ func TestDBUpdateUser(t *testing.T) {
 	if err := db.UpdateUser(updatedUser); err != nil {
 		t.Error(err)
 	}
-	gotUser, err := db.GetUser(user.ID)
+	gotUser, err := db.GetUser(user.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestDBUpdateUser(t *testing.T) {
 	if err := db.UpdateUser(updatedUser); err != nil {
 		t.Fatal(err)
 	}
-	gotUser, err = db.GetUser(user.ID)
+	gotUser, err = db.GetUser(user.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,15 +168,15 @@ func TestDBCreateEnrollment(t *testing.T) {
 
 	user := qtest.CreateFakeUser(t, db)
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
+		UserID:   user.GetID(),
+		CourseID: course.GetID(),
 	}); err != nil {
 		t.Error(err)
 	}
 
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
+		UserID:   user.GetID(),
+		CourseID: course.GetID(),
 	}); err == nil {
 		t.Fatal("expected duplicate enrollment creation to fail")
 	}
@@ -192,20 +192,20 @@ func TestDBAcceptRejectEnrollment(t *testing.T) {
 
 	user := qtest.CreateFakeUser(t, db)
 	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
+		UserID:   user.GetID(),
+		CourseID: course.GetID(),
 	}
 	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get course's pending enrollments.
-	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.ID, qf.Enrollment_PENDING)
+	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_PENDING)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == qf.Enrollment_PENDING {
+	if len(pendingEnrollments) != 1 && pendingEnrollments[0].GetStatus() == qf.Enrollment_PENDING {
 		t.Fatalf("have %v want 1 pending enrollment", pendingEnrollments)
 	}
 
@@ -216,28 +216,28 @@ func TestDBAcceptRejectEnrollment(t *testing.T) {
 	}
 
 	// Get course's accepted enrollments.
-	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, qf.Enrollment_STUDENT)
+	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_STUDENT)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == qf.Enrollment_STUDENT {
+	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].GetStatus() == qf.Enrollment_STUDENT {
 		t.Fatalf("have %v want 1 accepted enrollment", acceptedEnrollments)
 	}
 
 	// Reject enrollment.
-	if err := db.RejectEnrollment(user.ID, course.ID); err != nil {
+	if err := db.RejectEnrollment(user.GetID(), course.GetID()); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get all enrollments.
-	allEnrollments, err := db.GetEnrollmentsByCourse(course.ID)
+	allEnrollments, err := db.GetEnrollmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, enrol := range allEnrollments {
-		if enrol.UserID == user.ID && enrol.CourseID == course.ID {
+		if enrol.GetUserID() == user.GetID() && enrol.GetCourseID() == course.GetID() {
 			t.Fatalf("Enrollment %+v must have been deleted on rejection, but still found in the database", enrol)
 		}
 	}
@@ -280,20 +280,20 @@ func TestDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if user.IsAdmin {
+	if user.GetIsAdmin() {
 		t.Error("user should not yet be an administrator")
 	}
 
-	if err := db.UpdateUser(&qf.User{ID: user.ID, IsAdmin: true}); err != nil {
+	if err := db.UpdateUser(&qf.User{ID: user.GetID(), IsAdmin: true}); err != nil {
 		t.Error(err)
 	}
 
-	admin, err := db.GetUser(user.ID)
+	admin, err := db.GetUser(user.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !admin.IsAdmin {
+	if !admin.GetIsAdmin() {
 		t.Error("user should be an administrator")
 	}
 }
@@ -331,8 +331,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 			continue
 		}
 		query := &qf.Enrollment{
-			CourseID: c1.ID,
-			UserID:   users[i].ID,
+			CourseID: c1.GetID(),
+			UserID:   users[i].GetID(),
 		}
 		if err := db.CreateEnrollment(query); err != nil {
 			t.Fatal(err)
@@ -350,7 +350,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	// Creating Group
 	group := &qf.Group{
 		Name:     "SameNameGroup",
-		CourseID: c1.ID,
+		CourseID: c1.GetID(),
 		Users:    users,
 	}
 	if err := db.CreateGroup(group); err != nil {
@@ -360,7 +360,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	// Create Assignments
 	assignment1 := qf.Assignment{
 		Order:      1,
-		CourseID:   c1.ID,
+		CourseID:   c1.GetID(),
 		IsGroupLab: true,
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
@@ -368,7 +368,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 	assignment2 := qf.Assignment{
 		Order:      2,
-		CourseID:   c1.ID,
+		CourseID:   c1.GetID(),
 		IsGroupLab: true,
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
@@ -376,7 +376,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 	assignment3 := qf.Assignment{
 		Order:      1,
-		CourseID:   c2.ID,
+		CourseID:   c2.GetID(),
 		IsGroupLab: false,
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
@@ -385,8 +385,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Create some submissions
 	submission1 := qf.Submission{
-		GroupID:      group.ID,
-		AssignmentID: assignment1.ID,
+		GroupID:      group.GetID(),
+		AssignmentID: assignment1.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -394,8 +394,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := qf.Submission{
-		GroupID:      group.ID,
-		AssignmentID: assignment1.ID,
+		GroupID:      group.GetID(),
+		AssignmentID: assignment1.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -403,8 +403,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := qf.Submission{
-		GroupID:      group.ID,
-		AssignmentID: assignment2.ID,
+		GroupID:      group.GetID(),
+		AssignmentID: assignment2.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -412,8 +412,8 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission4 := qf.Submission{
-		UserID:       users[0].ID,
-		AssignmentID: assignment3.ID,
+		UserID:       users[0].GetID(),
+		AssignmentID: assignment3.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -423,7 +423,7 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetLastSubmissions(c1.ID, &qf.Submission{GroupID: group.ID})
+	submissions, err := db.GetLastSubmissions(c1.GetID(), &qf.Submission{GroupID: group.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -431,14 +431,14 @@ func TestDBGetInsertGroupSubmissions(t *testing.T) {
 	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
-	data, err := db.GetLastSubmissions(c1.ID, &qf.Submission{GroupID: group.ID})
+	data, err := db.GetLastSubmissions(c1.GetID(), &qf.Submission{GroupID: group.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetLastSubmissions(c2.ID, &qf.Submission{GroupID: group.ID})
+	data, err = db.GetLastSubmissions(c2.GetID(), &qf.Submission{GroupID: group.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -467,8 +467,8 @@ func TestDeleteGroup(t *testing.T) {
 			continue
 		}
 		query := &qf.Enrollment{
-			CourseID: course.ID,
-			UserID:   users[i].ID,
+			CourseID: course.GetID(),
+			UserID:   users[i].GetID(),
 		}
 		if err := db.CreateEnrollment(query); err != nil {
 			t.Fatal(err)
@@ -485,7 +485,7 @@ func TestDeleteGroup(t *testing.T) {
 
 	group := &qf.Group{
 		Name:     "SameNameGroup",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    users,
 		ID:       1,
 	}
@@ -498,7 +498,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotModels, _ := db.GetGroup(group.ID)
+	gotModels, _ := db.GetGroup(group.GetID())
 	if gotModels != nil {
 		t.Errorf("Got %+v wanted None", gotModels)
 	}

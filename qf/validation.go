@@ -103,31 +103,31 @@ func (org *Organization) IsValid() bool {
 
 // IsValid ensures that a review always has a reviewer and a submission IDs.
 func (r *Review) IsValid() bool {
-	return r.ReviewerID > 0 && r.SubmissionID > 0
+	return r.GetReviewerID() > 0 && r.GetSubmissionID() > 0
 }
 
 // IsValid ensures that course ID is provided and the review is valid.
 func (r *ReviewRequest) IsValid() bool {
-	return r.CourseID > 0 && r.Review.IsValid()
+	return r.GetCourseID() > 0 && r.GetReview().IsValid()
 }
 
 // IsValid ensures that a grading benchmark always belongs to an assignment
 // and is not empty.
 func (bm *GradingBenchmark) IsValid() bool {
-	return bm.AssignmentID > 0 && bm.Heading != ""
+	return bm.GetAssignmentID() > 0 && bm.GetHeading() != ""
 }
 
 // IsValid ensures that a criterion always belongs to a grading benchmark
 // and is not empty.
 func (c *GradingCriterion) IsValid() bool {
-	return c.BenchmarkID > 0 && c.Description != ""
+	return c.GetBenchmarkID() > 0 && c.GetDescription() != ""
 }
 
 func (m *Enrollments) IsValid() bool {
-	if len(m.Enrollments) == 0 {
+	if len(m.GetEnrollments()) == 0 {
 		return false
 	}
-	for _, e := range m.Enrollments {
+	for _, e := range m.GetEnrollments() {
 		if !e.IsValid() {
 			return false
 		}

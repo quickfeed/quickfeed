@@ -49,7 +49,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 	logger.Debugf("Successfully cloned tests repository to: %s", clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
+	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
 		logger.Errorf("Failed to parse assignments from '%s' repository: %v", qf.TestsRepo, err)
 		return

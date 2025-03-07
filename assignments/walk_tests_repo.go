@@ -85,7 +85,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			// for access control checks.
 			for _, bm := range benchmarks {
 				bm.CourseID = courseID
-				for _, c := range bm.Criteria {
+				for _, c := range bm.GetCriteria() {
 					c.CourseID = courseID
 				}
 			}
@@ -102,19 +102,19 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			if err != nil {
 				return nil, "", err
 			}
-			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].Tasks, task)
+			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].GetTasks(), task)
 		}
 	}
 
 	assignments := make([]*qf.Assignment, 0)
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
-		sort.Slice(assignment.Tasks, func(i, j int) bool {
-			return assignment.Tasks[i].Title < assignment.Tasks[j].Title
+		sort.Slice(assignment.GetTasks(), func(i, j int) bool {
+			return assignment.GetTasks()[i].GetTitle() < assignment.GetTasks()[j].GetTitle()
 		})
 	}
 	sort.Slice(assignments, func(i, j int) bool {
-		return assignments[i].Order < assignments[j].Order
+		return assignments[i].GetOrder() < assignments[j].GetOrder()
 	})
 
 	return assignments, courseDockerfile, nil

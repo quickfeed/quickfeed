@@ -37,7 +37,7 @@ func repoTypes(enrollment *qf.Enrollment) []qf.Repository_Type {
 	if enrollment.IsTeacher() {
 		repositories = append(repositories, qf.Repository_TESTS)
 	}
-	if enrollment.GroupID > 0 {
+	if enrollment.GetGroupID() > 0 {
 		repositories = append(repositories, qf.Repository_GROUP)
 	}
 	return repositories

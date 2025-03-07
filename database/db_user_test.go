@@ -27,7 +27,7 @@ func TestDBUpdateUserAccessToken(t *testing.T) {
 	if err := db.CreateUser(&user); err != nil {
 		t.Error(err)
 	}
-	gotUser, err := db.GetUser(user.ID)
+	gotUser, err := db.GetUser(user.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -40,7 +40,7 @@ func TestDBUpdateUserAccessToken(t *testing.T) {
 	if err := db.UpdateUser(&user); err != nil {
 		t.Error(err)
 	}
-	gotUser, err = db.GetUser(user.ID)
+	gotUser, err = db.GetUser(user.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,7 +55,7 @@ func TestDBUpdateUserAccessToken(t *testing.T) {
 	if err := db.UpdateUser(&user); err != nil {
 		t.Error(err)
 	}
-	gotUser, err = db.GetUser(user.ID)
+	gotUser, err = db.GetUser(user.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -81,7 +81,7 @@ func TestDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	if err := db.UpdateUser(wantUser); err != nil {
 		t.Error(err)
 	}
-	gotUser, err := db.GetUser(wantUser.ID)
+	gotUser, err := db.GetUser(wantUser.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,7 +102,7 @@ func TestDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	if err := db.UpdateUser(wantUser); err != nil {
 		t.Error(err)
 	}
-	gotUser, err = db.GetUser(wantUser.ID)
+	gotUser, err = db.GetUser(wantUser.GetID())
 	if err != nil {
 		t.Error(err)
 	}
