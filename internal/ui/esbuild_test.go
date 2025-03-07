@@ -8,6 +8,10 @@ import (
 )
 
 func TestBuild(t *testing.T) {
+	if os.Getenv("UI_TESTS") == "" {
+		t.SkipNow()
+	}
+
 	tmpDir := t.TempDir()
 	defer os.RemoveAll(tmpDir)
 
@@ -18,6 +22,10 @@ func TestBuild(t *testing.T) {
 
 // The watch function is exited by the main thread after the test is done.
 func TestWatch(t *testing.T) {
+	if os.Getenv("UI_TESTS") == "" {
+		t.SkipNow()
+	}
+
 	tmpDir := t.TempDir()
 	defer os.RemoveAll(tmpDir)
 
