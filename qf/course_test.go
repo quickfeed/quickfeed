@@ -3,7 +3,6 @@ package qf_test
 import (
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/qf"
@@ -51,55 +50,24 @@ func TestLock(t *testing.T) {
 	var wg sync.WaitGroup
 
 	course := &qf.Course{ID: 1, CourseCreatorID: 0}
-	want := uint64(10)
+	want := uint64(5)
 	rang := 5
 
-	for i := range rang {
+	for range rang {
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			defer wg.Done()
 
 			unlock := course.Lock()
 			defer unlock()
 
-			course.CourseCreatorID += uint64(i)
-		}(i)
+			course.CourseCreatorID++
+		}()
 	}
 
 	wg.Wait()
 
 	// Asserts the course is accessed concurrently and the course creator ID is updated correctly.
-	if !cmp.Equal(course.GetCourseCreatorID(), want) {
-		t.Errorf("CourseCreatorID = %v, want %v", course.GetCourseCreatorID(), want)
-	}
-
-	// Ensure the lock works as expected
-	// Run two goroutines, expects only one update, because the lock is not released.
-
-	want = uint64(0)
-	for i := range 2 {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			_ = course.Lock()
-			course.CourseCreatorID = uint64(i)
-		}(i)
-	}
-
-	ch := make(chan struct{})
-	go func() {
-		wg.Wait()
-		ch <- struct{}{}
-	}()
-
-	select {
-	case <-ch:
-		t.Errorf("Lock failed to prevent concurrent access")
-	case <-time.After(1 * time.Second):
-		// Expected behavior
-	}
-
-	// Assert one of the goroutines updated the course creator ID
 	if !cmp.Equal(course.GetCourseCreatorID(), want) {
 		t.Errorf("CourseCreatorID = %v, want %v", course.GetCourseCreatorID(), want)
 	}

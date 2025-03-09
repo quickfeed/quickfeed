@@ -35,15 +35,16 @@ func (course *Course) UpdateDockerfile(dockerfile string) bool {
 }
 
 var (
-	// Mutex for each course
+	// courseMutexMap contains a single mutex for each course.
 	courseMutexMap = make(map[uint64]*sync.Mutex)
-	// Mutex for the course mutex map
+	// mapMutex protects the courseMutexMap.
 	mapMutex = sync.Mutex{}
 )
 
-// Lock indexes the course mutex map with the course ID and locks the mutex.
-// The mutex is initialized if it does not exist.
-// This method is called when concurrently accessing the course.
+// Lock locks the course to prevent concurrent updates to the course.
+// It returns a corresponding unlock function which must be called when the update is done.
+// Specifically, this method is used to prevent concurrent database updates
+// derived from the test repository. See [assignments.UpdateFromTestsRepo].
 func (course *Course) Lock() func() {
 	mapMutex.Lock()
 	if _, ok := courseMutexMap[course.GetID()]; !ok {
@@ -78,7 +79,7 @@ func (course *Course) CloneDir() string {
 }
 
 func (course *Course) TeacherEnrollments() []*Enrollment {
-	enrolledTeachers := []*Enrollment{}
+	var enrolledTeachers []*Enrollment
 	for _, enrollment := range course.Enrollments {
 		if enrollment.IsTeacher() {
 			enrolledTeachers = append(enrolledTeachers, enrollment)
