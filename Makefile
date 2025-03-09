@@ -1,7 +1,7 @@
 # This trick allow us to source the environment variables defined in .env file in the Makefile
 # (see include directive in GNU make for more details).
 # It ignores errors in case the .env file does not exists.
-# It may be necessary to skip variables that uses special makefile caracters, like $.
+# It may be necessary to skip variables that uses special makefile characters, like $.
 -include .env
 
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)

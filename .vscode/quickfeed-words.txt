@@ -14,6 +14,7 @@ autocert
 autograde
 Autograder
 backports
+baserepo
 beatlabs
 binutils
 bitlab
@@ -46,17 +47,21 @@ datetime
 deadcode
 Debugf
 dhparams
+distro
 dockerd
 Docroot
 doesnotexist
+dropreplace
 Eivind
 envoyproxy
 errcheck
+errdefs
 Errorf
 espeland
 Etternavn
 excelize
 extendee
+featurename
 extldflags
 fileop
 Fornavn
@@ -81,6 +86,7 @@ googleapis
 gopath
 gopb
 gopls
+gorelease
 Gorm
 gormlogger
 GOROOT
@@ -111,6 +117,8 @@ ipam
 Isadmin
 isgrouplab
 itest
+javafile
+JAVATEST
 jinzhu
 Jostein
 jsonpb
@@ -128,6 +136,7 @@ letsencrypt
 Lindhom
 linuxbrew
 LOGDB
+LOGFILE
 logq
 logrotate
 longsleep
@@ -142,9 +151,11 @@ mkdir
 newkey
 ngrok
 nocheck
+norestart
 npmtools
 npmwebpack
 NTNU
+oldbackups
 oneof
 openrc
 Operativsystemer
@@ -153,6 +164,8 @@ orgs
 outform
 overmind
 Overmind
+ovigner
+oving
 paxos
 pbgo
 pgrep
@@ -177,7 +190,9 @@ quickfeed
 Radagast
 Repos
 repotoken
+rootfolder
 run
+runcontainer
 Sauron
 scms
 scorelimit
@@ -211,7 +226,10 @@ testcache
 testdata
 testdb
 Testersen
+testjava
+testjavafile
 testorg
+testpackage
 timestamppb
 tmpl
 Typeflag
