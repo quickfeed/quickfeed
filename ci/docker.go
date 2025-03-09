@@ -229,21 +229,27 @@ func (d *Docker) pullImage(ctx context.Context, imageName string) error {
 
 // buildImage builds and installs an image locally to be reused in a future run.
 func (d *Docker) buildImage(ctx context.Context, job *Job) error {
-	dockerFileContents := []byte(job.Dockerfile)
-	header := &tar.Header{
-		Name:     "Dockerfile",
-		Mode:     0o777,
-		Size:     int64(len(dockerFileContents)),
-		Typeflag: tar.TypeReg,
-	}
 	var buf bytes.Buffer
 	tarWriter := tar.NewWriter(&buf)
-	if err := tarWriter.WriteHeader(header); err != nil {
-		return err
+
+	// Add Dockerfile to the build context to simplify the build preparation
+	job.BuildContextFiles["Dockerfile"] = job.Dockerfile
+	for name, content := range job.BuildContextFiles {
+		fileContents := []byte(content)
+		header := &tar.Header{
+			Name:     name,
+			Mode:     0o777,
+			Size:     int64(len(fileContents)),
+			Typeflag: tar.TypeReg,
+		}
+		if err := tarWriter.WriteHeader(header); err != nil {
+			return err
+		}
+		if _, err := tarWriter.Write(fileContents); err != nil {
+			return err
+		}
 	}
-	if _, err := tarWriter.Write(dockerFileContents); err != nil {
-		return err
-	}
+
 	if err := tarWriter.Close(); err != nil {
 		return err
 	}
