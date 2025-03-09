@@ -3,8 +3,6 @@ package qf
 import (
 	"fmt"
 	"time"
-
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // gracePeriod is the grace period for submissions after the deadline.
@@ -139,29 +137,12 @@ func (m *Enrollments) UserIDs() []uint64 {
 	return userIDs
 }
 
-func (m *Enrollment) CountApprovedSubmissions(submissions []*Submission) {
-	var totalApproved uint64
-	var submissionDate time.Time
-	duplicateAssignments := make(map[uint64]struct{})
-
+func (m *Enrollment) UpdateTotalApproved(submissions []*Submission) {
+	duplicateAssignments := make(map[uint64]bool)
 	for _, s := range submissions {
-		// Ignore duplicate approved assignments
-		if _, ok := duplicateAssignments[s.GetAssignmentID()]; ok {
-			continue
-		}
-		if s.IsApproved(m.GetUserID()) {
-			duplicateAssignments[s.GetAssignmentID()] = struct{}{}
-			totalApproved++
-
-			// Update submissionDate if needed
-			if m.GetLastActivityDate() == nil {
-				submissionDate = s.NewestSubmissionDate(submissionDate)
-			}
+		if s.IsApproved(m.GetUserID()) && !duplicateAssignments[s.GetAssignmentID()] {
+			duplicateAssignments[s.GetAssignmentID()] = true
+			m.TotalApproved++
 		}
 	}
-
-	if m.LastActivityDate == nil && !submissionDate.IsZero() {
-		m.LastActivityDate = timestamppb.New(submissionDate)
-	}
-	m.TotalApproved = totalApproved
 }
