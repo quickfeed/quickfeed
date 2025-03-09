@@ -232,6 +232,10 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	var buf bytes.Buffer
 	tarWriter := tar.NewWriter(&buf)
 
+	if job.BuildContextFiles == nil {
+		job.BuildContextFiles = make(map[string]string)
+	}
+
 	// Add Dockerfile to the build context to simplify the build preparation
 	job.BuildContextFiles["Dockerfile"] = job.Dockerfile
 	for name, content := range job.BuildContextFiles {
