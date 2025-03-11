@@ -3,7 +3,6 @@ package assignments
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
@@ -17,8 +16,6 @@ import (
 // and docker image before aborting.
 const MaxWait = 5 * time.Minute
 
-var updateMutex = sync.Mutex{}
-
 // UpdateFromTestsRepo updates the database record for the course assignments.
 //
 // This will be called in response to a push event to the 'tests' repo, which
@@ -30,8 +27,8 @@ var updateMutex = sync.Mutex{}
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
-	updateMutex.Lock()
-	defer updateMutex.Unlock()
+	unlock := course.Lock()
+	defer unlock()
 
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
