@@ -53,49 +53,24 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create a new submission, ensure that it is auto-approved
-
-	submission := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Score:        1,
-	}
-	if err := db.CreateSubmission(submission); err != nil {
-		t.Error(err)
+	tests := []struct {
+		name string
+		in   *qf.Submission
+		want *qf.Submission
+	}{
+		{name: "Approved", in: &qf.Submission{AssignmentID: assignment.ID, UserID: user.ID, Score: 1}, want: &qf.Submission{ID: 1, AssignmentID: assignment.ID, UserID: user.ID, Score: 1, Grades: []*qf.Grade{{UserID: user.ID, SubmissionID: 1, Status: qf.Submission_APPROVED}}}},
+		{name: "NotApproved", in: &qf.Submission{AssignmentID: assignment.ID, UserID: user.ID, Score: 0}, want: &qf.Submission{ID: 2, AssignmentID: assignment.ID, UserID: user.ID, Score: 0, Grades: []*qf.Grade{{UserID: user.ID, SubmissionID: 2, Status: qf.Submission_NONE}}}},
 	}
 
-	want := &qf.Submission{
-		ID:           submission.ID,
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Score:        1,
-		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submission.ID, Status: qf.Submission_APPROVED}},
-	}
-
-	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
-		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
-	}
-
-	// create a new submission, ensure that it is not auto-approved
-
-	submission1 := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Score:        0,
-	}
-	if err := db.CreateSubmission(submission1); err != nil {
-		t.Error(err)
-	}
-
-	want1 := &qf.Submission{
-		ID:           submission1.ID,
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Score:        0,
-		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submission1.ID, Status: qf.Submission_NONE}},
-	}
-	if diff := cmp.Diff(submission1, want1, protocmp.Transform()); diff != "" {
-		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := db.CreateSubmission(tt.in); err != nil {
+				t.Error(err)
+			}
+			if diff := cmp.Diff(tt.in, tt.want, protocmp.Transform()); diff != "" {
+				t.Errorf("CreateSubmission(): (-got +want):\n%s", diff)
+			}
+		})
 	}
 }
 
