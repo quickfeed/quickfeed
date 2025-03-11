@@ -137,12 +137,20 @@ func (m *Enrollments) UserIDs() []uint64 {
 	return userIDs
 }
 
+// UpdateTotalApproved updates the total approved assignments for the current enrollment
+// based on the provided submissions.
 func (m *Enrollment) UpdateTotalApproved(submissions []*Submission) {
-	duplicateAssignments := make(map[uint64]bool)
+	var totalApproved uint64
+	duplicateAssignments := make(map[uint64]struct{})
 	for _, s := range submissions {
-		if s.IsApproved(m.GetUserID()) && !duplicateAssignments[s.GetAssignmentID()] {
-			duplicateAssignments[s.GetAssignmentID()] = true
-			m.TotalApproved++
+		// Ignore duplicate approved assignments
+		if _, ok := duplicateAssignments[s.GetAssignmentID()]; ok {
+			continue
+		}
+		if s.IsApproved(m.GetUserID()) {
+			duplicateAssignments[s.GetAssignmentID()] = struct{}{}
+			totalApproved++
 		}
 	}
+	m.TotalApproved = totalApproved
 }
