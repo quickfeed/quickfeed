@@ -41,6 +41,39 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	return user, course, assignment
 }
 
+func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, _, assignment := setupCourseAssignment(t, db)
+
+	assignment.AutoApprove = true
+	assignment.ScoreLimit = 1
+
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name string
+		in   *qf.Submission
+		want *qf.Submission
+	}{
+		{name: "Approved", in: &qf.Submission{AssignmentID: assignment.ID, UserID: user.ID, Score: 1}, want: &qf.Submission{ID: 1, AssignmentID: assignment.ID, UserID: user.ID, Score: 1, Grades: []*qf.Grade{{UserID: user.ID, SubmissionID: 1, Status: qf.Submission_APPROVED}}}},
+		{name: "NotApproved", in: &qf.Submission{AssignmentID: assignment.ID, UserID: user.ID, Score: 0}, want: &qf.Submission{ID: 2, AssignmentID: assignment.ID, UserID: user.ID, Score: 0, Grades: []*qf.Grade{{UserID: user.ID, SubmissionID: 2, Status: qf.Submission_NONE}}}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := db.CreateSubmission(tt.in); err != nil {
+				t.Error(err)
+			}
+			if diff := cmp.Diff(tt.in, tt.want, protocmp.Transform()); diff != "" {
+				t.Errorf("CreateSubmission(): (-got +want):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
