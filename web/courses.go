@@ -319,7 +319,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		return nil, err
 	}
 	for _, enrollment := range course.GetEnrollments() {
-		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
+		enrollment.UpdateTotalApproved(submissions.For(enrollment.GetID()))
 	}
 	return course.GetEnrollments(), nil
 }
