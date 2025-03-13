@@ -3,9 +3,9 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -30,123 +30,103 @@ var buildOptions = api.BuildOptions{
 // Dev mode uses inline source maps, and has a debug log level
 // Production mode minifies the output to boost performance, and logs only errors
 func getOptions(dev bool, outputDir *string) api.BuildOptions {
-	opts := buildOptions
 	if dev {
-		opts.Sourcemap = api.SourceMapInline
-		opts.LogLevel = api.LogLevelDebug
+		buildOptions.Sourcemap = api.SourceMapInline
+		buildOptions.LogLevel = api.LogLevelDebug
 	} else {
-		opts.LogLevel = api.LogLevelError
-		opts.MinifyWhitespace = true
-		opts.MinifyIdentifiers = true
-		opts.MinifySyntax = true
+		buildOptions.LogLevel = api.LogLevelError
+		buildOptions.MinifyWhitespace = true
+		buildOptions.MinifyIdentifiers = true
+		buildOptions.MinifySyntax = true
 	}
 	// This is done to enable testing without overwriting current build
 	if outputDir != nil {
-		opts.Outdir = *outputDir
+		buildOptions.Outdir = *outputDir
 	}
-	return opts
+	return buildOptions
+}
+
+// resetDistFolder removes the dist folder and creates a new one
+func resetDistFolder() error {
+	path := fmt.Sprintf("%s/dist", env.PublicDir())
+	if _, err := os.Stat(path); err == nil {
+		if err := os.RemoveAll(path); err != nil {
+			return fmt.Errorf("failed to remove dist directory: %v", err)
+		}
+	}
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return fmt.Errorf("failed to create dist directory: %v", err)
+	}
+	return nil
 }
 
 // Build builds the UI with esbuild
 // The entry point is src/index.tsx and the output is public/dist
 // Scss files are treated as css
 func Build(dev bool, outputDir *string) error {
+	if err := resetDistFolder(); err != nil {
+		return fmt.Errorf("failed to reset dist folder: %v", err)
+	}
 	result := api.Build(getOptions(dev, outputDir))
 	if len(result.Errors) > 0 {
 		return fmt.Errorf("failed to build UI: %v", parseMessages(result.Errors))
 	}
-	if err := createHtml(); err != nil {
+	if err := createHtml(result.OutputFiles); err != nil {
 		return fmt.Errorf("failed to create index.html: %v", err)
 	}
 	return nil
 }
 
-// createIndexTemplate creates the index template for the UI
-// It injects script references into the index template
-// The index template is located in public/index.tmpl.html
-// The script references are located in public/dist
-// The index template is written to public/assets/index.html
-func createHtml() error {
-	indexTmpl := fmt.Sprintf("%s/index.tmpl.html", env.PublicDir())
-	f, err := os.ReadFile(indexTmpl)
+// createHtml creates the index.html file for the UI
+// Injects file links into the index template
+func createHtml(outputFiles []api.OutputFile) error {
+	file, err := os.Create(fmt.Sprintf("%s/assets/index.html", env.PublicDir()))
 	if err != nil {
-		return fmt.Errorf("failed to stat index template: %v", err)
+		return fmt.Errorf("failed to read index.html: %v", err)
 	}
-	lines := removeComments(strings.Split(string(f), "\n"))
-
-	indexToInject := findClosingHeadTag(lines)
-	if indexToInject == -1 {
-		return errors.New("failed to find </head> in index template")
+	funcMap := template.FuncMap{
+		"ext":  filepath.Ext,
+		"base": filepath.Base,
 	}
-
-	links, err := getLinks()
+	t, err := template.New("index.html").Funcs(funcMap).Parse(tmpl)
 	if err != nil {
-		return fmt.Errorf("failed to get script refs: %v", err)
+		return fmt.Errorf("failed to parse template: %v", err)
 	}
-
-	// Inject script references into index template and write to public/assets/index.html
-	lines = append(lines[:indexToInject], append(links, lines[indexToInject:]...)...)
-	if err := os.WriteFile(fmt.Sprintf("%s/assets/index.html", env.PublicDir()), []byte(strings.Join(lines, "\n")), 0644); err != nil {
-		return fmt.Errorf("failed to write index.html: %v", err)
+	err = t.Execute(file, outputFiles)
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %v", err)
 	}
 	return nil
 }
 
-// findClosingHeadTag attempts to find the closing head tag in the index template
-// Returns index of the line before the closing head tag
-// The closing head tag is defined as </head>
-func findClosingHeadTag(lines []string) int {
-	for i, line := range lines {
-		if strings.Contains(line, "</head>") {
-			return i
-		}
-	}
-	return -1
-}
+var tmpl = `<!doctype html>
+<html lang="en">
 
-// getLinks gets the script and css references from the dist directory
-// Support extensions are .css and .js
-func getLinks() ([]string, error) {
-	content, err := os.ReadDir(fmt.Sprintf("%s/dist", env.PublicDir()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read dist directory: %v", err)
-	}
-	var links []string
-	for _, file := range content {
-		if file.IsDir() {
-			return nil, errors.New("unexpected directory in dist")
-		}
-		name := file.Name()
-		switch filepath.Ext(name) {
-		case ".css":
-			links = append(links, fmt.Sprintf("\t<link rel=\"stylesheet\" href=\"/static/%s\">", name))
-		case ".js":
-			links = append(links, fmt.Sprintf("\t<script type=\"module\" src=\"/static/%s\" defer></script>", name))
-		}
-	}
-	return links, nil
-}
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="/assets/site.webmanifest">
+    <title>QuickFeed</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{{- range $file := . }}
+	{{- $ext := (ext $file.Path) -}}
+	{{- $name := (base $file.Path) -}}
+	{{ with (eq $ext ".css") }}<link rel="stylesheet" href="/static/{{ $name }}">{{ end }}
+	{{ with (eq $ext ".js") }}<script type="module" src="/static/{{ $name }}" defer></script>{{ end }}
+{{- end }}
+</head>
 
-// removeComments removes comments from the index template
-// Comments are defined as <!-- ... -->
-// Appends lines when the comment variable is false with is updated by start: <!-- and end: -->
-func removeComments(lines []string) []string {
-	var cleaned []string
-	var comment bool
-	for _, line := range lines {
-		if strings.HasPrefix(strings.TrimSpace(line), "<!--") {
-			comment = true
-		}
-		if strings.HasSuffix(strings.TrimSpace(line), "-->") {
-			comment = false
-			continue
-		}
-		if !comment {
-			cleaned = append(cleaned, line)
-		}
-	}
-	return cleaned
-}
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+
+</html>
+`
 
 // Watch starts a watch process for the UI, rebuilding on changes
 // The log level is set to info, so only warnings and errors are shown
@@ -167,7 +147,7 @@ func Watch(ch chan<- error, dev bool, outputDir *string) {
 func parseMessages(messages []api.Message) error {
 	var errs []error
 	for _, message := range messages {
-		errs = append(errs, fmt.Errorf("error: %s, in file: %s", message.Text, message.Location.File))
+		errs = append(errs, fmt.Errorf("error: %s", message.Text))
 	}
 	return errors.Join(errs...)
 }
