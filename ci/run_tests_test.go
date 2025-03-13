@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/internal/rand"
@@ -18,6 +18,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/stream"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
@@ -250,7 +251,6 @@ func TestRecordResultsForManualReview(t *testing.T) {
 func TestStreamRecordResults(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	streamService := stream.NewStreamServices()
 
 	course := &qf.Course{
 		Name:              "Test",
@@ -260,25 +260,7 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
-
-	groupMember1 := qtest.CreateFakeUser(t, db)
-	groupMember2 := qtest.CreateFakeUser(t, db)
-	groupMember3 := qtest.CreateFakeUser(t, db)
-	for _, user := range []*qf.User{groupMember1, groupMember2, groupMember3} {
-		qtest.EnrollStudent(t, db, user, course)
-	}
-	group := &qf.Group{
-		CourseID: course.ID,
-		Name:     "group-1",
-		Users: []*qf.User{
-			groupMember1,
-			groupMember2,
-			groupMember3,
-		},
-	}
-	if err := db.CreateGroup(group); err != nil {
-		t.Fatal(err)
-	}
+	group := qtest.CreateGroup(t, db, course, 3)
 
 	assignment := &qf.Assignment{
 		CourseID:         course.ID,
@@ -290,30 +272,13 @@ func TestStreamRecordResults(t *testing.T) {
 		IsGroupLab:       true,
 		ContainerTimeout: 1,
 	}
-	if err := db.CreateAssignment(assignment); err != nil {
-		t.Fatal(err)
-	}
-
-	buildInfo := &score.BuildInfo{
-		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		BuildLog:       "Testing",
-		ExecTime:       33333,
-	}
-	testScores := []*score.Score{
-		{
-			Secret:   "secret",
-			TestName: "Test",
-			Score:    10,
-			MaxScore: 15,
-			Weight:   1,
-		},
-	}
+	qtest.CreateAssignment(t, db, assignment)
 
 	results := &score.Results{
-		BuildInfo: buildInfo,
-		Scores:    testScores,
+		BuildInfo: createBuildInfo(t),
+		Scores:    createScores(),
 	}
+
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -325,6 +290,7 @@ func TestStreamRecordResults(t *testing.T) {
 		CommitID: "deadbeef",
 	}
 
+	streamService := stream.NewStreamServices()
 	var streams []*qtest.MockStream[qf.Submission]
 	for _, user := range group.Users {
 		stream := qtest.NewMockStream[qf.Submission](t)
@@ -342,41 +308,29 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 	runStream(adminStream, &wg)
 
-	// Check that submission is recorded correctly
-	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	owners, err := runData.GetOwners(db)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// Check that submission is recorded correctly
+	submission := recordResults(t, runData, db, results, nil, false)
 	streamService.Submission.SendTo(submission, owners...)
+
 	if submission.IsAllApproved() {
 		t.Error("Submission must not be auto approved")
 	}
-
-	newBuildDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
-	results.BuildInfo.BuildDate = newBuildDate
-	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
+	updatedSubmission := recordResults(t, runData, db, results, qtest.Timestamp(t, "2022-11-12T13:00:00"), false)
 	streamService.Submission.SendTo(updatedSubmission, owners...)
 
-	runData.Rebuild = true
-	results.BuildInfo.BuildDate = qtest.Timestamp(t, "2022-11-13T13:00:00")
-	rebuiltSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rebuiltSubmission := recordResults(t, runData, db, results, qtest.Timestamp(t, "2022-11-13T13:00:00"), true)
 	streamService.Submission.SendTo(rebuiltSubmission, owners...)
 
-	for _, stream := range streams {
-		stream.Close()
+	for i := range streams {
+		streams[i].Close()
 	}
 	adminStream.Close()
+
 	// Wait for all streams to be closed
 	wg.Wait()
 
@@ -387,21 +341,17 @@ func TestStreamRecordResults(t *testing.T) {
 
 	// We should have received three submissions for each stream
 	numSubmissions := 0
+	submissions := []*qf.Submission{submission, updatedSubmission, rebuiltSubmission}
 	for _, stream := range streams {
 		numSubmissions += len(stream.Messages)
+
+		// Check that the messages are correct
+		for i, submission := range submissions {
+			qtest.Diff(t, "Incorrect submission", stream.Messages[i], submission, protocmp.Transform())
+		}
 	}
 	if numSubmissions != 9 {
 		t.Errorf("Expected 9 messages, got %d", numSubmissions)
-	}
-
-	// Check that the messages are correct
-	submissions := []*qf.Submission{submission, updatedSubmission, rebuiltSubmission}
-	for _, stream := range streams {
-		for i, submission := range submissions {
-			if diff := cmp.Diff(stream.Messages[i], submission, protocmp.Transform()); diff != "" {
-				t.Errorf("Incorrect submission. Want: %+v, got %+v", submission, stream.Messages[i])
-			}
-		}
 	}
 }
 
