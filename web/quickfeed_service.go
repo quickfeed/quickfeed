@@ -73,7 +73,7 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 		s.logger.Errorf("UpdateUser(userID=%d) failed: %v", userID(ctx), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
-	if _, err = s.updateUser(usr, in.Msg); err != nil {
+	if err = s.modifyUserProfile(usr, in.Msg); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update user"))
 	}
