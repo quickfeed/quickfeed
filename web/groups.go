@@ -36,7 +36,7 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 }
 
 // DeleteGroup deletes group with the provided ID.
-func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
+func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
-func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
+func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
 	course, group, err := s.getCourseGroup(&qf.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
