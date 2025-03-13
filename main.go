@@ -76,7 +76,7 @@ func main() {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
+		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile, *dev); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -142,7 +142,7 @@ func main() {
 	if *dev && *watch {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
-		handler = web.WatchHandler(ctx, handler)
+		handler = web.WatchHandler(ctx, handler, dev)
 	}
 
 	srv, err := srvFn(*httpAddr, handler)
