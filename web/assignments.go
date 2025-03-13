@@ -7,27 +7,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// getAssignments lists the assignments for the provided course.
-func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, error) {
-	allAssignments, err := s.db.GetAssignmentsByCourse(courseID)
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Assignments{Assignments: allAssignments}, nil
-}
-
-func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.GradingBenchmark, error) {
-	if _, err := s.db.GetAssignment(&qf.Assignment{
-		ID: query.AssignmentID,
-	}); err != nil {
-		return nil, err
-	}
-	if err := s.db.CreateBenchmark(query); err != nil {
-		return nil, err
-	}
-	return query, nil
-}
-
 func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: review.SubmissionID})
 	if err != nil {
