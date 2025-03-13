@@ -138,25 +138,9 @@ func TestRecordResults(t *testing.T) {
 		IsGroupLab:       false,
 		ContainerTimeout: 1,
 	}
-	if err := db.CreateAssignment(assignment); err != nil {
-		t.Fatal(err)
-	}
-
-	buildInfo := &score.BuildInfo{
-		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
-		BuildLog:       "Testing",
-		ExecTime:       33333,
-	}
-	testScores := []*score.Score{
-		{
-			Secret:   "secret",
-			TestName: "Test",
-			Score:    10,
-			MaxScore: 15,
-			Weight:   1,
-		},
-	}
+	qtest.CreateAssignment(t, db, assignment)
+	buildInfo := createBuildInfo(t)
+	testScores := createScores()
 	// Must create a new submission with correct scores and build info, not approved
 	results := &score.Results{
 		BuildInfo: buildInfo,
@@ -174,69 +158,33 @@ func TestRecordResults(t *testing.T) {
 	}
 
 	// Check that submission is recorded correctly
-	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
+	submission := recordResults(t, runData, db, results, nil, false)
 	if submission.IsApproved(runData.Repo.GetUserID()) {
 		t.Error("Submission must not be auto approved")
 	}
-	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
-		t.Errorf("submission score mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
-		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(buildInfo.SubmissionDate, submission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
-		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
-	}
+	qtest.Diff(t, "submission score mismatch", testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
+	qtest.Diff(t, "build info mismatch", buildInfo, submission.BuildInfo, protocmp.Transform())
 
 	// When updating submission after deadline: build info (submission and build dates) and slip days must be updated
 	newSubmissionDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
-	results.BuildInfo.BuildDate = newSubmissionDate
-	results.BuildInfo.SubmissionDate = newSubmissionDate
-	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
-	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	updatedSubmission := recordResults(t, runData, db, results, newSubmissionDate, false)
+	enrollment := qtest.GetEnrollment(t, db, course.ID, admin.ID)
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
-		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(newSubmissionDate, updatedSubmission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
-		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
-	}
+	qtest.Diff(t, "build info mismatch", results.BuildInfo, updatedSubmission.BuildInfo, protocmp.Transform())
 
 	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
-	runData.Rebuild = true
 	wantSubmissionDate := newSubmissionDate
 	newDate := qtest.Timestamp(t, "2022-11-13T15:00:00")
-	results.BuildInfo.BuildDate = newDate
-	results.BuildInfo.SubmissionDate = newDate
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
-	rebuiltSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(newDate, rebuiltSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
-		t.Errorf("build date mismatch: (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff(wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate, protocmp.Transform()); diff != "" {
-		t.Errorf("submission date mismatch: (-want +got):\n%s", diff)
-	}
-	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course)); diff != "" {
-		t.Errorf("slip days mismatch: (-want +got):\n%s", diff)
-	}
+	rebuiltSubmission := recordResults(t, runData, db, results, newDate, true)
+
+	qtest.Diff(t, "build date mismatch", newDate, rebuiltSubmission.BuildInfo.BuildDate, protocmp.Transform())
+	qtest.Diff(t, "submission date mismatch", wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate, protocmp.Transform())
+
+	updatedEnrollment := qtest.GetEnrollment(t, db, course.ID, admin.ID)
+	qtest.Diff(t, "slip days mismatch", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
 }
 
 func TestRecordResultsForManualReview(t *testing.T) {
