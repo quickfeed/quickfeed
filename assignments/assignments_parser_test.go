@@ -13,7 +13,7 @@ import (
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, _, err := readTestsRepositoryContent(dir, 0)
+	_, _, _, err := readTestsRepositoryContent(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -150,7 +150,7 @@ func TestParse(t *testing.T) {
 		GradingBenchmarks: wantCriteria,
 	}
 
-	assignments, dockerfile, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, dockerfile, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +182,7 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
-	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	_, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err == nil {
 		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
 	}
@@ -204,7 +204,7 @@ func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
 	}
 
 	// Since lab3 contains an old assignmentid field, this will return an error
-	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	_, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err == nil {
 		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
 	}
@@ -231,7 +231,7 @@ func TestParseUnknownFields(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +265,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	assignments, _, _, err := readTestsRepositoryContent(testsDir, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	writeFile(t, testsDir, "lab3", "assignment.yml", y3)
 
 	// Parse the new assignment
-	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	newAssignments, _, _, err := readTestsRepositoryContent(testsDir, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -128,7 +128,7 @@ WORKDIR /quickfeed
 		},
 	}
 
-	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotDockerfile, _, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
 }
 
 func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
-	_, _, err := readTestsRepositoryContent(folder, 1)
+	_, _, _, err := readTestsRepositoryContent(folder, 1)
 	if err == nil {
 		t.Errorf("expected error")
 	}
