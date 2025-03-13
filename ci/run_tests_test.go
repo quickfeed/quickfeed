@@ -412,3 +412,37 @@ func runStream(stream *qtest.MockStream[qf.Submission], wg *sync.WaitGroup) {
 		_ = stream.Run()
 	}()
 }
+
+func recordResults(t *testing.T, runData *ci.RunData, db database.Database, results *score.Results, date *timestamppb.Timestamp, rebuild bool) *qf.Submission {
+	if date != nil {
+		results.BuildInfo.BuildDate = date
+		results.BuildInfo.SubmissionDate = date
+	}
+	runData.Rebuild = rebuild
+	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return submission
+}
+
+func createBuildInfo(t *testing.T) *score.BuildInfo {
+	return &score.BuildInfo{
+		SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
+		BuildLog:       "Testing",
+		ExecTime:       33333,
+	}
+}
+
+func createScores() []*score.Score {
+	return []*score.Score{
+		{
+			Secret:   "secret",
+			TestName: "Test",
+			Score:    10,
+			MaxScore: 15,
+			Weight:   1,
+		},
+	}
+}
