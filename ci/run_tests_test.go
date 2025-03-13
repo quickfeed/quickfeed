@@ -207,9 +207,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		IsGroupLab: false,
 		Reviewers:  1,
 	}
-	if err := db.CreateAssignment(assignment); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateAssignment(t, db, assignment)
 
 	initialSubmission := &qf.Submission{
 		AssignmentID: assignment.ID,
@@ -232,10 +230,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		JobOwner: "test",
 	}
 
-	submission, err := runData.RecordResults(qtest.Logger(t), db, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	submission := recordResults(t, runData, db, nil, nil, false)
 
 	// make sure all fields were saved correctly in the database
 	query := &qf.Submission{
@@ -247,14 +242,9 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(updatedSubmission, submission, protocmp.Transform()); diff != "" {
-		t.Errorf("Incorrect submission fields in the database. Want: %+v, got %+v", initialSubmission, updatedSubmission)
-	}
-
+	qtest.Diff(t, "Incorrect submission fields in the database", updatedSubmission, submission, protocmp.Transform())
 	// submission must stay approved, released, with score = 80
-	if diff := cmp.Diff(initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "BuildInfo", "Scores")); diff != "" {
-		t.Errorf("Incorrect submission after update. Want: %+v, got %+v", initialSubmission, updatedSubmission)
-	}
+	qtest.Diff(t, "Incorrect submission after update", initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "BuildInfo", "Scores"))
 }
 
 func TestStreamRecordResults(t *testing.T) {
