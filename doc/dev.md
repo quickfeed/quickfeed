@@ -78,19 +78,19 @@ QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHoo
 
 TODO(meling) Update and improve this part. It is not correct anymore, I think.
 
-- **Primary Server Port:** 
+- **Primary Server Port:**
 By default, the server runs on port **:443**, the standard port for HTTPS traffic. This ensures secure communication right out of the box.
-- **Custom Port Configuration:** 
+- **Custom Port Configuration:**
 If you need to use a different port, you can easily change this by using the `-http.addr` flag when launching the server.
-- **HTTP to HTTPS Redirection:** 
-Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS. 
+- **HTTP to HTTPS Redirection:**
+Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS.
 This ensures that even if someone attempts to connect via the unsecured HTTP protocol, their request will be automatically upgraded to a secure connection.
 
-**Important Note:** 
-When running servers on ports like **:80** or **:443**, some operating systems may require elevated permissions or specific configurations. 
+**Important Note:**
+When running servers on ports like **:80** or **:443**, some operating systems may require elevated permissions or specific configurations.
 This is because ports below 1024 are considered privileged ports, and running services on these ports might need administrative rights or special configurations.
 
-In Linux, you can use the `setcap` command to allow a binary to bind to privileged ports without elevated permissions. 
+In Linux, you can use the `setcap` command to allow a binary to bind to privileged ports without elevated permissions.
 For example, to allow the `quickfeed` binary to bind to port **:443**, you can run the following command:
 
 ```sh
@@ -106,7 +106,8 @@ Please make sure to check your operating system's documentation for the necessar
 Application errors can be classified into several groups and handled in different ways:
 
 **Database errors**:
-  - Return generic "not found/failed" error message to the user, log the original error.
+
+- Return generic "not found/failed" error message to the user, log the original error.
 
 **SCM errors**:
 
@@ -135,22 +136,21 @@ In these cases the error is usually ephemeral in nature, and the action should b
 
 - Return a custom error with detailed information for logging and generic "failed precondition" message to the user.
 
-
 [Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
 
 ### Backend
 
-Errors are being logged at `QuickFeed Service` level. 
-All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly. 
+Errors are being logged at `QuickFeed Service` level.
+All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly.
 Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
 
-Errors returned to a user should be few and informative. 
+Errors returned to a user should be few and informative.
 They should not reveal internal details of the application.
 
 ### Frontend
 
-When receiving a response from the server, the response status code is checked on the frontend. 
-Any message with code different from 0 (0 is status code `OK`) will be logged to console. 
+When receiving a response from the server, the response status code is checked on the frontend.
+Any message with code different from 0 (0 is status code `OK`) will be logged to console.
 Error messages will be displayed to user where relevant, e.g. on course and group creation, and user and group enrollment updates.
 
 [Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes)
@@ -174,13 +174,6 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 - GitHub API name for organization owner is `admin`
 - Repository access levels for any organization member in GitHub API calls are: `read`/`write`/`admin`/`none`
 - Individual repository permission levels in GitHub API are: `pull`/`push`/`admin`
-
-### Slugs
-
-When retrieving organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page.
-For example, organization with a name like `QuickFeed Test Org` will have slugified name `quickfeed-test-org`.
-
-[URL slugs explained](http://patterns.dataincubator.org/book/url-slug.html)
 
 ### Repositories
 
@@ -207,7 +200,7 @@ One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/defau
 
 ## npm
 
-`npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. 
+`npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages.
 If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.
 
 ## Repairing database from backups

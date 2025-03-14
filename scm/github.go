@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/google/go-github/v62/github"
-	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
@@ -59,8 +58,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 			return nil, E(op, M("failed to get organization by ID: %d", opt.ID), err)
 		}
 	} else {
-		name := slug.Make(opt.Name)
-		githubOrg, _, err = s.client.Organizations.Get(ctx, name)
+		githubOrg, _, err = s.client.Organizations.Get(ctx, opt.Name)
 		if err != nil {
 			return nil, E(op, M("failed to get organization %s", opt.Name), err)
 		}
@@ -408,7 +406,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
-func (s *GithubSCM) createStudentRepo(ctx context.Context, organization string, user string) (*Repository, error) {
+func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{

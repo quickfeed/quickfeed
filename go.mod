@@ -14,7 +14,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v62 v62.0.0
-	github.com/gosimple/slug v1.14.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/quickfeed/quickfeed/kit v0.10.0
 	github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064
@@ -52,7 +51,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
