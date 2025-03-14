@@ -33,11 +33,12 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
             className="row clickable mb-1 py-2 align-items-center text-left"
             onClick={() => redirectTo(submission)}
             role="button"
+            aria-hidden="true"
         >
             <div className="col-8">
                 <ProgressBar courseID={courseID} submission={submission} type={Progress.LAB} />
             </div>
-                <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
+            <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
             <div className="col-3">
                 {assignmentStatusText(assignment, submission, getStatusByUser(submission, selfID))}
             </div>
