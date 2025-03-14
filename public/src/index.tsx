@@ -6,6 +6,7 @@ import { config } from './overmind'
 import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import './style.scss'
+import { ThemeProvider } from './settings'
 
 (BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
     return this.toString()
@@ -34,7 +35,9 @@ if (rootDocument) {
 
     root.render((<Provider value={overmind}>
         <BrowserRouter>
-            <App />
+            <ThemeProvider>
+                <App />
+            </ThemeProvider>
         </BrowserRouter>
     </Provider>))
 } else {
