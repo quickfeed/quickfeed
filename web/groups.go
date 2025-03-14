@@ -16,6 +16,7 @@ import (
 const maxGroupNameLength = 20
 
 var (
+	ErrGroupNameEmpty     = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is empty"))
 	ErrGroupNameDuplicate = connect.NewError(connect.CodeAlreadyExists, errors.New("group name already in use"))
 	ErrGroupNameTooLong   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is too long"))
 	ErrGroupNameInvalid   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name contains invalid characters"))
@@ -202,6 +203,9 @@ var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
 
 // checkGroupName returns an error if the group name is invalid; otherwise nil is returned.
 func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) error {
+	if groupName == "" {
+		return ErrGroupNameEmpty
+	}
 	if len(groupName) > maxGroupNameLength {
 		return ErrGroupNameTooLong
 	}
