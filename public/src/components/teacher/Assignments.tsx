@@ -55,11 +55,13 @@ const Assignments = () => {
 
         return (
             <ul key={assignment.ID.toString()} className="list-group">
-                <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)} role="button" aria-hidden="true">
-                    {assignment.name}
-                </li>
+                <div onClick={() => setHidden(!hidden)} role="button" aria-hidden="true">
+                    <li key="assignment" className="list-group-item">
+                        {assignment.name}
+                    </li>
+                </div>
                 {hidden && (
-                    <li key={"form"} className="list-group-item">
+                    <li key="form" className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
                         {isManuallyGraded(assignment)
                             ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
@@ -67,7 +69,7 @@ const Assignments = () => {
                         }
                     </li>
                 )}
-            </ul >
+            </ul>
         )
     }
 
