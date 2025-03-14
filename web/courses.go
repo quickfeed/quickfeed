@@ -148,20 +148,6 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	return s.db.UpdateEnrollment(query)
 }
 
-// getSubmissions returns all the latests submissions for a user of the given course.
-func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Submissions, error) {
-	// only one of user ID and group ID will be set; enforced by IsValid on qf.SubmissionRequest
-	query := &qf.Submission{
-		UserID:  request.GetUserID(),
-		GroupID: request.GetGroupID(),
-	}
-	submissions, err := s.db.GetLastSubmissions(request.GetCourseID(), query)
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Submissions{Submissions: submissions}, nil
-}
-
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest) (*qf.CourseSubmissions, error) {
 	submissions, err := s.db.GetCourseSubmissions(request.GetCourseID(), request.GetType())
@@ -254,51 +240,6 @@ func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Subm
 		return order.Less(subs[i].AssignmentID, subs[j].AssignmentID)
 	})
 	return subs
-}
-
-// updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(submissionID uint64, grades []*qf.Grade, released bool, score uint32) error {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
-	if err != nil {
-		return err
-	}
-
-	for _, grade := range grades {
-		submission.SetGrade(grade.UserID, grade.Status)
-	}
-	submission.Released = released
-	if score > 0 {
-		submission.Score = score
-	}
-	return s.db.UpdateSubmission(submission)
-}
-
-// updateSubmissions updates status and release state of multiple submissions for the
-// given course and assignment ID for all submissions with score equal or above the provided score
-func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsRequest) error {
-	query := &qf.Submission{
-		AssignmentID: request.AssignmentID,
-		Score:        request.ScoreLimit,
-		Released:     request.Release,
-	}
-
-	return s.db.UpdateSubmissions(query, true)
-}
-
-// updateCourse updates an existing course.
-func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
-	// ensure the course exists
-	_, err := s.db.GetCourse(request.ID)
-	if err != nil {
-		return err
-	}
-	// ensure the organization exists
-	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{ID: request.ScmOrganizationID})
-	if err != nil {
-		return err
-	}
-	request.ScmOrganizationName = org.GetScmOrganizationName()
-	return s.db.UpdateCourse(request)
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
