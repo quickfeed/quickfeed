@@ -1,5 +1,6 @@
 import argparse
 import sqlite3
+import requests
 from functools import partial
 from typing import List
 from faker import Faker
@@ -101,9 +102,26 @@ class DatabaseAnonymizer:
                 self.conn.commit()
 
     def set_as_admin(self, login: str):
-        self.updateCur.execute("UPDATE users SET is_admin=1 WHERE login=?", (login,))
-        self.conn.commit()
+        # Fetch the GitHub user for the given login
+        response = requests.get(f"https://api.github.com/users/{login}")
+        if response.status_code != 200:
+            print(f"Failed to fetch user {login} from GitHub")
+            return
+        user = response.json()
 
+        # Check if the user already exists in the database based on the login and remote_id
+        self.cur.execute("SELECT id FROM users WHERE login=? AND scm_remote_id=?", (login, user["id"]))
+        db_user = self.cur.fetchone()
+        if db_user is not None:
+            if db_user[0] == 1:
+                print(f"User {login} is already an admin")
+                return
+            print(f"User {login} already exists in the database")
+            return
+
+        # Set the user with id 1 as admin and update the login and remote_id
+        self.updateCur.execute("UPDATE users SET is_admin=1, login=?, scm_remote_id=? WHERE id=1", (login, user["id"]))
+        self.conn.commit()
 
     def exclude_user(self, login: str) -> bool:
         self.cur.execute("SELECT id FROM users WHERE login=?", (login,))
