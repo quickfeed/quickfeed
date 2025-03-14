@@ -34,7 +34,7 @@ type RunData struct {
 }
 
 // String returns a string representation of the run data structure.
-func (r RunData) String() string {
+func (r *RunData) String() string {
 	commitID := r.CommitID
 	if len(commitID) > 7 {
 		commitID = r.CommitID[:6]
@@ -113,7 +113,7 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	return results, nil
 }
 
-func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
+func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	defer timer(r.JobOwner, r.Course.GetCode(), cloneTimeGauge)()
 
 	clonedStudentRepo, err := sc.Clone(ctx, &scm.CloneOptions{

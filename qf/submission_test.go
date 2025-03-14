@@ -59,7 +59,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 	if newSubmissionDate.After(buildDate) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
-	if !newSubmissionDate.After(tim) {
+	if newSubmissionDate.Before(tim) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
 
@@ -74,7 +74,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 	if newSubmissionDate.After(buildDate) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
 	}
-	if !newSubmissionDate.After(zero) {
+	if newSubmissionDate.Before(zero) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
 	}
 }
