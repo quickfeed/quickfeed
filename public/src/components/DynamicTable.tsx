@@ -98,7 +98,7 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
 
     return (
         <div className="table-overflow" ref={container}>
-            <table className="table table-striped table-grp" onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
+            <table className="table table-striped table-grp" onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} role="button" aria-hidden="true">
                 <thead className="thead-dark">
                     <tr>
                         {head}

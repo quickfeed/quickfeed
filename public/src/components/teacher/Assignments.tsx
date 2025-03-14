@@ -55,7 +55,7 @@ const Assignments = () => {
 
         return (
             <ul key={assignment.ID.toString()} className="list-group">
-                <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)}>
+                <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)} role="button" aria-hidden="true">
                     {assignment.name}
                 </li>
                 {hidden && (
