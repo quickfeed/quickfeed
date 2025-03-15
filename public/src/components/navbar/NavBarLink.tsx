@@ -23,17 +23,15 @@ const NavBarLink = (props: NavLink) => {
         })
     }
     return (
-        <div onClick={() => history.push(props.link.to)} role="button" aria-hidden="true">
-            <li>
-                <div className="col" id="title">
-                    <Link to={props.link.to}>{props.link.text}</Link>
-                </div>
-                <div className="col">
-                    {icons ? icons : null}
-                    {props.jsx ? props.jsx : null}
-                </div>
-            </li>
-        </div>
+        <li onClick={() => history.push(props.link.to)}>
+            <div className="col" id="title">
+                <Link to={props.link.to}>{props.link.text}</Link>
+            </div>
+            <div className="col">
+                {icons ? icons : null}
+                {props.jsx ? props.jsx : null}
+            </div>
+        </li>
     )
 }
 
