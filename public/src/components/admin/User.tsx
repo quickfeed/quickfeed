@@ -45,7 +45,7 @@ const User = ({ user }: { user: pbUser; hidden: boolean }) => {
     )
 
     return (
-        <div role="button" className="clickable" onClick={toggleEnrollments}>
+        <div role="button" aria-hidden="true" className="clickable" onClick={toggleEnrollments}>
             {user.Name}
             {user.IsAdmin ? (
                 <span className={"badge badge-primary ml-2"}>Admin</span>

@@ -48,7 +48,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps) => {
     return (
         <tr>
             <th colSpan={3}>
-                <textarea rows={20} autoFocus onBlur={handleBlur} onKeyUp={handleKeyUp} defaultValue={grade.comment} className="form-control"></textarea>
+                <textarea rows={20} autoFocus onBlur={handleBlur} onKeyUp={handleKeyUp} defaultValue={grade.comment} className="form-control" />
             </th>
         </tr>
     )
