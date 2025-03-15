@@ -156,6 +156,7 @@ Overmind
 paxos
 pbgo
 pgrep
+pipefail
 pkgs
 Preload
 privkey
