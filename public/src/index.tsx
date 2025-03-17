@@ -1,6 +1,5 @@
+import { createRoot } from "react-dom/client"
 import React from 'react'
-import { render } from 'react-dom'
-
 import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
 import { config } from './overmind'
@@ -29,10 +28,15 @@ if (process.env.NODE_ENV === "development") {
     eventSource.onerror = () => console.error("could not connect to server-sent events")
 }
 
-render((
-    <Provider value={overmind}>
+const rootDocument = document.getElementById('root')
+if (rootDocument) {
+    const root = createRoot(rootDocument)
+
+    root.render((<Provider value={overmind}>
         <BrowserRouter>
             <App />
         </BrowserRouter>
-    </Provider>
-), document.getElementById('root'))
+    </Provider>))
+} else {
+    throw new Error('Could not find root element with id "root"')
+}

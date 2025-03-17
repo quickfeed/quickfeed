@@ -5,7 +5,7 @@ import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 
-const ManageSubmissionStatus = (): JSX.Element => {
+const ManageSubmissionStatus = () => {
     const actions = useActions()
     const state = useAppState()
     const assignment = state.selectedAssignment

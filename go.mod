@@ -1,6 +1,7 @@
 module github.com/quickfeed/quickfeed
 
 go 1.22.5
+toolchain go1.23.7
 
 require (
 	connectrpc.com/connect v1.16.2
@@ -20,8 +21,8 @@ require (
 	github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064
 	github.com/steinfletcher/apitest v1.5.16
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.31.0
-	golang.org/x/net v0.33.0
+	golang.org/x/crypto v0.35.0
+	golang.org/x/net v0.36.0
 	golang.org/x/oauth2 v0.21.0
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v2 v2.4.0
@@ -82,8 +83,8 @@ require (
 	go.opentelemetry.io/otel/sdk v1.28.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/rand"
@@ -33,6 +34,29 @@ func (course *Course) UpdateDockerfile(dockerfile string) bool {
 	return updated
 }
 
+var (
+	// courseMutexMap contains a single mutex for each course.
+	courseMutexMap = make(map[uint64]*sync.Mutex)
+	// mapMutex protects the courseMutexMap.
+	mapMutex = sync.Mutex{}
+)
+
+// Lock locks the course to prevent concurrent updates to the course.
+// It returns a corresponding unlock function which must be called when the update is done.
+// Specifically, this method is used to prevent concurrent database updates
+// derived from the test repository. See [assignments.UpdateFromTestsRepo].
+func (course *Course) Lock() func() {
+	mapMutex.Lock()
+	if _, ok := courseMutexMap[course.GetID()]; !ok {
+		courseMutexMap[course.GetID()] = &sync.Mutex{}
+	}
+	mu := courseMutexMap[course.GetID()]
+	mapMutex.Unlock()
+
+	mu.Lock()
+	return mu.Unlock
+}
+
 func (course *Course) GetDockerfile() string {
 	return courseDockerfileCache[course.GetID()]
 }
@@ -55,7 +79,7 @@ func (course *Course) CloneDir() string {
 }
 
 func (course *Course) TeacherEnrollments() []*Enrollment {
-	enrolledTeachers := []*Enrollment{}
+	var enrolledTeachers []*Enrollment
 	for _, enrollment := range course.GetEnrollments() {
 		if enrollment.IsTeacher() {
 			enrolledTeachers = append(enrolledTeachers, enrollment)

@@ -8,7 +8,7 @@ type GradeCommentProps = {
     setEditing: Dispatch<SetStateAction<boolean>>
 }
 
-const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.Element | null => {
+const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps) => {
     const actions = useActions()
     const state = useAppState()
 

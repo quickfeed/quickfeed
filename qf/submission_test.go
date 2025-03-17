@@ -59,7 +59,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 	if newSubmissionDate.After(buildDate) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
-	if !newSubmissionDate.After(tim) {
+	if newSubmissionDate.Before(tim) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSubmissionDate, buildDate)
 	}
 
@@ -74,7 +74,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 	if newSubmissionDate.After(buildDate) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
 	}
-	if !newSubmissionDate.After(zero) {
+	if newSubmissionDate.Before(zero) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", zero, newSubmissionDate, buildDate)
 	}
 }
@@ -139,7 +139,7 @@ func TestByGroup(t *testing.T) {
 	}
 }
 
-func TestCountApprovedSubmissions(t *testing.T) {
+func TestUpdateTotalApproved(t *testing.T) {
 	enroll1 := &qf.Enrollment{ID: 10, UserID: 1}
 	enroll2 := &qf.Enrollment{ID: 20, UserID: 2}
 	enroll3 := &qf.Enrollment{ID: 30, UserID: 3}
@@ -202,7 +202,7 @@ func TestCountApprovedSubmissions(t *testing.T) {
 
 	for _, test := range tests {
 		enrollment := test.enrollment
-		enrollment.CountApprovedSubmissions(submissions.For(enrollment.GetID()))
+		enrollment.UpdateTotalApproved(submissions.For(enrollment.GetID()))
 		if enrollment.GetTotalApproved() != test.want {
 			t.Errorf("expected enrollment(id=%d) total approved %d, got %d", enrollment.GetID(), test.want, enrollment.GetTotalApproved())
 		}

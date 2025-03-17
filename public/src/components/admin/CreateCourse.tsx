@@ -6,7 +6,7 @@ import CourseCreationInfo from "./CourseCreationInfo"
 import { Color } from "../../Helpers"
 
 
-const CreateCourse = (): JSX.Element => {
+const CreateCourse = () => {
     const state = useAppState()
     const actions = useActions()
     const [course, setCourse] = useState<Course>()

@@ -4,7 +4,7 @@ import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
 import { useHistory } from "react-router"
 
-const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
+const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
