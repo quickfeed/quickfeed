@@ -81,6 +81,7 @@ googleapis
 gopath
 gopb
 gopls
+goreleaser
 Gorm
 gormlogger
 GOROOT
@@ -94,6 +95,7 @@ Grafana's
 groupname
 grpc
 grpcpb
+grpcurl
 grpcweb
 Hein
 Hein's
@@ -224,6 +226,7 @@ urfave
 URL's
 usermod
 varcheck
+vercheck
 verdana
 Warnf
 webpack's

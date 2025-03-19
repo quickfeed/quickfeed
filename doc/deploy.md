@@ -54,14 +54,28 @@ For systems without homebrew, the make target should list well-known packages av
 
 ### Install Tools for Development
 
-The development tools are only needed for development, and can be skipped for deployment only.
-To install:
+Tools for development are managed via `go.mod` and does not need to be installed separately.
+They are used via the `go tool` command, which are invoked via:
 
 ```sh
-% make devtools
+% make proto
 ```
 
-The `devtools` make target will download and install various Protobuf compiler plugins and the grpcweb Protobuf compiler.
+For additional details, see the file `buf.gen.yaml` in the repository's root folder:
+
+```yaml
+version: v2
+plugins:
+  - local: ["go", "tool", "protoc-gen-go-patch"]
+    out: ./
+    opt:
+      - plugin=go
+      - paths=source_relative
+  - local: ["go", "tool", "protoc-gen-connect-go"]
+    out: ./
+    opt:
+      - paths=source_relative
+```
 
 ### Preparing the Environment for Production
 
