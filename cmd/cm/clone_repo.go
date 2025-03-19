@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"cmp"
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -10,15 +12,19 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
+
+	"github.com/quickfeed/quickfeed/scm"
+	"go.uber.org/zap"
 )
 
 // cloneRepo clones a repository from GitHub and pulls assignments from the main repository.
 //
 // Run with the following command:
 //
-//	cm clone-repo -repo <repo> [-pull]
+//	cm clone-repo -repo <repo> [-pull] [-all]
 //
-// Example:
+// Examples:
 //
 //	cm clone-repo -repo meling-labs
 //	cm clone-repo -repo group-repo
@@ -87,13 +93,16 @@ func repoHome() string {
 
 func cloneAllRepos() {
 	ghOrg := courseOrg()
+	ghClient := getSCMClient()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Alternative: use the GitHub CLI to list repositories:
 	// gh repo list dat520-2025 --limit 100 --json name,url --template '{{.name}}'
-	// TODO(meling): implement listRepos using the scm package
-	ghRepos := []string{"meling-labs", "group-repo"}
-	// ghRepos, err := listRepos(ghOrg)
-	// if err != nil {
-	// 	exitErr(err, "Error listing repositories")
-	// }
+	ghRepos, err := ghClient.GetRepositories(ctx, ghOrg)
+	if err != nil {
+		exitErr(err, "Error listing repositories")
+	}
 
 	path := filepath.Join(repoHome(), "student-repos")
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
@@ -103,23 +112,43 @@ func cloneAllRepos() {
 		return filepath.Join(path, repo)
 	}
 
-	for _, repo := range ghRepos {
+	fmt.Printf("Cloning %d student/group repositories into %q\n", len(ghRepos), path)
+
+	for _, scmRepo := range ghRepos {
+		repo := scmRepo.Repo
 		// skipping the main course repository (assignments, info, tests)
 		if slices.Contains(courseRepos, repo) {
 			continue
 		}
 
-		path := repoPath(repo)
-		if exists(path) {
-			fmt.Printf("Repository %q already exists, skipping.\n", repo)
-			continue
+		msg := fmt.Sprintf("Cloned %q into %q", repo, path)
+		if exists(repoPath(repo)) {
+			msg = fmt.Sprintf("Repository %q updated", repo)
 		}
 
-		fmt.Printf("Cloning %q into %q\n", repo, path)
-		if err := runCommand(path, "git", "clone", gitURL(ghOrg, repo)); err != nil {
-			exitErr(err, "Error cloning repository")
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		_, err := ghClient.Clone(ctx, &scm.CloneOptions{
+			Organization: ghOrg,
+			Repository:   repo,
+			DestDir:      path,
+		})
+		cancel()
+		if err != nil {
+			fmt.Printf("Error cloning %q: %v\n", repo, err)
+			continue
 		}
+		fmt.Println(msg)
 	}
+}
+
+func getSCMClient() scm.SCM {
+	token := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if token == "" {
+		exitErr(errors.New("missing GITHUB_ACCESS_TOKEN"), "cm: GitHub access token required for this operation")
+	}
+	client, err := scm.NewSCMClient(zap.NewNop().Sugar(), token)
+	check(err)
+	return client
 }
 
 // pullAssignments sets up a [repo] remote in repoPath and
