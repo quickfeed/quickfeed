@@ -23,7 +23,7 @@ const TeacherPage = () => {
     const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment))
 
     useEffect(() => {
-        actions.loadCourseSubmissions(courseID)
+        actions.refreshCourseSubmissions(courseID)
     }, [courseID, actions])
 
     const members = {

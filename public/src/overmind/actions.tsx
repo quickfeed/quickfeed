@@ -405,13 +405,6 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
     await actions.getCourses()
 }
 
-/** Fetches and stores all submissions of a given course into state. Triggers the loading spinner. */
-export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
-    state.isLoading = true
-    await actions.refreshCourseSubmissions(courseID)
-    state.loadedCourse[courseID.toString()] = true
-    state.isLoading = false
-}
 
 /** Refreshes all submissions for a given course. Calling this action directly will not trigger the loading spinner.
  *  Use `loadCourseSubmissions` instead if you want to trigger the loading spinner, such as on page load. */
