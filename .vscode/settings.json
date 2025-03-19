@@ -15,6 +15,16 @@
         ]
     },
     "cSpell.enabled": true,
+    "cSpell.ignorePaths": [
+        "vscode-extension",
+        ".git/{info,lfs,logs,refs,objects}/**",
+        ".git/{index,*refs,*HEAD}",
+        ".vscode",
+        ".vscode-insiders",
+        "go.mod",
+        "go.sum",
+        "**/**/*.pb.go"
+    ],
     "files.exclude": {
         "**/.git": true,
         "**/.DS_Store": true,
