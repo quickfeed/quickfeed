@@ -8,7 +8,9 @@ import (
 )
 
 func renameLegacyTests() {
-	renameTestFiles(gitRoot)
+	if err := renameTestFiles(gitRoot); err != nil {
+		exitErr(err, "Error renaming legacy test files")
+	}
 }
 
 // renameTestFiles renames all legacy *_ag_test.go files to *_qf_test.go in path.
