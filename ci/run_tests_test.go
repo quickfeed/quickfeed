@@ -35,10 +35,10 @@ func loadDockerfile(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T, runner ci.Runner) *ci.RunData {
+func setupRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	dockerfile := loadDockerfile(t)
 	qfTestOrg := scm.GetTestOrganization(t)
-	// Only used to fetch the user's GitHub login (user name)
+	// Only used to fetch the user's GitHub login (username)
 	_, userName := scm.GetTestSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
@@ -81,7 +81,7 @@ func TestRunTests(t *testing.T) {
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
 
-	runData := testRunData(t, runner)
+	runData := setupRunData(t, runner)
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
@@ -91,7 +91,7 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
-	t.Logf("%+v", results.BuildInfo.BuildLog)
+	t.Logf("%+v", results.GetBuildInfo().GetBuildLog())
 	results.BuildInfo.BuildLog = "removed"
 	t.Logf("%+v\n", qlog.IndentJson(results))
 }
@@ -100,8 +100,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
 
-	runData := testRunData(t, runner)
-	// Note that this timeout value is susceptible to variation
+	runData := setupRunData(t, runner)
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
 
@@ -111,8 +110,9 @@ func TestRunTestsTimeout(t *testing.T) {
 		t.Fatal(err)
 	}
 	const wantOut = `Container timeout. Please check for infinite loops or other slowness.`
-	if results.BuildInfo != nil && !strings.HasPrefix(results.BuildInfo.BuildLog, wantOut) {
-		t.Errorf("RunTests(1s timeout) = '%s', got '%s'", wantOut, results.BuildInfo.BuildLog)
+	gotOut := results.GetBuildInfo().GetBuildLog()
+	if !strings.HasPrefix(gotOut, wantOut) {
+		t.Errorf("RunTests(2s timeout) = '%s', want '%s'", gotOut, wantOut)
 	}
 }
 
@@ -130,7 +130,7 @@ func TestRecordResults(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		CourseID:         course.ID,
+		CourseID:         course.GetID(),
 		Name:             "lab1",
 		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
@@ -163,17 +163,17 @@ func TestRecordResults(t *testing.T) {
 	if submission.IsApproved(runData.Repo.GetUserID()) {
 		t.Error("Submission must not be auto approved")
 	}
-	qtest.Diff(t, "submission score mismatch", testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
-	qtest.Diff(t, "build info mismatch", buildInfo, submission.BuildInfo, protocmp.Transform())
+	qtest.Diff(t, "submission score mismatch", testScores, submission.GetScores(), protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
+	qtest.Diff(t, "build info mismatch", buildInfo, submission.GetBuildInfo(), protocmp.Transform())
 
 	// When updating submission after deadline: build info (submission and build dates) and slip days must be updated
 	newSubmissionDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
 	updatedSubmission := recordResults(t, runData, db, results, newSubmissionDate, false)
-	enrollment := qtest.GetEnrollment(t, db, course.ID, admin.ID)
-	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
+	enrollment := qtest.GetEnrollment(t, db, course.GetID(), admin.GetID())
+	if enrollment.RemainingSlipDays(course) == int32(course.GetSlipDays()) || len(enrollment.GetUsedSlipDays()) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	qtest.Diff(t, "build info mismatch", results.BuildInfo, updatedSubmission.BuildInfo, protocmp.Transform())
+	qtest.Diff(t, "build info mismatch", results.GetBuildInfo(), updatedSubmission.GetBuildInfo(), protocmp.Transform())
 
 	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
 	wantSubmissionDate := newSubmissionDate
@@ -181,10 +181,10 @@ func TestRecordResults(t *testing.T) {
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
 	rebuiltSubmission := recordResults(t, runData, db, results, newDate, true)
 
-	qtest.Diff(t, "build date mismatch", newDate, rebuiltSubmission.BuildInfo.BuildDate, protocmp.Transform())
-	qtest.Diff(t, "submission date mismatch", wantSubmissionDate, rebuiltSubmission.BuildInfo.SubmissionDate, protocmp.Transform())
+	qtest.Diff(t, "build date mismatch", newDate, rebuiltSubmission.GetBuildInfo().GetBuildDate(), protocmp.Transform())
+	qtest.Diff(t, "submission date mismatch", wantSubmissionDate, rebuiltSubmission.GetBuildInfo().GetSubmissionDate(), protocmp.Transform())
 
-	updatedEnrollment := qtest.GetEnrollment(t, db, course.ID, admin.ID)
+	updatedEnrollment := qtest.GetEnrollment(t, db, course.GetID(), admin.GetID())
 	qtest.Diff(t, "slip days mismatch", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
 }
 
@@ -202,7 +202,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 
 	assignment := &qf.Assignment{
 		Order:      1,
-		CourseID:   course.ID,
+		CourseID:   course.GetID(),
 		Name:       "assignment-1",
 		Deadline:   qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		IsGroupLab: false,
@@ -211,10 +211,10 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	qtest.CreateAssignment(t, db, assignment)
 
 	initialSubmission := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       admin.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       admin.GetID(),
 		Score:        80,
-		Grades:       []*qf.Grade{{UserID: admin.ID, Status: qf.Submission_APPROVED}},
+		Grades:       []*qf.Grade{{UserID: admin.GetID(), Status: qf.Submission_APPROVED}},
 		Released:     true,
 	}
 	if err := db.CreateSubmission(initialSubmission); err != nil {
@@ -226,7 +226,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		Assignment: assignment,
 		Repo: &qf.Repository{
 			RepoType: qf.Repository_USER,
-			UserID:   admin.ID,
+			UserID:   admin.GetID(),
 		},
 		JobOwner: "test",
 	}
@@ -235,8 +235,8 @@ func TestRecordResultsForManualReview(t *testing.T) {
 
 	// make sure all fields were saved correctly in the database
 	query := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       admin.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       admin.GetID(),
 	}
 	updatedSubmission, err := db.GetSubmission(query)
 	if err != nil {
@@ -263,7 +263,7 @@ func TestStreamRecordResults(t *testing.T) {
 	group := qtest.CreateGroup(t, db, course, 3)
 
 	assignment := &qf.Assignment{
-		CourseID:         course.ID,
+		CourseID:         course.GetID(),
 		Name:             "lab1",
 		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
@@ -284,7 +284,7 @@ func TestStreamRecordResults(t *testing.T) {
 		Assignment: assignment,
 		Repo: &qf.Repository{
 			RepoType: qf.Repository_GROUP,
-			GroupID:  group.ID,
+			GroupID:  group.GetID(),
 		},
 		JobOwner: "test",
 		CommitID: "deadbeef",
@@ -292,15 +292,15 @@ func TestStreamRecordResults(t *testing.T) {
 
 	streamService := stream.NewStreamServices()
 	var streams []*qtest.MockStream[qf.Submission]
-	for _, user := range group.Users {
-		stream := qtest.NewMockStream[qf.Submission](t)
-		streamService.Submission.Add(stream, user.ID)
-		streams = append(streams, stream)
+	for _, user := range group.GetUsers() {
+		mockStream := qtest.NewMockStream[qf.Submission](t)
+		streamService.Submission.Add(mockStream, user.GetID())
+		streams = append(streams, mockStream)
 	}
 
 	// Add a stream for the admin user
 	adminStream := qtest.NewMockStream[qf.Submission](t)
-	streamService.Submission.Add(adminStream, admin.ID)
+	streamService.Submission.Add(adminStream, admin.GetID())
 
 	var wg sync.WaitGroup
 	for i := range streams {
