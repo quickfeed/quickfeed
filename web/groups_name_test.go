@@ -50,6 +50,7 @@ func TestBadGroupNames(t *testing.T) {
 		{"DuplicateGroupName", web.ErrGroupNameDuplicate},
 		{"duplicateGroupName", web.ErrGroupNameDuplicate},
 		{"duplicateGroupname", web.ErrGroupNameDuplicate},
+		{"", web.ErrGroupNameEmpty},
 	}
 	for _, tt := range groupNames {
 		t.Run(tt.name, func(t *testing.T) {
