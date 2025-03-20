@@ -94,7 +94,7 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		CommitHash:   r.CommitID,
 		Score:        score,
 		Grades:       r.Assignment.SubmissionStatus(previous, score),
-		BuildInfo:    results.BuildInfo,
+		BuildInfo:    results.GetBuildInfo(),
 		Scores:       results.Scores,
 	}
 }

@@ -110,8 +110,9 @@ func TestRunTestsTimeout(t *testing.T) {
 		t.Fatal(err)
 	}
 	const wantOut = `Container timeout. Please check for infinite loops or other slowness.`
-	if results.BuildInfo != nil && !strings.HasPrefix(results.BuildInfo.GetBuildLog(), wantOut) {
-		t.Errorf("RunTests(1s timeout) = '%s', got '%s'", wantOut, results.BuildInfo.GetBuildLog())
+	gotOut := results.GetBuildInfo().GetBuildLog()
+	if !strings.HasPrefix(gotOut, wantOut) {
+		t.Errorf("RunTests(2s timeout) = '%s', want '%s'", gotOut, wantOut)
 	}
 }
 
