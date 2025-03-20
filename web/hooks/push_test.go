@@ -25,17 +25,17 @@ func TestExtractAssignments(t *testing.T) {
 
 	assignments := []*qf.Assignment{
 		{
-			CourseID: course.ID,
+			CourseID: course.GetID(),
 			Order:    1,
 			Name:     "lab1",
 		},
 		{
-			CourseID: course.ID,
+			CourseID: course.GetID(),
 			Order:    2,
 			Name:     "lab2",
 		},
 		{
-			CourseID: course.ID,
+			CourseID: course.GetID(),
 			Order:    3,
 			Name:     "lab3",
 		},
@@ -94,7 +94,7 @@ func TestExtractAssignments(t *testing.T) {
 			},
 		}, course)
 		sort.Slice(got, func(i, j int) bool {
-			return got[i].Order < got[j].Order
+			return got[i].GetOrder() < got[j].GetOrder()
 		})
 		if diff := cmp.Diff(tt.wantAssignments, got, protocmp.Transform()); diff != "" {
 			t.Errorf("%s: mismatch (-want, +got):\n%s", tt.name, diff)
@@ -117,14 +117,14 @@ func TestLastActivityDate(t *testing.T) {
 		{
 			"user repo",
 			&qf.Repository{
-				UserID:   admin.ID,
+				UserID:   admin.GetID(),
 				RepoType: qf.Repository_USER,
 			},
 		},
 		{
 			"group repo",
 			&qf.Repository{
-				UserID:   admin.ID,
+				UserID:   admin.GetID(),
 				RepoType: qf.Repository_GROUP,
 			},
 		},
@@ -132,19 +132,19 @@ func TestLastActivityDate(t *testing.T) {
 
 	for _, tt := range tests {
 		date := timestamppb.Now()
-		wh.updateLastActivityDate(course, tt.repo, admin.Login)
-		enrol, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
+		wh.updateLastActivityDate(course, tt.repo, admin.GetLogin())
+		enrol, err := db.GetEnrollmentByCourseAndUser(course.GetID(), admin.GetID())
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !inOneSecondRange(date.Seconds, enrol.LastActivityDate.Seconds) {
-			t.Errorf("last activity date mismatch: %d, expected %d", enrol.LastActivityDate.Seconds, date.Seconds)
+		if !inOneSecondRange(date.GetSeconds(), enrol.GetLastActivityDate().GetSeconds()) {
+			t.Errorf("last activity date mismatch: %d, expected %d", enrol.GetLastActivityDate().GetSeconds(), date.GetSeconds())
 		}
 		// Remove updated date.
 		if err := db.UpdateEnrollment(&qf.Enrollment{
-			ID:               enrol.ID,
-			UserID:           admin.ID,
-			CourseID:         course.ID,
+			ID:               enrol.GetID(),
+			UserID:           admin.GetID(),
+			CourseID:         course.GetID(),
 			LastActivityDate: nil,
 		}); err != nil {
 			t.Fatal(err)
@@ -266,7 +266,7 @@ func TestIgnorePush(t *testing.T) {
 				}
 				// Clean up between subtests to avoid pull requests being processed in other subtests.
 				t.Cleanup(func() {
-					if err := db.UpdatePullRequest(&qf.PullRequest{ID: tt.pullRequest.ID}); err != nil {
+					if err := db.UpdatePullRequest(&qf.PullRequest{ID: tt.pullRequest.GetID()}); err != nil {
 						t.Fatal(err)
 					}
 				})

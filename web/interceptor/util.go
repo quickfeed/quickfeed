@@ -15,15 +15,15 @@ func isValidSubmission(db database.Database, req requestID) bool {
 		return false
 	}
 
-	if sbm.GroupID > 0 {
-		grp, err := db.GetGroup(sbm.GroupID)
+	if sbm.GetGroupID() > 0 {
+		grp, err := db.GetGroup(sbm.GetGroupID())
 		if err != nil || grp.GetCourseID() != courseID {
 			return false
 		}
 		return true
 	}
 
-	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, sbm.UserID)
+	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, sbm.GetUserID())
 	if err != nil || enrol.IsNone() || enrol.IsPending() {
 		return false
 	}

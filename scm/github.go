@@ -151,11 +151,11 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 	// Set restrictions to prevent students from creating new repositories and prevent access
 	// to organization repositories. This will not affect organization owners (teachers).
-	if _, _, err = s.client.Organizations.Edit(ctx, org.ScmOrganizationName, &github.Organization{
+	if _, _, err = s.client.Organizations.Edit(ctx, org.GetScmOrganizationName(), &github.Organization{
 		DefaultRepoPermission: github.String("none"),
 		MembersCanCreateRepos: github.Bool(false),
 	}); err != nil {
-		return nil, E(op, m, fmt.Errorf("failed to update permissions for %s: %w", org.ScmOrganizationName, err))
+		return nil, E(op, m, fmt.Errorf("failed to update permissions for %s: %w", org.GetScmOrganizationName(), err))
 	}
 
 	// Create course repositories
@@ -163,7 +163,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	for path, private := range RepoPaths {
 		repoOptions := &CreateRepositoryOptions{
 			Repo:    path,
-			Owner:   org.ScmOrganizationName,
+			Owner:   org.GetScmOrganizationName(),
 			Private: private,
 		}
 		repo, err := s.createRepository(ctx, repoOptions)
@@ -174,7 +174,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create student repository for the course creator
-	repo, err := s.createStudentRepo(ctx, org.ScmOrganizationName, opt.CourseCreator)
+	repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.CourseCreator)
 	if err != nil {
 		return nil, err
 	}
@@ -195,24 +195,24 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	}
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
-		m = M("failed to enroll %s as student in %s", opt.User, org.ScmOrganizationName)
-		if err := s.addUser(ctx, org.ScmOrganizationName, qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
+		m = M("failed to enroll %s as student in %s", opt.User, org.GetScmOrganizationName())
+		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, E(op, m, err)
 		}
-		repo, err := s.createStudentRepo(ctx, org.ScmOrganizationName, opt.User)
+		repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.User)
 		if err != nil {
 			return nil, E(op, m, err)
 		}
 		// Promote user to organization member
-		if err := s.updatePermission(ctx, opt.User, org.ScmOrganizationName, member); err != nil {
+		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
 			return nil, E(op, m, err)
 		}
 		return repo, nil
 
 	case qf.Enrollment_TEACHER:
-		m = M("failed to enroll %s as teacher in %s", opt.User, org.ScmOrganizationName)
+		m = M("failed to enroll %s as teacher in %s", opt.User, org.GetScmOrganizationName())
 		// Promote user to organization admin
-		if err := s.updatePermission(ctx, opt.User, org.ScmOrganizationName, admin); err != nil {
+		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), admin); err != nil {
 			return nil, E(op, m, err)
 		}
 		// Teacher's private (student) repo should already exist
@@ -236,7 +236,7 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 		return E(op, m, err)
 	}
 	// If user was already removed we report the error and skip the repository deletion
-	if _, err := s.client.Organizations.RemoveMember(ctx, org.ScmOrganizationName, opt.User); err != nil {
+	if _, err := s.client.Organizations.RemoveMember(ctx, org.GetScmOrganizationName(), opt.User); err != nil {
 		return E(op, m, fmt.Errorf("failed to remove user: %w", err))
 	}
 	if err := s.deleteRepository(ctx, opt.RepositoryID); err != nil {

@@ -54,7 +54,7 @@ func TestSubmissionStatus(t *testing.T) {
 		{name: "AlreadyRejected", assignment: manual, submission: sub(qf.Submission_REJECTED, 85), score: 85, want: grade(qf.Submission_REJECTED)},
 	}
 	for _, test := range tests {
-		name := qtest.Name("User/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.AutoApprove, test.assignment.ScoreLimit, test.submission.GetGrades(), test.submission.GetScore(), test.score)
+		name := qtest.Name("User/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.GetAutoApprove(), test.assignment.GetScoreLimit(), test.submission.GetGrades(), test.submission.GetScore(), test.score)
 		t.Run(name, func(t *testing.T) {
 			got := test.assignment.SubmissionStatus(test.submission, test.score)
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
@@ -111,7 +111,7 @@ func TestSubmissionStatus(t *testing.T) {
 		{name: "AlreadyRejected", assignment: groupManual, submission: groupSub(qf.Submission_REJECTED, 85), score: 85, want: groupGrade(qf.Submission_REJECTED)},
 	}
 	for _, test := range groupTests {
-		name := qtest.Name("Group/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.AutoApprove, test.assignment.ScoreLimit, test.submission.GetGrades(), test.submission.GetScore(), test.score)
+		name := qtest.Name("Group/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.GetAutoApprove(), test.assignment.GetScoreLimit(), test.submission.GetGrades(), test.submission.GetScore(), test.score)
 		t.Run(name, func(t *testing.T) {
 			got := test.assignment.SubmissionStatus(test.submission, test.score)
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
