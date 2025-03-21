@@ -1,8 +1,8 @@
-import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, EnrollmentsSchema, UserSchema } from "../../proto/qf/types_pb"
+import { CourseSchema, Enrollment, Enrollment_UserStatus, EnrollmentSchema, EnrollmentsSchema, UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
-import React from "react"
+import React, { act } from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
@@ -13,6 +13,7 @@ import { initializeOvermind, mock } from "./TestHelpers"
 import { ApiClient } from "../overmind/effects"
 import { create } from "@bufbuild/protobuf"
 import { timestampFromDate } from "@bufbuild/protobuf/wkt"
+import { ConnectError } from "@connectrpc/connect"
 
 
 describe("UpdateEnrollment", () => {
@@ -35,6 +36,14 @@ describe("UpdateEnrollment", () => {
                 }
             })
             return { message: create(EnrollmentsSchema, { enrollments }), error: null }
+        }),
+        getCourse: mock("getCourse", async (request) => {
+            const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
+            if (!course) {
+                return { message: create(CourseSchema), error: new ConnectError("course not found") }
+            }
+            course.enrollments = MockData.mockedEnrollments().enrollments.filter(e => e.courseID === request.courseID)
+            return { message: course, error: null }
         }),
         updateEnrollments: mock("updateEnrollments", async (request) => {
             const enrollments = request.enrollments ?? []
@@ -65,8 +74,8 @@ describe("UpdateEnrollment", () => {
     beforeAll(async () => {
         // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(2), statuses: [] })
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: BigInt(1), statuses: [] })
+        await mockedOvermind.actions.getCourseData({ courseID: BigInt(2) })
+        await mockedOvermind.actions.getCourseData({ courseID: BigInt(1) })
     })
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
@@ -87,7 +96,7 @@ describe("UpdateEnrollment in webpage", () => {
         const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
             courseID: BigInt(1),
-            status: 3,
+            status: Enrollment_UserStatus.TEACHER,
             user,
             slipDaysRemaining: 3,
             lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
@@ -111,7 +120,10 @@ describe("UpdateEnrollment in webpage", () => {
         )
 
         const editButton = screen.getByText("Edit")
-        editButton.click()
+        expect(editButton).toBeTruthy()
+        act(() => {
+            editButton.click()
+        })
 
         expect(screen.getByText("Demote")).toBeTruthy()
         expect(screen.queryByText("Promote")).toBeFalsy()
@@ -127,7 +139,7 @@ describe("UpdateEnrollment in webpage", () => {
         const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
             courseID: BigInt(1),
-            status: 2,
+            status: Enrollment_UserStatus.STUDENT,
             user,
             slipDaysRemaining: 3,
             lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
@@ -150,7 +162,9 @@ describe("UpdateEnrollment in webpage", () => {
         )
 
         const editButton = screen.getByText("Edit")
-        editButton.click()
+        act(() => {
+            editButton.click()
+        })
 
         expect(screen.getByText("Promote")).toBeTruthy()
         expect(screen.queryByText("Demote")).toBeFalsy()

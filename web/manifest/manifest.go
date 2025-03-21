@@ -22,8 +22,8 @@ const (
 	appID         = "QUICKFEED_APP_ID"
 	appKey        = "QUICKFEED_APP_KEY"
 	clientID      = "QUICKFEED_CLIENT_ID"
-	clientSecret  = "QUICKFEED_CLIENT_SECRET"
-	webhookSecret = "QUICKFEED_WEBHOOK_SECRET"
+	clientSecret  = "QUICKFEED_CLIENT_SECRET"  // skipcq: SCT-A000
+	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
 )
 
 // ReadyForAppCreation returns nil if the environment configuration (envFile)
@@ -59,17 +59,21 @@ func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error
 }
 
 type Manifest struct {
-	domain  string
-	envFile string
-	handler http.Handler
-	done    chan error
+	domain     string
+	envFile    string
+	handler    http.Handler
+	done       chan error
+	client     *github.Client // optional, for testing
+	runWebpack bool           // run webpack only for production
 }
 
 func New(domain, envFile string) *Manifest {
 	m := &Manifest{
-		domain:  domain,
-		envFile: envFile,
-		done:    make(chan error),
+		domain:     domain,
+		envFile:    envFile,
+		client:     github.NewClient(nil),
+		done:       make(chan error),
+		runWebpack: true,
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -98,11 +102,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	if err := <-m.done; err != nil {
 		return err
 	}
-	if err := server.Shutdown(context.Background()); err != nil {
-		return err
-	}
-	// Refresh environment variables
-	return env.Load(env.RootEnv(m.envFile))
+	return server.Shutdown(context.Background())
 }
 
 func (m *Manifest) conversion() http.HandlerFunc {
@@ -119,7 +119,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 			return
 		}
 		ctx := context.Background()
-		config, resp, err := github.NewClient(nil).Apps.CompleteAppManifest(ctx, code)
+		config, resp, err := m.client.Apps.CompleteAppManifest(ctx, code)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "Error: %s", err)
@@ -144,7 +144,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Write PEM file
-		if err := os.WriteFile(appKeyFile, []byte(*config.PEM), 0o600); err != nil {
+		if err := os.WriteFile(appKeyFile, []byte(config.GetPEM()), 0o600); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -153,12 +153,13 @@ func (m *Manifest) conversion() http.HandlerFunc {
 
 		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
-			appID:         strconv.FormatInt(*config.ID, 10),
+			appID:         strconv.FormatInt(config.GetID(), 10),
 			appKey:        appKeyFile,
-			clientID:      *config.ClientID,
-			clientSecret:  *config.ClientSecret,
-			webhookSecret: *config.WebhookSecret,
+			clientID:      config.GetClientID(),
+			clientSecret:  config.GetClientSecret(),
+			webhookSecret: config.GetWebhookSecret(),
 		}
+
 		if err := env.Save(env.RootEnv(m.envFile), envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
@@ -176,7 +177,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 }
 
 func (m *Manifest) createApp() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if err := form(w, m.domain); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -229,12 +230,12 @@ body {
 </script>
 `
 
-	log.Printf("Successfully created the %s GitHub App.", *config.Name)
+	log.Printf("Successfully created the %s GitHub App.", config.GetName())
 
 	data := struct {
 		Name string
 	}{
-		Name: *config.Name,
+		Name: config.GetName(),
 	}
 	t := template.Must(template.New("success").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {
@@ -242,12 +243,14 @@ body {
 	}
 	publicEnvFile := env.PublicEnv(m.envFile)
 	if err := env.Save(publicEnvFile, map[string]string{
-		"QUICKFEED_APP_URL": *config.HTMLURL,
+		"QUICKFEED_APP_URL": config.GetHTMLURL(),
 	}); err != nil {
 		return err
 	}
-	log.Printf("App URL saved in %s: %s", publicEnvFile, *config.HTMLURL)
-	go runWebpack()
+	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
+	if m.runWebpack {
+		go runWebpack()
+	}
 	return nil
 }
 

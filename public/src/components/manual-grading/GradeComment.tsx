@@ -8,7 +8,7 @@ type GradeCommentProps = {
     setEditing: Dispatch<SetStateAction<boolean>>
 }
 
-const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.Element | null => {
+const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps) => {
     const actions = useActions()
     const state = useAppState()
 
@@ -48,7 +48,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
     return (
         <tr>
             <th colSpan={3}>
-                <textarea rows={20} autoFocus onBlur={handleBlur} onKeyUp={handleKeyUp} defaultValue={grade.comment} className="form-control"></textarea>
+                <textarea rows={20} autoFocus onBlur={handleBlur} onKeyUp={handleKeyUp} defaultValue={grade.comment} className="form-control" />
             </th>
         </tr>
     )

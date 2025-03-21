@@ -22,10 +22,14 @@ const TableSort = ({ review }: { review: boolean }) => {
             actions.setAscending(true)
             actions.clearSubmissionFilter()
         }
-    }, [])
+    }, [actions])
 
     const handleChange = (sort: SubmissionSort) => {
         actions.setSubmissionSort(sort)
+    }
+
+    const toggleIndividualSubmissions = () => {
+        actions.setIndividualSubmissionsView(!state.individualSubmissionView)
     }
 
     return (
@@ -34,13 +38,13 @@ const TableSort = ({ review }: { review: boolean }) => {
                 <div className="p-2">
                     <span>Sort by:</span>
                 </div>
-                <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Approved)}>
+                <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role="button" aria-hidden="true" onClick={() => handleChange(SubmissionSort.Approved)}>
                     Approved
                 </div>
-                <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Score)}>
+                <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role="button" aria-hidden="true" onClick={() => handleChange(SubmissionSort.Score)}>
                     Score
                 </div>
-                <div className="p-2" role={"button"} onClick={() => actions.setAscending(!state.sortAscending)}>
+                <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setAscending(!state.sortAscending)}>
                     <i className={state.sortAscending ? "icon fa fa-caret-down" : "icon fa fa-caret-down fa-rotate-180"} />
                 </div>
             </div>
@@ -48,18 +52,23 @@ const TableSort = ({ review }: { review: boolean }) => {
                 <div className="p-2">
                     Show:
                 </div>
-                <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("teachers")}>
+                <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setSubmissionFilter("teachers")}>
                     {state.submissionFilters.includes("teachers") ? <del>Teachers</del> : "Teachers"}
                 </div>
-                <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("approved")}>
+                <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setSubmissionFilter("approved")}>
                     {state.submissionFilters.includes("approved") ? <del>Graded</del> : "Graded"}
                 </div>
                 {review ?
-                    <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("released")}>
+                    <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setSubmissionFilter("released")}>
                         {state.submissionFilters.includes("released") ? <del>Released</del> : "Released"}
                     </div>
                     : null
                 }
+            </div>
+            <div className="d-inline-flex flex-row">
+                <div className="p-2" role="button" aria-hidden="true" onClick={toggleIndividualSubmissions}>
+                    {state.individualSubmissionView ? "Individual" : "Group"}
+                </div>
             </div>
         </div>
     )

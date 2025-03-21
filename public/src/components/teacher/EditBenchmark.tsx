@@ -4,7 +4,7 @@ import { useActions } from "../../overmind"
 import { clone, create } from "@bufbuild/protobuf"
 
 
-const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }): JSX.Element => {
+const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }) => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)

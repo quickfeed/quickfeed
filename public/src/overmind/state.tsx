@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, User, UserSchema } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 import { create } from "@bufbuild/protobuf"
 
 export interface CourseGroup {
@@ -51,7 +51,7 @@ export type State = {
 
     /* Contains all submissions for the user, indexed by course ID */
     // The individual submissions for a given course are indexed by assignment order - 1
-    submissions: { [courseID: string]: Submission[] },
+    submissions: SubmissionsForUser,
 
     /* Current enrollment status of the user for a given course */
     status: { [courseID: string]: Enrollment_UserStatus }
@@ -171,6 +171,10 @@ export type State = {
 
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
+
+    /* Can be used to determine whether or not to show only individual submissions */
+    individualSubmissionView: boolean,
+
     showFavorites: boolean,
 
 
@@ -213,9 +217,16 @@ export const state: State = {
         }
         return enrollmentsByCourseID
     }),
-    submissions: {},
-    userGroup: {},
-
+    submissions: new SubmissionsForUser(),
+    userGroup: derived(({ enrollments }: State) => {
+        const userGroup: { [courseID: string]: Group } = {}
+        for (const enrollment of enrollments) {
+            if (enrollment.group) {
+                userGroup[enrollment.courseID.toString()] = enrollment.group
+            }
+        }
+        return userGroup
+    }),
     isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
         if (activeCourse > 0 && enrollmentsByCourseID[activeCourse.toString()]) {
             return isTeacher(enrollmentsByCourseID[activeCourse.toString()])
@@ -224,10 +235,7 @@ export const state: State = {
     }),
     isCourseCreator: derived(({ courses, activeCourse, self }: State) => {
         const course = courses.find(c => c.ID === activeCourse)
-        if (course && course.courseCreatorID === self.ID) {
-            return true
-        }
-        return false
+        return course !== undefined && course.courseCreatorID === self.ID
     }),
     status: {},
 
@@ -364,7 +372,7 @@ export const state: State = {
                     if (!groupView && a.$typeName === "qf.Enrollment" && b.$typeName === "qf.Enrollment") {
                         nameA = a.user?.Name ?? ""
                         nameB = b.user?.Name ?? ""
-                    } 
+                    }
                     else if (groupView && a.$typeName === "qf.Group" && b.$typeName === "qf.Group") {
                         nameA = a.name ?? ""
                         nameB = b.name ?? ""
@@ -426,6 +434,7 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
+    individualSubmissionView: false,
     groupView: false,
     activeGroup: null,
     hasGroup: derived(({ userGroup }: State) => courseID => {

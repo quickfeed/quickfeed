@@ -73,23 +73,23 @@ export const setupDrivers = (path?: string): ThenableWebDriver[] => {
  * @param mockedEffects the mocked effects to initialize the mock with
  * NOTE: Directly setting derived values in the state is not supported.
 */
-export const initializeOvermind = (state: Partial<State & SubType<{ review: Partial<ReviewState>; }, object>>, mockedApi?: ApiClient) => {
+export const initializeOvermind = (state: Partial<State & SubType<{ review: Partial<ReviewState> }, object>>, mockedApi?: ApiClient) => {
     const overmind = createOvermindMock(config, {
         api: mockedApi
     }, initialState => {
         Object.assign(initialState, state)
-    });
+    })
     Object.assign(overmind.effects.api, mockedApi)
     return overmind
 }
 
 /** UnaryApiClient is a type that represents the ApiClient without streaming methods. */
 interface UnaryApiClient {
-    client: Omit<ApiClient["client"], "submissionStream">;
+    client: Omit<ApiClient["client"], "submissionStream">
 }
 
 /** Methods is a type that represents the methods of the UnaryApiClient */
-type Methods = UnaryApiClient["client"];
+type Methods = UnaryApiClient["client"]
 
 /** mock is a helper function that takes a method and a mocked function to run in place of the method.
  *  It returns a function that can be used to replace the method in the ApiClient.
@@ -102,6 +102,6 @@ export function mock<T extends keyof Methods>(
     mockFn: (...req: Parameters<Methods[T]>) => ReturnType<Methods[T]>
 ): Methods[T] {
     return async function (...args: Parameters<Methods[T]>): Promise<ReturnType<Methods[T]>> {
-        return mockFn(...args) as ReturnType<Methods[T]>;
-    } as Methods[T];
+        return mockFn(...args) as ReturnType<Methods[T]>
+    } as Methods[T]
 }

@@ -23,6 +23,7 @@ import {
     Group_GroupStatus,
     GroupSchema,
     GroupsSchema,
+    Repository_Type,
     Review,
     ReviewSchema,
     Submission_Status,
@@ -249,7 +250,7 @@ export class MockData {
     }
 
     public static mockedEnrollments() {
-        const enrollments = create(EnrollmentsSchema) 
+        const enrollments = create(EnrollmentsSchema)
         const localEnrols: Enrollment[] = []
         localEnrols.push(
             create(EnrollmentSchema, {
@@ -351,7 +352,7 @@ export class MockData {
     }
 
     public static mockedSubmissions() {
-        const submissions = create(SubmissionsSchema) 
+        const submissions = create(SubmissionsSchema)
         submissions.submissions = [
             create(SubmissionSchema, {
                 ID: BigInt(1),
@@ -409,7 +410,7 @@ export class MockData {
                 score: 80,
                 released: true,
                 reviews: [
-                   create(ReviewSchema, {
+                    create(ReviewSchema, {
                         ID: BigInt(1),
                         SubmissionID: BigInt(3),
                         score: 80,
@@ -605,6 +606,18 @@ export class MockData {
         return templateBenchmarks
     }
 
+    public static mockedRepositories() {
+        const repositories: { [courseid: string]: { [repo: number]: string } } = {
+            "1": {
+                [Repository_Type.INFO]: "info",
+                [Repository_Type.ASSIGNMENTS]: "assignments",
+                [Repository_Type.USER]: "user",
+                [Repository_Type.GROUP]: "group",
+                [Repository_Type.TESTS]: "tests",
+            }
+        }
+        return repositories
+    }
     public static computeScore(r: Review) {
         let score = 0
         let totalApproved = 0

@@ -9,7 +9,7 @@ import (
 
 func Cookie(t *testing.T, tm *auth.TokenManager, user *qf.User) string {
 	t.Helper()
-	cookie, err := tm.NewAuthCookie(user.ID)
+	cookie, err := tm.NewAuthCookie(user.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}

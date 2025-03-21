@@ -8,7 +8,7 @@ import TeacherPage from "./TeacherPage"
 
 /** The CoursePage component renders a Student or Teacher view
  *  depending on the active course and the user's enrollment status. */
-const CoursePage = (): JSX.Element => {
+const CoursePage = () => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -19,6 +19,7 @@ const CoursePage = (): JSX.Element => {
             actions.toggleFavorites()
         }
         actions.setActiveCourse(courseID)
+        actions.getCourseData({ courseID })
     }, [courseID])
 
     if (state.enrollmentsByCourseID[courseID.toString()] && isEnrolled(enrollment)) {

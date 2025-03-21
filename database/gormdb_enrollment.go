@@ -11,12 +11,12 @@ import (
 func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 	var user, course int64
 	if err := db.conn.Model(&qf.User{}).Where(&qf.User{
-		ID: enrollment.UserID,
+		ID: enrollment.GetUserID(),
 	}).Count(&user).Error; err != nil {
 		return err
 	}
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
-		ID: enrollment.CourseID,
+		ID: enrollment.GetCourseID(),
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -41,19 +41,19 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 // UpdateEnrollment changes status and display state of the given enrollment.
 func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
 	// If enrol.ID is zero, Select("*").Updates() would update ID of the Enrollment record to zero.
-	if enrol.ID == 0 {
+	if enrol.GetID() == 0 {
 		return errors.New("enrollment query missing primary key: ID")
 	}
 	return db.conn.Model(&qf.Enrollment{}).
 		Select("*").
 		Where(&qf.Enrollment{
-			CourseID: enrol.CourseID,
-			UserID:   enrol.UserID,
+			CourseID: enrol.GetCourseID(),
+			UserID:   enrol.GetUserID(),
 		}).Updates(enrol).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
-func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error) {
+func (db *GormDB) GetEnrollmentByCourseAndUser(courseID, userID uint64) (*qf.Enrollment, error) {
 	var enrollment qf.Enrollment
 	m := db.conn.Preload("Course").Preload("User").Preload("UsedSlipDays")
 	if err := m.
@@ -91,6 +91,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 	if err := db.conn.Preload("User").
 		Preload("Course").
 		Preload("Group").
+		Preload("Group.Users").
 		Preload("UsedSlipDays").
 		Model(model).
 		Where("status in (?)", statuses).

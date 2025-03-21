@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/multierr"
+	"github.com/quickfeed/quickfeed/internal/reload"
 	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -106,6 +107,18 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 	}, nil
 }
 
+func WatchHandler(ctx context.Context, handler http.Handler) http.Handler {
+	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "dist"))
+	if err != nil {
+		log.Printf("Failed to create watcher: %v", err)
+		return handler
+	}
+	mux := http.NewServeMux()
+	mux.Handle("/", handler)
+	mux.HandleFunc("/watch", watcher.Handler)
+	return mux
+}
+
 func metricsServer() *http.Server {
 	return &http.Server{
 		Handler:           metrics.Handler(),
@@ -158,5 +171,5 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 		metricsShutdownErr = srv.metricsServer.Shutdown(ctx)
 	}
 	srvShutdownErr := srv.httpServer.Shutdown(ctx)
-	return multierr.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
+	return errors.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
 }

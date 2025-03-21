@@ -13,7 +13,7 @@ import { clone } from "@bufbuild/protobuf"
 /** CourseForm is used to create a new course or edit an existing course.
  *  If `editCourse` is provided, the existing course will be modified.
  *  If no course is provided, a new course will be created. */
-const CourseForm = ({ courseToEdit }: { courseToEdit: Course }): JSX.Element | null => {
+const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     const actions = useActions()
     const history = useHistory()
 

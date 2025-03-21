@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -63,16 +64,51 @@ func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf
 // CreateCourse is a test helper to create a course in the database; it updates the course with the ID.
 func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateCourse(user.ID, course); err != nil {
+	if err := db.CreateCourse(user.GetID(), course); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func CreateAssignment(t *testing.T, db database.Database, assignment *qf.Assignment) {
+	t.Helper()
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func CreateGroup(t *testing.T, db database.Database, course *qf.Course, groupSize int) *qf.Group {
+	t.Helper()
+	var users []*qf.User
+	for range groupSize {
+		user := CreateFakeUser(t, db)
+		users = append(users, user)
+		EnrollStudent(t, db, user, course)
+	}
+	group := &qf.Group{
+		CourseID: course.ID,
+		Name:     "group " + RandomString(t),
+		Users:    users,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+	return group
+}
+
+func GetEnrollment(t *testing.T, db database.Database, userID, courseID uint64) *qf.Enrollment {
+	t.Helper()
+	enrollment, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return enrollment
 }
 
 func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
 	query := &qf.Enrollment{
-		UserID:   student.ID,
-		CourseID: course.ID,
+		UserID:   student.GetID(),
+		CourseID: course.GetID(),
 	}
 	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
@@ -86,8 +122,8 @@ func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course 
 func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
 	query := &qf.Enrollment{
-		UserID:   student.ID,
-		CourseID: course.ID,
+		UserID:   student.GetID(),
+		CourseID: course.GetID(),
 	}
 	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
@@ -101,8 +137,8 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Course, status qf.Enrollment_UserStatus) *qf.Enrollment {
 	t.Helper()
 	enrollment := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
+		UserID:   user.GetID(),
+		CourseID: course.GetID(),
 	}
 	if err := db.CreateEnrollment(enrollment); err != nil {
 		t.Fatal(err)
@@ -127,4 +163,31 @@ func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 	request := connect.NewRequest(message)
 	request.Header().Set("cookie", cookie)
 	return request
+}
+
+// Ptr returns a pointer to the given value.
+//
+// How to use:
+//   - Use this function to create a pointer to a value.
+//   - This function is useful when initializing a struct with a pointer field.
+//
+// Example:
+//
+//	type MyStruct struct {
+//		Field *int
+//	    Src   *string
+//	}
+//	myStruct := MyStruct{
+//		Field: Ptr(10),
+//		Src:   Ptr("hello"),
+//	}
+func Ptr[T any](t T) *T {
+	return &t
+}
+
+// Diff compares the got and want values and prints a diff with the given message.
+func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
+	if diff := cmp.Diff(got, want, opts...); diff != "" {
+		t.Errorf("%s: (-got +want)\n%s", msg, diff)
+	}
 }

@@ -5,6 +5,7 @@ import { initializeOvermind } from "./TestHelpers"
 import { Provider } from "overmind-react"
 import { render } from "@testing-library/react"
 import { create } from "@bufbuild/protobuf"
+import { SubmissionsForUser } from "../Helpers"
 
 type ProgressBarTest = {
     desc: string,
@@ -22,7 +23,7 @@ describe("ProgressBar", () => {
     const progressBarTests: ProgressBarTest[] = [
         {
             desc: "100% Progress Bar",
-            submission: create(SubmissionSchema,{
+            submission: create(SubmissionSchema, {
                 score: 100,
             }),
             assignment: create(AssignmentSchema, { scoreLimit: 100 }),
@@ -95,11 +96,12 @@ describe("ProgressBar", () => {
 
 
     test.each(progressBarTests)(`[Progress.NAV] $desc`, (test) => {
-        const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions: { "1": [test.submission] } })
-
+        const submissions = new SubmissionsForUser()
+        submissions.setSubmissions(1n, "USER", [test.submission])
+        const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions })
         const { container } = render(
             <Provider value={overmind}>
-                <ProgressBar courseID={"1"} assignmentIndex={0} submission={test.submission} type={Progress.NAV} />
+                <ProgressBar courseID={"1"} submission={test.submission} type={Progress.NAV} />
             </Provider>
         )
 
@@ -116,11 +118,15 @@ describe("ProgressBar", () => {
 })
 
 const labTest = (test: ProgressBarTest, withSubmission: boolean) => {
-    const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions: { "1": test.submission ? [test.submission] : [] } })
+    const submissions = new SubmissionsForUser()
+    if (withSubmission) {
+        submissions.setSubmissions(1n, "USER", [test.submission])
+    }
+    const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions })
 
     const { container } = render(
         <Provider value={overmind}>
-            <ProgressBar courseID={"1"} assignmentIndex={test.assignmentIndex ?? 0} submission={withSubmission ? test.submission : undefined} type={Progress.LAB} />
+            <ProgressBar courseID={"1"} submission={test.submission} type={Progress.LAB} />
         </Provider>
     )
 

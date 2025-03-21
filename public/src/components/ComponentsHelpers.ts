@@ -1,20 +1,27 @@
 import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
-import { AssignmentsMap } from "../overmind/state"
+import { useActions } from "../overmind"
+import { AssignmentsMap, State } from "../overmind/state"
 import { Row, RowElement } from "./DynamicTable"
 
 
-export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
-    const state = useAppState()
+export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course, state.isCourseManuallyGraded)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, state.individualSubmissionView, course, state.isCourseManuallyGraded)
     })
 }
 
-export const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
+export const generateRow = (
+    enrollment: Enrollment | Group,
+    assignments: AssignmentsMap,
+    submissions: SubmissionsForCourse,
+    generator: (s: Submission, e?: Enrollment | Group) => RowElement,
+    individual: boolean,
+    course?: Course,
+    withID?: boolean
+): Row => {
     const row: Row = []
     const isEnrollment = enrollment.$typeName === "qf.Enrollment"
     const isGroup = enrollment.$typeName === "qf.Group"
@@ -39,19 +46,24 @@ export const generateRow = (enrollment: Enrollment | Group, assignments: Assignm
             return
         }
 
-        if (isGroupLab && isEnrollment && enrollment.groupID === 0n) {
-            // If we're dealing with a group assignment, and the enrollment is not part of a group
-            // we should try to find an individual submission instead
-            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
-        } else if (isGroupLab) {
-            // If the previous conditions are not met, we have this situation:
-            // - The assignment is a group assignment
-            // - We're either dealing with an enrollment that is part of a group
-            // - or we're dealing with a group
+        if (isGroup && isGroupLab) {
+            // If we're dealing with a group assignment and a group, we should try to find a group submission
             submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
-        } else if (isEnrollment) {
-            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
         }
+
+        if (isEnrollment) {
+            if (isGroupLab && enrollment.groupID === 0n) {
+                // If we're dealing with a group assignment, and the enrollment is not part of a group
+                // we should try to find an individual submission instead
+                submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            } else if (isGroupLab && !individual) {
+                // If we're dealing with a group assignment, and the user is not viewing individual submissions
+                submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            } else {
+                submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            }
+        }
+
         if (submission) {
             row.push(generator(submission, enrollment))
             return
@@ -61,9 +73,7 @@ export const generateRow = (enrollment: Enrollment | Group, assignments: Assignm
     return row
 }
 
-export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean): Row => {
-    const isCourseManuallyGraded = useAppState((state) => state.isCourseManuallyGraded)
-    const actions = useActions()
+export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
     const base: Row = [
         { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
     ]

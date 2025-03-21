@@ -25,7 +25,7 @@ func TestGetCourse(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	gotCourse, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
-		CourseID: wantCourse.ID,
+		CourseID: wantCourse.GetID(),
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -49,15 +49,15 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	resp, err := client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 	}, cookie))
 	if err != nil {
 		t.Error(err)
 	}
 
 	course = resp.Msg
-	if course.DockerfileDigest != "" {
-		t.Errorf("expected empty DockerfileDigest, got %s", course.DockerfileDigest)
+	if course.GetDockerfileDigest() != "" {
+		t.Errorf("expected empty DockerfileDigest, got %s", course.GetDockerfileDigest())
 	}
 	dockerfile := "FROM golang:latest"
 	want := true
@@ -73,7 +73,7 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 
 	// GetCourse again to check that the digest is not returned in the response.
 	resp, err = client.GetCourse(context.Background(), qtest.RequestWithCookie(&qf.CourseRequest{
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 	}, cookie))
 	if err != nil {
 		t.Error(err)
@@ -81,8 +81,8 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 
 	// Check that the digest is not returned in the response.
 	course = resp.Msg
-	if course.DockerfileDigest != "" {
-		t.Errorf("expected DockerfileDigest to be removed, got %s", course.DockerfileDigest)
+	if course.GetDockerfileDigest() != "" {
+		t.Errorf("expected DockerfileDigest to be removed, got %s", course.GetDockerfileDigest())
 	}
 }
 
@@ -104,7 +104,7 @@ func TestGetCourses(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	gotCourses := foundCourses.Msg.Courses
+	gotCourses := foundCourses.Msg.GetCourses()
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
@@ -122,7 +122,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	stud1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student1", Login: "student1"})
-	enrollStud1 := &qf.Enrollment{CourseID: course.ID, UserID: stud1.ID}
+	enrollStud1 := &qf.Enrollment{CourseID: course.GetID(), UserID: stud1.GetID()}
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud1, Cookie(t, tm, stud1))); err != nil {
 		t.Error(err)
 	}
@@ -130,7 +130,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// verify that a pending enrollment was indeed created for the user
 	enrollStatusReq := &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_UserID{
-			UserID: stud1.ID,
+			UserID: stud1.GetID(),
 		},
 		Statuses: []qf.Enrollment_UserStatus{
 			qf.Enrollment_PENDING,
@@ -141,12 +141,12 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	var pendingUserEnrollment *qf.Enrollment
-	for _, enrollment := range userEnrollments.Msg.Enrollments {
-		if enrollment.CourseID == course.ID {
-			if enrollment.Status == qf.Enrollment_PENDING {
+	for _, enrollment := range userEnrollments.Msg.GetEnrollments() {
+		if enrollment.GetCourseID() == course.GetID() {
+			if enrollment.GetStatus() == qf.Enrollment_PENDING {
 				pendingUserEnrollment = enrollment
 			} else {
-				t.Errorf("expected student %d to have pending enrollment in course %d", stud1.ID, course.ID)
+				t.Errorf("expected student %d to have pending enrollment in course %d", stud1.GetID(), course.GetID())
 			}
 		}
 	}
@@ -154,38 +154,47 @@ func TestEnrollmentProcess(t *testing.T) {
 	// verify that a pending enrollment was indeed created for the course.
 	enrollReq := &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_CourseID{
-			CourseID: course.ID,
+			CourseID: course.GetID(),
 		},
 	}
+
+	// enrollments fetched with FetchMode CourseID will not have the course field preloaded.
 	courseEnrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(enrollReq, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
 	}
 	var pendingCourseEnrollment *qf.Enrollment
-	for _, enrollment := range courseEnrollments.Msg.Enrollments {
-		if enrollment.UserID == stud1.ID {
-			if enrollment.Status == qf.Enrollment_PENDING {
+	for _, enrollment := range courseEnrollments.Msg.GetEnrollments() {
+		if enrollment.GetUserID() == stud1.GetID() {
+			if enrollment.GetStatus() == qf.Enrollment_PENDING {
 				pendingCourseEnrollment = enrollment
 			} else {
-				t.Errorf("expected student %d to have pending enrollment in course %d", stud1.ID, course.ID)
+				t.Errorf("expected student %d to have pending enrollment in course %d", stud1.GetID(), course.GetID())
 			}
 		}
 	}
-	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(pendingUserEnrollment, pendingCourseEnrollment,
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Enrollment{}, "course"),
+	); diff != "" {
+		t.Errorf("%v, %v", pendingUserEnrollment, pendingCourseEnrollment)
 		t.Errorf("EnrollmentProcess mismatch (-pendingUserEnrollment +pendingCourseEnrollment):\n%s", diff)
 	}
 
 	wantEnrollment := &qf.Enrollment{
-		ID:           pendingCourseEnrollment.ID,
-		CourseID:     course.ID,
-		UserID:       stud1.ID,
+		ID:           pendingCourseEnrollment.GetID(),
+		CourseID:     course.GetID(),
+		UserID:       stud1.GetID(),
 		Status:       qf.Enrollment_PENDING,
 		State:        qf.Enrollment_VISIBLE,
 		Course:       course,
 		User:         stud1,
 		UsedSlipDays: []*qf.UsedSlipDays{},
 	}
-	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantEnrollment, pendingCourseEnrollment, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Enrollment{}, "course"),
+	}); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
 
@@ -198,7 +207,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	// verify that the enrollment was updated to student status.
-	gotEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, stud1.ID)
+	gotEnrollment, err := db.GetEnrollmentByCourseAndUser(course.GetID(), stud1.GetID())
 	if err != nil {
 		t.Error(err)
 	}
@@ -210,7 +219,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// create another user and enroll as student
 
 	stud2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student2", Login: "student2"})
-	enrollStud2 := &qf.Enrollment{CourseID: course.ID, UserID: stud2.ID}
+	enrollStud2 := &qf.Enrollment{CourseID: course.GetID(), UserID: stud2.GetID()}
 	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, Cookie(t, tm, stud2))); err != nil {
 		t.Error(err)
 	}
@@ -223,13 +232,13 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Error(err)
 	}
 	// verify that the stud2 was enrolled with student status.
-	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.ID, stud2.ID)
+	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.GetID(), stud2.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.ID = gotEnrollment.ID
+	wantEnrollment.ID = gotEnrollment.GetID()
 	wantEnrollment.Status = qf.Enrollment_STUDENT
-	wantEnrollment.UserID = stud2.ID
+	wantEnrollment.UserID = stud2.GetID()
 	wantEnrollment.User = stud2
 	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
@@ -246,11 +255,11 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Error(err)
 	}
 	// verify that the stud2 was promoted to teacher status.
-	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.ID, stud2.ID)
+	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.GetID(), stud2.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.ID = gotEnrollment.ID
+	wantEnrollment.ID = gotEnrollment.GetID()
 	wantEnrollment.Status = qf.Enrollment_TEACHER
 	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
@@ -273,25 +282,25 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[0].ID,
+		UserID:   user.GetID(),
+		CourseID: testCourses[0].GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[1].ID,
+		UserID:   user.GetID(),
+		CourseID: testCourses[1].GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
+		UserID:   user.GetID(),
+		CourseID: testCourses[2].GetID(),
 	}
 	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
+	if err := db.RejectEnrollment(user.GetID(), testCourses[1].GetID()); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_STUDENT
@@ -305,19 +314,19 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	wantCourses := map[uint64]qf.Enrollment_UserStatus{
-		testCourses[0].ID: qf.Enrollment_PENDING,
-		testCourses[1].ID: qf.Enrollment_NONE,
-		testCourses[2].ID: qf.Enrollment_STUDENT,
-		testCourses[3].ID: qf.Enrollment_NONE,
+		testCourses[0].GetID(): qf.Enrollment_PENDING,
+		testCourses[1].GetID(): qf.Enrollment_NONE,
+		testCourses[2].GetID(): qf.Enrollment_STUDENT,
+		testCourses[3].GetID(): qf.Enrollment_NONE,
 	}
 	for _, enrollment := range gotUser.Msg.GetEnrollments() {
-		course := enrollment.Course
-		wantStatus, ok := wantCourses[course.ID]
+		course := enrollment.GetCourse()
+		wantStatus, ok := wantCourses[course.GetID()]
 		if !ok {
-			t.Errorf("unexpected course: %+v", course.ID)
+			t.Errorf("unexpected course: %+v", course.GetID())
 		}
-		if enrollment.Status != wantStatus {
-			t.Errorf("have course %+v want %+v", enrollment.Status, wantStatus)
+		if enrollment.GetStatus() != wantStatus {
+			t.Errorf("have course %+v want %+v", enrollment.GetStatus(), wantStatus)
 		}
 	}
 }
@@ -338,27 +347,27 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	user := qtest.CreateFakeUser(t, db)
 
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[0].ID,
+		UserID:   user.GetID(),
+		CourseID: testCourses[0].GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[1].ID,
+		UserID:   user.GetID(),
+		CourseID: testCourses[1].GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 	query := &qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
+		UserID:   user.GetID(),
+		CourseID: testCourses[2].GetID(),
 	}
 	if err := db.CreateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
 	// user enrollment is rejected for course 1 and enrolled for course 2, still pending for course 0
-	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
+	if err := db.RejectEnrollment(user.GetID(), testCourses[1].GetID()); err != nil {
 		t.Fatal(err)
 	}
 	query.Status = qf.Enrollment_STUDENT
@@ -373,9 +382,9 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	gotCourses := make([]*qf.Course, 0)
 	for _, enrollment := range gotUser.Msg.GetEnrollments() {
 		// since GetUser returns all enrollments, we only keep the student enrollments
-		if enrollment.Status == qf.Enrollment_STUDENT {
-			course := enrollment.Course
-			course.Enrolled = enrollment.Status
+		if enrollment.GetStatus() == qf.Enrollment_STUDENT {
+			course := enrollment.GetCourse()
+			course.Enrolled = enrollment.GetStatus()
 			gotCourses = append(gotCourses, course)
 		}
 	}
@@ -384,7 +393,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	stats = append(stats, qf.Enrollment_STUDENT)
 	course_req := &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_UserID{
-			UserID: user.ID,
+			UserID: user.GetID(),
 		},
 		Statuses: stats,
 	}
@@ -395,12 +404,12 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	gotCourses2 := make([]*qf.Course, 0)
 	for _, enrollment := range enrollments.Msg.GetEnrollments() {
 		// since GetEnrollmentsByUser returns only student enrollments
-		course := enrollment.Course
-		course.Enrolled = enrollment.Status
+		course := enrollment.GetCourse()
+		course.Enrolled = enrollment.GetStatus()
 		gotCourses2 = append(gotCourses2, course)
 	}
 
-	wantCourses, err := db.GetCoursesByUser(user.ID, qf.Enrollment_STUDENT)
+	wantCourses, err := db.GetCoursesByUser(user.GetID(), qf.Enrollment_STUDENT)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -426,10 +435,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
 
-	student1Enrollment := &qf.Enrollment{UserID: student1.ID, CourseID: course.ID}
-	student2Enrollment := &qf.Enrollment{UserID: student2.ID, CourseID: course.ID}
-	taEnrollment := &qf.Enrollment{UserID: ta.ID, CourseID: course.ID}
-	teacherEnrollment := &qf.Enrollment{UserID: teacher.ID, CourseID: course.ID}
+	student1Enrollment := &qf.Enrollment{UserID: student1.GetID(), CourseID: course.GetID()}
+	student2Enrollment := &qf.Enrollment{UserID: student2.GetID(), CourseID: course.GetID()}
+	taEnrollment := &qf.Enrollment{UserID: ta.GetID(), CourseID: course.GetID()}
+	teacherEnrollment := &qf.Enrollment{UserID: teacher.GetID(), CourseID: course.GetID()}
 
 	ctx := context.Background()
 
@@ -450,7 +459,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher accepts pending students {student1, student2, ta} as student, must succeed
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
-	for _, enrollment := range request.Enrollments {
+	for _, enrollment := range request.GetEnrollments() {
 		enrollment.Status = qf.Enrollment_STUDENT
 	}
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
@@ -458,7 +467,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// teacher promotes students to teachers, must succeed
-	for _, enrollment := range request.Enrollments {
+	for _, enrollment := range request.GetEnrollments() {
 		enrollment.Status = qf.Enrollment_TEACHER
 	}
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, Cookie(t, tm, teacher))); err != nil {
@@ -493,12 +502,12 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// check that student1 is now enrolled as student
-	enrol, err := db.GetEnrollmentByCourseAndUser(course.ID, student1.ID)
+	enrol, err := db.GetEnrollmentByCourseAndUser(course.GetID(), student1.GetID())
 	if err != nil {
 		t.Error(err)
 	}
-	if enrol.Status != qf.Enrollment_STUDENT {
-		t.Errorf("expected status %s, got %s", qf.Enrollment_STUDENT, enrol.Status)
+	if enrol.GetStatus() != qf.Enrollment_STUDENT {
+		t.Errorf("expected status %s, got %s", qf.Enrollment_STUDENT, enrol.GetStatus())
 	}
 
 	// teacher rejects student2, must succeed
@@ -513,7 +522,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// ensure that student2 is no longer enrolled in the course
-	if _, err := db.GetEnrollmentByCourseAndUser(course.ID, student2.ID); err == nil {
+	if _, err := db.GetEnrollmentByCourseAndUser(course.GetID(), student2.GetID()); err == nil {
 		t.Error("expected error 'record not found'")
 	}
 
@@ -550,8 +559,8 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
 	if err := db.CreateEnrollment(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
+		UserID:   user.GetID(),
+		CourseID: course.GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -559,7 +568,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	ctx := context.Background()
 	req := &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_UserID{
-			UserID: user.ID,
+			UserID: user.GetID(),
 		},
 	}
 	enrollments, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(req, cookie))
@@ -571,7 +580,7 @@ func TestUpdateCourseVisibility(t *testing.T) {
 	}
 
 	// pending enrollment should be allowed to change visibility, but not status
-	enrollment := enrollments.Msg.Enrollments[0]
+	enrollment := enrollments.Msg.GetEnrollments()[0]
 	enrollment.State = qf.Enrollment_FAVORITE
 	enrollment.Status = qf.Enrollment_TEACHER
 	if _, err := client.UpdateCourseVisibility(ctx, qtest.RequestWithCookie(enrollment, cookie)); err != nil {
@@ -586,13 +595,13 @@ func TestUpdateCourseVisibility(t *testing.T) {
 		t.Errorf("expected 1 enrollment, got %d", len(gotEnrollments.Msg.GetEnrollments()))
 	}
 
-	gotEnrollment := gotEnrollments.Msg.Enrollments[0]
-	if gotEnrollment.State != qf.Enrollment_FAVORITE {
+	gotEnrollment := gotEnrollments.Msg.GetEnrollments()[0]
+	if gotEnrollment.GetState() != qf.Enrollment_FAVORITE {
 		// State should have changed to favorite
-		t.Errorf("expected enrollment state %s, got %s", qf.Enrollment_FAVORITE, gotEnrollment.State)
+		t.Errorf("expected enrollment state %s, got %s", qf.Enrollment_FAVORITE, gotEnrollment.GetState())
 	}
-	if gotEnrollment.Status != qf.Enrollment_PENDING {
+	if gotEnrollment.GetStatus() != qf.Enrollment_PENDING {
 		// Status should *not* have changed
-		t.Errorf("expected enrollment status %s, got %s", qf.Enrollment_NONE, gotEnrollment.Status)
+		t.Errorf("expected enrollment status %s, got %s", qf.Enrollment_NONE, gotEnrollment.GetStatus())
 	}
 }

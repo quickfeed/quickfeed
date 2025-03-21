@@ -8,7 +8,7 @@ import Search from "../Search"
 import { clone, create } from "@bufbuild/protobuf"
 
 
-const GroupForm = (): JSX.Element | null => {
+const GroupForm = () => {
     const state = useAppState()
     const actions = useActions()
 

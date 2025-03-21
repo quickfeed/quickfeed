@@ -5,19 +5,19 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v62/github"
-	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
 type mockOptions struct {
-	orgs      []github.Organization
-	repos     []github.Repository
-	members   []github.Membership
-	groups    map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
-	issues    map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
-	comments  map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
-	reviewers map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	orgs       []github.Organization
+	repos      []github.Repository
+	members    []github.Membership
+	groups     map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
+	issues     map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
+	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
+	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	appConfigs map[string]github.AppConfig                           // map: code -> app config
 }
 
 // DumpState returns a string representation of the mock state.
@@ -28,8 +28,8 @@ func (s mockOptions) DumpState() string {
 	for i, org := range s.orgs {
 		fmt.Fprintf(b, "Org[%d]: %v\n", i, org)
 	}
-	for i, repo := range s.repos {
-		fmt.Fprintf(b, "Repo[%d]: %v\n", i, repo)
+	for i := range s.repos {
+		fmt.Fprintf(b, "Repo[%d]: %v\n", i, s.repos[i])
 	}
 	for i, member := range s.members {
 		fmt.Fprintf(b, "Member[%d]: %v\n", i, member)
@@ -67,7 +67,8 @@ func (s mockOptions) DumpState() string {
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
 func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
-	for _, repo := range s.repos {
+	for i := range s.repos {
+		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
 			return true
 		}
@@ -195,10 +196,16 @@ func WithMockCourses() MockOption {
 	}
 }
 
+func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
+	return func(opts *mockOptions) {
+		opts.appConfigs = configs
+	}
+}
+
 var toOrg = func(course *qf.Course) github.Organization {
 	return github.Organization{
-		ID:    github.Int64(int64(course.ScmOrganizationID)),
-		Login: github.String(slug.Make(course.ScmOrganizationName)),
+		ID:    github.Int64(int64(course.GetScmOrganizationID())),
+		Login: github.String(course.GetScmOrganizationName()),
 	}
 }
 

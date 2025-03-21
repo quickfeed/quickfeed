@@ -1,4 +1,5 @@
 addstore
+adduser
 agpath
 alecthomas
 Alloc
@@ -14,6 +15,7 @@ autograde
 Autograder
 backports
 beatlabs
+binutils
 bitlab
 Bobsen
 Buf's
@@ -55,10 +57,13 @@ espeland
 Etternavn
 excelize
 extendee
+extldflags
 fileop
 Fornavn
 Frøyland
+fsnotify
 fullchain
+getent
 Getwd
 githubv
 GOBIN
@@ -71,21 +76,26 @@ gofumpt
 goimports
 golangci
 Gollum
+GOMODCACHE
 googleapis
 gopath
 gopb
 gopls
+goreleaser
 Gorm
 gormlogger
+GOROOT
 gosecret
 gosimple
 gotest
+GOTOOLCHAIN
 goveralls
 Grafana
 Grafana's
 groupname
 grpc
 grpcpb
+grpcurl
 grpcweb
 Hein
 Hein's
@@ -115,6 +125,7 @@ keyout
 killall
 labstack
 Lamport
+ldflags
 letsencrypt
 Lindhom
 linuxbrew
@@ -130,7 +141,6 @@ maxage
 meling
 migueleliasweb
 mkdir
-multierr
 newkey
 ngrok
 nocheck
@@ -138,6 +148,7 @@ npmtools
 npmwebpack
 NTNU
 oneof
+openrc
 Operativsystemer
 opsys
 orgs
@@ -198,6 +209,7 @@ Studentnr
 subtest
 subtests
 swiftui
+testcache
 testdata
 testdb
 Testersen
@@ -214,6 +226,7 @@ urfave
 URL's
 usermod
 varcheck
+vercheck
 verdana
 Warnf
 webpack's

@@ -9,12 +9,12 @@ type LabProps = {
     assignment: Assignment
 }
 
-const LabResultTable = ({ submission, assignment }: LabProps): JSX.Element => {
+const LabResultTable = ({ submission, assignment }: LabProps) => {
     if (submission && assignment) {
         return (
             <div className="pb-2">
                 <div className="pb-2">
-                    <ProgressBar key={"progress-bar"} courseID={assignment.CourseID.toString()} assignmentIndex={assignment.order - 1} submission={submission} type={Progress.LAB} />
+                    <ProgressBar key={"progress-bar"} courseID={assignment.CourseID.toString()} submission={submission} type={Progress.LAB} />
                 </div>
                 <SubmissionInfo submission={submission} assignment={assignment} />    
                 <SubmissionScores submission={submission} />

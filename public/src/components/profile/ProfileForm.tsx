@@ -6,7 +6,7 @@ import { useHistory } from "react-router"
 import { clone } from "@bufbuild/protobuf"
 import { UserSchema } from "../../../proto/qf/types_pb"
 
-const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
+const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()

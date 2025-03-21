@@ -47,22 +47,7 @@ export const handleStreamError = (context: Context, error: Error): void => {
 }
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
-    let courseID = 0n
-    let assignmentOrder = 0
-    Object.entries(state.assignments).forEach(
-        ([, assignments]) => {
-            const assignment = assignments.find(a => a.ID === submission.AssignmentID)
-            if (assignment && assignment.CourseID !== 0n) {
-                assignmentOrder = assignment.order
-                courseID = assignment.CourseID
-                return
-            }
-        }
-    )
-    if (courseID === 0n) {
-        return
-    }
-    Object.assign(state.submissions[courseID.toString()][assignmentOrder - 1], submission)
+    state.submissions.update(submission)
 }
 
 /**
@@ -156,18 +141,15 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
     }
 }
 
-export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: bigint, statuses: Enrollment_UserStatus[] }): Promise<void> => {
-    const response = await effects.api.client.getEnrollments({
-        FetchMode: {
-            case: "courseID",
-            value: value.courseID,
-        },
-        statuses: value.statuses,
+export const getCourseData = async ({ state, effects }: Context, { courseID }: { courseID: bigint }): Promise<void> => {
+    const response = await effects.api.client.getCourse({
+        courseID,
     })
     if (response.error) {
         return
     }
-    state.courseEnrollments[value.courseID.toString()] = response.message.enrollments
+    state.courseEnrollments[courseID.toString()] = response.message.enrollments
+    state.groups[courseID.toString()] = response.message.groups
 }
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
@@ -350,7 +332,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
     const response = await effects.api.client.updateEnrollments({ enrollments })
     if (response.error) {
         // Fetch enrollments again if update failed in case the user was able to approve some enrollments
-        await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment_UserStatus.PENDING] })
+        await actions.getCourseData({ courseID: state.activeCourse })
         return
     }
     for (const enrollment of state.pendingEnrollments) {
@@ -392,14 +374,6 @@ export const getRepositories = async ({ state, effects }: Context): Promise<void
         }
         state.repositories[courseID.toString()] = response.message.URLs
     }))
-}
-
-export const getGroup = async ({ state, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    const response = await effects.api.client.getGroup({ courseID: enrollment.courseID, groupID: enrollment.groupID })
-    if (response.error) {
-        return
-    }
-    state.userGroup[enrollment.courseID.toString()] = response.message
 }
 
 export const createGroup = async ({ state, actions, effects }: Context, group: CourseGroup): Promise<void> => {
@@ -487,10 +461,6 @@ export const getGroupsByCourse = async ({ state, effects }: Context, courseID: b
 }
 
 export const getUserSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const id = courseID.toString()
-    if (!state.submissions[id]) {
-        state.submissions[id] = []
-    }
     const response = await effects.api.client.getSubmissions({
         CourseID: courseID,
         FetchMode: {
@@ -501,13 +471,7 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
     if (response.error) {
         return
     }
-    // Insert submissions into state.submissions by the assignment order
-    state.assignments[id]?.forEach(assignment => {
-        const submission = response.message.submissions.find(s => s.AssignmentID === assignment.ID)
-        if (!state.submissions[id][assignment.order - 1]) {
-            state.submissions[id][assignment.order - 1] = submission ? submission : create(SubmissionSchema)
-        }
-    })
+    state.submissions.setSubmissions(courseID, "USER", response.message.submissions)
 }
 
 export const getGroupSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
@@ -525,12 +489,7 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
     if (response.error) {
         return
     }
-    state.assignments[courseID.toString()]?.forEach(assignment => {
-        const submission = response.message.submissions.find(sbm => sbm.AssignmentID === assignment.ID)
-        if (submission && assignment.isGroupLab) {
-            state.submissions[courseID.toString()][assignment.order - 1] = submission
-        }
-    })
+    state.submissions.setSubmissions(courseID, "GROUP", response.message.submissions)
 }
 
 export const setActiveCourse = ({ state }: Context, courseID: bigint): void => {
@@ -800,14 +759,6 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         if (isStudent(enrollment) || isTeacher(enrollment)) {
             results.push(actions.getUserSubmissions(courseID))
             results.push(actions.getGroupSubmissions(courseID))
-            const statuses = isStudent(enrollment) ? [Enrollment_UserStatus.STUDENT, Enrollment_UserStatus.TEACHER] : []
-            results.push(actions.getEnrollmentsByCourse({ courseID, statuses }))
-            if (enrollment.groupID > 0) {
-                results.push(actions.getGroup(enrollment))
-            }
-        }
-        if (isTeacher(enrollment)) {
-            results.push(actions.getGroupsByCourse(courseID))
         }
     }
     await Promise.all(results)
@@ -925,6 +876,10 @@ export const setSubmissionFilter = ({ state }: Context, filter: string): void =>
     } else {
         state.submissionFilters.push(filter)
     }
+}
+
+export const setIndividualSubmissionsView = ({ state }: Context, view: boolean): void => {
+    state.individualSubmissionView = view
 }
 
 export const setGroupView = ({ state }: Context, groupView: boolean): void => {

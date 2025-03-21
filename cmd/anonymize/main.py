@@ -45,13 +45,13 @@ class DatabaseAnonymizer:
         # List of tuples (select statement, update statement, functions to generate fake data)
         return [
             Statement(
-                "SELECT DISTINCT organization_id FROM repositories",
-                "UPDATE repositories SET organization_id=? WHERE organization_id=?",
+                "SELECT DISTINCT scm_organization_id FROM repositories",
+                "UPDATE repositories SET scm_organization_id=? WHERE scm_organization_id=?",
                 (self.fake.random_number,),
             ),
             Statement(
                 "SELECT * FROM repositories",
-                "UPDATE repositories SET html_url=?, repository_id=? WHERE id=?",
+                "UPDATE repositories SET html_url=?, scm_repository_id=? WHERE id=?",
                 (
                     self.fake.url,
                     partial(self.fake.random_number, digits=8),
@@ -59,28 +59,26 @@ class DatabaseAnonymizer:
             ),
             Statement(
                 f"SELECT * FROM users WHERE id != {self.excludeUser}",
-                "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=? WHERE id=?",
+                "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=?, refresh_token=? WHERE id=?",
                 (
                     self.fake.name,
                     self.fake.email,
                     self.fake.user_name,
                     partial(self.fake.random_number, digits=6),
                     self.fake.url,
-                ),
-            ),
-            Statement(
-                f"SELECT * FROM remote_identities WHERE user_id != {self.excludeUser}",
-                "UPDATE remote_identities SET access_token=?, remote_id=? WHERE id=?",
-                (
-                    partial(self.fake.password, length=20),
-                    partial(self.fake.random_number, digits=6),
+                    self.fake.password,
                 ),
             ),
             Statement(
                 "SELECT * FROM groups",
-                "UPDATE groups SET name=? WHERE id=?",
-                (self.fake.slug,),
+                "UPDATE groups SET name=?, scm_team_id=? WHERE id=?",
+                (self.fake.slug, partial(self.fake.random_number, digits=8)),
             ),
+            Statement(
+                "SELECT * FROM submissions",
+                "UPDATE submissions SET commit_hash=? WHERE id=?",
+                (partial(self.fake.random_number, digits=5),),
+            )
         ]
 
     def fetch(self, statement: str) -> list:
@@ -106,12 +104,6 @@ class DatabaseAnonymizer:
         self.updateCur.execute("UPDATE users SET is_admin=1 WHERE login=?", (login,))
         self.conn.commit()
 
-    def set_remote_identity(self, user_id: int, remote_id: int):
-        self.updateCur.execute(
-            "UPDATE remote_identities SET remote_id=? WHERE user_id=?",
-            (remote_id, user_id),
-        )
-        self.conn.commit()
 
     def exclude_user(self, login: str) -> bool:
         self.cur.execute("SELECT id FROM users WHERE login=?", (login,))
@@ -195,9 +187,6 @@ def main():
 
     if args.admin is not None:
         db.set_as_admin(args.admin)
-
-    if args.remote is not None:
-        db.set_remote_identity(args.remote[0], args.remote[1])
 
     db.close()
 

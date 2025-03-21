@@ -4,7 +4,7 @@ import { useActions } from "../../overmind"
 import { clone, create } from "@bufbuild/protobuf"
 
 
-const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }): JSX.Element => {
+const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)

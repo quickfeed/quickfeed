@@ -5,7 +5,7 @@ import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 
-const ManageSubmissionStatus = (): JSX.Element => {
+const ManageSubmissionStatus = () => {
     const actions = useActions()
     const state = useAppState()
     const assignment = state.selectedAssignment
@@ -46,7 +46,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
         if (!assignment) {
             return ""
         }
-        const user = state.courseEnrollments[assignment.CourseID.toString()].find(user => user.ID === userID)?.user
+        const user = state.courseEnrollments[assignment.CourseID.toString()].find(enrollment => enrollment.userID === userID)?.user
         if (!user) {
             return ""
         }

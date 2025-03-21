@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { useParams } from 'react-router'
+import { useLocation, useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useAppState, useActions } from '../overmind'
@@ -15,13 +15,15 @@ interface MatchProps {
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
  *  If the user is a teacher, Lab displays the currently selected submission.
  */
-const Lab = (): JSX.Element => {
+const Lab = () => {
 
     const state = useAppState()
     const actions = useActions()
     const { id, lab } = useParams<MatchProps>()
     const courseID = id
     const assignmentID = lab ? BigInt(lab) : BigInt(-1)
+    const location = useLocation()
+    const isGroupLab = location.pathname.includes("group-lab")
 
     useEffect(() => {
         if (!state.isTeacher) {
@@ -39,14 +41,27 @@ const Lab = (): JSX.Element => {
             assignment = state.assignments[courseID].find(a => a.ID === submission?.AssignmentID) ?? null
         } else {
             // Retrieve the student's submission
-            submission = state.submissions[courseID]?.find(s => s.AssignmentID === assignmentID) ?? null
+
             assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
+            if (!assignment) {
+                return <div>Assignment not found</div>
+            }
+            const submissions = state.submissions.ForAssignment(assignment) ?? null
+            if (!submissions) {
+                return <div>No submissions found</div>
+            }
+
+            if (isGroupLab) {
+                submission = submissions.find(s => s.groupID > 0n) ?? null
+            } else {
+                submission = submissions.find(s => s.userID === state.self.ID && s.groupID === 0n) ?? null
+            }
         }
 
         if (assignment && submission) {
             // Confirm both assignment and submission exists before attempting to render
             const review = hasReviews(submission) ? submission.reviews : []
-            let buildLog: JSX.Element[] = []
+            let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
                 buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)
