@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
+func (s *QuickFeedService) internalCreateReview(review *qf.Review) (*qf.Review, error) {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
 	return review, nil
 }
 
-func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
+func (s *QuickFeedService) internalUpdateReview(review *qf.Review) (*qf.Review, error) {
 	if review.ID == 0 {
 		return nil, fmt.Errorf("cannot update review with empty ID")
 	}

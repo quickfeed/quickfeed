@@ -73,7 +73,7 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 		s.logger.Errorf("UpdateUser(userID=%d) failed: %v", userID(ctx), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
-	if _, err = s.updateUser(usr, in.Msg); err != nil {
+	if err = s.editUserProfile(usr, in.Msg); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update user"))
 	}
@@ -309,7 +309,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	err = s.updateGroup(ctx, scmClient, in.Msg)
+	err = s.internalUpdateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
@@ -335,7 +335,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.Msg.GetGroupID(), in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	if err = s.deleteGroup(ctx, scmClient, in.Msg); err != nil {
+	if err = s.internalDeleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
 			s.logger.Error(ctxErr)
@@ -401,7 +401,8 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get submission"))
+		s.logger.Errorf("UpdateSubmission failed: %v", err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
 	for _, grade := range in.Msg.GetGrades() {
 		submission.SetGrade(grade.UserID, grade.Status)
@@ -424,13 +425,13 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	if in.Msg.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
-		if err := s.rebuildSubmission(in.Msg); err != nil {
+		if err := s.internalRebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
 		}
 	} else {
 		// Submission ID == 0 ==> rebuild all for given CourseID and AssignmentID
-		if err := s.rebuildSubmissions(in.Msg); err != nil {
+		if err := s.internalRebuildAllSubmissions(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submissions: %w", err))
 		}
@@ -447,7 +448,7 @@ func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Reques
 	}
 	if err := s.db.CreateBenchmark(in.Msg); err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add benchmark"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create benchmark"))
 	}
 	return connect.NewResponse(in.Msg), nil
 }
@@ -499,7 +500,7 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Reques
 
 // CreateReview adds a new submission review.
 func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.createReview(in.Msg.Review)
+	review, err := s.internalCreateReview(in.Msg.Review)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
@@ -509,7 +510,7 @@ func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[q
 
 // UpdateReview updates a submission review.
 func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.updateReview(in.Msg.Review)
+	review, err := s.internalUpdateReview(in.Msg.Review)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
