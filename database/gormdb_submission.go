@@ -58,6 +58,11 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 			for _, sc := range submission.GetScores() {
 				sc.SubmissionID = submission.GetID()
 			}
+		} else {
+			// Initialize grades for the new submission
+			if err := setGrades(tx, submission); err != nil {
+				return err // will rollback transaction
+			}
 		}
 		// Full save associations is required to save any nested grades
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(submission).Error; err != nil {
@@ -65,6 +70,39 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 		}
 		return nil // will commit transaction
 	})
+}
+
+// setGrades adds grades for any user or group related to the submission
+// which are then saved to the database upon creation of the submission.
+func setGrades(tx *gorm.DB, submission *qf.Submission) error {
+	var userIDs []uint64
+
+	if submission.GetUserID() > 0 {
+		userIDs = []uint64{submission.GetUserID()}
+	}
+	if submission.GetGroupID() > 0 {
+		// Get the UserIDs of the group members
+		tx.Model(&qf.Enrollment{}).Where("group_id = ?", submission.GetGroupID()).Pluck("user_id", &userIDs)
+	}
+
+	// Only want to initialize grades if they are nil
+	// This is to prevent overwriting existing grades
+	if submission.GetGrades() == nil {
+		submission.Grades = make([]*qf.Grade, len(userIDs))
+		for i, userID := range userIDs {
+			submission.Grades[i] = &qf.Grade{
+				UserID: userID,
+			}
+		}
+	}
+
+	// Find the submission's associated assignment
+	var assignment qf.Assignment
+	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+		return err
+	}
+	submission.SetGradesIfApproved(&assignment, submission.GetScore())
+	return nil
 }
 
 // check returns an error if the submission query is invalid; otherwise nil is returned.
