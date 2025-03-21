@@ -4,8 +4,10 @@ package main
 // cm init-env -year 2025 -name "Distributed Systems"
 // cm init-repos
 // cm clone-repo -pull
+// cm clone-repo -repo meling-labs -pull
 // cm clone-repo -repo meling-labs
 // cm clone-repo -repo group-repo
+// cm clone-all-repos
 // cm update-doc-tags
 // cm remove-solution-tags
 // cm gen-readme

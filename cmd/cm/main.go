@@ -9,6 +9,7 @@ const (
 	initEnvCmd            = "init-env"
 	initReposCmd          = "init-repos"
 	cloneRepoCmd          = "clone-repo"
+	cloneAllReposCmd      = "clone-all-repos"
 	updateDocTagsCmd      = "update-doc-tags"
 	removeSolutionTagsCmd = "remove-solution-tags"
 	genReadmeCmd          = "gen-readme"
@@ -30,6 +31,8 @@ func main() {
 		initRepos()
 	case cloneRepoCmd:
 		cloneRepo(args)
+	case cloneAllReposCmd:
+		cloneAllRepos()
 	case updateDocTagsCmd:
 		updateDocTags(args)
 	case removeSolutionTagsCmd:
