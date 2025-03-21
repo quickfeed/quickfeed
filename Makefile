@@ -6,8 +6,6 @@
 
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
-protopatch			:= patch/go.proto
-protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
 
 # necessary when target is not tied to a specific file
 .PHONY: download brew version-check install ui proto test qcm scm
@@ -42,11 +40,8 @@ ui-update: version-check
 	@echo "Running npm install and webpack"
 	@cd public; npm i; webpack
 
-$(protopatch): $(protopatch-original)
-	@echo "Copying $(protopatch-original) to $(protopatch)"
-	@cp -f $(protopatch-original) $(protopatch)
-
-proto: $(protopatch)
+proto:
+	buf dep update
 	buf generate --template buf.gen.yaml
 
 # TODO(meling): Split the proto target to avoid generating too new typescript... Need to fix #1147 first; after which we should merge this target with the proto target.
