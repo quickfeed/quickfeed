@@ -57,6 +57,15 @@ func (s *Submission) SetGradeAll(status Submission_Status) {
 	}
 }
 
+// SetGradesIfApproved marks the submission approved for all group members
+// or a single user if the assignment is autoapprove and
+// the score is greater or equal to the assignment's score limit.
+func (s *Submission) SetGradesIfApproved(a *Assignment, score uint32) {
+	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
+		s.SetGradeAll(Submission_APPROVED)
+	}
+}
+
 // NewestSubmissionDate returns the submission's submission date if newer than the provided date.
 // Otherwise, the provided date is returned, i.e., if it is newer.
 func (s *Submission) NewestSubmissionDate(submissionDate time.Time) time.Time {

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func TestSubmissionStatus(t *testing.T) {
+func TestSetGradesIfApproved(t *testing.T) {
 	const (
 		T = true
 		F = false
@@ -56,9 +56,11 @@ func TestSubmissionStatus(t *testing.T) {
 	for _, test := range tests {
 		name := qtest.Name("User/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.GetAutoApprove(), test.assignment.GetScoreLimit(), test.submission.GetGrades(), test.submission.GetScore(), test.score)
 		t.Run(name, func(t *testing.T) {
-			got := test.assignment.SubmissionStatus(test.submission, test.score)
+			sub := test.submission
+			sub.SetGradesIfApproved(test.assignment, test.score)
+			got := sub.GetGrades()
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
-				t.Errorf("SubmissionStatus(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
+				t.Errorf("SetGradesIfApproved(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
 			}
 		})
 	}
@@ -113,9 +115,11 @@ func TestSubmissionStatus(t *testing.T) {
 	for _, test := range groupTests {
 		name := qtest.Name("Group/"+test.name, []string{"AutoApprove", "ScoreLimit", "PrevStatus", "PrevScore", "Score"}, test.assignment.GetAutoApprove(), test.assignment.GetScoreLimit(), test.submission.GetGrades(), test.submission.GetScore(), test.score)
 		t.Run(name, func(t *testing.T) {
-			got := test.assignment.SubmissionStatus(test.submission, test.score)
+			sub := test.submission
+			sub.SetGradesIfApproved(test.assignment, test.score)
+			got := sub.GetGrades()
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
-				t.Errorf("SubmissionStatus(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
+				t.Errorf("SetGradesIfApproved(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
 			}
 		})
 	}
