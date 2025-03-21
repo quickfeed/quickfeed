@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"cmp"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/internal/env"
 )
 
 // initEnv initializes the environment variables for the course.
@@ -107,36 +108,13 @@ func exists(filename string) bool {
 // It will not override a variable that already exists in the environment.
 func loadEnv() error {
 	envFile := envFilePath()
-	file, err := os.Open(envFile)
-	if err != nil {
+	if err := env.Load(envFile); err != nil {
 		return err
-	}
-	defer file.Close() // skipcq: GO-S2307
-
-	fmt.Printf("Loading environment variables from %s\n", lastDirFile(envFile))
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if ignore(line) {
-			continue
-		}
-		key, val, found := strings.Cut(line, "=")
-		if !found {
-			continue
-		}
-		k := strings.TrimSpace(key)
-		if os.Getenv(k) != "" {
-			// Ignore .env entries already set in the environment.
-			continue
-		}
-		val = os.ExpandEnv(strings.Trim(strings.TrimSpace(val), `"`))
-		os.Setenv(k, val)
 	}
 	if err := checkRequiredEnv(); err != nil {
 		return err
 	}
-	return scanner.Err()
+	return nil
 }
 
 func checkRequiredEnv() error {
@@ -146,11 +124,6 @@ func checkRequiredEnv() error {
 		}
 	}
 	return nil
-}
-
-func ignore(line string) bool {
-	trimmedLine := strings.TrimSpace(line)
-	return trimmedLine == "" || strings.HasPrefix(trimmedLine, "#")
 }
 
 func envFilePath() string {
