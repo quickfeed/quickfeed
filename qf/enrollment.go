@@ -13,15 +13,15 @@ const gracePeriod time.Duration = time.Duration(2 * time.Hour)
 // UpdateSlipDays updates the number of slip days for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
-		return fmt.Errorf("invariant violation (enrollment.CourseID != assignment.CourseID) (%d != %d)", m.CourseID, assignment.CourseID)
+		return fmt.Errorf("invariant violation (enrollment.GetCourseID() != assignment.GetCourseID()) (%d != %d)", m.GetCourseID(), assignment.GetCourseID())
 	}
 	if assignment.GetID() != submission.GetAssignmentID() {
-		return fmt.Errorf("invariant violation (assignment.ID != submission.AssignmentID) (%d != %d)", assignment.ID, submission.AssignmentID)
+		return fmt.Errorf("invariant violation (assignment.GetID() != submission.GetAssignmentID()) (%d != %d)", assignment.GetID(), submission.GetAssignmentID())
 	}
 	sinceDeadline := assignment.SinceDeadline(submission.GetBuildInfo().GetSubmissionDate().AsTime())
 
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
-	if submission.Score < assignment.ScoreLimit && !submission.IsApproved(m.GetUserID()) && sinceDeadline > 0 {
+	if submission.GetScore() < assignment.GetScoreLimit() && !submission.IsApproved(m.GetUserID()) && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slip days for this assignment
 		slpDays, slpHours := uint32(sinceDeadline/days), sinceDeadline%days
 		// slpHours is hours after deadline, excluding subsequent full-day slip days after deadline
@@ -36,15 +36,15 @@ func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submissi
 // internalUpdateSlipDays updates the number of slip days for the given assignment.
 func (m *Enrollment) internalUpdateSlipDays(assignmentID uint64, slipDays uint32) {
 	for _, val := range m.GetUsedSlipDays() {
-		if val.AssignmentID == assignmentID {
+		if val.GetAssignmentID() == assignmentID {
 			val.UsedDays = slipDays
 			return
 		}
 	}
 	// not found; add new entry to the slice
-	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{
+	m.UsedSlipDays = append(m.GetUsedSlipDays(), &UsedSlipDays{
 		AssignmentID: assignmentID,
-		EnrollmentID: m.ID,
+		EnrollmentID: m.GetID(),
 		UsedDays:     slipDays,
 	})
 }

@@ -49,7 +49,7 @@ func TestLoadRunScript(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if len(runSh) == 0 {
+	if runSh == "" {
 		t.Error("run script is empty")
 	}
 	runData.Assignment = &qf.Assignment{Name: "lab2"}
@@ -57,7 +57,7 @@ func TestLoadRunScript(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if len(runSh) == 0 {
+	if runSh == "" {
 		t.Error("run script is empty")
 	}
 }

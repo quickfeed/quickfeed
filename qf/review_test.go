@@ -108,8 +108,8 @@ var reviewScoreTests = []struct {
 func TestComputeScore(t *testing.T) {
 	for _, reviewTest := range reviewScoreTests {
 		reviewTest.review.ComputeScore()
-		if reviewTest.review.Score != reviewTest.score {
-			t.Fatalf("Computed wrong review score: expected %d, got %d", reviewTest.score, reviewTest.review.Score)
+		if reviewTest.review.GetScore() != reviewTest.score {
+			t.Fatalf("Computed wrong review score: expected %d, got %d", reviewTest.score, reviewTest.review.GetScore())
 		}
 	}
 }

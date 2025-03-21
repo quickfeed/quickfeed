@@ -29,14 +29,16 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
 
     return (
         <>
-            <li role={"button"} onClick={() => navigateTo(enrollment.courseID)} className="activeClass">
-                <div className="col" id="title">
-                    {course?.code}
-                </div>
-                <div className="col" title="icon">
-                    <i className={active ? " icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"} />
-                </div>
-            </li>
+            <div role="button" onClick={() => navigateTo(enrollment.courseID)} aria-hidden="true">
+                <li className="activeClass">
+                    <div className="col" id="title">
+                        {course?.code}
+                    </div>
+                    <div className="col" title="icon">
+                        <i className={active ? " icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"} />
+                    </div>
+                </li>
+            </div>
             <div className={active ? Status.ActiveLab : Status.Inactive}>
                 {active && isStudent(enrollment) ? <NavBarLabs /> : null}
                 {active && isTeacher(enrollment) ? <NavBarTeacher /> : null}

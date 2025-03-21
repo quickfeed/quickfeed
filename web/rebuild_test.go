@@ -121,7 +121,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	teacher := qtest.CreateFakeUser(t, db)
-	err = db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
+	err = db.UpdateUser(&qf.User{ID: teacher.GetID(), IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,11 +138,11 @@ func TestRebuildSubmissions(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student2, &course)
 
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.ScmOrganizationName}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
 	repo1 := qf.Repository{
 		ScmOrganizationID: 1,
 		ScmRepositoryID:   1,
-		UserID:            student1.ID,
+		UserID:            student1.GetID(),
 		RepoType:          qf.Repository_USER,
 		HTMLURL:           repo.StudentRepoURL("user"),
 	}
@@ -152,7 +152,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	repo2 := qf.Repository{
 		ScmOrganizationID: 1,
 		ScmRepositoryID:   2,
-		UserID:            student2.ID,
+		UserID:            student2.GetID(),
 		RepoType:          qf.Repository_USER,
 	}
 	if err := db.CreateRepository(&repo2); err != nil {
@@ -161,7 +161,7 @@ func TestRebuildSubmissions(t *testing.T) {
 
 	ctx := context.Background()
 	assignment := &qf.Assignment{
-		CourseID:         course.ID,
+		CourseID:         course.GetID(),
 		Name:             "lab1",
 		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
@@ -176,20 +176,20 @@ func TestRebuildSubmissions(t *testing.T) {
 
 	if err = db.CreateSubmission(&qf.Submission{
 		AssignmentID: 1,
-		UserID:       student1.ID,
+		UserID:       student1.GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err = db.CreateSubmission(&qf.Submission{
 		AssignmentID: 1,
-		UserID:       student2.ID,
+		UserID:       student2.GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// try to rebuild non-existing submission
 	rebuildRequest := connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
-		AssignmentID: assignment.ID,
+		AssignmentID: assignment.GetID(),
 		SubmissionID: 123,
 	}}
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err == nil {
@@ -201,7 +201,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
-	submissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
+	submissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.GetID()})
 	if err != nil {
 		t.Fatalf("Failed to get created submissions: %s", err)
 	}
@@ -209,17 +209,17 @@ func TestRebuildSubmissions(t *testing.T) {
 	// make sure wrong assignment ID returns error
 	request := &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{}}
 
-	request.Msg.SubmissionID = course.ID
+	request.Msg.SubmissionID = course.GetID()
 	request.Msg.AssignmentID = 1337
 	if _, err = q.RebuildSubmissions(ctx, request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
-	request.Msg.AssignmentID = assignment.ID
+	request.Msg.AssignmentID = assignment.GetID()
 	if _, err = q.RebuildSubmissions(ctx, request); err != nil {
 		t.Fatalf("Failed to rebuild submissions: %s", err)
 	}
-	rebuiltSubmissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
+	rebuiltSubmissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.GetID()})
 	if err != nil {
 		t.Fatalf("Failed to get created submissions: %s", err)
 	}

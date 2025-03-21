@@ -18,13 +18,13 @@ func TestCreateUpdateReview(t *testing.T) {
 	user, course, assignment := setupCourseAssignment(t, db)
 
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 	// confirm that the submission is in the database
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,8 +88,8 @@ func updateSubmission(t *testing.T, db database.Database, wantReview *qf.Review)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(sub.Reviews) != 1 {
-		t.Fatalf("have %d reviews want %d", len(sub.Reviews), 1)
+	if len(sub.GetReviews()) != 1 {
+		t.Fatalf("have %d reviews want %d", len(sub.GetReviews()), 1)
 	}
 	var gotReview *qf.Review
 	for _, r := range sub.GetReviews() {

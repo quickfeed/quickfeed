@@ -13,13 +13,13 @@ import (
 
 // updateEnrollment changes the status of the given course enrollment.
 func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
-	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.GetCourseID(), request.GetUserID())
 	if err != nil {
 		return err
 	}
 	// log changes to teacher status
 	if enrollment.IsTeacher() || request.IsTeacher() {
-		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.UserID, enrollment.Status, request.Status)
+		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.GetUserID(), enrollment.GetStatus(), request.GetStatus())
 	}
 
 	switch {
@@ -39,31 +39,31 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
-		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.Code, user.Login, err)
+	if err := s.db.RejectEnrollment(user.GetID(), course.GetID()); err != nil {
+		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.GetCode(), user.GetLogin(), err)
 		// continue with other delete operations
 	}
 	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to get %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	if repo == nil {
-		s.logger.Debugf("No %s repository found for %q: %v", course.Code, user.Login, err)
+		s.logger.Debugf("No %s repository found for %q: %v", course.GetCode(), user.GetLogin(), err)
 		// cannot continue without repository information
 		return nil
 	}
 	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, user.Login, err)
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), user.GetLogin(), err)
 		// continue with other delete operations
 	}
 	// when deleting a user, remove github repository and organization membership as well
 	opt := &scm.RejectEnrollmentOptions{
 		User:           user.GetLogin(),
-		OrganizationID: repo.ScmOrganizationID,
-		RepositoryID:   repo.ScmRepositoryID,
+		OrganizationID: repo.GetScmOrganizationID(),
+		RepositoryID:   repo.GetScmRepositoryID(),
 	}
 	if err := sc.RejectEnrollment(ctx, opt); err != nil {
-		s.logger.Debugf("rejectEnrollment: failed to remove %s from %q (expected behavior): %v", user.Login, course.Code, err)
+		s.logger.Debugf("rejectEnrollment: failed to remove %s from %q (expected behavior): %v", user.GetLogin(), course.GetCode(), err)
 	}
 	return nil
 }
@@ -77,41 +77,41 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	// which could happen if accepting a previously rejected student
 	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to get %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	// Use enrollment with full updated info to ensure that gorm Select.Updates works correctly.
 	query.Status = qf.Enrollment_STUDENT
-	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
+	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.GetLogin(), course.GetCode(), repo != nil)
 	if repo != nil {
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
 	}
 	// create user scmRepo and add user to course organization as a member
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
-		Organization: course.ScmOrganizationName,
+		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
-	s.logger.Debugf("Enrolling student %q in %s; repo update done", user.Login, course.Code)
+	s.logger.Debugf("Enrolling student %q in %s; repo update done", user.GetLogin(), course.GetCode())
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
 		ScmOrganizationID: course.GetScmOrganizationID(),
 		ScmRepositoryID:   scmRepo.ID,
-		UserID:            user.ID,
+		UserID:            user.GetID(),
 		HTMLURL:           scmRepo.HTMLURL,
 		RepoType:          qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(&userRepo); err != nil {
-		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
 	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
 		// log error, but continue with enrollment; we can manually accept invitations later
-		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
+		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.GetCode(), user.GetLogin(), err)
 	}
 	return s.db.UpdateEnrollment(query)
 }
@@ -123,11 +123,11 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, query 
 	query.Status = qf.Enrollment_TEACHER
 	// make owner, remove from students, add to teachers
 	if _, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
-		Organization: course.ScmOrganizationName,
+		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_TEACHER,
 	}); err != nil {
-		return fmt.Errorf("failed to update %s repository membership for teacher %q: %w", course.Code, user.Login, err)
+		return fmt.Errorf("failed to update %s repository membership for teacher %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	return s.db.UpdateEnrollment(query)
 }
@@ -142,7 +142,7 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	})
 	if err != nil {
 		// log error, but continue to update enrollment; we can manually revoke teacher access later
-		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
+		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.GetCode(), user.GetLogin(), err)
 	}
 	query.Status = qf.Enrollment_STUDENT
 	return s.db.UpdateEnrollment(query)
@@ -178,18 +178,18 @@ func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint6
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	skipGroup := map[uint64]bool{0: true} // skip group ID 0 (no group)
 	om := newOrderMap(course.GetAssignments())
-	for _, enrollment := range course.Enrollments {
-		if skipGroup[enrollment.GroupID] {
+	for _, enrollment := range course.GetEnrollments() {
+		if skipGroup[enrollment.GetGroupID()] {
 			continue // include group enrollment only once
 		}
-		skipGroup[enrollment.GroupID] = true
+		skipGroup[enrollment.GetGroupID()] = true
 		// Note: we (intentionally) use enrollment.GroupID as the key to the map here.
 		// This is primarily a convenience for the frontend, which can then use
 		// the group ID as the key to the map.
-		submissionsMap[enrollment.GroupID] = &qf.Submissions{
+		submissionsMap[enrollment.GetGroupID()] = &qf.Submissions{
 			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
 				// include group submissions for this enrollment
-				return submission.ByGroup(enrollment.GroupID)
+				return submission.ByGroup(enrollment.GetGroupID())
 			}),
 		}
 	}
@@ -201,11 +201,11 @@ func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint6
 func makeUserResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	om := newOrderMap(course.GetAssignments())
-	for _, enrollment := range course.Enrollments {
-		submissionsMap[enrollment.ID] = &qf.Submissions{
+	for _, enrollment := range course.GetEnrollments() {
+		submissionsMap[enrollment.GetID()] = &qf.Submissions{
 			Submissions: choose(submission, om, func(submission *qf.Submission) bool {
 				// include individual submissions for this enrollment
-				return submission.ByUser(enrollment.UserID)
+				return submission.ByUser(enrollment.GetUserID())
 			}),
 		}
 	}
@@ -217,11 +217,11 @@ func makeUserResults(course *qf.Course, submission []*qf.Submission) map[uint64]
 func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
 	submissionsMap := make(map[uint64]*qf.Submissions)
 	om := newOrderMap(course.GetAssignments())
-	for _, enrollment := range course.Enrollments {
-		submissionsMap[enrollment.ID] = &qf.Submissions{
+	for _, enrollment := range course.GetEnrollments() {
+		submissionsMap[enrollment.GetID()] = &qf.Submissions{
 			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
 				// include individual and group submissions for this enrollment
-				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
+				return submission.ByUser(enrollment.GetUserID()) || submission.ByGroup(enrollment.GetGroupID())
 			}),
 		}
 	}
@@ -237,7 +237,7 @@ func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Subm
 	}
 	// sort submissions by assignment order
 	sort.Slice(subs, func(i, j int) bool {
-		return order.Less(subs[i].AssignmentID, subs[j].AssignmentID)
+		return order.Less(subs[i].GetAssignmentID(), subs[j].GetAssignmentID())
 	})
 	return subs
 }
@@ -267,9 +267,9 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
 func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp scm.SCM, user *qf.User, organizationName string) error {
-	user, err := s.db.GetUser(user.ID)
+	user, err := s.db.GetUser(user.GetID())
 	if err != nil {
-		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
+		return fmt.Errorf("failed to get user %d: %w", user.GetID(), err)
 	}
 	newRefreshToken, err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
 		Login:        user.GetLogin(),
@@ -277,7 +277,7 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 		RefreshToken: user.GetRefreshToken(),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to accept invites for %s: %w", user.Login, err)
+		return fmt.Errorf("failed to accept invites for %s: %w", user.GetLogin(), err)
 	}
 	// Save the user's new refresh token in the database.
 	user.RefreshToken = newRefreshToken
@@ -293,7 +293,7 @@ type orderMap map[uint64]uint32
 func newOrderMap(assignments []*qf.Assignment) *orderMap {
 	om := make(orderMap)
 	for _, assignment := range assignments {
-		om[assignment.ID] = assignment.Order
+		om[assignment.GetID()] = assignment.GetOrder()
 	}
 	return &om
 }
