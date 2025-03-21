@@ -3,7 +3,7 @@ import Alerts from '../components/alerts/Alerts'
 
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
-const AboutPage = (): JSX.Element => {
+const AboutPage = () => {
     return (
         <div>
             <div className="banner">
@@ -66,7 +66,7 @@ const AboutPage = (): JSX.Element => {
                         <img
                             className="img-circle"
                             src="/assets/img/Aplus2.png"
-                            alt="A+ image" style={{ width: "140px", height: "140px" }} />
+                            alt="A+ grade" style={{ width: "140px", height: "140px" }} />
                         <h2>Fair Grading</h2>
                         <p>
                             On due date of an assignment, the most recent version
@@ -106,7 +106,7 @@ const AboutPage = (): JSX.Element => {
                             <img
                                 className="featurette-image img-responsive about"
                                 src="/assets/img/intro1.png"
-                                alt="Generic placeholder image" />
+                                alt="test results" />
                         </div>
                     </div>
                 </section>
@@ -119,7 +119,7 @@ const AboutPage = (): JSX.Element => {
                             <img
                                 className="featurette-image img-responsive about"
                                 src="/assets/img/intro3.png"
-                                alt="Generic placeholder image" />
+                                alt="commits" />
                         </div>
                         <div key="c2r2" className="col-md-7">
                             <h2 className="featurette-heading">
@@ -156,7 +156,7 @@ const AboutPage = (): JSX.Element => {
                             <img
                                 className="featurette-image img-responsive about"
                                 src="/assets/img/intro2.png"
-                                alt="Generic placeholder image" />
+                                alt="lab overview" />
                         </div>
                     </div>
                 </section>
@@ -169,7 +169,7 @@ const AboutPage = (): JSX.Element => {
                             <img
                                 className="featurette-image img-responsive about"
                                 src="/assets/img/intro4.png"
-                                alt="Generic placeholder image" />
+                                alt="approvelist" />
                         </div>
                         <div key="c2r4" className="col-md-7">
                             <h2 className="featurette-heading">

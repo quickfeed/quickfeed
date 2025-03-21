@@ -29,16 +29,6 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 	return context.WithTimeout(context.Background(), timeout)
 }
 
-// SubmissionStatus returns the existing grade submission status, or an approved submission status
-// if the score of the latest submission is sufficient to autoapprove the assignment.
-func (a *Assignment) SubmissionStatus(latest *Submission, score uint32) []*Grade {
-	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
-		latest.SetGradeAll(Submission_APPROVED)
-	}
-	// keep existing status if already approved/revision/rejected
-	return latest.GetGrades()
-}
-
 // CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 	clone := proto.Clone(a).(*Assignment)

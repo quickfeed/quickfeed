@@ -166,7 +166,7 @@ func TestParse(t *testing.T) {
 	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(assignments[1].GradingBenchmarks, wantCriteria, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(assignments[1].GetGradingBenchmarks(), wantCriteria, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch when parsing criteria (-want +got):\n%s", diff)
 	}
 }
@@ -265,7 +265,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	assignments, _, err := readTestsRepositoryContent(testsDir, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +279,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	}
 
 	// Read the assignments from the database
-	gotAssignments, err := db.GetAssignmentsByCourse(course.ID)
+	gotAssignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	writeFile(t, testsDir, "lab3", "assignment.yml", y3)
 
 	// Parse the new assignment
-	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.ID)
+	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +308,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	}
 
 	// Read the assignments from the database
-	gotNewAssignments, err := db.GetAssignmentsByCourse(course.ID)
+	gotNewAssignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}

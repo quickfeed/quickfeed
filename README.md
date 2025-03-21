@@ -17,9 +17,6 @@ On Unix systems with homebrew you should be able to install development tools us
 
 ```shell
 % make brew
-% make devtools
-# Make sure the bin folder with our tools is in your PATH.
-% export PATH=$PATH:$PWD/bin
 ```
 
 For non-brew users, please inspect the `Makefile` to determine instructions for your system.

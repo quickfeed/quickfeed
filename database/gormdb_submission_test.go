@@ -28,7 +28,7 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 	assignment := &qf.Assignment{
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Order:    1,
 	}
 	if err := db.CreateAssignment(assignment); err != nil {
@@ -80,14 +80,14 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	user, course, assignment := setupCourseAssignment(t, db)
 
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		Score:        80,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,11 +95,11 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		t.Errorf("have %d submissions want %d", len(submissions), 1)
 	}
 	want := &qf.Submission{
-		ID:           submissions[0].ID,
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		ID:           submissions[0].GetID(),
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		Score:        80,
-		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
+		Grades:       []*qf.Grade{{UserID: user.GetID(), SubmissionID: submissions[0].GetID(), Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -109,23 +109,23 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 
 	// Set score to zero after having recorded a score of 80
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		Score:        0,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	submissions, err = db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err = db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want = &qf.Submission{
-		ID:           submissions[0].ID,
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		ID:           submissions[0].GetID(),
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		Score:        0,
-		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
+		Grades:       []*qf.Grade{{UserID: user.GetID(), SubmissionID: submissions[0].GetID(), Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -144,14 +144,14 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	// check that it is still approved after using create method
 
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// confirm that the submission is in the database
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,10 +160,10 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	}
 
 	want := &qf.Submission{
-		ID:           submissions[0].ID,
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: submissions[0].ID, Status: qf.Submission_NONE}},
+		ID:           submissions[0].GetID(),
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+		Grades:       []*qf.Grade{{UserID: user.GetID(), SubmissionID: submissions[0].GetID(), Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -171,7 +171,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
-	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.GetUserID()) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
@@ -180,24 +180,24 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err = db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.GetUserID()) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].SetGrade(user.ID, qf.Submission_APPROVED)
+	submissions[0].SetGrade(user.GetID(), qf.Submission_APPROVED)
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err = db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_APPROVED {
+	if submissions[0].GetStatusByUser(want.GetUserID()) != qf.Submission_APPROVED {
 		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }
@@ -227,7 +227,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 
 	// create a submission for the assignment for non-existing user; should fail
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
+		AssignmentID: assignment.GetID(),
 		UserID:       3,
 	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
@@ -235,14 +235,14 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 
 	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// confirm that the submission and its build info is in the database
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,10 +251,10 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 	gotSubmission := submissions[0]
 	wantSubmission := &qf.Submission{
-		ID:           gotSubmission.ID,
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Grades:       []*qf.Grade{{UserID: user.ID, SubmissionID: gotSubmission.ID, Status: qf.Submission_NONE}},
+		ID:           gotSubmission.GetID(),
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+		Grades:       []*qf.Grade{{UserID: user.GetID(), SubmissionID: gotSubmission.GetID(), Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -293,16 +293,16 @@ func TestGormDBInsertBadSubmissions(t *testing.T) {
 	user, _, assignment := setupCourseAssignment(t, db)
 
 	// create a submission for the assignment for non-existing user; should fail
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.ID, UserID: 3}); !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.GetID(), UserID: 3}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 	// create a submission for the assignment for non-existing user; should fail
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.ID, GroupID: 9}); !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.GetID(), GroupID: 9}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 
 	// create another submission for the assignment; now it should succeed
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.ID, UserID: user.ID}); err != nil {
+	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -326,21 +326,21 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	// Create some assignments
 	assignment1 := qf.Assignment{
 		Order:    1,
-		CourseID: c1.ID,
+		CourseID: c1.GetID(),
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
 	assignment2 := qf.Assignment{
 		Order:    2,
-		CourseID: c1.ID,
+		CourseID: c1.GetID(),
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
 	assignment3 := qf.Assignment{
 		Order:    1,
-		CourseID: c2.ID,
+		CourseID: c2.GetID(),
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
 		t.Fatal(err)
@@ -349,8 +349,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	// Create some submissions. We need IDs set here to be able
 	// to compare local submission structs with database structs.
 	submission1 := qf.Submission{
-		UserID:       user.ID,
-		AssignmentID: assignment1.ID,
+		UserID:       user.GetID(),
+		AssignmentID: assignment1.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -358,8 +358,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := qf.Submission{
-		UserID:       user.ID,
-		AssignmentID: assignment1.ID,
+		UserID:       user.GetID(),
+		AssignmentID: assignment1.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -367,8 +367,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := qf.Submission{
-		UserID:       user.ID,
-		AssignmentID: assignment2.ID,
+		UserID:       user.GetID(),
+		AssignmentID: assignment2.GetID(),
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
@@ -378,7 +378,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetLastSubmissions(c1.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(c1.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -386,14 +386,14 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
-	data, err := db.GetLastSubmissions(c1.ID, &qf.Submission{UserID: user.ID})
+	data, err := db.GetLastSubmissions(c1.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetLastSubmissions(c2.ID, &qf.Submission{UserID: user.ID})
+	data, err = db.GetLastSubmissions(c2.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -429,14 +429,14 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 		},
 	}
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		BuildInfo:    buildInfo,
 		Scores:       scores,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -444,13 +444,13 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 
-	buildInfo.SubmissionID = submissions[0].ID
+	buildInfo.SubmissionID = submissions[0].GetID()
 	buildInfo.ID = 1
-	if diff := cmp.Diff(buildInfo, submissions[0].BuildInfo, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(buildInfo, submissions[0].GetBuildInfo(), protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same build info, but got (-got +want):\n%s", diff)
 	}
 	if diff := cmp.Diff(
-		submissions[0].Scores,
+		submissions[0].GetScores(),
 		scores,
 		protocmp.Transform(),
 		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID", "Secret")); diff != "" {
@@ -459,7 +459,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 
 	// buildInfo record must be updated (have the same ID as before) instead
 	// of saving a duplicate
-	oldSubmissionID := submissions[0].ID
+	oldSubmissionID := submissions[0].GetID()
 	updatedBuildInfo := &score.BuildInfo{
 		BuildDate: qtest.Timestamp(t, "2022-11-10T15:00:00"),
 		BuildLog:  "Updated",
@@ -475,7 +475,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	if err := db.CreateSubmission(submissions[0]); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err = db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -483,12 +483,12 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 
-	updatedBuildInfo.ID = submissions[0].BuildInfo.ID
+	updatedBuildInfo.ID = submissions[0].GetBuildInfo().GetID()
 	updatedBuildInfo.SubmissionID = oldSubmissionID
-	if diff := cmp.Diff(submissions[0].BuildInfo, updatedBuildInfo, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions[0].GetBuildInfo(), updatedBuildInfo, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected updated build info, but got (-sub +want):\n%s", diff)
 	}
-	if diff := cmp.Diff(submissions[0].Scores, scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
+	if diff := cmp.Diff(submissions[0].GetScores(), scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
 		t.Errorf("Incorrect scores after update (-want, +got):\n%s", diff)
 	}
 
@@ -505,8 +505,8 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 	user, course, assignment := setupCourseAssignment(t, db)
 
 	if err := db.CreateSubmission(&qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
 		BuildInfo: &score.BuildInfo{
 			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
 		},
@@ -515,32 +515,32 @@ func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 	}
 
 	want := &qf.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+		Grades:       []*qf.Grade{{UserID: user.GetID(), Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 		BuildInfo: &score.BuildInfo{
 			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
 		},
 	}
-	submission, err := db.GetSubmission(&qf.Submission{UserID: user.ID})
+	submission, err := db.GetSubmission(&qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want.ID = submission.ID
-	want.Grades[0].SubmissionID = submission.ID
+	want.ID = submission.GetID()
+	want.Grades[0].SubmissionID = submission.GetID()
 	want.BuildInfo.ID = 1
-	want.BuildInfo.SubmissionID = submission.ID
+	want.BuildInfo.SubmissionID = submission.GetID()
 	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.GetID(), &qf.Submission{UserID: user.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want.ID = submissions[0].ID
+	want.ID = submissions[0].GetID()
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
@@ -560,21 +560,21 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	// Create some assignments
 	assignment1 := qf.Assignment{
 		Order:    1,
-		CourseID: c1.ID,
+		CourseID: c1.GetID(),
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
 	assignment2 := qf.Assignment{
 		Order:    2,
-		CourseID: c1.ID,
+		CourseID: c1.GetID(),
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
 	assignment3 := qf.Assignment{
 		Order:    1,
-		CourseID: c2.ID,
+		CourseID: c2.GetID(),
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
 		t.Fatal(err)
@@ -584,8 +584,8 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	user := qtest.CreateFakeUser(t, db)
 	// create a new submission
 	submission := qf.Submission{
-		AssignmentID: assignment1.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment1.GetID(),
+		UserID:       user.GetID(),
 	}
 	if err := db.CreateSubmission(&submission); err != nil {
 		t.Fatal(err)
@@ -593,8 +593,8 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 
 	// create a new submission
 	submission2 := qf.Submission{
-		AssignmentID: assignment2.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment2.GetID(),
+		UserID:       user.GetID(),
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -602,8 +602,8 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 
 	// create a new submission
 	submission3 := qf.Submission{
-		AssignmentID: assignment3.ID,
-		UserID:       user.ID,
+		AssignmentID: assignment3.GetID(),
+		UserID:       user.GetID(),
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -617,31 +617,31 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	}{
 		{
 			name:         "assignment1, course1",
-			courseID:     c1.ID,
-			failCourseID: c2.ID,
+			courseID:     c1.GetID(),
+			failCourseID: c2.GetID(),
 			want:         &submission,
 		},
 		{
 			name:         "assignment2, course1",
-			courseID:     c1.ID,
-			failCourseID: c2.ID,
+			courseID:     c1.GetID(),
+			failCourseID: c2.GetID(),
 			want:         &submission2,
 		},
 		{
 			name:         "assignment3, course2",
-			courseID:     c2.ID,
-			failCourseID: c1.ID,
+			courseID:     c2.GetID(),
+			failCourseID: c1.GetID(),
 			want:         &submission3,
 		},
 	}
 
 	for _, test := range tests {
 		// Test that submission is returned only for the correct course
-		_, err := db.GetLastSubmission(test.failCourseID, &qf.Submission{ID: test.want.ID})
+		_, err := db.GetLastSubmission(test.failCourseID, &qf.Submission{ID: test.want.GetID()})
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			t.Errorf("Expected error: %v, got: %v", gorm.ErrRecordNotFound, err)
 		}
-		gotSubmission, err := db.GetLastSubmission(test.courseID, &qf.Submission{ID: test.want.ID})
+		gotSubmission, err := db.GetLastSubmission(test.courseID, &qf.Submission{ID: test.want.GetID()})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -651,7 +651,7 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	}
 
 	// Test that non existing submission returns an error
-	gotSubmission, err := db.GetLastSubmission(c1.ID, &qf.Submission{ID: 123})
+	gotSubmission, err := db.GetLastSubmission(c1.GetID(), &qf.Submission{ID: 123})
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Errorf("Expected error: %v, got: %v", gorm.ErrRecordNotFound, err)
 	}

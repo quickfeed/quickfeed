@@ -42,10 +42,10 @@ func tasksFromAssignments(assignments []*qf.Assignment) map[uint32]map[string]*q
 	taskMap := make(map[uint32]map[string]*qf.Task)
 	for _, assignment := range assignments {
 		temp := make(map[string]*qf.Task)
-		for _, task := range assignment.Tasks {
-			temp[task.Name] = task
+		for _, task := range assignment.GetTasks() {
+			temp[task.GetName()] = task
 		}
-		taskMap[assignment.Order] = temp
+		taskMap[assignment.GetOrder()] = temp
 	}
 	return taskMap
 }
@@ -54,7 +54,7 @@ func tasksFromAssignments(assignments []*qf.Assignment) map[uint32]map[string]*q
 func mapTasksByID(tasks []*qf.Task) map[uint64]*qf.Task {
 	taskMap := make(map[uint64]*qf.Task)
 	for _, task := range tasks {
-		taskMap[task.ID] = task
+		taskMap[task.GetID()] = task
 	}
 	return taskMap
 }
@@ -101,16 +101,16 @@ func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 		issueOptions := &scm.IssueOptions{
 			Organization: course.GetScmOrganizationName(),
 			Repository:   repo.Name(),
-			Title:        task.Title,
-			Body:         task.Body,
+			Title:        task.GetTitle(),
+			Body:         task.GetBody(),
 		}
 		scmIssue, err := sc.CreateIssue(ctx, issueOptions)
 		if err != nil {
 			return nil, err
 		}
 		createdIssues = append(createdIssues, &qf.Issue{
-			RepositoryID:   repo.ID,
-			TaskID:         task.ID,
+			RepositoryID:   repo.GetID(),
+			TaskID:         task.GetID(),
 			ScmIssueNumber: uint64(scmIssue.Number),
 		})
 	}
@@ -120,8 +120,8 @@ func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 // updateIssues updates issues based on repository, course and tasks. It handles deleted tasks by closing them and inserting a statement into the body.
 func updateIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.Repository, tasks []*qf.Task) error {
 	taskMap := mapTasksByID(tasks)
-	for _, issue := range repo.Issues {
-		task, ok := taskMap[issue.TaskID]
+	for _, issue := range repo.GetIssues() {
+		task, ok := taskMap[issue.GetTaskID()]
 		if !ok {
 			// Issue does not need to be updated
 			continue
@@ -129,9 +129,9 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.R
 		issueOptions := &scm.IssueOptions{
 			Organization: course.GetScmOrganizationName(),
 			Repository:   repo.Name(),
-			Title:        task.Title,
-			Body:         task.Body,
-			Number:       int(issue.ScmIssueNumber),
+			Title:        task.GetTitle(),
+			Body:         task.GetBody(),
+			Number:       int(issue.GetScmIssueNumber()),
 		}
 		if task.IsDeleted() {
 			issueOptions.State = "closed"

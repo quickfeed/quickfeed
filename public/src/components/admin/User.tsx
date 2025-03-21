@@ -3,7 +3,7 @@ import { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
 import { useGrpc } from "../../overmind"
 import { EnrollmentStatus, EnrollmentStatusBadge } from "../../Helpers"
 
-const User = ({ user }: { user: pbUser; hidden: boolean }): JSX.Element => {
+const User = ({ user }: { user: pbUser; hidden: boolean }) => {
     const { api } = useGrpc()
     const [enrollments, setEnrollments] = React.useState<Enrollment[]>([])
     const [showEnrollments, setShowEnrollments] = React.useState<boolean>(false)
@@ -45,7 +45,7 @@ const User = ({ user }: { user: pbUser; hidden: boolean }): JSX.Element => {
     )
 
     return (
-        <div role="button" className="clickable" onClick={toggleEnrollments}>
+        <div role="button" aria-hidden="true" className="clickable" onClick={toggleEnrollments}>
             {user.Name}
             {user.IsAdmin ? (
                 <span className={"badge badge-primary ml-2"}>Admin</span>

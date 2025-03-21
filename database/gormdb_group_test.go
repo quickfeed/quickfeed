@@ -133,14 +133,14 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			// create as many users as the desired number of enrollments
 			for i, enrollment := range test.enrollments {
 				user := qtest.CreateFakeUser(t, db)
-				userIDs = append(userIDs, user.ID)
+				userIDs = append(userIDs, user.GetID())
 				if enrollment == qf.Enrollment_PENDING {
 					continue
 				}
 
 				// enroll user in course
 				if err := db.CreateEnrollment(&qf.Enrollment{
-					CourseID: course.ID,
+					CourseID: course.GetID(),
 					UserID:   user.GetID(),
 				}); err != nil {
 					t.Fatal(err)
@@ -148,9 +148,9 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				err := errors.New("enrollment status not implemented")
 				switch test.enrollments[i] {
 				case qf.Enrollment_NONE:
-					err = db.RejectEnrollment(user.GetID(), course.ID)
+					err = db.RejectEnrollment(user.GetID(), course.GetID())
 				case qf.Enrollment_STUDENT:
-					query, err1 := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+					query, err1 := db.GetEnrollmentByCourseAndUser(course.GetID(), user.GetID())
 					if err1 != nil {
 						t.Fatal(err1)
 					}
@@ -163,7 +163,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Test.
-			group := test.getGroup(course.ID, userIDs...)
+			group := test.getGroup(course.GetID(), userIDs...)
 			if err := db.CreateGroup(group); err != test.err {
 				t.Errorf("have error '%v' want '%v'", err, test.err)
 			}
@@ -172,26 +172,26 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Verify.
-			enrollments, err := db.GetEnrollmentsByCourse(course.ID, qf.Enrollment_STUDENT)
+			enrollments, err := db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_STUDENT)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(group.Users) > 0 && len(enrollments) != len(group.Users) {
-				t.Errorf("have %d enrollments want %d", len(enrollments), len(group.Users))
+			if len(group.GetUsers()) > 0 && len(enrollments) != len(group.GetUsers()) {
+				t.Errorf("have %d enrollments want %d", len(enrollments), len(group.GetUsers()))
 			}
 			sorted := make(map[uint64]*qf.Enrollment)
 			for _, enrollment := range enrollments {
 				enrollment.Course = nil
 				enrollment.Group = nil
-				sorted[enrollment.UserID] = enrollment
+				sorted[enrollment.GetUserID()] = enrollment
 			}
-			for _, user := range group.Users {
-				if _, ok := sorted[user.ID]; !ok {
-					t.Errorf("have no enrollment for user %d", user.ID)
+			for _, user := range group.GetUsers() {
+				if _, ok := sorted[user.GetID()]; !ok {
+					t.Errorf("have no enrollment for user %d", user.GetID())
 				}
 			}
 
-			have, err := db.GetGroup(group.ID)
+			have, err := db.GetGroup(group.GetID())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -233,14 +233,14 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 
 		// enroll users in course
 		if err := db.CreateEnrollment(&qf.Enrollment{
-			CourseID: course.ID,
-			UserID:   users[i].ID,
+			CourseID: course.GetID(),
+			UserID:   users[i].GetID(),
 		}); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		if enrollments[i] == qf.Enrollment_STUDENT {
-			query, err1 := db.GetEnrollmentByCourseAndUser(course.ID, users[i].ID)
+			query, err1 := db.GetEnrollmentByCourseAndUser(course.GetID(), users[i].GetID())
 			if err1 != nil {
 				t.Fatal(err1)
 			}
@@ -256,7 +256,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	// further attempts should fail with ErrDuplicateGroup.
 	identical := &qf.Group{
 		Name:     "SameNameGroup",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    users,
 	}
 	if err := db.CreateGroup(identical); err != nil {
@@ -293,14 +293,14 @@ func TestGetGroupsByCourse(t *testing.T) {
 
 		// enroll users in course
 		if err := db.CreateEnrollment(&qf.Enrollment{
-			CourseID: course.ID,
-			UserID:   user.ID,
+			CourseID: course.GetID(),
+			UserID:   user.GetID(),
 		}); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		if enrollments[i] == qf.Enrollment_STUDENT {
-			query, err1 := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+			query, err1 := db.GetEnrollmentByCourseAndUser(course.GetID(), user.GetID())
 			if err1 != nil {
 				t.Fatal(err)
 			}
@@ -312,11 +312,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		}
 	}
 
-	group := &qf.Group{Name: "MyGroup", CourseID: course.ID, Users: users[0:2]}
+	group := &qf.Group{Name: "MyGroup", CourseID: course.GetID(), Users: users[0:2]}
 	if err := db.CreateGroup(group); err != nil {
 		t.Fatal(err)
 	}
-	group2 := &qf.Group{Name: "MyOtherGroup", CourseID: course.ID, Users: users[2:5]}
+	group2 := &qf.Group{Name: "MyOtherGroup", CourseID: course.GetID(), Users: users[2:5]}
 	if err := db.CreateGroup(group2); err != nil {
 		t.Fatal(err)
 	}
@@ -340,11 +340,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 
-	pendingGroups, err := db.GetGroupsByCourse(course.ID, qf.Group_PENDING)
+	pendingGroups, err := db.GetGroupsByCourse(course.GetID(), qf.Group_PENDING)
 	if err != nil {
 		t.Fatal(err)
 	}
-	approvedGroups, err := db.GetGroupsByCourse(course.ID, qf.Group_APPROVED)
+	approvedGroups, err := db.GetGroupsByCourse(course.GetID(), qf.Group_APPROVED)
 	if err != nil {
 		t.Fatal(err)
 	}
