@@ -74,36 +74,34 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 
 // setGrades adds grades for any user or group related to the submission
 // which are then saved to the database upon creation of the submission.
-func setGrades(tx *gorm.DB, s *qf.Submission) error {
-	if s.GetUserID() > 0 {
-		// Add a grade for the user if the submission is not a group submission.
-		// Create a new grade for the user.
-		s.Grades = []*qf.Grade{{
-			UserID: s.GetUserID(),
-			Status: s.GetStatusByUser(s.GetUserID()),
-		}}
-	}
-	if s.GetGroupID() > 0 {
-		// If the submission is for a group, create a new grade for each user in the group.
-		// Get all the user IDs in the group
-		var userIDs []uint64
-		tx.Model(&qf.Enrollment{}).Where("group_id = ?", s.GetGroupID()).Pluck("user_id", &userIDs)
+func setGrades(tx *gorm.DB, submission *qf.Submission) error {
+	var userIDs []uint64
 
-		s.Grades = make([]*qf.Grade, len(userIDs))
-		for idx, id := range userIDs {
-			// Create a grade for each user in the group
-			s.Grades[idx] = &qf.Grade{
-				UserID: id,
+	if submission.GetUserID() > 0 {
+		userIDs = []uint64{submission.GetUserID()}
+	}
+	if submission.GetGroupID() > 0 {
+		// Get the UserIDs of the group members
+		tx.Model(&qf.Enrollment{}).Where("group_id = ?", submission.GetGroupID()).Pluck("user_id", &userIDs)
+	}
+
+	// Only want to initialize grades if they are nil
+	// This is to prevent overwriting existing grades
+	if submission.GetGrades() == nil {
+		submission.Grades = make([]*qf.Grade, len(userIDs))
+		for i, userID := range userIDs {
+			submission.Grades[i] = &qf.Grade{
+				UserID: userID,
 			}
 		}
 	}
-	// Find the assignment associated with the submission
+
+	// Find the submission's associated assignment
 	var assignment qf.Assignment
-	if err := tx.First(&assignment, s.GetAssignmentID()).Error; err != nil {
+	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
 		return err
 	}
-	// Set the submission status based on the assignment's auto-approve settings
-	s.Grades = assignment.SubmissionStatus(s, s.GetScore())
+	submission.SetGradesIfApproved(&assignment, submission.GetScore())
 	return nil
 }
 
