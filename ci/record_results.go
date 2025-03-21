@@ -86,6 +86,7 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
 	score := results.Sum()
+	previous.SetGradesIfApproved(r.Assignment, score)
 	return &qf.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
@@ -93,7 +94,7 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        score,
-		Grades:       r.Assignment.SubmissionStatus(previous, score),
+		Grades:       previous.GetGrades(),
 		BuildInfo:    results.GetBuildInfo(),
 		Scores:       results.Scores,
 	}
