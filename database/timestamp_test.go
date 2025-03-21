@@ -75,7 +75,7 @@ func TestTimestampSerializer_Nil_Value(t *testing.T) {
 		// Deadline is nil
 	}
 	ts := database.TimestampSerializer{}
-	got, _ := ts.Value(ctx, &schema.Field{}, reflect.Value{}, assignment.Deadline)
+	got, _ := ts.Value(ctx, &schema.Field{}, reflect.Value{}, assignment.GetDeadline())
 	if got != nil {
 		t.Errorf("expected nil, got = %v, ", got)
 	}

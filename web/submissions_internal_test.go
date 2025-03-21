@@ -45,11 +45,11 @@ func TestOrderSubmissions(t *testing.T) {
 
 	// Sort the submissions by assignment order
 	sort.Slice(submissions, func(i, j int) bool {
-		return orderMap.Less(submissions[i].AssignmentID, submissions[j].AssignmentID)
+		return orderMap.Less(submissions[i].GetAssignmentID(), submissions[j].GetAssignmentID())
 	})
 
 	// Check that the submissions are sorted correctly
-	if submissions[0].ID != 3 || submissions[1].ID != 1 || submissions[2].ID != 2 {
+	if submissions[0].GetID() != 3 || submissions[1].GetID() != 1 || submissions[2].GetID() != 2 {
 		t.Error("Submissions not sorted correctly")
 	}
 }
