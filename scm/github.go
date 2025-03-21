@@ -103,7 +103,9 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Reposit
 	if org == "" {
 		return nil, E(op, "organization name must be provided")
 	}
-	repos, _, err := s.client.Repositories.ListByOrg(ctx, org, nil)
+	repos, _, err := s.client.Repositories.ListByOrg(ctx, org, &github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{PerPage: 100},
+	})
 	if err != nil {
 		return nil, E(op, M("failed to get repositories for %s", org), err)
 	}

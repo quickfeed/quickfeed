@@ -10,7 +10,7 @@ protopatch			:= patch/go.proto
 protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check install ui proto test qcm scm
+.PHONY: download brew version-check install ui proto test qcm cm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -69,3 +69,6 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
+
+cm:
+	@go install github.com/quickfeed/quickfeed/cmd/cm
