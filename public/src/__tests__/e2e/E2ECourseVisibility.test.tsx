@@ -40,7 +40,7 @@ describe("End to End course visibility", () => {
             // Check if the course has moved from navigator
             let isInList = true
             for (let i = 0; i < courses.length; i++) {
-                if (await courses[i].getText() === hamburgerCode) {
+                if ((await courses[i].getText()) === hamburgerCode) {
                     isInList = false
                 }
             }

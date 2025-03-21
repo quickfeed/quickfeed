@@ -1,8 +1,9 @@
 import React, { useState } from "react"
 import { useActions } from "../../overmind"
-import { Course } from "../../../proto/qf/types_pb"
+import { Course, CourseSchema } from "../../../proto/qf/types_pb"
 import FormInput from "./FormInput"
 import { useHistory } from "react-router"
+import { clone } from "@bufbuild/protobuf"
 
 
 
@@ -17,7 +18,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     const history = useHistory()
 
     // Local state containing the course to be created or edited (if any)
-    const [course, setCourse] = useState(courseToEdit.clone())
+    const [course, setCourse] = useState(clone(CourseSchema, courseToEdit))
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget

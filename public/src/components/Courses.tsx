@@ -1,10 +1,11 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
+import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"
 import { Color, isVisible } from "../Helpers"
+import { create } from "@bufbuild/protobuf"
 
 // If home is set to true, display only favorite courses. Otherwise, display all courses.
 // Can be used on dashboard to let the user choose which courses to display based on favorites.
@@ -72,7 +73,7 @@ const Courses = (overview: overview) => {
                 }
             } else {
                 availableCourses.push(
-                    <CourseCard key={course.ID.toString()} course={course} enrollment={new Enrollment} />
+                    <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} />
                 )
             }
         })
