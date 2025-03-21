@@ -63,11 +63,11 @@ func TestFibonacciMax(t *testing.T) {
 			sc.Dec()
 		}
 	}
-	if sc.Score != numCorrect {
-		t.Errorf("Score=%d, expected %d", sc.Score, numCorrect)
+	if sc.GetScore() != numCorrect {
+		t.Errorf("Score=%d, expected %d", sc.GetScore(), numCorrect)
 	}
-	if sc.TestName != t.Name() {
-		t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
+	if sc.GetTestName() != t.Name() {
+		t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
 	}
 }
 
@@ -88,11 +88,11 @@ func TestFibonacciMin(t *testing.T) {
 			sc.Inc()
 		}
 	}
-	if sc.Score != numCorrect {
-		t.Errorf("Score=%d, expected %d", sc.Score, numCorrect)
+	if sc.GetScore() != numCorrect {
+		t.Errorf("Score=%d, expected %d", sc.GetScore(), numCorrect)
 	}
-	if sc.TestName != t.Name() {
-		t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
+	if sc.GetTestName() != t.Name() {
+		t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
 	}
 	once.Do(func() { ran = true })
 }
@@ -109,11 +109,11 @@ func TestFibonacciSubTest(t *testing.T) {
 			if ft.in < numCorrect {
 				expectedScore = 1
 			}
-			if sc.Score != expectedScore {
-				t.Errorf("Score=%d, expected %d", sc.Score, expectedScore)
+			if sc.GetScore() != expectedScore {
+				t.Errorf("Score=%d, expected %d", sc.GetScore(), expectedScore)
 			}
-			if sc.TestName != t.Name() {
-				t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
+			if sc.GetTestName() != t.Name() {
+				t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
 			}
 		})
 		t.Run(subTestName("Min", ft.in), func(t *testing.T) {
@@ -126,11 +126,11 @@ func TestFibonacciSubTest(t *testing.T) {
 			if ft.in < numCorrect {
 				expectedScore = 1
 			}
-			if sc.Score != expectedScore {
-				t.Errorf("Score=%d, expected %d", sc.Score, expectedScore)
+			if sc.GetScore() != expectedScore {
+				t.Errorf("Score=%d, expected %d", sc.GetScore(), expectedScore)
 			}
-			if sc.TestName != t.Name() {
-				t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
+			if sc.GetTestName() != t.Name() {
+				t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
 			}
 		})
 	}

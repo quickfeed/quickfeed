@@ -25,6 +25,12 @@ internal/config/certs/*
 *.db
 *.log
 
+#Test files
+public/testdata/test.env.bak
+public/testdata/test.env
+testdata/test.env.bak
+testdata/test.env
+
 TODO
 dat320-original.xlsx
 dat320-approve-list.xlsx

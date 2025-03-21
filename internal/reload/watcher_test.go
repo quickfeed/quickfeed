@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -39,7 +40,10 @@ func TestWatcher(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
+	var fileWriterWG sync.WaitGroup
+	fileWriterWG.Add(1)
 	go func() {
+		defer fileWriterWG.Done()
 		// wait some time before writing to the file
 		time.Sleep(2 * time.Second)
 		// try to write to the file multiple times
@@ -91,4 +95,6 @@ func TestWatcher(t *testing.T) {
 		// if we don't receive an event in 10 seconds, fail the test
 		t.Error("Timeout: No event received")
 	}
+	// wait for the file-writer goroutine to finish
+	fileWriterWG.Wait()
 }
