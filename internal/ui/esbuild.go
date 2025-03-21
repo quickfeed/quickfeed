@@ -15,12 +15,15 @@ import (
 // The entry point is src/index.tsx
 // The api has write access and writes the output to public/dist
 var buildOptions = api.BuildOptions{
-	EntryPoints: []string{fmt.Sprintf("%s/src/index.tsx", env.PublicDir())},
+	EntryPoints: []string{
+		fmt.Sprintf("%s/src/App.tsx", env.PublicDir()),
+		fmt.Sprintf("%s/src/index.tsx", env.PublicDir()),
+	},
 	Outdir:      fmt.Sprintf("%s/dist", env.PublicDir()),
 	Bundle:      true,
 	Write:       true,
-	Format:      api.FormatESModule,
-	Splitting:   true,
+	TreeShaking: api.TreeShakingTrue,
+	EntryNames:  "[name]-[hash]",
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},
@@ -31,8 +34,8 @@ var buildOptions = api.BuildOptions{
 // Production mode minifies the output to boost performance, and logs only errors
 func getOptions(dev bool, outputDir *string) api.BuildOptions {
 	if dev {
-		buildOptions.Sourcemap = api.SourceMapInline
 		buildOptions.LogLevel = api.LogLevelDebug
+		buildOptions.Sourcemap = api.SourceMapInline
 	} else {
 		buildOptions.LogLevel = api.LogLevelError
 		buildOptions.MinifyWhitespace = true
@@ -54,7 +57,7 @@ func resetDistFolder() error {
 			return fmt.Errorf("failed to remove dist directory: %v", err)
 		}
 	}
-	if err := os.MkdirAll(path, 0755); err != nil {
+	if err := os.MkdirAll(path, 0o755); err != nil {
 		return fmt.Errorf("failed to create dist directory: %v", err)
 	}
 	return nil
@@ -88,7 +91,11 @@ func createHtml(outputFiles []api.OutputFile) error {
 		"ext":  filepath.Ext,
 		"base": filepath.Base,
 	}
-	t, err := template.New("index.html").Funcs(funcMap).Parse(tmpl)
+	tmpl, err := os.ReadFile(fmt.Sprintf("%s/index.tmpl.html", env.PublicDir()))
+	if err != nil {
+		return fmt.Errorf("failed to read index.tmpl.html: %v", err)
+	}
+	t, err := template.New("index.html").Funcs(funcMap).Parse(string(tmpl))
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
 	}
@@ -98,35 +105,6 @@ func createHtml(outputFiles []api.OutputFile) error {
 	}
 	return nil
 }
-
-var tmpl = `<!doctype html>
-<html lang="en">
-
-<head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
-    <link rel="manifest" href="/assets/site.webmanifest">
-    <title>QuickFeed</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-{{- range $file := . }}
-	{{- $ext := (ext $file.Path) -}}
-	{{- $name := (base $file.Path) -}}
-	{{ with (eq $ext ".css") }}<link rel="stylesheet" href="/static/{{ $name }}">{{ end }}
-	{{ with (eq $ext ".js") }}<script type="module" src="/static/{{ $name }}" defer></script>{{ end }}
-{{- end }}
-</head>
-
-<body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-</body>
-
-</html>
-`
 
 // Watch starts a watch process for the UI, rebuilding on changes
 // The log level is set to info, so only warnings and errors are shown
