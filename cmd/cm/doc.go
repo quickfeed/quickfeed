@@ -3,6 +3,8 @@ package main
 // cm init-env -year 2025 -course dat520 -name "Distributed Systems"
 // cm init-env -year 2025 -name "Distributed Systems"
 // cm init-repos
+// cm list-repos
+// cm list-repos -url
 // cm clone-repo -pull
 // cm clone-repo -repo meling-labs -pull
 // cm clone-repo -repo meling-labs

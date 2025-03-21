@@ -8,6 +8,7 @@ import (
 const (
 	initEnvCmd            = "init-env"
 	initReposCmd          = "init-repos"
+	listReposCmd          = "list-repos"
 	cloneRepoCmd          = "clone-repo"
 	cloneAllReposCmd      = "clone-all-repos"
 	updateDocTagsCmd      = "update-doc-tags"
@@ -29,6 +30,8 @@ func main() {
 		initEnv(args)
 	case initReposCmd:
 		initRepos()
+	case listReposCmd:
+		listRepos(args)
 	case cloneRepoCmd:
 		cloneRepo(args)
 	case cloneAllReposCmd:

@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
 	"slices"
 	"time"
 
@@ -13,15 +12,23 @@ import (
 	"go.uber.org/zap"
 )
 
-// cloneAllRepos clones all student and group repositories from a GitHub course.
+// listRepos lists all student and group repositories from a GitHub course.
 //
 // Run with the following command:
 //
-//	cm clone-all-repos
+//	cm list-repos
+//	cm list-repos -url
 //
-// The student/group repositories for the current year are cloned into the directory
-// <year>/student-repos/<repo>.
-func cloneAllRepos() {
+// The -url flag specifies that the URL of the repository should be printed instead of the name.
+func listRepos(args []string) {
+	fs := flag.NewFlagSet(cloneRepoCmd, flag.ExitOnError)
+	var url bool
+	fs.BoolVar(&url, "url", false, "Print only the URL of the repository")
+
+	if err := fs.Parse(args); err != nil {
+		exitErr(err, "Error parsing flags")
+	}
+
 	if err := loadEnv(); err != nil {
 		exitErr(err, "Error loading environment variables")
 	}
@@ -49,15 +56,7 @@ func cloneAllRepos() {
 		exitErr(err, "Error listing repositories")
 	}
 
-	path := filepath.Join(repoHome(), "student-repos")
-	if err := os.MkdirAll(path, os.ModePerm); err != nil {
-		exitErr(err, "Error creating repository directory")
-	}
-	repoPath := func(repo string) string {
-		return filepath.Join(path, repo)
-	}
-
-	fmt.Printf("Cloning %d student/group repositories into %q\n", len(ghRepos), path)
+	fmt.Printf("Listing %d student/group repositories:\n", len(ghRepos))
 
 	for _, scmRepo := range ghRepos {
 		repo := scmRepo.Repo
@@ -65,23 +64,9 @@ func cloneAllRepos() {
 		if slices.Contains(courseRepos, repo) {
 			continue
 		}
-
-		msg := fmt.Sprintf("Cloned %q into %q", repo, path)
-		if exists(repoPath(repo)) {
-			msg = fmt.Sprintf("Repository %q updated", repo)
+		if url {
+			repo = scmRepo.HTMLURL
 		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		_, err := ghClient.Clone(ctx, &scm.CloneOptions{
-			Organization: ghOrg,
-			Repository:   repo,
-			DestDir:      path,
-		})
-		cancel()
-		if err != nil {
-			fmt.Printf("Error cloning %q: %v\n", repo, err)
-			continue
-		}
-		fmt.Println(msg)
+		fmt.Printf("  %s\n", repo)
 	}
 }
