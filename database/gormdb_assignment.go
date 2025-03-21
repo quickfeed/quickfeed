@@ -217,6 +217,11 @@ func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.Submis
 
 // CreateBenchmark creates a new grading benchmark
 func (db *GormDB) CreateBenchmark(query *qf.GradingBenchmark) error {
+	if _, err := db.GetAssignment(&qf.Assignment{
+		ID: query.GetAssignmentID(),
+	}); err != nil {
+		return err
+	}
 	return db.conn.Create(query).Error
 }
 

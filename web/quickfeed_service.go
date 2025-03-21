@@ -435,11 +435,6 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 
 // CreateBenchmark adds a new grading benchmark for an assignment.
 func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	if _, err := s.db.GetAssignment(&qf.Assignment{
-		ID: in.Msg.GetAssignmentID(),
-	}); err != nil {
-		return nil, err
-	}
 	if err := s.db.CreateBenchmark(in.Msg); err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create benchmark"))
