@@ -51,7 +51,9 @@ const Courses = (overview: overview) => {
         const teacher: React.JSX.Element[] = []
         const pending: React.JSX.Element[] = []
         const availableCourses: React.JSX.Element[] = []
-        state.courses.map(course => {
+
+
+        state.courses.forEach(course => {
             const enrol = state.enrollmentsByCourseID[course.ID.toString()]
             if (enrol) {
                 const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
