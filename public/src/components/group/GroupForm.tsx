@@ -24,7 +24,7 @@ const GroupForm = () => {
         return () => {
             actions.setActiveGroup(null)
         }
-    }, [])
+    }, [actions, courseID, state.enrollmentsByCourseID, state.self])
     if (!group) {
         return null
     }
@@ -142,8 +142,8 @@ const GroupForm = () => {
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedAndFilteredEnrollments.map((enrollment, index) => {
-                            return <AvailableUser key={index} enrollment={enrollment} />
+                        {sortedAndFilteredEnrollments.map((enrollment) => {
+                            return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
                         })}
                     </ul>
                 </div>

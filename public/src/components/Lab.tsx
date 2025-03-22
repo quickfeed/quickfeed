@@ -29,7 +29,7 @@ const Lab = () => {
         if (!state.isTeacher) {
             actions.setSelectedAssignmentID(Number(lab))
         }
-    }, [lab])
+    }, [lab, actions, state.isTeacher])
 
     const InternalLab = () => {
         let submission: Submission | null
@@ -64,7 +64,7 @@ const Lab = () => {
             let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
-                buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)
+                buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={x + i}>{x}<br /></span>)
             }
 
             return (
