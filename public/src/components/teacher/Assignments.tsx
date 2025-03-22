@@ -14,11 +14,10 @@ const Assignments = () => {
     const courseID = getCourseID()
     const actions = useActions()
     const state = useAppState()
+    const [hidden, setHidden] = useState<boolean>(false)
+    const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
     const assignmentElement = (assignment: Assignment) => {
-        const [hidden, setHidden] = useState<boolean>(false)
-        const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
-
         /* rebuild all tests for this assignment */
         const rebuild = async () => {
             if (confirm(`Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`)) {
