@@ -81,7 +81,7 @@ const ManageSubmissionStatus = () => {
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
                         className="col mr-2"
-                        onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
+                        onClick={() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades))}
                     />
                 )}
                 {assignment && !isManuallyGraded(assignment) && (
