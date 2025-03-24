@@ -1,10 +1,10 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
 import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt"
 import { CourseSubmissions } from "../proto/qf/requests_pb"
-import { create } from "@bufbuild/protobuf"
+import { create, isMessage } from "@bufbuild/protobuf"
 
 export enum Color {
     RED = "danger",
@@ -312,8 +312,8 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
-export const getSubmissionCellColor = (submission: Submission, owner:  Enrollment | Group): string => {
-    if (owner.$typeName === "qf.Group") {
+export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
+    if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
             return "result-approved"
         }
@@ -450,7 +450,7 @@ export class SubmissionsForCourse {
 
     /** ForGroup returns group submissions for the given group or enrollment */
     ForGroup(group: Group | Enrollment): Submission[] {
-        if (group.$typeName === "qf.Group") {
+        if (isMessage(group, GroupSchema)) {
             return this.groupSubmissions.get(group.ID)?.submissions ?? []
         }
         return this.groupSubmissions.get(group.groupID)?.submissions ?? []
