@@ -53,8 +53,10 @@ Eivind
 envoyproxy
 errcheck
 Errorf
+esbuild
 espeland
 Etternavn
+evanw
 excelize
 extendee
 extldflags
@@ -144,8 +146,8 @@ mkdir
 newkey
 ngrok
 nocheck
+noscript
 npmtools
-npmwebpack
 NTNU
 oneof
 openrc
@@ -229,7 +231,6 @@ varcheck
 vercheck
 verdana
 Warnf
-webpack's
 wojtekmaj
 WORKDIR
 Worktree
