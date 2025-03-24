@@ -1,6 +1,9 @@
 import React, { useEffect } from "react"
 
 const LoginPage = (): JSX.Element => {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
   // Add a class to the body element to style the login page
   useEffect(() => {
     document.body.classList.add("login-page")
@@ -176,7 +179,7 @@ const LoginPage = (): JSX.Element => {
         </section>
         <footer className="text-center mt-5">
           <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={scrollToTop}
             className="btn align-items-center backToTop"
           >
             <i className="fa fa-arrow-up" />
