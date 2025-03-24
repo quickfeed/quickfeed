@@ -21,7 +21,7 @@ const NavBarUser = (): JSX.Element => {
             <StreamStatus />
             <ul className="nav-item dropdown">
                 <img className="rounded-circle" src={self.AvatarURL} id="avatar" />
-                <i className="fa fa-chevron-down text-white"></i>
+                <i className="fa fa-chevron-down text-white"/>
                 <ul className="dropdown-menu dropdown-menu-center bg-dark">
                     <ProfileButton />
                     <AboutButton />

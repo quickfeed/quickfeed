@@ -1,9 +1,9 @@
 import React, { useEffect } from "react"
 
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" })
+}
 const LoginPage = (): JSX.Element => {
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
   // Add a class to the body element to style the login page
   useEffect(() => {
     document.body.classList.add("login-page")
@@ -19,7 +19,7 @@ const LoginPage = (): JSX.Element => {
       </p>
       <section id="loginBox">
         <div className="mb-5 loginBox">
-          <i className="fa fa-5x fa-github align-middle ms-auto mb-3" id="github icon"></i>
+          <i className="fa fa-5x fa-github align-middle ms-auto mb-3" id="github icon"/>
           <h4>Sign in with GitHub</h4>
           <p className="text-secondary"> to continue to QuickFeed </p>
           <a href="/auth/github" className="loginButton"> Sign in </a>
@@ -27,7 +27,6 @@ const LoginPage = (): JSX.Element => {
       </section>
       <div className="container">
         <section id="aboutquickfeed">
-          {/* <hr className="loginDivider" /> */}
           <h2 className="featurette-heading">About QuickFeed</h2>
           <p className="lead">
             QuickFeed is a tool for providing automated feedback to students on their lab assignments.
@@ -55,6 +54,7 @@ const LoginPage = (): JSX.Element => {
             <img
               className="img-circle"
               src="/assets/img/overlapping-arrows-no-background.png"
+              alt="Overlapping arrows image"
               style={{ width: "140px", height: "140px" }}
             />
             <h2>Continuous Integration</h2>
@@ -178,10 +178,7 @@ const LoginPage = (): JSX.Element => {
           </div>
         </section>
         <footer className="text-center mt-5">
-          <button
-            onClick={scrollToTop}
-            className="btn align-items-center backToTop"
-          >
+          <button onClick={scrollToTop} className="btn align-items-center backToTop">
             <i className="fa fa-arrow-up" />
             <p>Back to top</p>
           </button>
