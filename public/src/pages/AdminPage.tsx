@@ -10,7 +10,7 @@ import CreateCourse from "../components/admin/CreateCourse"
 
 
 // AdminPage is the page containing the admin-only components.
-const AdminPage = (): JSX.Element => {
+const AdminPage = () => {
     const state = useAppState()
     const history = useHistory()
 

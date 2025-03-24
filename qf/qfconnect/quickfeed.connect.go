@@ -140,46 +140,6 @@ const (
 	QuickFeedServiceSubmissionStreamProcedure = "/qf.QuickFeedService/SubmissionStream"
 )
 
-// These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
-var (
-	quickFeedServiceServiceDescriptor                      = qf.File_qf_quickfeed_proto.Services().ByName("QuickFeedService")
-	quickFeedServiceGetUserMethodDescriptor                = quickFeedServiceServiceDescriptor.Methods().ByName("GetUser")
-	quickFeedServiceGetUsersMethodDescriptor               = quickFeedServiceServiceDescriptor.Methods().ByName("GetUsers")
-	quickFeedServiceUpdateUserMethodDescriptor             = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateUser")
-	quickFeedServiceGetGroupMethodDescriptor               = quickFeedServiceServiceDescriptor.Methods().ByName("GetGroup")
-	quickFeedServiceGetGroupsByCourseMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("GetGroupsByCourse")
-	quickFeedServiceCreateGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("CreateGroup")
-	quickFeedServiceUpdateGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateGroup")
-	quickFeedServiceDeleteGroupMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteGroup")
-	quickFeedServiceGetCourseMethodDescriptor              = quickFeedServiceServiceDescriptor.Methods().ByName("GetCourse")
-	quickFeedServiceGetCoursesMethodDescriptor             = quickFeedServiceServiceDescriptor.Methods().ByName("GetCourses")
-	quickFeedServiceUpdateCourseMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCourse")
-	quickFeedServiceUpdateCourseVisibilityMethodDescriptor = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCourseVisibility")
-	quickFeedServiceGetAssignmentsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetAssignments")
-	quickFeedServiceUpdateAssignmentsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateAssignments")
-	quickFeedServiceGetEnrollmentsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetEnrollments")
-	quickFeedServiceCreateEnrollmentMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("CreateEnrollment")
-	quickFeedServiceUpdateEnrollmentsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateEnrollments")
-	quickFeedServiceGetSubmissionMethodDescriptor          = quickFeedServiceServiceDescriptor.Methods().ByName("GetSubmission")
-	quickFeedServiceGetSubmissionsMethodDescriptor         = quickFeedServiceServiceDescriptor.Methods().ByName("GetSubmissions")
-	quickFeedServiceGetSubmissionsByCourseMethodDescriptor = quickFeedServiceServiceDescriptor.Methods().ByName("GetSubmissionsByCourse")
-	quickFeedServiceUpdateSubmissionMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateSubmission")
-	quickFeedServiceUpdateSubmissionsMethodDescriptor      = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateSubmissions")
-	quickFeedServiceRebuildSubmissionsMethodDescriptor     = quickFeedServiceServiceDescriptor.Methods().ByName("RebuildSubmissions")
-	quickFeedServiceCreateBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("CreateBenchmark")
-	quickFeedServiceUpdateBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateBenchmark")
-	quickFeedServiceDeleteBenchmarkMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteBenchmark")
-	quickFeedServiceCreateCriterionMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("CreateCriterion")
-	quickFeedServiceUpdateCriterionMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateCriterion")
-	quickFeedServiceDeleteCriterionMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("DeleteCriterion")
-	quickFeedServiceCreateReviewMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("CreateReview")
-	quickFeedServiceUpdateReviewMethodDescriptor           = quickFeedServiceServiceDescriptor.Methods().ByName("UpdateReview")
-	quickFeedServiceGetOrganizationMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("GetOrganization")
-	quickFeedServiceGetRepositoriesMethodDescriptor        = quickFeedServiceServiceDescriptor.Methods().ByName("GetRepositories")
-	quickFeedServiceIsEmptyRepoMethodDescriptor            = quickFeedServiceServiceDescriptor.Methods().ByName("IsEmptyRepo")
-	quickFeedServiceSubmissionStreamMethodDescriptor       = quickFeedServiceServiceDescriptor.Methods().ByName("SubmissionStream")
-)
-
 // QuickFeedServiceClient is a client for the qf.QuickFeedService service.
 type QuickFeedServiceClient interface {
 	GetUser(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.User], error)
@@ -233,215 +193,216 @@ type QuickFeedServiceClient interface {
 // http://api.acme.com or https://acme.com/grpc).
 func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) QuickFeedServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
+	quickFeedServiceMethods := qf.File_qf_quickfeed_proto.Services().ByName("QuickFeedService").Methods()
 	return &quickFeedServiceClient{
 		getUser: connect.NewClient[qf.Void, qf.User](
 			httpClient,
 			baseURL+QuickFeedServiceGetUserProcedure,
-			connect.WithSchema(quickFeedServiceGetUserMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetUser")),
 			connect.WithClientOptions(opts...),
 		),
 		getUsers: connect.NewClient[qf.Void, qf.Users](
 			httpClient,
 			baseURL+QuickFeedServiceGetUsersProcedure,
-			connect.WithSchema(quickFeedServiceGetUsersMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetUsers")),
 			connect.WithClientOptions(opts...),
 		),
 		updateUser: connect.NewClient[qf.User, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateUserProcedure,
-			connect.WithSchema(quickFeedServiceUpdateUserMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateUser")),
 			connect.WithClientOptions(opts...),
 		),
 		getGroup: connect.NewClient[qf.GroupRequest, qf.Group](
 			httpClient,
 			baseURL+QuickFeedServiceGetGroupProcedure,
-			connect.WithSchema(quickFeedServiceGetGroupMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetGroup")),
 			connect.WithClientOptions(opts...),
 		),
 		getGroupsByCourse: connect.NewClient[qf.CourseRequest, qf.Groups](
 			httpClient,
 			baseURL+QuickFeedServiceGetGroupsByCourseProcedure,
-			connect.WithSchema(quickFeedServiceGetGroupsByCourseMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetGroupsByCourse")),
 			connect.WithClientOptions(opts...),
 		),
 		createGroup: connect.NewClient[qf.Group, qf.Group](
 			httpClient,
 			baseURL+QuickFeedServiceCreateGroupProcedure,
-			connect.WithSchema(quickFeedServiceCreateGroupMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("CreateGroup")),
 			connect.WithClientOptions(opts...),
 		),
 		updateGroup: connect.NewClient[qf.Group, qf.Group](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateGroupProcedure,
-			connect.WithSchema(quickFeedServiceUpdateGroupMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateGroup")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteGroup: connect.NewClient[qf.GroupRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceDeleteGroupProcedure,
-			connect.WithSchema(quickFeedServiceDeleteGroupMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteGroup")),
 			connect.WithClientOptions(opts...),
 		),
 		getCourse: connect.NewClient[qf.CourseRequest, qf.Course](
 			httpClient,
 			baseURL+QuickFeedServiceGetCourseProcedure,
-			connect.WithSchema(quickFeedServiceGetCourseMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetCourse")),
 			connect.WithClientOptions(opts...),
 		),
 		getCourses: connect.NewClient[qf.Void, qf.Courses](
 			httpClient,
 			baseURL+QuickFeedServiceGetCoursesProcedure,
-			connect.WithSchema(quickFeedServiceGetCoursesMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetCourses")),
 			connect.WithClientOptions(opts...),
 		),
 		updateCourse: connect.NewClient[qf.Course, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateCourseProcedure,
-			connect.WithSchema(quickFeedServiceUpdateCourseMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCourse")),
 			connect.WithClientOptions(opts...),
 		),
 		updateCourseVisibility: connect.NewClient[qf.Enrollment, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateCourseVisibilityProcedure,
-			connect.WithSchema(quickFeedServiceUpdateCourseVisibilityMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCourseVisibility")),
 			connect.WithClientOptions(opts...),
 		),
 		getAssignments: connect.NewClient[qf.CourseRequest, qf.Assignments](
 			httpClient,
 			baseURL+QuickFeedServiceGetAssignmentsProcedure,
-			connect.WithSchema(quickFeedServiceGetAssignmentsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetAssignments")),
 			connect.WithClientOptions(opts...),
 		),
 		updateAssignments: connect.NewClient[qf.CourseRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateAssignmentsProcedure,
-			connect.WithSchema(quickFeedServiceUpdateAssignmentsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateAssignments")),
 			connect.WithClientOptions(opts...),
 		),
 		getEnrollments: connect.NewClient[qf.EnrollmentRequest, qf.Enrollments](
 			httpClient,
 			baseURL+QuickFeedServiceGetEnrollmentsProcedure,
-			connect.WithSchema(quickFeedServiceGetEnrollmentsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetEnrollments")),
 			connect.WithClientOptions(opts...),
 		),
 		createEnrollment: connect.NewClient[qf.Enrollment, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceCreateEnrollmentProcedure,
-			connect.WithSchema(quickFeedServiceCreateEnrollmentMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("CreateEnrollment")),
 			connect.WithClientOptions(opts...),
 		),
 		updateEnrollments: connect.NewClient[qf.Enrollments, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateEnrollmentsProcedure,
-			connect.WithSchema(quickFeedServiceUpdateEnrollmentsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateEnrollments")),
 			connect.WithClientOptions(opts...),
 		),
 		getSubmission: connect.NewClient[qf.SubmissionRequest, qf.Submission](
 			httpClient,
 			baseURL+QuickFeedServiceGetSubmissionProcedure,
-			connect.WithSchema(quickFeedServiceGetSubmissionMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmission")),
 			connect.WithClientOptions(opts...),
 		),
 		getSubmissions: connect.NewClient[qf.SubmissionRequest, qf.Submissions](
 			httpClient,
 			baseURL+QuickFeedServiceGetSubmissionsProcedure,
-			connect.WithSchema(quickFeedServiceGetSubmissionsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmissions")),
 			connect.WithClientOptions(opts...),
 		),
 		getSubmissionsByCourse: connect.NewClient[qf.SubmissionRequest, qf.CourseSubmissions](
 			httpClient,
 			baseURL+QuickFeedServiceGetSubmissionsByCourseProcedure,
-			connect.WithSchema(quickFeedServiceGetSubmissionsByCourseMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmissionsByCourse")),
 			connect.WithClientOptions(opts...),
 		),
 		updateSubmission: connect.NewClient[qf.UpdateSubmissionRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateSubmissionProcedure,
-			connect.WithSchema(quickFeedServiceUpdateSubmissionMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmission")),
 			connect.WithClientOptions(opts...),
 		),
 		updateSubmissions: connect.NewClient[qf.UpdateSubmissionsRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateSubmissionsProcedure,
-			connect.WithSchema(quickFeedServiceUpdateSubmissionsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmissions")),
 			connect.WithClientOptions(opts...),
 		),
 		rebuildSubmissions: connect.NewClient[qf.RebuildRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceRebuildSubmissionsProcedure,
-			connect.WithSchema(quickFeedServiceRebuildSubmissionsMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("RebuildSubmissions")),
 			connect.WithClientOptions(opts...),
 		),
 		createBenchmark: connect.NewClient[qf.GradingBenchmark, qf.GradingBenchmark](
 			httpClient,
 			baseURL+QuickFeedServiceCreateBenchmarkProcedure,
-			connect.WithSchema(quickFeedServiceCreateBenchmarkMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("CreateBenchmark")),
 			connect.WithClientOptions(opts...),
 		),
 		updateBenchmark: connect.NewClient[qf.GradingBenchmark, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateBenchmarkProcedure,
-			connect.WithSchema(quickFeedServiceUpdateBenchmarkMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateBenchmark")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteBenchmark: connect.NewClient[qf.GradingBenchmark, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceDeleteBenchmarkProcedure,
-			connect.WithSchema(quickFeedServiceDeleteBenchmarkMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteBenchmark")),
 			connect.WithClientOptions(opts...),
 		),
 		createCriterion: connect.NewClient[qf.GradingCriterion, qf.GradingCriterion](
 			httpClient,
 			baseURL+QuickFeedServiceCreateCriterionProcedure,
-			connect.WithSchema(quickFeedServiceCreateCriterionMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("CreateCriterion")),
 			connect.WithClientOptions(opts...),
 		),
 		updateCriterion: connect.NewClient[qf.GradingCriterion, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateCriterionProcedure,
-			connect.WithSchema(quickFeedServiceUpdateCriterionMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCriterion")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteCriterion: connect.NewClient[qf.GradingCriterion, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceDeleteCriterionProcedure,
-			connect.WithSchema(quickFeedServiceDeleteCriterionMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteCriterion")),
 			connect.WithClientOptions(opts...),
 		),
 		createReview: connect.NewClient[qf.ReviewRequest, qf.Review](
 			httpClient,
 			baseURL+QuickFeedServiceCreateReviewProcedure,
-			connect.WithSchema(quickFeedServiceCreateReviewMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("CreateReview")),
 			connect.WithClientOptions(opts...),
 		),
 		updateReview: connect.NewClient[qf.ReviewRequest, qf.Review](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateReviewProcedure,
-			connect.WithSchema(quickFeedServiceUpdateReviewMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 			connect.WithClientOptions(opts...),
 		),
 		getOrganization: connect.NewClient[qf.Organization, qf.Organization](
 			httpClient,
 			baseURL+QuickFeedServiceGetOrganizationProcedure,
-			connect.WithSchema(quickFeedServiceGetOrganizationMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetOrganization")),
 			connect.WithClientOptions(opts...),
 		),
 		getRepositories: connect.NewClient[qf.CourseRequest, qf.Repositories](
 			httpClient,
 			baseURL+QuickFeedServiceGetRepositoriesProcedure,
-			connect.WithSchema(quickFeedServiceGetRepositoriesMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetRepositories")),
 			connect.WithClientOptions(opts...),
 		),
 		isEmptyRepo: connect.NewClient[qf.RepositoryRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceIsEmptyRepoProcedure,
-			connect.WithSchema(quickFeedServiceIsEmptyRepoMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("IsEmptyRepo")),
 			connect.WithClientOptions(opts...),
 		),
 		submissionStream: connect.NewClient[qf.Void, qf.Submission](
 			httpClient,
 			baseURL+QuickFeedServiceSubmissionStreamProcedure,
-			connect.WithSchema(quickFeedServiceSubmissionStreamMethodDescriptor),
+			connect.WithSchema(quickFeedServiceMethods.ByName("SubmissionStream")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -711,214 +672,215 @@ type QuickFeedServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	quickFeedServiceMethods := qf.File_qf_quickfeed_proto.Services().ByName("QuickFeedService").Methods()
 	quickFeedServiceGetUserHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetUserProcedure,
 		svc.GetUser,
-		connect.WithSchema(quickFeedServiceGetUserMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetUser")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetUsersHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetUsersProcedure,
 		svc.GetUsers,
-		connect.WithSchema(quickFeedServiceGetUsersMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetUsers")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateUserHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateUserProcedure,
 		svc.UpdateUser,
-		connect.WithSchema(quickFeedServiceUpdateUserMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateUser")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetGroupHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetGroupProcedure,
 		svc.GetGroup,
-		connect.WithSchema(quickFeedServiceGetGroupMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetGroup")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetGroupsByCourseHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetGroupsByCourseProcedure,
 		svc.GetGroupsByCourse,
-		connect.WithSchema(quickFeedServiceGetGroupsByCourseMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetGroupsByCourse")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceCreateGroupHandler := connect.NewUnaryHandler(
 		QuickFeedServiceCreateGroupProcedure,
 		svc.CreateGroup,
-		connect.WithSchema(quickFeedServiceCreateGroupMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("CreateGroup")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateGroupHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateGroupProcedure,
 		svc.UpdateGroup,
-		connect.WithSchema(quickFeedServiceUpdateGroupMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateGroup")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceDeleteGroupHandler := connect.NewUnaryHandler(
 		QuickFeedServiceDeleteGroupProcedure,
 		svc.DeleteGroup,
-		connect.WithSchema(quickFeedServiceDeleteGroupMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("DeleteGroup")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetCourseHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetCourseProcedure,
 		svc.GetCourse,
-		connect.WithSchema(quickFeedServiceGetCourseMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetCourse")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetCoursesHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetCoursesProcedure,
 		svc.GetCourses,
-		connect.WithSchema(quickFeedServiceGetCoursesMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetCourses")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateCourseHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateCourseProcedure,
 		svc.UpdateCourse,
-		connect.WithSchema(quickFeedServiceUpdateCourseMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCourse")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateCourseVisibilityHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateCourseVisibilityProcedure,
 		svc.UpdateCourseVisibility,
-		connect.WithSchema(quickFeedServiceUpdateCourseVisibilityMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCourseVisibility")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetAssignmentsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetAssignmentsProcedure,
 		svc.GetAssignments,
-		connect.WithSchema(quickFeedServiceGetAssignmentsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetAssignments")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateAssignmentsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateAssignmentsProcedure,
 		svc.UpdateAssignments,
-		connect.WithSchema(quickFeedServiceUpdateAssignmentsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateAssignments")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetEnrollmentsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetEnrollmentsProcedure,
 		svc.GetEnrollments,
-		connect.WithSchema(quickFeedServiceGetEnrollmentsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetEnrollments")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceCreateEnrollmentHandler := connect.NewUnaryHandler(
 		QuickFeedServiceCreateEnrollmentProcedure,
 		svc.CreateEnrollment,
-		connect.WithSchema(quickFeedServiceCreateEnrollmentMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("CreateEnrollment")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateEnrollmentsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateEnrollmentsProcedure,
 		svc.UpdateEnrollments,
-		connect.WithSchema(quickFeedServiceUpdateEnrollmentsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateEnrollments")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetSubmissionHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetSubmissionProcedure,
 		svc.GetSubmission,
-		connect.WithSchema(quickFeedServiceGetSubmissionMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmission")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetSubmissionsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetSubmissionsProcedure,
 		svc.GetSubmissions,
-		connect.WithSchema(quickFeedServiceGetSubmissionsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmissions")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetSubmissionsByCourseHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetSubmissionsByCourseProcedure,
 		svc.GetSubmissionsByCourse,
-		connect.WithSchema(quickFeedServiceGetSubmissionsByCourseMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmissionsByCourse")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateSubmissionHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateSubmissionProcedure,
 		svc.UpdateSubmission,
-		connect.WithSchema(quickFeedServiceUpdateSubmissionMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmission")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateSubmissionsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateSubmissionsProcedure,
 		svc.UpdateSubmissions,
-		connect.WithSchema(quickFeedServiceUpdateSubmissionsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmissions")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceRebuildSubmissionsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceRebuildSubmissionsProcedure,
 		svc.RebuildSubmissions,
-		connect.WithSchema(quickFeedServiceRebuildSubmissionsMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("RebuildSubmissions")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceCreateBenchmarkHandler := connect.NewUnaryHandler(
 		QuickFeedServiceCreateBenchmarkProcedure,
 		svc.CreateBenchmark,
-		connect.WithSchema(quickFeedServiceCreateBenchmarkMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("CreateBenchmark")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateBenchmarkHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateBenchmarkProcedure,
 		svc.UpdateBenchmark,
-		connect.WithSchema(quickFeedServiceUpdateBenchmarkMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateBenchmark")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceDeleteBenchmarkHandler := connect.NewUnaryHandler(
 		QuickFeedServiceDeleteBenchmarkProcedure,
 		svc.DeleteBenchmark,
-		connect.WithSchema(quickFeedServiceDeleteBenchmarkMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("DeleteBenchmark")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceCreateCriterionHandler := connect.NewUnaryHandler(
 		QuickFeedServiceCreateCriterionProcedure,
 		svc.CreateCriterion,
-		connect.WithSchema(quickFeedServiceCreateCriterionMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("CreateCriterion")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateCriterionHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateCriterionProcedure,
 		svc.UpdateCriterion,
-		connect.WithSchema(quickFeedServiceUpdateCriterionMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCriterion")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceDeleteCriterionHandler := connect.NewUnaryHandler(
 		QuickFeedServiceDeleteCriterionProcedure,
 		svc.DeleteCriterion,
-		connect.WithSchema(quickFeedServiceDeleteCriterionMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("DeleteCriterion")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceCreateReviewHandler := connect.NewUnaryHandler(
 		QuickFeedServiceCreateReviewProcedure,
 		svc.CreateReview,
-		connect.WithSchema(quickFeedServiceCreateReviewMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("CreateReview")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceUpdateReviewHandler := connect.NewUnaryHandler(
 		QuickFeedServiceUpdateReviewProcedure,
 		svc.UpdateReview,
-		connect.WithSchema(quickFeedServiceUpdateReviewMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetOrganizationHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetOrganizationProcedure,
 		svc.GetOrganization,
-		connect.WithSchema(quickFeedServiceGetOrganizationMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetOrganization")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetRepositoriesHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetRepositoriesProcedure,
 		svc.GetRepositories,
-		connect.WithSchema(quickFeedServiceGetRepositoriesMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetRepositories")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceIsEmptyRepoHandler := connect.NewUnaryHandler(
 		QuickFeedServiceIsEmptyRepoProcedure,
 		svc.IsEmptyRepo,
-		connect.WithSchema(quickFeedServiceIsEmptyRepoMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("IsEmptyRepo")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceSubmissionStreamHandler := connect.NewServerStreamHandler(
 		QuickFeedServiceSubmissionStreamProcedure,
 		svc.SubmissionStream,
-		connect.WithSchema(quickFeedServiceSubmissionStreamMethodDescriptor),
+		connect.WithSchema(quickFeedServiceMethods.ByName("SubmissionStream")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/qf.QuickFeedService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

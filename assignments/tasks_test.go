@@ -25,7 +25,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Delete all issues on student repositories
 	repoFn(repos, func(repo *scm.Repository) {
 		if err := scmApp.DeleteIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.ScmOrganizationName,
+			Owner: course.GetScmOrganizationName(),
 			Repo:  repo.Repo,
 		}); err != nil {
 			t.Fatal(err)
@@ -35,7 +35,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 
 	// Create issues on student repositories for the first assignment's tasks
 	first := assignments[:1]
-	t.Logf("Synchronizing tasks with issues for assignment %d with %d tasks", first[0].GetOrder(), len(first[0].Tasks))
+	t.Logf("Synchronizing tasks with issues for assignment %d with %d tasks", first[0].GetOrder(), len(first[0].GetTasks()))
 	if err := synchronizeTasksWithIssues(ctx, db, scmApp, course, first); err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := scmApp.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.ScmOrganizationName,
+			Owner: course.GetScmOrganizationName(),
 			Repo:  repo.Repo,
 		})
 		if err != nil {
@@ -54,16 +54,16 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 			t.Logf("Found issue (%s): %s", repo.Repo, issue.Title)
 			issues[issue.Title] = issue
 		}
-		for _, task := range first[0].Tasks {
+		for _, task := range first[0].GetTasks() {
 			if _, ok := issues[task.Title]; !ok {
-				t.Errorf("task.Title = %s not found in repo %s", task.Title, repo.Repo)
+				t.Errorf("task.Title = %s not found in repo %s", task.GetTitle(), repo.Repo)
 			}
 		}
 	})
 
 	// Create issues on student repositories for the second assignment's tasks
 	second := assignments[1:]
-	t.Logf("Synchronizing tasks with issues for assignment %d with %d tasks", second[0].GetOrder(), len(second[0].Tasks))
+	t.Logf("Synchronizing tasks with issues for assignment %d with %d tasks", second[0].GetOrder(), len(second[0].GetTasks()))
 	if err := synchronizeTasksWithIssues(ctx, db, scmApp, course, second); err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := scmApp.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.ScmOrganizationName,
+			Owner: course.GetScmOrganizationName(),
 			Repo:  repo.Repo,
 		})
 		if err != nil {
@@ -82,9 +82,9 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 			t.Logf("Found issue (%s): %s", repo.Repo, issue.Title)
 			issues[issue.Title] = issue
 		}
-		for _, task := range second[0].Tasks {
-			if _, ok := issues[task.Title]; !ok {
-				t.Errorf("task.Title = %s not found in repo %s", task.Title, repo.Repo)
+		for _, task := range second[0].GetTasks() {
+			if _, ok := issues[task.GetTitle()]; !ok {
+				t.Errorf("task.GetTitle() = %s not found in repo %s", task.GetTitle(), repo.Repo)
 			}
 		}
 	})
