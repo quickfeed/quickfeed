@@ -145,15 +145,15 @@
 
 #content {
     transition: margin-left ease-in-out 0.2s;
-    margin-left: 0px;
-    margin-right: 0px;
+    margin-left: 350px;
+    margin-right: 100px;
     width: 100%;
 }
 
 #content-full {
     transition: margin-left ease-in-out 0.2s;
-    margin-left: 0px;
-    margin-right: 0px;
+    margin-left: 100px;
+    margin-right: 100px;
     width: 100%;
 }
 
@@ -374,7 +374,6 @@ input {
 
 .dropdown-menu-center {
     right: auto;
-    left: 50%;
     -webkit-transform: translate(-50%, 0);
     -o-transform: translate(-50%, 0);
     transform: translate(-50%, 0);
@@ -389,7 +388,6 @@ input {
     height: var(--navbar-height);
 
     .nav-child {
-
         &.brand {
             display: flex;
             font-size: 1.5rem;
@@ -481,7 +479,6 @@ nav.flexbox {
 .flex-user {
     display: flex;
     flex-direction: row;
-    width: 15rem;
     justify-content: center;
     align-items: center;
 }
@@ -664,4 +661,79 @@ nav.flexbox {
     width: 20px;
     text-align: center;
     color: slategray;
+}
+
+// LoginPage specific styles
+body.login-page {
+    margin: 0;
+    padding: 0;
+    background-color: #0d1117 !important;
+}
+
+.loginContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+    align-items: center;
+    height: 100vh;
+    background-color: #0d1117;
+    color: #c9d1d9;
+}
+
+.loginBox {
+    background-color: #161b22;
+    padding: 30px;
+    // padding-top: 50px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    text-align: center;
+}
+
+.loginButton {
+    display: block;
+    background-color: #238636;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 17px;
+}
+
+.loginButton:hover {
+    background-color: #2aa042;
+    color: #fff;
+}
+
+.loginWelcomeHeader {
+    margin-top: 60px;
+    margin-bottom: 50px;
+    transform: scale(1.8);
+    color: #e0e5eb;
+}
+
+.loginDivider {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    color: #c9d1d9;
+    border-bottom: 1px solid #30363d;
+    width: 100%;
+}
+
+.backToTop {
+    color: #6c757d;
+}
+
+.backToTop:hover {
+    color: #c9d1d9;
+    transform: scale(1.05);
+}
+
+.signIn {
+    right: auto;
+    text-align: right;
+    color: #c9d1d9;
+    // margin-right: 30px;
+}
+
+.signIn:hover {
+    color: #f2f4f6;
 }
