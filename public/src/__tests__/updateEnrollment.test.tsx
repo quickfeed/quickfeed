@@ -1,4 +1,4 @@
-import { CourseSchema, Enrollment, Enrollment_UserStatus, EnrollmentSchema, EnrollmentsSchema, UserSchema } from "../../proto/qf/types_pb"
+import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
@@ -20,23 +20,6 @@ describe("UpdateEnrollment", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
-        getEnrollments: mock("getEnrollments", async (request) => {
-            const enrollments: Enrollment[] = []
-            MockData.mockedEnrollments().enrollments.forEach(e => {
-                if (request.FetchMode?.case === "courseID") {
-                    if (e.courseID === request.FetchMode.value) {
-                        enrollments.push(e)
-                    }
-                } else if (request.FetchMode?.case === "userID") {
-                    if (e.userID === request.FetchMode.value) {
-                        enrollments.push(e)
-                    }
-                } else {
-                    enrollments.push(e)
-                }
-            })
-            return { message: create(EnrollmentsSchema, { enrollments }), error: null }
-        }),
         getCourse: mock("getCourse", async (request) => {
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
