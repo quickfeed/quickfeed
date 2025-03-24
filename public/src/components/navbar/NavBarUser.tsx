@@ -11,11 +11,7 @@ const NavBarUser = (): JSX.Element => {
 
     if (!isLoggedIn) {
         return (
-            <ul>
-                <a href="/auth/github" className="signIn" style={{ textAlign: "right", color: "#d4d4d4", marginRight: "30px" }}>Login
-                    <i className="fa fa-2x fa-github align-middle ms-auto " id="github" style={{marginLeft: "10px"}}/>
-                </a>
-            </ul>
+            <a href="/auth/github" className="flex-user signIn mr-3">Sign In</a>
         )
     }
 
@@ -25,6 +21,7 @@ const NavBarUser = (): JSX.Element => {
             <StreamStatus />
             <ul className="nav-item dropdown">
                 <img className="rounded-circle" src={self.AvatarURL} id="avatar" />
+                <i className="fa fa-chevron-down text-white"></i>
                 <ul className="dropdown-menu dropdown-menu-center bg-dark">
                     <ProfileButton />
                     <AboutButton />
