@@ -16,6 +16,7 @@ describe("Profile", () => {
             state.self = create(UserSchema, {
                 ID: BigInt(1),
                 Name: "Test User",
+                AvatarURL: "https://example.com/avatar.png",
             })
         })
         const history = createMemoryHistory()
