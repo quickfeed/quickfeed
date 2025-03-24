@@ -1,8 +1,8 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, User, UserSchema } from "../../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, EnrollmentSchema, Group, GroupSchema, Submission, User, UserSchema } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
-import { create } from "@bufbuild/protobuf"
+import { create, isMessage } from "@bufbuild/protobuf"
 
 export interface CourseGroup {
     courseID: bigint
@@ -335,7 +335,7 @@ export const state: State = {
 
             switch (sortSubmissionsBy) {
                 case SubmissionSort.ID: {
-                    if (a.$typeName === "qf.Enrollment" && b.$typeName === "qf.Enrollment") {
+                    if (isMessage(a, EnrollmentSchema) && isMessage(b, EnrollmentSchema)) {
                         return sortOrder * (Number(a.userID) - Number(b.userID))
                     } else {
                         return sortOrder * (Number(a.ID) - Number(b.ID))
@@ -369,11 +369,11 @@ export const state: State = {
                 case SubmissionSort.Name: {
                     let nameA = ""
                     let nameB = ""
-                    if (!groupView && a.$typeName === "qf.Enrollment" && b.$typeName === "qf.Enrollment") {
+                    if (!groupView && isMessage(a, EnrollmentSchema) && isMessage(b, EnrollmentSchema)) {
                         nameA = a.user?.Name ?? ""
                         nameB = b.user?.Name ?? ""
                     }
-                    else if (groupView && a.$typeName === "qf.Group" && b.$typeName === "qf.Group") {
+                    else if (groupView && isMessage(a, GroupSchema) && isMessage(b, GroupSchema)) {
                         nameA = a.name ?? ""
                         nameB = b.name ?? ""
                     }

@@ -25,7 +25,7 @@ import { Response } from "../client"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import * as internalActions from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
-import { clone, create } from "@bufbuild/protobuf"
+import { clone, create, isMessage } from "@bufbuild/protobuf"
 
 export const internal = internalActions
 
@@ -922,7 +922,7 @@ export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
 // setSubmissionOwner sets the owner of the currently selected submission.
 // The owner is either an enrollment or a group.
 export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group) => {
-    if (owner.$typeName === "qf.Group") {
+    if (isMessage(owner, GroupSchema)) {
         state.submissionOwner = { type: "GROUP", id: owner.ID }
     } else {
         const groupID = state.selectedSubmission?.groupID ?? 0n

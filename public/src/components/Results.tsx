@@ -11,7 +11,7 @@ import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
-import { clone } from "@bufbuild/protobuf"
+import { clone, isMessage } from "@bufbuild/protobuf"
 
 
 const Results = ({ review }: { review: boolean }) => {
@@ -87,7 +87,7 @@ const Results = ({ review }: { review: boolean }) => {
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
                 actions.setSelectedSubmission(submission)
-                if (owner.$typeName === "qf.Enrollment") {
+                if (isMessage(owner, EnrollmentSchema)) {
                     actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
                 actions.setSubmissionOwner(owner)
@@ -106,7 +106,7 @@ const Results = ({ review }: { review: boolean }) => {
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
                 actions.setSelectedSubmission(submission)
-                if (owner.$typeName === "qf.Enrollment") {
+                if (isMessage(owner, EnrollmentSchema)) {
                     actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
                 actions.setSubmissionOwner(owner)
