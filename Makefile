@@ -44,9 +44,14 @@ proto:
 	buf dep update
 	buf generate --template buf.gen.yaml
 
+UI_PROTOS := public/proto/kit/score/score_pb.ts public/proto/qf/types_pb.ts
 # TODO(meling): Split the proto target to avoid generating too new typescript... Need to fix #1147 first; after which we should merge this target with the proto target.
 proto-ui: $(protopatch)
 	buf generate --template buf.gen.ui.yaml --exclude-path patch
+	@echo "Removing protopatch imports from $(UI_PROTOS)"
+	sed -i '/import { file_patch_go } from "\(.*\)patch\/go_pb";/d' $(UI_PROTOS)
+	sed -i 's/, *file_patch_go//; s/file_patch_go, *//' $(UI_PROTOS)
+
 
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
