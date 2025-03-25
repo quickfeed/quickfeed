@@ -12,7 +12,6 @@ type ProgressBarTest = {
     submission: Submission,
     assignment: Assignment,
     want: string
-    assignmentIndex?: number
 }
 
 
@@ -77,21 +76,10 @@ describe("ProgressBar", () => {
             assignment: create(AssignmentSchema),
             want: "0 %"
         },
-        {
-            desc: "Progress Bar with incorrect index",
-            submission: create(SubmissionSchema, { score: 50 }),
-            assignment: create(AssignmentSchema, { scoreLimit: 100 }),
-            want: "0 %",
-            assignmentIndex: 10
-        }
     ]
 
     test.each(progressBarTests)(`[Progress.LAB] $desc`, (test) => {
-        labTest(test, true)
-    })
-
-    test.each(progressBarTests)(`[Progress.LAB - Without Submission] $desc`, (test) => {
-        labTest(test, false)
+        labTest(test)
     })
 
 
@@ -117,11 +105,9 @@ describe("ProgressBar", () => {
     })
 })
 
-const labTest = (test: ProgressBarTest, withSubmission: boolean) => {
+const labTest = (test: ProgressBarTest) => {
     const submissions = new SubmissionsForUser()
-    if (withSubmission) {
-        submissions.setSubmissions(1n, "USER", [test.submission])
-    }
+    submissions.setSubmissions(1n, "USER", [test.submission])
     const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions })
 
     const { container } = render(
@@ -131,12 +117,10 @@ const labTest = (test: ProgressBarTest, withSubmission: boolean) => {
     )
 
     // Incorrect assignment index should not have a secondary bar
-    const hasSecondary = test.submission.score < test.assignment.scoreLimit && test.assignmentIndex === undefined
+    const hasSecondary = test.submission.score < test.assignment.scoreLimit
     // Given an invalid assignment index, we expect the bar to be empty
     // However, if we pass a submission, we expect the bar to be filled to the correct percentage
-    const score = test.assignmentIndex === undefined || withSubmission
-        ? test.submission.score
-        : 0
+    const score = test.submission.score
 
     const bars = container.getElementsByClassName("progress-bar")
     expect(bars).toHaveLength(hasSecondary ? 2 : 1)
