@@ -4,8 +4,9 @@
 # It may be necessary to skip variables that uses special makefile characters, like $.
 -include .env
 
-OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
-ARCH				:= $(shell uname -m)
+OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
+protopatch	:= qf/types.proto kit/score/score.proto
+proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
 .PHONY: download brew version-check install ui proto test qcm cm
@@ -44,14 +45,12 @@ proto:
 	buf dep update
 	buf generate --template buf.gen.yaml
 
-UI_PROTOS := public/proto/kit/score/score_pb.ts public/proto/qf/types_pb.ts
 # TODO(meling): Split the proto target to avoid generating too new typescript... Need to fix #1147 first; after which we should merge this target with the proto target.
 proto-ui: $(protopatch)
 	buf generate --template buf.gen.ui.yaml --exclude-path patch
-	@echo "Removing protopatch imports from $(UI_PROTOS)"
-	sed -i '/import { file_patch_go } from "\(.*\)patch\/go_pb";/d' $(UI_PROTOS)
-	sed -i 's/, *file_patch_go//; s/file_patch_go, *//' $(UI_PROTOS)
-
+	@echo "Removing protopatch imports from $(proto_ts)"
+	@perl -i -ne "print unless /import\s*\{\s*file_patch_go\s*\}\s*from\s*[\"'].*patch\/go_pb[\"'];/" $(proto_ts)
+	@perl -i -pe "s/,\s*file_patch_go//g; s/file_patch_go,\s*//g" $(proto_ts)
 
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
