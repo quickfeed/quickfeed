@@ -769,8 +769,11 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 /* Utility Actions */
 
 /** Switches between teacher and student view. */
-export const changeView = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const enrollment = state.enrollmentsByCourseID[courseID.toString()]
+export const changeView = async ({ state, effects }: Context): Promise<void> => {
+    const enrollment = state.enrollments.find(enrol => enrol.courseID === state.activeCourse)
+    if (!enrollment) {
+        return
+    }
     if (hasStudent(enrollment.status)) {
         const response = await effects.api.client.getEnrollments({
             FetchMode: {
@@ -782,7 +785,7 @@ export const changeView = async ({ state, effects }: Context, courseID: bigint):
         if (response.error) {
             return
         }
-        if (response.message.enrollments.find(enrol => enrol.courseID === courseID && hasTeacher(enrol.status))) {
+        if (response.message.enrollments.find(enrol => enrol.courseID === state.activeCourse && hasTeacher(enrol.status))) {
             enrollment.status = Enrollment_UserStatus.TEACHER
         }
     } else if (hasTeacher(enrollment.status)) {
