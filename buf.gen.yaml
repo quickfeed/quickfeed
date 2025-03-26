@@ -10,3 +10,8 @@ plugins:
   out: ./
   opt:
   - paths=source_relative
+- remote: buf.build/bufbuild/es
+  out: public/proto
+  opt: target=ts
+  exclude_types:
+  - go
