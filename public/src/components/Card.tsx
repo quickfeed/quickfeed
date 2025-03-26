@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { useHistory } from "react-router"
 import { Color } from "../Helpers"
 
@@ -10,13 +10,13 @@ export interface Notification {
 
 /**  This component displays a card with a header, a body and a button in the footer
  * @param title: The title of the card
- * @param text: The text in body of the card 
+ * @param text: The text in body of the card
  * @param buttonText: The text of the button in the footer
- * @param notification: (optional) Notification to display. Floats right of title. 
- * @param to: (Optional) The path to navigate to when the button is clicked 
- * @param onclick: (Optional) The function to call when the button is clicked 
+ * @param notification: (optional) Notification to display. Floats right of title.
+ * @param to: (Optional) The path to navigate to when the button is clicked
+ * @param onclick: (Optional) The function to call when the button is clicked
  */
-const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification,  to?: string, onclick?: () => void }) => {
+const Card = memo((props: { title: string, text: string, buttonText: string, notification?: Notification, to?: string, onclick?: () => void }) => {
     const history = useHistory()
 
     const notification = props.notification ? <i className={`badge badge-${props.notification.color} float-right`}>{props.notification.text}</i> : null
@@ -42,13 +42,15 @@ const Card = (props: { title: string, text: string, buttonText: string, notifica
                     <p className="card-text">
                         {props.text}
                     </p>
-                    <div className="btn btn-primary" onClick={onClick}>
+                    <div className="btn btn-primary" onClick={onClick}> {/* skipcq: JS-0417 */}
                         {props.buttonText}
                     </div>
                 </div>
             </div>
         </div>
     )
-}
+})
+
+Card.displayName = "Card"
 
 export default Card

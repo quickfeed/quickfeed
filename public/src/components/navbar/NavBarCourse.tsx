@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { useHistory } from "react-router"
 import { Enrollment } from "../../../proto/qf/types_pb"
 import { Status } from "../../consts"
@@ -12,24 +12,25 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
+
     // Determines if a dropdown should be shown for the course
     const active = state.activeCourse === enrollment.courseID
     const course = state.courses.find(c => c.ID === enrollment.courseID)
 
-    const navigateTo = (courseID: bigint) => {
+    const navigateTo = useCallback(() => {
         if (active) {
             // Collapse active course dropdown
             actions.setActiveCourse(BigInt(0))
             history.push("/")
         } else {
-            history.push(`/course/${courseID}`)
-            actions.setActiveCourse(courseID)
+            history.push(`/course/${enrollment.courseID}`)
+            actions.setActiveCourse(enrollment.courseID)
         }
-    }
+    }, [actions, active, enrollment.courseID, history])
 
     return (
         <>
-            <div role="button" onClick={() => navigateTo(enrollment.courseID)} aria-hidden="true">
+            <div role="button" onClick={navigateTo} aria-hidden="true"> {/* skipcq: JS-0417 */}
                 <li className="activeClass">
                     <div className="col" id="title">
                         {course?.code}

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import AboutButton from "../navbar-buttons/AboutButton"
 import AdminButton from "../navbar-buttons/AdminButton"
 import { useAppState } from "../../overmind"
@@ -6,7 +6,7 @@ import ProfileButton from "../navbar-buttons/ProfileButton"
 import LogoutButton from "../navbar-buttons/LogoutButton"
 import StreamStatus from "./StreamStatus"
 
-const NavBarUser = () => {
+const NavBarUser = memo(() => {
     const { self, isLoggedIn } = useAppState()
 
     if (!isLoggedIn) {
@@ -35,6 +35,8 @@ const NavBarUser = () => {
 
         </div>
     )
-}
+})
+
+NavBarUser.displayName = "NavBarUser"
 
 export default NavBarUser

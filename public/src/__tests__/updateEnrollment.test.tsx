@@ -19,7 +19,7 @@ describe("UpdateEnrollment", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
-        getCourse: mock("getCourse", async (request) => {
+        getCourse: mock("getCourse", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
                 return { message: new Course(), error: new ConnectError("course not found") }
@@ -27,7 +27,7 @@ describe("UpdateEnrollment", () => {
             course.enrollments = MockData.mockedEnrollments().enrollments.filter(e => e.courseID === request.courseID)
             return { message: course, error: null }
         }),
-        updateEnrollments: mock("updateEnrollments", async (request) => {
+        updateEnrollments: mock("updateEnrollments", async (request) => { // skipcq: JS-0116
             const enrollments = request.enrollments ?? []
             if (enrollments.length === 0) {
                 return { message: new Void(), error: null }

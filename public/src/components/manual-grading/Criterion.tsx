@@ -12,7 +12,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
-    const [showComment, setShowComment] = React.useState<boolean>(true)
+    const [showComment, setShowComment] = useState<boolean>(true)
     const { isTeacher } = useAppState()
 
     // classname is used to style the first column of the row returned by this component
@@ -36,19 +36,18 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
         ? <CriteriaStatus criterion={criteria} />
         : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
 
-
     let comment: React.JSX.Element | null = null
     let button: React.JSX.Element | null = null
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment
-        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton>
+        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton> // skipcq: JS-0417
         if (criteria.comment.length > 0) {
             comment = <CriterionComment comment={criteria.comment} />
         }
     } else {
         comment = <CriterionComment comment={criteria.comment} />
-        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton>
+        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton> // skipcq: JS-0417
     }
 
     // Only display the comment if the comment is not empty

@@ -11,7 +11,7 @@ const NavBarTeacher = () => {
     const pendingGroups = state.pendingGroups.length > 0 ? { text: state.pendingGroups.length.toString(), classname: "badge badge-danger" } : null
     const approvedGroups = { text: state.numGroups.toString(), classname: "badge badge-primary" }
     const courseHasManualGrading = state.assignments[state.activeCourse.toString()]?.some(assignment => isManuallyGraded(assignment))
-    
+
     const links: NavLink[] = [
         { link: { text: "Results", to: `/course/${state.activeCourse}/results` } },
         { link: { text: "Members", to: `/course/${state.activeCourse}/members` }, icons: [pending, enrolled] },
@@ -22,7 +22,7 @@ const NavBarTeacher = () => {
         links.unshift({ link: { text: "Review", to: `/course/${state.activeCourse}/review` } })
     }
 
-    const teacherLinks = links.map((link, index) => { return <NavBarLink key={index} link={link.link} icons={link.icons} /> })
+    const teacherLinks = links.map((link) => { return <NavBarLink key={link.link.text} link={link.link} icons={link.icons} /> })
     return <>{teacherLinks}</>
 }
 

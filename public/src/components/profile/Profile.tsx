@@ -23,7 +23,7 @@ const Profile = () => {
         if (!state.isValid) {
             setEditing(true)
         }
-    })
+    }, [state.isValid])
 
     if (state.isLoggedIn) {
         return (

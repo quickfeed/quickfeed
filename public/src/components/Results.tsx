@@ -4,7 +4,7 @@ import { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
-import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
+import { GenerateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
 import DynamicTable, { CellElement, RowElement } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
@@ -20,7 +20,7 @@ const Results = ({ review }: { review: boolean }) => {
     const history = useHistory()
     const location = useLocation()
 
-    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
+    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers])
     const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
         return state.assignments[courseID.toString()]?.filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID) ?? []
@@ -35,7 +35,7 @@ const Results = ({ review }: { review: boolean }) => {
             actions.review.setAssignmentID(-1n)
             actions.setActiveEnrollment(null)
         }
-    }, [])
+    }, [actions, courseID, state.loadedCourse])
 
     useEffect(() => {
         if (!state.selectedSubmission) {
@@ -50,7 +50,7 @@ const Results = ({ review }: { review: boolean }) => {
                 }
             }
         }
-    }, [])
+    }, [actions, location.search, state.selectedSubmission, state.submissionsForCourse])
 
     const handleLabClick = useCallback((labId: bigint) => {
         // Update the URL with the selected lab
@@ -58,13 +58,25 @@ const Results = ({ review }: { review: boolean }) => {
             pathname: location.pathname,
             search: `?id=${labId}`
         })
-    }, [history])
+    }, [history, location.pathname])
 
-    if (!state.loadedCourse[courseID.toString()]) {
-        return <h1>Fetching Submissions...</h1>
-    }
+    const groupView = state.groupView
+    const handleSetGroupView = useCallback(() => {
+        actions.setGroupView(!groupView)
+        actions.review.setAssignmentID(BigInt(-1))
+    }, [actions, groupView])
 
     const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
+        const handleReviewCellClick = () => {
+            actions.setSelectedSubmission(submission)
+            if (owner instanceof Enrollment) {
+                actions.setActiveEnrollment(owner.clone())
+            }
+            actions.setSubmissionOwner(owner)
+            actions.review.setSelectedReview(-1)
+            handleLabClick(submission.ID)
+        }
+
         if (!state.isManuallyGraded(submission)) {
             return { value: "N/A" }
         }
@@ -80,19 +92,12 @@ const Results = ({ review }: { review: boolean }) => {
         // Used to visually indicate that the submission will be released for the given minimum score
         const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
         const numReviewers = state.assignments[state.activeCourse.toString()]?.find((a) => a.ID === submission.AssignmentID)?.reviewers ?? 0
+
         return ({
             // TODO: Figure out a better way to visualize released submissions than '(r)'
             value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
-            onClick: () => {
-                actions.setSelectedSubmission(submission)
-                if (owner instanceof Enrollment) {
-                    actions.setActiveEnrollment(owner.clone())
-                }
-                actions.setSubmissionOwner(owner)
-                actions.review.setSelectedReview(-1)
-                handleLabClick(submission.ID)
-            }
+            onClick: handleReviewCellClick
         })
     }
 
@@ -100,28 +105,31 @@ const Results = ({ review }: { review: boolean }) => {
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
         const isSelected = state.selectedSubmission?.ID === submission.ID
+
+        const handleGetSubmissionCell = () => {
+            actions.setSelectedSubmission(submission)
+            if (owner instanceof Enrollment) {
+                actions.setActiveEnrollment(owner.clone())
+            }
+            actions.setSubmissionOwner(owner)
+            handleLabClick(submission.ID)
+            actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
+        }
+
         return ({
             value: `${submission.score} %`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
-            onClick: () => {
-                actions.setSelectedSubmission(submission)
-                if (owner instanceof Enrollment) {
-                    actions.setActiveEnrollment(owner.clone())
-                }
-                actions.setSubmissionOwner(owner)
-                handleLabClick(submission.ID)
-                actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
-            }
+            onClick: handleGetSubmissionCell
         })
     }
-
-    const groupView = state.groupView
-    const header = generateAssignmentsHeader(assignments, groupView, actions, state.isCourseManuallyGraded)
 
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(members, generator, state)
 
-
+    if (!state.loadedCourse[courseID.toString()]) {
+        return <h1>Fetching Submissions...</h1>
+    }
+    const header = GenerateAssignmentsHeader(assignments, groupView, actions, state.isCourseManuallyGraded)
     return (
         <div className="row">
             <div className={`p-0 ${state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}`}>
@@ -132,7 +140,7 @@ const Results = ({ review }: { review: boolean }) => {
                         color={groupView ? Color.BLUE : Color.GREEN}
                         type={ButtonType.BUTTON}
                         className="ml-2"
-                        onClick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
+                        onClick={handleSetGroupView}
                     />
                 </Search>
                 <TableSort review={review} />

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { useHistory } from "react-router"
 import { assignmentStatusText, getFormattedTime, getStatusByUser, isApproved, SubmissionStatus, timeFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
@@ -24,6 +24,7 @@ const SubmissionsTable = () => {
         })
         return assignments
     }
+    const handleClick = useCallback((courseID: bigint, assignmentID: bigint) => () => history.push(`/course/${courseID}/lab/${assignmentID}`), [history])
 
     const NewSubmissionsTable = () => {
         const table: React.JSX.Element[] = []
@@ -47,7 +48,7 @@ const SubmissionsTable = () => {
                 const course = state.courses.find(c => c.ID === courseID)
                 table.push(
                     <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
-                        onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
+                        onClick={handleClick(courseID, assignment.ID)}>
                         <th scope="row">{course?.code}</th>
                         <td>
                             {assignment.name}

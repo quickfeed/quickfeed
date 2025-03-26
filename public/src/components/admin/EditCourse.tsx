@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { Course } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 import DynamicTable, { Row } from "../DynamicTable"
@@ -8,6 +8,8 @@ import CourseForm from "../forms/CourseForm"
 const EditCourse = () => {
     const state = useAppState()
     const [course, setCourse] = useState<Course>()
+
+    const handleRefresh = useCallback((selected: boolean, c: Course) => () => selected ? setCourse(undefined) : setCourse(c), [])
 
     const courses = state.courses.map(c => {
         const selected = course?.ID === c.ID
@@ -19,7 +21,7 @@ const EditCourse = () => {
         data.push(c.slipDays.toString())
         data.push(
             <span className={selected ? "badge badge-danger clickable" : "badge badge-primary clickable"}
-                onClick={() => { selected ? setCourse(undefined) : setCourse(c) }}>
+                onClick={(handleRefresh(selected, c))}>
                 {selected ? "Cancel" : "Edit"}
             </span>
         )

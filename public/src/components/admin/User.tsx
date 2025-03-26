@@ -1,29 +1,26 @@
-import React from "react"
+import React, { useState, useCallback } from "react"
 import { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
 import { useGrpc } from "../../overmind"
 import { EnrollmentStatus, EnrollmentStatusBadge } from "../../Helpers"
 
 const User = ({ user }: { user: pbUser; hidden: boolean }) => {
     const { api } = useGrpc()
-    const [enrollments, setEnrollments] = React.useState<Enrollment[]>([])
-    const [showEnrollments, setShowEnrollments] = React.useState<boolean>(false)
+    const [enrollments, setEnrollments] = useState<Enrollment[]>([])
+    const [showEnrollments, setShowEnrollments] = useState<boolean>(false)
 
-    const toggleEnrollments = () => {
+    const toggleEnrollments = useCallback(() => {
         setShowEnrollments(!showEnrollments)
         if (!enrollments.length) {
-            getEnrollments()
+            api.client
+                .getEnrollments({
+                    FetchMode: { case: "userID", value: user.ID },
+                })
+                .then((response) => {
+                    setEnrollments(response.message.enrollments)
+                })
         }
-    }
+    }, [api.client, enrollments.length, showEnrollments, user.ID])
 
-    const getEnrollments = () => {
-        api.client
-            .getEnrollments({
-                FetchMode: { case: "userID", value: user.ID },
-            })
-            .then((response) => {
-                setEnrollments(response.message.enrollments)
-            })
-    }
 
     const enrollmentsList = enrollments.length ? (
         <div>

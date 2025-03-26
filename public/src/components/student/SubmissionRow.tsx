@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useHistory } from 'react-router'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getStatusByUser, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
@@ -15,13 +15,13 @@ interface SubmissionRowProps {
 const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, courseID, selfID }) => {
     const history = useHistory()
 
-    const redirectTo = (submission: Submission) => {
+    const redirectTo = useCallback((submission: Submission) => () => {
         if (submission.groupID !== 0n) {
             history.push(`/course/${courseID}/group-lab/${submission.AssignmentID.toString()}`)
         } else {
             history.push(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
         }
-    }
+    }, [courseID, history])
 
     if (!isValidSubmissionForAssignment(submission, assignment)) {
         return null
@@ -31,7 +31,7 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
         <div
             key={submission.ID.toString()}
             className="row clickable mb-1 py-2 align-items-center text-left"
-            onClick={() => redirectTo(submission)}
+            onClick={redirectTo(submission)}
             role="button"
             aria-hidden="true"
         >
