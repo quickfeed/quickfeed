@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useCallback } from "react"
 import { Grade, Submission_Status } from "../../proto/qf/types_pb"
 import { Color, hasAllStatus, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -21,26 +21,26 @@ const ManageSubmissionStatus = () => {
         }
     }, [state.selectedSubmission])
 
-    const handleRebuild = async () => {
+    const handleRebuild = useCallback(async () => {
         if (rebuilding) { return } // Don't allow multiple rebuilds at once
         setRebuilding(true)
         await actions.rebuildSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission })
         setRebuilding(false)
-    }
+    }, [rebuilding, actions, state.submissionOwner, state.selectedSubmission])
 
-    const handleSetStatus = async (status: Submission_Status) => {
+    const handleSetStatus = useCallback((status: Submission_Status) => async () => {
         if (updating !== Submission_Status.NONE) { return } // Don't allow multiple updates at once
         setUpdating(status)
         await actions.updateSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission, status })
         setUpdating(Submission_Status.NONE)
-    }
+    }, [updating, actions, state.submissionOwner, state.selectedSubmission])
 
-    const handleSetGrade = async (grade: Grade, status: Submission_Status) => {
+    const handleSetGrade = useCallback((grade: Grade, status: Submission_Status) => async () => {
         if (updating !== Submission_Status.NONE) { return } // Don't allow multiple updates at once
         setUpdating(status)
         await actions.updateGrade({ grade, status })
         setUpdating(Submission_Status.NONE)
-    }
+    }, [updating, actions])
 
     const getUserName = (userID: bigint): string => {
         if (!assignment) {
@@ -72,6 +72,8 @@ const ManageSubmissionStatus = () => {
         return ButtonType.OUTLINE
     }
 
+    const handleSetViewIndividualGrades = useCallback(() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades)), [viewIndividualGrades])
+
     return (
         <>
             <div className="row mb-1 ml-auto mr-auto">
@@ -81,7 +83,7 @@ const ManageSubmissionStatus = () => {
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
                         className="col mr-2"
-                        onClick={() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades))}
+                        onClick={handleSetViewIndividualGrades}
                     />
                 )}
                 {assignment && !isManuallyGraded(assignment) && (
@@ -94,7 +96,7 @@ const ManageSubmissionStatus = () => {
                     />
                 )}
             </div>
-            
+
             {!viewIndividualGrades && (
                 <div className="row m-auto">
                     <DynamicButton
@@ -102,21 +104,21 @@ const ManageSubmissionStatus = () => {
                         color={Color.GREEN}
                         type={getButtonType(Submission_Status.APPROVED)}
                         className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.APPROVED)}
+                        onClick={handleSetStatus(Submission_Status.APPROVED)}
                     />
                     <DynamicButton
                         text="Revision"
                         color={Color.YELLOW}
                         type={getButtonType(Submission_Status.REVISION)}
                         className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.REVISION)}
+                        onClick={handleSetStatus(Submission_Status.REVISION)}
                     />
                     <DynamicButton
                         text="Reject"
                         color={Color.RED}
                         type={getButtonType(Submission_Status.REJECTED)}
                         className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.REJECTED)}
+                        onClick={handleSetStatus(Submission_Status.REJECTED)}
                     />
                 </div>
             )}
@@ -132,7 +134,7 @@ const ManageSubmissionStatus = () => {
                                         color={Color.GREEN}
                                         type={getGradeButtonType(grade, Submission_Status.APPROVED)}
                                         className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.APPROVED)}
+                                        onClick={handleSetGrade(grade, Submission_Status.APPROVED)}
                                     />
                                 </td>
                                 <td>
@@ -141,7 +143,7 @@ const ManageSubmissionStatus = () => {
                                         color={Color.YELLOW}
                                         type={getGradeButtonType(grade, Submission_Status.REVISION)}
                                         className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.REVISION)}
+                                        onClick={handleSetGrade(grade, Submission_Status.REVISION)}
                                     />
                                 </td>
                                 <td>
@@ -150,7 +152,7 @@ const ManageSubmissionStatus = () => {
                                         color={Color.RED}
                                         type={getGradeButtonType(grade, Submission_Status.REJECTED)}
                                         className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.REJECTED)}
+                                        onClick={handleSetGrade(grade, Submission_Status.REJECTED)}
                                     />
                                 </td>
                             </tr>

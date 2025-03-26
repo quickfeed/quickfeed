@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { useActions, useAppState } from "../overmind"
 import { Link } from "react-router-dom"
 import NavFavorites from "./NavFavorites"
@@ -6,14 +6,14 @@ import NavBarUser from "./navbar/NavBarUser"
 import NavBarActiveCourse from "./navbar/NavBarActiveCourse"
 
 
-const NavBar = () => {
+const NavBar = memo(() => {
     const state = useAppState()
     const actions = useActions()
 
     let hamburger = null
     if (state.isLoggedIn) {
         const classname = `clickable hamburger ${state.showFavorites ? "open" : "closed"}`
-        hamburger = <span onClick={() => actions.toggleFavorites()} className={classname}>☰</span>
+        hamburger = <span onClick={() => actions.toggleFavorites()} className={classname}>☰</span> // skipcq: JS-0417
     }
 
     return (
@@ -27,6 +27,8 @@ const NavBar = () => {
             <NavFavorites />
         </nav>
     )
-}
+})
+
+NavBar.displayName = "NavBar"
 
 export default NavBar

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { useActions } from "../../overmind"
 import { Course } from "../../../proto/qf/types_pb"
 import FormInput from "./FormInput"
@@ -19,7 +19,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(courseToEdit.clone())
 
-    const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
+    const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
         switch (name) {
             case "courseName":
@@ -39,7 +39,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
                 break
         }
         setCourse(course)
-    }
+    }, [course])
 
     // Creates a new course if no course is being edited, otherwise updates the existing course
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,50 +51,50 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     return (
         <div className="container">
             <form className="form-group" onSubmit={async e => await submitHandler(e)}>
-                    <div className="row">
-                        <FormInput prepend="Name"
-                            name="courseName"
-                            placeholder={"Course Name"}
-                            defaultValue={course.name}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="row">
-                        <FormInput
-                            prepend="Code"
-                            name="courseCode"
-                            placeholder={"(ex. DAT320)"}
-                            defaultValue={course.code}
-                            onChange={handleChange}
-                        />
-                        <FormInput
-                            prepend="Tag"
-                            name="courseTag"
-                            placeholder={"(ex. Fall / Spring)"}
-                            defaultValue={course.tag}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="row">
-                        <FormInput
-                            prepend="Slip days"
-                            name="slipDays"
-                            placeholder={"(ex. 7)"}
-                            defaultValue={course.slipDays.toString()}
-                            onChange={handleChange}
-                            type="number"
-                        />
-                        <FormInput
-                            prepend="Year"
-                            name="courseYear"
-                            placeholder={"(ex. 2021)"}
-                            defaultValue={course.year.toString()}
-                            onChange={handleChange}
-                            type="number"
-                        />
-                    </div>
-                    <input className="btn btn-primary" type="submit" value={"Save"} />
-                </form>
+                <div className="row">
+                    <FormInput prepend="Name"
+                        name="courseName"
+                        placeholder={"Course Name"}
+                        defaultValue={course.name}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="row">
+                    <FormInput
+                        prepend="Code"
+                        name="courseCode"
+                        placeholder={"(ex. DAT320)"}
+                        defaultValue={course.code}
+                        onChange={handleChange}
+                    />
+                    <FormInput
+                        prepend="Tag"
+                        name="courseTag"
+                        placeholder={"(ex. Fall / Spring)"}
+                        defaultValue={course.tag}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="row">
+                    <FormInput
+                        prepend="Slip days"
+                        name="slipDays"
+                        placeholder={"(ex. 7)"}
+                        defaultValue={course.slipDays.toString()}
+                        onChange={handleChange}
+                        type="number"
+                    />
+                    <FormInput
+                        prepend="Year"
+                        name="courseYear"
+                        placeholder={"(ex. 2021)"}
+                        defaultValue={course.year.toString()}
+                        onChange={handleChange}
+                        type="number"
+                    />
+                </div>
+                <input className="btn btn-primary" type="submit" value={"Save"} />
+            </form>
         </div>
     )
 }

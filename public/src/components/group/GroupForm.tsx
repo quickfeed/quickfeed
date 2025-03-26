@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react"
-import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
+import React, { useCallback, useEffect, useState } from "react"
+import { Enrollment, Enrollment_UserStatus, Group, User } from "../../../proto/qf/types_pb"
 import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
@@ -15,16 +15,16 @@ const GroupForm = () => {
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
     const courseID = getCourseID()
 
+    const handleUpdateGroupUsers = useCallback((user: User | undefined) => () => actions.updateGroupUsers(user), [actions])
+
     const group = state.activeGroup
     useEffect(() => {
         if (isStudent(state.enrollmentsByCourseID[courseID.toString()])) {
             actions.setActiveGroup(new Group())
             actions.updateGroupUsers(state.self.clone())
         }
-        return () => {
-            actions.setActiveGroup(null)
-        }
     }, [actions, courseID, state.enrollmentsByCourseID, state.self])
+
     if (!group) {
         return null
     }
@@ -84,7 +84,7 @@ const GroupForm = () => {
                         color={Color.GREEN}
                         type={ButtonType.BADGE}
                         className="ml-2 float-right"
-                        onClick={() => actions.updateGroupUsers(enrollment.user)}
+                        onClick={handleUpdateGroupUsers(enrollment.user)}
                     />
                 </li>
             )
@@ -102,7 +102,7 @@ const GroupForm = () => {
                     color={Color.RED}
                     type={ButtonType.BADGE}
                     className="float-right"
-                    onClick={() => actions.updateGroupUsers(user)}
+                    onClick={handleUpdateGroupUsers(user)}
                 />
             </li>
         )
@@ -121,7 +121,7 @@ const GroupForm = () => {
             return <div>Students</div>
         }
         return (
-            <button className="btn btn-primary w-100" type="button" onClick={toggleEnrollmentType}>
+            <button className="btn btn-primary w-100" type="button" onClick={toggleEnrollmentType}> {/* skipcq: JS-0417 */}
                 {enrollmentType === Enrollment_UserStatus.STUDENT ? "Students" : "Teachers"}
             </button>
         )
@@ -130,7 +130,7 @@ const GroupForm = () => {
     const GroupNameBanner = <div className="card-header" style={{ textAlign: "center" }}>{group.name}</div>
     const GroupNameInput = group && isApprovedGroup(group)
         ? null
-        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)} />
+        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)} /> // skipcq: JS-0417
 
     return (
         <div className="container">
@@ -153,21 +153,21 @@ const GroupForm = () => {
                         {GroupNameBanner}
                         {GroupNameInput}
                         {groupMembers}
-                        {group && group.ID ?
+                        {group?.ID ?
                             <div className="row justify-content-md-center">
                                 <DynamicButton
                                     text={"Update"}
                                     color={Color.BLUE}
                                     type={ButtonType.BUTTON}
                                     className="ml-2"
-                                    onClick={() => actions.updateGroup(group)}
+                                    onClick={() => actions.updateGroup(group)} // skipcq: JS-0417
                                 />
                                 <Button
                                     text={"Cancel"}
                                     color={Color.RED}
                                     type={ButtonType.OUTLINE}
                                     className="ml-2"
-                                    onClick={() => actions.setActiveGroup(null)}
+                                    onClick={() => actions.setActiveGroup(null)} // skipcq: JS-0417
                                 />
                             </div>
                             :
@@ -175,7 +175,7 @@ const GroupForm = () => {
                                 text={"Create Group"}
                                 color={Color.GREEN}
                                 type={ButtonType.BUTTON}
-                                onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}
+                                onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })} // skipcq: JS-0417
                             />
                         }
                     </div>

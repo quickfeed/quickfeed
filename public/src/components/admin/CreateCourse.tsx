@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { Course } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 import CourseForm from "../forms/CourseForm"
@@ -12,7 +12,11 @@ const CreateCourse = () => {
     const [course, setCourse] = useState<Course>()
     const [orgName, setOrgName] = useState("")
 
-    const refresh = React.useCallback(async () => {
+    const handleSetOrgName = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => setOrgName(e.currentTarget.value), [])
+    const handleRefresh = useCallback(async () => {
+        if (course) {
+            return
+        }
         await actions.getCourses()
         const c = state.courses.find(c => c.ScmOrganizationName === orgName)
         if (c) {
@@ -21,7 +25,7 @@ const CreateCourse = () => {
         } else {
             actions.alert({ text: "Course not found. Make sure the organization name is correct and that you have installed the GitHub App.", color: Color.YELLOW, delay: 10000 })
         }
-    }, [actions, orgName, state.courses])
+    }, [actions, course, orgName, state.courses])
 
     return (
         <div className="container">
@@ -31,8 +35,8 @@ const CreateCourse = () => {
                     <div className="input-group-prepend">
                         <div className="input-group-text">Get Course</div>
                     </div>
-                    <input className="form-control" disabled={course ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
-                    <span className={course ? "btn btn-success disabled" : "btn btn-primary"} onClick={!course ? () => refresh() : () => { return }}>
+                    <input className="form-control" disabled={course ? true : false} onKeyUp={handleSetOrgName} />
+                    <span className={course ? "btn btn-success disabled" : "btn btn-primary"} onClick={handleRefresh}>
                         {course ? <i className="fa fa-check" /> : "Find"}
                     </span>
                 </div>

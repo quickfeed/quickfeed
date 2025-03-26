@@ -12,7 +12,7 @@ export class ApiClient {
      * Must be called before accessing the client.
      * @param errorHandler A function that is called when an error occurs.
      */
-    public init(errorHandler: (payload?: { method: string; error: ConnectError; } | undefined) => void) {
+    public init(errorHandler: (payload?: { method: string; error: ConnectError } | undefined) => void) {
         this.client = createResponseClient(QuickFeedService, createConnectTransport({
             baseUrl: `https://${window.location.host}`
         }), errorHandler)

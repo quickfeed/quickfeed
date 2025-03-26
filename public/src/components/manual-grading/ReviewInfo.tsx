@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Review, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
@@ -12,13 +12,13 @@ import MarkReadyButton from "./MarkReadyButton"
 const ReviewInfo = ({ review }: { review?: Review }) => {
     const state = useAppState()
     const actions = useActions()
+    const submission = state.selectedSubmission
+    const handleRelease = useCallback(() => actions.review.release({ submission, owner: state.submissionOwner }), [actions, submission, state.submissionOwner])
 
     if (!review) {
         return null
     }
-
     const assignment = state.selectedAssignment
-    const submission = state.selectedSubmission
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
@@ -36,7 +36,6 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
             </li>
         )
     }
-
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
         <DynamicButton
@@ -44,7 +43,7 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
             color={submission?.released ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON}
             className={`float-right ${!state.isCourseCreator && "disabled"} `}
-            onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
+            onClick={handleRelease}
         />
     )
     return (
@@ -62,7 +61,7 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[status] :  NoSubmission }
+                {submission ? SubmissionStatus[status] : NoSubmission}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>

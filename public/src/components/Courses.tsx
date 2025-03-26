@@ -30,13 +30,13 @@ const Courses = (overview: overview) => {
                             color={Color.GREEN}
                             type={ButtonType.BUTTON}
                             className="mr-3"
-                            onClick={() => history.push("/admin/create")}
+                            onClick={() => history.push("/admin/create")} // skipcq: JS-0417
                         />
                         <Button
                             text="Manage users"
                             color={Color.BLUE}
                             type={ButtonType.BUTTON}
-                            onClick={() => history.push("/admin/manage")}
+                            onClick={() => history.push("/admin/manage")} // skipcq: JS-0417
                         />
                     </div>
                     : null}
@@ -52,15 +52,14 @@ const Courses = (overview: overview) => {
         const pending: React.JSX.Element[] = []
         const availableCourses: React.JSX.Element[] = []
 
-
         state.courses.forEach(course => {
-            const enrol = state.enrollmentsByCourseID[course.ID.toString()]
-            if (enrol) {
-                const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
-                if (isVisible(enrol)) {
+            const enrollment = state.enrollmentsByCourseID[course.ID.toString()]
+            if (enrollment) {
+                const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrollment} />
+                if (isVisible(enrollment)) {
                     favorite.push(courseCard)
                 } else {
-                    switch (enrol.status) {
+                    switch (enrollment.status) {
                         case Enrollment_UserStatus.PENDING:
                             pending.push(courseCard)
                             break
@@ -80,7 +79,7 @@ const Courses = (overview: overview) => {
         })
 
         if (overview.home) {
-            // Render only favorite courses.
+            // Render only favorite and available courses.
             return (
                 <>
                     {favorite.length > 0 &&
@@ -89,6 +88,14 @@ const Courses = (overview: overview) => {
                                 {favorite}
                             </div>
                         </div>
+                    }
+                    {availableCourses.length > 0 &&
+                        <>
+                            <h2>Available Courses</h2>
+                            <div className="card-deck course-card-row">
+                                {availableCourses}
+                            </div>
+                        </>
                     }
                 </>
             )

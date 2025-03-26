@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { Color } from "../../Helpers"
 
 export enum ButtonType {
@@ -17,13 +17,15 @@ export type ButtonProps = {
     onClick: () => void,
 }
 
-const Button = ({ children, text, color, type, className, onClick }: ButtonProps) => {
+const Button = memo(({ children, text, color, type, className, onClick }: ButtonProps) => {
     return (
         <button className={`${type}-${color}${className ? " " + className : ""}`} onClick={onClick}>
             {children}
             {text}
         </button>
     )
-}
+})
+
+Button.displayName = "Button"
 
 export default Button

@@ -13,6 +13,7 @@ const NavBarLabs = () => {
     const state = useAppState()
     const history = useHistory()
     const location = useLocation()
+    const handlePush = React.useCallback((link: string) => () => history.push(link), [history])
 
     if (!state.assignments[state.activeCourse.toString()]) {
         return null
@@ -61,8 +62,8 @@ const NavBarLabs = () => {
                 <div
                     className={highlightSubmission(submission, assignment)}
                     style={{ position: "relative" }}
-                    key={assignment.ID.toString()}
-                    onClick={() => { history.push(link.link.to) }}
+                    key={submission.ID.toString()}
+                    onClick={handlePush(link.link.to)}
                     role="button"
                     aria-hidden="true"
                 >

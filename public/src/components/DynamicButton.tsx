@@ -1,11 +1,11 @@
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { Color } from "../Helpers"
 import { ButtonType } from "./admin/Button"
 
 
 export type DynamicButtonProps = {
     text: string,
-    onClick: () => Promise<unknown>,
+    onClick: () => Promise<void>,
     color: Color,
     type: ButtonType,
     className?: string,
@@ -18,7 +18,7 @@ export type DynamicButtonProps = {
 const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonProps) => {
     const [isPending, setIsPending] = useState<boolean>(false)
 
-    const handleClick = async () => {
+    const handleClick = useCallback(async () => {
         if (isPending) {
             // Disable double clicks
             return
@@ -26,7 +26,7 @@ const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonP
         setIsPending(true)
         await onClick()
         setIsPending(false)
-    }
+    }, [isPending, onClick])
 
     const buttonClass = `${type}-${isPending ? Color.GRAY : color} ${className ?? ""}`
     const content = isPending

@@ -11,6 +11,7 @@
     "newLine": "LF",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "module": "es2020",
     "moduleResolution": "node",
     "allowJs": true,
   },

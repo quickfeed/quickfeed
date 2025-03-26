@@ -1,11 +1,14 @@
-import React, { useState } from "react"
-import { Assignment, GradingBenchmark } from "../../../proto/qf/types_pb"
-import { useActions } from "../../overmind"
+import React, { useState, memo } from "react"
+import { GradingBenchmark } from "../../../proto/qf/types_pb"
 
+interface EditBenchmarkProps {
+    children?: React.ReactNode
+    benchmark?: GradingBenchmark
+    updateBenchmark: (event: React.KeyboardEvent<HTMLInputElement>, bm: GradingBenchmark) => void
+    deleteBenchmark?: () => void
+}
 
-const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }) => {
-    const actions = useActions()
-
+const EditBenchmark = memo(({ children, benchmark, updateBenchmark, deleteBenchmark }: EditBenchmarkProps) => {
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(benchmark ? false : true)
 
@@ -15,15 +18,9 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
         : new GradingBenchmark()
 
     const handleBenchmark = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        const { value } = event.currentTarget
+        updateBenchmark(event, bm)
         if (event.key === "Enter") {
-            // Set the criterion's benchmark ID
-            // This could already be set if a benchmark was passed in
-            bm.AssignmentID = assignment.ID
-            actions.createOrUpdateBenchmark({ benchmark: bm, assignment: assignment })
             setEditing(false)
-        } else {
-            bm.heading = value
         }
     }
 
@@ -38,6 +35,7 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
         }
         setEditing(false)
     }
+    const handleSetEditing = (editing: boolean) => () => setEditing(editing)
 
     if (add) {
         return (
@@ -51,13 +49,14 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
         <>
             <div className="list-group-item list-group-item-primary">
                 {editing
-                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={() => handleBlur()} onClick={() => setEditing(true)} onKeyUp={e => { handleBenchmark(e) }} />
-                    : <span onClick={() => setEditing(true)}>{bm?.heading}<span className="badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark: benchmark, assignment: assignment })}>Delete</span></span>
-                }
+                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={handleBlur} onClick={handleSetEditing(!editing)} onKeyUp={handleBenchmark} />
+                    : <span onClick={handleSetEditing(true)}>{bm?.heading}<span className="badge badge-danger float-right clickable" onClick={deleteBenchmark}>Delete</span></span>}
             </div>
             {children}
         </>
     )
-}
+})
+
+EditBenchmark.displayName = "EditBenchmark"
 
 export default EditBenchmark

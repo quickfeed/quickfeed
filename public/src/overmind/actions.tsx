@@ -17,7 +17,10 @@ import {
     User
 } from "../../proto/qf/types_pb"
 import { Response } from "../client"
-import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import {
+    Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, isPending, isStudent, isTeacher, isVisible, newID,
+    setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup
+} from "../Helpers"
 import * as internalActions from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
 
@@ -566,12 +569,10 @@ export const enroll = async ({ state, effects }: Context, courseID: bigint): Pro
             value: state.self.ID,
         }
     })
-
     if (enrolsResponse.error) {
         return
     }
     state.enrollments = enrolsResponse.message.enrollments
-
 }
 
 export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group, status: Group_GroupStatus }): Promise<void> => {
@@ -640,13 +641,13 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     }
 }
 
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
+export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<Boolean> => {
     // Check if this need cloning
     const bm = benchmark.clone()
     if (benchmark.ID) {
         const response = await effects.api.client.updateBenchmark(bm)
         if (response.error) {
-            return
+            return false
         }
         const index = assignment.gradingBenchmarks.indexOf(benchmark)
         if (index > -1) {
@@ -655,10 +656,11 @@ export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark,
     } else {
         const response = await effects.api.client.createBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
         assignment.gradingBenchmarks.push(response.message)
     }
+    return true
 }
 
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
@@ -768,26 +770,28 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 
 /* Utility Actions */
 
-/** Switches between teacher and student view. */
-export const changeView = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const enrollment = state.enrollmentsByCourseID[courseID.toString()]
-    if (hasStudent(enrollment.status)) {
+/* Switches between teacher and student view. */
+export const changeView = async ({ state, effects }: Context, courseID: bigint) => {
+    // Initialize as student, a user can either be a student or a teacher when switching views.
+    // A student view is only converted to a teacher if the user is a teacher in the course.
+    let newEnrollmentStatus = Enrollment_UserStatus.STUDENT
+
+    // Check if the user is a teacher in the course.
+    if (hasStudent(state.enrollmentsByCourseID[courseID.toString()].status)) {
         const response = await effects.api.client.getEnrollments({
-            FetchMode: {
-                case: "userID",
-                value: state.self.ID,
-            },
+            FetchMode: { case: "userID", value: state.self.ID, },
             statuses: [Enrollment_UserStatus.TEACHER],
         })
-        if (response.error) {
-            return
+        if (response.error) return
+
+        if (response.message.enrollments.some(enrol => enrol.courseID === courseID)) {
+            newEnrollmentStatus = Enrollment_UserStatus.TEACHER
         }
-        if (response.message.enrollments.find(enrol => enrol.courseID === courseID && hasTeacher(enrol.status))) {
-            enrollment.status = Enrollment_UserStatus.TEACHER
-        }
-    } else if (hasTeacher(enrollment.status)) {
-        enrollment.status = Enrollment_UserStatus.STUDENT
     }
+    // Find and update the enrollment status
+    const enrollment = state.enrollments.find(enroll => enroll.courseID === courseID)
+    if (!enrollment) return
+    enrollment.status = newEnrollmentStatus
 }
 
 export const loading = ({ state }: Context): void => {

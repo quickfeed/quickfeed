@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { useActions, useAppState } from '../../overmind'
 import useWindowSize from "../../hooks/windowsSize"
@@ -9,12 +9,12 @@ const Breadcrumbs = () => {
     const state = useAppState()
     const actions = useActions()
     const location = useLocation()
-    const { width } = useWindowSize();
+    const { width } = useWindowSize()
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)
 
-    const getCourseNameById = (id: string): string | null => {
+    const getCourseNameById = useCallback((id: string): string | null => {
         const course = state.courses.find(course => course.ID.toString() === id)
         if (!course) {
             return null
@@ -23,19 +23,19 @@ const Breadcrumbs = () => {
             return course.code
         }
         return course.name
-    }
+    }, [state.courses, width])
 
-    const getAssignmentNameById = (id: string): string | null => {
+    const getAssignmentNameById = useCallback((id: string): string | null => {
         if (pathnames[0] === 'course' && pathnames[1]) {
             const assignment = state.assignments[pathnames[1]].find(assignment => assignment.ID.toString() === id)
             return assignment ? assignment.name : null
         }
         return null
-    }
+    }, [state.assignments, pathnames])
 
-    const handleDashboard = () => {
+    const handleDashboard = useCallback(() => {
         actions.setActiveCourse(0n)
-    }
+    }, [actions])
 
     useEffect(() => {
         if (pathnames[0] === 'course' && pathnames[1]) {
@@ -44,13 +44,13 @@ const Breadcrumbs = () => {
         if (pathnames[2] === 'lab' && pathnames[3]) {
             setAssignmentName(getAssignmentNameById(pathnames[3]))
         }
-    }, [pathnames, width])
+    }, [getAssignmentNameById, getCourseNameById, pathnames, width])
 
     return (
         <nav aria-label="breadcrumb">
             <ol className="breadcrumb m-0 bg-transparent">
                 <li className="breadcrumb-item">
-                    <Link to="/" onClick={handleDashboard}>Dashboard</Link>
+                    <Link to="/" onClick={handleDashboard}>Dashboard</Link> {/* skipcq: JS-0417 */}
                 </li>
                 {pathnames.map((value, index) => {
                     const last = index === pathnames.length - 1

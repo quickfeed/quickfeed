@@ -72,7 +72,7 @@ export type State = {
 
     /* Contains links to all repositories for a given course */
     // Individual repository links are accessed by Repository.Type
-    repositories: { [courseid: string]: { [repo: string]: string } },
+    repositories: { [courseID: string]: { [repo: string]: string } },
 
     /***************************************************************************
     *                              Public data

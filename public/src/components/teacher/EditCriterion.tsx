@@ -1,11 +1,13 @@
-import React, { useState } from "react"
-import { Assignment, GradingCriterion } from "../../../proto/qf/types_pb"
-import { useActions } from "../../overmind"
+import React, { useState, memo } from "react"
+import { GradingCriterion } from "../../../proto/qf/types_pb"
 
+interface EditCriterionProps {
+    originalCriterion?: GradingCriterion
+    updateCriterion: (event: React.KeyboardEvent<HTMLInputElement>, criterion: GradingCriterion) => void
+    deleteCriterion?: () => void
+}
 
-const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
-    const actions = useActions()
-
+const EditCriterion = memo(({ originalCriterion, updateCriterion, deleteCriterion }: EditCriterionProps) => {
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(originalCriterion ? false : true)
 
@@ -14,17 +16,9 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
         ? originalCriterion.clone()
         : new GradingCriterion()
 
-    const handleCriteria = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        const { value } = event.currentTarget
-        if (event.key === "Enter") {
-            // Set the criterion's benchmark ID
-            // This could already be set if a criterion was passed in
-            criterion.BenchmarkID = benchmarkID
-            actions.createOrUpdateCriterion({ criterion: criterion, assignment: assignment })
-            setEditing(false)
-        } else {
-            criterion.description = value
-        }
+    const handleCriterion = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        updateCriterion(event, criterion)
+        setEditing(false)
     }
 
     const handleBlur = () => {
@@ -42,19 +36,20 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
     if (add) {
         return (
             <div className="list-group-item">
-                <button className="btn btn-primary" name="submit" onClick={() => { setAdd(false); setEditing(true) }}>Add</button>
+                <button className="btn btn-primary" name="submit" onClick={() => { setAdd(false); setEditing(true) }}>Add</button> {/* skipcq: JS-0417 */}
             </div>
         )
     }
 
     return (
-        <div className="list-group-item" onClick={() => setEditing(!editing)}>
+        <div className="list-group-item" onClick={() => setEditing(!editing)}> {/* skipcq: JS-0417 */}
             {editing
-                ? <input className="form-control" type="text" onBlur={() => { handleBlur() }} autoFocus defaultValue={criterion.description} name="criterion" onKeyUp={e => { handleCriteria(e) }} />
-                : <><span>{criterion.description}</span><span className="badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: originalCriterion, assignment: assignment })}>Delete</span></>
-            }
+                ? <input className="form-control" type="text" onBlur={handleBlur} autoFocus defaultValue={criterion.description} name="criterion" onKeyUp={handleCriterion} />
+                : <><span>{criterion.description}</span><span className="badge badge-danger float-right clickable" onClick={deleteCriterion}>Delete</span></>}
         </div>
     )
-}
+})
+
+EditCriterion.displayName = "EditCriterion"
 
 export default EditCriterion

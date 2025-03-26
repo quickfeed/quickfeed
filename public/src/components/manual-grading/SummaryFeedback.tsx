@@ -1,5 +1,5 @@
 
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { Review } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 import CriterionComment from "./Comment"
@@ -12,11 +12,7 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
 
     const summaryFeedback = <td colSpan={3}><CriterionComment comment={review.feedback.length > 0 ? review.feedback : "No summary feedback"} /></td>
 
-    if (!state.isTeacher) {
-        return <tr>{summaryFeedback}</tr>
-    }
-
-    const handleChange = (event: React.FormEvent<HTMLTextAreaElement>) => {
+    const handleChange = useCallback((event: React.FormEvent<HTMLTextAreaElement>) => {
         const { value } = event.currentTarget
         setEditing(false)
         // Exit early if the value is unchanged
@@ -24,6 +20,10 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
             return
         }
         actions.review.updateFeedback({ feedback: value })
+    }, [actions.review, review.feedback])
+
+    if (!state.isTeacher) {
+        return <tr>{summaryFeedback}</tr>
     }
 
     return (

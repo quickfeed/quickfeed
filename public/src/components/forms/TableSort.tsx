@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useCallback } from "react"
 import { SubmissionSort } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 
@@ -24,13 +24,10 @@ const TableSort = ({ review }: { review: boolean }) => {
         }
     }, [actions])
 
-    const handleChange = (sort: SubmissionSort) => {
-        actions.setSubmissionSort(sort)
-    }
-
-    const toggleIndividualSubmissions = () => {
-        actions.setIndividualSubmissionsView(!state.individualSubmissionView)
-    }
+    const handleChange = useCallback((sort: SubmissionSort) => () => actions.setSubmissionSort(sort), [actions])
+    const handleSubmissionFilter = useCallback((filter: string) => () => actions.setSubmissionFilter(filter), [actions])
+    const handleAscending = useCallback(() => actions.setAscending(!state.sortAscending), [state.sortAscending, actions])
+    const toggleIndividualSubmissions = useCallback(() => actions.setIndividualSubmissionsView(!state.individualSubmissionView), [state.individualSubmissionView, actions])
 
     return (
         <div className="p-1 mb-2 bg-dark text-white d-flex flex-row">
@@ -38,13 +35,13 @@ const TableSort = ({ review }: { review: boolean }) => {
                 <div className="p-2">
                     <span>Sort by:</span>
                 </div>
-                <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role="button" aria-hidden="true" onClick={() => handleChange(SubmissionSort.Approved)}>
+                <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role="button" aria-hidden="true" onClick={handleChange(SubmissionSort.Approved)}>
                     Approved
                 </div>
-                <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role="button" aria-hidden="true" onClick={() => handleChange(SubmissionSort.Score)}>
+                <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role="button" aria-hidden="true" onClick={handleChange(SubmissionSort.Score)}>
                     Score
                 </div>
-                <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setAscending(!state.sortAscending)}>
+                <div className="p-2" role="button" aria-hidden="true" onClick={handleAscending}>
                     <i className={state.sortAscending ? "icon fa fa-caret-down" : "icon fa fa-caret-down fa-rotate-180"} />
                 </div>
             </div>
@@ -52,14 +49,14 @@ const TableSort = ({ review }: { review: boolean }) => {
                 <div className="p-2">
                     Show:
                 </div>
-                <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setSubmissionFilter("teachers")}>
+                <div className="p-2" role="button" aria-hidden="true" onClick={handleSubmissionFilter("teachers")}>
                     {state.submissionFilters.includes("teachers") ? <del>Teachers</del> : "Teachers"}
                 </div>
-                <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setSubmissionFilter("approved")}>
+                <div className="p-2" role="button" aria-hidden="true" onClick={handleSubmissionFilter("approved")}>
                     {state.submissionFilters.includes("approved") ? <del>Graded</del> : "Graded"}
                 </div>
                 {review ?
-                    <div className="p-2" role="button" aria-hidden="true" onClick={() => actions.setSubmissionFilter("released")}>
+                    <div className="p-2" role="button" aria-hidden="true" onClick={handleSubmissionFilter("released")}>
                         {state.submissionFilters.includes("released") ? <del>Released</del> : "Released"}
                     </div>
                     : null

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useLayoutEffect } from "react"
 import { Redirect } from "react-router"
 import { getCourseID, isEnrolled, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -14,13 +14,16 @@ const CoursePage = () => {
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!state.showFavorites) {
             actions.toggleFavorites()
         }
+
         actions.setActiveCourse(courseID)
         actions.getCourseData({ courseID })
-    }, [courseID])
+        // Having state.showFavorites in the dependency array would cause an infinite loop
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [actions, courseID])
 
     if (state.enrollmentsByCourseID[courseID.toString()] && isEnrolled(enrollment)) {
         if (isTeacher(enrollment)) {

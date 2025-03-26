@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { isHidden } from "../Helpers"
 import { useAppState } from "../overmind"
 
@@ -20,7 +20,7 @@ const isJSXElement = (element: RowElement): element is React.JSX.Element => {
     return (element as React.JSX.Element).type !== undefined
 }
 
-const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
+const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     const [isMouseDown, setIsMouseDown] = React.useState(false)
     const container = React.useRef<HTMLTableElement>(null)
@@ -30,7 +30,6 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
         // Nothing to render
         return null
     }
-
 
     const isRowHidden = (row: Row) => {
         if (searchQuery.length === 0) {
@@ -110,6 +109,8 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
             </table>
         </div>
     )
-}
+})
+
+DynamicTable.displayName = "DynamicTable"
 
 export default DynamicTable
