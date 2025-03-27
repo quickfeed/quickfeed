@@ -40,24 +40,23 @@ const ReviewForm = () => {
         )
     })
 
-    if ((reviews.length === 0 || reviews.some(review => !isAuthor(review))) && (reviewers - reviews.length) > 0) {
-        // Display a button to create a new review if:
-        // there are no reviews or the current user is not the author of the review, and there are still available review slots
-        selectReviewButton.push(
-            <Button key="add"
-                text="Add Review"
-                color={Color.BLUE}
-                type={ButtonType.BUTTON}
-                onClick={async () => { await actions.review.createReview() }}
-            />
-        )
-    }
+    // Display a button to create a new review if:
+    // there are no reviews or the current user is not the author of the review, and there are still available review slots
+    const newReview = (reviews.length === 0 || reviews.some(review => !isAuthor(review))) && (reviewers - reviews.length) > 0
+    const addReviewButton = newReview ?
+        <Button key="add"
+            text="Add Review"
+            color={Color.BLUE}
+            type={ButtonType.BUTTON}
+            onClick={async () => { await actions.review.createReview() }}
+        /> : null
 
     if (!isManuallyGraded(assignment)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
             <div className="col lab-sticky reviewLabResult">
+                {addReviewButton}
                 {state.review.currentReview ? (
                     <>
                         <ReviewInfo review={state.review.currentReview} selectReviewButton={selectReviewButton} />
