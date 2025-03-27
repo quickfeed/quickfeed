@@ -478,7 +478,6 @@ nav.flexbox {
 .flex-user {
     display: flex;
     flex-direction: row;
-    // width: 15rem;
     justify-content: center;
     align-items: center;
 }
@@ -677,7 +676,6 @@ body.login-page {
 .loginBox {
     background-color: #161b22;
     padding: 30px;
-    // padding-top: 50px;
     border-radius: 10px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
     text-align: center;
@@ -725,9 +723,18 @@ body.login-page {
     right: auto;
     text-align: right;
     color: #c9d1d9;
-    // margin-right: 30px;
 }
 
 .signIn:hover {
     color: #f2f4f6;
+}
+
+.chevron-icon {
+    transition: transform 0.3s ease-in-out;
+    display: inline-block;
+    font-size: 1rem;
+}
+
+.nav-item.dropdown:hover .chevron-icon {
+    transform: rotate(180deg); /* flips it upwards */
 }

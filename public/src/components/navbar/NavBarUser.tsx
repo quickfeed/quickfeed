@@ -11,7 +11,7 @@ const NavBarUser = () => {
 
     if (!isLoggedIn) {
         return (
-            <a href="/auth/github" className="flex-user signIn mr-3">Sign In</a>
+            <a href="/auth/github" className="flex-user signIn mr-2">Sign In</a>
         )
     }
 
@@ -20,8 +20,8 @@ const NavBarUser = () => {
 
             <StreamStatus />
             <ul className="nav-item dropdown">
+                <i className="fa fa-chevron-down text-white mr-1 chevron-icon" />
                 <img className="rounded-circle" src={self.AvatarURL} id="avatar" />
-                <i className="fa fa-chevron-down text-white"/>
                 <ul className="dropdown-menu dropdown-menu-center bg-dark">
                     <ProfileButton />
                     <AboutButton />
