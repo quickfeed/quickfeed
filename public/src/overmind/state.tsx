@@ -1,8 +1,8 @@
+import { create, isMessage } from "@bufbuild/protobuf"
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, EnrollmentSchema, Group, GroupSchema, Submission, User, UserSchema } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
-import { create, isMessage } from "@bufbuild/protobuf"
 
 export interface CourseGroup {
     courseID: bigint
@@ -321,7 +321,7 @@ export const state: State = {
         }
 
         const sortOrder = sortAscending ? -1 : 1
-        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-0044
+        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-R1005
             let subA: Submission | undefined
             let subB: Submission | undefined
             if (assignmentID > 0) {
