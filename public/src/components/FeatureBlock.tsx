@@ -1,7 +1,6 @@
-import React from "react";
+import React, { JSX } from "react";
 
 interface FeatureBlockProps {
-    id: string;
     heading: string;
     subheading: string;
     content: string;
@@ -10,7 +9,6 @@ interface FeatureBlockProps {
 }
 
 const FeatureBlock: React.FC<FeatureBlockProps> = ({
-    id,
     heading,
     subheading,
     content,
@@ -18,7 +16,6 @@ const FeatureBlock: React.FC<FeatureBlockProps> = ({
     reverse = false,
 }) => {
     return (
-        <section id={id}>
             <div className={`row featurette ${reverse ? "flex-row-reverse" : ""}`}>
                 <div className="col-md-7">
                     <h2 className="featurette-heading">
@@ -34,7 +31,6 @@ const FeatureBlock: React.FC<FeatureBlockProps> = ({
                     />
                 </div>
             </div>
-        </section>
     );
 };
 

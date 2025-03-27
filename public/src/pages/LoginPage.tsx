@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import AboutPage from "./AboutPage"
 
-const LoginPage = (): JSX.Element => {
+const LoginPage = () => {
   // Add a class to the body element to style the login page
   useEffect(() => {
     document.body.classList.add("login-page")
