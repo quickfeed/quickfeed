@@ -1,10 +1,7 @@
 import React from 'react'
 import Alerts from '../components/alerts/Alerts'
 import FeatureBlock, { MiniFeatureBlock } from '../components/FeatureBlock'
-
-const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-}
+import BackToTop from '../components/BackToTop'
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
 const AboutPage = () => {
@@ -43,12 +40,7 @@ const AboutPage = () => {
                 <section id="grading">
                     <FeatureBlock heading="Grading" subheading="Easy and Fair" content="On the due date, teachers can access the test results and use this as a tool in the grading process. The teaching staff will immediately know which of their tests passed, and how much of the code is covered by the tests." imageSrc="/assets/img/intro4.png" reverse />
                 </section>
-                <footer className="text-center mt-5">
-                    <button onClick={scrollToTop} className="btn align-items-center backToTop">
-                        <i className="fa fa-arrow-up" />
-                        <p>Back to top</p>
-                    </button>
-                </footer>
+                <BackToTop />
             </div>
         </div>
 
