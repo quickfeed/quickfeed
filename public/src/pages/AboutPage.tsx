@@ -1,37 +1,32 @@
 import React from 'react'
 import Alerts from '../components/alerts/Alerts'
 
+const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
 const AboutPage = (): JSX.Element => {
     return (
         <div>
-            <div className="banner">
-                <div key="jb" id="0" className="jumbotron">
-                    <div key="cblock" className="centerblock container">
-                        <h1>Automated student feedback</h1>
-                        <p>
-                            <strong>QuickFeed </strong>
-                            provides instantaneous feedback to students on
-                            their programming assignments. It is also a
-                            valuable tool for teachers when grading lab
-                            assignments.
-                        </p>
-                        <p>
-                            <a className="btn btn-primary btn-lg" href="#quickfeed" role="button">Learn more »</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
             <Alerts />
-            <div key="container" className="container">
-
+            <div className="container">
+                <section id="aboutquickfeed">
+                    <h2 className="featurette-heading">About QuickFeed</h2>
+                    <p className="lead">
+                        QuickFeed is a tool for providing automated feedback to students on their lab assignments.
+                        QuickFeed builds upon version control systems and continuous integration.
+                        When students upload code to their repositories, QuickFeed automatically builds their code and provides feedback based on tests supplied by the teaching staff.
+                        When grading assignments, teaching staff can access the results of test execution and have a valuable tool in the grading process.
+                    </p>
+                    <hr className="loginDivider" />
+                </section>
                 <div key="rowheader" className="row marketing">
                     <div key="gh" className="col-lg-4">
-                        <img
-                            className="img-circle"
-                            src="/assets/img/GitHub-Mark-120px-plus.png"
-                            alt="GitHub logo" style={{ width: "140px", height: "140px" }} />
+                        <i
+                            className="fa fa-github align-middle ms-auto"
+                            id="github logo"
+                            style={{ width: "140px", height: "140px", fontSize: "140px", lineHeight: "140px" }} />
                         <h2>GitHub Integration</h2>
                         <p>
                             Manage all students and courses on GitHub.
@@ -39,15 +34,12 @@ const AboutPage = (): JSX.Element => {
                             Teachers get separate repositories for publishing assignments and information to students.
                             All taken care of automatically.
                         </p>
-                        <p>
-                            <a className="btn btn-default" href="#versioncontrol" role="button">View details »</a>
-                        </p>
                     </div>
                     <div key="ci" className="col-lg-4">
-
                         <img
                             className="img-circle"
-                            src="/assets/img/overlapping-arrows.png"
+                            src="/assets/img/overlapping-arrows-no-background.png"
+                            alt="Overlapping arrows image"
                             style={{ width: "140px", height: "140px" }}
                         />
                         <h2>Continuous Integration</h2>
@@ -56,16 +48,11 @@ const AboutPage = (): JSX.Element => {
                             Students can quickly identify what they need to focus on to improve.
                             All customizable for the teaching staff.
                         </p>
-                        <p>
-                            <a className="btn btn-default" href="#ci" role="button">
-                                View details »
-                            </a>
-                        </p>
                     </div>
                     <div key="grade" className="col-lg-4">
                         <img
                             className="img-circle"
-                            src="/assets/img/Aplus2.png"
+                            src="/assets/img/Aplus2-no-background.png"
                             alt="A+ image" style={{ width: "140px", height: "140px" }} />
                         <h2>Fair Grading</h2>
                         <p>
@@ -74,13 +61,10 @@ const AboutPage = (): JSX.Element => {
                             Easily accessible for the teachers.
                             Together with latest build log, this makes grading easier and more fair.
                         </p>
-                        <p>
-                            <a className="btn btn-default" href="#grading" role="button">View details »</a>
-                        </p>
                     </div>
                 </div>
-                <section id="#quickfeed">
-                    <hr className="featurette-divider" />
+                <section id="automatedfeedback">
+                    <hr className="loginDivider" />
                     <div key="row1" className="row featurette">
                         <div key="c1r1" className="col-md-7">
                             <h2 className="featurette-heading">
@@ -110,10 +94,8 @@ const AboutPage = (): JSX.Element => {
                         </div>
                     </div>
                 </section>
-
                 <section id="versioncontrol">
-
-                    <hr className="featurette-divider" />
+                    <hr className="loginDivider" />
                     <div key="row2" className="row featurette">
                         <div key="c1r2" className="col-md-5">
                             <img
@@ -134,10 +116,8 @@ const AboutPage = (): JSX.Element => {
                         </div>
                     </div>
                 </section>
-
                 <section id="ci">
-
-                    <hr className="featurette-divider" />
+                    <hr className="loginDivider" />
                     <div key="row3" className="row featurette">
                         <div key="c1r3" className="col-md-7">
                             <h2 className="featurette-heading">
@@ -160,10 +140,8 @@ const AboutPage = (): JSX.Element => {
                         </div>
                     </div>
                 </section>
-
                 <section id="grading">
-
-                    <hr className="featurette-divider" />
+                    <hr className="loginDivider" />
                     <div key="row4" className="row featurette">
                         <div key="c1r4" className="col-md-5">
                             <img
@@ -184,10 +162,11 @@ const AboutPage = (): JSX.Element => {
                         </div>
                     </div>
                 </section>
-
-                <footer>
-                    <hr />
-                    <p className="pull-right"><a href="#">Back to top</a></p>
+                <footer className="text-center mt-5">
+                    <button onClick={scrollToTop} className="btn align-items-center backToTop">
+                        <i className="fa fa-arrow-up" />
+                        <p>Back to top</p>
+                    </button>
                 </footer>
             </div>
         </div>
