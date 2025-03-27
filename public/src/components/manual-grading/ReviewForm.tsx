@@ -34,7 +34,7 @@ const ReviewForm = () => {
                 text={review.ready ? "Ready" : "In Progress"}
                 color={review.ready ? Color.GREEN : Color.YELLOW}
                 type={ButtonType.BUTTON}
-                className={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
+                className={`${state.review.selectedReview === index ? "active border border-dark" : ""}`}
                 onClick={() => { actions.review.setSelectedReview(index) }}
             />
         )
@@ -48,7 +48,6 @@ const ReviewForm = () => {
                 text="Add Review"
                 color={Color.BLUE}
                 type={ButtonType.BUTTON}
-                className="mr-1"
                 onClick={async () => { await actions.review.createReview() }}
             />
         )
@@ -59,10 +58,9 @@ const ReviewForm = () => {
     } else {
         return (
             <div className="col lab-sticky reviewLabResult">
-                <div className="mb-1">{selectReviewButton}</div>
                 {state.review.currentReview ? (
                     <>
-                        <ReviewInfo review={state.review.currentReview} />
+                        <ReviewInfo review={state.review.currentReview} selectReviewButton={selectReviewButton} />
                         <ReviewResult review={state.review.currentReview} />
                     </>
                 ) : null}
