@@ -82,6 +82,7 @@ const Results = ({ review }: { review: boolean }) => {
         const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
         const numReviewers = state.assignments[state.activeCourse.toString()]?.find((a) => a.ID === submission.AssignmentID)?.reviewers ?? 0
         return ({
+            iconTitle: submission.released ? "Released" : "Not released",
             iconClassName: submission.released ? "fa fa-unlock" : "fa fa-lock",
             value: `${reviews.length}/${numReviewers}`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
