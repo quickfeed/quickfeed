@@ -7,7 +7,7 @@ const scrollToTop = () => {
 }
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
-const AboutPage = (): JSX.Element => {
+const AboutPage = () => {
     return (
         <div>
             <Alerts />

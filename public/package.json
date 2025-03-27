@@ -3,19 +3,21 @@
   "version": "0.2.0",
   "private": true,
   "dependencies": {
-    "@bufbuild/connect": "^0.8.4",
-    "@bufbuild/connect-web": "^0.8.4",
-    "@bufbuild/protobuf": "^1.2.0",
-    "@types/react": "^16.14.2",
-    "@types/react-dom": "^16.9.10",
-    "overmind": "^28.0.1",
-    "overmind-react": "^29.0.1",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.2",
-    "react-markdown": "^8.0.5",
+    "@bufbuild/protobuf": "^2.2.5",
+    "@bufbuild/protoc-gen-es": "^2.2.5",
+    "@connectrpc/connect": "^2.0.2",
+    "@connectrpc/connect-web": "^2.0.2",
+
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "overmind": "^28.0.4-1738965119622",
+    "overmind-react": "^29.0.6-1738965119622",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-markdown": "^9.0.3",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.3.0",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-syntax-highlighter": "^15.6.1"
   },
   "scripts": {
     "tsc": "tsc",
@@ -27,10 +29,10 @@
     "build:dev": "webpack --mode development"
   },
   "devDependencies": {
-    "@testing-library/react": "^12.1.5",
+    "@testing-library/react": "^16.2.0",
     "@types/jest": "^29.2.0",
     "@types/react-router-dom": "^5.1.7",
-    "@types/react-syntax-highlighter": "^15.5.6",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "@types/selenium-webdriver": "^4.1.1",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",
@@ -59,6 +61,9 @@
   },
   "jest": {
     "preset": "ts-jest/presets/js-with-ts",
+    "setupFiles": [
+      "<rootDir>/src/__tests__/setup.jest.js"
+    ],
     "testEnvironment": "jsdom",
     "verbose": true,
     "transformIgnorePatterns": [
@@ -79,7 +84,8 @@
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)",
       "!**/__tests__/TestHelpers.ts",
-      "!**/__tests__/mock_data/**"
+      "!**/__tests__/mock_data/**",
+      "!**/__tests__/setup.jest.js"
     ],
     "moduleNameMapper": {
       "./types_pb.js": "<rootDir>/proto/qf/types_pb.ts",

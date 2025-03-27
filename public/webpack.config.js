@@ -12,7 +12,7 @@ module.exports = {
             import: "./src/overmind/index.tsx",
             dependOn: 'shared',
         },
-        shared: ["./node_modules/@bufbuild/protobuf", "./node_modules/@bufbuild/connect-web", "overmind"],
+        shared: ["./node_modules/@bufbuild/protobuf", "./node_modules/@connectrpc/connect-web", "overmind"],
     },
     output: {
         // Bundle filenames include hashes based on the contents of the file.

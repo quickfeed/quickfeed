@@ -10,12 +10,12 @@ import EditCriterion from "./EditCriterion"
 /** This component displays all assignments for the active course and:
  *  for assignments that are not manually graded, allows teachers to rebuild all submissions.
  *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
-const Assignments = (): JSX.Element => {
+const Assignments = () => {
     const courseID = getCourseID()
     const actions = useActions()
     const state = useAppState()
 
-    const assignmentElement = (assignment: Assignment): JSX.Element => {
+    const assignmentElement = (assignment: Assignment) => {
         const [hidden, setHidden] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
@@ -55,11 +55,13 @@ const Assignments = (): JSX.Element => {
 
         return (
             <ul key={assignment.ID.toString()} className="list-group">
-                <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)}>
-                    {assignment.name}
-                </li>
+                <div onClick={() => setHidden(!hidden)} role="button" aria-hidden="true">
+                    <li key="assignment" className="list-group-item">
+                        {assignment.name}
+                    </li>
+                </div>
                 {hidden && (
-                    <li key={"form"} className="list-group-item">
+                    <li key="form" className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
                         {isManuallyGraded(assignment)
                             ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
@@ -67,7 +69,7 @@ const Assignments = (): JSX.Element => {
                         }
                     </li>
                 )}
-            </ul >
+            </ul>
         )
     }
 

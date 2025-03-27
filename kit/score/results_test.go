@@ -23,9 +23,9 @@ Here are some more logs for the student.
 		// err may contain multiple errors
 		t.Fatal(err)
 	}
-	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
+	if strings.Contains(res.GetBuildInfo().GetBuildLog(), "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
-		t.Logf("res %+v", res.BuildInfo)
+		t.Logf("res %+v", res.GetBuildInfo())
 	}
 }
 
@@ -42,9 +42,9 @@ Here are some more logs for the student.
 		// err may contain multiple errors
 		t.Fatal(err)
 	}
-	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
+	if strings.Contains(res.GetBuildInfo().GetBuildLog(), "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
-		t.Logf("res %+v", res.BuildInfo)
+		t.Logf("res %+v", res.GetBuildInfo())
 	}
 }
 
@@ -91,8 +91,8 @@ func TestExtractResultsWithMultipleZeroScoreLines(t *testing.T) {
 		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
 	}
 	for _, score := range res.Scores {
-		if score.Score != 50 {
-			t.Errorf("ExtractResult() expected 50, got %d", score.Score)
+		if score.GetScore() != 50 {
+			t.Errorf("ExtractResult() expected 50, got %d", score.GetScore())
 		}
 	}
 }
@@ -118,8 +118,8 @@ func TestExtractResultsWithMultipleNonZeroScoreLines(t *testing.T) {
 		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
 	}
 	for _, score := range res.Scores {
-		if score.Score != -1 {
-			t.Errorf("ExtractResult() expected -1, got %d", score.Score)
+		if score.GetScore() != -1 {
+			t.Errorf("ExtractResult() expected -1, got %d", score.GetScore())
 		}
 	}
 }
@@ -182,7 +182,7 @@ func TestExtractResultsExecTime(t *testing.T) {
 				// err may contain multiple errors
 				t.Fatal(err)
 			}
-			got := res.BuildInfo.ExecTime
+			got := res.GetBuildInfo().GetExecTime()
 			if got != tt.want {
 				t.Errorf("ExtractResult(..., %q) = '%v', want '%v'", tt.in, got, tt.want)
 			}

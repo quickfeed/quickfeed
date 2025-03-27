@@ -64,10 +64,10 @@ func TestEnrollmentRemoveRemoteID(t *testing.T) {
 
 func checkUser(t *testing.T, user *qf.User) {
 	t.Helper()
-	if user.ScmRemoteID != 0 {
-		t.Errorf("user.ScmRemoteID = %d, want 0", user.ScmRemoteID)
+	if user.GetScmRemoteID() != 0 {
+		t.Errorf("user.GetScmRemoteID() = %d, want 0", user.GetScmRemoteID())
 	}
-	if user.RefreshToken != "" {
-		t.Errorf(`user.RefreshToken = %s, want ""`, user.RefreshToken)
+	if user.GetRefreshToken() != "" {
+		t.Errorf(`user.GetRefreshToken() = %s, want ""`, user.GetRefreshToken())
 	}
 }

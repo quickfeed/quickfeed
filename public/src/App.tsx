@@ -11,7 +11,7 @@ import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
 import LoginPage from './pages/LoginPage'
 
-const App = (): JSX.Element => {
+const App = () => {
     const state = useAppState()
 
     const Main = () => {

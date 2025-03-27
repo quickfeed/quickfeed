@@ -7,12 +7,12 @@ func (r *Review) ComputeScore() {
 	scorePoints := 0
 	totalCriteria := 0
 	passedCriteria := 0
-	for _, bm := range r.GradingBenchmarks {
-		for _, c := range bm.Criteria {
+	for _, bm := range r.GetGradingBenchmarks() {
+		for _, c := range bm.GetCriteria() {
 			totalCriteria++
-			if c.Grade == GradingCriterion_PASSED {
+			if c.GetGrade() == GradingCriterion_PASSED {
 				passedCriteria++
-				scorePoints += int(c.Points)
+				scorePoints += int(c.GetPoints())
 			}
 		}
 	}

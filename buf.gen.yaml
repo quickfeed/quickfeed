@@ -1,10 +1,17 @@
-# buf.gen.yaml defines a local generation template.
-# For details, see https://docs.buf.build/configuration/v1/buf-gen-yaml
-version: v1
+# See https://buf.build/docs/configuration/v2/buf-gen-yaml/ for documentation on the fields
+version: v2
 plugins:
-  - plugin: go-patch
-    out: ./
-    opt: plugin=go,paths=source_relative
-  - plugin: connect-go
-    out: ./
-    opt: paths=source_relative
+- local: [ "go", "tool", "protoc-gen-go-patch" ]
+  out: ./
+  opt:
+  - plugin=go
+  - paths=source_relative
+- local: [ "go", "tool", "protoc-gen-connect-go" ]
+  out: ./
+  opt:
+  - paths=source_relative
+- remote: buf.build/bufbuild/es
+  out: public/proto
+  opt: target=ts
+  exclude_types:
+  - go
