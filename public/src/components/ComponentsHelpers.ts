@@ -3,8 +3,7 @@ import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, S
 import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions } from "../overmind"
 import { AssignmentsMap, State } from "../overmind/state"
-import { Row, RowElement } from "./DynamicTable"
-
+import { CellElement, Row, RowElement } from "./DynamicTable"
 
 export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {
     const course = state.courses.find(c => c.ID === state.activeCourse)
@@ -74,7 +73,7 @@ export const generateRow = (
     return row
 }
 
-export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
     const base: Row = [
         { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
     ]
@@ -82,11 +81,16 @@ export const generateAssignmentsHeader = (assignments: Assignment[], group: bool
         base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
     }
     for (const assignment of assignments) {
-        if (group && assignment.isGroupLab) {
-            base.push({ value: `${assignment.name} (g)`, onClick: () => actions.review.setAssignmentID(assignment.ID) })
+        const cell: CellElement = { iconClassName: "fa fa-users", value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }
+        if (viewByGroup && assignment.isGroupLab) {
+            base.push(cell)
+            continue
         }
-        if (!group) {
-            base.push({ value: assignment.isGroupLab ? `${assignment.name} (g)` : assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) })
+        if (!viewByGroup) {
+            if (!assignment.isGroupLab) {
+                cell.iconClassName = "" // Remove the group icon
+            }
+            base.push(cell)
         }
     }
     return base
