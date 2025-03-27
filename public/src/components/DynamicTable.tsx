@@ -57,7 +57,8 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
     const rowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link} target={"_blank"} rel="noopener noreferrer">{cell.value}</a> : cell.value
-            return <td key={index} className={cell.className} onClick={cell.onClick}>{element}</td>
+            const icon = cell.iconClassName ? <i className={cell.iconClassName} /> : null
+            return <td key={index} className={cell.className} onClick={cell.onClick}>{element} {icon}</td>
         }
         return index == 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
     }
