@@ -1,5 +1,6 @@
+import { clone, create } from "@bufbuild/protobuf"
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Review, Submission } from '../../../../proto/qf/types_pb'
+import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, ReviewSchema, Submission, SubmissionSchema } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor } from '../../../Helpers'
 import { SubmissionOwner } from '../../state'
 
@@ -99,7 +100,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
     // If there is no submission or active course, we cannot create a review
     if (submission && state.activeCourse) {
         // Set the current user as the reviewer
-        const review = new Review({
+        const review = create(ReviewSchema,{
             ReviewerID: state.self.ID,
             SubmissionID: submission.ID,
         })
@@ -162,18 +163,18 @@ export const release = async ({ state, effects }: Context, { submission, owner }
     if (!submission) {
         return
     }
-    const clone = submission.clone()
-    clone.released = !submission.released
+    const clonedSubmission = clone(SubmissionSchema, submission)
+    clonedSubmission.released = !submission.released
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: submission.Grades,
-        released: clone.released,
+        released: clonedSubmission.released,
         score: submission.score,
     })
     if (response.error) {
         return
     }
-    submission.released = clone.released
+    submission.released = clonedSubmission.released
     state.submissionsForCourse.update(owner, submission)
 }

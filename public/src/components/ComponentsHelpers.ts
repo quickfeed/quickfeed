@@ -1,4 +1,5 @@
-import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
+import { isMessage } from "@bufbuild/protobuf"
+import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../proto/qf/types_pb"
 import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions } from "../overmind"
 import { AssignmentsMap, State } from "../overmind/state"
@@ -23,8 +24,8 @@ export const generateRow = (
     withID?: boolean
 ): Row => {
     const row: Row = []
-    const isEnrollment = enrollment instanceof Enrollment
-    const isGroup = enrollment instanceof Group
+    const isEnrollment = isMessage(enrollment, EnrollmentSchema)
+    const isGroup = isMessage(enrollment, GroupSchema)
 
     if (withID) {
         isEnrollment
