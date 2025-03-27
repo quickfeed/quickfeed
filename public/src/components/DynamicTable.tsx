@@ -5,6 +5,7 @@ import { useAppState } from "../overmind"
 export type CellElement = {
     value: string,
     className?: string,
+    iconClassName?: string,
     onClick?: () => void,
     link?: string
 }
@@ -64,7 +65,9 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
     const headerRowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
-            return <th key={index} className={cell.className} style={cell.onClick ? { "cursor": "pointer" } : undefined} onClick={cell.onClick}>{element}</th>
+            const style = cell.onClick ? { "cursor": "pointer" } : undefined
+            const icon = cell.iconClassName ? <i className={cell.iconClassName} /> : null
+            return <th key={index} className={cell.className} style={style} onClick={cell.onClick}>{element} {icon}</th>
         }
         return <th key={index}>{cell}</th>
     }
