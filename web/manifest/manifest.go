@@ -49,9 +49,9 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	return nil
 }
 
-func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error {
+func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string) error {
 	m := New(env.DomainWithPort(), envFile)
-	server, err := srvFn(httpAddr, m.Handler())
+	server, err := srvFn(m.Handler())
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 		}
 	}()
 	log.Println("Important: The GitHub user that installs the QuickFeed App will become the server's admin user.")
-	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.Domain())
+	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.DomainWithPort())
 	if err := <-m.done; err != nil {
 		return err
 	}

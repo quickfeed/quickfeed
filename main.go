@@ -75,7 +75,7 @@ func main() {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, env.HttpAddr(), envFile); err != nil {
+		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -144,7 +144,7 @@ func main() {
 		handler = web.WatchHandler(ctx, handler)
 	}
 
-	srv, err := srvFn(env.HttpAddr(), handler)
+	srv, err := srvFn(handler)
 	if err != nil {
 		log.Fatal(err)
 	}
