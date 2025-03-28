@@ -26,16 +26,16 @@ const ReviewForm = () => {
 
     const reviewers = assignment.reviewers ?? 0
     const reviews = state.review.reviews.get(state.selectedSubmission.ID) ?? []
-    const selectReviewButton: React.JSX.Element[] = []
+    const selectReviewButtons: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
-        selectReviewButton.push(
+        selectReviewButtons.push(
             <Button key={review.ID.toString()}
-                text={review.ready ? "Ready" : "In Progress"}
+                text={`#${index + 1} ${review.ready ? "Ready" : "In Progress"}`}
                 color={review.ready ? Color.GREEN : Color.YELLOW}
                 type={ButtonType.BUTTON}
-                className={`${state.review.selectedReview === index ? "active border border-dark" : ""}`}
-                onClick={() => { actions.review.setSelectedReview(index) }}
+                className={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
+                onClick={function () { actions.review.setSelectedReview(index) }}
             />
         )
     })
@@ -48,7 +48,7 @@ const ReviewForm = () => {
             text="Add Review"
             color={Color.BLUE}
             type={ButtonType.BUTTON}
-            onClick={async () => { await actions.review.createReview() }}
+            onClick={function () { actions.review.createReview() }}
         /> : null
 
     if (!isManuallyGraded(assignment)) {
@@ -59,7 +59,7 @@ const ReviewForm = () => {
                 {addReviewButton}
                 {state.review.currentReview ? (
                     <>
-                        <ReviewInfo review={state.review.currentReview} selectReviewButton={selectReviewButton} />
+                        <ReviewInfo review={state.review.currentReview} selectReviewButtons={selectReviewButtons} />
                         <ReviewResult review={state.review.currentReview} />
                     </>
                 ) : null}
