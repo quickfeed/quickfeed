@@ -61,7 +61,6 @@ const ReviewInfo = ({ review, selectReviewButton }: { review?: Review, selectRev
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>
                 <span>{ready ? "Ready" : "In progress"}</span>
-                {<MarkReadyButton review={review} />}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Score: </span>
