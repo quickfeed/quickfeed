@@ -1,6 +1,6 @@
 import { clone, create } from "@bufbuild/protobuf"
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, ReviewSchema, Submission, SubmissionSchema } from '../../../../proto/qf/types_pb'
+import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, ReviewSchema, Submission, Submission_Status, SubmissionSchema } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor } from '../../../Helpers'
 import { SubmissionOwner } from '../../state'
 
@@ -100,7 +100,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
     // If there is no submission or active course, we cannot create a review
     if (submission && state.activeCourse) {
         // Set the current user as the reviewer
-        const review = create(ReviewSchema,{
+        const review = create(ReviewSchema, {
             ReviewerID: state.self.ID,
             SubmissionID: submission.ID,
         })
@@ -130,14 +130,22 @@ export const setMinimumScore = ({ state }: Context, minimumScore: number): void 
     state.review.minimumScore = minimumScore
 }
 
+const determineReleaseString = (release: boolean, approve: boolean): string => {
+    let releaseString = ""
+    if (release && approve) {
+        releaseString = "release and approve"
+    } else if (release) {
+        releaseString = "release"
+    } else if (approve) {
+        releaseString = "approve"
+    }
+    return releaseString
+}
+
 export const releaseAll = async ({ state, actions, effects }: Context, { release, approve }: { release: boolean, approve: boolean }): Promise<void> => {
     const assignment = state.assignments[state.activeCourse.toString()].find(a => a.ID === state.review.assignmentID)
-
-    const releaseString = release && approve ? 'release and approve'
-        : release ? 'release'
-            : approve ? "approve"
-                : ""
-    const confirmText = `Are you sure you want to ${releaseString} all reviews for ${assignment?.name} above ${state.review.minimumScore} score?`
+    const status = approve ? Submission_Status.APPROVED : Submission_Status.NONE
+    const confirmText = `Are you sure you want to ${determineReleaseString(release, approve)} all reviews for ${assignment?.name} above ${state.review.minimumScore} score?`
     const invalidMinimumScore = state.review.minimumScore < 0 || state.review.minimumScore > 100
 
     if (invalidMinimumScore || !confirm(confirmText)) {
@@ -148,9 +156,9 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const response = await effects.api.client.updateSubmissions({
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
-        scoreLimit: state.review.minimumScore,
+        score: state.review.minimumScore,
         release,
-        approve,
+        status,
     })
     if (response.error) {
         return
@@ -169,7 +177,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: submission.Grades,
-        released: clonedSubmission.released,
+        release: clonedSubmission.released,
         score: submission.score,
     })
     if (response.error) {
