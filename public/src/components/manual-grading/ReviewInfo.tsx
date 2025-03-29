@@ -8,14 +8,9 @@ import DynamicButton from "../DynamicButton"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 import MarkReadyButton from "./MarkReadyButton"
 
-
-const ReviewInfo = ({ review }: { review?: Review }) => {
+const ReviewInfo = ({ review }: { review: Review }) => {
     const state = useAppState()
     const actions = useActions()
-
-    if (!review) {
-        return null
-    }
 
     const assignment = state.selectedAssignment
     const submission = state.selectedSubmission
@@ -62,7 +57,7 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[status] :  NoSubmission }
+                {submission ? SubmissionStatus[status] : NoSubmission}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>
