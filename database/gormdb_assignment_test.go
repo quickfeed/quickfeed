@@ -208,6 +208,33 @@ func TestGetCourseSubmissions(t *testing.T) {
 	}
 }
 
+func TestCreateBenchmarkWithoutAssignment(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	benchmark := &qf.GradingBenchmark{
+		ID:           1,
+		AssignmentID: 1,
+		Heading:      "Test benchmark",
+		Criteria: []*qf.GradingCriterion{
+			{
+				ID:          1,
+				Description: "Criterion 1",
+				Points:      5,
+			},
+			{
+				ID:          2,
+				Description: "Criterion 2",
+				Points:      10,
+			},
+		},
+	}
+
+	if err := db.CreateBenchmark(benchmark); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
 func TestUpdateBenchmarks(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
