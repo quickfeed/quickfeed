@@ -12,9 +12,9 @@ import './style.scss'
 }
 
 const overmind = createOvermind(config, {
-    // Enable devtools by setting the below to ex. 'devtools: "localhost:3301"'
+    // Enable devtools by setting the below to ex. 'devtools: "localhost:3031"'
     // then run 'npx overmind-devtools@latest' to start the devtools
-    devtools: "localhost:3301",
+    devtools: "localhost:3031",
 })
 
 if (process.env.NODE_ENV === "development") {

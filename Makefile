@@ -4,13 +4,12 @@
 # It may be necessary to skip variables that uses special makefile characters, like $.
 -include .env
 
-OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
-ARCH				:= $(shell uname -m)
-protopatch			:= patch/go.proto
-protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
+OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
+protopatch	:= qf/types.proto kit/score/score.proto
+proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check install ui proto test qcm scm
+.PHONY: download brew version-check install ui proto test qcm cm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -42,16 +41,13 @@ ui-update: version-check
 	@echo "Running npm install and webpack"
 	@cd public; npm i; webpack
 
-$(protopatch): $(protopatch-original)
-	@echo "Copying $(protopatch-original) to $(protopatch)"
-	@cp -f $(protopatch-original) $(protopatch)
-
-proto: $(protopatch)
-	buf generate --template buf.gen.yaml
-
-# TODO(meling): Split the proto target to avoid generating too new typescript... Need to fix #1147 first; after which we should merge this target with the proto target.
-proto-ui: $(protopatch)
-	buf generate --template buf.gen.ui.yaml --exclude-path patch
+# This uses an patched version of buf to generate the typescript code.
+# To install the patch version, run `go install github.com/bufbuild/buf/cmd/buf@304f0af`
+# TODO(meling): Remove this comment and revert to the brewed buf command once the new version is released.
+# See bufbuild/buf#3624 for more information: https://github.com/bufbuild/buf/pull/3624
+proto:
+	buf dep update
+	~/go/bin/buf generate --template buf.gen.yaml
 
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
@@ -69,3 +65,6 @@ selenium:
 
 qcm:
 	@cd cmd/qcm; go install
+
+cm:
+	@go install github.com/quickfeed/quickfeed/cmd/cm

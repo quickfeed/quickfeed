@@ -1,10 +1,7 @@
 package qf
 
 import (
-	"errors"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 func (s *Submission) IsApproved(userID uint64) bool {
@@ -114,43 +111,4 @@ func (s *Submissions) Clean(userID uint64) {
 		submission.Grades = nil
 		submission.Reviews = nil
 	}
-}
-
-// BeforeCreate is called before a new submission is created.
-// This method adds grades for any user or group related to the submission
-// which are then saved to the database upon creation of the submission.
-func (s *Submission) BeforeCreate(tx *gorm.DB) error {
-	if s.GetUserID() == 0 && s.GetGroupID() == 0 {
-		return errors.New("submission must have either user or group ID")
-	}
-	if s.GetUserID() > 0 {
-		// Add a grade for the user if the submission is not a group submission.
-		// Create a new grade for the user.
-		s.Grades = []*Grade{{
-			UserID:       s.GetUserID(),
-			SubmissionID: s.GetID(),
-			Status:       s.GetStatusByUser(s.GetUserID()),
-		}}
-	}
-	if s.GetGroupID() > 0 {
-		// If the submission is for a group, create a new grade for each user in the group.
-		// Get all the user IDs in the group
-		var userIDs []uint64
-		tx.Model(&Enrollment{}).Where("group_id = ?", s.GetGroupID()).Pluck("user_id", &userIDs)
-
-		if len(userIDs) == 0 {
-			return errors.New("group has no users")
-		}
-
-		s.Grades = make([]*Grade, len(userIDs))
-		for idx, id := range userIDs {
-			// Create a grade for each user in the group
-			s.GetGrades()[idx] = &Grade{
-				UserID:       id,
-				SubmissionID: s.GetID(),
-				Status:       s.GetStatusByUser(id),
-			}
-		}
-	}
-	return nil
 }

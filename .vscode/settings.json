@@ -26,6 +26,7 @@
         ".vscode-insiders",
         "go.mod",
         "go.sum",
+        "**/**/*_pb.ts",
         "**/**/*.pb.go"
     ],
     "files.exclude": {
