@@ -6,6 +6,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -274,15 +275,51 @@ func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 
 // CreateReview creates a new submission review.
 func (db *GormDB) CreateReview(query *qf.Review) error {
+	submission, err := db.GetSubmission(&qf.Submission{ID: query.GetSubmissionID()})
+	if err != nil {
+		return err
+	}
+	assignment, err := db.GetAssignment(&qf.Assignment{ID: submission.GetAssignmentID()})
+	if err != nil {
+		return err
+	}
+	if len(submission.GetReviews()) >= int(assignment.GetReviewers()) {
+		return fmt.Errorf("failed to create a new review for submission %d to assignment %s: all %d reviews already created",
+			submission.GetID(), assignment.GetName(), assignment.GetReviewers())
+	}
+	query.Edited = timestamppb.Now()
+	query.ComputeScore()
+	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: submission.GetAssignmentID()})
+	if err != nil {
+		return err
+	}
+	query.GradingBenchmarks = benchmarks
+	for _, bm := range query.GetGradingBenchmarks() {
+		bm.ID = 0
+		for _, c := range bm.GetCriteria() {
+			c.ID = 0
+		}
+	}
 	return db.conn.Create(query).Error
 }
 
 // UpdateReview updates a review.
 func (db *GormDB) UpdateReview(query *qf.Review) error {
+	if query.GetID() == 0 {
+		return fmt.Errorf("cannot update review with empty ID")
+	}
+	submission, err := db.GetSubmission(&qf.Submission{ID: query.GetSubmissionID()})
+	if err != nil {
+		return err
+	}
+
+	query.Edited = timestamppb.Now()
+	query.ComputeScore()
+
 	// By default, Gorm will not update zero value fields; such as the Ready bool field.
 	// Therefore we use Select before the Updates call. For additional context, see
 	// https://github.com/quickfeed/quickfeed/issues/569#issuecomment-1013729572
-	return db.conn.Model(&query).Select("*").Updates(&qf.Review{
+	if err := db.conn.Model(&query).Select("*").Updates(&qf.Review{
 		ID:           query.GetID(),
 		SubmissionID: query.GetSubmissionID(),
 		Feedback:     query.GetFeedback(),
@@ -290,7 +327,28 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 		Score:        query.GetScore(),
 		ReviewerID:   query.GetReviewerID(),
 		Edited:       query.GetEdited(),
-	}).Error
+	}).Error; err != nil {
+		return err
+	}
+
+	for _, bm := range query.GetGradingBenchmarks() {
+		if err := db.UpdateBenchmark(bm); err != nil {
+			return err
+		}
+		for _, c := range bm.GetCriteria() {
+			if err := db.UpdateCriterion(c); err != nil {
+				return err
+			}
+		}
+	}
+	// Update the submission's score if the review score has changed.
+	if submission.GetScore() != query.GetScore() {
+		submission.Score = query.GetScore()
+		if err := db.UpdateSubmission(submission); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DeleteReview removes all reviews matching the query.

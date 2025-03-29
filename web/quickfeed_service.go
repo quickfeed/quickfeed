@@ -492,22 +492,20 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Reques
 
 // CreateReview adds a new submission review.
 func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.internalCreateReview(in.Msg.GetReview())
-	if err != nil {
+	if err := s.db.CreateReview(in.Msg.GetReview()); err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
 	}
-	return connect.NewResponse(review), nil
+	return connect.NewResponse(in.Msg.GetReview()), nil
 }
 
 // UpdateReview updates a submission review.
 func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.internalUpdateReview(in.Msg.GetReview())
-	if err != nil {
+	if err := s.db.UpdateReview(in.Msg.GetReview()); err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
 	}
-	return connect.NewResponse(review), nil
+	return connect.NewResponse(in.Msg.GetReview()), nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
