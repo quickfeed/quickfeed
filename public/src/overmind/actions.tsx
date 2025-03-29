@@ -201,7 +201,7 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: clonedSubmission.Grades,
-        released: submission.released,
+        release: submission.released,
         score: submission.score,
     })
     if (response.error) {
@@ -231,7 +231,7 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
         courseID: state.activeCourse,
         submissionID: state.selectedSubmission.ID,
         grades: clonedSubmission.Grades,
-        released: state.selectedSubmission.released,
+        release: state.selectedSubmission.released,
         score: state.selectedSubmission.score,
     })
     if (response.error) {

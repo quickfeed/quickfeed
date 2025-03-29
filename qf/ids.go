@@ -75,11 +75,6 @@ func (r *SubmissionRequest) IDFor(role string) uint64 {
 }
 
 // IDFor returns course ID.
-func (r *UpdateSubmissionsRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
-}
-
-// IDFor returns course ID.
 func (r *UpdateSubmissionRequest) IDFor(role string) uint64 {
 	switch role {
 	case "course":

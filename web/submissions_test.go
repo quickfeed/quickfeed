@@ -841,11 +841,11 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// Attempt to release all submissions with score >= 80
-	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{
+	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
 		AssignmentID: assignments[0].GetID(),
 		Release:      true,
-		ScoreLimit:   80,
+		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
@@ -887,11 +887,11 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// Attempt to release all submissions with score >= 80
-	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{
+	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
 		AssignmentID: assignments[1].GetID(),
 		Release:      true,
-		ScoreLimit:   80,
+		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
@@ -911,11 +911,11 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// Approve all submissions for assignment 1 with score >= 80
-	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{
+	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
 		AssignmentID: assignments[1].GetID(),
-		Approve:      true,
-		ScoreLimit:   80,
+		Status:       qf.Submission_APPROVED,
+		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}

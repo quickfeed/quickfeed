@@ -542,13 +542,16 @@ func (*SubmissionRequest_SubmissionID) isSubmissionRequest_FetchMode() {}
 
 func (*SubmissionRequest_Type) isSubmissionRequest_FetchMode() {}
 
+// UpdateSubmissionRequest is used to update manually reviewed submissions.
 type UpdateSubmissionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SubmissionID  uint64                 `protobuf:"varint,1,opt,name=submissionID,proto3" json:"submissionID,omitempty"`
-	CourseID      uint64                 `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	Score         uint32                 `protobuf:"varint,3,opt,name=score,proto3" json:"score,omitempty"`
-	Released      bool                   `protobuf:"varint,4,opt,name=released,proto3" json:"released,omitempty"`
-	Grades        []*Grade               `protobuf:"bytes,5,rep,name=grades,proto3" json:"grades,omitempty"`
+	CourseID      uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"` // if non-zero, update all submissions
+	SubmissionID  uint64                 `protobuf:"varint,3,opt,name=submissionID,proto3" json:"submissionID,omitempty"` // if non-zero, update single specific submission
+	Score         uint32                 `protobuf:"varint,4,opt,name=score,proto3" json:"score,omitempty"`               // only used for single submission
+	Release       bool                   `protobuf:"varint,5,opt,name=release,proto3" json:"release,omitempty"`           // indicate whether or not to release submission(s) to students
+	Status        Submission_Status      `protobuf:"varint,6,opt,name=status,proto3,enum=qf.Submission_Status" json:"status,omitempty"`
+	Grades        []*Grade               `protobuf:"bytes,7,rep,name=grades,proto3" json:"grades,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -583,16 +586,23 @@ func (*UpdateSubmissionRequest) Descriptor() ([]byte, []int) {
 	return file_qf_requests_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *UpdateSubmissionRequest) GetSubmissionID() uint64 {
+func (x *UpdateSubmissionRequest) GetCourseID() uint64 {
 	if x != nil {
-		return x.SubmissionID
+		return x.CourseID
 	}
 	return 0
 }
 
-func (x *UpdateSubmissionRequest) GetCourseID() uint64 {
+func (x *UpdateSubmissionRequest) GetAssignmentID() uint64 {
 	if x != nil {
-		return x.CourseID
+		return x.AssignmentID
+	}
+	return 0
+}
+
+func (x *UpdateSubmissionRequest) GetSubmissionID() uint64 {
+	if x != nil {
+		return x.SubmissionID
 	}
 	return 0
 }
@@ -604,11 +614,18 @@ func (x *UpdateSubmissionRequest) GetScore() uint32 {
 	return 0
 }
 
-func (x *UpdateSubmissionRequest) GetReleased() bool {
+func (x *UpdateSubmissionRequest) GetRelease() bool {
 	if x != nil {
-		return x.Released
+		return x.Release
 	}
 	return false
+}
+
+func (x *UpdateSubmissionRequest) GetStatus() Submission_Status {
+	if x != nil {
+		return x.Status
+	}
+	return Submission_NONE
 }
 
 func (x *UpdateSubmissionRequest) GetGrades() []*Grade {
@@ -616,82 +633,6 @@ func (x *UpdateSubmissionRequest) GetGrades() []*Grade {
 		return x.Grades
 	}
 	return nil
-}
-
-type UpdateSubmissionsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CourseID      uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
-	ScoreLimit    uint32                 `protobuf:"varint,3,opt,name=scoreLimit,proto3" json:"scoreLimit,omitempty"`
-	Release       bool                   `protobuf:"varint,4,opt,name=release,proto3" json:"release,omitempty"`
-	Approve       bool                   `protobuf:"varint,5,opt,name=approve,proto3" json:"approve,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateSubmissionsRequest) Reset() {
-	*x = UpdateSubmissionsRequest{}
-	mi := &file_qf_requests_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateSubmissionsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateSubmissionsRequest) ProtoMessage() {}
-
-func (x *UpdateSubmissionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateSubmissionsRequest.ProtoReflect.Descriptor instead.
-func (*UpdateSubmissionsRequest) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *UpdateSubmissionsRequest) GetCourseID() uint64 {
-	if x != nil {
-		return x.CourseID
-	}
-	return 0
-}
-
-func (x *UpdateSubmissionsRequest) GetAssignmentID() uint64 {
-	if x != nil {
-		return x.AssignmentID
-	}
-	return 0
-}
-
-func (x *UpdateSubmissionsRequest) GetScoreLimit() uint32 {
-	if x != nil {
-		return x.ScoreLimit
-	}
-	return 0
-}
-
-func (x *UpdateSubmissionsRequest) GetRelease() bool {
-	if x != nil {
-		return x.Release
-	}
-	return false
-}
-
-func (x *UpdateSubmissionsRequest) GetApprove() bool {
-	if x != nil {
-		return x.Approve
-	}
-	return false
 }
 
 // used to check whether student/group submission repo is empty
@@ -706,7 +647,7 @@ type RepositoryRequest struct {
 
 func (x *RepositoryRequest) Reset() {
 	*x = RepositoryRequest{}
-	mi := &file_qf_requests_proto_msgTypes[9]
+	mi := &file_qf_requests_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -718,7 +659,7 @@ func (x *RepositoryRequest) String() string {
 func (*RepositoryRequest) ProtoMessage() {}
 
 func (x *RepositoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[9]
+	mi := &file_qf_requests_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -731,7 +672,7 @@ func (x *RepositoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RepositoryRequest.ProtoReflect.Descriptor instead.
 func (*RepositoryRequest) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{9}
+	return file_qf_requests_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RepositoryRequest) GetUserID() uint64 {
@@ -764,7 +705,7 @@ type Repositories struct {
 
 func (x *Repositories) Reset() {
 	*x = Repositories{}
-	mi := &file_qf_requests_proto_msgTypes[10]
+	mi := &file_qf_requests_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -776,7 +717,7 @@ func (x *Repositories) String() string {
 func (*Repositories) ProtoMessage() {}
 
 func (x *Repositories) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[10]
+	mi := &file_qf_requests_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -789,7 +730,7 @@ func (x *Repositories) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Repositories.ProtoReflect.Descriptor instead.
 func (*Repositories) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{10}
+	return file_qf_requests_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Repositories) GetURLs() map[uint32]string {
@@ -810,7 +751,7 @@ type RebuildRequest struct {
 
 func (x *RebuildRequest) Reset() {
 	*x = RebuildRequest{}
-	mi := &file_qf_requests_proto_msgTypes[11]
+	mi := &file_qf_requests_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -822,7 +763,7 @@ func (x *RebuildRequest) String() string {
 func (*RebuildRequest) ProtoMessage() {}
 
 func (x *RebuildRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[11]
+	mi := &file_qf_requests_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -835,7 +776,7 @@ func (x *RebuildRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RebuildRequest.ProtoReflect.Descriptor instead.
 func (*RebuildRequest) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{11}
+	return file_qf_requests_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *RebuildRequest) GetCourseID() uint64 {
@@ -867,7 +808,7 @@ type Void struct {
 
 func (x *Void) Reset() {
 	*x = Void{}
-	mi := &file_qf_requests_proto_msgTypes[12]
+	mi := &file_qf_requests_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -879,7 +820,7 @@ func (x *Void) String() string {
 func (*Void) ProtoMessage() {}
 
 func (x *Void) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[12]
+	mi := &file_qf_requests_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -892,7 +833,7 @@ func (x *Void) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Void.ProtoReflect.Descriptor instead.
 func (*Void) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{12}
+	return file_qf_requests_proto_rawDescGZIP(), []int{11}
 }
 
 var File_qf_requests_proto protoreflect.FileDescriptor
@@ -960,29 +901,23 @@ var file_qf_requests_proto_rawDesc = string([]byte{
 	0x6f, 0x6e, 0x54, 0x79, 0x70, 0x65, 0x12, 0x07, 0x0a, 0x03, 0x41, 0x4c, 0x4c, 0x10, 0x00, 0x12,
 	0x08, 0x0a, 0x04, 0x55, 0x53, 0x45, 0x52, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x47, 0x52, 0x4f,
 	0x55, 0x50, 0x10, 0x02, 0x42, 0x0b, 0x0a, 0x09, 0x46, 0x65, 0x74, 0x63, 0x68, 0x4d, 0x6f, 0x64,
-	0x65, 0x22, 0xae, 0x01, 0x0a, 0x17, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x75, 0x62, 0x6d,
-	0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x22, 0x0a,
-	0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x18, 0x01, 0x20,
+	0x65, 0x22, 0xff, 0x01, 0x0a, 0x17, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x75, 0x62, 0x6d,
+	0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a,
+	0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x12, 0x22, 0x0a, 0x0c, 0x61, 0x73, 0x73,
+	0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0c, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x12, 0x22, 0x0a,
+	0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x18, 0x03, 0x20,
 	0x01, 0x28, 0x04, 0x52, 0x0c, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49,
-	0x44, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x12, 0x14, 0x0a,
-	0x05, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x73, 0x63,
-	0x6f, 0x72, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x12,
-	0x21, 0x0a, 0x06, 0x67, 0x72, 0x61, 0x64, 0x65, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x09, 0x2e, 0x71, 0x66, 0x2e, 0x47, 0x72, 0x61, 0x64, 0x65, 0x52, 0x06, 0x67, 0x72, 0x61, 0x64,
-	0x65, 0x73, 0x22, 0xae, 0x01, 0x0a, 0x18, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x75, 0x62,
-	0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x08, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x49, 0x44, 0x12, 0x22, 0x0a, 0x0c, 0x61,
-	0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x0c, 0x61, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x44, 0x12,
-	0x1e, 0x0a, 0x0a, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0d, 0x52, 0x0a, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12,
-	0x18, 0x0a, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x70, 0x70,
-	0x72, 0x6f, 0x76, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x61, 0x70, 0x70, 0x72,
-	0x6f, 0x76, 0x65, 0x22, 0x61, 0x0a, 0x11, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72,
+	0x44, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d,
+	0x52, 0x05, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x12, 0x2d, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x15, 0x2e, 0x71, 0x66, 0x2e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f,
+	0x6e, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73,
+	0x12, 0x21, 0x0a, 0x06, 0x67, 0x72, 0x61, 0x64, 0x65, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x09, 0x2e, 0x71, 0x66, 0x2e, 0x47, 0x72, 0x61, 0x64, 0x65, 0x52, 0x06, 0x67, 0x72, 0x61,
+	0x64, 0x65, 0x73, 0x22, 0x61, 0x0a, 0x11, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72,
 	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x75, 0x73, 0x65, 0x72,
 	0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x44,
 	0x12, 0x18, 0x0a, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28,
@@ -1022,7 +957,7 @@ func file_qf_requests_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_qf_requests_proto_goTypes = []any{
 	(SubmissionRequest_SubmissionType)(0), // 0: qf.SubmissionRequest.SubmissionType
 	(*CourseSubmissions)(nil),             // 1: qf.CourseSubmissions
@@ -1033,31 +968,32 @@ var file_qf_requests_proto_goTypes = []any{
 	(*EnrollmentRequest)(nil),             // 6: qf.EnrollmentRequest
 	(*SubmissionRequest)(nil),             // 7: qf.SubmissionRequest
 	(*UpdateSubmissionRequest)(nil),       // 8: qf.UpdateSubmissionRequest
-	(*UpdateSubmissionsRequest)(nil),      // 9: qf.UpdateSubmissionsRequest
-	(*RepositoryRequest)(nil),             // 10: qf.RepositoryRequest
-	(*Repositories)(nil),                  // 11: qf.Repositories
-	(*RebuildRequest)(nil),                // 12: qf.RebuildRequest
-	(*Void)(nil),                          // 13: qf.Void
-	nil,                                   // 14: qf.CourseSubmissions.SubmissionsEntry
-	nil,                                   // 15: qf.Repositories.URLsEntry
-	(*Review)(nil),                        // 16: qf.Review
-	(Enrollment_UserStatus)(0),            // 17: qf.Enrollment.UserStatus
+	(*RepositoryRequest)(nil),             // 9: qf.RepositoryRequest
+	(*Repositories)(nil),                  // 10: qf.Repositories
+	(*RebuildRequest)(nil),                // 11: qf.RebuildRequest
+	(*Void)(nil),                          // 12: qf.Void
+	nil,                                   // 13: qf.CourseSubmissions.SubmissionsEntry
+	nil,                                   // 14: qf.Repositories.URLsEntry
+	(*Review)(nil),                        // 15: qf.Review
+	(Enrollment_UserStatus)(0),            // 16: qf.Enrollment.UserStatus
+	(Submission_Status)(0),                // 17: qf.Submission.Status
 	(*Grade)(nil),                         // 18: qf.Grade
 	(*Submissions)(nil),                   // 19: qf.Submissions
 }
 var file_qf_requests_proto_depIdxs = []int32{
-	14, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
-	16, // 1: qf.ReviewRequest.review:type_name -> qf.Review
-	17, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
+	13, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
+	15, // 1: qf.ReviewRequest.review:type_name -> qf.Review
+	16, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
 	0,  // 3: qf.SubmissionRequest.Type:type_name -> qf.SubmissionRequest.SubmissionType
-	18, // 4: qf.UpdateSubmissionRequest.grades:type_name -> qf.Grade
-	15, // 5: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
-	19, // 6: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
-	7,  // [7:7] is the sub-list for method output_type
-	7,  // [7:7] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	17, // 4: qf.UpdateSubmissionRequest.status:type_name -> qf.Submission.Status
+	18, // 5: qf.UpdateSubmissionRequest.grades:type_name -> qf.Grade
+	14, // 6: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
+	19, // 7: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
+	8,  // [8:8] is the sub-list for method output_type
+	8,  // [8:8] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_qf_requests_proto_init() }
@@ -1082,7 +1018,7 @@ func file_qf_requests_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_requests_proto_rawDesc), len(file_qf_requests_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   15,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
