@@ -392,8 +392,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 // The map values are lists of all submissions for the given group or enrollment.
 func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
-
-	courseLinks, err := s.getAllCourseSubmissions(in.Msg)
+	courseLinks, err := s.db.GetCourseSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetSubmissionsByCourse failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
