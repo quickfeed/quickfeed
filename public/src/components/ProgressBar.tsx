@@ -1,7 +1,8 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Submission, Submission_Status } from "../../proto/qf/types_pb"
+import { Assignment, Submission, Submission_Status } from "../../proto/qf/types_pb"
 import { getStatusByUser } from "../Helpers"
+import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
 export enum Progress {
     NAV,
@@ -93,3 +94,20 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
 }
 
 export default ProgressBar
+
+// DefaultProgressBar is a function that returns a progress bar for a lab/assignment with no submissions
+export const DefaultProgressBar = ({ assignment }: { assignment: Assignment }) => {
+    return (
+        <div className="row mb-1 py-2 align-items-center text-left">
+            <div className="col-8">
+                <div className="progress">
+                    <PrimaryProgressBar score={0} text={"0 %"} />
+                    <SecondaryProgressBar progress={assignment.scoreLimit} text={`${assignment.scoreLimit} %`} />
+                </div>
+            </div>
+            <SubmissionTypeIcon solo={!assignment.isGroupLab} />
+            <div className="col-3">
+                No submission
+            </div>
+        </div> : null
+}

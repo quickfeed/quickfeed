@@ -2,6 +2,7 @@ import React from 'react'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getFormattedTime } from "../../Helpers"
 import SubmissionRow from './SubmissionRow'
+import { DefaultProgressBar } from '../ProgressBar'
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -36,6 +37,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
             selfID={selfID}
           />
         ))}
+        {submissions.length === 0 && <DefaultProgressBar assignment={assignment} />}
       </div>
     </div>
   )
