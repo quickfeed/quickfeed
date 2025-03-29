@@ -39,8 +39,8 @@ func (s *Submission) GetStatusByUser(userID uint64) Submission_Status {
 	return Submission_NONE
 }
 
-// SetReleasedAndMarks sets the submission's released status, grades and score
-func (s *Submission) SetReleasedAndMarks(request *UpdateSubmissionRequest) {
+// SetGradesAndRelease sets the submission's grade, score and released status.
+func (s *Submission) SetGradesAndRelease(request *UpdateSubmissionRequest) {
 	for _, grade := range request.GetGrades() {
 		s.SetGrade(grade.GetUserID(), grade.GetStatus())
 	}

@@ -404,7 +404,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
-	submission.SetReleasedAndMarks(in.Msg)
+	submission.SetGradesAndRelease(in.Msg)
 	err = s.db.UpdateSubmission(submission)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)

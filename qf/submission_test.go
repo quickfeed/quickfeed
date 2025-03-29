@@ -212,6 +212,25 @@ func TestUpdateTotalApproved(t *testing.T) {
 	}
 }
 
+func TestSetGradesAndRelease(t *testing.T) {
+	approvedGrade := []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}}
+	tests := []struct {
+		name          string
+		submission    *qf.Submission
+		updateRequest *qf.UpdateSubmissionRequest
+		want          *qf.Submission
+	}{
+		{name: "Update grades, released and score", submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}}}, updateRequest: &qf.UpdateSubmissionRequest{Score: 1, Released: true, Grades: approvedGrade}, want: &qf.Submission{Score: 1, Released: true, Grades: approvedGrade}},
+		{name: "Update release. No grades and score is zero", submission: &qf.Submission{}, updateRequest: &qf.UpdateSubmissionRequest{Score: 0, Released: true}, want: &qf.Submission{Score: 0, Released: true}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.submission.SetGradesAndRelease(test.updateRequest)
+			qtest.Diff(t, "SetGradesAndRelease() mismatch", test.submission, test.want, protocmp.Transform())
+		})
+	}
+}
+
 func TestSetGradesIfApproved(t *testing.T) {
 	const (
 		T = true
