@@ -1,5 +1,5 @@
 import React from "react"
-import { Review, Submission_Status } from "../../../proto/qf/types_pb"
+import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
@@ -8,17 +8,17 @@ import DynamicButton from "../DynamicButton"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 import MarkReadyButton from "./MarkReadyButton"
 
+interface ReviewInfoProps {
+    courseID: string
+    assignmentName: string
+    reviewers: number
+    submission: Submission
+    review: Review
+}
 
-const ReviewInfo = ({ review }: { review?: Review }) => {
+const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
     const actions = useActions()
-
-    if (!review) {
-        return null
-    }
-
-    const assignment = state.selectedAssignment
-    const submission = state.selectedSubmission
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
@@ -37,11 +37,11 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
         )
     }
 
-    const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
+    const setReadyOrGradeButton = ready ? <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} /> : markReadyButton
     const releaseButton = (
         <DynamicButton
-            text={submission?.released ? "Released" : "Release"}
-            color={submission?.released ? Color.WHITE : Color.YELLOW}
+            text={submission.released ? "Released" : "Release"}
+            color={submission.released ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON}
             className={`float-right ${!state.isCourseCreator && "disabled"} `}
             onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
@@ -51,7 +51,7 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
         <ul className="list-group">
             <li className="list-group-item active">
                 <span className="align-middle">
-                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignment?.name}</span>
+                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignmentName}</span>
                     {releaseButton}
                 </span>
             </li>
@@ -62,7 +62,7 @@ const ReviewInfo = ({ review }: { review?: Review }) => {
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[status] :  NoSubmission }
+                {submission ? SubmissionStatus[status] : NoSubmission}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>

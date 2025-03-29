@@ -63,7 +63,7 @@ const Assignments = () => {
                 {hidden && (
                     <li key="form" className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
-                        {isManuallyGraded(assignment)
+                        {isManuallyGraded(assignment.reviewers)
                             ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
                             : <Button text={buttonText} color={Color.BLUE} type={ButtonType.BUTTON} onClick={rebuild} />
                         }

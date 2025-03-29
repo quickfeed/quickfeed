@@ -20,7 +20,7 @@ const TeacherPage = () => {
     const courseID = getCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`
-    const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment))
+    const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
 
     const members = {
         title: "View Members",

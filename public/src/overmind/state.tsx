@@ -426,7 +426,7 @@ export const state: State = {
     }),
     isCourseManuallyGraded: derived(({ activeCourse, assignments }: State) => {
         if (activeCourse > 0 && assignments[activeCourse.toString()]) {
-            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a))
+            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a.reviewers))
         }
         return false
     }),
