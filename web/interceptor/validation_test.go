@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
@@ -92,5 +93,52 @@ func TestImplementsValidation(t *testing.T) {
 		if !test.found {
 			t.Errorf("Message %s is tested, but no longer exists", name)
 		}
+	}
+}
+
+func TestUpdateSubmissionRequestIsValid(t *testing.T) {
+	tests := map[string]struct {
+		request *qf.UpdateSubmissionRequest
+		want    bool
+	}{
+		"Assignment and Submission ID": {
+			request: &qf.UpdateSubmissionRequest{
+				CourseID:     1,
+				SubmissionID: 2,
+				AssignmentID: 3,
+			},
+			want: false,
+		},
+		"Missing Course ID": {
+			request: &qf.UpdateSubmissionRequest{
+				SubmissionID: 1,
+				Score:        2,
+			},
+			want: false,
+		},
+		"Approve all submissions for an assignment": {
+			request: &qf.UpdateSubmissionRequest{
+				CourseID:     1,
+				AssignmentID: 2,
+				Status:       qf.Submission_APPROVED,
+			},
+			want: true,
+		},
+		"Update a single submission": {
+			request: &qf.UpdateSubmissionRequest{
+				CourseID:     1,
+				SubmissionID: 2,
+				Status:       qf.Submission_APPROVED,
+			},
+			want: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := test.request.IsValid(); got != test.want {
+				t.Errorf("IsValid() = %v, want %v", got, test.want)
+			}
+		})
 	}
 }
