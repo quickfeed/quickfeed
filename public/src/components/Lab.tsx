@@ -6,6 +6,7 @@ import { useAppState, useActions } from '../overmind'
 import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
+import { CenteredMessage, KnownMessage } from './CenteredMessage'
 
 interface MatchProps {
     id: string
@@ -16,7 +17,6 @@ interface MatchProps {
  *  If the user is a teacher, Lab displays the currently selected submission.
  */
 const Lab = () => {
-
     const state = useAppState()
     const actions = useActions()
     const { id, lab } = useParams<MatchProps>()
@@ -41,14 +41,13 @@ const Lab = () => {
             assignment = state.assignments[courseID].find(a => a.ID === submission?.AssignmentID) ?? null
         } else {
             // Retrieve the student's submission
-
             assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
             if (!assignment) {
-                return <div>Assignment not found</div>
+                return <CenteredMessage message={KnownMessage.NoAssignment} />
             }
             const submissions = state.submissions.ForAssignment(assignment) ?? null
             if (!submissions) {
-                return <div>No submissions found</div>
+                return <CenteredMessage message={KnownMessage.NoSubmission} />
             }
 
             if (isGroupLab) {
@@ -79,9 +78,7 @@ const Lab = () => {
                 </div>
             )
         }
-        return (
-            <div>No submission found</div>
-        )
+        return <CenteredMessage message={KnownMessage.NoSubmission} />
     }
 
     return (

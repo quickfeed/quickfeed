@@ -10,6 +10,7 @@ import { ApiClient } from "../overmind/effects"
 import { initializeOvermind, mock } from "./TestHelpers"
 import { create, clone } from "@bufbuild/protobuf"
 import { ConnectError } from "@connectrpc/connect"
+import { KnownMessage } from "../components/CenteredMessage"
 
 describe("Lab view correctly re-renders on state change", () => {
     const api = new ApiClient()
@@ -72,26 +73,26 @@ describe("Lab view correctly re-renders on state change", () => {
 
     test("No assignment", () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent("Assignment not found")
+        assertContent(KnownMessage.NoAssignment)
     })
 
     test("No submission", async () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent("Assignment not found")
+        assertContent(KnownMessage.NoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
-        // after the assignment is fetched it should show "No submission found"
-        assertContent("No submission found")
+        // after the assignment is fetched it should show "Select a submission from the results table"
+        assertContent(KnownMessage.NoSubmission)
     })
 
     test("Submission found", async () => {
         // TODO:  The previous tests are covered here, we could remove them
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent("Assignment not found")
+        assertContent(KnownMessage.NoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
-        // after the assignment is fetched it should show "No submission found"
-        assertContent("No submission found")
+        // after the assignment is fetched it should show "Select a submission from the results table"
+        assertContent(KnownMessage.NoSubmission)
 
         // fetch submissions for the user
         await act(async () => {

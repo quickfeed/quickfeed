@@ -5,6 +5,7 @@ import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
+import { CenteredMessage, KnownMessage } from "../CenteredMessage"
 
 
 const ReviewForm = () => {
@@ -12,12 +13,12 @@ const ReviewForm = () => {
     const actions = useActions()
 
     if (!state.selectedSubmission) {
-        return <div>No submission selected</div>
+        return <CenteredMessage message={KnownMessage.NoSubmission} />
     }
 
     const assignment = state.selectedAssignment
     if (!assignment) {
-        return <div>No Submission</div>
+        return <CenteredMessage message={KnownMessage.NoAssignment} />
     }
 
     const isAuthor = (review: Review) => {
