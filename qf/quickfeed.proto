@@ -48,7 +48,7 @@ service QuickFeedService {
     // Get lab submissions for every course user or every course group
     rpc GetSubmissionsByCourse(SubmissionRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
-    rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
+    rpc UpdateSubmissions(UpdateSubmissionRequest) returns (Void) {}
     rpc RebuildSubmissions(RebuildRequest) returns (Void) {}
 
     // manual grading //
