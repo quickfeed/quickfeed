@@ -61,7 +61,7 @@ const NavBarLabs = () => {
                 <div
                     className={highlightSubmission(submission, assignment)}
                     style={{ position: "relative" }}
-                    key={assignment.ID.toString()}
+                    key={submission.ID.toString()}
                     onClick={() => { history.push(link.link.to) }}
                     role="button"
                     aria-hidden="true"
