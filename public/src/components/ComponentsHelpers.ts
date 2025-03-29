@@ -68,7 +68,7 @@ export const generateRow = (
             row.push(generator(submission, enrollment))
             return
         }
-        row.push("N/A")
+        row.push("-")
     })
     return row
 }

@@ -67,7 +67,7 @@ const Results = ({ review }: { review: boolean }) => {
 
     const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
         if (!state.isManuallyGraded(submission)) {
-            return { value: "N/A" }
+            return { value: "-" }
         }
         const reviews = state.review.reviews.get(submission.ID) ?? []
         // Check if the current user has any pending reviews for this submission
