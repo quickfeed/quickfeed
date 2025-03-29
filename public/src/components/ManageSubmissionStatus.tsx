@@ -84,7 +84,7 @@ const ManageSubmissionStatus = () => {
                         onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
                     />
                 )}
-                {assignment && !isManuallyGraded(assignment) && (
+                {!isManuallyGraded(reviewers) && (
                     <DynamicButton
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}

@@ -70,7 +70,7 @@ const Lab = () => {
                 <div key={submission.ID.toString()} className="mb-4">
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment) && submission.released ? <ReviewResult review={review[0]} /> : null}
+                    {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}>{buildLog}</code>

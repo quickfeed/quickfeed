@@ -55,7 +55,7 @@ const ReviewForm = () => {
         )
     }
 
-    if (!isManuallyGraded(assignment)) {
+    if (!isManuallyGraded(selectedAssignment.reviewers)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (

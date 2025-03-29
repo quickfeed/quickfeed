@@ -32,19 +32,19 @@ export enum ConnStatus {
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a timestamp
- * 
+ *
  *  The offset parameter is used to remove the timezone offset from the timestamp.
  *  For example, deadlines are defined in our `assignment.yaml` files in UTC time (ex. 2023-12-31 23:59:00).
  *  If we don't remove the timezone offset, the date will be off by the timezone offset (from above: 2024-01-01 00:59:00).
  *  We want to display the date as it is defined in the assignment file, so we remove the timezone offset.
  *  - offset: true
  *      - 2023-12-31T23:59:00Z will be displayed as "31 December 2023 23:59"
- * 
+ *
  *  In other cases such as the build date for submissions, we want to display the date in the user's local timezone.
  *  In this case, we *don't* remove the timezone offset. Otherwise the date will be off by the timezone offset.
  *  - offset: false
  *      - 2023-12-31T23:59:00Z will be displayed as "1 January 2024 00:59"
- * 
+ *
  *  Note that in UTC+1 the offset is -60 minutes, adding the offset will effectively subtract 60 minutes from the date.
  */
 export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: boolean): string => {
@@ -52,9 +52,9 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
         return "N/A"
     }
     const date = timestampDate(timestamp)
-    
+
     // dates are stored in UTC, so we might need to adjust for the local timezone
-    // otherwise the date will be off by the timezone offset, e.g. 
+    // otherwise the date will be off by the timezone offset, e.g.
     // 2024-02-08T23:59:00Z will be displayed to users in UTC+1 as "9 February 2024 00:59"
     // not "8 February 2024 23:59" as expected
     const tzOffset = offset ? date.getTimezoneOffset() * 60000 : 0
@@ -159,7 +159,7 @@ export const isAuthor = (user: User, review: Review): boolean => { return user.I
 /** isValidSubmissionForAssignment returns true if the submission is valid for the assignment
  *  A submission is considered valid if the assignment is a group lab, or the submission is not part of a group.
  *  This is used to filter out submissions that are not to be displayed in the UI.
- * 
+ *
  *  - If the assignment is a group lab, all submissions (solo and group) are valid.
  *  - If the assignment is not a group lab, only submissions that are not part of a group are valid.
  */
@@ -169,8 +169,8 @@ export const isValidSubmissionForAssignment = (submission: Submission, assignmen
 
 export const isGroupSubmission = (submission: Submission): boolean => { return submission.groupID > 0n }
 
-export const isManuallyGraded = (assignment: Assignment): boolean => {
-    return assignment.reviewers > 0
+export const isManuallyGraded = (reviewers: number): boolean => {
+    return reviewers > 0
 }
 
 export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
