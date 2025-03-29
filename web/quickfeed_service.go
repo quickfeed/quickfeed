@@ -164,12 +164,7 @@ func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *conne
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	enrollment := &qf.Enrollment{
-		UserID:   in.Msg.GetUserID(),
-		CourseID: in.Msg.GetCourseID(),
-		Status:   qf.Enrollment_PENDING,
-	}
-	if err := s.db.CreateEnrollment(enrollment); err != nil {
+	if err := s.db.CreateEnrollment(in.Msg); err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create enrollment"))
 	}
@@ -268,9 +263,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 		s.logger.Errorf("GetGroups failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get groups"))
 	}
-	return connect.NewResponse(&qf.Groups{
-		Groups: groups,
-	}), nil
+	return connect.NewResponse(&qf.Groups{Groups: groups}), nil
 }
 
 // CreateGroup creates a new group for the given course and users.

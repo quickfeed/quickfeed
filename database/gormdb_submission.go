@@ -209,6 +209,9 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*
 
 // GetSubmissions returns all submissions matching the query.
 func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error) {
+	if _, err := db.GetAssignment(&qf.Assignment{ID: query.GetAssignmentID()}); err != nil {
+		return nil, err
+	}
 	var submissions []*qf.Submission
 	if err := db.conn.Preload("Grades").Find(&submissions, &query).Error; err != nil {
 		return nil, err

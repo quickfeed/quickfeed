@@ -18,7 +18,11 @@ func (s *QuickFeedService) internalRebuildSubmission(request *qf.RebuildRequest)
 	if err != nil {
 		return err
 	}
-	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.GetAssignmentID()})
+	assignment, err := s.db.GetAssignment(&qf.Assignment{ID: request.GetAssignmentID()})
+	if err != nil {
+		return err
+	}
+	course, err := s.db.GetCourse(assignment.GetCourseID())
 	if err != nil {
 		return err
 	}
@@ -70,9 +74,6 @@ func (s *QuickFeedService) internalRebuildSubmission(request *qf.RebuildRequest)
 }
 
 func (s *QuickFeedService) internalRebuildAllSubmissions(request *qf.RebuildRequest) error {
-	if _, err := s.db.GetAssignment(&qf.Assignment{ID: request.GetAssignmentID()}); err != nil {
-		return err
-	}
 	submissions, err := s.db.GetSubmissions(&qf.Submission{AssignmentID: request.GetAssignmentID()})
 	if err != nil {
 		return err
@@ -106,8 +107,7 @@ func (s *QuickFeedService) internalRebuildAllSubmissions(request *qf.RebuildRequ
 	wg.Wait()
 	close(sem)
 
-	s.logger.Debugf("Rebuilt %d submissions in %v (failed: %d)",
-		len(submissions), time.Since(start), errCnt)
+	s.logger.Debugf("Rebuilt %d submissions in %v (failed: %d)", len(submissions), time.Since(start), errCnt)
 	return nil
 }
 
