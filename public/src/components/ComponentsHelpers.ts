@@ -81,17 +81,18 @@ export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup
         base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
     }
     for (const assignment of assignments) {
-        const cell: CellElement = { iconClassName: "fa fa-users", value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }
-        if (viewByGroup && assignment.isGroupLab) {
-            base.push(cell)
+        const cell: CellElement = { value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }
+        // If we are viewing by group, ignore all non-group assignments
+        if (viewByGroup && !assignment.isGroupLab) {
             continue
         }
-        if (!viewByGroup) {
-            if (!assignment.isGroupLab) {
-                cell.iconClassName = "" // Remove the group icon
-            }
-            base.push(cell)
+        // If group assignment, add group icon
+        if (assignment.isGroupLab) {
+            cell.iconTitle = "Group"; cell.iconClassName = "fa fa-users"
+        } else {
+            cell.iconTitle = "Individual"; cell.iconClassName = "fa fa-user"
         }
+        base.push(cell)
     }
     return base
 }
