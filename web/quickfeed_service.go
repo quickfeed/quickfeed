@@ -85,17 +85,19 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to the gitHub organization: %s", in.Msg.GetScmOrganizationName())))
 	}
 	// ensure the course exists
 	_, err = s.db.GetCourse(in.Msg.GetID())
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		s.logger.Errorf("UpdateCourse failed: course %d not found: %v", in.Msg.GetID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get course"))
 	}
 	// ensure the organization exists
 	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{ID: in.Msg.GetScmOrganizationID()})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		s.logger.Errorf("UpdateCourse failed: to get organization %s: %v", in.Msg.GetScmOrganizationName(), in.Msg.GetID(), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get organization"))
 	}
 	in.Msg.ScmOrganizationName = org.GetScmOrganizationName()
 
@@ -185,7 +187,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unable to connect to the gitHub organization for the course"))
 	}
 	for _, enrollment := range in.Msg.GetEnrollments() {
 		if s.isCourseCreator(enrollment.GetCourseID(), enrollment.GetUserID()) {
@@ -287,11 +289,12 @@ func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf
 	}
 	// create new group and update groupID in enrollment table
 	if err := s.db.CreateGroup(in.Msg); err != nil {
-		return nil, err
+		s.logger.Errorf("CreateGroup failed: %v", err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
 	group, err := s.db.GetGroup(in.Msg.GetID())
 	if err != nil {
-		s.logger.Errorf("CreateGroup failed: %v", err)
+		s.logger.Errorf("CreateGroup failed to get group %d: %v", in.Msg.GetID(), err)
 		if connect.CodeOf(err) != connect.CodeUnknown {
 			// err was already a status error; return it to client.
 			return nil, err
@@ -307,7 +310,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to the gitHub organization for the group: %s", in.Msg.GetName())))
 	}
 	err = s.internalUpdateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
@@ -323,6 +326,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	}
 	group, err := s.db.GetGroup(in.Msg.GetID())
 	if err != nil {
+		s.logger.Errorf("UpdateGroup failed to get group: %d: %v", in.Msg.GetID(), err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get group"))
 	}
 	return connect.NewResponse(group), nil
@@ -333,7 +337,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.Msg.GetGroupID(), in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unable to connect to the gitHub organization for the group"))
 	}
 	if err = s.internalDeleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
@@ -401,7 +405,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
-		s.logger.Errorf("UpdateSubmission failed: %v", err)
+		s.logger.Errorf("UpdateSubmission failed to get submission: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
 	submission.SetGradesAndRelease(in.Msg)
@@ -421,13 +425,13 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
 		if err := s.internalRebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
-			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submission"))
 		}
 	} else {
 		// Submission ID == 0 ==> rebuild all for given CourseID and AssignmentID
 		if err := s.internalRebuildAllSubmissions(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
-			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submissions: %w", err))
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions"))
 		}
 	}
 	return &connect.Response[qf.Void]{}, nil
@@ -544,7 +548,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to your github organization: %s", course.GetScmOrganizationName())))
 	}
 	assignments.UpdateFromTestsRepo(s.logger, s.runner, s.db, scmClient, course)
 
@@ -554,8 +558,8 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentsRepo, err)
-		return nil, err
+		s.logger.Errorf("UpdateAssignments failed: to clone '%s' repository: %v", qf.AssignmentsRepo, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to clone assignments repository"))
 	}
 	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
 
@@ -636,13 +640,14 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("repositories not found"))
 	}
 	if len(repos) < 1 {
+		s.logger.Debugf("IsEmptyRepo: no repositories found for course %d, user %d, group %d", in.Msg.GetCourseID(), in.Msg.GetUserID(), in.Msg.GetGroupID())
 		// No repository found, nothing to delete
 		return &connect.Response[qf.Void]{}, nil
 	}
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to your github organization: %s", course.GetScmOrganizationName())))
 	}
 
 	if err := isEmpty(ctx, scmClient, repos); err != nil {

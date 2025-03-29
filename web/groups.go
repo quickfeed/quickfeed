@@ -169,7 +169,7 @@ func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) 
 
 	users, err := s.db.GetUsers(userIds...)
 	if err != nil {
-		return nil, err
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get users"))
 	}
 	if len(request.GetUsers()) != len(users) || len(users) != len(userIds) {
 		return nil, fmt.Errorf("invariant violation (request.Users=%d, users=%d, userIds=%d)",
@@ -194,7 +194,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 	}
 	courseGroups, err := s.db.GetGroupsByCourse(courseID)
 	if err != nil {
-		return err
+		return connect.NewError(connect.CodeInternal, errors.New("failed to get groups"))
 	}
 	for _, group := range courseGroups {
 		if strings.EqualFold(group.GetName(), groupName) {
