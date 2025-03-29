@@ -12,12 +12,13 @@ const ReviewForm = () => {
     const state = useAppState()
     const actions = useActions()
 
-    if (!state.selectedSubmission) {
+    const selectedSubmission = state.selectedSubmission
+    if (!selectedSubmission) {
         return <CenteredMessage message={KnownMessage.NoSubmission} />
     }
 
-    const assignment = state.selectedAssignment
-    if (!assignment) {
+    const selectedAssignment = state.selectedAssignment
+    if (!selectedAssignment) {
         return <CenteredMessage message={KnownMessage.NoAssignment} />
     }
 
@@ -25,8 +26,8 @@ const ReviewForm = () => {
         return review?.ReviewerID === state.self.ID
     }
 
-    const reviewers = assignment.reviewers ?? 0
-    const reviews = state.review.reviews.get(state.selectedSubmission.ID) ?? []
+    const reviewers = selectedAssignment.reviewers ?? 0
+    const reviews = state.review.reviews.get(selectedSubmission.ID) ?? []
     const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
@@ -63,7 +64,13 @@ const ReviewForm = () => {
                 <div className="mb-1">{selectReviewButton}</div>
                 {state.review.currentReview ? (
                     <>
-                        <ReviewInfo review={state.review.currentReview} />
+                        <ReviewInfo
+                            courseID={selectedAssignment.CourseID.toString()}
+                            assignmentName={selectedAssignment.name}
+                            reviewers={selectedAssignment.reviewers}
+                            submission={selectedSubmission}
+                            review={state.review.currentReview}
+                        />
                         <ReviewResult review={state.review.currentReview} />
                     </>
                 ) : null}
