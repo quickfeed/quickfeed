@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Assignment, Submission, Submission_Status } from "../../proto/qf/types_pb"
+import { Submission, Submission_Status } from "../../proto/qf/types_pb"
 import { getStatusByUser } from "../Helpers"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
@@ -80,16 +80,16 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
 export default ProgressBar
 
 // DefaultProgressBar is a function that returns a progress bar for a lab/assignment with no submissions
-export const DefaultProgressBar = ({ assignment }: { assignment: Assignment }) => {
+export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: number, isGroupLab: boolean }) => {
     return (
         <div className="row mb-1 py-2 align-items-center text-left">
             <div className="col-8">
                 <div className="progress">
                     <PrimaryProgressBar score={0} text={"0 %"} />
-                    <SecondaryProgressBar progress={assignment.scoreLimit} text={`${assignment.scoreLimit} %`} />
+                    <SecondaryProgressBar progress={scoreLimit} text={`${scoreLimit} %`} />
                 </div>
             </div>
-            <SubmissionTypeIcon solo={!assignment.isGroupLab} />
+            <SubmissionTypeIcon solo={!isGroupLab} />
             <div className="col-3">
                 No submission
             </div>
@@ -99,25 +99,29 @@ export const DefaultProgressBar = ({ assignment }: { assignment: Assignment }) =
 
 
 const PrimaryProgressBar = ({ color, score, text }: { color?: string, score: number, text: string }) => {
-    return <div
-        className={`progress-bar ${color}`}
-        role="progressbar"
-        style={{ width: `${score}%`, transitionDelay: "0.5s" }}
-        aria-valuenow={score}
-        aria-valuemin={0}
-        aria-valuemax={100}
-    >
-        {text}
-    </div>
+    return (
+        <div
+            className={`progress-bar ${color}`}
+            role="progressbar"
+            style={{ width: `${score}%`, transitionDelay: "0.5s" }}
+            aria-valuenow={score}
+            aria-valuemin={0}
+            aria-valuemax={100}
+        >
+            {text}
+        </div>
+    )
 }
 
 const SecondaryProgressBar = ({ progress, text }: { progress: number, text: string }) => {
-    return <div
-        className={"progress-bar progressbar-secondary bg-secondary"}
-        role="progressbar"
-        style={{ width: `${progress}%` }}
-        aria-valuemax={100}
-    >
-        {text}
-    </div>
+    return (
+        <div
+            className={"progress-bar progressbar-secondary bg-secondary"}
+            role="progressbar"
+            style={{ width: `${progress}%` }}
+            aria-valuemax={100}
+        >
+            {text}
+        </div>
+    )
 }

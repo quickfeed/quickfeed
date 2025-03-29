@@ -37,7 +37,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
             selfID={selfID}
           />
         ))}
-        {submissions.length === 0 && <DefaultProgressBar assignment={assignment} />}
+        {submissions.length === 0 && <DefaultProgressBar scoreLimit={assignment.scoreLimit} isGroupLab={assignment.isGroupLab} />}
       </div>
     </div>
   )
