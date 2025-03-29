@@ -41,7 +41,7 @@ const TeacherPage = () => {
 
     return (
         <div className="box">
-            <RedirectButton to={root} />
+            <RedirectButton to={"/"} />
             <Alerts />
             <div className="row" hidden={history.location.pathname != root}>
                 {courseHasManualGrading && <Card {...review} />}
