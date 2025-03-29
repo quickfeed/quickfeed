@@ -5,11 +5,11 @@ import { useHistory } from "react-router"
 const RedirectButton = ({ to }: { to: string }) => {
     const history = useHistory()
 
-    // The button is hidden if user is currently at the location the button redirects to
-    const isHidden = history.location.pathname == to ? true : false
+    // Path to dashboard when on root of Student or Teacher page
+    const path = history.location.pathname == to ? "/" : to
 
     return (
-        <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={isHidden}>
+        <div className={"btn btn-dark redirectButton"} onClick={() => history.push(path)}>
             <i className="fa fa-arrow-left" />
         </div>
     )
