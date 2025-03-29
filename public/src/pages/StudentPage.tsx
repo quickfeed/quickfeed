@@ -16,7 +16,7 @@ const StudentPage = () => {
 
     return (
         <div className="box">
-            <RedirectButton to={root} />
+            <RedirectButton to={"/"} />
             <Alerts />
             <div className="row" hidden={history.location.pathname !== root}>
                 <div className="col-md-9" >
