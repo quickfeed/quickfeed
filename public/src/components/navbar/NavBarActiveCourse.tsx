@@ -7,6 +7,11 @@ import Breadcrumbs from "./Breadcrumbs"
 
 
 const NavBarActiveCourse = () => {
+    const [, setForceUpdate] = React.useState(0)
+    const forceRerender = () => {
+        setForceUpdate((prev) => prev + 1)
+    }
+
     const activeCourse = useAppState((state) => state.activeCourse ? (state.courses.find((c) => c.ID === state.activeCourse) ?? null) : null)
     const enrollment = useAppState((state) => state.enrollmentsByCourseID[state.activeCourse?.toString() ?? ""] ?? null)
     const { isLoggedIn } = useAppState()
@@ -18,7 +23,7 @@ const NavBarActiveCourse = () => {
     return (
         <div className="nav-child course">
             <Breadcrumbs />
-            <CourseFavoriteButton enrollment={enrollment} style={{ "paddingRight": "20px" }} />
+            <CourseFavoriteButton onFavoriteToggle={forceRerender} enrollment={enrollment} style={{ "paddingRight": "20px" }} />
             <ToggleSwitch />
         </div>
     )
