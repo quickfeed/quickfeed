@@ -10,18 +10,27 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(benchmark ? false : true)
 
-    // Clone the criterion, or create a new one if none was passed in
+    // Clone the benchmark, or create a new one if none was passed in
     const bm = benchmark
         ? clone(GradingBenchmarkSchema, benchmark)
         : create(GradingBenchmarkSchema)
 
-    const handleBenchmark = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const resetBenchmark = () => {
+        // Reset the benchmark and enable add button
+        bm.heading = ""
+        setAdd(true)
+    }
+
+    const handleBenchmark = async (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
         if (event.key === "Enter") {
-            // Set the criterion's benchmark ID
+            // Set the benchmark's assignment ID
             // This could already be set if a benchmark was passed in
             bm.AssignmentID = assignment.ID
-            actions.createOrUpdateBenchmark({ benchmark: bm, assignment: assignment })
+            const success = await actions.createOrUpdateBenchmark({ benchmark: bm, assignment: assignment })
+            if (!success) {
+                resetBenchmark()
+            }
             setEditing(false)
         } else {
             bm.heading = value
@@ -30,12 +39,10 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
 
     const handleBlur = () => {
         if (benchmark) {
-            // Restore the original criterion
+            // Restore the original benchmark
             bm.heading = benchmark.heading
         } else {
-            // Reset the criterion and enable add button
-            bm.heading = ""
-            setAdd(true)
+            resetBenchmark()
         }
         setEditing(false)
     }
@@ -50,10 +57,10 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
 
     return (
         <>
-            <div className="list-group-item list-group-item-primary">
+            <div className="list-group-item list-group-item-primary" onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
                 {editing
-                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={() => handleBlur()} onClick={() => setEditing(true)} onKeyUp={e => { handleBenchmark(e) }} />
-                    : <span onClick={() => setEditing(true)}>{bm?.heading}<span className="badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark: benchmark, assignment: assignment })}>Delete</span></span>
+                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={handleBlur} onClick={handleBlur} onKeyUp={e => handleBenchmark(e)} />
+                    : <span>{bm?.heading}<span className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark: benchmark, assignment: assignment })}>Delete Benchmark</span></span>
                 }
             </div>
             {children}

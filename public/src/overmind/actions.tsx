@@ -646,25 +646,25 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     }
 }
 
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    // Check if this need cloning
-    const bm = clone(GradingBenchmarkSchema, benchmark)
+export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<boolean> => {
     if (benchmark.ID) {
-        const response = await effects.api.client.updateBenchmark(bm)
+        const response = await effects.api.client.updateBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
-        const index = assignment.gradingBenchmarks.indexOf(benchmark)
+        const index = assignment.gradingBenchmarks.findIndex(b => b.ID === benchmark.ID)
         if (index > -1) {
             assignment.gradingBenchmarks[index] = benchmark
         }
     } else {
+        benchmark.CourseID = assignment.CourseID // Needed for access control
         const response = await effects.api.client.createBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
         assignment.gradingBenchmarks.push(response.message)
     }
+    return true
 }
 
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
