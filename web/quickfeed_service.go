@@ -85,7 +85,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to the gitHub organization: %s", in.Msg.GetScmOrganizationName())))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to the gitHub organization: %s", in.Msg.GetScmOrganizationName()))
 	}
 	// ensure the course exists
 	_, err = s.db.GetCourse(in.Msg.GetID())
@@ -164,12 +164,7 @@ func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *conne
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	enrollment := &qf.Enrollment{
-		UserID:   in.Msg.GetUserID(),
-		CourseID: in.Msg.GetCourseID(),
-		Status:   qf.Enrollment_PENDING,
-	}
-	if err := s.db.CreateEnrollment(enrollment); err != nil {
+	if err := s.db.CreateEnrollment(in.Msg); err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create enrollment"))
 	}
@@ -268,9 +263,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 		s.logger.Errorf("GetGroups failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get groups"))
 	}
-	return connect.NewResponse(&qf.Groups{
-		Groups: groups,
-	}), nil
+	return connect.NewResponse(&qf.Groups{Groups: groups}), nil
 }
 
 // CreateGroup creates a new group for the given course and users.
@@ -310,7 +303,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to the gitHub organization for the group: %s", in.Msg.GetName())))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to the gitHub organization for the group: %s", in.Msg.GetName()))
 	}
 	err = s.internalUpdateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
@@ -392,8 +385,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 // The map values are lists of all submissions for the given group or enrollment.
 func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
-
-	courseLinks, err := s.getAllCourseSubmissions(in.Msg)
+	courseLinks, err := s.db.GetCourseSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetSubmissionsByCourse failed: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
@@ -493,22 +485,20 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Reques
 
 // CreateReview adds a new submission review.
 func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.internalCreateReview(in.Msg.GetReview())
-	if err != nil {
+	if err := s.db.CreateReview(in.Msg.GetReview()); err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
 	}
-	return connect.NewResponse(review), nil
+	return connect.NewResponse(in.Msg.GetReview()), nil
 }
 
 // UpdateReview updates a submission review.
 func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.internalUpdateReview(in.Msg.GetReview())
-	if err != nil {
+	if err := s.db.UpdateReview(in.Msg.GetReview()); err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
 	}
-	return connect.NewResponse(review), nil
+	return connect.NewResponse(in.Msg.GetReview()), nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
@@ -548,7 +538,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to your github organization: %s", course.GetScmOrganizationName())))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to your github organization: %s", course.GetScmOrganizationName()))
 	}
 	assignments.UpdateFromTestsRepo(s.logger, s.runner, s.db, scmClient, course)
 
@@ -647,7 +637,7 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New(fmt.Sprintf("unable to connect to your github organization: %s", course.GetScmOrganizationName())))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to your github organization: %s", course.GetScmOrganizationName()))
 	}
 
 	if err := isEmpty(ctx, scmClient, repos); err != nil {
