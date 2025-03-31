@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react"
 import { useHistory, useLocation } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, Icon } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -12,7 +12,6 @@ import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
 import { clone, isMessage } from "@bufbuild/protobuf"
-
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
@@ -67,7 +66,7 @@ const Results = ({ review }: { review: boolean }) => {
 
     const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
         if (!state.isManuallyGraded(submission)) {
-            return { value: "N/A" }
+            return { iconTitle: "auto graded", iconClassName: `${Icon.DASH} grey`, value: "" }
         }
         const reviews = state.review.reviews.get(submission.ID) ?? []
         // Check if the current user has any pending reviews for this submission
