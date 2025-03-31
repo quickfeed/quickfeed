@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -14,6 +15,14 @@ import (
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 )
+
+func TestGetUserExpectUnknownUser(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	_, err := client.GetUser(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	qtest.EvaluateError(t, err, connect.NewError(connect.CodeNotFound, errors.New("unknown user")))
+}
 
 func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
