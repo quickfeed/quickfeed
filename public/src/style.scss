@@ -1,4 +1,3 @@
-
 :root {
     // Height of the navbar
     --navbar-height: 76px;
@@ -323,7 +322,7 @@ input {
 .selected {
     border: 2px solid rgb(0, 123, 255);
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.5) inset;
-  }
+}
 
 .release {
     box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
@@ -384,6 +383,7 @@ input {
 .width-resize {
     min-width: 150px;
 }
+
 .navbar-top {
     background-color: #222;
     height: var(--navbar-height);
@@ -395,7 +395,8 @@ input {
             font-size: 1.5rem;
             padding: 0.5rem 1rem;
             width: 15rem;
-            & > * {
+
+            &>* {
                 margin-right: 0.5rem;
             }
 
@@ -403,6 +404,7 @@ input {
                 min-width: 30px;
                 transition: color 0.2s ease-in-out;
                 text-align: center;
+
                 &.closed {
                     color: #d4d4d4;
 
@@ -420,10 +422,10 @@ input {
 
             &::before {
                 color: green;
-                content:  remove-where();
+                content: remove-where();
             }
 
-            & > * {
+            &>* {
                 margin-right: 0.5rem;
                 align-self: center;
             }
@@ -434,17 +436,18 @@ input {
 }
 
 
-    .navbar  {
-        .nav-item {
-            &:hover .dropdown-menu {
-                display: block;
-            }
-            .dropdown-menu {
-                display: none;
-                margin-top: 0;
-            }
+.navbar {
+    .nav-item {
+        &:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            margin-top: 0;
         }
     }
+}
 
 @media only screen and (max-width: 980px) {
     .width-resize {
@@ -468,6 +471,7 @@ nav.flexbox {
     flex-direction: row;
     justify-content: space-between;
     flex-wrap: nowrap;
+
     ul {
         padding: 0.3rem;
         margin: 0.3rem;
@@ -495,7 +499,7 @@ nav.flexbox {
         width: 0;
         height: 0;
 
-        &:checked + .slider {
+        &:checked+.slider {
             background-color: #28a745;
 
             & .toggle {
@@ -505,7 +509,7 @@ nav.flexbox {
             }
         }
 
-        &:not(:checked) + .slider {
+        &:not(:checked)+.slider {
             background-color: #007bff;
         }
     }
@@ -540,15 +544,15 @@ nav.flexbox {
     .slider.round {
         border-radius: 34px;
 
-        box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.5) inset;
-        -webkit-box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.5) inset;
-        -moz-box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.5) inset;
+        box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5) inset;
+        -webkit-box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5) inset;
+        -moz-box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5) inset;
 
         & .toggle {
             border-radius: 50%;
         }
     }
-  }
+}
 
 
 .course-card {
@@ -559,13 +563,16 @@ nav.flexbox {
 }
 
 .comment {
+
     // all children links should be white
     a {
         color: red;
+
         &:hover {
             text-decoration: underline
         }
     }
+
     background-color: #f7f7f9;
     height: 100%;
 
@@ -574,6 +581,7 @@ nav.flexbox {
         padding: 1rem;
         border-bottom: 1px solid #eaeaea;
     }
+
     td::before {
         content: "";
         position: absolute;
@@ -583,27 +591,30 @@ nav.flexbox {
         top: 0;
         left: 0;
 
-        background-color: rgba(0,0,0,0.1);
-        
+        background-color: rgba(0, 0, 0, 0.1);
+
         // transition height on hover
         transition: height 0.2s ease-in-out;
     }
 
-    &.comment-passed{
+    &.comment-passed {
+
         // green
         td::before {
-            background-color: rgba(0, 128, 0, 0.3) ;
+            background-color: rgba(0, 128, 0, 0.3);
         }
     }
 
-    &.comment-failed{
+    &.comment-failed {
+
         // red
         td::before {
             background-color: rgba(255, 0, 0, 0.3);
         }
     }
 
-    &.comment-not-graded{
+    &.comment-not-graded {
+
         // grey
         td::before {
             background-color: rgba(128, 128, 128, 0.3);
@@ -634,9 +645,10 @@ nav.flexbox {
 }
 
 .breadcrumb {
-    .breadcrumb-item + .breadcrumb-item::before {
+    .breadcrumb-item+.breadcrumb-item::before {
         content: ">" !important;
     }
+
     flex-wrap: nowrap;
 }
 
@@ -652,4 +664,13 @@ nav.flexbox {
     width: 20px;
     text-align: center;
     color: slategray;
+}
+
+.hover-effect {
+    &:hover {
+        background-color: #f2f2f2;
+        transform: scale(1.01);
+    }
+
+    transition: all 0.3s ease-in-out;
 }
