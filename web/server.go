@@ -28,9 +28,9 @@ type Server struct {
 	certFile       string
 }
 
-type ServerType func(addr string, handler http.Handler) (*Server, error)
+type ServerType func(handler http.Handler) (*Server, error)
 
-func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
+func NewProductionServer(handler http.Handler) (*Server, error) {
 	whitelist, err := env.Whitelist()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get whitelist: %w", err)
@@ -45,7 +45,7 @@ func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
 
 	httpServer := &http.Server{
 		Handler:           handler,
-		Addr:              addr,
+		Addr:              env.HttpAddr(),
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 		WriteTimeout:      2 * time.Minute,
 		ReadTimeout:       2 * time.Minute,
@@ -65,7 +65,7 @@ func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
 	}, nil
 }
 
-func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
+func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
 	if err != nil {
 		// Couldn't load credentials; generate self-signed certificates.
@@ -88,7 +88,7 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 
 	httpServer := &http.Server{
 		Handler:           handler,
-		Addr:              addr,
+		Addr:              env.HttpAddr(),
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 		WriteTimeout:      2 * time.Minute,
 		ReadTimeout:       2 * time.Minute,

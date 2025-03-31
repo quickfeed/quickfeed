@@ -41,13 +41,9 @@ ui-update: version-check
 	@echo "Running npm install and webpack"
 	@cd public; npm i; webpack
 
-# This uses an patched version of buf to generate the typescript code.
-# To install the patch version, run `go install github.com/bufbuild/buf/cmd/buf@304f0af`
-# TODO(meling): Remove this comment and revert to the brewed buf command once the new version is released.
-# See bufbuild/buf#3624 for more information: https://github.com/bufbuild/buf/pull/3624
 proto:
 	buf dep update
-	~/go/bin/buf generate --template buf.gen.yaml
+	buf generate --template buf.gen.yaml
 
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
