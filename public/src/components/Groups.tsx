@@ -40,7 +40,8 @@ const Groups = () => {
         if (isPendingGroup(group)) {
             buttons.push(
                 <DynamicButton
-                    text={"Approve"}
+                    key={`approve${group.ID}`}
+                    text="Approve"
                     color={Color.BLUE}
                     type={ButtonType.BADGE}
                     onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
@@ -49,7 +50,8 @@ const Groups = () => {
         }
         buttons.push(
             <Button
-                text={"Edit"}
+                key={`edit${group.ID}`}
+                text="Edit"
                 color={Color.YELLOW}
                 type={ButtonType.BADGE}
                 className="ml-2"
@@ -58,7 +60,8 @@ const Groups = () => {
         )
         buttons.push(
             <DynamicButton
-                text={"Delete"}
+                key={`delete${group.ID}`}
+                text="Delete"
                 color={Color.RED}
                 type={ButtonType.BADGE}
                 className="ml-2"
