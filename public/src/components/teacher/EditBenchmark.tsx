@@ -27,7 +27,7 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
             // Set the benchmark's assignment ID
             // This could already be set if a benchmark was passed in
             bm.AssignmentID = assignment.ID
-            const success = await actions.createOrUpdateBenchmark({ benchmark: bm, assignment: assignment })
+            const success = await actions.createOrUpdateBenchmark({ benchmark: bm, assignment })
             if (!success) {
                 resetBenchmark()
             }
@@ -54,14 +54,19 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
             </div>
         )
     }
-
+    const input = <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={handleBlur} onKeyUp={e => handleBenchmark(e)} /> // skipcq: JS-0757
+    const textAndButton = (
+        <span onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
+            {bm?.heading}
+            <button className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark, assignment })}>
+                Delete Benchmark
+            </button>
+        </span>
+    )
     return (
         <>
-            <div className="list-group-item list-group-item-primary" onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
-                {editing
-                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={handleBlur} onClick={handleBlur} onKeyUp={e => handleBenchmark(e)} />
-                    : <span>{bm?.heading}<span className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark: benchmark, assignment: assignment })}>Delete Benchmark</span></span>
-                }
+            <div className="list-group-item list-group-item-primary">
+                {editing ? input : textAndButton}
             </div>
             {children}
         </>

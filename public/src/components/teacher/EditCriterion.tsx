@@ -28,7 +28,7 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
             // Set the criterion's benchmark ID
             // This could already be set if a criterion was passed in
             criterion.BenchmarkID = benchmarkID
-            const success = await actions.createOrUpdateCriterion({ criterion: criterion, assignment: assignment })
+            const success = await actions.createOrUpdateCriterion({ criterion, assignment })
             if (!success) {
                 resetCriterion()
             }
@@ -56,12 +56,18 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
         )
     }
 
+    const input = <input className="form-control" type="text" autoFocus onBlur={handleBlur} defaultValue={criterion.description} name="criterion" onKeyUp={e => handleCriteria(e)} /> // skipcq: JS-0757
+    const textAndButton = (
+        <span onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
+            {criterion.description}
+            <button className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: originalCriterion, assignment })}>
+                Delete Criteria
+            </button>
+        </span>
+    )
     return (
-        <div className="list-group-item" onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
-            {editing
-                ? <input className="form-control" type="text" onBlur={handleBlur} onClick={handleBlur} autoFocus defaultValue={criterion.description} name="criterion" onKeyUp={e => handleCriteria(e)} />
-                : <span>{criterion.description}<span className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: originalCriterion, assignment: assignment })}>Delete Criteria</span></span>
-            }
+        <div className="list-group-item">
+            {editing ? input : textAndButton}
         </div>
     )
 }
