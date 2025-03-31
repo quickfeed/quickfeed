@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
-import { getFormattedTime } from "../../Helpers"
+import { getFormattedTime, isValidSubmissionForAssignment } from "../../Helpers"
 import SubmissionRow from './SubmissionRow'
 import { useHistory } from 'react-router'
 
@@ -20,10 +20,11 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
       history.push(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
     }
   }, [history, courseID])
-  const hasSubmissions = submissions.length > 0
-  const redirectToMainAssignment = () => {
+  const validSubmissions = submissions.filter((submission) => isValidSubmissionForAssignment(submission, assignment))
+  const hasSubmissions = validSubmissions.length > 0
+  const redirectToSubmission = () => {
     if (hasSubmissions) {
-      redirectTo(submissions[0])
+      redirectTo(validSubmissions[0])
     }
   }
   // Add onclick and hover only if there are submissions
@@ -31,7 +32,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
   const ariaHidden = hasSubmissions ? "true" : "false"
   const hover = hasSubmissions ? "hover-effect" : ""
   return (
-    <div key={assignment.ID.toString()} className={`card mb-4 shadow-sm ${hover}`} onClick={redirectToMainAssignment} role={buttonRole} aria-hidden={ariaHidden}>
+    <div key={assignment.ID.toString()} className={`card mb-4 shadow-sm ${hover}`} onClick={redirectToSubmission} role={buttonRole} aria-hidden={ariaHidden}> {/* skipcq: JS-0746, JS-0765 */}
       <div className="card-header">
         <div className="d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center">
@@ -46,7 +47,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
         </div>
       </div>
       <div className="card-body">
-        {submissions.map((submission) => (
+        {validSubmissions.map((submission) => (
           <SubmissionRow
             key={submission.ID.toString()}
             submission={submission}
