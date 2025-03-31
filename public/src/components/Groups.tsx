@@ -115,22 +115,28 @@ const Groups = () => {
         return <GroupForm />
     }
 
+    const table = (
+        <table className="table table-striped table-grp table-hover">
+            <thead className="thead-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Members</th>
+                    <th>Manage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {PendingGroups}
+                {ApprovedGroups}
+            </tbody>
+        </table>
+    )
+
     return (
         <div className="box">
             <div className="pb-2">
                 <Search />
             </div>
-            <table className="table table-striped table-grp table-hover">
-                <thead className="thead-dark">
-                    <th>Name</th>
-                    <th>Members</th>
-                    <th>Manage</th>
-                </thead>
-                <tbody>
-                    {PendingGroups}
-                    {ApprovedGroups}
-                </tbody>
-            </table>
+            {table}
         </div>
     )
 }
