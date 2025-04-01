@@ -49,9 +49,11 @@ func getOptions(outputDir *string) api.BuildOptions {
 		"src/overmind/index.tsx",
 		"src/components/Results.tsx",
 	}
+	var entries []string
 	for _, entry := range entryPoints {
-		buildOptions.EntryPoints = append(buildOptions.EntryPoints, fmt.Sprintf("%s/%s", env.PublicDir(), entry))
+		entries = append(entries, fmt.Sprintf("%s/%s", env.PublicDir(), entry))
 	}
+	buildOptions.EntryPoints = entries
 	/*
 		Production options
 
