@@ -53,6 +53,7 @@ Eivind
 envoyproxy
 errcheck
 Errorf
+esbuild
 espeland
 Etternavn
 excelize
