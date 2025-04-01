@@ -340,10 +340,9 @@ input {
 
 .clickable {
     cursor: pointer;
-}
-
-.clickable:hover {
-    text-decoration: none;
+    :hover {
+        text-decoration: none;
+    }
 }
 
 .alert {
@@ -688,11 +687,10 @@ body.login-page {
     padding: 10px 15px;
     border-radius: 5px;
     font-size: 17px;
-}
-
-.loginButton:hover {
-    background-color: #2aa042;
-    color: #fff;
+    :hover {
+        background-color: #2aa042;
+        color: #fff;
+    }
 }
 
 .loginWelcomeHeader {
@@ -712,11 +710,10 @@ body.login-page {
 
 .backToTop {
     color: #6c757d;
-}
-
-.backToTop:hover {
-    color: #c9d1d9;
-    transform: scale(1.05);
+    :hover {
+        color: #c9d1d9;
+        transform: scale(1.05);
+    }
 }
 
 .signIn {

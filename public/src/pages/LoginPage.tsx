@@ -16,8 +16,8 @@ const LoginPage = () => {
         To get started with QuickFeed, please sign in with your GitHub account.
       </p>
       <section id="loginBox">
-        <div className="mb-5 loginBox">
-          <i className="fa fa-5x fa-github align-middle ms-auto mb-3" id="github icon"/>
+        <div className="loginBox">
+          <i className="fa fa-5x fa-github align-middle ms-auto" id="github icon" />
           <h4>Sign in with GitHub</h4>
           <p className="text-secondary"> to continue to QuickFeed </p>
           <a href="/auth/github" className="loginButton"> Sign in </a>
