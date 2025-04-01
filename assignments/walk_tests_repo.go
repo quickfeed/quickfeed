@@ -19,6 +19,14 @@ const (
 	taskFilePattern    = "task-*.md"
 )
 
+// filesForBuildContext is used as a filter to retrieve files required for the build context.
+// Add more files to support more dependencies for projects.
+var filesForBuildContext = map[string]struct{}{
+	dockerfile: {},
+	"go.mod":   {},
+	"go.sum":   {},
+}
+
 var patterns = []string{
 	assignmentFile,
 	assignmentFileYaml,
@@ -48,10 +56,10 @@ func match(filename, pattern string) bool {
 // readTestsRepositoryContent reads dir and returns a list of assignments and
 // the course's Dockerfile content if there exists a 'tests/scripts/Dockerfile'.
 // Assignments are extracted from 'assignment.yml' files, one for each assignment.
-func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
+func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, map[string]string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	// Process all assignment.yml files first
@@ -62,13 +70,13 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		case assignmentFile, assignmentFileYaml:
 			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID)
 			if err != nil {
-				return nil, "", err
+				return nil, nil, err
 			}
 			assignmentsMap[assignmentName] = assignment
 		}
 	}
 
-	var courseDockerfile string
+	buildContext := make(map[string]string)
 
 	// Process other files in tests repository
 	for path, contents := range files {
@@ -79,7 +87,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		case criteriaFile:
 			var benchmarks []*qf.GradingBenchmark
 			if err := json.Unmarshal(contents, &benchmarks); err != nil {
-				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
+				return nil, nil, fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
 			}
 			// Benchmarks and criteria must have courseID
 			// for access control checks.
@@ -90,9 +98,11 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 				}
 			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
-
-		case dockerfile:
-			courseDockerfile = string(contents)
+		default:
+			if _, ok := filesForBuildContext[filename]; ok {
+				// Add the file to the build context
+				buildContext[filename] = string(contents)
+			}
 		}
 
 		if match(filename, taskFilePattern) {
@@ -100,7 +110,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			taskName := taskName(filename)
 			task, err := newTask(contents, assignment.GetOrder(), taskName)
 			if err != nil {
-				return nil, "", err
+				return nil, nil, err
 			}
 			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].GetTasks(), task)
 		}
@@ -117,7 +127,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		return assignments[i].GetOrder() < assignments[j].GetOrder()
 	})
 
-	return assignments, courseDockerfile, nil
+	return assignments, buildContext, nil
 }
 
 // walkTestsRepository walks the tests repository and returns a map of file names and their contents.
