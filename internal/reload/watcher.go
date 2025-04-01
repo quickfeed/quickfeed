@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/quickfeed/quickfeed/internal/ui"
 )
 
 type Watcher struct {
@@ -34,7 +35,11 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 		clients:   make(map[chan string]bool),
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	go webpack()          // Start webpack in watch mode
+	ch := make(chan error)
+	go ui.Watch(ch)
+	if err := <-ch; err != nil {
+		return nil, fmt.Errorf("failed to start watch process: %v", err)
+	}
 	return watcher, nil
 }
 
