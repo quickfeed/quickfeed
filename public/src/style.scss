@@ -723,10 +723,9 @@ body.login-page {
     right: auto;
     text-align: right;
     color: #c9d1d9;
-}
-
-.signIn:hover {
-    color: #f2f4f6;
+    :hover {
+        color: #f2f4f6;
+    }
 }
 
 .chevron-icon {
@@ -734,7 +733,6 @@ body.login-page {
     display: inline-block;
     font-size: 1rem;
 }
-
 .nav-item.dropdown:hover .chevron-icon {
     transform: rotate(180deg); /* flips it upwards */
 }
