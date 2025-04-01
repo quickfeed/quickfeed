@@ -12,6 +12,7 @@ import (
 
 const (
 	defaultDomain   = "127.0.0.1"
+	defaultPort     = "443"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
 )
@@ -24,6 +25,18 @@ func Domain() string {
 		domain = defaultDomain
 	}
 	return domain
+}
+
+func HttpAddr() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+	return fmt.Sprintf(":%s", port)
+}
+
+func DomainWithPort() string {
+	return Domain() + HttpAddr()
 }
 
 // WhiteList returns a list of domains that the server will create certificates for.

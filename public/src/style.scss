@@ -425,7 +425,7 @@ input {
                 content: remove-where();
             }
 
-            & > * {
+            &>* {
                 margin-right: 0.5rem;
                 align-self: center;
             }
@@ -494,7 +494,7 @@ nav.flexbox {
         width: 0;
         height: 0;
 
-        &:checked + .slider {
+        &:checked+.slider {
             background-color: #28a745;
 
             & .toggle {
@@ -504,7 +504,7 @@ nav.flexbox {
             }
         }
 
-        &:not(:checked) + .slider {
+        &:not(:checked)+.slider {
             background-color: #007bff;
         }
     }
@@ -557,6 +557,7 @@ nav.flexbox {
 }
 
 .comment {
+
     // all children links should be white
     a {
         color: red;
@@ -635,7 +636,7 @@ nav.flexbox {
 }
 
 .breadcrumb {
-    .breadcrumb-item + .breadcrumb-item::before {
+    .breadcrumb-item+.breadcrumb-item::before {
         content: ">" !important;
     }
 
@@ -654,6 +655,15 @@ nav.flexbox {
     width: 20px;
     text-align: center;
     color: slategray;
+}
+
+.hover-effect {
+    &:hover {
+        background-color: #f2f2f2;
+        transform: scale(1.01);
+    }
+
+    transition: all 0.3s ease-in-out;
 }
 
 // LoginPage specific styles
