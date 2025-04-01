@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === "development") {
     eventSource.onmessage = () => {
         setTimeout(() => {
             location.reload()
-        }, 500)
+        }, 100)
     }
     eventSource.onerror = () => console.error("could not connect to server-sent events")
 }
