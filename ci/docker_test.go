@@ -217,10 +217,12 @@ func TestDockerBuild(t *testing.T) {
 	// To build an image, we need a job with both image name
 	// and Dockerfile content.
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		Commands:   []string{script},
+		Name:  t.Name() + "-" + qtest.RandomString(t),
+		Image: image,
+		BuildContext: map[string]string{
+			ci.Dockerfile: dockerfile,
+		},
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -257,10 +259,12 @@ WORKDIR /quickfeed`
 	defer closeFn()
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		Commands:   []string{script},
+		Name:  t.Name() + "-" + qtest.RandomString(t),
+		Image: image,
+		BuildContext: map[string]string{
+			ci.Dockerfile: dockerfile,
+		},
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -270,10 +274,12 @@ WORKDIR /quickfeed`
 	}
 
 	out2, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile2,
-		Commands:   []string{script2},
+		Name:  t.Name() + "-" + qtest.RandomString(t),
+		Image: image,
+		BuildContext: map[string]string{
+			ci.Dockerfile: dockerfile2,
+		},
+		Commands: []string{script2},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -342,12 +348,14 @@ WORKDIR /quickfeed
 	}
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		BindDir:    dir,
-		Env:        envVars,
-		Commands:   []string{script},
+		Name:  t.Name() + "-" + qtest.RandomString(t),
+		Image: image,
+		BuildContext: map[string]string{
+			ci.Dockerfile: dockerfile,
+		},
+		BindDir:  dir,
+		Env:      envVars,
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)

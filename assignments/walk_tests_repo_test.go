@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -125,12 +126,12 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 		},
 	}
 
-	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotBuildContext, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotDockerfile != wantDockerfile {
-		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
+	if gotBuildContext[ci.Dockerfile] != wantDockerfile {
+		t.Errorf("got Dockerfile %q, want %q", gotBuildContext[ci.Dockerfile], wantDockerfile)
 	}
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
