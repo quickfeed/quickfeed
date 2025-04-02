@@ -10,7 +10,6 @@ import {
     EnrollmentSchema,
     Grade,
     GradingBenchmark,
-    GradingBenchmarkSchema,
     GradingCriterion,
     Group,
     Group_GroupStatus,
@@ -620,51 +619,53 @@ export const updateGroup = async ({ state, actions, effects }: Context, group: G
     }
 }
 
-export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.ID)
+export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<boolean> => {
+    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.BenchmarkID)
     if (!benchmark) {
         // If a benchmark is not found, the criterion is invalid.
-        return
+        return false
     }
 
     // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
     if (criterion.ID) {
         const response = await effects.api.client.updateCriterion(criterion)
         if (response.error) {
-            return
+            return false
         }
         const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
         if (index > -1) {
             benchmark.criteria[index] = criterion
         }
     } else {
+        criterion.CourseID = assignment.CourseID // Needed for access control
         const response = await effects.api.client.createCriterion(criterion)
         if (response.error) {
-            return
+            return false
         }
         benchmark.criteria.push(response.message)
     }
+    return true
 }
 
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    // Check if this need cloning
-    const bm = clone(GradingBenchmarkSchema, benchmark)
+export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<boolean> => {
     if (benchmark.ID) {
-        const response = await effects.api.client.updateBenchmark(bm)
+        const response = await effects.api.client.updateBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
-        const index = assignment.gradingBenchmarks.indexOf(benchmark)
+        const index = assignment.gradingBenchmarks.findIndex(b => b.ID === benchmark.ID)
         if (index > -1) {
             assignment.gradingBenchmarks[index] = benchmark
         }
     } else {
+        benchmark.CourseID = assignment.CourseID // Needed for access control
         const response = await effects.api.client.createBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
         assignment.gradingBenchmarks.push(response.message)
     }
+    return true
 }
 
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
@@ -682,7 +683,8 @@ export const deleteCriterion = async ({ effects }: Context, { criterion, assignm
         return
     }
 
-    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion?.ID)
+    const benchmarks = assignment.gradingBenchmarks
+    const benchmark = benchmarks.find(bm => bm.ID === criterion?.BenchmarkID)
     if (!benchmark) {
         // Criterion has no parent benchmark
         return
@@ -700,11 +702,10 @@ export const deleteCriterion = async ({ effects }: Context, { criterion, assignm
     }
 
     // Remove criterion from benchmark in state if request was successful
-    const index = assignment.gradingBenchmarks.indexOf(benchmark)
+    const index = benchmarks.indexOf(benchmark)
     if (index > -1) {
-        assignment.gradingBenchmarks.splice(index, 1)
+        benchmarks[index].criteria = benchmarks[index].criteria.filter(c => c.ID !== criterion.ID)
     }
-
 }
 
 export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
