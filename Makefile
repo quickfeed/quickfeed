@@ -54,13 +54,6 @@ test:
 	@go clean -testcache
 	@go test ./...
 
-webpack-dev-server:
-	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
-
-# TODO Should check that webpack-dev-server is running.
-selenium:
-	@cd public && npm run test:selenium
-
 qcm:
 	@cd cmd/qcm; go install
 
