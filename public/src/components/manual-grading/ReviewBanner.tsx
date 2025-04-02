@@ -77,7 +77,7 @@ const ReviewBanner = ({ assignment, submission, review }: ReviewBannerProps) => 
                 </div>
             </div>
             <div className="container mb-3">
-                <ManageSubmissionStatus />
+                {review?.ready ? <ManageSubmissionStatus /> : null}
             </div>
         </div >
     )
