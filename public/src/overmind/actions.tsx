@@ -503,7 +503,11 @@ export const setSelectedAssignmentID = ({ state }: Context, assignmentID: number
     state.selectedAssignmentID = assignmentID
 }
 
-export const setSelectedSubmission = ({ state }: Context, submission: Submission): void => {
+export const setSelectedSubmission = ({ state }: Context, { submission }: { submission: Submission | null }): void => {
+    if (!submission) {
+        state.selectedSubmission = null
+        return
+    }
     state.selectedSubmission = clone(SubmissionSchema, submission)
 }
 
