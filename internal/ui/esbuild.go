@@ -4,21 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/quickfeed/quickfeed/internal/env"
 )
-
-/*
-
-	Esbuild currently struggles with splitting the compiled files into reasonable sized chunks.
-	Therefore will webpack be used until esbuild can handle this.
-	There are improvements which can be made to better split the files into chunks.
-	But the splitting functionality is still experimental in esbuild, and we therefore wait to use it in production.
-
-*/
 
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
@@ -29,15 +21,30 @@ var buildOptions = api.BuildOptions{
 	TreeShaking: api.TreeShakingTrue,
 	EntryNames:  "[name]-[hash]",
 	Splitting:   true,
-	Metafile:    true,
 	Format:      api.FormatESModule,
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},
+	Define: map[string]string{
+		"process.env.NODE_ENV": "\"development\"", // Required to define mode when minifying files, or it will default to production
+	},
+	Plugins: []api.Plugin{
+		{
+			Name: "HTML Plugin",
+			Setup: func(setup api.PluginBuild) {
+				setup.OnEnd(func(result *api.BuildResult) (api.OnEndResult, error) {
+					if err := createHtml(result.OutputFiles); err != nil {
+						log.Printf("failed to create index.html: %v", err)
+					}
+					return api.OnEndResult{}, nil
+				})
+			},
+		},
+	},
 }
 
 // getOptions returns the build options for esbuild
-func getOptions(outputDir *string) api.BuildOptions {
+func getOptions(outputDir *string, dev bool) api.BuildOptions {
 	// Dynamically add entry points to the build options
 	// Adding more can reduce the size of the output files, but will increase the file count
 	entryPoints := []string{
@@ -54,23 +61,18 @@ func getOptions(outputDir *string) api.BuildOptions {
 		entries = append(entries, fmt.Sprintf("%s/%s", env.PublicDir(), entry))
 	}
 	buildOptions.EntryPoints = entries
-	/*
-		Production options
-
-		These can be added for development, but is not recommended.
-
-		buildOptions.LogLevel = api.LogLevelError
-		buildOptions.MinifyWhitespace = true
-		buildOptions.MinifyIdentifiers = true
-		buildOptions.MinifySyntax = true
-	*/
-
-	// Development options
 	buildOptions.LogLevel = api.LogLevelDebug
-	buildOptions.Sourcemap = api.SourceMapInline
+	buildOptions.Sourcemap = api.SourceMapLinked
+	buildOptions.MinifyWhitespace = true
+	buildOptions.MinifyIdentifiers = true
+	buildOptions.MinifySyntax = true
+
+	if !dev {
+		buildOptions.Define["process.env.NODE_ENV"] = "production"
+		buildOptions.LogLevel = api.LogLevelError
+	}
 
 	// This is done to enable testing without overwriting current build
-	// Important to not override webpack build
 	if outputDir != nil {
 		buildOptions.Outdir = *outputDir
 	}
@@ -92,13 +94,13 @@ func resetDistFolder() error {
 }
 
 // Build builds the UI with esbuild
-// The entry point is src/index.tsx and the output is public/dist
+// The output is public/dist
 // Scss files are treated as css
-func Build(outputDir *string) error {
+func Build(outputDir *string, dev bool) error {
 	if err := resetDistFolder(); err != nil {
 		return fmt.Errorf("failed to reset dist folder: %v", err)
 	}
-	result := api.Build(getOptions(outputDir))
+	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {
 		return fmt.Errorf("failed to build UI: %v", parseMessages(result.Errors))
 	}
@@ -119,7 +121,7 @@ func createHtml(outputFiles []api.OutputFile) error {
 		"ext":  filepath.Ext,
 		"base": filepath.Base,
 	}
-	tmpl, err := os.ReadFile(fmt.Sprintf("%s/index.esbuild.tmpl.html", env.PublicDir()))
+	tmpl, err := os.ReadFile(fmt.Sprintf("%s/index.tmpl.html", env.PublicDir()))
 	if err != nil {
 		return fmt.Errorf("failed to read index.tmpl.html: %v", err)
 	}
@@ -137,8 +139,7 @@ func createHtml(outputFiles []api.OutputFile) error {
 // Watch starts a watch process for the UI, rebuilding on changes
 // The log level is set to info, so only warnings and errors are shown
 func Watch(ch chan<- error) {
-	ctx, err := api.Context(getOptions(nil))
-	defer ctx.Cancel()
+	ctx, err := api.Context(getOptions(nil, true))
 	if err != nil {
 		ch <- fmt.Errorf("failed to create build context: %v", parseMessages(err.Errors))
 		return

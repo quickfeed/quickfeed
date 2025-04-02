@@ -75,7 +75,7 @@ func main() {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile); err != nil {
+		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile, *dev); err != nil {
 			log.Fatal(err)
 		}
 	}

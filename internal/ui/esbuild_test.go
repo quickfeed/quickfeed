@@ -15,7 +15,7 @@ func TestBuild(t *testing.T) {
 	tmpDir := t.TempDir()
 	defer os.RemoveAll(tmpDir)
 
-	if err := ui.Build(&tmpDir); err != nil {
+	if err := ui.Build(&tmpDir, true); err != nil {
 		t.Errorf("Build failed: %v", err)
 	}
 }

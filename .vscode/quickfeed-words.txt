@@ -56,6 +56,7 @@ Errorf
 esbuild
 espeland
 Etternavn
+evanw
 excelize
 extendee
 extldflags
@@ -146,7 +147,6 @@ newkey
 ngrok
 nocheck
 npmtools
-npmwebpack
 NTNU
 oneof
 openrc
@@ -230,7 +230,6 @@ varcheck
 vercheck
 verdana
 Warnf
-webpack's
 wojtekmaj
 WORKDIR
 Worktree
