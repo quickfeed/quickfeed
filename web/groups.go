@@ -37,7 +37,7 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 }
 
 // DeleteGroup deletes group with the provided ID.
-func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
+func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
@@ -67,31 +67,11 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 	return sc.DeleteGroup(ctx, opt.ID)
 }
 
-// createGroup creates a new group for the given course and users.
-// This function is typically called by a student when creating
-// a group, which will later be (optionally) edited and approved
-// by a teacher of the course using the updateGroup function below.
-func (s *QuickFeedService) createGroup(request *qf.Group) (*qf.Group, error) {
-	if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
-		return nil, err
-	}
-	// get users of group, check consistency of group request
-	if _, err := s.getGroupUsers(request); err != nil {
-		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %v", request.GetName(), err)
-		return nil, err
-	}
-	// create new group and update groupID in enrollment table
-	if err := s.db.CreateGroup(request); err != nil {
-		return nil, err
-	}
-	return s.db.GetGroup(request.GetID())
-}
-
 // updateGroup updates the group for the given group request.
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
-func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
+func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
 	course, group, err := s.getCourseGroup(&qf.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
@@ -189,7 +169,7 @@ func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) 
 
 	users, err := s.db.GetUsers(userIds...)
 	if err != nil {
-		return nil, err
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get users"))
 	}
 	if len(request.GetUsers()) != len(users) || len(users) != len(userIds) {
 		return nil, fmt.Errorf("invariant violation (request.Users=%d, users=%d, userIds=%d)",
@@ -214,7 +194,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 	}
 	courseGroups, err := s.db.GetGroupsByCourse(courseID)
 	if err != nil {
-		return err
+		return connect.NewError(connect.CodeInternal, errors.New("failed to get groups"))
 	}
 	for _, group := range courseGroups {
 		if strings.EqualFold(group.GetName(), groupName) {

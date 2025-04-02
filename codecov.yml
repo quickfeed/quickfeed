@@ -10,3 +10,4 @@ ignore:
   - "internal/env/auth_secret.go"
   - "cmd/**"
   - "main.go"
+  - "internal/qtest/test_helper.go"
