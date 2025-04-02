@@ -21,7 +21,7 @@ const MarkReadyButton = ({ review }: { review: Review }) => {
             text={ready ? "Mark In progress" : "Mark Ready"}
             color={ready ? Color.YELLOW : Color.GREEN}
             type={ready ? ButtonType.BADGE : ButtonType.BUTTON}
-            className={ready ? "float-right" : allCriteriaGraded ? "" : "disabled"}
+            className={allCriteriaGraded ? "" : "disabled"}
             onClick={handleMarkReady}
         />
     )
