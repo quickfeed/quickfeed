@@ -8,8 +8,8 @@
             // Compound configuration to run both frontend and backend debug sessions
             "name": "Launch Quickfeed",
             "configurations": [
-                "Debug Frontend",
-                "Debug Backend - Quickfeed"
+                "Launch Quickfeed Frontend",
+                "Launch Quickfeed Backend"
             ],
         }
     ],
@@ -22,8 +22,7 @@
             "program": "${fileDirname}"
         },
         {
-            // Start a debugging session for the frontend
-            "name": "Debug Frontend",
+            "name": "Launch Quickfeed Frontend",
             "type": "chrome", // Others: "msedge", "firefox"
             "request": "launch",
             // The url is here for convenience, as you can also input the URL in the browser
@@ -31,14 +30,13 @@
             "webRoot": "${workspaceFolder}/public",
         },
         {
-            // Start a debugging session for the backend
             // Launches Quickfeed in dev and watch mode
-            // Debug Quickfeed directly by switching mode to "auto" and set program to "${workspaceFolder}/main.go"
-            "name": "Debug Backend - Quickfeed",
+            "name": "Launch Quickfeed Backend",
             "type": "go",
             "request": "launch",
-            "mode": "exec",
-            "program": "${env:GOPATH}/bin/quickfeed",
+            // You can debug a Quickfeed binary by switching mode to "exec" and set program to "${env:GOPATH}/bin/quickfeed"
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
             "args": [
                 "-dev",
                 "-watch"
