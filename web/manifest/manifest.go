@@ -266,21 +266,6 @@ body {
 	return nil
 }
 
-func runWebpack() {
-	log.Println("Running webpack...")
-	c := exec.Command("webpack")
-	c.Dir = "public"
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
-		log.Print("Failed to run webpack; trying npm ci")
-		if ok := runNpmCi(); !ok {
-			return
-		}
-	}
-	log.Print("Done webpack")
-}
-
 func runNpmCi() bool {
 	log.Println("Running npm ci...")
 	c := exec.Command("npm", "ci")

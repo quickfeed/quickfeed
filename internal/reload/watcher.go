@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -114,15 +113,5 @@ func (watcher *Watcher) Handler(w http.ResponseWriter, r *http.Request) {
 			watcher.removeClient(client)
 			return
 		}
-	}
-}
-
-func webpack() {
-	log.Println("Running webpack...")
-	c := exec.Command("npx", "webpack", "--mode=development", "--watch")
-	c.Dir = "public"
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
 	}
 }
