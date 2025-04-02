@@ -3,6 +3,16 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
+    "compounds": [
+        {
+            // Compound configuration to run both frontend and backend debug sessions
+            "name": "Launch Quickfeed",
+            "configurations": [
+                "Launch Quickfeed Frontend",
+                "Launch Quickfeed Backend"
+            ],
+        }
+    ],
     "configurations": [
         {
             "name": "Launch Package",
@@ -10,6 +20,27 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}"
+        },
+        {
+            "name": "Launch Quickfeed Frontend",
+            "type": "chrome", // Others: "msedge", "firefox"
+            "request": "launch",
+            // The url is here for convenience, as you can also input the URL in the browser
+            "url": "https://localhost:443", // Update PORT as needed. See .env file
+            "webRoot": "${workspaceFolder}/public",
+        },
+        {
+            // Launches Quickfeed in dev and watch mode
+            "name": "Launch Quickfeed Backend",
+            "type": "go",
+            "request": "launch",
+            // You can debug a Quickfeed binary by switching mode to "exec" and set program to "${env:GOPATH}/bin/quickfeed"
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "args": [
+                "-dev",
+                "-watch"
+            ]
         }
     ]
 }
