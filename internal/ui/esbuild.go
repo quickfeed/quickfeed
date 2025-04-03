@@ -19,7 +19,7 @@ var public = func(s string) string {
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
 var buildOptions = api.BuildOptions{
-	Outdir: fmt.Sprintf("%s/dist", env.PublicDir()),
+	Outdir: public("/dist"),
 	EntryPoints: []string{
 		public("src/index.tsx"),
 		public("src/App.tsx"),
@@ -74,7 +74,7 @@ var buildOptions = api.BuildOptions{
 
 // resetDistFolder removes the dist folder and creates a new one
 func resetDistFolder() error {
-	path := fmt.Sprintf("%s/dist", env.PublicDir())
+	path := public("dist")
 	if _, err := os.Stat(path); err == nil {
 		if err := os.RemoveAll(path); err != nil {
 			return fmt.Errorf("failed to remove dist directory: %v", err)
@@ -89,7 +89,7 @@ func resetDistFolder() error {
 // createHtml creates the index.html file from the index.tmpl.html template
 // Injects file links into the index template
 func createHtml(outputFiles []api.OutputFile) error {
-	file, err := os.Create(fmt.Sprintf("%s/assets/index.html", env.PublicDir()))
+	file, err := os.Create(public("/assets/index.html"))
 	if err != nil {
 		return fmt.Errorf("failed to read index.html: %v", err)
 	}
@@ -97,7 +97,7 @@ func createHtml(outputFiles []api.OutputFile) error {
 		"ext":  filepath.Ext,
 		"base": filepath.Base,
 	}
-	tmpl, err := os.ReadFile(fmt.Sprintf("%s/index.tmpl.html", env.PublicDir()))
+	tmpl, err := os.ReadFile(public("/index.tmpl.html"))
 	if err != nil {
 		return fmt.Errorf("failed to read index.tmpl.html: %v", err)
 	}
