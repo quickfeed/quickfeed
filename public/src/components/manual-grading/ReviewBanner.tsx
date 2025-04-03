@@ -68,7 +68,7 @@ const ReviewBanner = ({ assignment, submission, review }: ReviewBannerProps) => 
                 <div className="d-flex p-2 w-40 mr-5">
                     <h4 className="p-2">{assignment.name}</h4>
                     <div className="mt-1">
-                        {review?.ready ? <MarkReadyButton review={review} /> : null}
+                        {review?.ready && !submission?.released ? <MarkReadyButton review={review} /> : null}
                     </div>
                 </div>
                 <div className="ml-auto mt-2 mr-2">
@@ -85,7 +85,7 @@ const ReviewBanner = ({ assignment, submission, review }: ReviewBannerProps) => 
                 </div>
             </div>
             <div className="container mb-3">
-                {review?.ready ? <ManageSubmissionStatus /> : null}
+                {review?.ready ? <ManageSubmissionStatus courseID={assignment.CourseID.toString()} reviewers={reviewers} /> : null}
             </div>
         </div >
     )
