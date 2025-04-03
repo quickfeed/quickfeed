@@ -25,19 +25,17 @@ const ReviewForm = () => {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
-            <div className="col">
+            <div className="lab-sticky reviewLabResult">
                 <ReviewBanner assignment={selectedAssignment} submission={selectedSubmission} review={review} />
-                <div className="reviewLabResult">
-                    <ReviewInfo
-                        courseID={selectedAssignment.CourseID.toString()}
-                        assignmentName={selectedAssignment.name}
-                        reviewers={selectedAssignment.reviewers}
-                        submission={selectedSubmission}
-                        review={review}
-                    />
-                    {review ? <ReviewResult review={review} /> : null}
-                </div>
-            </div >
+                <ReviewInfo
+                    courseID={selectedAssignment.CourseID.toString()}
+                    assignmentName={selectedAssignment.name}
+                    reviewers={selectedAssignment.reviewers}
+                    submission={selectedSubmission}
+                    review={review}
+                />
+                {review ? <ReviewResult review={review} /> : null}
+            </div>
         )
     }
 }

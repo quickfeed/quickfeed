@@ -262,10 +262,15 @@ input {
 }
 
 .lab-sticky {
-    z-index: 10;
     position: sticky;
-    top: 80px;
+    top: 100px;
     padding: 0;
+}
+
+.sticky-child {
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .reviewLabResult {

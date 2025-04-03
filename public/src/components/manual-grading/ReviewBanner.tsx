@@ -29,10 +29,9 @@ const ReviewBanner = ({ assignment, submission, review }: ReviewBannerProps) => 
         const border = state.review.selectedReview === index ? "active border border-dark" : ""
         const selected = state.review.selectedReview !== index ? "disabled" : ""
         const name = state.courseTeachers[review.ReviewerID.toString()]?.Name
-        const initials = name ? name.split(" ").map((n) => n[0]).join("") : ""
         selectReviewButtons.push(
             <Button key={review.ID.toString()}
-                text={`#${index + 1} ${initials}`}
+                text={`#${index + 1} ${name}`}
                 color={review.ready ? Color.GREEN : Color.YELLOW}
                 type={ButtonType.BUTTON}
                 className={`mr-1 ${border} ${selected}`}
@@ -53,38 +52,38 @@ const ReviewBanner = ({ assignment, submission, review }: ReviewBannerProps) => 
         /> : null
 
     return (
-        <div className="lab-sticky bg-dark text-white d-flex flex-column">
-            <ul className="nav nav-tabs p-2">
-                {selectReviewButtons.map((button) => (
-                    <li className="nav-item" key={button.key}>
-                        {button}
+        <div className="sticky-child bg-dark text-white d-flex flex-column">
+            <div className="d-flex p-2">
+                <ul className="nav nav-tabs p-2">
+                    {selectReviewButtons.map((button) => (
+                        <li className="nav-item" key={button.key}>
+                            {button}
+                        </li>
+                    ))}
+                    <li className="nav-item">
+                        {addReviewButton}
                     </li>
-                ))}
-                <li className="nav-item">
-                    {addReviewButton}
-                </li>
-            </ul>
-            <div className="d-flex">
-                <div className="d-flex p-2 w-40 mr-5">
-                    <h4 className="p-2">{assignment.name}</h4>
-                    <div className="mt-1">
-                        {review?.ready && !submission?.released ? <MarkReadyButton review={review} /> : null}
-                    </div>
-                </div>
-                <div className="ml-auto mt-2 mr-2">
-                    {review && !review.ready ? <MarkReadyButton review={review} /> : null}
+                </ul>
+                <div className="ml-auto mt-1">
                     {review?.ready ?
                         <DynamicButton
-                            text={submission?.released ? "Revert Release" : "Release Lab"}
+                            text={submission?.released ? "Unpublish" : "Publish"}
                             color={submission?.released ? Color.WHITE : Color.YELLOW}
                             type={ButtonType.BUTTON}
-                            className="ml-2"
                             onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
                         />
                         : null}
                 </div>
             </div>
-            <div className="container mb-3">
+            <div className="d-flex">
+                <div className="d-flex p-2 w-40 mr-5">
+                    <h4 className="p-2">{assignment.name}</h4>
+                </div>
+                <div className="ml-auto mt-2 mr-2">
+                    {review ? <MarkReadyButton allCriteriaGraded={state.review.graded === state.review.criteriaTotal} ready={review.ready} /> : null}
+                </div>
+            </div>
+            <div className="container px-0 mb-3">
                 {review?.ready ? <ManageSubmissionStatus courseID={assignment.CourseID.toString()} reviewers={reviewers} /> : null}
             </div>
         </div >
