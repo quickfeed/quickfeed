@@ -24,6 +24,7 @@
     "test": "jest --testPathIgnorePatterns=e2e",
     "test:ci": "jest --testPathIgnorePatterns=e2e --maxWorkers=1",
     "test:selenium": "jest --testPathPattern=e2e",
+    "overmind": "npx overmind-devtools@29.0.6-1743431531002",
     "build": "webpack",
     "build:watch": "webpack --watch --mode development",
     "build:dev": "webpack --mode development"
