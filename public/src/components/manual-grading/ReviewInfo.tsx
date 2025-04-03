@@ -9,12 +9,11 @@ interface ReviewInfoProps {
     assignmentName: string
     reviewers: number
     submission: Submission
-    review: Review
+    review: Review | null
 }
 
 const ReviewInfo = ({ submission, review }: ReviewInfoProps) => {
     const state = useAppState()
-    const ready = review.ready
 
     const user = state.selectedEnrollment?.user
     let status = Submission_Status.NONE
@@ -35,28 +34,32 @@ const ReviewInfo = ({ submission, review }: ReviewInfoProps) => {
             {userLi}
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
-                {state.review.reviewer?.Name}
+                {state.review.reviewer?.Name ?? "???"}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
                 {submission ? SubmissionStatus[status] : NoSubmission}
             </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Review Status: </span>
-                <span>{ready ? "Ready" : "In progress"}</span>
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Score: </span>
-                {review.score}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Updated: </span>
-                {getFormattedTime(review.edited)}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Graded: </span>
-                {state.review.graded}/{state.review.criteriaTotal}
-            </li>
+            {review ? (
+                <>
+                    <li className="list-group-item">
+                        <span className="w-25 mr-5 float-left">Review Status: </span>
+                        <span>{review?.ready ? "Ready" : "In progress"}</span>
+                    </li>
+                    <li className="list-group-item">
+                        <span className="w-25 mr-5 float-left">Score: </span>
+                        {review?.score}
+                    </li>
+                    <li className="list-group-item">
+                        <span className="w-25 mr-5 float-left">Updated: </span>
+                        {getFormattedTime(review?.edited)}
+                    </li>
+                    <li className="list-group-item">
+                        <span className="w-25 mr-5 float-left">Graded: </span>
+                        {state.review.graded}/{state.review.criteriaTotal}
+                    </li>
+                </>
+            ) : null}
         </ul>
     )
 }

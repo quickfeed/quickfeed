@@ -28,18 +28,14 @@ const ReviewForm = () => {
             <div className="col">
                 <ReviewBanner assignment={selectedAssignment} submission={selectedSubmission} review={review} />
                 <div className="reviewLabResult">
-                    {review ? (
-                        <>
-                            <ReviewInfo
-                                courseID={selectedAssignment.CourseID.toString()}
-                                assignmentName={selectedAssignment.name}
-                                reviewers={selectedAssignment.reviewers}
-                                submission={selectedSubmission}
-                                review={review}
-                            />
-                            <ReviewResult review={review} />
-                        </>
-                    ) : null}
+                    <ReviewInfo
+                        courseID={selectedAssignment.CourseID.toString()}
+                        assignmentName={selectedAssignment.name}
+                        reviewers={selectedAssignment.reviewers}
+                        submission={selectedSubmission}
+                        review={review}
+                    />
+                    {review ? <ReviewResult review={review} /> : null}
                 </div>
             </div >
         )
