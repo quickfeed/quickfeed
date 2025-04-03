@@ -4,31 +4,39 @@ import { useAppState } from "../../overmind"
 import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
 import ReviewBanner from "./ReviewBanner"
+import { CenteredMessage, KnownMessage } from "../CenteredMessage"
 
 
 const ReviewForm = () => {
     const state = useAppState()
 
-    const submission = state.selectedSubmission
-    if (!submission) {
-        return <div>No submission selected</div>
+    const selectedSubmission = state.selectedSubmission
+    if (!selectedSubmission) {
+        return <CenteredMessage message={KnownMessage.NoSubmission} />
     }
-    const assignment = state.selectedAssignment
-    if (!assignment) {
-        return <div>No Submission</div>
+    const selectedAssignment = state.selectedAssignment
+    if (!selectedAssignment) {
+        return <CenteredMessage message={KnownMessage.NoAssignment} />
     }
+
     const review = state.review.currentReview
 
-    if (!isManuallyGraded(assignment)) {
+    if (!isManuallyGraded(selectedAssignment.reviewers)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
             <div className="col">
-                <ReviewBanner assignment={assignment} submission={submission} review={review} />
+                <ReviewBanner assignment={selectedAssignment} submission={selectedSubmission} review={review} />
                 <div className="reviewLabResult">
                     {review ? (
                         <>
-                            <ReviewInfo review={review} />
+                            <ReviewInfo
+                                courseID={selectedAssignment.CourseID.toString()}
+                                assignmentName={selectedAssignment.name}
+                                reviewers={selectedAssignment.reviewers}
+                                submission={selectedSubmission}
+                                review={review}
+                            />
                             <ReviewResult review={review} />
                         </>
                     ) : null}

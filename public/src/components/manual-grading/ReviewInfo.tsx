@@ -1,18 +1,19 @@
 import React from "react"
-import { Review, Submission_Status } from "../../../proto/qf/types_pb"
+import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
+interface ReviewInfoProps {
+    courseID: string
+    assignmentName: string
+    reviewers: number
+    submission: Submission
+    review: Review
+}
 
-const ReviewInfo = ({ review }: { review?: Review }) => {
+const ReviewInfo = ({ submission, review }: ReviewInfoProps) => {
     const state = useAppState()
-
-    if (!review) {
-        return null
-    }
-
-    const submission = state.selectedSubmission
     const ready = review.ready
 
     const user = state.selectedEnrollment?.user

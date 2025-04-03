@@ -35,6 +35,7 @@ const Results = ({ review }: { review: boolean }) => {
             actions.setGroupView(false)
             actions.review.setAssignmentID(-1n)
             actions.setActiveEnrollment(null)
+            actions.setSelectedSubmission({ submission: null })
         }
     }, [])
 
@@ -46,7 +47,7 @@ const Results = ({ review }: { review: boolean }) => {
             if (selectedLab) {
                 const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
                 if (submission) {
-                    actions.setSelectedSubmission(submission)
+                    actions.setSelectedSubmission({ submission })
                     actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
                 }
             }
@@ -86,7 +87,7 @@ const Results = ({ review }: { review: boolean }) => {
             value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
-                actions.setSelectedSubmission(submission)
+                actions.setSelectedSubmission({ submission })
                 if (isMessage(owner, EnrollmentSchema)) {
                     actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
@@ -105,7 +106,7 @@ const Results = ({ review }: { review: boolean }) => {
             value: `${submission.score} %`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
-                actions.setSelectedSubmission(submission)
+                actions.setSelectedSubmission({ submission })
                 if (isMessage(owner, EnrollmentSchema)) {
                     actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }

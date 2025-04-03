@@ -6,12 +6,7 @@ import Criteria from "./manual-grading/Criterion"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
-const ReviewResult = ({ review }: { review?: Review }) => {
-
-    if (!review) {
-        return null
-    }
-
+const ReviewResult = ({ review }: { review: Review }) => {
     const result = hasBenchmarks(review) ? review.gradingBenchmarks.map(benchmark => {
         return (
             <Benchmark key={benchmark.ID.toString()} bm={benchmark}>
