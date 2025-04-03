@@ -74,6 +74,29 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 	}
 }
 
+func TestGormDBUpdateSubmissionReleaseToFalse(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, _, assignment := setupCourseAssignment(t, db)
+	submission := &qf.Submission{
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+		Released:     true,
+	}
+	if err := db.CreateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+	submission.Released = false
+	if err := db.UpdateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+	gotSubmission, err := db.GetSubmission(submission)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qtest.Diff(t, "Expected release to be false", gotSubmission, submission, protocmp.Transform())
+}
+
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
