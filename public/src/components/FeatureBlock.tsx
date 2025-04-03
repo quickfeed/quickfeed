@@ -46,8 +46,7 @@ const FeatureBlock: React.FC<FeatureBlockProps> = ({
 interface MiniFeatureBlockProps {
     title: string
     content: string
-    imgSrc?: string
-    icon?: JSX.Element
+    media?: JSX.Element
     style?: React.CSSProperties
 }
 
@@ -62,46 +61,22 @@ interface MiniFeatureBlockProps {
 export const MiniFeatureBlock: React.FC<MiniFeatureBlockProps> = ({
     title,
     content,
-    imgSrc,
-    icon,
+    media,
     style,
 }) => {
-    let iconOrImg
-    if (icon) {
-        iconOrImg =
-            <div style={{
-                width: "140px",
-                height: "140px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                ...style
-            }}>
-                {icon}
-            </div>
-    }
-    else if (imgSrc) {
-        iconOrImg =
-            <div style={{
-                width: "140px",
-                height: "140px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                ...style
-            }}>
-                <img
-                    src={imgSrc}
-                    alt={title}
-                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
-            </div>
-    }
     return (
         <div className="col-lg-4 text-center">
-            {iconOrImg}
+            <div style={{
+                width: "140px",
+                height: "140px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
+                ...style
+            }}>
+                {media}
+            </div>
             <h2>{title}</h2>
             <p>{content}</p>
         </div>
