@@ -4,6 +4,7 @@ import { Color, hasAllStatus, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
+import { useKeyboardShortcut } from "../hooks/keybind"
 
 const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, reviewers: number }) => {
     const actions = useActions()
@@ -40,6 +41,30 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
         await actions.updateGrade({ grade, status })
         setUpdating(Submission_Status.NONE)
     }
+
+    useKeyboardShortcut({
+        // a = approve
+        // r = reject
+        // v = revision
+        keys: ["a", "r", "v"],
+        callback: (e) => {
+            if (state.selectedSubmission) {
+                switch (e.key) {
+                    case "a":
+                        handleSetStatus(Submission_Status.APPROVED)
+                        break
+                    case "v":
+                        handleSetStatus(Submission_Status.REVISION)
+                        break
+                    case "r":
+                        handleSetStatus(Submission_Status.REJECTED)
+                        break
+                    default:
+                    // do nothing
+                }
+            }
+        },
+    })
 
     const getUserName = (userID: bigint): string => {
         const user = state.courseEnrollments[courseID].find(enrollment => enrollment.userID === userID)?.user
