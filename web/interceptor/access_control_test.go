@@ -51,8 +51,6 @@ func TestAccessControl(t *testing.T) {
 	course := &qf.Course{
 		Code:                "test101",
 		Year:                2022,
-		ScmOrganizationID:   1,
-		ScmOrganizationName: "test",
 		CourseCreatorID:     courseAdmin.GetID(),
 	}
 	qtest.CreateCourse(t, db, courseAdmin, course)
