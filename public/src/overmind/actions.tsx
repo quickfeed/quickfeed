@@ -1,6 +1,6 @@
 import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "."
-import { Organization, RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import {RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import {
     Assignment,
     Course,
