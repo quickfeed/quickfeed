@@ -22,11 +22,11 @@ import {
     UserSchema
 } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
-import * as internalActions from "./internalActions"
+import {isEmptyRepo} from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
 import { clone, create, isMessage } from "@bufbuild/protobuf"
 
-export const internal = internalActions
+export const internal = {isEmptyRepo}
 
 export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
