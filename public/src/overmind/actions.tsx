@@ -1,24 +1,30 @@
-import { Code, ConnectError } from "@bufbuild/connect"
+import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "."
-import { SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import { Organization, RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import {
     Assignment,
     Course,
     Enrollment,
     Enrollment_DisplayState,
     Enrollment_UserStatus,
+    EnrollmentSchema,
     Grade,
     GradingBenchmark,
+    GradingBenchmarkSchema,
     GradingCriterion,
     Group,
     Group_GroupStatus,
+    GroupSchema,
     Submission,
     Submission_Status,
-    User
+    SubmissionSchema,
+    User,
+    UserSchema
 } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
 import * as internalActions from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
+import { clone, create, isMessage } from "@bufbuild/protobuf"
 
 export const internal = internalActions
 
@@ -119,7 +125,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
     // Confirm that user really wants to change admin status
     if (confirm(`Are you sure you want to ${user.IsAdmin ? "demote" : "promote"} ${user.Name}?`)) {
         // Convert to proto object and change admin status
-        const req = new User(user)
+        const req = { ...user }
         req.IsAdmin = !user.IsAdmin
         // Send updated user to server
         const response = await effects.api.client.updateUser(req)
@@ -180,27 +186,27 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
         return
     }
 
-    let clone = submission.clone()
+    let clonedSubmission = clone(SubmissionSchema, submission)
     switch (owner.type) {
         case "ENROLLMENT":
-            clone = setStatusByUser(clone, submission.userID, status)
+            clonedSubmission = setStatusByUser(clonedSubmission, submission.userID, status)
             break
         case "GROUP":
-            clone = setStatusAll(clone, status)
+            clonedSubmission = setStatusAll(clonedSubmission, status)
             break
     }
     /* Update the submission status */
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
-        grades: clone.Grades,
+        grades: clonedSubmission.Grades,
         released: submission.released,
         score: submission.score,
     })
     if (response.error) {
         return
     }
-    submission.Grades = clone.Grades
+    submission.Grades = clonedSubmission.Grades
     state.submissionsForCourse.update(owner, submission)
 }
 
@@ -213,8 +219,8 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
         return
     }
 
-    const clone = state.selectedSubmission.clone()
-    clone.Grades = clone.Grades.map(g => {
+    const clonedSubmission = clone(SubmissionSchema, state.selectedSubmission)
+    clonedSubmission.Grades = clonedSubmission.Grades.map(g => {
         if (g.UserID === grade.UserID) {
             g.Status = status
         }
@@ -223,7 +229,7 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
     const response = await effects.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: state.selectedSubmission.ID,
-        grades: clone.Grades,
+        grades: clonedSubmission.Grades,
         released: state.selectedSubmission.released,
         score: state.selectedSubmission.score,
     })
@@ -231,14 +237,14 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
         return
     }
 
-    state.selectedSubmission.Grades = clone.Grades
-    const type = clone.userID ? "ENROLLMENT" : "GROUP"
+    state.selectedSubmission.Grades = clonedSubmission.Grades
+    const type = clonedSubmission.userID ? "ENROLLMENT" : "GROUP"
     switch (type) {
         case "ENROLLMENT":
-            state.submissionsForCourse.update({ type, id: clone.userID }, clone)
+            state.submissionsForCourse.update({ type, id: clonedSubmission.userID }, clonedSubmission)
             break
         case "GROUP":
-            state.submissionsForCourse.update({ type, id: clone.groupID }, clone)
+            state.submissionsForCourse.update({ type, id: clonedSubmission.groupID }, clonedSubmission)
             break
     }
 }
@@ -251,7 +257,7 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
     }
 
     if (status === Enrollment_UserStatus.NONE) {
-        const proceed = await actions.internal.isEmptyRepo({ userID: enrollment.userID, courseID: enrollment.courseID })
+        const proceed = await actions.internal.isEmptyRepo(create(RepositoryRequestSchema, { userID: enrollment.userID, courseID: enrollment.courseID }))
         if (!proceed) {
             return
         }
@@ -288,11 +294,11 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
     }
 
     // Clone enrollment object and change status
-    const temp = enrollment.clone()
-    temp.status = status
+    const clonedEnrollment = clone(EnrollmentSchema, enrollment)
+    clonedEnrollment.status = status
 
     // Send updated enrollment to server
-    const response = await effects.api.client.updateEnrollments({ enrollments: [temp] })
+    const response = await effects.api.client.updateEnrollments({ enrollments: [clonedEnrollment] })
     if (response.error) {
         return
     }
@@ -315,8 +321,8 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
     // Clone and set status to student for all pending enrollments.
     // We need to clone the enrollments to avoid modifying the state directly.
     // We do not want to update set the enrollment status before the update is successful.
-    const enrollments = state.pendingEnrollments.map(e => {
-        const temp = e.clone()
+    const enrollments = state.pendingEnrollments.map(enrollment => {
+        const temp = clone(EnrollmentSchema, enrollment)
         temp.status = Enrollment_UserStatus.STUDENT
         return temp
     })
@@ -379,7 +385,7 @@ export const createGroup = async ({ state, actions, effects }: Context, group: C
     const response = await effects.api.client.createGroup({
         courseID: group.courseID,
         name: group.name,
-        users: group.users.map(userID => new User({ ID: userID }))
+        users: group.users.map(ID => create(UserSchema, { ID })),
     })
 
     if (response.error) {
@@ -493,7 +499,7 @@ export const setSelectedAssignmentID = ({ state }: Context, assignmentID: number
 }
 
 export const setSelectedSubmission = ({ state }: Context, submission: Submission): void => {
-    state.selectedSubmission = submission.clone()
+    state.selectedSubmission = clone(SubmissionSchema, submission)
 }
 
 export const getSubmission = async ({ state, effects }: Context, { courseID, owner, submission }: { courseID: bigint, owner: SubmissionOwner, submission: Submission }): Promise<void> => {
@@ -581,7 +587,7 @@ export const deleteGroup = async ({ state, actions, effects }: Context, group: G
     if (!confirm("Deleting a group is an irreversible action. Are you sure?")) {
         return
     }
-    const proceed = await actions.internal.isEmptyRepo({ groupID: group.ID, courseID: group.courseID })
+    const proceed = await actions.internal.isEmptyRepo(create(RepositoryRequestSchema, { courseID: group.courseID, groupID: group.ID }))
     if (!proceed) {
         return
     }
@@ -636,7 +642,7 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
 
 export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     // Check if this need cloning
-    const bm = benchmark.clone()
+    const bm = clone(GradingBenchmarkSchema, benchmark)
     if (benchmark.ID) {
         const response = await effects.api.client.updateBenchmark(bm)
         if (response.error) {
@@ -763,8 +769,11 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 /* Utility Actions */
 
 /** Switches between teacher and student view. */
-export const changeView = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
-    const enrollment = state.enrollmentsByCourseID[courseID.toString()]
+export const changeView = async ({ state, effects }: Context): Promise<void> => {
+    const enrollment = state.enrollments.find(enrol => enrol.courseID === state.activeCourse)
+    if (!enrollment) {
+        return
+    }
     if (hasStudent(enrollment.status)) {
         const response = await effects.api.client.getEnrollments({
             FetchMode: {
@@ -776,7 +785,7 @@ export const changeView = async ({ state, effects }: Context, courseID: bigint):
         if (response.error) {
             return
         }
-        if (response.message.enrollments.find(enrol => enrol.courseID === courseID && hasTeacher(enrol.status))) {
+        if (response.message.enrollments.find(enrol => enrol.courseID === state.activeCourse && hasTeacher(enrol.status))) {
             enrollment.status = Enrollment_UserStatus.TEACHER
         }
     } else if (hasTeacher(enrollment.status)) {
@@ -839,7 +848,7 @@ export const popAlert = ({ state }: Context, alert: Alert): void => {
 
 export const logout = ({ state }: Context): void => {
     // This does not empty the state.
-    state.self = new User()
+    state.self = create(UserSchema)
 }
 
 export const setAscending = ({ state }: Context, ascending: boolean): void => {
@@ -875,7 +884,11 @@ export const setGroupView = ({ state }: Context, groupView: boolean): void => {
 }
 
 export const setActiveGroup = ({ state }: Context, group: Group | null): void => {
-    state.activeGroup = group?.clone() ?? null
+    if (group) {
+        state.activeGroup = clone(GroupSchema, group)
+    } else {
+        state.activeGroup = null
+    }
 }
 
 export const updateGroupUsers = ({ state }: Context, user: User): void => {
@@ -906,7 +919,7 @@ export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
 // setSubmissionOwner sets the owner of the currently selected submission.
 // The owner is either an enrollment or a group.
 export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group) => {
-    if (owner instanceof Group) {
+    if (isMessage(owner, GroupSchema)) {
         state.submissionOwner = { type: "GROUP", id: owner.ID }
     } else {
         const groupID = state.selectedSubmission?.groupID ?? 0n
