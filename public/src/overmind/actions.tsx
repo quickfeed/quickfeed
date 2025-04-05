@@ -1,6 +1,6 @@
 import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "."
-import { Organization, RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import {RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import {
     Assignment,
     Course,
@@ -20,13 +20,12 @@ import {
     User,
     UserSchema
 } from "../../proto/qf/types_pb"
-import { Response } from "../client"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
-import * as internalActions from "./internalActions"
+import {isEmptyRepo} from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
 import { clone, create, isMessage } from "@bufbuild/protobuf"
 
-export const internal = internalActions
+export const internal = {isEmptyRepo}
 
 export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
@@ -394,11 +393,6 @@ export const createGroup = async ({ state, actions, effects }: Context, group: C
 
     state.userGroup[group.courseID.toString()] = response.message
     state.activeGroup = null
-}
-
-/** getOrganization returns the organization object for orgName retrieved from the server. */
-export const getOrganization = async ({ effects }: Context, orgName: string): Promise<Response<Organization>> => {
-    return await effects.api.client.getOrganization({ ScmOrganizationName: orgName })
 }
 
 /** Updates a given course and refreshes courses in state if successful  */
@@ -840,7 +834,7 @@ export const errorHandler = (context: Context, { method, error }: { method: stri
         // error.rawMessage:  "failed to create github application: ..."
         //
         // If the current user is an admin, the method name is included along with the error code.
-        // e.g. "GetOrganization: [not_found] failed to create github application: ..."
+        // e.g. "GetCourse: [not_found] failed to create github application: ..."
         const message = context.state.self.IsAdmin ? `${method}: ${error.message}` : error.rawMessage
         context.actions.alert({
             text: message,
