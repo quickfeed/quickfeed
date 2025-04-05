@@ -155,11 +155,11 @@ func TestConversion(t *testing.T) {
 		client:  scmClient.Client(),
 		envFile: "testdata/test.env",
 		done:    make(chan error, 1),
-		buildUI: false, // Disable esbuild for testing
+		build:   func() error { return nil }, // Avoid building UI when testing
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/manifest/callback", manifest.conversion(true))
+	mux.Handle("/manifest/callback", manifest.conversion())
 	server := httptest.NewServer(mux)
 	defer server.Close()
 

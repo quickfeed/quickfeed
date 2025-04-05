@@ -65,7 +65,7 @@ type Manifest struct {
 	handler http.Handler
 	done    chan error
 	client  *github.Client // optional, for testing
-	buildUI bool           // build UI is only for production
+	build   func() error
 }
 
 func New(domain, envFile string, dev bool) *Manifest {
@@ -74,10 +74,10 @@ func New(domain, envFile string, dev bool) *Manifest {
 		envFile: envFile,
 		client:  github.NewClient(nil),
 		done:    make(chan error),
-		buildUI: true,
+		build:   func() error { return ui.Build("", dev) },
 	}
 	router := http.NewServeMux()
-	router.Handle("/manifest/callback", m.conversion(dev))
+	router.Handle("/manifest/callback", m.conversion())
 	router.Handle("/manifest", m.createApp())
 	m.handler = router
 	return m
@@ -106,7 +106,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	return server.Shutdown(context.Background())
 }
 
-func (m *Manifest) conversion(dev bool) http.HandlerFunc {
+func (m *Manifest) conversion() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var retErr error
 		code := r.URL.Query().Get("code")
@@ -169,10 +169,20 @@ func (m *Manifest) conversion(dev bool) http.HandlerFunc {
 		}
 
 		// Print success message, and redirect to main page
-		if err := m.success(w, config, dev); err != nil {
+		if err := m.success(w, config); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
+			return
+		}
+
+		// Build the UI if needed
+		if err := m.buildUI(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
+		} else {
+			log.Printf("UI built successfully")
 		}
 	}
 }
@@ -189,7 +199,7 @@ func (m *Manifest) createApp() http.HandlerFunc {
 	}
 }
 
-func (m *Manifest) success(w http.ResponseWriter, config *github.AppConfig, dev bool) error {
+func (m *Manifest) success(w http.ResponseWriter, config *github.AppConfig) error {
 	const tpl = `<!DOCTYPE html>
 <html>
 <head>
@@ -250,17 +260,20 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	if m.buildUI {
-		build := func() error { return ui.Build(nil, dev) }
-		// Try to build the UI, if it fails, run npm ci and try again
-		if err := build(); err != nil {
-			if ok := runNpmCi(); !ok {
-				return fmt.Errorf("failed to run npm ci: %v", err)
-			}
-			// Attempt to build again
-			if err := build(); err != nil {
-				return fmt.Errorf("failed to rebuild the UI: %v", err)
-			}
+	return nil
+}
+
+// buildUI builds the UI. If it fails, it runs npm ci and tries again.
+// This is useful when the UI may not be built yet.
+// The build function can be overridden for testing purposes.
+func (m *Manifest) buildUI() error {
+	if err := m.build(); err != nil {
+		if ok := runNpmCi(); !ok {
+			return fmt.Errorf("failed to run npm ci: %w", err)
+		}
+		// Attempt to build again
+		if err := m.build(); err != nil {
+			return fmt.Errorf("failed to rebuild the UI: %w", err)
 		}
 	}
 	return nil
