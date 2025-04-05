@@ -151,11 +151,11 @@ func TestConversion(t *testing.T) {
 
 	scmClient := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockAppConfig(config))
 	manifest := Manifest{
-		domain:     "localhost",
-		client:     scmClient.Client(),
-		envFile:    "testdata/test.env",
-		done:       make(chan error, 1),
-		runWebpack: false, // Disable webpack for testing
+		domain:  "localhost",
+		client:  scmClient.Client(),
+		envFile: "testdata/test.env",
+		done:    make(chan error, 1),
+		build:   func() error { return nil }, // Avoid building UI when testing
 	}
 
 	mux := http.NewServeMux()

@@ -8,5 +8,6 @@ ignore:
   - "**/*.connect.go" # ignore generated protobuf files
   - "**/*.pb.go" # ignore generated protobuf files
   - "internal/env/auth_secret.go"
+  - "internal/ui/**" # ignore esbuild code, as the tests use npm and can't be executed on github actions
   - "cmd/**"
   - "main.go"

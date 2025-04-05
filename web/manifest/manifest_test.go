@@ -28,7 +28,7 @@ func TestCreateQuickFeedApp(t *testing.T) {
 	if err := manifest.ReadyForAppCreation(envFile); err != nil {
 		t.Fatal(err)
 	}
-	if err := manifest.CreateNewQuickFeedApp(web.NewDevelopmentServer, envFile); err != nil {
+	if err := manifest.CreateNewQuickFeedApp(web.NewDevelopmentServer, envFile, false); err != nil {
 		t.Fatal(err)
 	}
 }
