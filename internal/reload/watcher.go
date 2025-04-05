@@ -34,9 +34,7 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 		clients:   make(map[chan string]bool),
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	ch := make(chan error)
-	go ui.Watch(ch)
-	if err := <-ch; err != nil {
+	if err := ui.Watch(); err != nil {
 		return nil, fmt.Errorf("failed to start watch process: %v", err)
 	}
 	return watcher, nil

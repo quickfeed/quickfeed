@@ -49,11 +49,21 @@ var buildOptions = api.BuildOptions{
 			Name: "Reset Plugin",
 			Setup: func(setup api.PluginBuild) {
 				setup.OnStart(func() (api.OnStartResult, error) {
-					err := resetDistFolder()
-					if err != nil {
-						log.Printf("failed to reset dist folder: %v", err)
+					if err := resetDistFolder(); err != nil {
+						return api.OnStartResult{
+							Warnings: []api.Message{
+								{
+									PluginName: "Reset",
+									Text:       "Failed to clear the dist folder",
+									Notes: []api.Note{
+										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", public("dist"))},
+										{Text: fmt.Sprintf("Error: %v", err)},
+									},
+								},
+							},
+						}, nil
 					}
-					return api.OnStartResult{}, err
+					return api.OnStartResult{}, nil
 				})
 			},
 		},
@@ -61,11 +71,18 @@ var buildOptions = api.BuildOptions{
 			Name: "HTML Plugin",
 			Setup: func(setup api.PluginBuild) {
 				setup.OnEnd(func(result *api.BuildResult) (api.OnEndResult, error) {
-					err := createHtml(result.OutputFiles)
-					if err != nil {
-						log.Printf("failed to create index.html: %v", err)
+					if err := createHtml(result.OutputFiles); err != nil {
+						return api.OnEndResult{
+							Errors: []api.Message{
+								{
+									PluginName: "HTML",
+									Text:       "Failed to create index.html",
+									Notes:      []api.Note{{Text: err.Error()}},
+								},
+							},
+						}, nil
 					}
-					return api.OnEndResult{Errors: result.Errors, Warnings: result.Warnings}, err
+					return api.OnEndResult{}, nil
 				})
 			},
 		},
@@ -77,11 +94,11 @@ func resetDistFolder() error {
 	path := public("dist")
 	if _, err := os.Stat(path); err == nil {
 		if err := os.RemoveAll(path); err != nil {
-			return fmt.Errorf("failed to remove dist directory: %v", err)
+			return err
 		}
 	}
 	if err := os.MkdirAll(path, 0o755); err != nil {
-		return fmt.Errorf("failed to create dist directory: %v", err)
+		return err
 	}
 	return nil
 }
@@ -89,32 +106,29 @@ func resetDistFolder() error {
 // createHtml creates the index.html file from the index.tmpl.html template
 // Injects file links into the index template
 func createHtml(outputFiles []api.OutputFile) error {
-	file, err := os.Create(public("/assets/index.html"))
+	file, err := os.Create(public("assets/index.html"))
 	if err != nil {
-		return fmt.Errorf("failed to read index.html: %v", err)
+		return err
 	}
 	funcMap := template.FuncMap{
 		"ext":  filepath.Ext,
 		"base": filepath.Base,
 	}
-	tmpl, err := os.ReadFile(public("/index.tmpl.html"))
+	tmplName := "index.tmpl.html"
+	tmpl, err := os.ReadFile(public(tmplName))
 	if err != nil {
-		return fmt.Errorf("failed to read index.tmpl.html: %v", err)
+		return err
 	}
-	t, err := template.New("index.html").Funcs(funcMap).Parse(string(tmpl))
+	t, err := template.New(tmplName).Funcs(funcMap).Parse(string(tmpl))
 	if err != nil {
-		return fmt.Errorf("failed to parse template: %v", err)
+		return err
 	}
-	err = t.Execute(file, outputFiles)
-	if err != nil {
-		return fmt.Errorf("failed to execute template: %v", err)
-	}
-	return nil
+	return t.Execute(file, outputFiles)
 }
 
 // getOptions returns the build options for esbuild
 // used to perform dynamic updates depending on the dev flag and outputDir
-func getOptions(outputDir *string, dev bool) api.BuildOptions {
+func getOptions(outputDir string, dev bool) api.BuildOptions {
 	if dev {
 		buildOptions.Define = map[string]string{
 			"process.env.NODE_ENV": "\"development\"", // Required to define development mode when minifying files, or it will default to production
@@ -122,40 +136,26 @@ func getOptions(outputDir *string, dev bool) api.BuildOptions {
 		buildOptions.LogLevel = api.LogLevelDebug
 	}
 	// enabling custom outputDir allow for testing without overwriting current build
-	if outputDir != nil {
-		buildOptions.Outdir = *outputDir
+	if outputDir != "" {
+		buildOptions.Outdir = outputDir
 	}
 	return buildOptions
 }
 
 // Build builds the UI with esbuild and outputs to the public/dist folder
-func Build(outputDir *string, dev bool) error {
+func Build(outputDir string, dev bool) error {
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {
-		return fmt.Errorf("failed to build UI: %v", parseMessages(result.Errors))
+		return fmt.Errorf("failed to build UI: %v", result.Errors)
 	}
 	return nil
 }
 
 // Watch starts a watch process for the frontend, rebuilding on changes
-func Watch(ch chan<- error) {
-	ctx, err := api.Context(getOptions(nil, true))
+func Watch() error {
+	ctx, err := api.Context(getOptions("", true))
 	if err != nil {
-		ch <- fmt.Errorf("failed to create build context: %v", parseMessages(err.Errors))
-		return
+		return fmt.Errorf("failed to create build context: %w", err)
 	}
-	if err := ctx.Watch(api.WatchOptions{}); err != nil {
-		ch <- fmt.Errorf("failed to start watching: %v", err)
-		return
-	}
-	ch <- nil
-}
-
-// parseMessages converts esbuild messages to a single error
-func parseMessages(messages []api.Message) error {
-	var errs []error
-	for _, message := range messages {
-		errs = append(errs, fmt.Errorf("error: %s", message.Text))
-	}
-	return errors.Join(errs...)
+	return ctx.Watch(api.WatchOptions{})
 }

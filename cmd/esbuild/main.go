@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/quickfeed/quickfeed/internal/ui"
 )
 
@@ -12,7 +10,6 @@ import (
 // The frontend src code is located in the public directory.
 // The compiled code is placed in the dist directory.
 func main() {
-	if err := ui.Build(nil, true); err != nil {
-		log.Fatalf("failed to build UI: %v", err)
-	}
+	// Errors and warnings will be logged by Esbuild
+	_ = ui.Build("", true)
 }
