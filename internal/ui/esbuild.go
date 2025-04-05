@@ -21,12 +21,19 @@ var buildOptions = api.BuildOptions{
 	EntryPoints: []string{
 		public("src/index.tsx"),
 		public("src/App.tsx"),
-		public("src/overmind/state.tsx"),
-		public("src/overmind/actions.tsx"),
-		public("src/overmind/effects.tsx"),
+
+		// pages
+		public("src/pages/TeacherPage.tsx"),
+
+		// components
+		public("src/components/manual-grading/Comment.tsx"),
+		public("src/components/Card.tsx"),
+
+		// overmind
 		public("src/overmind/index.tsx"),
-		public("src/components/Results.tsx"),
-		// Adding more can reduce the size of the output files, but will increase the file count
+		public("src/overmind/effects.tsx"),
+		public("src/overmind/state.tsx"),
+		public("src/overmind/internalActions.tsx"),
 	},
 	Bundle:            true,
 	Write:             true,
