@@ -1,10 +1,8 @@
 package ui
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -13,13 +11,13 @@ import (
 )
 
 var public = func(s string) string {
-	return fmt.Sprintf("%s/%s", env.PublicDir(), s)
+	return filepath.Join(env.PublicDir(), s)
 }
 
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
 var buildOptions = api.BuildOptions{
-	Outdir: public("/dist"),
+	Outdir: public("dist"),
 	EntryPoints: []string{
 		public("src/index.tsx"),
 		public("src/App.tsx"),
@@ -131,7 +129,9 @@ func createHtml(outputFiles []api.OutputFile) error {
 func getOptions(outputDir string, dev bool) api.BuildOptions {
 	if dev {
 		buildOptions.Define = map[string]string{
-			"process.env.NODE_ENV": "\"development\"", // Required to define development mode when minifying files, or it will default to production
+			// Esbuild defaults to production when minifying files.
+			// We must explicitly set it to "development" for dev builds.
+			"process.env.NODE_ENV": `"development"`,
 		}
 		buildOptions.LogLevel = api.LogLevelDebug
 	}
