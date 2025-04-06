@@ -111,7 +111,7 @@ const Results = ({ review }: { review: boolean }) => {
                 }
                 actions.setSubmissionOwner(owner)
                 handleLabClick(submission.ID)
-                actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
+                actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
             }
         })
     }
