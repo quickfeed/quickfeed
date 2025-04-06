@@ -15,10 +15,10 @@ describe("generateRow", () => {
             // - Submission ID: 3, Assignment ID: 3
             // Group submission:
             // - Submission ID: 4, Assignment ID: 4
-            desc: `Enrollment{ID: 1, groupID: 1} should have rows {1, ${Icons.GreyDash}, 3, 4}`,
+            desc: `Enrollment{ID: 1, groupID: 1} should have rows {1, ${Icons.NotAvailable}, 3, 4}`,
             enrollment: create(EnrollmentSchema, { ID: 1n, groupID: 1n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
-            want: [{ value: "1" }, Icons.GreyDash, { value: "3" }, { value: "4" }]
+            want: [{ value: "1" }, Icons.NotAvailable, { value: "3" }, { value: "4" }]
         },
         {
             // Enrolled user with enrollment ID: 2 and groupID: 0 (not in a group)
@@ -27,19 +27,19 @@ describe("generateRow", () => {
             // - Submission ID: 7, Assignment ID: 4
             // Individual submission for group assignment
             // should be included as the user is not in a group
-            desc: `Enrollment{ID: 2, groupID: 0} should have rows {${Icons.GreyDash}, 2, ${Icons.GreyDash}, 7}`,
+            desc: `Enrollment{ID: 2, groupID: 0} should have rows {${Icons.NotAvailable}, 2, ${Icons.NotAvailable}, 7}`,
             enrollment: create(EnrollmentSchema, { ID: 3n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
-            want: [Icons.GreyDash, { value: "2" }, Icons.GreyDash, { value: "7" }]
+            want: [Icons.NotAvailable, { value: "2" }, Icons.NotAvailable, { value: "7" }]
         },
         {
             // Enrolled user with enrollment ID: 3 and groupID: 0 (not in a group)
             // Individual submissions:
             // - Submission ID: 6, Assignment ID: 1
-            desc: `Enrollment{ID: 3, groupID: 0} should have rows {6, ${Icons.GreyDash}, ${Icons.GreyDash}, ${Icons.GreyDash}}`,
+            desc: `Enrollment{ID: 3, groupID: 0} should have rows {6, ${Icons.NotAvailable}, ${Icons.NotAvailable}, ${Icons.NotAvailable}}`,
             enrollment: create(EnrollmentSchema, { ID: 5n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
-            want: [{ value: "6" }, Icons.GreyDash, Icons.GreyDash, Icons.GreyDash]
+            want: [{ value: "6" }, Icons.NotAvailable, Icons.NotAvailable, Icons.NotAvailable]
         },
         {
             // Group with ID: 1
@@ -53,10 +53,10 @@ describe("generateRow", () => {
         {
             // Group with ID: 2
             // Has no submissions
-            desc: `Group{ID: 2} should have rows {${Icons.GreyDash}}`,
+            desc: `Group{ID: 2} should have rows {${Icons.NotAvailable}}`,
             enrollment: create(GroupSchema, { ID: 2n }),
             generator: (s: Submission) => ({ value: `${s.ID}` }),
-            want: [{ value: "", link: "https://github.com//" }, Icons.GreyDash]
+            want: [{ value: "", link: "https://github.com//" }, Icons.NotAvailable]
         }
     ]
 

@@ -69,7 +69,7 @@ export const generateRow = (
             row.push(generator(submission, enrollment))
             return
         }
-        row.push(Icons.GreyDash)
+        row.push(Icons.NotAvailable)
     })
     return row
 }
