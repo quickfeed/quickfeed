@@ -29,6 +29,12 @@ export enum ConnStatus {
     RECONNECTING,
 }
 
+export enum Icon {
+    DASH = "fa fa-minus grey",
+    USER = "fa fa-user",
+    GROUP = "fa fa-users",
+}
+
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a timestamp
