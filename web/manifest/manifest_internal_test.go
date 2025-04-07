@@ -227,6 +227,9 @@ func TestConversion(t *testing.T) {
 }
 
 func TestBuildUI(t *testing.T) {
+	if os.Getenv("CI") == "true" {
+		t.Skipf("Skipping %s when running on GitHub", t.Name())
+	}
 	m := Manifest{
 		build: func() error { return ui.Build("", true) },
 	}
