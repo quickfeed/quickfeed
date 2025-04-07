@@ -1,6 +1,6 @@
 module github.com/quickfeed/quickfeed
 
-go 1.24.1
+go 1.24.2
 
 require (
 	connectrpc.com/connect v1.18.1
