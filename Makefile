@@ -43,6 +43,10 @@ ui-update: version-check
 	@cd public; npm i
 	@go run cmd/esbuild/main.go
 
+overmind:
+	@echo "Running Overmind Devtools"
+	@cd public; npm run overmind
+
 proto:
 	buf dep update
 	buf generate --template buf.gen.yaml

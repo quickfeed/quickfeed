@@ -9,8 +9,8 @@
     "@connectrpc/connect-web": "^2.0.2",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "overmind": "^28.0.4-1738965119622",
-    "overmind-react": "^29.0.6-1738965119622",
+    "overmind": "^28.0.4-1743431531002",
+    "overmind-react": "^29.0.6-1743431531002",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-markdown": "^9.0.3",
@@ -20,7 +20,8 @@
   "scripts": {
     "tsc": "tsc",
     "test": "jest",
-    "test:ci": "jest --maxWorkers=1"
+    "test:ci": "jest --maxWorkers=1",
+    "overmind": "npx overmind-devtools@29.0.6-1743431531002"
   },
   "devDependencies": {
     "@testing-library/react": "^16.2.0",

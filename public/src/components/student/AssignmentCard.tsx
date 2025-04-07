@@ -2,6 +2,7 @@ import React, { useCallback } from 'react'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getFormattedTime, isValidSubmissionForAssignment } from "../../Helpers"
 import SubmissionRow from './SubmissionRow'
+import { DefaultProgressBar } from '../ProgressBar'
 import { useHistory } from 'react-router'
 
 interface AssignmentCardProps {
@@ -57,6 +58,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
             redirectTo={redirectTo}
           />
         ))}
+        {submissions.length === 0 && <DefaultProgressBar scoreLimit={assignment.scoreLimit} isGroupLab={assignment.isGroupLab} />}
       </div>
     </div>
   )
