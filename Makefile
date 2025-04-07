@@ -41,6 +41,10 @@ ui-update: version-check
 	@echo "Running npm install and webpack"
 	@cd public; npm i; webpack
 
+overmind:
+	@echo "Running Overmind Devtools"
+	@cd public; npm run overmind
+
 proto:
 	buf dep update
 	buf generate --template buf.gen.yaml

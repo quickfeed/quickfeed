@@ -10,8 +10,8 @@
 
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "overmind": "^28.0.4-1738965119622",
-    "overmind-react": "^29.0.6-1738965119622",
+    "overmind": "^28.0.4-1743431531002",
+    "overmind-react": "^29.0.6-1743431531002",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-markdown": "^9.0.3",
@@ -24,6 +24,7 @@
     "test": "jest --testPathIgnorePatterns=e2e",
     "test:ci": "jest --testPathIgnorePatterns=e2e --maxWorkers=1",
     "test:selenium": "jest --testPathPattern=e2e",
+    "overmind": "npx overmind-devtools@29.0.6-1743431531002",
     "build": "webpack",
     "build:watch": "webpack --watch --mode development",
     "build:dev": "webpack --mode development"
