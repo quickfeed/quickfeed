@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -222,5 +223,14 @@ func TestConversion(t *testing.T) {
 		if diff := cmp.Diff(cfg.GetPEM(), string(pem)); diff != "" {
 			t.Errorf("pem file content mismatch (-want +got):\n%s", diff)
 		}
+	}
+}
+
+func TestBuildUI(t *testing.T) {
+	m := Manifest{
+		build: func() error { return ui.Build("", true) },
+	}
+	if err := m.buildUI(); err != nil {
+		t.Errorf("buildUI() failed with error: %v", err)
 	}
 }
