@@ -875,21 +875,15 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\x03ALL\x10\x00\x12\b\n" +
 	"\x04USER\x10\x01\x12\t\n" +
 	"\x05GROUP\x10\x02B\v\n" +
-	"\tFetchMode\"\xae\x01\n" +
-	"\x17UpdateSubmissionRequest\x12\"\n" +
-	"\fsubmissionID\x18\x01 \x01(\x04R\fsubmissionID\x12\x1a\n" +
-	"\bcourseID\x18\x02 \x01(\x04R\bcourseID\x12\x14\n" +
-	"\x05score\x18\x03 \x01(\rR\x05score\x12\x1a\n" +
-	"\breleased\x18\x04 \x01(\bR\breleased\x12!\n" +
-	"\x06grades\x18\x05 \x03(\v2\t.qf.GradeR\x06grades\"\xae\x01\n" +
-	"\x18UpdateSubmissionsRequest\x12\x1a\n" +
+	"\tFetchMode\"\xff\x01\n" +
+	"\x17UpdateSubmissionRequest\x12\x1a\n" +
 	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12\"\n" +
-	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\x1e\n" +
-	"\n" +
-	"scoreLimit\x18\x03 \x01(\rR\n" +
-	"scoreLimit\x12\x18\n" +
-	"\arelease\x18\x04 \x01(\bR\arelease\x12\x18\n" +
-	"\aapprove\x18\x05 \x01(\bR\aapprove\"a\n" +
+	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\"\n" +
+	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\x12\x14\n" +
+	"\x05score\x18\x04 \x01(\rR\x05score\x12\x18\n" +
+	"\arelease\x18\x05 \x01(\bR\arelease\x12-\n" +
+	"\x06status\x18\x06 \x01(\x0e2\x15.qf.Submission.StatusR\x06status\x12!\n" +
+	"\x06grades\x18\a \x03(\v2\t.qf.GradeR\x06grades\"a\n" +
 	"\x11RepositoryRequest\x12\x16\n" +
 	"\x06userID\x18\x01 \x01(\x04R\x06userID\x12\x18\n" +
 	"\agroupID\x18\x02 \x01(\x04R\agroupID\x12\x1a\n" +
