@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Review } from "../../../proto/qf/types_pb"
 import { isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
@@ -12,6 +12,8 @@ const ReviewForm = () => {
     const state = useAppState()
     const actions = useActions()
 
+    const handleRefresh = useCallback((index: number) => () => actions.review.setSelectedReview(index), [actions])
+    const handleCreateReview = useCallback(async () => await actions.review.createReview(), [actions])
     const selectedSubmission = state.selectedSubmission
     if (!selectedSubmission) {
         return <CenteredMessage message={KnownMessage.NoSubmission} />
@@ -37,7 +39,7 @@ const ReviewForm = () => {
                 color={review.ready ? Color.GREEN : Color.YELLOW}
                 type={ButtonType.BUTTON}
                 className={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
-                onClick={() => { actions.review.setSelectedReview(index) }}
+                onClick={handleRefresh(index)}
             />
         )
     })
@@ -51,7 +53,7 @@ const ReviewForm = () => {
                 color={Color.BLUE}
                 type={ButtonType.BUTTON}
                 className="mr-1"
-                onClick={async () => { await actions.review.createReview() }}
+                onClick={handleCreateReview}
             />
         )
     }

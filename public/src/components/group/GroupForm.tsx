@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react"
-import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
+import React, { useCallback, useEffect, useState } from "react"
+import { Enrollment, Enrollment_UserStatus, User, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
 import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
@@ -16,16 +16,16 @@ const GroupForm = () => {
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
     const courseID = getCourseID()
 
+    const handleUpdateGroupUsers = useCallback((user: User | undefined) => () => actions.updateGroupUsers(user), [actions])
+
     const group = state.activeGroup
     useEffect(() => {
         if (isStudent(state.enrollmentsByCourseID[courseID.toString()])) {
             actions.setActiveGroup(create(GroupSchema))
             actions.updateGroupUsers(clone(UserSchema, state.self))
         }
-        return () => {
-            actions.setActiveGroup(null)
-        }
-    }, [])
+    }, [actions, courseID, state.enrollmentsByCourseID, state.self])
+
     if (!group) {
         return null
     }
@@ -41,7 +41,7 @@ const GroupForm = () => {
         return false
     }
 
-    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment =>  clone(EnrollmentSchema, enrollment))
+    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => clone(EnrollmentSchema, enrollment))
 
     // Determine the user's enrollment status (teacher or student)
     const isTeacher = hasTeacher(state.status[courseID.toString()])
@@ -85,7 +85,7 @@ const GroupForm = () => {
                         color={Color.GREEN}
                         type={ButtonType.BADGE}
                         className="ml-2 float-right"
-                        onClick={() => actions.updateGroupUsers(enrollment.user)}
+                        onClick={handleUpdateGroupUsers(enrollment.user)}
                     />
                 </li>
             )
@@ -103,7 +103,7 @@ const GroupForm = () => {
                     color={Color.RED}
                     type={ButtonType.BADGE}
                     className="float-right"
-                    onClick={() => actions.updateGroupUsers(user)}
+                    onClick={handleUpdateGroupUsers(user)}
                 />
             </li>
         )
@@ -143,8 +143,8 @@ const GroupForm = () => {
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedAndFilteredEnrollments.map((enrollment, index) => {
-                            return <AvailableUser key={index} enrollment={enrollment} />
+                        {sortedAndFilteredEnrollments.map((enrollment) => {
+                            return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
                         })}
                     </ul>
                 </div>
@@ -154,7 +154,7 @@ const GroupForm = () => {
                         {GroupNameBanner}
                         {GroupNameInput}
                         {groupMembers}
-                        {group && group.ID ?
+                        {group?.ID ?
                             <div className="row justify-content-md-center">
                                 <DynamicButton
                                     text={"Update"}

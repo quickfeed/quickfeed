@@ -569,12 +569,10 @@ export const enroll = async ({ state, effects }: Context, courseID: bigint): Pro
             value: state.self.ID,
         }
     })
-
     if (enrolsResponse.error) {
         return
     }
     state.enrollments = enrolsResponse.message.enrollments
-
 }
 
 export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group, status: Group_GroupStatus }): Promise<void> => {
@@ -781,15 +779,11 @@ export const changeView = async ({ state, effects }: Context): Promise<void> => 
     }
     if (hasStudent(enrollment.status)) {
         const response = await effects.api.client.getEnrollments({
-            FetchMode: {
-                case: "userID",
-                value: state.self.ID,
-            },
+            FetchMode: { case: "userID", value: state.self.ID, },
             statuses: [Enrollment_UserStatus.TEACHER],
         })
-        if (response.error) {
-            return
-        }
+        if (response.error) return
+
         if (response.message.enrollments.find(enrol => enrol.courseID === state.activeCourse && hasTeacher(enrol.status))) {
             enrollment.status = Enrollment_UserStatus.TEACHER
         }

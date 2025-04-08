@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client"
-import React from 'react'
+import React, { StrictMode } from 'react'
 import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
 import { config } from './overmind'
@@ -34,7 +34,9 @@ if (rootDocument) {
 
     root.render((<Provider value={overmind}>
         <BrowserRouter>
-            <App />
+            <StrictMode>
+                <App />
+            </StrictMode>
         </BrowserRouter>
     </Provider>))
 } else {

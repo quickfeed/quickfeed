@@ -1,10 +1,10 @@
-import React, { useState } from "react"
+import React, { useState, memo } from "react"
 import { Assignment, GradingBenchmark, GradingBenchmarkSchema } from "../../../proto/qf/types_pb"
 import { useActions } from "../../overmind"
 import { clone, create } from "@bufbuild/protobuf"
 
 
-const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }) => {
+const EditBenchmark = memo(({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }) => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)
@@ -71,6 +71,7 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
             {children}
         </>
     )
-}
+})
 
+EditBenchmark.displayName = "EditBenchmark"
 export default EditBenchmark

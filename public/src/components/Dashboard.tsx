@@ -6,7 +6,6 @@ import Alerts from "./alerts/Alerts"
 import Courses from "./Courses"
 import SubmissionsTable from "./dashboard/SubmissionsTable"
 
-
 /* Dashboard for a signed in user. */
 const Dashboard = () => {
     const state = useAppState()
