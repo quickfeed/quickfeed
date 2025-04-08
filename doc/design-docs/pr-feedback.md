@@ -126,7 +126,7 @@ There are three stages:
 Maybe in the initial stage, the PR is marked as draft; only when the all tests pass will the PR be moved out of draft mode to be reviewed.
 Moving the PR out of draft mode could be automatic, but students can do it manually also.
 
-### Oje's notes on responses
+### Ole's notes on responses
 
 - How do we know that a task is completed? Currently quickfeed grades only based on the entire assignment.
 - If group assignments are to be separated into individual tasks, one drawback would be that these tasks would have to be independent of each other. Otherwise one task can not be implemented before another is complete.
