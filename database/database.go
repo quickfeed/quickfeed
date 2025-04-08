@@ -110,7 +110,7 @@ type Database interface {
 	UpdateSubmission(*qf.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score.
 	// The boolean argument determines whether to approve or reject the submissions.
-	UpdateSubmissions(*qf.Submission, bool) error
+	UpdateSubmissions(*qf.Submission, qf.Submission_Status) error
 	// GetReview returns a single review matching the given query.
 	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.

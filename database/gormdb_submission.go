@@ -223,7 +223,7 @@ func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
 
 // UpdateSubmissions approves and/or releases all submissions that have score
 // equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
+func (db *GormDB) UpdateSubmissions(query *qf.Submission, status qf.Submission_Status) error {
 	return db.conn.Transaction(func(tx *gorm.DB) error {
 		var submissionIDs []*uint64
 		if err := tx.Model(&qf.Submission{}).
@@ -239,11 +239,6 @@ func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
 				Released: query.GetReleased(),
 			}).Error; err != nil {
 			return err
-		}
-
-		status := qf.Submission_APPROVED
-		if !approve {
-			status = qf.Submission_REJECTED
 		}
 
 		// Approve all Grades for the submissions
