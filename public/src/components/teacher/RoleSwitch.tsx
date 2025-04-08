@@ -11,7 +11,7 @@ const RoleSwitch = ({ enrollment }: { enrollment: Enrollment }) => {
 
     if (hasTeacher(state.status[enrollment.courseID.toString()])) {
         return (
-            <span className="clickable" onClick={() => actions.changeView(enrollment.courseID)}>
+            <span className="clickable" onClick={() => actions.changeView()}>
                 {isTeacher(enrollment) ? "Switch to Student View" : "Switch to Teacher View"}
             </span>
         )

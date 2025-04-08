@@ -18,10 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ./public/package-lock.json
 
       - name: Install modules
         working-directory: ./public
-        run: npm i
+        run: npm ci
 
       - name: Run tests
         working-directory: ./public/src/__tests__

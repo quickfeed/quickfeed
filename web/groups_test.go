@@ -30,12 +30,12 @@ func TestNewGroup(t *testing.T) {
 
 	ctx := context.Background()
 	// current user must be in the group being created
-	createGroupRequest := qtest.RequestWithCookie(&qf.Group{Name: "Heins-Group", CourseID: course.ID, Users: []*qf.User{{ID: user.ID}}}, Cookie(t, tm, user))
+	createGroupRequest := qtest.RequestWithCookie(&qf.Group{Name: "Heins-Group", CourseID: course.GetID(), Users: []*qf.User{{ID: user.GetID()}}}, Cookie(t, tm, user))
 	wantGroup, err := client.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Error(err)
 	}
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{CourseID: course.ID, GroupID: wantGroup.Msg.ID}, Cookie(t, tm, user)))
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{CourseID: course.GetID(), GroupID: wantGroup.Msg.GetID()}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,7 +58,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &course)
 
-	users := []*qf.User{{ID: user.ID}}
+	users := []*qf.User{{ID: user.GetID()}}
 
 	ctx := context.Background()
 
@@ -68,12 +68,12 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without a course ID")
 	}
-	group_wo_name := qtest.RequestWithCookie(&qf.Group{CourseID: course.ID, Users: users}, Cookie(t, tm, user))
+	group_wo_name := qtest.RequestWithCookie(&qf.Group{CourseID: course.GetID(), Users: users}, Cookie(t, tm, user))
 	if group_wo_name.Msg.IsValid() {
 		// emulate CreateGroup check without name
 		t.Fatal("expected CreateGroup to fail without group name")
 	}
-	group_wo_users := qtest.RequestWithCookie(&qf.Group{Name: "Hein's Group", CourseID: course.ID}, Cookie(t, tm, user))
+	group_wo_users := qtest.RequestWithCookie(&qf.Group{Name: "Hein's Group", CourseID: course.GetID()}, Cookie(t, tm, user))
 	_, err = client.CreateGroup(ctx, group_wo_users)
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without users")
@@ -98,16 +98,16 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	user := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, user, &course)
 
-	users := []*qf.User{{ID: user.ID}}
+	users := []*qf.User{{ID: user.GetID()}}
 	ctx := context.Background()
 
 	// current user must be in the group being created
-	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}, Cookie(t, tm, user)))
+	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{Name: "HeinsGroup", CourseID: course.GetID(), Users: users}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
 	// check that group member (user) can access group
-	groupReq := &qf.GroupRequest{CourseID: course.ID, GroupID: wantGroup.Msg.ID}
+	groupReq := &qf.GroupRequest{CourseID: course.GetID(), GroupID: wantGroup.Msg.GetID()}
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
@@ -149,8 +149,8 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	// current user must be in the group being created
 	group_req := qtest.RequestWithCookie(&qf.Group{
 		Name:     "HeinsGroup",
-		CourseID: course.ID,
-		Users:    []*qf.User{{ID: user.ID}, {ID: teacher.ID}},
+		CourseID: course.GetID(),
+		Users:    []*qf.User{{ID: user.GetID()}, {ID: teacher.GetID()}},
 	}, Cookie(t, tm, user))
 	_, err := client.CreateGroup(context.Background(), group_req)
 	if err != nil {
@@ -185,7 +185,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// group with two students
 	createGroupRequest := qtest.RequestWithCookie(&qf.Group{
 		Name:     "HeinsTwoMemberGroup",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{user1, user2},
 	}, Cookie(t, tm, user1))
 
@@ -196,8 +196,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		CourseID: course.ID,
-		GroupID:  wantGroup.Msg.ID,
+		CourseID: course.GetID(),
+		GroupID:  wantGroup.Msg.GetID(),
 	}, Cookie(t, tm, user1)))
 	if err != nil {
 		t.Error(err)
@@ -212,9 +212,9 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// set teacher in cookie
 	// group with three students
 	updateGroupRequest := qtest.RequestWithCookie(&qf.Group{
-		ID:       gotGroup.Msg.ID,
+		ID:       gotGroup.Msg.GetID(),
 		Name:     "Heins3MemberGroup",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{user1, user2, user3},
 	}, Cookie(t, tm, teacher))
 	gotUpdatedGroup, err := client.UpdateGroup(ctx, updateGroupRequest)
@@ -224,8 +224,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// check that the group have changed group membership
 	userIDs := make([]uint64, 0)
-	for _, usr := range updateGroupRequest.Msg.Users {
-		userIDs = append(userIDs, usr.ID)
+	for _, usr := range updateGroupRequest.Msg.GetUsers() {
+		userIDs = append(userIDs, usr.GetID())
 	}
 
 	grpUsers, err := db.GetUsers(userIDs...)
@@ -234,7 +234,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 
 	wantGroup = gotGroup
-	wantGroup.Msg.Name = updateGroupRequest.Msg.Name
+	wantGroup.Msg.Name = updateGroupRequest.Msg.GetName()
 	wantGroup.Msg.Users = grpUsers
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Msg.Status = qf.Group_APPROVED
@@ -251,9 +251,9 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// change group to only one student
 	// name must not update because group repo already exist
 	updateGroupRequest1 := qtest.RequestWithCookie(&qf.Group{
-		ID:       gotGroup.Msg.ID,
+		ID:       gotGroup.Msg.GetID(),
 		Name:     "Hein's single member Group",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{user1},
 	}, Cookie(t, tm, teacher))
 	gotUpdatedGroup, err = client.UpdateGroup(ctx, updateGroupRequest1)
@@ -262,16 +262,16 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 	// check that the group have changed group membership
 	userIDs = make([]uint64, 0)
-	for _, usr := range updateGroupRequest1.Msg.Users {
-		userIDs = append(userIDs, usr.ID)
+	for _, usr := range updateGroupRequest1.Msg.GetUsers() {
+		userIDs = append(userIDs, usr.GetID())
 	}
 
 	grpUsers, err = db.GetUsers(userIDs...)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(gotUpdatedGroup.Msg.Users) != 1 {
-		t.Errorf("Expected only single member group, got %d members", len(gotUpdatedGroup.Msg.Users))
+	if len(gotUpdatedGroup.Msg.GetUsers()) != 1 {
+		t.Errorf("Expected only single member group, got %d members", len(gotUpdatedGroup.Msg.GetUsers()))
 	}
 	wantGroup.Msg = updateGroupRequest.Msg
 	wantGroup.Msg.Users = grpUsers
@@ -299,8 +299,8 @@ func TestDeleteGroup(t *testing.T) {
 	// create user and enroll as pending (teacher)
 	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
-		UserID:   teacher.ID,
-		CourseID: course.ID,
+		UserID:   teacher.GetID(),
+		CourseID: course.GetID(),
 	}, Cookie(t, tm, teacher))); err != nil {
 		t.Error(err)
 	}
@@ -309,8 +309,8 @@ func TestDeleteGroup(t *testing.T) {
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
-				UserID:   teacher.ID,
-				CourseID: course.ID,
+				UserID:   teacher.GetID(),
+				CourseID: course.GetID(),
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
@@ -322,8 +322,8 @@ func TestDeleteGroup(t *testing.T) {
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
-				UserID:   teacher.ID,
-				CourseID: course.ID,
+				UserID:   teacher.GetID(),
+				CourseID: course.GetID(),
 				Status:   qf.Enrollment_TEACHER,
 			},
 		},
@@ -334,8 +334,8 @@ func TestDeleteGroup(t *testing.T) {
 	// create user and enroll as pending (student)
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
+		UserID:   user.GetID(),
+		CourseID: course.GetID(),
 	}, Cookie(t, tm, user))); err != nil {
 		t.Error(err)
 	}
@@ -344,8 +344,8 @@ func TestDeleteGroup(t *testing.T) {
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
-				UserID:   user.ID,
-				CourseID: course.ID,
+				UserID:   user.GetID(),
+				CourseID: course.GetID(),
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
@@ -354,7 +354,7 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create group as student user
-	group := &qf.Group{Name: "TestDeleteGroup", CourseID: course.ID, Users: []*qf.User{user}}
+	group := &qf.Group{Name: "TestDeleteGroup", CourseID: course.GetID(), Users: []*qf.User{user}}
 	respGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
 	if err != nil {
 		t.Fatal(err)
@@ -362,8 +362,8 @@ func TestDeleteGroup(t *testing.T) {
 
 	// delete group as teacher
 	_, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		GroupID:  respGroup.Msg.ID,
-		CourseID: course.ID,
+		GroupID:  respGroup.Msg.GetID(),
+		CourseID: course.GetID(),
 	}, Cookie(t, tm, teacher)))
 	if err != nil {
 		t.Error(err)
@@ -392,15 +392,15 @@ func TestGetGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	group := &qf.Group{Name: "TestGroup", CourseID: course.ID, Users: []*qf.User{user}}
+	group := &qf.Group{Name: "TestGroup", CourseID: course.GetID(), Users: []*qf.User{user}}
 	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
 	}
 
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		CourseID: course.ID,
-		GroupID:  wantGroup.Msg.ID,
+		CourseID: course.GetID(),
+		GroupID:  wantGroup.Msg.GetID(),
 	}, Cookie(t, tm, user)))
 	if err != nil {
 		t.Error(err)
@@ -432,7 +432,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
-	if err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true}); err != nil {
+	if err := db.UpdateUser(&qf.User{ID: teacher.GetID(), IsAdmin: true}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -448,7 +448,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	group := &qf.Group{
 		ID:       1,
 		Name:     "Test Group",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{user1, user2},
 	}
 	err := db.CreateGroup(group)
@@ -456,7 +456,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	// get the group as stored in db with enrollments
-	wantGroup, err := db.GetGroup(group.ID)
+	wantGroup, err := db.GetGroup(group.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -500,7 +500,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	qtest.EnrollStudent(t, db, user2, &course)
 
 	group := &qf.Group{
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{user1, user2},
 	}
 	err := db.CreateGroup(group)
@@ -509,15 +509,15 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	}
 
 	wantGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		CourseID: course.ID,
-		UserID:   user1.ID,
+		CourseID: course.GetID(),
+		UserID:   user1.GetID(),
 	}, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
 	}
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		CourseID: course.ID,
-		GroupID:  group.ID,
+		CourseID: course.GetID(),
+		GroupID:  group.GetID(),
 	}, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)
@@ -546,7 +546,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	group := &qf.Group{
 		ID:       1,
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Name:     "TestGroup",
 		Users:    []*qf.User{user1, user2},
 	}
@@ -565,29 +565,29 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	// then get user enrollments with group ID
-	wantEnrollment1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
+	wantEnrollment1, err := db.GetEnrollmentByCourseAndUser(course.GetID(), user1.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
+	wantEnrollment2, err := db.GetEnrollmentByCourseAndUser(course.GetID(), user2.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// delete the group
 	if _, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
-		CourseID: course.ID,
-		GroupID:  createdGroup.Msg.ID,
+		CourseID: course.GetID(),
+		GroupID:  createdGroup.Msg.GetID(),
 	}, Cookie(t, tm, admin))); err != nil {
 		t.Error(err)
 	}
 
 	// get updated enrollments of group members
-	gotEnrollment1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
+	gotEnrollment1, err := db.GetEnrollmentByCourseAndUser(course.GetID(), user1.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotEnrollment2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
+	gotEnrollment2, err := db.GetEnrollmentByCourseAndUser(course.GetID(), user2.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -631,7 +631,7 @@ func TestGetGroups(t *testing.T) {
 	ctx := context.Background()
 	group1, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{
 		Name:     "Group1",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{users[1], users[2]},
 	}, Cookie(t, tm, users[2])))
 	if err != nil {
@@ -639,22 +639,22 @@ func TestGetGroups(t *testing.T) {
 	}
 	group2, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{
 		Name:     "Group2",
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Users:    []*qf.User{users[4], users[5]},
 	}, Cookie(t, tm, users[5])))
 	if err != nil {
 		t.Error(err)
 	}
 	wantGroups := &qf.Groups{Groups: []*qf.Group{group1.Msg, group2.Msg}}
-	for _, grp := range wantGroups.Groups {
-		for _, grpEnrol := range grp.Enrollments {
+	for _, grp := range wantGroups.GetGroups() {
+		for _, grpEnrol := range grp.GetEnrollments() {
 			grpEnrol.UsedSlipDays = []*qf.UsedSlipDays{}
 		}
 	}
 
 	// get groups from the database; current user is admin, which is also teacher
 	gotGroups, err := client.GetGroupsByCourse(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 	}, Cookie(t, tm, admin)))
 	if err != nil {
 		t.Error(err)

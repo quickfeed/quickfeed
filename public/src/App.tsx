@@ -9,8 +9,9 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
+import LoginPage from './pages/LoginPage'
 
-const App = (): JSX.Element => {
+const App = () => {
     const state = useAppState()
 
     const Main = () => {
@@ -30,6 +31,7 @@ const App = (): JSX.Element => {
             return (
                 <Switch>
                     <Route path="/" exact component={Dashboard} />
+                    <Route path="/login" component={LoginPage} />
                     <Route path="/about" component={AboutPage} />
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={CoursePage} />
@@ -41,7 +43,7 @@ const App = (): JSX.Element => {
             //  user not logged in: show About page
             return (
                 <Switch>
-                    <Route path="/" component={AboutPage} />
+                    <Route path="/" component={LoginPage} />
                 </Switch>
             )
         }

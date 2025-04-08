@@ -14,13 +14,13 @@ const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
-const TeacherPage = (): JSX.Element => {
+const TeacherPage = () => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`
-    const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment))
+    const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
 
     const members = {
         title: "View Members",

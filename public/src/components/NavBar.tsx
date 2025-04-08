@@ -6,7 +6,7 @@ import NavBarUser from "./navbar/NavBarUser"
 import NavBarActiveCourse from "./navbar/NavBarActiveCourse"
 
 
-const NavBar = (): JSX.Element => {
+const NavBar = () => {
     const state = useAppState()
     const actions = useActions()
 

@@ -6,6 +6,7 @@
   - [Setup](#setup)
     - [Install Tools for Deployment](#install-tools-for-deployment)
     - [Install Tools for Development](#install-tools-for-development)
+    - [The PORT environment variable](#the-port-environment-variable)
     - [Preparing the Environment for Production](#preparing-the-environment-for-production)
     - [Preparing the Environment for Testing](#preparing-the-environment-for-testing)
     - [First-time Installation](#first-time-installation)
@@ -54,14 +55,36 @@ For systems without homebrew, the make target should list well-known packages av
 
 ### Install Tools for Development
 
-The development tools are only needed for development, and can be skipped for deployment only.
-To install:
+Tools for development are managed via `go.mod` and does not need to be installed separately.
+They are used via the `go tool` command, which are invoked via:
 
 ```sh
-% make devtools
+% make proto
 ```
 
-The `devtools` make target will download and install various Protobuf compiler plugins and the grpcweb Protobuf compiler.
+For additional details, see the file `buf.gen.yaml` in the repository's root folder:
+
+```yaml
+version: v2
+plugins:
+  - local: ["go", "tool", "protoc-gen-go-patch"]
+    out: ./
+    opt:
+      - plugin=go
+      - paths=source_relative
+  - local: ["go", "tool", "protoc-gen-connect-go"]
+    out: ./
+    opt:
+      - paths=source_relative
+```
+
+### The PORT environment variable
+
+The `PORT` environment variable can be changed to any valid port, and we strongly advise running Quickfeed a secure port in production.
+It can be set to an unprivileged port and prevent permission issues when [running on a privileged port](#running-server-on-a-privileged-port).
+This is helpful for debugging, as it allows you to run Quickfeed directly by setting program to `"${workspaceFolder}/main.go"`, in the launch profile.
+Alternatively, you can grant the Quickfeed binary access to the privileged port and run it as an executable.
+The launch profile program should then be set to `"${env:GOPATH}/bin/quickfeed"`.
 
 ### Preparing the Environment for Production
 
@@ -80,6 +103,8 @@ QUICKFEED_WEBHOOK_SECRET=""
 
 # QuickFeed server domain or ip
 DOMAIN="example.com"
+# Quickfeed server port
+PORT="443"
 
 # Comma-separated list of domains to allow certificates for.
 # IP addresses and "localhost" are *not* valid.
@@ -103,6 +128,8 @@ QUICKFEED_CERT_FILE=$QUICKFEED/internal/config/certs/fullchain.pem
 
 # QuickFeed server domain or ip
 DOMAIN="127.0.0.1"
+# Quickfeed server port
+PORT="443"
 ```
 
 The [QuickFeed App installation process](#first-time-installation) will guide you through the rest of the setup,
@@ -218,14 +245,15 @@ To view the full usage details:
 | **Flag**        | **Description**                                      | **Example** |
 | --------------- | ---------------------------------------------------- | ----------- |
 | `database.file` | Path to QuickFeed database                           | `qf.db`     |
-| `http.addr`     | Listener address for HTTP service                    | `:8081`     |
+| `http.public`   | Path to content to serve                             |             |
 | `dev`           | Run development server with self-signed certificates |             |
 | `new`           | Create a new QuickFeed App                           |             |
+| `watch`         | Watch for changes and reload frontend                |             |
+| `secret`        | Create new secret for JWT signing                    |             |
 
 ### Running Server on a Privileged Port
 
-It is possible to run server in development mode on different ports by setting the `http.addr` flag.
-However, by default the server will run on port `:443`.
+It is possible to run server in development mode on different ports by updating the environment variable `PORT`, which is by default the standard HTTPS port: `443`.
 If the quickfeed binary cannot access port `:443` on your Linux system, you can enable it by running:
 
 ```sh

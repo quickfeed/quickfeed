@@ -1,6 +1,5 @@
+import { createRoot } from "react-dom/client"
 import React from 'react'
-import { render } from 'react-dom'
-
 import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
 import { config } from './overmind'
@@ -13,9 +12,9 @@ import './style.scss'
 }
 
 const overmind = createOvermind(config, {
-    // Enable devtools by setting the below to ex. 'devtools: "localhost:3301"'
+    // Enable devtools by setting the below to ex. 'devtools: "localhost:3031"'
     // then run 'npx overmind-devtools@latest' to start the devtools
-    devtools: "localhost:3301",
+    devtools: "localhost:3031",
 })
 
 if (process.env.NODE_ENV === "development") {
@@ -24,15 +23,20 @@ if (process.env.NODE_ENV === "development") {
     eventSource.onmessage = () => {
         setTimeout(() => {
             location.reload()
-        }, 500)
+        }, 200)
     }
     eventSource.onerror = () => console.error("could not connect to server-sent events")
 }
 
-render((
-    <Provider value={overmind}>
+const rootDocument = document.getElementById('root')
+if (rootDocument) {
+    const root = createRoot(rootDocument)
+
+    root.render((<Provider value={overmind}>
         <BrowserRouter>
             <App />
         </BrowserRouter>
-    </Provider>
-), document.getElementById('root'))
+    </Provider>))
+} else {
+    throw new Error('Could not find root element with id "root"')
+}

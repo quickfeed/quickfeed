@@ -1,8 +1,9 @@
 import React, { useState } from "react"
 import { useActions } from "../../overmind"
-import { Course } from "../../../proto/qf/types_pb"
+import { Course, CourseSchema } from "../../../proto/qf/types_pb"
 import FormInput from "./FormInput"
 import { useHistory } from "react-router"
+import { clone } from "@bufbuild/protobuf"
 
 
 
@@ -12,12 +13,12 @@ import { useHistory } from "react-router"
 /** CourseForm is used to create a new course or edit an existing course.
  *  If `editCourse` is provided, the existing course will be modified.
  *  If no course is provided, a new course will be created. */
-const CourseForm = ({ courseToEdit }: { courseToEdit: Course }): JSX.Element | null => {
+const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     const actions = useActions()
     const history = useHistory()
 
     // Local state containing the course to be created or edited (if any)
-    const [course, setCourse] = useState(courseToEdit.clone())
+    const [course, setCourse] = useState(clone(CourseSchema, courseToEdit))
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget

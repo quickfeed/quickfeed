@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction } from 'react'
 import { useAppState } from '../../overmind'
 
 /** ProfileInfo displays the user's profile information. */
-const ProfileInfo = ({ setEditing }: { setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
+const ProfileInfo = ({ setEditing }: { setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const self = useAppState().self
 
     return (
