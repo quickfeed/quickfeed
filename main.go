@@ -44,13 +44,12 @@ func init() {
 
 func main() {
 	var (
-		dbFile   = flag.String("database.file", env.DatabasePath(), "database file")
-		public   = flag.String("http.public", env.PublicDir(), "path to content to serve")
-		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
-		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
-		watch    = flag.Bool("watch", false, "watch for changes and reload")
-		newApp   = flag.Bool("new", false, "create new GitHub app")
-		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
+		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
+		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
+		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
+		watch  = flag.Bool("watch", false, "watch for changes and reload")
+		newApp = flag.Bool("new", false, "create new GitHub app")
+		secret = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
 
@@ -70,13 +69,13 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
+	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
 	if *newApp {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
+		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile, *dev); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -122,7 +121,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	authConfig := auth.NewGitHubConfig(env.Domain(), scmConfig)
+	authConfig := auth.NewGitHubConfig(env.DomainWithPort(), scmConfig)
 	log.Print("Callback: ", authConfig.RedirectURL)
 	scmManager := scm.NewSCMManager(scmConfig)
 
@@ -145,7 +144,7 @@ func main() {
 		handler = web.WatchHandler(ctx, handler)
 	}
 
-	srv, err := srvFn(*httpAddr, handler)
+	srv, err := srvFn(handler)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -34,20 +34,22 @@ ifeq ($(OS),linux)
 endif
 
 ui: version-check
-	@echo "Running npm ci and webpack"
-	@cd public; npm ci; webpack
+	@echo "Running npm ci and esbuild"
+	@cd public; npm ci
+	@go run cmd/esbuild/main.go
 
 ui-update: version-check
-	@echo "Running npm install and webpack"
-	@cd public; npm i; webpack
+	@echo "Running npm install and esbuild"
+	@cd public; npm i
+	@go run cmd/esbuild/main.go
 
-# This uses an patched version of buf to generate the typescript code.
-# To install the patch version, run `go install github.com/bufbuild/buf/cmd/buf@304f0af`
-# TODO(meling): Remove this comment and revert to the brewed buf command once the new version is released.
-# See bufbuild/buf#3624 for more information: https://github.com/bufbuild/buf/pull/3624
+overmind:
+	@echo "Running Overmind Devtools"
+	@cd public; npm run overmind
+
 proto:
 	buf dep update
-	~/go/bin/buf generate --template buf.gen.yaml
+	buf generate --template buf.gen.yaml
 
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
@@ -55,13 +57,6 @@ proto-swift:
 test:
 	@go clean -testcache
 	@go test ./...
-
-webpack-dev-server:
-	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
-
-# TODO Should check that webpack-dev-server is running.
-selenium:
-	@cd public && npm run test:selenium
 
 qcm:
 	@cd cmd/qcm; go install

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react"
 import { useHistory, useLocation } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, Icon } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -12,7 +12,6 @@ import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
 import { clone, isMessage } from "@bufbuild/protobuf"
-
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
@@ -35,6 +34,7 @@ const Results = ({ review }: { review: boolean }) => {
             actions.setGroupView(false)
             actions.review.setAssignmentID(-1n)
             actions.setActiveEnrollment(null)
+            actions.setSelectedSubmission({ submission: null })
         }
     }, [])
 
@@ -46,7 +46,7 @@ const Results = ({ review }: { review: boolean }) => {
             if (selectedLab) {
                 const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
                 if (submission) {
-                    actions.setSelectedSubmission(submission)
+                    actions.setSelectedSubmission({ submission })
                     actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
                 }
             }
@@ -67,7 +67,7 @@ const Results = ({ review }: { review: boolean }) => {
 
     const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
         if (!state.isManuallyGraded(submission)) {
-            return { value: "N/A" }
+            return { iconTitle: "auto graded", iconClassName: Icon.DASH, value: "" }
         }
         const reviews = state.review.reviews.get(submission.ID) ?? []
         // Check if the current user has any pending reviews for this submission
@@ -82,11 +82,12 @@ const Results = ({ review }: { review: boolean }) => {
         const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
         const numReviewers = state.assignments[state.activeCourse.toString()]?.find((a) => a.ID === submission.AssignmentID)?.reviewers ?? 0
         return ({
-            // TODO: Figure out a better way to visualize released submissions than '(r)'
-            value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
+            iconTitle: submission.released ? "Released" : "Not released",
+            iconClassName: submission.released ? "fa fa-unlock" : "fa fa-lock",
+            value: `${reviews.length}/${numReviewers}`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
             onClick: () => {
-                actions.setSelectedSubmission(submission)
+                actions.setSelectedSubmission({ submission })
                 if (isMessage(owner, EnrollmentSchema)) {
                     actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
@@ -105,13 +106,13 @@ const Results = ({ review }: { review: boolean }) => {
             value: `${submission.score} %`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
             onClick: () => {
-                actions.setSelectedSubmission(submission)
+                actions.setSelectedSubmission({ submission })
                 if (isMessage(owner, EnrollmentSchema)) {
                     actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
                 }
                 actions.setSubmissionOwner(owner)
                 handleLabClick(submission.ID)
-                actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
+                actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
             }
         })
     }

@@ -15,13 +15,23 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
         ? clone(GradingCriterionSchema, originalCriterion)
         : create(GradingCriterionSchema)
 
-    const handleCriteria = (event: React.KeyboardEvent<HTMLInputElement>) => {
+
+    const resetCriterion = () => {
+        // Reset the criterion and enable add button
+        criterion.description = ""
+        setAdd(true)
+    }
+
+    const handleCriteria = async (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
         if (event.key === "Enter") {
             // Set the criterion's benchmark ID
             // This could already be set if a criterion was passed in
             criterion.BenchmarkID = benchmarkID
-            actions.createOrUpdateCriterion({ criterion: criterion, assignment: assignment })
+            const success = await actions.createOrUpdateCriterion({ criterion, assignment })
+            if (!success) {
+                resetCriterion()
+            }
             setEditing(false)
         } else {
             criterion.description = value
@@ -33,9 +43,7 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
             // Restore the original criterion
             criterion.description = originalCriterion.description
         } else {
-            // Reset the criterion and enable add button
-            criterion.description = ""
-            setAdd(true)
+            resetCriterion()
         }
         setEditing(false)
     }
@@ -43,17 +51,23 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
     if (add) {
         return (
             <div className="list-group-item">
-                <button className="btn btn-primary" name="submit" onClick={() => { setAdd(false); setEditing(true) }}>Add</button>
+                <button className="btn btn-success" name="submit" onClick={() => { setAdd(false); setEditing(true) }}>Add Criteria</button>
             </div>
         )
     }
 
+    const input = <input className="form-control" type="text" autoFocus onBlur={handleBlur} defaultValue={criterion.description} name="criterion" onKeyUp={e => handleCriteria(e)} /> // skipcq: JS-0757
+    const textAndButton = (
+        <span onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
+            {criterion.description}
+            <button className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: originalCriterion, assignment })}>
+                Delete Criteria
+            </button>
+        </span>
+    )
     return (
-        <div className="list-group-item" onClick={() => setEditing(!editing)}>
-            {editing
-                ? <input className="form-control" type="text" onBlur={() => { handleBlur() }} autoFocus defaultValue={criterion.description} name="criterion" onKeyUp={e => { handleCriteria(e) }} />
-                : <><span>{criterion.description}</span><span className="badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: originalCriterion, assignment: assignment })}>Delete</span></>
-            }
+        <div className="list-group-item">
+            {editing ? input : textAndButton}
         </div>
     )
 }

@@ -51,8 +51,6 @@ func TestAccessControl(t *testing.T) {
 	course := &qf.Course{
 		Code:                "test101",
 		Year:                2022,
-		ScmOrganizationID:   1,
-		ScmOrganizationName: "test",
 		CourseCreatorID:     courseAdmin.GetID(),
 	}
 	qtest.CreateCourse(t, db, courseAdmin, course)
@@ -285,8 +283,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, tt.cookie))
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetOrganization(ctx, qtest.RequestWithCookie(&qf.Organization{ScmOrganizationName: "test"}, tt.cookie))
-			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 

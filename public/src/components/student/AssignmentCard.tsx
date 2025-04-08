@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
-import { getFormattedTime } from "../../Helpers"
+import { getFormattedTime, isValidSubmissionForAssignment } from "../../Helpers"
 import SubmissionRow from './SubmissionRow'
+import { DefaultProgressBar } from '../ProgressBar'
+import { useHistory } from 'react-router'
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -11,8 +13,27 @@ interface AssignmentCardProps {
 }
 
 const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions, courseID, selfID }) => {
+  const history = useHistory()
+  const redirectTo = useCallback((submission: Submission) => {
+    if (submission.groupID !== 0n) {
+      history.push(`/course/${courseID}/group-lab/${submission.AssignmentID.toString()}`)
+    } else {
+      history.push(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
+    }
+  }, [history, courseID])
+  const validSubmissions = submissions.filter((submission) => isValidSubmissionForAssignment(submission, assignment))
+  const hasSubmissions = validSubmissions.length > 0
+  const redirectToSubmission = () => {
+    if (hasSubmissions) {
+      redirectTo(validSubmissions[0])
+    }
+  }
+  // Add onclick and hover only if there are submissions
+  const buttonRole = hasSubmissions ? "button" : ""
+  const ariaHidden = hasSubmissions ? "true" : "false"
+  const hover = hasSubmissions ? "hover-effect" : ""
   return (
-    <div key={assignment.ID.toString()} className="card mb-4 shadow-sm">
+    <div key={assignment.ID.toString()} className={`card mb-4 shadow-sm ${hover}`} onClick={redirectToSubmission} role={buttonRole} aria-hidden={ariaHidden}> {/* skipcq: JS-0746, JS-0765 */}
       <div className="card-header">
         <div className="d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center">
@@ -27,15 +48,17 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
         </div>
       </div>
       <div className="card-body">
-        {submissions.map((submission) => (
+        {validSubmissions.map((submission) => (
           <SubmissionRow
             key={submission.ID.toString()}
             submission={submission}
             assignment={assignment}
             courseID={courseID}
             selfID={selfID}
+            redirectTo={redirectTo}
           />
         ))}
+        {submissions.length === 0 && <DefaultProgressBar scoreLimit={assignment.scoreLimit} isGroupLab={assignment.isGroupLab} />}
       </div>
     </div>
   )
