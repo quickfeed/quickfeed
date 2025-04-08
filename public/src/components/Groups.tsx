@@ -44,7 +44,7 @@ const Groups = () => {
         if (isPendingGroup(group)) {
             buttons.push(
                 <DynamicButton
-                    key={group.ID + "approve"}
+                    key={`approve${group.ID}`}
                     text="Approve"
                     color={Color.BLUE}
                     type={ButtonType.BADGE}
@@ -54,7 +54,7 @@ const Groups = () => {
         }
         buttons.push(
             <Button
-                key={group.ID + "edit"}
+                key={`edit${group.ID}`}
                 text="Edit"
                 color={Color.YELLOW}
                 type={ButtonType.BADGE}
@@ -64,7 +64,7 @@ const Groups = () => {
         )
         buttons.push(
             <DynamicButton
-                key={group.ID + "delete"}
+                key={`delete${group.ID}`}
                 text="Delete"
                 color={Color.RED}
                 type={ButtonType.BADGE}
@@ -119,24 +119,28 @@ const Groups = () => {
         return <GroupForm key={state.activeGroup.ID.toString()} />
     }
 
+    const table = (
+        <table className="table table-striped table-grp table-hover">
+            <thead className="thead-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Members</th>
+                    <th>Manage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {PendingGroups}
+                {ApprovedGroups}
+            </tbody>
+        </table>
+    )
+
     return (
         <div className="box">
             <div className="pb-2">
                 <Search />
             </div>
-            <table className="table table-striped table-grp table-hover">
-                <thead className="thead-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>Members</th>
-                        <th>Manage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {PendingGroups}
-                    {ApprovedGroups}
-                </tbody>
-            </table>
+            {table}
         </div>
     )
 }

@@ -5,6 +5,7 @@ import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
+import { CenteredMessage, KnownMessage } from "../CenteredMessage"
 
 
 const ReviewForm = () => {
@@ -13,22 +14,22 @@ const ReviewForm = () => {
 
     const handleRefresh = useCallback((index: number) => () => actions.review.setSelectedReview(index), [actions])
     const handleCreateReview = useCallback(async () => await actions.review.createReview(), [actions])
-
-    if (!state.selectedSubmission) {
-        return <div>No submission selected</div>
+    const selectedSubmission = state.selectedSubmission
+    if (!selectedSubmission) {
+        return <CenteredMessage message={KnownMessage.NoSubmission} />
     }
 
-    const assignment = state.selectedAssignment
-    if (!assignment) {
-        return <div>No Submission</div>
+    const selectedAssignment = state.selectedAssignment
+    if (!selectedAssignment) {
+        return <CenteredMessage message={KnownMessage.NoAssignment} />
     }
 
     const isAuthor = (review: Review) => {
         return review?.ReviewerID === state.self.ID
     }
 
-    const reviewers = assignment.reviewers ?? 0
-    const reviews = state.review.reviews.get(state.selectedSubmission.ID) ?? []
+    const reviewers = selectedAssignment.reviewers ?? 0
+    const reviews = state.review.reviews.get(selectedSubmission.ID) ?? []
     const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
@@ -57,7 +58,7 @@ const ReviewForm = () => {
         )
     }
 
-    if (!isManuallyGraded(assignment)) {
+    if (!isManuallyGraded(selectedAssignment.reviewers)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
@@ -65,7 +66,13 @@ const ReviewForm = () => {
                 <div className="mb-1">{selectReviewButton}</div>
                 {state.review.currentReview ? (
                     <>
-                        <ReviewInfo review={state.review.currentReview} />
+                        <ReviewInfo
+                            courseID={selectedAssignment.CourseID.toString()}
+                            assignmentName={selectedAssignment.name}
+                            reviewers={selectedAssignment.reviewers}
+                            submission={selectedSubmission}
+                            review={state.review.currentReview}
+                        />
                         <ReviewResult review={state.review.currentReview} />
                     </>
                 ) : null}

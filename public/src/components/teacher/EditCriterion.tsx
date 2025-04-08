@@ -1,24 +1,41 @@
 import React, { useState, memo } from "react"
-import { GradingCriterion } from "../../../proto/qf/types_pb"
+import { Assignment, GradingCriterion, GradingCriterionSchema } from "../../../proto/qf/types_pb"
+import { useActions } from "../../overmind"
+import { clone, create } from "@bufbuild/protobuf"
 
-interface EditCriterionProps {
-    originalCriterion?: GradingCriterion
-    updateCriterion: (event: React.KeyboardEvent<HTMLInputElement>, criterion: GradingCriterion) => void
-    deleteCriterion?: () => void
-}
 
-const EditCriterion = memo(({ originalCriterion, updateCriterion, deleteCriterion }: EditCriterionProps) => {
+const EditCriterion = memo(({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
+    const actions = useActions()
+
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(originalCriterion ? false : true)
 
     // Clone the criterion, or create a new one if none was passed in
     const criterion = originalCriterion
-        ? originalCriterion.clone()
-        : new GradingCriterion()
+        ? clone(GradingCriterionSchema, originalCriterion)
+        : create(GradingCriterionSchema)
 
-    const handleCriterion = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        updateCriterion(event, criterion)
-        setEditing(false)
+
+    const resetCriterion = () => {
+        // Reset the criterion and enable add button
+        criterion.description = ""
+        setAdd(true)
+    }
+
+    const handleCriteria = async (event: React.KeyboardEvent<HTMLInputElement>) => {
+        const { value } = event.currentTarget
+        if (event.key === "Enter") {
+            // Set the criterion's benchmark ID
+            // This could already be set if a criterion was passed in
+            criterion.BenchmarkID = benchmarkID
+            const success = await actions.createOrUpdateCriterion({ criterion, assignment })
+            if (!success) {
+                resetCriterion()
+            }
+            setEditing(false)
+        } else {
+            criterion.description = value
+        }
     }
 
     const handleBlur = () => {
@@ -26,9 +43,7 @@ const EditCriterion = memo(({ originalCriterion, updateCriterion, deleteCriterio
             // Restore the original criterion
             criterion.description = originalCriterion.description
         } else {
-            // Reset the criterion and enable add button
-            criterion.description = ""
-            setAdd(true)
+            resetCriterion()
         }
         setEditing(false)
     }
@@ -36,16 +51,23 @@ const EditCriterion = memo(({ originalCriterion, updateCriterion, deleteCriterio
     if (add) {
         return (
             <div className="list-group-item">
-                <button className="btn btn-primary" name="submit" onClick={() => { setAdd(false); setEditing(true) }}>Add</button> {/* skipcq: JS-0417 */}
+                <button className="btn btn-success" name="submit" onClick={() => { setAdd(false); setEditing(true) }}>Add Criteria</button>
             </div>
         )
     }
 
+    const input = <input className="form-control" type="text" autoFocus onBlur={handleBlur} defaultValue={criterion.description} name="criterion" onKeyUp={e => handleCriteria(e)} /> // skipcq: JS-0757
+    const textAndButton = (
+        <span onClick={() => setEditing(!editing)} role="button" aria-hidden="true">
+            {criterion.description}
+            <button className="p-2 badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: originalCriterion, assignment })}>
+                Delete Criteria
+            </button>
+        </span>
+    )
     return (
-        <div className="list-group-item" onClick={() => setEditing(!editing)}> {/* skipcq: JS-0417 */}
-            {editing
-                ? <input className="form-control" type="text" onBlur={handleBlur} autoFocus defaultValue={criterion.description} name="criterion" onKeyUp={handleCriterion} />
-                : <><span>{criterion.description}</span><span className="badge badge-danger float-right clickable" onClick={deleteCriterion}>Delete</span></>}
+        <div className="list-group-item">
+            {editing ? input : textAndButton}
         </div>
     )
 })

@@ -4,8 +4,9 @@
 # It may be necessary to skip variables that uses special makefile characters, like $.
 -include .env
 
-OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
-ARCH				:= $(shell uname -m)
+OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
+protopatch	:= qf/types.proto kit/score/score.proto
+proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
 .PHONY: download brew version-check install ui proto test qcm cm
@@ -33,20 +34,22 @@ ifeq ($(OS),linux)
 endif
 
 ui: version-check
-	@echo "Running npm ci and webpack"
-	@cd public; npm ci; webpack
+	@echo "Running npm ci and esbuild"
+	@cd public; npm ci
+	@go run cmd/esbuild/main.go
 
 ui-update: version-check
-	@echo "Running npm install and webpack"
-	@cd public; npm i; webpack
+	@echo "Running npm install and esbuild"
+	@cd public; npm i
+	@go run cmd/esbuild/main.go
+
+overmind:
+	@echo "Running Overmind Devtools"
+	@cd public; npm run overmind
 
 proto:
 	buf dep update
 	buf generate --template buf.gen.yaml
-
-# TODO(meling): Split the proto target to avoid generating too new typescript... Need to fix #1147 first; after which we should merge this target with the proto target.
-proto-ui: $(protopatch)
-	buf generate --template buf.gen.ui.yaml --exclude-path patch
 
 proto-swift:
 	buf generate --template buf.gen.swift.yaml --exclude-path patch
@@ -54,13 +57,6 @@ proto-swift:
 test:
 	@go clean -testcache
 	@go test ./...
-
-webpack-dev-server:
-	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
-
-# TODO Should check that webpack-dev-server is running.
-selenium:
-	@cd public && npm run test:selenium
 
 qcm:
 	@cd cmd/qcm; go install

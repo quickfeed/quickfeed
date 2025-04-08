@@ -26,6 +26,7 @@
         ".vscode-insiders",
         "go.mod",
         "go.sum",
+        "**/**/*_pb.ts",
         "**/**/*.pb.go"
     ],
     "files.exclude": {
@@ -52,6 +53,10 @@
     },
     "[javascript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "prettier.tabWidth": 4,
     },
     "[proto3]": {
         "editor.defaultFormatter": "zxh404.vscode-proto3"

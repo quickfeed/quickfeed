@@ -4,7 +4,9 @@ import { useAppState } from "../overmind"
 
 export type CellElement = {
     value: string,
+    iconTitle?: string,
     className?: string,
+    iconClassName?: string,
     onClick?: () => void,
     link?: string
 }
@@ -52,10 +54,14 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
         return true
     }
 
+    const icon = (cell: CellElement) => {
+        return cell.iconClassName && cell.iconTitle ? <i className={cell.iconClassName} title={cell.iconTitle} /> : null
+    }
+
     const rowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link} target={"_blank"} rel="noopener noreferrer">{cell.value}</a> : cell.value
-            return <td key={index} className={cell.className} onClick={cell.onClick}>{element}</td>
+            return <td key={index} className={cell.className} onClick={cell.onClick}>{element} {icon(cell)}</td>
         }
         return index == 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
     }
@@ -63,7 +69,8 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
     const headerRowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
-            return <th key={index} className={cell.className} style={cell.onClick ? { "cursor": "pointer" } : undefined} onClick={cell.onClick}>{element}</th>
+            const style = cell.onClick ? { "cursor": "pointer" } : undefined
+            return <th key={index} className={cell.className} style={style} onClick={cell.onClick}>{element} {icon(cell)}</th>
         }
         return <th key={index}>{cell}</th>
     }

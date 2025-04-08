@@ -11,11 +11,7 @@ const NavBarUser = memo(() => {
 
     if (!isLoggedIn) {
         return (
-            <ul>
-                <a href="/auth/github" className="signIn" style={{ textAlign: "right", color: "#d4d4d4", marginRight: "55px" }}>
-                    <i className="fa fa-2x fa-github align-middle ms-auto " id="github" />
-                </a>
-            </ul>
+            <a href="/auth/github" className="flex-user signIn mr-2">Sign In</a>
         )
     }
 
@@ -24,6 +20,7 @@ const NavBarUser = memo(() => {
 
             <StreamStatus />
             <ul className="nav-item dropdown">
+                <i className="fa fa-chevron-down text-white mr-1 chevron-icon" />
                 <img className="rounded-circle" src={self.AvatarURL} id="avatar" />
                 <ul className="dropdown-menu dropdown-menu-center bg-dark">
                     <ProfileButton />

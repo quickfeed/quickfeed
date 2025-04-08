@@ -3,6 +3,8 @@ import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
 import { useHistory } from "react-router"
+import { clone } from "@bufbuild/protobuf"
+import { UserSchema } from "../../../proto/qf/types_pb"
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
@@ -10,7 +12,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     const history = useHistory()
 
     // Create a copy of the user object, so that we can modify it without affecting the original object.
-    const [user, setUser] = useState(state.self.clone())
+    const [user, setUser] = useState(clone(UserSchema, state.self))
     const [isValid, setIsValid] = useState(state.isValid)
 
     // Update the user object when user input changes, and update the state.

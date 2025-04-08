@@ -12,7 +12,7 @@ import './style.scss'
 }
 
 const overmind = createOvermind(config, {
-    // Enable devtools by setting the below to ex. 'devtools: "localhost:3301"'
+    // Enable devtools by setting the below to ex. 'devtools: "localhost:3031"'
     // then run 'npx overmind-devtools@latest' to start the devtools
     devtools: "localhost:3031",
 })
@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === "development") {
     eventSource.onmessage = () => {
         setTimeout(() => {
             location.reload()
-        }, 500)
+        }, 200)
     }
     eventSource.onerror = () => console.error("could not connect to server-sent events")
 }

@@ -1,10 +1,11 @@
+import { isMessage } from "@bufbuild/protobuf"
 import { useCallback } from "react"
-import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
-import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
+import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../proto/qf/types_pb"
+import { groupRepoLink, Icon, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions } from "../overmind"
 import { AssignmentsMap, State } from "../overmind/state"
-import { Row, RowElement } from "./DynamicTable"
-
+import { CellElement, Row, RowElement } from "./DynamicTable"
+import { Icons } from "./Icons"
 
 export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {
     const course = state.courses.find(c => c.ID === state.activeCourse)
@@ -24,8 +25,8 @@ export const generateRow = (
     withID?: boolean
 ): Row => {
     const row: Row = []
-    const isEnrollment = enrollment instanceof Enrollment
-    const isGroup = enrollment instanceof Group
+    const isEnrollment = isMessage(enrollment, EnrollmentSchema)
+    const isGroup = isMessage(enrollment, GroupSchema)
 
     if (withID) {
         isEnrollment
@@ -69,12 +70,12 @@ export const generateRow = (
             row.push(generator(submission, enrollment))
             return
         }
-        row.push("N/A")
+        row.push(Icons.NotAvailable)
     })
     return row
 }
 
-export const GenerateAssignmentsHeader = (assignments: Assignment[], group: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+export const GenerateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
     const handleSort = useCallback((sortBy: SubmissionSort) => () => actions.setSubmissionSort(sortBy), [actions])
     const base: Row = [
         { value: "Name", onClick: handleSort(SubmissionSort.Name) }
@@ -84,12 +85,18 @@ export const GenerateAssignmentsHeader = (assignments: Assignment[], group: bool
     }
     const handleClick = useCallback((assignmentID: bigint) => () => actions.review.setAssignmentID(assignmentID), [actions.review])
     for (const assignment of assignments) {
-        if (group && assignment.isGroupLab) {
-            base.push({ value: `${assignment.name} (g)`, onClick: handleClick(assignment.ID) })
+        const cell: CellElement = { value: assignment.name, onClick: handleClick(assignment.ID) }
+        // If we are viewing by group, ignore all non-group assignments
+        if (viewByGroup && !assignment.isGroupLab) {
+            continue
         }
-        if (!group) {
-            base.push({ value: assignment.isGroupLab ? `${assignment.name} (g)` : assignment.name, onClick: handleClick(assignment.ID) })
+        // If group assignment, add group icon
+        if (assignment.isGroupLab) {
+            cell.iconTitle = "Group"; cell.iconClassName = Icon.GROUP
+        } else {
+            cell.iconTitle = "Individual"; cell.iconClassName = Icon.USER
         }
+        base.push(cell)
     }
     return base
 }

@@ -1,4 +1,4 @@
-import { Course, Enrollment, Enrollment_UserStatus, User } from "../../proto/qf/types_pb"
+import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"
@@ -8,11 +8,12 @@ import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { render, screen } from "@testing-library/react"
 import { MockData } from "./mock_data/mockData"
-import { Void } from "../../proto/qf/requests_pb"
+import { VoidSchema } from "../../proto/qf/requests_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
 import { ApiClient } from "../overmind/effects"
-import { Timestamp } from "@bufbuild/protobuf"
-import { ConnectError } from "@bufbuild/connect"
+import { create } from "@bufbuild/protobuf"
+import { timestampFromDate } from "@bufbuild/protobuf/wkt"
+import { ConnectError } from "@connectrpc/connect"
 
 
 describe("UpdateEnrollment", () => {
@@ -22,7 +23,7 @@ describe("UpdateEnrollment", () => {
         getCourse: mock("getCourse", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
-                return { message: new Course(), error: new ConnectError("course not found") }
+                return { message: create(CourseSchema), error: new ConnectError("course not found") }
             }
             course.enrollments = MockData.mockedEnrollments().enrollments.filter(e => e.courseID === request.courseID)
             return { message: course, error: null }
@@ -30,7 +31,7 @@ describe("UpdateEnrollment", () => {
         updateEnrollments: mock("updateEnrollments", async (request) => { // skipcq: JS-0116
             const enrollments = request.enrollments ?? []
             if (enrollments.length === 0) {
-                return { message: new Void(), error: null }
+                return { message: create(VoidSchema), error: null }
             }
             enrollments.forEach(e => {
                 const enrollment = MockData.mockedEnrollments().enrollments.find(en => en.ID === e.ID)
@@ -39,7 +40,7 @@ describe("UpdateEnrollment", () => {
                 }
                 enrollment.status = e.status
             })
-            return { message: new Void(), error: null }
+            return { message: create(VoidSchema), error: null }
         }),
     }
     const mockedOvermind = initializeOvermind({}, api)
@@ -74,14 +75,14 @@ describe("UpdateEnrollment", () => {
 
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
-        const user = new User({ ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
-        const enrollment = new Enrollment({
+        const user = create(UserSchema, { ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
+        const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
             courseID: BigInt(1),
             status: Enrollment_UserStatus.TEACHER,
             user,
             slipDaysRemaining: 3,
-            lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
+            lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
 
@@ -112,19 +113,19 @@ describe("UpdateEnrollment in webpage", () => {
     })
 
     it("If status is student, button should display promote", () => {
-        const user = new User({
+        const user = create(UserSchema, {
             ID: BigInt(1),
             Name: "Test User",
             StudentID: "6583969706",
             Email: "test@gmail.com"
         })
-        const enrollment = new Enrollment({
+        const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
             courseID: BigInt(1),
             status: Enrollment_UserStatus.STUDENT,
             user,
             slipDaysRemaining: 3,
-            lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
+            lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
         const mockedOvermind = createOvermindMock(config, (state) => {

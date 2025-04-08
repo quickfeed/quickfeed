@@ -55,7 +55,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     <td>{getFormattedTime(assignment.deadline, true)}</td>
                 </tr>
 
-                {!isManuallyGraded(assignment) ? (
+                {!isManuallyGraded(assignment.reviewers) ? (
                     <tr>
                         <td colSpan={2}>Tests Passed</td>
                         <td>{getPassedTestsCount(submission.Scores)}</td>

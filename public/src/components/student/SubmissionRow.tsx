@@ -1,7 +1,6 @@
-import React, { useCallback } from 'react'
-import { useHistory } from 'react-router'
+import React from 'react'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
-import { assignmentStatusText, getStatusByUser, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
+import { assignmentStatusText, getStatusByUser, isGroupSubmission } from "../../Helpers"
 import ProgressBar, { Progress } from "../ProgressBar"
 import SubmissionTypeIcon from './SubmissionTypeIcon'
 
@@ -10,28 +9,18 @@ interface SubmissionRowProps {
     assignment: Assignment
     courseID: string
     selfID: bigint
+    redirectTo: (submission: Submission) => void
 }
 
-const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, courseID, selfID }) => {
-    const history = useHistory()
-
-    const redirectTo = useCallback((submission: Submission) => () => {
-        if (submission.groupID !== 0n) {
-            history.push(`/course/${courseID}/group-lab/${submission.AssignmentID.toString()}`)
-        } else {
-            history.push(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
-        }
-    }, [courseID, history])
-
-    if (!isValidSubmissionForAssignment(submission, assignment)) {
-        return null
-    }
-
+const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, courseID, selfID, redirectTo }) => {
+    // Should hover individual submissions for group labs, to indicate to the user where they end up after clicking
+    // The default behavior is to redirect to the group lab submission page
+    const hoverSubmission = assignment.isGroupLab && !isGroupSubmission(submission) ? "hover-effect" : ""
     return (
         <div
             key={submission.ID.toString()}
-            className="row clickable mb-1 py-2 align-items-center text-left"
-            onClick={redirectTo(submission)}
+            className={`row clickable mb-1 py-2 align-items-center text-left ${hoverSubmission}`}
+            onClick={(e) => { e.stopPropagation(); redirectTo(submission) }}
             role="button"
             aria-hidden="true"
         >

@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react'
 import { Submission } from "../../../proto/qf/types_pb"
 import SubmissionScore from "./SubmissionScore"
+import { ScoreSchema } from "../../../proto/kit/score/score_pb"
+import { clone } from "@bufbuild/protobuf"
 
 type ScoreSort = "name" | "score" | "weight" | "percentage"
 
@@ -10,7 +12,7 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
 
     const sortScores = () => {
         const sortBy = sortAscending ? 1 : -1
-        const scores = submission.clone().Scores
+        const scores = submission.Scores.map(score => clone(ScoreSchema, score))
         const totalWeight = scores.reduce((acc, score) => acc + score.Weight, 0)
         return scores.sort((a, b) => {
             switch (sortKey) {

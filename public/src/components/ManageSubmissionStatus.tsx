@@ -5,10 +5,9 @@ import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 
-const ManageSubmissionStatus = () => {
+const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, reviewers: number }) => {
     const actions = useActions()
     const state = useAppState()
-    const assignment = state.selectedAssignment
 
     const [rebuilding, setRebuilding] = React.useState(false)
     const [updating, setUpdating] = React.useState<Submission_Status>(Submission_Status.NONE)
@@ -43,10 +42,7 @@ const ManageSubmissionStatus = () => {
     }, [updating, actions])
 
     const getUserName = (userID: bigint): string => {
-        if (!assignment) {
-            return ""
-        }
-        const user = state.courseEnrollments[assignment.CourseID.toString()].find(enrollment => enrollment.userID === userID)?.user
+        const user = state.courseEnrollments[courseID].find(enrollment => enrollment.userID === userID)?.user
         if (!user) {
             return ""
         }
@@ -86,7 +82,7 @@ const ManageSubmissionStatus = () => {
                         onClick={handleSetViewIndividualGrades}
                     />
                 )}
-                {assignment && !isManuallyGraded(assignment) && (
+                {!isManuallyGraded(reviewers) && (
                     <DynamicButton
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}

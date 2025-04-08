@@ -1,5 +1,5 @@
-import { Code } from "@bufbuild/connect"
-import { AnyMessage } from "@bufbuild/protobuf"
+import { Code } from "@connectrpc/connect"
+import { Message } from "@bufbuild/protobuf"
 import { Response } from "../../client"
 
 /** Prompt contains the messages to display to the user when prompting for confirmation. */
@@ -18,7 +18,7 @@ export namespace Prompt {
  * @returns The error if the user did not confirm the warning, or null if the user did.
  *
 */
-export function promptOnErrorResponse<T extends AnyMessage>(response: Response<T>, errorCode: Code, message: string) {
+export function promptOnErrorResponse<T extends Message>(response: Response<T>, errorCode: Code, message: string) {
     if (response.error) {
         if (response.error.code === errorCode) {
             if (confirm(message)) {

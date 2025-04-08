@@ -24,7 +24,7 @@ const ToggleSwitch = () => {
     }
 
     const switchView = useCallback(() => {
-        actions.changeView(activeCourse).then(() => {
+        actions.changeView().then(() => {
             updateStatus(isTeacher)
             navigate.push("/course/" + activeCourse)
         })

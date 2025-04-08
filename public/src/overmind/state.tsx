@@ -1,6 +1,7 @@
+import { create, isMessage } from "@bufbuild/protobuf"
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Group_GroupStatus, Submission, User } from "../../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, EnrollmentSchema, Group, GroupSchema, Submission, User, UserSchema } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
@@ -16,13 +17,6 @@ export interface Alert {
     color: Color
     // The delay in milliseconds before the alert is removed
     delay?: number
-}
-
-interface GroupOrEnrollment {
-    ID: bigint,
-    name?: string,
-    user?: User,
-    status?: Enrollment_UserStatus | Group_GroupStatus
 }
 
 type EnrollmentsByCourse = { [CourseID: string]: Enrollment }
@@ -206,7 +200,7 @@ export type State = {
 /* Initial State */
 /* To add to state, extend the State type and initialize the variable below */
 export const state: State = {
-    self: new User(),
+    self: create(UserSchema),
     isLoggedIn: derived(({ self }: State) => {
         return Number(self.ID) !== 0
     }),
@@ -288,7 +282,7 @@ export const state: State = {
             numAssignments = assignments[activeCourse.toString()]?.length ?? 0
         }
 
-        let filtered: GroupOrEnrollment[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
+        let filtered: (Group | Enrollment)[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
         for (const filter of submissionFilters) {
             switch (filter) {
                 case "teachers":
@@ -327,7 +321,7 @@ export const state: State = {
         }
 
         const sortOrder = sortAscending ? -1 : 1
-        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-0044
+        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-R1005
             let subA: Submission | undefined
             let subB: Submission | undefined
             if (assignmentID > 0) {
@@ -341,7 +335,7 @@ export const state: State = {
 
             switch (sortSubmissionsBy) {
                 case SubmissionSort.ID: {
-                    if (a instanceof Enrollment && b instanceof Enrollment) {
+                    if (isMessage(a, EnrollmentSchema) && isMessage(b, EnrollmentSchema)) {
                         return sortOrder * (Number(a.userID) - Number(b.userID))
                     } else {
                         return sortOrder * (Number(a.ID) - Number(b.ID))
@@ -373,8 +367,16 @@ export const state: State = {
                     return sortOrder * (aApproved - bApproved)
                 }
                 case SubmissionSort.Name: {
-                    const nameA = groupView ? a.name ?? "" : a.user?.Name ?? ""
-                    const nameB = groupView ? b.name ?? "" : b.user?.Name ?? ""
+                    let nameA = ""
+                    let nameB = ""
+                    if (!groupView && isMessage(a, EnrollmentSchema) && isMessage(b, EnrollmentSchema)) {
+                        nameA = a.user?.Name ?? ""
+                        nameB = b.user?.Name ?? ""
+                    }
+                    else if (groupView && isMessage(a, GroupSchema) && isMessage(b, GroupSchema)) {
+                        nameA = a.name ?? ""
+                        nameB = b.name ?? ""
+                    }
                     return sortOrder * (nameA.localeCompare(nameB))
                 }
                 default:
@@ -424,7 +426,7 @@ export const state: State = {
     }),
     isCourseManuallyGraded: derived(({ activeCourse, assignments }: State) => {
         if (activeCourse > 0 && assignments[activeCourse.toString()]) {
-            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a))
+            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a.reviewers))
         }
         return false
     }),

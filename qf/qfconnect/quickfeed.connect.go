@@ -126,9 +126,6 @@ const (
 	// QuickFeedServiceUpdateReviewProcedure is the fully-qualified name of the QuickFeedService's
 	// UpdateReview RPC.
 	QuickFeedServiceUpdateReviewProcedure = "/qf.QuickFeedService/UpdateReview"
-	// QuickFeedServiceGetOrganizationProcedure is the fully-qualified name of the QuickFeedService's
-	// GetOrganization RPC.
-	QuickFeedServiceGetOrganizationProcedure = "/qf.QuickFeedService/GetOrganization"
 	// QuickFeedServiceGetRepositoriesProcedure is the fully-qualified name of the QuickFeedService's
 	// GetRepositories RPC.
 	QuickFeedServiceGetRepositoriesProcedure = "/qf.QuickFeedService/GetRepositories"
@@ -176,9 +173,6 @@ type QuickFeedServiceClient interface {
 	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
-	// GetOrganization returns the organization with the given organization name.
-	// Note that organization ID is not used in the request, but it is populated in the response.
-	GetOrganization(context.Context, *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Submission], error)
@@ -381,12 +375,6 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 			connect.WithClientOptions(opts...),
 		),
-		getOrganization: connect.NewClient[qf.Organization, qf.Organization](
-			httpClient,
-			baseURL+QuickFeedServiceGetOrganizationProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("GetOrganization")),
-			connect.WithClientOptions(opts...),
-		),
 		getRepositories: connect.NewClient[qf.CourseRequest, qf.Repositories](
 			httpClient,
 			baseURL+QuickFeedServiceGetRepositoriesProcedure,
@@ -441,7 +429,6 @@ type quickFeedServiceClient struct {
 	deleteCriterion        *connect.Client[qf.GradingCriterion, qf.Void]
 	createReview           *connect.Client[qf.ReviewRequest, qf.Review]
 	updateReview           *connect.Client[qf.ReviewRequest, qf.Review]
-	getOrganization        *connect.Client[qf.Organization, qf.Organization]
 	getRepositories        *connect.Client[qf.CourseRequest, qf.Repositories]
 	isEmptyRepo            *connect.Client[qf.RepositoryRequest, qf.Void]
 	submissionStream       *connect.Client[qf.Void, qf.Submission]
@@ -602,11 +589,6 @@ func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *connect.
 	return c.updateReview.CallUnary(ctx, req)
 }
 
-// GetOrganization calls qf.QuickFeedService.GetOrganization.
-func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, req *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
-	return c.getOrganization.CallUnary(ctx, req)
-}
-
 // GetRepositories calls qf.QuickFeedService.GetRepositories.
 func (c *quickFeedServiceClient) GetRepositories(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	return c.getRepositories.CallUnary(ctx, req)
@@ -658,9 +640,6 @@ type QuickFeedServiceHandler interface {
 	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
-	// GetOrganization returns the organization with the given organization name.
-	// Note that organization ID is not used in the request, but it is populated in the response.
-	GetOrganization(context.Context, *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error)
 	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Submission]) error
@@ -859,12 +838,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 		connect.WithHandlerOptions(opts...),
 	)
-	quickFeedServiceGetOrganizationHandler := connect.NewUnaryHandler(
-		QuickFeedServiceGetOrganizationProcedure,
-		svc.GetOrganization,
-		connect.WithSchema(quickFeedServiceMethods.ByName("GetOrganization")),
-		connect.WithHandlerOptions(opts...),
-	)
 	quickFeedServiceGetRepositoriesHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetRepositoriesProcedure,
 		svc.GetRepositories,
@@ -947,8 +920,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceCreateReviewHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateReviewProcedure:
 			quickFeedServiceUpdateReviewHandler.ServeHTTP(w, r)
-		case QuickFeedServiceGetOrganizationProcedure:
-			quickFeedServiceGetOrganizationHandler.ServeHTTP(w, r)
 		case QuickFeedServiceGetRepositoriesProcedure:
 			quickFeedServiceGetRepositoriesHandler.ServeHTTP(w, r)
 		case QuickFeedServiceIsEmptyRepoProcedure:
@@ -1086,10 +1057,6 @@ func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *conne
 
 func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) GetOrganization(context.Context, *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetOrganization is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
