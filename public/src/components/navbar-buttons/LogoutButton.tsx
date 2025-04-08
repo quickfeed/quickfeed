@@ -5,7 +5,7 @@ const LogoutButton = () => {
     const actions = useActions()
     return (
         <li>
-            <a href="/logout" className="sidebar-items-link dropdown-item bg-dark" style={{ color: "#d4d4d4" }} onClick={() => actions.logout()}>Log out</a> {/* skipcq: JS-0417 */}
+            <a href="/logout" className="sidebar-items-link dropdown-item bg-dark" style={{ color: "#d4d4d4" }} onClick={() => actions.logout()}>Log out</a>
         </li>
     )
 }

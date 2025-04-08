@@ -13,7 +13,7 @@ const NavBar = memo(() => {
     let hamburger = null
     if (state.isLoggedIn) {
         const classname = `clickable hamburger ${state.showFavorites ? "open" : "closed"}`
-        hamburger = <span onClick={() => actions.toggleFavorites()} className={classname}>☰</span> // skipcq: JS-0417
+        hamburger = <span onClick={() => actions.toggleFavorites()} className={classname}>☰</span>
     }
 
     return (

@@ -41,13 +41,13 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment
-        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton> // skipcq: JS-0417
+        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton>
         if (criteria.comment.length > 0) {
             comment = <CriterionComment comment={criteria.comment} />
         }
     } else {
         comment = <CriterionComment comment={criteria.comment} />
-        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton> // skipcq: JS-0417
+        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton>
     }
 
     // Only display the comment if the comment is not empty

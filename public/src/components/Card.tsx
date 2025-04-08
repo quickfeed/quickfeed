@@ -42,7 +42,7 @@ const Card = memo((props: { title: string, text: string, buttonText: string, not
                     <p className="card-text">
                         {props.text}
                     </p>
-                    <div className="btn btn-primary" onClick={onClick}> {/* skipcq: JS-0417 */}
+                    <div className="btn btn-primary" onClick={onClick}>
                         {props.buttonText}
                     </div>
                 </div>

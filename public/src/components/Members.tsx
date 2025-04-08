@@ -107,7 +107,7 @@ const Members = () => {
                         text={edit ? "Done" : "Edit"}
                         color={edit ? Color.RED : Color.BLUE}
                         type={ButtonType.BUTTON}
-                        onClick={() => setEditing(!edit)} // skipcq: JS-0417
+                        onClick={() => setEditing(!edit)}
                     />
                 </div>
                 {pending?.length > 0 ?

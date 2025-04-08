@@ -50,7 +50,7 @@ const Breadcrumbs = () => {
         <nav aria-label="breadcrumb">
             <ol className="breadcrumb m-0 bg-transparent">
                 <li className="breadcrumb-item">
-                    <Link to="/" onClick={handleDashboard}>Dashboard</Link> {/* skipcq: JS-0417 */}
+                    <Link to="/" onClick={handleDashboard}>Dashboard</Link>
                 </li>
                 {pathnames.map((value, index) => {
                     const last = index === pathnames.length - 1

@@ -27,7 +27,7 @@ const StreamStatus = () => {
         reconnect()
     }
 
-    const streamStarter = open ? <i className="fa fa-repeat fa-stack-1x " onMouseLeave={handleMouseLeave} onClick={handleOnClick} /> : null // skipcq: JS-0417
+    const streamStarter = open ? <i className="fa fa-repeat fa-stack-1x " onMouseLeave={handleMouseLeave} onClick={handleOnClick} /> : null
 
     // Show stream status based on connection status
     switch (status) {
@@ -36,14 +36,14 @@ const StreamStatus = () => {
         case ConnStatus.RECONNECTING:
             return (
                 <span className="fa-stack fa-lg2">
-                    <i className="fa fa-circle fa-stack-1x text-warning" title="Attempting to re-establish stream connection" onMouseEnter={handleMouseEnter} /> {/* skipcq: JS-0417 */}
+                    <i className="fa fa-circle fa-stack-1x text-warning" title="Attempting to re-establish stream connection" onMouseEnter={handleMouseEnter} />
                     {streamStarter}
                 </span>
             )
         default:
             return (
                 <span className="fa-stack">
-                    <i className="fa fa-circle fa-stack-1x text-danger" title="No stream connection" onMouseEnter={handleMouseEnter} /> {/* skipcq: JS-0417 */}
+                    <i className="fa fa-circle fa-stack-1x text-danger" title="No stream connection" onMouseEnter={handleMouseEnter} />
                     {streamStarter}
                 </span>
             )

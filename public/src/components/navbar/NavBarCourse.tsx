@@ -30,7 +30,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
 
     return (
         <>
-            <div role="button" onClick={navigateTo} aria-hidden="true"> {/* skipcq: JS-0417 */}
+            <div role="button" onClick={navigateTo} aria-hidden="true">
                 <li className="activeClass">
                     <div className="col" id="title">
                         {course?.code}

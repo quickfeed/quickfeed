@@ -31,13 +31,13 @@ const Courses = (overview: overview) => {
                             color={Color.GREEN}
                             type={ButtonType.BUTTON}
                             className="mr-3"
-                            onClick={() => history.push("/admin/create")} // skipcq: JS-0417
+                            onClick={() => history.push("/admin/create")}
                         />
                         <Button
                             text="Manage users"
                             color={Color.BLUE}
                             type={ButtonType.BUTTON}
-                            onClick={() => history.push("/admin/manage")} // skipcq: JS-0417
+                            onClick={() => history.push("/admin/manage")}
                         />
                     </div>
                     : null}

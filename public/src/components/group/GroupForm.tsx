@@ -122,7 +122,7 @@ const GroupForm = () => {
             return <div>Students</div>
         }
         return (
-            <button className="btn btn-primary w-100" type="button" onClick={toggleEnrollmentType}> {/* skipcq: JS-0417 */}
+            <button className="btn btn-primary w-100" type="button" onClick={toggleEnrollmentType}>
                 {enrollmentType === Enrollment_UserStatus.STUDENT ? "Students" : "Teachers"}
             </button>
         )
@@ -131,7 +131,7 @@ const GroupForm = () => {
     const GroupNameBanner = <div className="card-header" style={{ textAlign: "center" }}>{group.name}</div>
     const GroupNameInput = group && isApprovedGroup(group)
         ? null
-        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)} /> // skipcq: JS-0417
+        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)} />
 
     return (
         <div className="container">
@@ -161,14 +161,14 @@ const GroupForm = () => {
                                     color={Color.BLUE}
                                     type={ButtonType.BUTTON}
                                     className="ml-2"
-                                    onClick={() => actions.updateGroup(group)} // skipcq: JS-0417
+                                    onClick={() => actions.updateGroup(group)}
                                 />
                                 <Button
                                     text={"Cancel"}
                                     color={Color.RED}
                                     type={ButtonType.OUTLINE}
                                     className="ml-2"
-                                    onClick={() => actions.setActiveGroup(null)} // skipcq: JS-0417
+                                    onClick={() => actions.setActiveGroup(null)}
                                 />
                             </div>
                             :
@@ -176,7 +176,7 @@ const GroupForm = () => {
                                 text={"Create Group"}
                                 color={Color.GREEN}
                                 type={ButtonType.BUTTON}
-                                onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })} // skipcq: JS-0417
+                                onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}
                             />
                         }
                     </div>
