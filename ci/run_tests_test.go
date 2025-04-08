@@ -52,10 +52,12 @@ func setupRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
 	t.Logf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
 	out, err := runner.Run(context.Background(), &ci.Job{
-		Name:       course.JobName(),
-		Image:      course.DockerImage(),
-		Dockerfile: course.GetDockerfile(),
-		Commands:   []string{`echo -n "Hello from Dockerfile"`},
+		Name:  course.JobName(),
+		Image: course.DockerImage(),
+		BuildContext: map[string]string{
+			ci.Dockerfile: course.GetDockerfile(),
+		},
+		Commands: []string{`echo -n "Hello from Dockerfile"`},
 	})
 	if err != nil {
 		t.Fatal(err)
