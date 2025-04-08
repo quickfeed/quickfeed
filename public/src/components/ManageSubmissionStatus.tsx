@@ -76,7 +76,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         text={viewIndividualGrades ? "All Grades" : "Individual Grades"}
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        className="col mr-2"
+                        className="col mx-1"
                         onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
                     />
                 )}
@@ -85,7 +85,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}
                         type={ButtonType.OUTLINE}
-                        className="col mr-2"
+                        className="col mx-1"
                         onClick={handleRebuild}
                     />
                 )}
@@ -97,21 +97,21 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         text="Approve"
                         color={Color.GREEN}
                         type={getButtonType(Submission_Status.APPROVED)}
-                        className="col mr-2"
+                        className="col mx-1"
                         onClick={() => handleSetStatus(Submission_Status.APPROVED)}
                     />
                     <DynamicButton
                         text="Revision"
                         color={Color.YELLOW}
                         type={getButtonType(Submission_Status.REVISION)}
-                        className="col mr-2"
+                        className="col mx-1"
                         onClick={() => handleSetStatus(Submission_Status.REVISION)}
                     />
                     <DynamicButton
                         text="Reject"
                         color={Color.RED}
                         type={getButtonType(Submission_Status.REJECTED)}
-                        className="col mr-2"
+                        className="col mx-1"
                         onClick={() => handleSetStatus(Submission_Status.REJECTED)}
                     />
                 </div>
@@ -127,7 +127,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                         text="Approve"
                                         color={Color.GREEN}
                                         type={getGradeButtonType(grade, Submission_Status.APPROVED)}
-                                        className="mr-2"
+                                        className="mx-1"
                                         onClick={() => handleSetGrade(grade, Submission_Status.APPROVED)}
                                     />
                                 </td>
@@ -136,7 +136,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                         text="Revision"
                                         color={Color.YELLOW}
                                         type={getGradeButtonType(grade, Submission_Status.REVISION)}
-                                        className="mr-2"
+                                        className="mx-1"
                                         onClick={() => handleSetGrade(grade, Submission_Status.REVISION)}
                                     />
                                 </td>
@@ -145,7 +145,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                         text="Reject"
                                         color={Color.RED}
                                         type={getGradeButtonType(grade, Submission_Status.REJECTED)}
-                                        className="mr-2"
+                                        className="mx-1"
                                         onClick={() => handleSetGrade(grade, Submission_Status.REJECTED)}
                                     />
                                 </td>
