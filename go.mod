@@ -8,8 +8,14 @@ require (
 	github.com/alecthomas/kong v1.9.0
 	github.com/alta/protopatch v0.5.3
 	github.com/beatlabs/github-auth v0.0.0-20240915075323-ab38acb2d2a1
+
 	github.com/docker/docker v28.0.4+incompatible
+  github.com/evanw/esbuild v0.25.2
 	github.com/fsnotify/fsnotify v1.9.0
+
+
+	
+
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.7.0
