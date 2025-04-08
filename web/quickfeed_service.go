@@ -82,9 +82,9 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 
 // UpdateCourse changes the course information details.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.ScmOrganizationName)
+	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.ScmOrganizationName, err)
+		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
@@ -176,7 +176,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	for _, enrollment := range in.Msg.GetEnrollments() {
-		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
+		if s.isCourseCreator(enrollment.GetCourseID(), enrollment.GetUserID()) {
 			s.logger.Errorf("UpdateEnrollments failed: user %s attempted to demote course creator", usr.GetName())
 			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("course creator cannot be demoted"))
 		}
@@ -294,7 +294,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update group"))
 	}
-	group, err := s.db.GetGroup(in.Msg.ID)
+	group, err := s.db.GetGroup(in.Msg.GetID())
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get group"))
 	}
@@ -343,7 +343,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 	}
 	id := userID(ctx)
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
-	if !s.isTeacher(id, in.Msg.CourseID) {
+	if !s.isTeacher(id, in.Msg.GetCourseID()) {
 		submissions.Clean(id)
 	}
 	return connect.NewResponse(submissions), nil
@@ -452,7 +452,7 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Reques
 
 // CreateReview adds a new submission review.
 func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.createReview(in.Msg.Review)
+	review, err := s.createReview(in.Msg.GetReview())
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
@@ -462,7 +462,7 @@ func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[q
 
 // UpdateReview updates a submission review.
 func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review, err := s.updateReview(in.Msg.Review)
+	review, err := s.updateReview(in.Msg.GetReview())
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
@@ -518,33 +518,6 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
 
 	return &connect.Response[qf.Void]{}, nil
-}
-
-// GetOrganization fetches a github organization by name.
-func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
-	usr, err := s.db.GetUser(userID(ctx))
-	if err != nil {
-		s.logger.Errorf("GetOrganization(userID=%d) failed: %v", userID(ctx), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
-	}
-	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
-	if err != nil {
-		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
-	}
-	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetScmOrganizationName(), Username: usr.GetLogin(), NewCourse: true})
-	if err != nil {
-		s.logger.Errorf("GetOrganization failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
-			return nil, ctxErr
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found"))
-	}
-	return connect.NewResponse(org), nil
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.

@@ -169,17 +169,17 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 
 	sortTasksByName := func(tasks []*qf.Task) {
 		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].ID < tasks[j].ID
+			return tasks[i].GetID() < tasks[j].GetID()
 		})
 	}
 	getTasksFromAssignments := func(assignments []*qf.Assignment) map[uint32]map[string]*qf.Task {
 		taskMap := make(map[uint32]map[string]*qf.Task)
 		for _, assignment := range assignments {
 			temp := make(map[string]*qf.Task)
-			for _, task := range assignment.Tasks {
-				temp[task.Name] = task
+			for _, task := range assignment.GetTasks() {
+				temp[task.GetName()] = task
 			}
-			taskMap[assignment.Order] = temp
+			taskMap[assignment.GetOrder()] = temp
 		}
 		return taskMap
 	}
@@ -195,13 +195,13 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			previousTasks := make(map[uint32]map[string]*qf.Task)
 
 			for _, foundAssignments := range tt.foundAssignmentSequence {
-				wantTasks := []*qf.Task{}
+				var wantTasks []*qf.Task
 				for _, assignment := range foundAssignments {
 					assignment.CourseID = course.GetID()
 					if err := db.CreateAssignment(assignment); err != nil {
 						t.Error(err)
 					}
-					wantTasks = append(wantTasks, assignment.Tasks...)
+					wantTasks = append(wantTasks, assignment.GetTasks()...)
 				}
 				gotCreatedTasks, gotUpdatedTasks, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments))
 				if err != nil {
@@ -212,8 +212,8 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				wantCreatedTasks := []*qf.Task{}
-				wantUpdatedTasks := []*qf.Task{}
+				var wantCreatedTasks []*qf.Task
+				var wantUpdatedTasks []*qf.Task
 				for _, wantTask := range wantTasks {
 					taskMap, ok := previousTasks[wantTask.GetAssignmentOrder()]
 					if !ok {

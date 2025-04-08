@@ -8,7 +8,7 @@ func (db *GormDB) CreateUser(user *qf.User) error {
 		return err
 	}
 	// The first user defaults to admin user.
-	if user.ID == 1 {
+	if user.GetID() == 1 {
 		user.IsAdmin = true
 		if err := db.UpdateUser(user); err != nil {
 			return err
@@ -55,8 +55,8 @@ func (db *GormDB) GetUserByCourse(query *qf.Course, login string) (*qf.User, err
 		First(&user, &qf.User{Login: login}).Error; err != nil {
 		return nil, err
 	}
-	for _, e := range user.Enrollments {
-		if e.CourseID == course.ID {
+	for _, e := range user.GetEnrollments() {
+		if e.GetCourseID() == course.GetID() {
 			user.Enrollments = make([]*qf.Enrollment, 0)
 			return &user, nil
 		}

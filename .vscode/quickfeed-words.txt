@@ -57,8 +57,10 @@ envoyproxy
 errcheck
 errdefs
 Errorf
+esbuild
 espeland
 Etternavn
+evanw
 excelize
 extendee
 featurename
@@ -66,7 +68,9 @@ extldflags
 fileop
 Fornavn
 Frøyland
+fsnotify
 fullchain
+getent
 Getwd
 githubv
 GOBIN
@@ -85,6 +89,7 @@ gopath
 gopb
 gopls
 gorelease
+goreleaser
 Gorm
 gormlogger
 GOROOT
@@ -98,6 +103,7 @@ Grafana's
 groupname
 grpc
 grpcpb
+grpcurl
 grpcweb
 Hein
 Hein's
@@ -151,7 +157,6 @@ ngrok
 nocheck
 norestart
 npmtools
-npmwebpack
 NTNU
 oldbackups
 oneof
@@ -240,9 +245,9 @@ urfave
 URL's
 usermod
 varcheck
+vercheck
 verdana
 Warnf
-webpack's
 wojtekmaj
 WORKDIR
 Worktree

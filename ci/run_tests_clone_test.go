@@ -2,7 +2,6 @@ package ci
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,11 +10,8 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-func init() {
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
-}
-
 func TestCloneAndCopyRunTests(t *testing.T) {
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
 	qfTestOrg := scm.GetTestOrganization(t)
 	sc, qfUserName := scm.GetTestSCM(t)
 

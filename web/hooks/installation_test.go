@@ -31,8 +31,8 @@ func TestReceiveInstallationEvent(t *testing.T) {
 
 	wantCourse1 := qtest.MockCourses[0]
 	response := sendEvent(t, event{
-		OrganizationLogin: wantCourse1.ScmOrganizationName,
-		OrganizationScmID: int(wantCourse1.ScmOrganizationID),
+		OrganizationLogin: wantCourse1.GetScmOrganizationName(),
+		OrganizationScmID: int(wantCourse1.GetScmOrganizationID()),
 		UserLogin:         "quickfeed",
 		UserScmID:         1,
 	}, server)
@@ -45,18 +45,18 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if course.ScmOrganizationName != wantCourse1.ScmOrganizationName {
-		t.Errorf("got course %q, want %q", course.ScmOrganizationName, wantCourse1.ScmOrganizationName)
+	if course.GetScmOrganizationName() != wantCourse1.GetScmOrganizationName() {
+		t.Errorf("got course %q, want %q", course.GetScmOrganizationName(), wantCourse1.GetScmOrganizationName())
 	}
-	if course.CourseCreatorID != admin.ID {
-		t.Errorf("got course creator id %d, want 1", course.CourseCreatorID)
+	if course.GetCourseCreatorID() != admin.GetID() {
+		t.Errorf("got course creator id %d, want 1", course.GetCourseCreatorID())
 	}
 
 	// Send another event with another organization.
 	wantCourse2 := qtest.MockCourses[1]
 	response = sendEvent(t, event{
-		OrganizationLogin: wantCourse2.ScmOrganizationName,
-		OrganizationScmID: int(wantCourse2.ScmOrganizationID),
+		OrganizationLogin: wantCourse2.GetScmOrganizationName(),
+		OrganizationScmID: int(wantCourse2.GetScmOrganizationID()),
 		UserLogin:         "quickfeed",
 		UserScmID:         1,
 	}, server)
@@ -70,8 +70,8 @@ func TestReceiveInstallationEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if course.ScmOrganizationName != wantCourse2.ScmOrganizationName {
-		t.Errorf("got course %s, want %s", course.ScmOrganizationName, wantCourse2.ScmOrganizationName)
+	if course.GetScmOrganizationName() != wantCourse2.GetScmOrganizationName() {
+		t.Errorf("got course %s, want %s", course.GetScmOrganizationName(), wantCourse2.GetScmOrganizationName())
 	}
 }
 
@@ -90,8 +90,8 @@ func TestAlreadyExistingCourse(t *testing.T) {
 
 	wantCourse := qtest.MockCourses[0]
 	response := sendEvent(t, event{
-		OrganizationLogin: wantCourse.ScmOrganizationName,
-		OrganizationScmID: int(wantCourse.ScmOrganizationID),
+		OrganizationLogin: wantCourse.GetScmOrganizationName(),
+		OrganizationScmID: int(wantCourse.GetScmOrganizationID()),
 		UserLogin:         "quickfeed",
 		UserScmID:         1,
 	}, server)
@@ -99,19 +99,19 @@ func TestAlreadyExistingCourse(t *testing.T) {
 		t.Errorf("got status %d, want 200", response.StatusCode)
 	}
 
-	course, err := wh.db.GetCourseByOrganizationID(wantCourse.ScmOrganizationID)
+	course, err := wh.db.GetCourseByOrganizationID(wantCourse.GetScmOrganizationID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if course.ScmOrganizationName != wantCourse.ScmOrganizationName {
-		t.Errorf("got course %s, want %s", course.ScmOrganizationName, wantCourse.ScmOrganizationName)
+	if course.GetScmOrganizationName() != wantCourse.GetScmOrganizationName() {
+		t.Errorf("got course %s, want %s", course.GetScmOrganizationName(), wantCourse.GetScmOrganizationName())
 	}
 
 	// Send the same event again, this should not create a new course.
 	// This should log an scm.ErrAlreadyExists error; check running with LOG=1.
 	response = sendEvent(t, event{
-		OrganizationLogin: wantCourse.ScmOrganizationName,
-		OrganizationScmID: int(wantCourse.ScmOrganizationID),
+		OrganizationLogin: wantCourse.GetScmOrganizationName(),
+		OrganizationScmID: int(wantCourse.GetScmOrganizationID()),
 		UserLogin:         "quickfeed",
 		UserScmID:         1,
 	}, server)
@@ -127,12 +127,12 @@ func TestAlreadyExistingCourse(t *testing.T) {
 		t.Errorf("got %d courses, want 1", len(courses))
 	}
 
-	course, err = wh.db.GetCourseByOrganizationID(wantCourse.ScmOrganizationID)
+	course, err = wh.db.GetCourseByOrganizationID(wantCourse.GetScmOrganizationID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if course.ScmOrganizationName != wantCourse.ScmOrganizationName {
-		t.Errorf("got course %s, want %s", course.ScmOrganizationName, wantCourse.ScmOrganizationName)
+	if course.GetScmOrganizationName() != wantCourse.GetScmOrganizationName() {
+		t.Errorf("got course %s, want %s", course.GetScmOrganizationName(), wantCourse.GetScmOrganizationName())
 	}
 }
 
@@ -157,7 +157,7 @@ func TestNonAdminUser(t *testing.T) {
 		OrganizationLogin: "qf102-2022",
 		OrganizationScmID: 1,
 		UserLogin:         "quickfeed",
-		UserScmID:         int(user.ScmRemoteID),
+		UserScmID:         int(user.GetScmRemoteID()),
 	}, server)
 
 	course, err := wh.db.GetCourseByOrganizationID(1)
@@ -211,7 +211,7 @@ func TestNonExistingOrganization(t *testing.T) {
 		OrganizationLogin: "qf102-2022",
 		OrganizationScmID: invalidOrgID,
 		UserLogin:         "quickfeed",
-		UserScmID:         int(admin.ScmRemoteID),
+		UserScmID:         int(admin.GetScmRemoteID()),
 	}, server)
 
 	if _, err := wh.db.GetCourseByOrganizationID(uint64(invalidOrgID)); err == nil {
@@ -239,7 +239,7 @@ func TestInvalidAction(t *testing.T) {
 		OrganizationLogin: "qf102-2022",
 		OrganizationScmID: 1,
 		UserLogin:         "quickfeed",
-		UserScmID:         int(admin.ScmRemoteID),
+		UserScmID:         int(admin.GetScmRemoteID()),
 	}, server)
 
 	if _, err := wh.db.GetCourseByOrganizationID(1); err == nil {
@@ -259,7 +259,7 @@ func TestCheckUserClaims(t *testing.T) {
 		ScmRemoteID: 1,
 	})
 
-	token, err := wh.tm.NewAuthCookie(admin.ID)
+	token, err := wh.tm.NewAuthCookie(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,12 +288,12 @@ func TestCheckUserClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if course.Name != "qf102-2022" {
-		t.Errorf("got course name %s, want qf102-2022", course.Name)
+	if course.GetName() != "qf102-2022" {
+		t.Errorf("got course name %s, want qf102-2022", course.GetName())
 	}
 
-	if course.CourseCreatorID != admin.ID {
-		t.Errorf("got course creator id %d, want 1", course.CourseCreatorID)
+	if course.GetCourseCreatorID() != admin.GetID() {
+		t.Errorf("got course creator id %d, want 1", course.GetCourseCreatorID())
 	}
 
 	// Check successful course creation queued the users claims to be updated.
@@ -310,8 +310,8 @@ func TestCheckUserClaims(t *testing.T) {
 		t.Errorf("got %d courses, want 0", len(claims.Courses))
 	}
 
-	if claims.Courses[course.ID] != qf.Enrollment_TEACHER {
-		t.Errorf("got %d status, want %d", claims.Courses[course.ID], qf.Enrollment_TEACHER)
+	if claims.Courses[course.GetID()] != qf.Enrollment_TEACHER {
+		t.Errorf("got %d status, want %d", claims.Courses[course.GetID()], qf.Enrollment_TEACHER)
 	}
 }
 

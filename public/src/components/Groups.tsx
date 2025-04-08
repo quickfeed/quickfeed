@@ -9,7 +9,7 @@ import Search from "./Search"
 
 
 /* Lists all groups for a given course. */
-const Groups = (): JSX.Element => {
+const Groups = () => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -36,11 +36,12 @@ const Groups = (): JSX.Element => {
     }
 
     const GroupButtons = ({ group }: { group: Group }) => {
-        const buttons: JSX.Element[] = []
+        const buttons: React.JSX.Element[] = []
         if (isPendingGroup(group)) {
             buttons.push(
                 <DynamicButton
-                    text={"Approve"}
+                    key={`approve${group.ID}`}
+                    text="Approve"
                     color={Color.BLUE}
                     type={ButtonType.BADGE}
                     onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
@@ -49,7 +50,8 @@ const Groups = (): JSX.Element => {
         }
         buttons.push(
             <Button
-                text={"Edit"}
+                key={`edit${group.ID}`}
+                text="Edit"
                 color={Color.YELLOW}
                 type={ButtonType.BADGE}
                 className="ml-2"
@@ -58,7 +60,8 @@ const Groups = (): JSX.Element => {
         )
         buttons.push(
             <DynamicButton
-                text={"Delete"}
+                key={`delete${group.ID}`}
+                text="Delete"
                 color={Color.RED}
                 type={ButtonType.BADGE}
                 className="ml-2"
@@ -112,22 +115,28 @@ const Groups = (): JSX.Element => {
         return <GroupForm />
     }
 
+    const table = (
+        <table className="table table-striped table-grp table-hover">
+            <thead className="thead-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Members</th>
+                    <th>Manage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {PendingGroups}
+                {ApprovedGroups}
+            </tbody>
+        </table>
+    )
+
     return (
         <div className="box">
             <div className="pb-2">
                 <Search />
             </div>
-            <table className="table table-striped table-grp table-hover">
-                <thead className="thead-dark">
-                    <th>Name</th>
-                    <th>Members</th>
-                    <th>Manage</th>
-                </thead>
-                <tbody>
-                    {PendingGroups}
-                    {ApprovedGroups}
-                </tbody>
-            </table>
+            {table}
         </div>
     )
 }

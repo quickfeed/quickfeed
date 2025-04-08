@@ -78,9 +78,6 @@ TODO(meling) Update and improve this part. It is not correct anymore, I think.
 
 - **Primary Server Port:**
 By default, the server runs on port **:443**, the standard port for HTTPS traffic. This ensures secure communication right out of the box.
-- **Custom Port Configuration:**
-If you need to use a different port, you can easily change this by using the `-http.addr` flag when launching the server.
-  - **BEWARE**: Can cause issues with callback from github
 
 - **HTTP to HTTPS Redirection:**
 Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS.
@@ -174,13 +171,6 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 - GitHub API name for organization owner is `admin`
 - Repository access levels for any organization member in GitHub API calls are: `read`/`write`/`admin`/`none`
 - Individual repository permission levels in GitHub API are: `pull`/`push`/`admin`
-
-### Slugs
-
-When retrieving organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page.
-For example, organization with a name like `QuickFeed Test Org` will have slugified name `quickfeed-test-org`.
-
-[URL slugs explained](http://patterns.dataincubator.org/book/url-slug.html)
 
 ### Repositories
 

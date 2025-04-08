@@ -25,7 +25,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	if err != nil {
 		return nil, err
 	}
-	return q.getSCM(ctx, course.ScmOrganizationName)
+	return q.getSCM(ctx, course.GetScmOrganizationName())
 }
 
 // createRepo invokes the SCM to create a repository for the
@@ -35,7 +35,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, error) {
 	opt := &scm.GroupOptions{
-		Organization: course.ScmOrganizationName,
+		Organization: course.GetScmOrganizationName(),
 		GroupName:    group.GetName(),
 		Users:        group.UserNames(),
 	}
@@ -55,7 +55,7 @@ func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Gr
 
 func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
 	opt := &scm.GroupOptions{
-		GroupName:    group.Name,
+		GroupName:    group.GetName(),
 		Organization: orgName,
 		Users:        group.UserNames(),
 	}

@@ -8,7 +8,7 @@ import SubmissionsTable from "./dashboard/SubmissionsTable"
 
 
 /* Dashboard for a signed in user. */
-const Dashboard = (): JSX.Element => {
+const Dashboard = () => {
     const state = useAppState()
 
     // Users that are not enrolled in any courses are redirected to the course list.
@@ -17,11 +17,8 @@ const Dashboard = (): JSX.Element => {
     }
 
     return (
-        <div className='box'>
+        <div className='box mt-5'>
             <Alerts />
-            <div>
-                <h1>Welcome, {state.self.Name}!</h1>
-            </div>
             <SubmissionsTable />
             <Courses home />
         </div>
