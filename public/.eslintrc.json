@@ -16,6 +16,7 @@
 		}
 	},
 	"rules": {
+		"react/prop-types": "off", // See: https://stackoverflow.com/questions/38684925/react-eslint-error-missing-in-props-validation
 		"react/function-component-definition": [
 			2,
 			{

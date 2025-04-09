@@ -49,11 +49,12 @@ const App = () => {
         }
     }
 
+    const divSize = state.showFavorites ? "content" : "content-full"
     return (
         <div>
             <NavBar />
             <div className="app wrapper">
-                <div id={state.showFavorites ? "content" : "content-full"}>
+                <div id={divSize}>
                     {Main()}
                 </div>
             </div>

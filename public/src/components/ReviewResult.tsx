@@ -8,13 +8,13 @@ import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
 const ReviewResult = ({ review }: { review: Review }) => {
-    const result = hasBenchmarks(review) ? review.gradingBenchmarks.map(benchmark => {
+    const benchmarks = review.gradingBenchmarks.map(benchmark => {
         return (
             <Benchmark key={benchmark.ID.toString()} bm={benchmark}>
                 {benchmark.criteria.map(criteria => <Criteria key={criteria.ID.toString()} criteria={criteria} />)}
             </Benchmark>
         )
-    }) : null
+    })
 
     return (
         <table className="table">
@@ -31,7 +31,7 @@ const ReviewResult = ({ review }: { review: Review }) => {
                 </tr>
             </thead>
             <tbody>
-                {result}
+                {hasBenchmarks(review) ? benchmarks : null}
             </tbody>
             <tfoot>
                 <SummaryFeedback review={review} />

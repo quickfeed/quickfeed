@@ -91,15 +91,18 @@ export const timeFormatter = (deadline: Timestamp): Deadline => {
     if (timeToDeadline < 0) {
         const daysSince = -days
         const hoursSince = -hours
-        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
+        const expiredSince = daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`
+
+        return { className: "table-danger", message: `Expired ${expiredSince}`, daysUntil: 0 }
     }
 
     if (days === 0) {
         return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
     }
 
+    const pluralDays = days === 1 ? " " : "s"
     if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
+        return { className: "table-warning", message: `${days} day${pluralDays} to deadline`, daysUntil: days }
     }
 
     if (days < 14) {
@@ -297,7 +300,12 @@ export const defaultTag = (date: Date): string => {
 }
 
 export const defaultYear = (date: Date): number => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
+    // TODO: This statement is confusing
+    // Should it be? date.getMonth() == 11 && date.getDate() <= 31
+    // meaning its november ?
+    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10
+        ? (date.getFullYear() + 1)
+        : date.getFullYear()
 }
 
 export const userLink = (user: User): string => {

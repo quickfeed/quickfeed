@@ -93,21 +93,22 @@ describe("ProgressBar", () => {
             </Provider>
         )
 
-
         const bar = container.getElementsByTagName("div").item(0)
         expect(bar?.style).toHaveProperty("right", `${100 - test.submission.score}%`)
-        expect(bar?.style).toHaveProperty(
-            "border-bottom",
-            test.submission.score >= test.assignment.scoreLimit
-                ? "2px solid green"
-                : "2px solid yellow"
-        )
+
+        const approvedStyling = test.submission.score >= test.assignment.scoreLimit
+            ? "2px solid green"
+            : "2px solid yellow"
+        expect(bar?.style).toHaveProperty("border-bottom", approvedStyling)
     })
 })
 
 const labTest = (test: ProgressBarTest) => {
     const submissions = new SubmissionsForUser()
     submissions.setSubmissions(1n, "USER", [test.submission])
+    // TODO: This appears to be redudant: test.assignment ? [test.assignment] : []
+    // Assignment can't be null ?
+    // Should just be [test.assignment]
     const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions })
 
     const { container } = render(
@@ -123,7 +124,8 @@ const labTest = (test: ProgressBarTest) => {
     const score = test.submission.score
 
     const bars = container.getElementsByClassName("progress-bar")
-    expect(bars).toHaveLength(hasSecondary ? 2 : 1)
+    const barLength = hasSecondary ? 2 : 1
+    expect(bars).toHaveLength(barLength)
     if (hasSecondary) {
         const secondary = container.getElementsByClassName("progressbar-secondary").item(0)
         if (!secondary) {
