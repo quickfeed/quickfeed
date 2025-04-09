@@ -28,9 +28,8 @@ export const generateRow = (
     const isGroup = isMessage(enrollment, GroupSchema)
 
     if (withID) {
-        isEnrollment
-            ? row.push({ value: enrollment.userID.toString() })
-            : row.push({ value: enrollment.ID.toString() })
+        const ID = isEnrollment ? enrollment.userID.toString() : enrollment.ID.toString()
+        row.push({ value: ID })
     }
 
     if (isEnrollment && enrollment.user) {

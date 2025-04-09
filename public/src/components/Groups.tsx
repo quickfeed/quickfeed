@@ -78,10 +78,11 @@ const Groups = () => {
         }
 
         const members = group.users.map((user, index) => {
+            const comma = index >= group.users.length - 1 ? "" : ", "
             return (
                 <span key={user.ID.toString()} className="inline-block">
                     <a href={`https://github.com/${user.Login}`} target="_blank" rel="noopener noreferrer">{user.Name}</a>
-                    {index >= group.users.length - 1 ? "" : ", "}
+                    {comma}
                 </span>
             )
         })
