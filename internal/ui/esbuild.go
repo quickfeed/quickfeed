@@ -14,10 +14,12 @@ var public = func(s string) string {
 	return filepath.Join(env.PublicDir(), s)
 }
 
+var distDir = public("dist")
+
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
 var buildOptions = api.BuildOptions{
-	Outdir: public("dist"),
+	Outdir: distDir,
 	EntryPoints: []string{
 		public("src/index.tsx"),
 		public("src/App.tsx"),
@@ -61,7 +63,7 @@ var buildOptions = api.BuildOptions{
 									PluginName: "Reset",
 									Text:       "Failed to clear the dist folder",
 									Notes: []api.Note{
-										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", public("dist"))},
+										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", distDir)},
 										{Text: fmt.Sprintf("Error: %v", err)},
 									},
 								},
@@ -96,14 +98,15 @@ var buildOptions = api.BuildOptions{
 
 // resetDistFolder removes the dist folder and creates a new one
 func resetDistFolder() error {
-	path := public("dist")
-	if _, err := os.Stat(path); err == nil {
-		if err := os.RemoveAll(path); err != nil {
+	entries, err := os.ReadDir(distDir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		err = os.Remove(filepath.Join(distDir, entry.Name()))
+		if err != nil {
 			return err
 		}
-	}
-	if err := os.MkdirAll(path, 0o755); err != nil {
-		return err
 	}
 	return nil
 }
