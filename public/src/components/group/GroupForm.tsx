@@ -10,7 +10,7 @@ import { clone, create } from "@bufbuild/protobuf"
 
 const GroupForm = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     const [query, setQuery] = useState<string>("")
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
@@ -41,7 +41,7 @@ const GroupForm = () => {
         return false
     }
 
-    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment =>  clone(EnrollmentSchema, enrollment))
+    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => clone(EnrollmentSchema, enrollment))
 
     // Determine the user's enrollment status (teacher or student)
     const isTeacher = hasTeacher(state.status[courseID.toString()])

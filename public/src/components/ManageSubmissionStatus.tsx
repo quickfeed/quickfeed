@@ -6,7 +6,7 @@ import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 
 const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, reviewers: number }) => {
-    const actions = useActions()
+    const actions = useActions().global
     const state = useAppState()
 
     const [rebuilding, setRebuilding] = React.useState(false)

@@ -7,9 +7,9 @@ import { ScreenSize } from "../../consts"
 
 const Breadcrumbs = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const location = useLocation()
-    const { width } = useWindowSize();
+    const { width } = useWindowSize()
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)

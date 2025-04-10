@@ -10,7 +10,7 @@ import User from "./User"
 
 const Users = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     useEffect(() => {
         actions.getUsers()

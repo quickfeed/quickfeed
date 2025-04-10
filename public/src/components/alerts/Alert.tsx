@@ -13,7 +13,7 @@ import { useActions } from "../../overmind"
  */
 const Alert = ({ alert }: { alert: AlertType }) => {
     const circleRef = useRef<SVGCircleElement>(null)
-    const actions = useActions()
+    const actions = useActions().global
 
     useEffect(() => {
         let id: ReturnType<typeof setTimeout>

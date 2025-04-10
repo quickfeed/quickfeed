@@ -12,7 +12,7 @@ import EditCriterion from "./EditCriterion"
  *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
 const Assignments = () => {
     const courseID = getCourseID()
-    const actions = useActions()
+    const actions = useActions().global
     const state = useAppState()
 
     const assignmentElement = (assignment: Assignment) => {

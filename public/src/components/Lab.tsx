@@ -18,7 +18,7 @@ interface MatchProps {
  */
 const Lab = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const { id, lab } = useParams<MatchProps>()
     const courseID = id
     const assignmentID = lab ? BigInt(lab) : BigInt(-1)

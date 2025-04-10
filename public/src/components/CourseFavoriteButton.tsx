@@ -6,7 +6,7 @@ import { useActions } from "../overmind"
 
 // CourseFavoriteButton is a component that displays a button to toggle the favorite status of a course.
 const CourseFavoriteButton = ({ enrollment, style }: { enrollment: Enrollment, style: React.CSSProperties }) => {
-    const actions = useActions()
+    const actions = useActions().global
 
     return (
         // TODO: Consider creating a tooltip component.

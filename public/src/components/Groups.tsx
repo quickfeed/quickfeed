@@ -11,7 +11,7 @@ import Search from "./Search"
 /* Lists all groups for a given course. */
 const Groups = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = getCourseID()
 
     const groupSearch = (group: Group) => {

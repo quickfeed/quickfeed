@@ -10,7 +10,7 @@ import NavBarTeacher from "./NavBarTeacher"
 
 const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const history = useHistory()
     // Determines if a dropdown should be shown for the course
     const active = state.activeCourse === enrollment.courseID
