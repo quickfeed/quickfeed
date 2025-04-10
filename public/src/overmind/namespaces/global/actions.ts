@@ -457,7 +457,7 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
 
 export const getGroupSubmissions = async ({ state, effects }: Context, courseID: bigint): Promise<void> => {
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
-    if (!(enrollment && enrollment.group)) {
+    if (!enrollment?.group) {
         return
     }
     const response = await effects.global.api.client.getSubmissions({
