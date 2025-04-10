@@ -21,11 +21,23 @@ import {
     UserSchema
 } from "../../../../proto/qf/types_pb"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../../../Helpers"
-import { isEmptyRepo } from "../../internalActions"
+import { isEmptyRepo } from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "../../state"
 import { clone, create, isMessage } from "@bufbuild/protobuf"
 
 export const internal = { isEmptyRepo }
+
+export const onInitializeOvermind = async ({ actions, effects }: Context) => {
+    // Initialize the API client. *Must* be done before accessing the client.
+    effects.global.api.init(actions.global.errorHandler)
+    await actions.global.fetchUserData()
+    // Currently this only alerts the user if they are not logged in after a page refresh
+    const alert = localStorage.getItem("alert")
+    if (alert) {
+        actions.global.alert({ text: alert, color: Color.RED })
+        localStorage.removeItem("alert")
+    }
+}
 
 export const handleStreamError = (context: Context, error: Error): void => {
     context.state.connectionStatus = ConnStatus.DISCONNECTED

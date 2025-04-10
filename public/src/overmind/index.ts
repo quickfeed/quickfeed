@@ -1,6 +1,5 @@
 import { createStateHook, createActionsHook, createEffectsHook } from 'overmind-react'
 import { state } from './state'
-import * as actions from './actions'
 import * as review from './namespaces/review'
 import * as global from './namespaces/global'
 import { IContext } from 'overmind'
@@ -11,8 +10,7 @@ import { merge, namespaced } from 'overmind/config'
 /* To add a new namespace, add it to the namespaced object. */
 export const config = merge(
     {
-        state,
-        actions
+        state
     },
     namespaced({
         review,
