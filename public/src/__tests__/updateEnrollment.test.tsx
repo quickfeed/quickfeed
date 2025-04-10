@@ -10,7 +10,7 @@ import { render, screen } from "@testing-library/react"
 import { MockData } from "./mock_data/mockData"
 import { VoidSchema } from "../../proto/qf/requests_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
 import { create } from "@bufbuild/protobuf"
 import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { ConnectError } from "@connectrpc/connect"
@@ -57,8 +57,8 @@ describe("UpdateEnrollment", () => {
     beforeAll(async () => {
         // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
-        await mockedOvermind.actions.getCourseData({ courseID: BigInt(2) })
-        await mockedOvermind.actions.getCourseData({ courseID: BigInt(1) })
+        await mockedOvermind.actions.global.getCourseData({ courseID: BigInt(2) })
+        await mockedOvermind.actions.global.getCourseData({ courseID: BigInt(1) })
     })
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
@@ -66,9 +66,9 @@ describe("UpdateEnrollment", () => {
         if (!enrollment) {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
-        mockedOvermind.actions.setActiveCourse(test.courseID)
+        mockedOvermind.actions.global.setActiveCourse(test.courseID)
         window.confirm = jest.fn(() => true)
-        await mockedOvermind.actions.updateEnrollment({ enrollment, status: test.want })
+        await mockedOvermind.actions.global.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })
 })
