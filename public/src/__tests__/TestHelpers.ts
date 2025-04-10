@@ -3,7 +3,7 @@ import { config } from "../overmind"
 import { State } from "../overmind/state"
 import { SubType } from "overmind/lib/internalTypes"
 import { ReviewState } from "../overmind/namespaces/review/state"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
 
 /** initializeOvermind creates a mock Overmind instance with the given state, reviewState, and mockedEffects.
  * @param state the state to initialize the mock with
@@ -12,11 +12,13 @@ import { ApiClient } from "../overmind/effects"
 */
 export const initializeOvermind = (state: Partial<State & SubType<{ review: Partial<ReviewState> }, object>>, mockedApi?: ApiClient) => {
     const overmind = createOvermindMock(config, {
-        api: mockedApi
+        global: {
+            api: mockedApi
+        }
     }, initialState => {
         Object.assign(initialState, state)
     })
-    Object.assign(overmind.effects.api, mockedApi)
+    Object.assign(overmind.effects.global.api, mockedApi)
     return overmind
 }
 

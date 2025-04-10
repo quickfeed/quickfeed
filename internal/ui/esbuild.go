@@ -30,10 +30,10 @@ var buildOptions = api.BuildOptions{
 		public("src/components/Card.tsx"),
 
 		// overmind
-		public("src/overmind/index.tsx"),
-		public("src/overmind/effects.tsx"),
-		public("src/overmind/state.tsx"),
-		public("src/overmind/internalActions.tsx"),
+		public("src/overmind/index.ts"),
+		public("src/overmind/namespaces/global/effects.ts"),
+		public("src/overmind/state.ts"),
+		public("src/overmind/internalActions.ts"),
 	},
 	Bundle:            true,
 	Write:             true,

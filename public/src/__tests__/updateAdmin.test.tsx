@@ -1,6 +1,6 @@
 import { User, UserSchema } from "../../proto/qf/types_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
 import { create } from "@bufbuild/protobuf"
 import { VoidSchema } from "../../proto/qf/requests_pb"
 
@@ -48,7 +48,7 @@ describe("Correct permission status should be set", () => {
         }
         const { state, actions } = initializeOvermind({ allUsers: [test.user], review: { reviewer: create(UserSchema) } }, api)
         window.confirm = jest.fn(() => test.confirm)
-        await actions.updateAdmin(test.user)
+        await actions.global.updateAdmin(test.user)
         expect(state.allUsers[0].IsAdmin).toEqual(test.want)
     })
 })

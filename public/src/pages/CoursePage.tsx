@@ -10,7 +10,7 @@ import TeacherPage from "./TeacherPage"
  *  depending on the active course and the user's enrollment status. */
 const CoursePage = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 
