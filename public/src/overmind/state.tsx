@@ -1,7 +1,7 @@
 import { create, isMessage } from "@bufbuild/protobuf"
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, EnrollmentSchema, Group, GroupSchema, Submission, User, UserSchema } from "../../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, EnrollmentSchema, Group, GroupSchema, Submission, User, UserSchema, Notification } from "../../proto/qf/types_pb"
 import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
@@ -52,6 +52,12 @@ export type State = {
     /* Contains all submissions for the user, indexed by course ID */
     // The individual submissions for a given course are indexed by assignment order - 1
     submissions: SubmissionsForUser,
+
+    /* Contains all notifications for the user */
+    notifications: Notification[],
+    /* Number of unread notifications, displayed in a read circle relative to the bell */
+    // derived from notifications
+    unreadNotifications: number,
 
     /* Current enrollment status of the user for a given course */
     status: { [courseID: string]: Enrollment_UserStatus }
@@ -218,6 +224,10 @@ export const state: State = {
         return enrollmentsByCourseID
     }),
     submissions: new SubmissionsForUser(),
+    notifications: [],
+    unreadNotifications: derived(({ notifications }: State) => {
+        return notifications.filter(n => !n.IsRead).length
+    }),
     userGroup: derived(({ enrollments }: State) => {
         const userGroup: { [courseID: string]: Group } = {}
         for (const enrollment of enrollments) {

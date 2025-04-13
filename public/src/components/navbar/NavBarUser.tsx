@@ -5,9 +5,10 @@ import { useAppState } from "../../overmind"
 import ProfileButton from "../navbar-buttons/ProfileButton"
 import LogoutButton from "../navbar-buttons/LogoutButton"
 import StreamStatus from "./StreamStatus"
+import { Link } from "react-router-dom"
 
 const NavBarUser = () => {
-    const { self, isLoggedIn } = useAppState()
+    const { self, isLoggedIn, unreadNotifications } = useAppState()
 
     if (!isLoggedIn) {
         return (
@@ -18,7 +19,14 @@ const NavBarUser = () => {
     return (
         <div className="flex-user">
 
-            <StreamStatus />
+            <Link to="/notifications" className="mr-2" style={{ position: "relative" }}>
+                <i className="fa fa-bell notification-icon" />
+                {/* Only show the red circle if there are unread notifications */}
+                {unreadNotifications > 0 &&
+                    <span className="notification-badge"> {unreadNotifications} </span>
+                }
+            </Link>
+
             <ul className="nav-item dropdown">
                 <i className="fa fa-chevron-down text-white mr-1 chevron-icon" />
                 <img className="rounded-circle" src={self.AvatarURL} id="avatar" />
@@ -30,7 +38,9 @@ const NavBarUser = () => {
                 </ul>
             </ul>
 
-        </div>
+            <StreamStatus />
+
+        </div >
     )
 }
 

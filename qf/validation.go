@@ -134,3 +134,9 @@ func (m *Enrollments) IsValid() bool {
 	}
 	return m.HasCourseID()
 }
+
+func (n *Notification) IsValid() bool {
+	return n.Title != "" && n.Body != "" &&
+		// Custom notifications must have at least one recipient
+		(n.RecipientType != Notification_SELECTIVE || len(n.GetRecipientIDs()) > 0)
+}

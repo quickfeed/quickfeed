@@ -150,6 +150,27 @@ func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Co
 	return enrollment
 }
 
+func CreateNotification(t *testing.T, db database.Database, userID uint64, recievers []uint64) *qf.Notification {
+	t.Helper()
+
+	n := &qf.Notification{
+		Sender: userID,
+		Title:  "Test Notification",
+		Body:   "This is a test notification",
+		Recipients: []*qf.NotificationRecipient{
+			{
+				UserID: recievers[0],
+			},
+		},
+	}
+
+	if err := db.CreateNotification(n); err != nil {
+		t.Fatal(err)
+	}
+
+	return n
+}
+
 func RandomString(t *testing.T) string {
 	t.Helper()
 	randomness := make([]byte, 10)

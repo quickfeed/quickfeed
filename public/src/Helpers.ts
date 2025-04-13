@@ -1,5 +1,9 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
+import {
+    Notification, Assignment, Course, Enrollment, GradingBenchmark, Group, Review,
+    Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState,
+    Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema
+} from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
 import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt"
@@ -618,4 +622,15 @@ export class SubmissionsForUser {
             this.groupSubmissions = clone.set(courseID, submissions)
         }
     }
+}
+
+export const isNotificationValid = (notification: Notification) => {
+    let error = ""
+    if (notification.title.length === 0) {
+        error = "Title cannot be empty"
+    } else if (notification.body.length === 0) {
+        error = "Body cannot be empty"
+    }
+
+    return error
 }

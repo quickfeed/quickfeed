@@ -385,6 +385,111 @@ func (GradingCriterion_Grade) EnumDescriptor() ([]byte, []int) {
 	return file_qf_types_proto_rawDescGZIP(), []int{20, 0}
 }
 
+// Predefined notification types
+// Meant for ease of use
+type Notification_Type int32
+
+const (
+	Notification_CUSTOM Notification_Type = 0
+	// Only for admins
+	Notification_MAINTENANCE Notification_Type = 1
+	// Only for teachers
+	Notification_ALERT_STUNDENTS_BEHIND Notification_Type = 2
+)
+
+// Enum value maps for Notification_Type.
+var (
+	Notification_Type_name = map[int32]string{
+		0: "CUSTOM",
+		1: "MAINTENANCE",
+		2: "ALERT_STUNDENTS_BEHIND",
+	}
+	Notification_Type_value = map[string]int32{
+		"CUSTOM":                 0,
+		"MAINTENANCE":            1,
+		"ALERT_STUNDENTS_BEHIND": 2,
+	}
+)
+
+func (x Notification_Type) Enum() *Notification_Type {
+	p := new(Notification_Type)
+	*p = x
+	return p
+}
+
+func (x Notification_Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Notification_Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_qf_types_proto_enumTypes[7].Descriptor()
+}
+
+func (Notification_Type) Type() protoreflect.EnumType {
+	return &file_qf_types_proto_enumTypes[7]
+}
+
+func (x Notification_Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Notification_Type.Descriptor instead.
+func (Notification_Type) EnumDescriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{22, 0}
+}
+
+type Notification_RecipientType int32
+
+const (
+	Notification_SELECTIVE Notification_RecipientType = 0
+	Notification_ALL       Notification_RecipientType = 1 // Only for admins
+	Notification_STUDENTS  Notification_RecipientType = 2
+	Notification_TEACHERS  Notification_RecipientType = 3
+)
+
+// Enum value maps for Notification_RecipientType.
+var (
+	Notification_RecipientType_name = map[int32]string{
+		0: "SELECTIVE",
+		1: "ALL",
+		2: "STUDENTS",
+		3: "TEACHERS",
+	}
+	Notification_RecipientType_value = map[string]int32{
+		"SELECTIVE": 0,
+		"ALL":       1,
+		"STUDENTS":  2,
+		"TEACHERS":  3,
+	}
+)
+
+func (x Notification_RecipientType) Enum() *Notification_RecipientType {
+	p := new(Notification_RecipientType)
+	*p = x
+	return p
+}
+
+func (x Notification_RecipientType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Notification_RecipientType) Descriptor() protoreflect.EnumDescriptor {
+	return file_qf_types_proto_enumTypes[8].Descriptor()
+}
+
+func (Notification_RecipientType) Type() protoreflect.EnumType {
+	return &file_qf_types_proto_enumTypes[8]
+}
+
+func (x Notification_RecipientType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Notification_RecipientType.Descriptor instead.
+func (Notification_RecipientType) EnumDescriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{22, 1}
+}
+
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
@@ -2241,6 +2346,253 @@ func (x *Review) GetEdited() *timestamppb.Timestamp {
 	return nil
 }
 
+type Notification struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	ID            uint64                     `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Sender        uint64                     `protobuf:"varint,2,opt,name=sender,proto3" json:"sender,omitempty"`
+	Title         string                     `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	Body          string                     `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
+	Url           string                     `protobuf:"bytes,6,opt,name=url,proto3" json:"url,omitempty"`
+	CourseID      uint64                     `protobuf:"varint,7,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	Type          Notification_Type          `protobuf:"varint,8,opt,name=type,proto3,enum=qf.Notification_Type" json:"type,omitempty"`
+	RecipientType Notification_RecipientType `protobuf:"varint,9,opt,name=recipientType,proto3,enum=qf.Notification_RecipientType" json:"recipientType,omitempty"`
+	// Updated when a user retrieves the notifications
+	IsRead bool `protobuf:"varint,10,opt,name=IsRead,proto3" json:"IsRead,omitempty" gorm:"-"`
+	// Used by the frontend to easily add and remove recipients
+	RecipientIDs  []uint64                 `protobuf:"varint,11,rep,packed,name=recipientIDs,proto3" json:"recipientIDs,omitempty" gorm:"-"`
+	CreatedAt     *timestamppb.Timestamp   `protobuf:"bytes,12,opt,name=createdAt,proto3" json:"createdAt,omitempty" gorm:"serializer:timestamp;type:datetime"`
+	Recipients    []*NotificationRecipient `protobuf:"bytes,13,rep,name=recipients,proto3" json:"recipients,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Notification) Reset() {
+	*x = Notification{}
+	mi := &file_qf_types_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Notification) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Notification) ProtoMessage() {}
+
+func (x *Notification) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Notification.ProtoReflect.Descriptor instead.
+func (*Notification) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *Notification) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *Notification) GetSender() uint64 {
+	if x != nil {
+		return x.Sender
+	}
+	return 0
+}
+
+func (x *Notification) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Notification) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
+func (x *Notification) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *Notification) GetCourseID() uint64 {
+	if x != nil {
+		return x.CourseID
+	}
+	return 0
+}
+
+func (x *Notification) GetType() Notification_Type {
+	if x != nil {
+		return x.Type
+	}
+	return Notification_CUSTOM
+}
+
+func (x *Notification) GetRecipientType() Notification_RecipientType {
+	if x != nil {
+		return x.RecipientType
+	}
+	return Notification_SELECTIVE
+}
+
+func (x *Notification) GetIsRead() bool {
+	if x != nil {
+		return x.IsRead
+	}
+	return false
+}
+
+func (x *Notification) GetRecipientIDs() []uint64 {
+	if x != nil {
+		return x.RecipientIDs
+	}
+	return nil
+}
+
+func (x *Notification) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Notification) GetRecipients() []*NotificationRecipient {
+	if x != nil {
+		return x.Recipients
+	}
+	return nil
+}
+
+// TODO(Joachim): Switch out with many2many ???
+type NotificationRecipient struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	NotificationID uint64                 `protobuf:"varint,1,opt,name=NotificationID,proto3" json:"NotificationID,omitempty"`
+	UserID         uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty"`
+	Read           *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=read,proto3" json:"read,omitempty" gorm:"serializer:timestamp;type:datetime"`
+	IsRead         bool                   `protobuf:"varint,4,opt,name=isRead,proto3" json:"isRead,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *NotificationRecipient) Reset() {
+	*x = NotificationRecipient{}
+	mi := &file_qf_types_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationRecipient) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationRecipient) ProtoMessage() {}
+
+func (x *NotificationRecipient) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationRecipient.ProtoReflect.Descriptor instead.
+func (*NotificationRecipient) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *NotificationRecipient) GetNotificationID() uint64 {
+	if x != nil {
+		return x.NotificationID
+	}
+	return 0
+}
+
+func (x *NotificationRecipient) GetUserID() uint64 {
+	if x != nil {
+		return x.UserID
+	}
+	return 0
+}
+
+func (x *NotificationRecipient) GetRead() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Read
+	}
+	return nil
+}
+
+func (x *NotificationRecipient) GetIsRead() bool {
+	if x != nil {
+		return x.IsRead
+	}
+	return false
+}
+
+type Notifications struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Notifications []*Notification        `protobuf:"bytes,1,rep,name=notifications,proto3" json:"notifications,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Notifications) Reset() {
+	*x = Notifications{}
+	mi := &file_qf_types_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Notifications) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Notifications) ProtoMessage() {}
+
+func (x *Notifications) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Notifications.ProtoReflect.Descriptor instead.
+func (*Notifications) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *Notifications) GetNotifications() []*Notification {
+	if x != nil {
+		return x.Notifications
+	}
+	return nil
+}
+
 var File_qf_types_proto protoreflect.FileDescriptor
 
 const file_qf_types_proto_rawDesc = "" +
@@ -2462,7 +2814,40 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x05ready\x18\x05 \x01(\bR\x05ready\x12\x14\n" +
 	"\x05score\x18\x06 \x01(\rR\x05score\x12e\n" +
 	"\x11gradingBenchmarks\x18\a \x03(\v2\x14.qf.GradingBenchmarkB!ʵ\x03\x1d\xa2\x01\x1agorm:\"foreignKey:ReviewID\"R\x11gradingBenchmarks\x12d\n" +
-	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06editedB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
+	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\x8a\x05\n" +
+	"\fNotification\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x16\n" +
+	"\x06sender\x18\x02 \x01(\x04R\x06sender\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x12\n" +
+	"\x04body\x18\x05 \x01(\tR\x04body\x12\x10\n" +
+	"\x03url\x18\x06 \x01(\tR\x03url\x12\x1a\n" +
+	"\bcourseID\x18\a \x01(\x04R\bcourseID\x12)\n" +
+	"\x04type\x18\b \x01(\x0e2\x15.qf.Notification.TypeR\x04type\x12D\n" +
+	"\rrecipientType\x18\t \x01(\x0e2\x1e.qf.Notification.RecipientTypeR\rrecipientType\x12'\n" +
+	"\x06IsRead\x18\n" +
+	" \x01(\bB\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\x06IsRead\x123\n" +
+	"\frecipientIDs\x18\v \x03(\x04B\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\frecipientIDs\x12j\n" +
+	"\tcreatedAt\x18\f \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tcreatedAt\x129\n" +
+	"\n" +
+	"recipients\x18\r \x03(\v2\x19.qf.NotificationRecipientR\n" +
+	"recipients\"?\n" +
+	"\x04Type\x12\n" +
+	"\n" +
+	"\x06CUSTOM\x10\x00\x12\x0f\n" +
+	"\vMAINTENANCE\x10\x01\x12\x1a\n" +
+	"\x16ALERT_STUNDENTS_BEHIND\x10\x02\"C\n" +
+	"\rRecipientType\x12\r\n" +
+	"\tSELECTIVE\x10\x00\x12\a\n" +
+	"\x03ALL\x10\x01\x12\f\n" +
+	"\bSTUDENTS\x10\x02\x12\f\n" +
+	"\bTEACHERS\x10\x03\"\xd1\x01\n" +
+	"\x15NotificationRecipient\x12&\n" +
+	"\x0eNotificationID\x18\x01 \x01(\x04R\x0eNotificationID\x12\x16\n" +
+	"\x06UserID\x18\x02 \x01(\x04R\x06UserID\x12`\n" +
+	"\x04read\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x04read\x12\x16\n" +
+	"\x06isRead\x18\x04 \x01(\bR\x06isRead\"G\n" +
+	"\rNotifications\x126\n" +
+	"\rnotifications\x18\x01 \x03(\v2\x10.qf.NotificationR\rnotificationsB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
 	file_qf_types_proto_rawDescOnce sync.Once
@@ -2476,88 +2861,99 @@ func file_qf_types_proto_rawDescGZIP() []byte {
 	return file_qf_types_proto_rawDescData
 }
 
-var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 9)
+var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_qf_types_proto_goTypes = []any{
-	(Group_GroupStatus)(0),        // 0: qf.Group.GroupStatus
-	(Repository_Type)(0),          // 1: qf.Repository.Type
-	(Enrollment_UserStatus)(0),    // 2: qf.Enrollment.UserStatus
-	(Enrollment_DisplayState)(0),  // 3: qf.Enrollment.DisplayState
-	(PullRequest_Stage)(0),        // 4: qf.PullRequest.Stage
-	(Submission_Status)(0),        // 5: qf.Submission.Status
-	(GradingCriterion_Grade)(0),   // 6: qf.GradingCriterion.Grade
-	(*User)(nil),                  // 7: qf.User
-	(*Users)(nil),                 // 8: qf.Users
-	(*Group)(nil),                 // 9: qf.Group
-	(*Groups)(nil),                // 10: qf.Groups
-	(*Course)(nil),                // 11: qf.Course
-	(*Courses)(nil),               // 12: qf.Courses
-	(*Repository)(nil),            // 13: qf.Repository
-	(*Enrollment)(nil),            // 14: qf.Enrollment
-	(*UsedSlipDays)(nil),          // 15: qf.UsedSlipDays
-	(*Enrollments)(nil),           // 16: qf.Enrollments
-	(*Assignment)(nil),            // 17: qf.Assignment
-	(*Task)(nil),                  // 18: qf.Task
-	(*Issue)(nil),                 // 19: qf.Issue
-	(*PullRequest)(nil),           // 20: qf.PullRequest
-	(*Assignments)(nil),           // 21: qf.Assignments
-	(*Submission)(nil),            // 22: qf.Submission
-	(*Submissions)(nil),           // 23: qf.Submissions
-	(*Grade)(nil),                 // 24: qf.Grade
-	(*GradingBenchmark)(nil),      // 25: qf.GradingBenchmark
-	(*Benchmarks)(nil),            // 26: qf.Benchmarks
-	(*GradingCriterion)(nil),      // 27: qf.GradingCriterion
-	(*Review)(nil),                // 28: qf.Review
-	(*timestamppb.Timestamp)(nil), // 29: google.protobuf.Timestamp
-	(*score.BuildInfo)(nil),       // 30: score.BuildInfo
-	(*score.Score)(nil),           // 31: score.Score
+	(Group_GroupStatus)(0),          // 0: qf.Group.GroupStatus
+	(Repository_Type)(0),            // 1: qf.Repository.Type
+	(Enrollment_UserStatus)(0),      // 2: qf.Enrollment.UserStatus
+	(Enrollment_DisplayState)(0),    // 3: qf.Enrollment.DisplayState
+	(PullRequest_Stage)(0),          // 4: qf.PullRequest.Stage
+	(Submission_Status)(0),          // 5: qf.Submission.Status
+	(GradingCriterion_Grade)(0),     // 6: qf.GradingCriterion.Grade
+	(Notification_Type)(0),          // 7: qf.Notification.Type
+	(Notification_RecipientType)(0), // 8: qf.Notification.RecipientType
+	(*User)(nil),                    // 9: qf.User
+	(*Users)(nil),                   // 10: qf.Users
+	(*Group)(nil),                   // 11: qf.Group
+	(*Groups)(nil),                  // 12: qf.Groups
+	(*Course)(nil),                  // 13: qf.Course
+	(*Courses)(nil),                 // 14: qf.Courses
+	(*Repository)(nil),              // 15: qf.Repository
+	(*Enrollment)(nil),              // 16: qf.Enrollment
+	(*UsedSlipDays)(nil),            // 17: qf.UsedSlipDays
+	(*Enrollments)(nil),             // 18: qf.Enrollments
+	(*Assignment)(nil),              // 19: qf.Assignment
+	(*Task)(nil),                    // 20: qf.Task
+	(*Issue)(nil),                   // 21: qf.Issue
+	(*PullRequest)(nil),             // 22: qf.PullRequest
+	(*Assignments)(nil),             // 23: qf.Assignments
+	(*Submission)(nil),              // 24: qf.Submission
+	(*Submissions)(nil),             // 25: qf.Submissions
+	(*Grade)(nil),                   // 26: qf.Grade
+	(*GradingBenchmark)(nil),        // 27: qf.GradingBenchmark
+	(*Benchmarks)(nil),              // 28: qf.Benchmarks
+	(*GradingCriterion)(nil),        // 29: qf.GradingCriterion
+	(*Review)(nil),                  // 30: qf.Review
+	(*Notification)(nil),            // 31: qf.Notification
+	(*NotificationRecipient)(nil),   // 32: qf.NotificationRecipient
+	(*Notifications)(nil),           // 33: qf.Notifications
+	(*timestamppb.Timestamp)(nil),   // 34: google.protobuf.Timestamp
+	(*score.BuildInfo)(nil),         // 35: score.BuildInfo
+	(*score.Score)(nil),             // 36: score.Score
 }
 var file_qf_types_proto_depIdxs = []int32{
-	14, // 0: qf.User.Enrollments:type_name -> qf.Enrollment
-	7,  // 1: qf.Users.users:type_name -> qf.User
+	16, // 0: qf.User.Enrollments:type_name -> qf.Enrollment
+	9,  // 1: qf.Users.users:type_name -> qf.User
 	0,  // 2: qf.Group.status:type_name -> qf.Group.GroupStatus
-	7,  // 3: qf.Group.users:type_name -> qf.User
-	14, // 4: qf.Group.enrollments:type_name -> qf.Enrollment
-	9,  // 5: qf.Groups.groups:type_name -> qf.Group
+	9,  // 3: qf.Group.users:type_name -> qf.User
+	16, // 4: qf.Group.enrollments:type_name -> qf.Enrollment
+	11, // 5: qf.Groups.groups:type_name -> qf.Group
 	2,  // 6: qf.Course.enrolled:type_name -> qf.Enrollment.UserStatus
-	14, // 7: qf.Course.enrollments:type_name -> qf.Enrollment
-	17, // 8: qf.Course.assignments:type_name -> qf.Assignment
-	9,  // 9: qf.Course.groups:type_name -> qf.Group
-	11, // 10: qf.Courses.courses:type_name -> qf.Course
+	16, // 7: qf.Course.enrollments:type_name -> qf.Enrollment
+	19, // 8: qf.Course.assignments:type_name -> qf.Assignment
+	11, // 9: qf.Course.groups:type_name -> qf.Group
+	13, // 10: qf.Courses.courses:type_name -> qf.Course
 	1,  // 11: qf.Repository.repoType:type_name -> qf.Repository.Type
-	19, // 12: qf.Repository.issues:type_name -> qf.Issue
-	7,  // 13: qf.Enrollment.user:type_name -> qf.User
-	11, // 14: qf.Enrollment.course:type_name -> qf.Course
-	9,  // 15: qf.Enrollment.group:type_name -> qf.Group
+	21, // 12: qf.Repository.issues:type_name -> qf.Issue
+	9,  // 13: qf.Enrollment.user:type_name -> qf.User
+	13, // 14: qf.Enrollment.course:type_name -> qf.Course
+	11, // 15: qf.Enrollment.group:type_name -> qf.Group
 	2,  // 16: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
 	3,  // 17: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
-	29, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
-	15, // 19: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
-	14, // 20: qf.Enrollments.enrollments:type_name -> qf.Enrollment
-	29, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
-	22, // 22: qf.Assignment.submissions:type_name -> qf.Submission
-	18, // 23: qf.Assignment.tasks:type_name -> qf.Task
-	25, // 24: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	19, // 25: qf.Task.issues:type_name -> qf.Issue
+	34, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
+	17, // 19: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
+	16, // 20: qf.Enrollments.enrollments:type_name -> qf.Enrollment
+	34, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
+	24, // 22: qf.Assignment.submissions:type_name -> qf.Submission
+	20, // 23: qf.Assignment.tasks:type_name -> qf.Task
+	27, // 24: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	21, // 25: qf.Task.issues:type_name -> qf.Issue
 	4,  // 26: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
-	17, // 27: qf.Assignments.assignments:type_name -> qf.Assignment
-	24, // 28: qf.Submission.Grades:type_name -> qf.Grade
-	29, // 29: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
-	28, // 30: qf.Submission.reviews:type_name -> qf.Review
-	30, // 31: qf.Submission.BuildInfo:type_name -> score.BuildInfo
-	31, // 32: qf.Submission.Scores:type_name -> score.Score
-	22, // 33: qf.Submissions.submissions:type_name -> qf.Submission
+	19, // 27: qf.Assignments.assignments:type_name -> qf.Assignment
+	26, // 28: qf.Submission.Grades:type_name -> qf.Grade
+	34, // 29: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
+	30, // 30: qf.Submission.reviews:type_name -> qf.Review
+	35, // 31: qf.Submission.BuildInfo:type_name -> score.BuildInfo
+	36, // 32: qf.Submission.Scores:type_name -> score.Score
+	24, // 33: qf.Submissions.submissions:type_name -> qf.Submission
 	5,  // 34: qf.Grade.Status:type_name -> qf.Submission.Status
-	27, // 35: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
-	25, // 36: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
+	29, // 35: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
+	27, // 36: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
 	6,  // 37: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
-	25, // 38: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	29, // 39: qf.Review.edited:type_name -> google.protobuf.Timestamp
-	40, // [40:40] is the sub-list for method output_type
-	40, // [40:40] is the sub-list for method input_type
-	40, // [40:40] is the sub-list for extension type_name
-	40, // [40:40] is the sub-list for extension extendee
-	0,  // [0:40] is the sub-list for field type_name
+	27, // 38: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	34, // 39: qf.Review.edited:type_name -> google.protobuf.Timestamp
+	7,  // 40: qf.Notification.type:type_name -> qf.Notification.Type
+	8,  // 41: qf.Notification.recipientType:type_name -> qf.Notification.RecipientType
+	34, // 42: qf.Notification.createdAt:type_name -> google.protobuf.Timestamp
+	32, // 43: qf.Notification.recipients:type_name -> qf.NotificationRecipient
+	34, // 44: qf.NotificationRecipient.read:type_name -> google.protobuf.Timestamp
+	31, // 45: qf.Notifications.notifications:type_name -> qf.Notification
+	46, // [46:46] is the sub-list for method output_type
+	46, // [46:46] is the sub-list for method input_type
+	46, // [46:46] is the sub-list for extension type_name
+	46, // [46:46] is the sub-list for extension extendee
+	0,  // [0:46] is the sub-list for field type_name
 }
 
 func init() { file_qf_types_proto_init() }
@@ -2570,8 +2966,8 @@ func file_qf_types_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_types_proto_rawDesc), len(file_qf_types_proto_rawDesc)),
-			NumEnums:      7,
-			NumMessages:   22,
+			NumEnums:      9,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
