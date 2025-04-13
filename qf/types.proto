@@ -276,3 +276,57 @@ message Review {
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
     google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }
+
+//  NOTIFICATION  //
+
+message Notification {
+    // Predefined notification types
+    // Meant for ease of use
+    enum Type {
+        CUSTOM     = 0;
+
+        // Only for admins
+        MAINTENANCE = 1;
+
+        // Only for teachers
+        ALERT_STUNDENTS_BEHIND = 2;
+        // Add more teacher specific notifications here
+        // Needs to be implementend in the server -> internal/notification/*
+        // And added to the interface -> internal/notification/notification.go
+    }
+
+    enum RecipientType {
+        SELECTIVE      = 0;
+        ALL         = 1; // Only for admins
+        STUDENTS    = 2;
+        TEACHERS    = 3;
+    }
+
+    uint64 ID                   = 1;
+    uint64 sender               = 2;
+    string title                = 4;
+    string body                 = 5;
+    string url                  = 6;
+    uint64 courseID             = 7;
+    Type type                   = 8;
+    RecipientType recipientType = 9;
+    // Updated when a user retrieves the notifications
+    bool IsRead                 = 10 [(go.field) = { tags: 'gorm:"-"'}];
+    // Used by the frontend to easily add and remove recipients
+    repeated uint64 recipientIDs  = 11 [(go.field) = { tags: 'gorm:"-"' }];
+
+    google.protobuf.Timestamp createdAt       = 12 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    repeated NotificationRecipient recipients = 13;
+}
+
+// TODO(Joachim): Switch out with many2many ???
+message NotificationRecipient {
+    uint64 NotificationID          = 1;
+    uint64 UserID                  = 2;
+    google.protobuf.Timestamp read = 3 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    bool isRead                    = 4;
+}
+
+message Notifications {
+    repeated Notification notifications = 1;
+}

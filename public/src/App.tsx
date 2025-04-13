@@ -10,6 +10,7 @@ import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
 import LoginPage from './pages/LoginPage'
+import NotificationPage from './pages/NotificationPage'
 
 const App = () => {
     const state = useAppState()
@@ -34,6 +35,7 @@ const App = () => {
                     <Route path="/login" component={LoginPage} />
                     <Route path="/about" component={AboutPage} />
                     <Route path="/profile" component={Profile} />
+                    <Route path="/notifications" component={NotificationPage} />
                     <Route path="/course/:id" component={CoursePage} />
                     <Route path="/courses" exact component={Courses} />
                     <Route path="/admin" component={AdminPage} />

@@ -12,13 +12,15 @@ import (
 // To add a new service, add a new field to this struct and
 // initialize the service in the NewStreamServices function.
 type StreamServices struct {
-	Submission *Service[uint64, qf.Submission]
+	Submission   *Service[uint64, qf.Submission]
+	Notification *Service[uint64, qf.Notification]
 }
 
 // NewStreamServices creates a new StreamServices.
 func NewStreamServices() *StreamServices {
 	return &StreamServices{
-		Submission: NewService[uint64, qf.Submission](),
+		Submission:   NewService[uint64, qf.Submission](),
+		Notification: NewService[uint64, qf.Notification](),
 	}
 }
 

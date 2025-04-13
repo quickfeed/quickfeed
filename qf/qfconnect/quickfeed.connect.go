@@ -126,6 +126,18 @@ const (
 	// QuickFeedServiceUpdateReviewProcedure is the fully-qualified name of the QuickFeedService's
 	// UpdateReview RPC.
 	QuickFeedServiceUpdateReviewProcedure = "/qf.QuickFeedService/UpdateReview"
+	// QuickFeedServiceGetNotificationsProcedure is the fully-qualified name of the QuickFeedService's
+	// GetNotifications RPC.
+	QuickFeedServiceGetNotificationsProcedure = "/qf.QuickFeedService/GetNotifications"
+	// QuickFeedServiceSendNotificationProcedure is the fully-qualified name of the QuickFeedService's
+	// SendNotification RPC.
+	QuickFeedServiceSendNotificationProcedure = "/qf.QuickFeedService/SendNotification"
+	// QuickFeedServiceReadNotificationProcedure is the fully-qualified name of the QuickFeedService's
+	// ReadNotification RPC.
+	QuickFeedServiceReadNotificationProcedure = "/qf.QuickFeedService/ReadNotification"
+	// QuickFeedServiceNotificationStreamProcedure is the fully-qualified name of the QuickFeedService's
+	// NotificationStream RPC.
+	QuickFeedServiceNotificationStreamProcedure = "/qf.QuickFeedService/NotificationStream"
 	// QuickFeedServiceGetRepositoriesProcedure is the fully-qualified name of the QuickFeedService's
 	// GetRepositories RPC.
 	QuickFeedServiceGetRepositoriesProcedure = "/qf.QuickFeedService/GetRepositories"
@@ -173,6 +185,10 @@ type QuickFeedServiceClient interface {
 	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
+	GetNotifications(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Notifications], error)
+	SendNotification(context.Context, *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error)
+	ReadNotification(context.Context, *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error)
+	NotificationStream(context.Context, *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Notification], error)
 	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Submission], error)
@@ -375,6 +391,30 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 			connect.WithClientOptions(opts...),
 		),
+		getNotifications: connect.NewClient[qf.Void, qf.Notifications](
+			httpClient,
+			baseURL+QuickFeedServiceGetNotificationsProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetNotifications")),
+			connect.WithClientOptions(opts...),
+		),
+		sendNotification: connect.NewClient[qf.Notification, qf.Void](
+			httpClient,
+			baseURL+QuickFeedServiceSendNotificationProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("SendNotification")),
+			connect.WithClientOptions(opts...),
+		),
+		readNotification: connect.NewClient[qf.Notification, qf.Void](
+			httpClient,
+			baseURL+QuickFeedServiceReadNotificationProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("ReadNotification")),
+			connect.WithClientOptions(opts...),
+		),
+		notificationStream: connect.NewClient[qf.Void, qf.Notification](
+			httpClient,
+			baseURL+QuickFeedServiceNotificationStreamProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("NotificationStream")),
+			connect.WithClientOptions(opts...),
+		),
 		getRepositories: connect.NewClient[qf.CourseRequest, qf.Repositories](
 			httpClient,
 			baseURL+QuickFeedServiceGetRepositoriesProcedure,
@@ -429,6 +469,10 @@ type quickFeedServiceClient struct {
 	deleteCriterion        *connect.Client[qf.GradingCriterion, qf.Void]
 	createReview           *connect.Client[qf.ReviewRequest, qf.Review]
 	updateReview           *connect.Client[qf.ReviewRequest, qf.Review]
+	getNotifications       *connect.Client[qf.Void, qf.Notifications]
+	sendNotification       *connect.Client[qf.Notification, qf.Void]
+	readNotification       *connect.Client[qf.Notification, qf.Void]
+	notificationStream     *connect.Client[qf.Void, qf.Notification]
 	getRepositories        *connect.Client[qf.CourseRequest, qf.Repositories]
 	isEmptyRepo            *connect.Client[qf.RepositoryRequest, qf.Void]
 	submissionStream       *connect.Client[qf.Void, qf.Submission]
@@ -589,6 +633,26 @@ func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *connect.
 	return c.updateReview.CallUnary(ctx, req)
 }
 
+// GetNotifications calls qf.QuickFeedService.GetNotifications.
+func (c *quickFeedServiceClient) GetNotifications(ctx context.Context, req *connect.Request[qf.Void]) (*connect.Response[qf.Notifications], error) {
+	return c.getNotifications.CallUnary(ctx, req)
+}
+
+// SendNotification calls qf.QuickFeedService.SendNotification.
+func (c *quickFeedServiceClient) SendNotification(ctx context.Context, req *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error) {
+	return c.sendNotification.CallUnary(ctx, req)
+}
+
+// ReadNotification calls qf.QuickFeedService.ReadNotification.
+func (c *quickFeedServiceClient) ReadNotification(ctx context.Context, req *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error) {
+	return c.readNotification.CallUnary(ctx, req)
+}
+
+// NotificationStream calls qf.QuickFeedService.NotificationStream.
+func (c *quickFeedServiceClient) NotificationStream(ctx context.Context, req *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Notification], error) {
+	return c.notificationStream.CallServerStream(ctx, req)
+}
+
 // GetRepositories calls qf.QuickFeedService.GetRepositories.
 func (c *quickFeedServiceClient) GetRepositories(ctx context.Context, req *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	return c.getRepositories.CallUnary(ctx, req)
@@ -640,6 +704,10 @@ type QuickFeedServiceHandler interface {
 	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
+	GetNotifications(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Notifications], error)
+	SendNotification(context.Context, *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error)
+	ReadNotification(context.Context, *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error)
+	NotificationStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Notification]) error
 	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Submission]) error
@@ -838,6 +906,30 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 		connect.WithHandlerOptions(opts...),
 	)
+	quickFeedServiceGetNotificationsHandler := connect.NewUnaryHandler(
+		QuickFeedServiceGetNotificationsProcedure,
+		svc.GetNotifications,
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetNotifications")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceSendNotificationHandler := connect.NewUnaryHandler(
+		QuickFeedServiceSendNotificationProcedure,
+		svc.SendNotification,
+		connect.WithSchema(quickFeedServiceMethods.ByName("SendNotification")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceReadNotificationHandler := connect.NewUnaryHandler(
+		QuickFeedServiceReadNotificationProcedure,
+		svc.ReadNotification,
+		connect.WithSchema(quickFeedServiceMethods.ByName("ReadNotification")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceNotificationStreamHandler := connect.NewServerStreamHandler(
+		QuickFeedServiceNotificationStreamProcedure,
+		svc.NotificationStream,
+		connect.WithSchema(quickFeedServiceMethods.ByName("NotificationStream")),
+		connect.WithHandlerOptions(opts...),
+	)
 	quickFeedServiceGetRepositoriesHandler := connect.NewUnaryHandler(
 		QuickFeedServiceGetRepositoriesProcedure,
 		svc.GetRepositories,
@@ -920,6 +1012,14 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceCreateReviewHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateReviewProcedure:
 			quickFeedServiceUpdateReviewHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetNotificationsProcedure:
+			quickFeedServiceGetNotificationsHandler.ServeHTTP(w, r)
+		case QuickFeedServiceSendNotificationProcedure:
+			quickFeedServiceSendNotificationHandler.ServeHTTP(w, r)
+		case QuickFeedServiceReadNotificationProcedure:
+			quickFeedServiceReadNotificationHandler.ServeHTTP(w, r)
+		case QuickFeedServiceNotificationStreamProcedure:
+			quickFeedServiceNotificationStreamHandler.ServeHTTP(w, r)
 		case QuickFeedServiceGetRepositoriesProcedure:
 			quickFeedServiceGetRepositoriesHandler.ServeHTTP(w, r)
 		case QuickFeedServiceIsEmptyRepoProcedure:
@@ -1057,6 +1157,22 @@ func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *conne
 
 func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) GetNotifications(context.Context, *connect.Request[qf.Void]) (*connect.Response[qf.Notifications], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetNotifications is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) SendNotification(context.Context, *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.SendNotification is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) ReadNotification(context.Context, *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.ReadNotification is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) NotificationStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Notification]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.NotificationStream is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {

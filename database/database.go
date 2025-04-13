@@ -147,4 +147,12 @@ type Database interface {
 
 	// UpdateSlipDays updates used slip days for the given course enrollment
 	UpdateSlipDays([]*qf.UsedSlipDays) error
+
+	// CreateNotification creates a new notification for the given user.
+	CreateNotification(notification *qf.Notification) error
+	// GetNotifications returns all notifications for the given user.
+	GetNotifications(userID uint64) ([]*qf.Notification, error)
+	// UpdateNotification updates the given notification.
+	// Used for marking notifications as read.
+	UpdateNotification(query *qf.Notification) error
 }

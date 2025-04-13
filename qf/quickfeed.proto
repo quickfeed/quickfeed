@@ -64,6 +64,13 @@ service QuickFeedService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
 
+    // notifications //
+
+    rpc GetNotifications(Void) returns (Notifications) {}
+    rpc SendNotification(Notification) returns (Void) {}
+    rpc ReadNotification(Notification) returns (Void) {}
+    rpc NotificationStream(Void) returns (stream Notification) {}
+
     // misc //
 
     rpc GetRepositories(CourseRequest) returns (Repositories) {}

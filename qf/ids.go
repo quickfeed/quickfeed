@@ -125,3 +125,13 @@ func (r *GradingCriterion) IDFor(_ string) uint64 {
 func (*Organization) IDFor(_ string) uint64 {
 	return 0
 }
+
+func (n *Notification) IDFor(role string) uint64 {
+	switch role {
+	case "course":
+		return n.GetCourseID()
+	case "user":
+		return n.GetSender()
+	}
+	return 0
+}

@@ -69,6 +69,8 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 		&qf.Issue{},
 		&qf.Task{},
 		&qf.PullRequest{},
+		&qf.Notification{},
+		&qf.NotificationRecipient{},
 		&score.BuildInfo{},
 		&score.Score{},
 	); err != nil {

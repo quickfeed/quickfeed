@@ -11,6 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/notification"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
@@ -20,24 +21,27 @@ import (
 // QuickFeedService holds references to the database and
 // other shared data structures.
 type QuickFeedService struct {
-	logger *zap.SugaredLogger
-	db     database.Database
-	scmMgr *scm.Manager
-	bh     BaseHookOptions
-	runner ci.Runner
+	logger   *zap.SugaredLogger
+	db       database.Database
+	notifier notification.Notification
+	scmMgr   *scm.Manager
+	bh       BaseHookOptions
+	runner   ci.Runner
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
 func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+	streams := stream.NewStreamServices()
 	return &QuickFeedService{
-		logger:  logger.Sugar(),
-		db:      db,
-		scmMgr:  mgr,
-		bh:      bh,
-		runner:  runner,
-		streams: stream.NewStreamServices(),
+		logger:   logger.Sugar(),
+		db:       db,
+		notifier: notification.New(db, streams.Notification),
+		scmMgr:   mgr,
+		bh:       bh,
+		runner:   runner,
+		streams:  streams,
 	}
 }
 
@@ -587,11 +591,53 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// SubmissionStream adds the the created stream to the stream service.
+// SubmissionStream adds the created stream to the stream service.
 // The stream may be used to send the submission results to the frontend.
 // The stream is closed when the client disconnects.
 func (s *QuickFeedService) SubmissionStream(ctx context.Context, _ *connect.Request[qf.Void], st *connect.ServerStream[qf.Submission]) error {
 	stream := stream.NewStream(ctx, st)
 	s.streams.Submission.Add(stream, userID(ctx))
 	return stream.Run()
+}
+
+// NotificationStream adds the created stream to the stream service.
+// The stream may be used to send notifications to the frontend.
+func (s *QuickFeedService) NotificationStream(ctx context.Context, _ *connect.Request[qf.Void], st *connect.ServerStream[qf.Notification]) error {
+	stream := stream.NewStream(ctx, st)
+	s.streams.Notification.Add(stream, userID(ctx))
+	return stream.Run()
+}
+
+func (s *QuickFeedService) GetNotifications(ctx context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.Notifications], error) {
+	notifications, err := s.db.GetNotifications(userID(ctx))
+	if err != nil {
+		s.logger.Errorf("GetNotifications failed: %v", err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get notifications"))
+	}
+	return connect.NewResponse(&qf.Notifications{
+		Notifications: notifications,
+	}), nil
+}
+
+func (s *QuickFeedService) ReadNotification(ctx context.Context, in *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error) {
+	// Mark the notification as read for the current user
+	in.Msg.ReadBy([]uint64{userID(ctx)})
+
+	if err := s.db.UpdateNotification(in.Msg); err != nil {
+		s.logger.Errorf("ReadNotification failed: %v", err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to set notification as read"))
+	}
+	return &connect.Response[qf.Void]{}, nil
+}
+
+func (s *QuickFeedService) SendNotification(ctx context.Context, in *connect.Request[qf.Notification]) (*connect.Response[qf.Void], error) {
+	// Overwrite the creator ID if its incorrect
+	if in.Msg.GetSender() != userID(ctx) {
+		in.Msg.Sender = userID(ctx)
+	}
+	if err := s.notifier.Notify(in.Msg); err != nil {
+		s.logger.Errorf("Notify failed: %v", err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to send notification"))
+	}
+	return &connect.Response[qf.Void]{}, nil
 }

@@ -1,6 +1,6 @@
 import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "."
-import {RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import { RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import {
     Assignment,
     Course,
@@ -18,14 +18,15 @@ import {
     Submission_Status,
     SubmissionSchema,
     User,
-    UserSchema
+    UserSchema,
+    Notification
 } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
-import {isEmptyRepo} from "./internalActions"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isNotificationValid, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
+import { isEmptyRepo } from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
 import { clone, create, isMessage } from "@bufbuild/protobuf"
 
-export const internal = {isEmptyRepo}
+export const internal = { isEmptyRepo }
 
 export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
@@ -46,6 +47,32 @@ export const handleStreamError = (context: Context, error: Error): void => {
 
 export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
     state.submissions.update(submission)
+}
+
+export const receiveNotification = ({ actions, state }: Context, notification: Notification): void => {
+    actions.alert({ text: notification.title, color: Color.GREEN, delay: 10000 })
+    state.notifications.push(notification)
+}
+
+export const getNotifications = async ({ state, effects }: Context): Promise<void> => {
+    const response = await effects.api.client.getNotifications({})
+    if (response.error) {
+        return
+    }
+    state.notifications = response.message.notifications
+}
+
+export const sendNotification = async ({ effects, actions }: Context, notification: Notification): Promise<void> => {
+    const error = isNotificationValid(notification)
+    if (error != "") {
+        actions.alert({ text: error, color: Color.RED, delay: 10000 })
+        return
+    }
+
+    const response = await effects.api.client.sendNotification(notification)
+    if (response.error) {
+        actions.alert({ text: response.error.message, color: Color.RED, delay: 10000 })
+    }
 }
 
 /**
@@ -723,7 +750,15 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment |
     state.selectedEnrollment = enrollment ? enrollment : null
 }
 
-export const startSubmissionStream = ({ actions, effects }: Context) => {
+export const startStreams = ({ actions, effects }: Context) => {
+    // Start notification stream
+    effects.streamService.notificationStream({
+        onStatusChange: actions.setConnectionStatus,
+        onMessage: actions.receiveNotification,
+        onError: actions.handleStreamError,
+    })
+
+    // Start submission stream
     effects.streamService.submissionStream({
         onStatusChange: actions.setConnectionStatus,
         onMessage: actions.receiveSubmission,
@@ -748,6 +783,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         state.isLoading = false
         return false
     }
+    await actions.getNotifications()
     // Order matters here. Some data is dependent on other data. Ex. fetching submissions depends on enrollments.
     await actions.getEnrollmentsByUser()
     await actions.getAssignments()
@@ -765,7 +801,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         await actions.getUsers()
     }
     await actions.getRepositories()
-    actions.startSubmissionStream()
+    actions.startStreams()
     // End loading screen.
     state.isLoading = false
     return true

@@ -96,14 +96,14 @@ var buildOptions = api.BuildOptions{
 
 // resetDistFolder removes the dist folder and creates a new one
 func resetDistFolder() error {
-	path := public("dist")
-	if _, err := os.Stat(path); err == nil {
-		if err := os.RemoveAll(path); err != nil {
+	entries, err := os.ReadDir(public("dist"))
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if err := os.Remove(filepath.Join(public("dist"), entry.Name())); err != nil {
 			return err
 		}
-	}
-	if err := os.MkdirAll(path, 0o755); err != nil {
-		return err
 	}
 	return nil
 }

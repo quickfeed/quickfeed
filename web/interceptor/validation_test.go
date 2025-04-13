@@ -53,6 +53,8 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.RepositoryRequest":        {cleaner: F, validator: T},
 		"qf.GroupRequest":             {cleaner: F, validator: T},
 		"qf.EnrollmentRequest":        {cleaner: F, validator: T},
+		"qf.Notification":             {cleaner: F, validator: T},
+		"qf.Notifications":            {cleaner: F, validator: F},
 		"score.Score":                 {cleaner: F, validator: F},
 		"score.BuildInfo":             {cleaner: F, validator: F},
 	}

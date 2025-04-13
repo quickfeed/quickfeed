@@ -38,8 +38,12 @@ var accessRolesFor = map[string]roles{
 	"GetCourse":              {none},
 	"GetCourses":             {none},
 	"SubmissionStream":       {none}, // No role required as long as the user is authenticated, i.e. has a valid token.
+	"NotificationStream":     {none}, // ^
+	"GetNotifications":       {none},
+	"ReadNotification":       {none},
 	"CreateEnrollment":       {user},
 	"UpdateCourseVisibility": {user},
+	"SendNotification":       {teacher, admin},
 	"UpdateUser":             {user, admin},
 	"GetEnrollments":         {user, student, teacher, admin},
 	"GetSubmissions":         {student, group, teacher},
