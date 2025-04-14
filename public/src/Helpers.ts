@@ -201,10 +201,7 @@ export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return be
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
 export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
 
-export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
-    if (!submission) {
-        return Submission_Status.NONE
-    }
+export const getStatusByUser = (submission: Submission, userID: bigint): Submission_Status => {
     const grade = submission.Grades.find(grade => grade.UserID === userID)
     if (!grade) {
         return Submission_Status.NONE
@@ -297,7 +294,12 @@ export const defaultTag = (date: Date): string => {
 }
 
 export const defaultYear = (date: Date): number => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
+    // TODO(Joachim): This statement is confusing
+    // Should it be? date.getMonth() == 11 && date.getDate() <= 31
+    // meaning its november ?
+    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10
+        ? (date.getFullYear() + 1)
+        : date.getFullYear()
 }
 
 export const userLink = (user: User): string => {
