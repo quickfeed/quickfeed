@@ -17,7 +17,7 @@ const EditCourse = () => {
             c.name, c.code, c.tag,
             c.year.toString(), c.slipDays.toString(),
 
-            <button key="" className={`clickable ${badge}`} onClick={() => setCourse(selected ? undefined : c)}>
+            <button key={c.ID} className={`clickable ${badge}`} onClick={() => setCourse(selected ? undefined : c)}>
                 {buttonText}
             </button>
         ]

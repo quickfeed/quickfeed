@@ -69,7 +69,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
             return dynamicButtons
         }
         return dynamicButtons.map((button, index) => (
-            <div key={index} className="col">
+            <div key={`${buttonsInfo[index].text}-divButton`} className="col">
                 {button}
             </div>
         ))

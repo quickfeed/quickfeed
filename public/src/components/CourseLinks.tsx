@@ -27,7 +27,7 @@ const CourseLinks = () => {
     ]
 
     const LinkElement = ({ link }: { link: link }) => {
-        if (repo[link.type] == undefined) {
+        if (repo[link.type] === undefined) {
             return null
         }
 

@@ -11,7 +11,7 @@ const CourseFavoriteButton = ({ enrollment, style }: { enrollment: Enrollment, s
     return (
         // TODO: Consider creating a tooltip component.
         <span style={style} title="Favorite or unfavorite this course. Favorite courses will appear on your dashboard.">
-            <i className={starIcon} onClick={() => actions.setEnrollmentState(enrollment)} />
+            <i role="button" aria-hidden="true" className={starIcon} onClick={() => actions.setEnrollmentState(enrollment)} />
         </span>
     )
 }

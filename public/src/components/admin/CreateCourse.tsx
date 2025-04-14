@@ -35,7 +35,7 @@ const CreateCourse = () => {
                         <div className="input-group-text">Get Course</div>
                     </div>
                     <input className="form-control" disabled={course ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
-                    <span className={buttonClass} onClick={refreshIfNoCourse}>
+                    <span role="button" aria-hidden="true" className={buttonClass} onClick={refreshIfNoCourse}>
                         {findTextOrIcon}
                     </span>
                 </div>

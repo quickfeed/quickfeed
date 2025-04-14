@@ -36,7 +36,7 @@ const TableSort = ({ review }: { review: boolean }) => {
         return state.sortSubmissionsBy === sort ? "font-weight-bold" : ""
     }
     const pointer = state.sortAscending ? "fa fa-caret-down" : "fa fa-caret-down fa-rotate-180"
-    const textFortoggleIndiviualView = state.individualSubmissionView ? "Individual" : "Group"
+    const textForToggleIndividualViewButton = state.individualSubmissionView ? "Individual" : "Group"
 
     const submissionFilters = [
         { name: "teachers", text: "Teachers", show: true },
@@ -76,7 +76,7 @@ const TableSort = ({ review }: { review: boolean }) => {
                 {filterElements}
             </div>
             <div className="d-inline-flex flex-row">
-                <DivButton text={textFortoggleIndiviualView} onclick={toggleIndividualSubmissions} />
+                <DivButton text={textForToggleIndividualViewButton} onclick={toggleIndividualSubmissions} />
             </div>
         </div>
     )
