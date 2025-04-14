@@ -1,7 +1,8 @@
 import { createStateHook, createActionsHook, createEffectsHook } from 'overmind-react'
 import { state } from './state'
-import * as review from './namespaces/review'
-import * as global from './namespaces/global'
+// review and global does not expose themselves as an ES Module.
+import * as review from './namespaces/review' // skipcq: JS-C1003
+import * as global from './namespaces/global' // skipcq: JS-C1003
 import { IContext } from 'overmind'
 import { merge, namespaced } from 'overmind/config'
 
