@@ -76,16 +76,14 @@ const Members = () => {
             </i>
         )
         const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
-        const data: Row = []
-        data.push(
+        return [
             Name, Email, StudentID,
             getFormattedTime(enrollment.lastActivityDate),
             enrollment.totalApproved.toString(),
             enrollment.slipDaysRemaining.toString(),
 
             isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
-        )
-        return data
+        ]
     })
 
     const toggleEditButtonText = edit ? "Done" : "Edit"
