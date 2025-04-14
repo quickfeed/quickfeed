@@ -42,53 +42,49 @@ const Members = () => {
         { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
     ]
     const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
-        const data: Row = []
-        data.push(enrollment.user ? enrollment.user.Name : "")
-        data.push(enrollment.user ? enrollment.user.Email : "")
-        data.push(enrollment.user ? enrollment.user.StudentID : "")
-        data.push(getFormattedTime(enrollment.lastActivityDate))
-        data.push(enrollment.totalApproved.toString())
-        data.push(enrollment.slipDaysRemaining.toString())
+        const editAndTeacher = edit && isTeacher(enrollment)
 
-        if (isPending(enrollment)) {
-            data.push(
-                <div className="d-flex">
-                    <DynamicButton
-                        text={"Accept"}
-                        color={Color.GREEN}
-                        type={ButtonType.BADGE}
-                        className="mr-2"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT })}
-                    />
-                    <DynamicButton
-                        text={"Reject"}
-                        color={Color.RED}
-                        type={ButtonType.BADGE}
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
-                    />
-                </div>)
-        } else {
-            data.push(edit ? (
-                <div className="d-flex">
-                    <DynamicButton
-                        text={isTeacher(enrollment) ? "Demote" : "Promote"}
-                        color={isTeacher(enrollment) ? Color.YELLOW : Color.BLUE}
-                        type={ButtonType.BADGE}
-                        className="mr-2"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}
-                    />
-                    <DynamicButton
-                        text={"Reject"}
-                        color={Color.RED}
-                        type={ButtonType.BADGE}
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
-                    />
-                </div>) :
-                <i className={EnrollmentStatusBadge[enrollment.status]}>
-                    {EnrollmentStatus[enrollment.status]}
-                </i>
-            )
-        }
+        const actionColor = editAndTeacher ? Color.YELLOW : Color.BLUE
+        const currentRole = editAndTeacher ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
+        const userRoleAction = editAndTeacher ? "Demote" : "Promote"
+
+        const buttonColor = isPending(enrollment) ? Color.GREEN : actionColor
+        const role = isPending(enrollment) ? Enrollment_UserStatus.STUDENT : currentRole
+        const enrollmentButtonText = isPending(enrollment) ? "Accept" : userRoleAction
+
+        const buttons = (
+            <div className="d-flex">
+                <DynamicButton
+                    text={enrollmentButtonText}
+                    color={buttonColor}
+                    type={ButtonType.BADGE}
+                    className="mr-2"
+                    onClick={() => actions.updateEnrollment({ enrollment, status: role })}
+                />
+                <DynamicButton
+                    text={"Reject"}
+                    color={Color.RED}
+                    type={ButtonType.BADGE}
+                    onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
+                />
+            </div>
+        )
+
+        const enrollmentBadgeIcon = (
+            <i className={EnrollmentStatusBadge[enrollment.status]}>
+                {EnrollmentStatus[enrollment.status]}
+            </i>
+        )
+        const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
+        const data: Row = []
+        data.push(
+            Name, Email, StudentID,
+            getFormattedTime(enrollment.lastActivityDate),
+            enrollment.totalApproved.toString(),
+            enrollment.slipDaysRemaining.toString(),
+
+            isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
+        )
         return data
     })
 
