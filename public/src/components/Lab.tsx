@@ -43,11 +43,11 @@ const Lab = () => {
             // Retrieve the student's submission
             assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
             if (!assignment) {
-                return <CenteredMessage message={KnownMessage.NoAssignment} />
+                return <CenteredMessage message={KnownMessage.StudentNoAssignment} />
             }
             const submissions = state.submissions.ForAssignment(assignment) ?? null
             if (!submissions) {
-                return <CenteredMessage message={KnownMessage.NoSubmission} />
+                return <CenteredMessage message={KnownMessage.StudentNoSubmission} />
             }
 
             if (isGroupLab) {
@@ -78,7 +78,7 @@ const Lab = () => {
                 </div>
             )
         }
-        return <CenteredMessage message={KnownMessage.NoSubmission} />
+        return <CenteredMessage message={state.isTeacher ? KnownMessage.TeacherNoSubmission : KnownMessage.StudentNoSubmission} />
     }
 
     return (

@@ -7,11 +7,11 @@ import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 const LabResult = () => {
     const state = useAppState()
     if (!state.selectedSubmission) {
-        return <CenteredMessage message={KnownMessage.NoSubmission} />
+        return <CenteredMessage message={KnownMessage.TeacherNoSubmission} />
     }
     const assignment = state.selectedAssignment
     if (!assignment) {
-        return <CenteredMessage message={KnownMessage.NoAssignment} />
+        return <CenteredMessage message={KnownMessage.TeacherNoAssignment} />
     }
     return (
         <div className="lab-resize lab-sticky">

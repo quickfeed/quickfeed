@@ -73,26 +73,26 @@ describe("Lab view correctly re-renders on state change", () => {
 
     test("No assignment", () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
     })
 
     test("No submission", async () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "Select a submission from the results table"
-        assertContent(KnownMessage.NoSubmission)
+        assertContent(KnownMessage.StudentNoSubmission)
     })
 
     test("Submission found", async () => {
         // TODO:  The previous tests are covered here, we could remove them
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "Select a submission from the results table"
-        assertContent(KnownMessage.NoSubmission)
+        assertContent(KnownMessage.StudentNoSubmission)
 
         // fetch submissions for the user
         await act(async () => {
