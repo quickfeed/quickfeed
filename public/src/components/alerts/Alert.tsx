@@ -54,8 +54,9 @@ const Alert = ({ alert }: { alert: AlertType }) => {
         }
     }, [actions, alert])
 
+    const handlePop = React.useCallback(() => actions.popAlert(alert), [actions, alert])
     return (
-        <div className={`alert alert-${alert.color}`} role="button" aria-hidden="true" style={{ marginTop: "20px", whiteSpace: "pre-wrap" }} onClick={() => actions.popAlert(alert)}>
+        <div className={`alert alert-${alert.color}`} role="button" aria-hidden="true" style={{ marginTop: "20px", whiteSpace: "pre-wrap" }} onClick={handlePop}>
             {alert.delay && (
                 <svg viewBox="0 0 50 50" style={{ width: 20, height: 20, marginRight: 20 }}>
                     <circle ref={circleRef} cx={25} cy={25} r={20} strokeWidth={5} fill="none" stroke="#000" />

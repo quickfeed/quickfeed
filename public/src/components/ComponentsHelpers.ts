@@ -1,4 +1,5 @@
 import { isMessage } from "@bufbuild/protobuf"
+import { useCallback } from "react"
 import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../proto/qf/types_pb"
 import { groupRepoLink, Icon, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions } from "../overmind"
@@ -74,15 +75,17 @@ export const generateRow = (
     return row
 }
 
-export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+export const GenerateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+    const handleSort = useCallback((sortBy: SubmissionSort) => () => actions.setSubmissionSort(sortBy), [actions])
     const base: Row = [
-        { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
+        { value: "Name", onClick: handleSort(SubmissionSort.Name) }
     ]
     if (isCourseManuallyGraded) {
-        base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
+        base.unshift({ value: "ID", onClick: handleSort(SubmissionSort.ID) })
     }
+    const handleClick = useCallback((assignmentID: bigint) => () => actions.review.setAssignmentID(assignmentID), [actions.review])
     for (const assignment of assignments) {
-        const cell: CellElement = { value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }
+        const cell: CellElement = { value: assignment.name, onClick: handleClick(assignment.ID) }
         // If we are viewing by group, ignore all non-group assignments
         if (viewByGroup && !assignment.isGroupLab) {
             continue

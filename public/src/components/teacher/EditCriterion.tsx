@@ -1,10 +1,10 @@
-import React, { useState } from "react"
+import React, { useState, memo } from "react"
 import { Assignment, GradingCriterion, GradingCriterionSchema } from "../../../proto/qf/types_pb"
 import { useActions } from "../../overmind"
 import { clone, create } from "@bufbuild/protobuf"
 
 
-const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
+const EditCriterion = memo(({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)
@@ -70,6 +70,8 @@ const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { origina
             {editing ? input : textAndButton}
         </div>
     )
-}
+})
+
+EditCriterion.displayName = "EditCriterion"
 
 export default EditCriterion

@@ -22,7 +22,7 @@ const NavBarTeacher = () => {
         links.unshift({ link: { text: "Review", to: `/course/${state.activeCourse}/review` } })
     }
 
-    const teacherLinks = links.map((link, index) => { return <NavBarLink key={index} link={link.link} icons={link.icons} /> })
+    const teacherLinks = links.map((link) => { return <NavBarLink key={link.link.text} link={link.link} icons={link.icons} /> })
     return <>{teacherLinks}</>
 }
 

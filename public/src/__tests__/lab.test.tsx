@@ -16,7 +16,7 @@ describe("Lab view correctly re-renders on state change", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
-        getAssignments: mock("getAssignments", async (request) => {
+        getAssignments: mock("getAssignments", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
                 return { message: create(AssignmentsSchema), error: new ConnectError("course not found") }
@@ -24,7 +24,7 @@ describe("Lab view correctly re-renders on state change", () => {
             const assignments = MockData.mockedAssignments().filter(a => a.CourseID === request.courseID)
             return { message: create(AssignmentsSchema, { assignments }), error: null }
         }),
-        getSubmissions: mock("getSubmissions", async (request) => {
+        getSubmissions: mock("getSubmissions", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.CourseID)
             if (!course) {
                 return { message: create(SubmissionsSchema), error: new ConnectError("course not found") }
