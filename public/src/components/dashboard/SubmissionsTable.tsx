@@ -44,7 +44,7 @@ const SubmissionsTable = () => {
             const now = new Date()
 
             /*
-                Only show assingments which are the same year as now and if one month after deadline month.
+                Only show assignments which are the same year as now and if one month after deadline month.
                 This way students will only see assignments which are the current year and the expired assignments
                 are shown for a month after the deadline.
             */
@@ -75,28 +75,26 @@ const SubmissionsTable = () => {
     })
 
     return (
-        <>
-            {table.length !== 0 ? (
-                <div>
-                    <h2> Assignment Deadlines </h2>
-                    <table className="table rounded-lg table-bordered table-hover" id="LandingPageTable">
-                        <thead>
-                            <tr>
-                                <th scope="col">Course</th>
-                                <th scope="col">Assignment</th>
-                                <th scope="col">Progress</th>
-                                <th scope="col">Deadline</th>
-                                <th scope="col">Due in</th>
-                                <th scope="col">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {table}
-                        </tbody>
-                    </table>
-                </div>
-            ) : null}
-        </ >
+        table.length !== 0 ? (
+            <div>
+                <h2> Assignment Deadlines </h2>
+                <table className="table rounded-lg table-bordered table-hover" id="LandingPageTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Course</th>
+                            <th scope="col">Assignment</th>
+                            <th scope="col">Progress</th>
+                            <th scope="col">Deadline</th>
+                            <th scope="col">Due in</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table}
+                    </tbody>
+                </table>
+            </div>
+        ) : null
     )
 }
 
