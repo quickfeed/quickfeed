@@ -92,6 +92,8 @@ const Members = () => {
         return data
     })
 
+    const toggleEditButtonText = edit ? "Done" : "Edit"
+    const toggleEditButtonColor = edit ? Color.RED : Color.BLUE
     return (
         <div className='container'>
             <div className="row no-gutters pb-2">
@@ -100,8 +102,8 @@ const Members = () => {
                 </div>
                 <div className="ml-auto">
                     <Button
-                        text={edit ? "Done" : "Edit"}
-                        color={edit ? Color.RED : Color.BLUE}
+                        text={toggleEditButtonText}
+                        color={toggleEditButtonColor}
                         type={ButtonType.BUTTON}
                         onClick={() => setEditing(!edit)}
                     />

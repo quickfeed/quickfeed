@@ -27,6 +27,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
         }
     }
 
+    const pointerIcon = active ? "icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"
     return (
         <>
             <div role="button" onClick={() => navigateTo(enrollment.courseID)} aria-hidden="true">
@@ -35,7 +36,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
                         {course?.code}
                     </div>
                     <div className="col" title="icon">
-                        <i className={active ? " icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"} />
+                        <i className={pointerIcon} />
                     </div>
                 </li>
             </div>

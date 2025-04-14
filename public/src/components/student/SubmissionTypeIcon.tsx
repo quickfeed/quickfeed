@@ -1,7 +1,7 @@
 import React from 'react'
 
 interface SubmissionTypeIconProps {
-  solo: boolean
+    solo: boolean
 }
 
 const SubmissionTypeIcon: React.FC<SubmissionTypeIconProps> = ({ solo }) => {
@@ -9,7 +9,7 @@ const SubmissionTypeIcon: React.FC<SubmissionTypeIconProps> = ({ solo }) => {
     return (
         <i
             className={`fa ${indicator} submission-icon`}
-            title={solo ? "Solo submission" : "Group submission"}
+            title={`${solo ? "Solo" : "Group"} submission`}
         />
     )
 }
