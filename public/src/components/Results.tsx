@@ -38,20 +38,18 @@ const Results = ({ review }: { review: boolean }) => {
         }
     }, [])
 
-    useEffect(() => {
-        if (!state.selectedSubmission) {
-            // If no submission is selected, check if there is a selected lab in the URL
-            // and select it if it exists
-            const selectedLab = new URLSearchParams(location.search).get('id')
-            if (selectedLab) {
-                const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
-                if (submission) {
-                    actions.setSelectedSubmission({ submission })
-                    actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
-                }
+    if (!state.selectedSubmission) {
+        // If no submission is selected, check if there is a selected lab in the URL
+        // and select it if it exists
+        const selectedLab = new URLSearchParams(location.search).get('id')
+        if (selectedLab) {
+            const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
+            if (submission) {
+                actions.setSelectedSubmission({ submission })
+                actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
             }
         }
-    }, [])
+    }
 
     const handleLabClick = useCallback((labId: bigint) => {
         // Update the URL with the selected lab
