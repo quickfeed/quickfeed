@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
-import type { Enrollment_UserStatus, Grade, Review, Submissions } from "./types_pb";
+import type { Enrollment_UserStatus, Grade, Review, Submission_Status, Submissions } from "./types_pb";
 import { file_qf_types } from "./types_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file qf/requests.proto.
  */
 export const file_qf_requests: GenFile = /*@__PURE__*/
-  fileDesc("ChFxZi9yZXF1ZXN0cy5wcm90bxICcWYilQEKEUNvdXJzZVN1Ym1pc3Npb25zEjsKC3N1Ym1pc3Npb25zGAEgAygLMiYucWYuQ291cnNlU3VibWlzc2lvbnMuU3VibWlzc2lvbnNFbnRyeRpDChBTdWJtaXNzaW9uc0VudHJ5EgsKA2tleRgBIAEoBBIeCgV2YWx1ZRgCIAEoCzIPLnFmLlN1Ym1pc3Npb25zOgI4ASI9Cg1SZXZpZXdSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhoKBnJldmlldxgCIAEoCzIKLnFmLlJldmlldyIhCg1Db3Vyc2VSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEIkEKDEdyb3VwUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIOCgZ1c2VySUQYAiABKAQSDwoHZ3JvdXBJRBgDIAEoBCJGCgxPcmdhbml6YXRpb24SGQoRU2NtT3JnYW5pemF0aW9uSUQYASABKAQSGwoTU2NtT3JnYW5pemF0aW9uTmFtZRgCIAEoCSJzChFFbnJvbGxtZW50UmVxdWVzdBISCghjb3Vyc2VJRBgBIAEoBEgAEhAKBnVzZXJJRBgCIAEoBEgAEisKCHN0YXR1c2VzGAMgAygOMhkucWYuRW5yb2xsbWVudC5Vc2VyU3RhdHVzQgsKCUZldGNoTW9kZSLrAQoRU3VibWlzc2lvblJlcXVlc3QSEAoIQ291cnNlSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKBlVzZXJJRBgDIAEoBEgAEhEKB0dyb3VwSUQYBCABKARIABIWCgxTdWJtaXNzaW9uSUQYBSABKARIABI0CgRUeXBlGAYgASgOMiQucWYuU3VibWlzc2lvblJlcXVlc3QuU3VibWlzc2lvblR5cGVIACIuCg5TdWJtaXNzaW9uVHlwZRIHCgNBTEwQABIICgRVU0VSEAESCQoFR1JPVVAQAkILCglGZXRjaE1vZGUifQoXVXBkYXRlU3VibWlzc2lvblJlcXVlc3QSFAoMc3VibWlzc2lvbklEGAEgASgEEhAKCGNvdXJzZUlEGAIgASgEEg0KBXNjb3JlGAMgASgNEhAKCHJlbGVhc2VkGAQgASgIEhkKBmdyYWRlcxgFIAMoCzIJLnFmLkdyYWRlIngKGFVwZGF0ZVN1Ym1pc3Npb25zUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIUCgxhc3NpZ25tZW50SUQYAiABKAQSEgoKc2NvcmVMaW1pdBgDIAEoDRIPCgdyZWxlYXNlGAQgASgIEg8KB2FwcHJvdmUYBSABKAgiRgoRUmVwb3NpdG9yeVJlcXVlc3QSDgoGdXNlcklEGAEgASgEEg8KB2dyb3VwSUQYAiABKAQSEAoIY291cnNlSUQYAyABKAQiZQoMUmVwb3NpdG9yaWVzEigKBFVSTHMYASADKAsyGi5xZi5SZXBvc2l0b3JpZXMuVVJMc0VudHJ5GisKCVVSTHNFbnRyeRILCgNrZXkYASABKA0SDQoFdmFsdWUYAiABKAk6AjgBIk4KDlJlYnVpbGRSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIUCgxzdWJtaXNzaW9uSUQYAyABKAQiBgoEVm9pZEImWiFnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQvcWa6AgBiBnByb3RvMw", [file_qf_types]);
+  fileDesc("ChFxZi9yZXF1ZXN0cy5wcm90bxICcWYilQEKEUNvdXJzZVN1Ym1pc3Npb25zEjsKC3N1Ym1pc3Npb25zGAEgAygLMiYucWYuQ291cnNlU3VibWlzc2lvbnMuU3VibWlzc2lvbnNFbnRyeRpDChBTdWJtaXNzaW9uc0VudHJ5EgsKA2tleRgBIAEoBBIeCgV2YWx1ZRgCIAEoCzIPLnFmLlN1Ym1pc3Npb25zOgI4ASI9Cg1SZXZpZXdSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhoKBnJldmlldxgCIAEoCzIKLnFmLlJldmlldyIhCg1Db3Vyc2VSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEIkEKDEdyb3VwUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIOCgZ1c2VySUQYAiABKAQSDwoHZ3JvdXBJRBgDIAEoBCJGCgxPcmdhbml6YXRpb24SGQoRU2NtT3JnYW5pemF0aW9uSUQYASABKAQSGwoTU2NtT3JnYW5pemF0aW9uTmFtZRgCIAEoCSJzChFFbnJvbGxtZW50UmVxdWVzdBISCghjb3Vyc2VJRBgBIAEoBEgAEhAKBnVzZXJJRBgCIAEoBEgAEisKCHN0YXR1c2VzGAMgAygOMhkucWYuRW5yb2xsbWVudC5Vc2VyU3RhdHVzQgsKCUZldGNoTW9kZSLrAQoRU3VibWlzc2lvblJlcXVlc3QSEAoIQ291cnNlSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKBlVzZXJJRBgDIAEoBEgAEhEKB0dyb3VwSUQYBCABKARIABIWCgxTdWJtaXNzaW9uSUQYBSABKARIABI0CgRUeXBlGAYgASgOMiQucWYuU3VibWlzc2lvblJlcXVlc3QuU3VibWlzc2lvblR5cGVIACIuCg5TdWJtaXNzaW9uVHlwZRIHCgNBTEwQABIICgRVU0VSEAESCQoFR1JPVVAQAkILCglGZXRjaE1vZGUiuQEKF1VwZGF0ZVN1Ym1pc3Npb25SZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIUCgxzdWJtaXNzaW9uSUQYAyABKAQSDQoFc2NvcmUYBCABKA0SDwoHcmVsZWFzZRgFIAEoCBIlCgZzdGF0dXMYBiABKA4yFS5xZi5TdWJtaXNzaW9uLlN0YXR1cxIZCgZncmFkZXMYByADKAsyCS5xZi5HcmFkZSJGChFSZXBvc2l0b3J5UmVxdWVzdBIOCgZ1c2VySUQYASABKAQSDwoHZ3JvdXBJRBgCIAEoBBIQCghjb3Vyc2VJRBgDIAEoBCJlCgxSZXBvc2l0b3JpZXMSKAoEVVJMcxgBIAMoCzIaLnFmLlJlcG9zaXRvcmllcy5VUkxzRW50cnkaKwoJVVJMc0VudHJ5EgsKA2tleRgBIAEoDRINCgV2YWx1ZRgCIAEoCToCOAEiTgoOUmVidWlsZFJlcXVlc3QSEAoIY291cnNlSUQYASABKAQSFAoMYXNzaWdubWVudElEGAIgASgEEhQKDHN1Ym1pc3Npb25JRBgDIAEoBCIGCgRWb2lkQiZaIWdpdGh1Yi5jb20vcXVpY2tmZWVkL3F1aWNrZmVlZC9xZroCAGIGcHJvdG8z", [file_qf_types]);
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -247,31 +247,51 @@ export const SubmissionRequest_SubmissionTypeSchema: GenEnum<SubmissionRequest_S
   enumDesc(file_qf_requests, 6, 0);
 
 /**
+ * UpdateSubmissionRequest is used to update manually reviewed submissions.
+ *
  * @generated from message qf.UpdateSubmissionRequest
  */
 export type UpdateSubmissionRequest = Message<"qf.UpdateSubmissionRequest"> & {
   /**
-   * @generated from field: uint64 submissionID = 1;
-   */
-  submissionID: bigint;
-
-  /**
-   * @generated from field: uint64 courseID = 2;
+   * @generated from field: uint64 courseID = 1;
    */
   courseID: bigint;
 
   /**
-   * @generated from field: uint32 score = 3;
+   * if non-zero, update all submissions
+   *
+   * @generated from field: uint64 assignmentID = 2;
+   */
+  assignmentID: bigint;
+
+  /**
+   * if non-zero, update single specific submission
+   *
+   * @generated from field: uint64 submissionID = 3;
+   */
+  submissionID: bigint;
+
+  /**
+   * only used for single submission
+   *
+   * @generated from field: uint32 score = 4;
    */
   score: number;
 
   /**
-   * @generated from field: bool released = 4;
+   * indicate whether or not to release submission(s) to students
+   *
+   * @generated from field: bool release = 5;
    */
-  released: boolean;
+  release: boolean;
 
   /**
-   * @generated from field: repeated qf.Grade grades = 5;
+   * @generated from field: qf.Submission.Status status = 6;
+   */
+  status: Submission_Status;
+
+  /**
+   * @generated from field: repeated qf.Grade grades = 7;
    */
   grades: Grade[];
 };
@@ -282,43 +302,6 @@ export type UpdateSubmissionRequest = Message<"qf.UpdateSubmissionRequest"> & {
  */
 export const UpdateSubmissionRequestSchema: GenMessage<UpdateSubmissionRequest> = /*@__PURE__*/
   messageDesc(file_qf_requests, 7);
-
-/**
- * @generated from message qf.UpdateSubmissionsRequest
- */
-export type UpdateSubmissionsRequest = Message<"qf.UpdateSubmissionsRequest"> & {
-  /**
-   * @generated from field: uint64 courseID = 1;
-   */
-  courseID: bigint;
-
-  /**
-   * @generated from field: uint64 assignmentID = 2;
-   */
-  assignmentID: bigint;
-
-  /**
-   * @generated from field: uint32 scoreLimit = 3;
-   */
-  scoreLimit: number;
-
-  /**
-   * @generated from field: bool release = 4;
-   */
-  release: boolean;
-
-  /**
-   * @generated from field: bool approve = 5;
-   */
-  approve: boolean;
-};
-
-/**
- * Describes the message qf.UpdateSubmissionsRequest.
- * Use `create(UpdateSubmissionsRequestSchema)` to create a new message.
- */
-export const UpdateSubmissionsRequestSchema: GenMessage<UpdateSubmissionsRequest> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 8);
 
 /**
  * used to check whether student/group submission repo is empty
@@ -347,7 +330,7 @@ export type RepositoryRequest = Message<"qf.RepositoryRequest"> & {
  * Use `create(RepositoryRequestSchema)` to create a new message.
  */
 export const RepositoryRequestSchema: GenMessage<RepositoryRequest> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 9);
+  messageDesc(file_qf_requests, 8);
 
 /**
  * @generated from message qf.Repositories
@@ -366,7 +349,7 @@ export type Repositories = Message<"qf.Repositories"> & {
  * Use `create(RepositoriesSchema)` to create a new message.
  */
 export const RepositoriesSchema: GenMessage<Repositories> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 10);
+  messageDesc(file_qf_requests, 9);
 
 /**
  * @generated from message qf.RebuildRequest
@@ -393,7 +376,7 @@ export type RebuildRequest = Message<"qf.RebuildRequest"> & {
  * Use `create(RebuildRequestSchema)` to create a new message.
  */
 export const RebuildRequestSchema: GenMessage<RebuildRequest> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 11);
+  messageDesc(file_qf_requests, 10);
 
 /**
  * @generated from message qf.Void
@@ -406,5 +389,5 @@ export type Void = Message<"qf.Void"> & {
  * Use `create(VoidSchema)` to create a new message.
  */
 export const VoidSchema: GenMessage<Void> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 12);
+  messageDesc(file_qf_requests, 11);
 

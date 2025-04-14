@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
@@ -18,43 +19,42 @@ func TestImplementsValidation(t *testing.T) {
 		validator bool
 		found     bool
 	}{
-		"qf.Void":                     {cleaner: F, validator: T},
-		"qf.User":                     {cleaner: T, validator: T},
-		"qf.Users":                    {cleaner: T, validator: F},
-		"qf.Submission":               {cleaner: F, validator: F},
-		"qf.Submissions":              {cleaner: F, validator: F},
-		"qf.Grade":                    {cleaner: F, validator: F},
-		"qf.Enrollment":               {cleaner: T, validator: T},
-		"qf.Enrollments":              {cleaner: T, validator: T},
-		"qf.Assignment":               {cleaner: F, validator: F},
-		"qf.Course":                   {cleaner: T, validator: T},
-		"qf.Courses":                  {cleaner: T, validator: F},
-		"qf.Group":                    {cleaner: T, validator: T},
-		"qf.Groups":                   {cleaner: T, validator: F},
-		"qf.Repository":               {cleaner: F, validator: F},
-		"qf.UpdateSubmissionsRequest": {cleaner: F, validator: F},
-		"qf.RebuildRequest":           {cleaner: F, validator: T},
-		"qf.CourseRequest":            {cleaner: F, validator: T},
-		"qf.PullRequest":              {cleaner: F, validator: F},
-		"qf.Assignments":              {cleaner: F, validator: F},
-		"qf.GradingBenchmark":         {cleaner: F, validator: T},
-		"qf.Review":                   {cleaner: F, validator: T},
-		"qf.Benchmarks":               {cleaner: F, validator: F},
-		"qf.Issue":                    {cleaner: F, validator: F},
-		"qf.UpdateSubmissionRequest":  {cleaner: F, validator: T},
-		"qf.UsedSlipDays":             {cleaner: F, validator: F},
-		"qf.Task":                     {cleaner: F, validator: F},
-		"qf.GradingCriterion":         {cleaner: F, validator: T},
-		"qf.Repositories":             {cleaner: F, validator: F},
-		"qf.CourseSubmissions":        {cleaner: F, validator: F},
-		"qf.Organization":             {cleaner: F, validator: T},
-		"qf.SubmissionRequest":        {cleaner: F, validator: T},
-		"qf.ReviewRequest":            {cleaner: F, validator: T},
-		"qf.RepositoryRequest":        {cleaner: F, validator: T},
-		"qf.GroupRequest":             {cleaner: F, validator: T},
-		"qf.EnrollmentRequest":        {cleaner: F, validator: T},
-		"score.Score":                 {cleaner: F, validator: F},
-		"score.BuildInfo":             {cleaner: F, validator: F},
+		"qf.Void":                    {cleaner: F, validator: T},
+		"qf.User":                    {cleaner: T, validator: T},
+		"qf.Users":                   {cleaner: T, validator: F},
+		"qf.Submission":              {cleaner: F, validator: F},
+		"qf.Submissions":             {cleaner: F, validator: F},
+		"qf.Grade":                   {cleaner: F, validator: F},
+		"qf.Enrollment":              {cleaner: T, validator: T},
+		"qf.Enrollments":             {cleaner: T, validator: T},
+		"qf.Assignment":              {cleaner: F, validator: F},
+		"qf.Course":                  {cleaner: T, validator: T},
+		"qf.Courses":                 {cleaner: T, validator: F},
+		"qf.Group":                   {cleaner: T, validator: T},
+		"qf.Groups":                  {cleaner: T, validator: F},
+		"qf.Repository":              {cleaner: F, validator: F},
+		"qf.RebuildRequest":          {cleaner: F, validator: T},
+		"qf.CourseRequest":           {cleaner: F, validator: T},
+		"qf.PullRequest":             {cleaner: F, validator: F},
+		"qf.Assignments":             {cleaner: F, validator: F},
+		"qf.GradingBenchmark":        {cleaner: F, validator: T},
+		"qf.Review":                  {cleaner: F, validator: T},
+		"qf.Benchmarks":              {cleaner: F, validator: F},
+		"qf.Issue":                   {cleaner: F, validator: F},
+		"qf.UpdateSubmissionRequest": {cleaner: F, validator: T},
+		"qf.UsedSlipDays":            {cleaner: F, validator: F},
+		"qf.Task":                    {cleaner: F, validator: F},
+		"qf.GradingCriterion":        {cleaner: F, validator: T},
+		"qf.Repositories":            {cleaner: F, validator: F},
+		"qf.CourseSubmissions":       {cleaner: F, validator: F},
+		"qf.Organization":            {cleaner: F, validator: T},
+		"qf.SubmissionRequest":       {cleaner: F, validator: T},
+		"qf.ReviewRequest":           {cleaner: F, validator: T},
+		"qf.RepositoryRequest":       {cleaner: F, validator: T},
+		"qf.GroupRequest":            {cleaner: F, validator: T},
+		"qf.EnrollmentRequest":       {cleaner: F, validator: T},
+		"score.Score":                {cleaner: F, validator: F},
+		"score.BuildInfo":            {cleaner: F, validator: F},
 	}
 
 	protoregistry.GlobalTypes.RangeMessages(func(desc protoreflect.MessageType) bool {
@@ -93,5 +93,52 @@ func TestImplementsValidation(t *testing.T) {
 		if !test.found {
 			t.Errorf("Message %s is tested, but no longer exists", name)
 		}
+	}
+}
+
+func TestUpdateSubmissionRequestIsValid(t *testing.T) {
+	tests := map[string]struct {
+		request *qf.UpdateSubmissionRequest
+		want    bool
+	}{
+		"Assignment and Submission ID": {
+			request: &qf.UpdateSubmissionRequest{
+				CourseID:     1,
+				SubmissionID: 2,
+				AssignmentID: 3,
+			},
+			want: false,
+		},
+		"Missing Course ID": {
+			request: &qf.UpdateSubmissionRequest{
+				SubmissionID: 1,
+				Score:        2,
+			},
+			want: false,
+		},
+		"Approve all submissions for an assignment": {
+			request: &qf.UpdateSubmissionRequest{
+				CourseID:     1,
+				AssignmentID: 2,
+				Status:       qf.Submission_APPROVED,
+			},
+			want: true,
+		},
+		"Update a single submission": {
+			request: &qf.UpdateSubmissionRequest{
+				CourseID:     1,
+				SubmissionID: 2,
+				Status:       qf.Submission_APPROVED,
+			},
+			want: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := test.request.IsValid(); got != test.want {
+				t.Errorf("IsValid() = %v, want %v", got, test.want)
+			}
+		})
 	}
 }

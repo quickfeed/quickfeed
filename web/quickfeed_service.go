@@ -367,7 +367,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
-	err := s.updateSubmission(in.Msg.GetSubmissionID(), in.Msg.GetGrades(), in.Msg.GetReleased(), in.Msg.GetScore())
+	err := s.updateSubmission(in.Msg.GetSubmissionID(), in.Msg.GetGrades(), in.Msg.GetRelease(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
@@ -472,7 +472,7 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
-func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	err := s.updateSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed for request %+v: %v", in, err)
