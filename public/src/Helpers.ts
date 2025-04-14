@@ -73,7 +73,6 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
 export interface Deadline {
     className: string,
     message: string,
-    daysUntil: number,
 }
 
 /**
@@ -82,32 +81,35 @@ export interface Deadline {
  *
  * layoutTime = "2021-03-20T23:59:00"
  */
-export const timeFormatter = (deadline: Timestamp): Deadline => {
-    const timeToDeadline = timestampDate(deadline).getTime()
+export const timeFormatter = (deadline: Date, passed: boolean): Deadline => {
+    const timeToDeadline = deadline.getTime() - Date.now()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
 
-    if (timeToDeadline < 0) {
+    let className = "table-primary"
+    let message = `${days} days to deadline`
+
+    if (passed) {
+        className = "table-success"
+    } else if (timeToDeadline < 0) {
         const daysSince = -days
         const hoursSince = -hours
-        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
+        const expiredSince = daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`
+
+        className = "table-danger"
+        message = `Expired ${expiredSince}`
+    } else if (days === 0) {
+        className = "table-danger"
+        message = `${hours} hours and ${minutes} minutes to deadline!`
+    } else if (days < 3) {
+        className = "table-warning"
+        message = `${days} day${days === 1 ? " " : "s"} to deadline!`
     }
 
-    if (days === 0) {
-        return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
-    }
-
-    if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
-    }
-
-    if (days < 14) {
-        return { className: "table-primary", message: `${days} days`, daysUntil: days }
-    }
-
-    return { className: "", message: "", daysUntil: days }
+    return { className, message }
 }
+
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
