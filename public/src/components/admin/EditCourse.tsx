@@ -12,16 +12,15 @@ const EditCourse = () => {
     const courses = state.courses.map(c => {
         const selected = course?.ID === c.ID
         const data: Row = []
-        data.push(c.name)
-        data.push(c.code)
-        data.push(c.tag)
-        data.push(c.year.toString())
-        data.push(c.slipDays.toString())
+        const badge = selected ? "badge badge-danger" : "badge badge-primary"
+        const buttonText = selected ? "Cancel" : "Edit"
         data.push(
-            <span className={selected ? "badge badge-danger clickable" : "badge badge-primary clickable"}
-                onClick={() => { selected ? setCourse(undefined) : setCourse(c) }}>
-                {selected ? "Cancel" : "Edit"}
-            </span>
+            c.name, c.code, c.tag,
+            c.year.toString(), c.slipDays.toString(),
+
+            <button className={`clickable ${badge}`} onClick={() => setCourse(selected ? undefined : c)}>
+                {buttonText}
+            </button>
         )
         return data
     })

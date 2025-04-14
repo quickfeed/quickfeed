@@ -19,11 +19,11 @@ const Users = () => {
     const headers: string[] = ["Name", "GitHub", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user) => {
         const data: Row = []
-        data.push(<User user={user} hidden={!isHidden(user.Name, state.query)} />)
-        data.push(<a href={userLink(user)}>{user.Login}</a>)
-        data.push(user.Email)
-        data.push(user.StudentID)
         data.push(
+            <User user={user} hidden={!isHidden(user.Name, state.query)} />,
+            <a href={userLink(user)}>{user.Login}</a>,
+            user.Email,
+            user.StudentID,
             <DynamicButton
                 text={user.IsAdmin ? "Demote" : "Promote"}
                 color={user.IsAdmin ? Color.RED : Color.BLUE}
