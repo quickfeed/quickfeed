@@ -30,7 +30,7 @@ export const updateReview = async ({ state, effects }: Context): Promise<boolean
     }
 
     const review = state.review.currentReview
-    const response = await effects.api.client.updateReview({
+    const response = await effects.global.api.client.updateReview({
         courseID: state.activeCourse,
         review
     })
@@ -100,12 +100,12 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
     // If there is no submission or active course, we cannot create a review
     if (submission && state.activeCourse) {
         // Set the current user as the reviewer
-        const review = create(ReviewSchema,{
+        const review = create(ReviewSchema, {
             ReviewerID: state.self.ID,
             SubmissionID: submission.ID,
         })
 
-        const response = await effects.api.client.createReview({
+        const response = await effects.global.api.client.createReview({
             courseID: state.activeCourse,
             review,
         })
@@ -141,11 +141,11 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const invalidMinimumScore = state.review.minimumScore < 0 || state.review.minimumScore > 100
 
     if (invalidMinimumScore || !confirm(confirmText)) {
-        invalidMinimumScore && actions.alert({ text: 'Minimum score must be in range [0, 100]', color: Color.YELLOW })
+        invalidMinimumScore && actions.global.alert({ text: 'Minimum score must be in range [0, 100]', color: Color.YELLOW })
         return
     }
 
-    const response = await effects.api.client.updateSubmissions({
+    const response = await effects.global.api.client.updateSubmissions({
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
         scoreLimit: state.review.minimumScore,
@@ -156,7 +156,7 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
         return
     }
     // Refresh submissions in state for the active course
-    await actions.refreshCourseSubmissions(state.activeCourse)
+    await actions.global.refreshCourseSubmissions(state.activeCourse)
 }
 
 export const release = async ({ state, effects }: Context, { submission, owner }: { submission: Submission | null, owner: SubmissionOwner }): Promise<void> => {
@@ -165,7 +165,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
     }
     const clonedSubmission = clone(SubmissionSchema, submission)
     clonedSubmission.released = !submission.released
-    const response = await effects.api.client.updateSubmission({
+    const response = await effects.global.api.client.updateSubmission({
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: submission.Grades,

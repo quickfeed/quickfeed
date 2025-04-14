@@ -9,7 +9,7 @@ import Button, { ButtonType } from "./admin/Button"
 
 const Members = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = getCourseID()
 
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)

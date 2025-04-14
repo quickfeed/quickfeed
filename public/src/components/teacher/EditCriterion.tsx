@@ -5,7 +5,7 @@ import { clone, create } from "@bufbuild/protobuf"
 
 
 const EditCriterion = ({ originalCriterion, benchmarkID, assignment }: { originalCriterion?: GradingCriterion, benchmarkID: bigint, assignment: Assignment }) => {
-    const actions = useActions()
+    const actions = useActions().global
 
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(originalCriterion ? false : true)

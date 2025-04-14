@@ -19,7 +19,7 @@ const CardColor = [
 ]
 
 const CourseCard = ({ course, enrollment }: CardProps) => {
-    const actions = useActions()
+    const actions = useActions().global
     const history = useHistory()
     const status = enrollment.status
 

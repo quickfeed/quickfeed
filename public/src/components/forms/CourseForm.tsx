@@ -14,7 +14,7 @@ import { clone } from "@bufbuild/protobuf"
  *  If `editCourse` is provided, the existing course will be modified.
  *  If no course is provided, a new course will be created. */
 const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
-    const actions = useActions()
+    const actions = useActions().global
     const history = useHistory()
 
     // Local state containing the course to be created or edited (if any)
@@ -52,50 +52,50 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     return (
         <div className="container">
             <form className="form-group" onSubmit={async e => await submitHandler(e)}>
-                    <div className="row">
-                        <FormInput prepend="Name"
-                            name="courseName"
-                            placeholder={"Course Name"}
-                            defaultValue={course.name}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="row">
-                        <FormInput
-                            prepend="Code"
-                            name="courseCode"
-                            placeholder={"(ex. DAT320)"}
-                            defaultValue={course.code}
-                            onChange={handleChange}
-                        />
-                        <FormInput
-                            prepend="Tag"
-                            name="courseTag"
-                            placeholder={"(ex. Fall / Spring)"}
-                            defaultValue={course.tag}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="row">
-                        <FormInput
-                            prepend="Slip days"
-                            name="slipDays"
-                            placeholder={"(ex. 7)"}
-                            defaultValue={course.slipDays.toString()}
-                            onChange={handleChange}
-                            type="number"
-                        />
-                        <FormInput
-                            prepend="Year"
-                            name="courseYear"
-                            placeholder={"(ex. 2021)"}
-                            defaultValue={course.year.toString()}
-                            onChange={handleChange}
-                            type="number"
-                        />
-                    </div>
-                    <input className="btn btn-primary" type="submit" value={"Save"} />
-                </form>
+                <div className="row">
+                    <FormInput prepend="Name"
+                        name="courseName"
+                        placeholder={"Course Name"}
+                        defaultValue={course.name}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="row">
+                    <FormInput
+                        prepend="Code"
+                        name="courseCode"
+                        placeholder={"(ex. DAT320)"}
+                        defaultValue={course.code}
+                        onChange={handleChange}
+                    />
+                    <FormInput
+                        prepend="Tag"
+                        name="courseTag"
+                        placeholder={"(ex. Fall / Spring)"}
+                        defaultValue={course.tag}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="row">
+                    <FormInput
+                        prepend="Slip days"
+                        name="slipDays"
+                        placeholder={"(ex. 7)"}
+                        defaultValue={course.slipDays.toString()}
+                        onChange={handleChange}
+                        type="number"
+                    />
+                    <FormInput
+                        prepend="Year"
+                        name="courseYear"
+                        placeholder={"(ex. 2021)"}
+                        defaultValue={course.year.toString()}
+                        onChange={handleChange}
+                        type="number"
+                    />
+                </div>
+                <input className="btn btn-primary" type="submit" value={"Save"} />
+            </form>
         </div>
     )
 }

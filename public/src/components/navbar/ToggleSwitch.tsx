@@ -6,7 +6,7 @@ import { useHistory } from "react-router"
 
 const ToggleSwitch = () => {
     const { activeCourse, enrollmentsByCourseID, status } = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const navigate = useHistory()
     const [enrollmentStatus, setEnrollmentStatus] =
         React.useState<boolean>(false)

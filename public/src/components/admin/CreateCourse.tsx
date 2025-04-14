@@ -8,7 +8,7 @@ import { Color } from "../../Helpers"
 
 const CreateCourse = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const [course, setCourse] = useState<Course>()
     const [orgName, setOrgName] = useState("")
 
