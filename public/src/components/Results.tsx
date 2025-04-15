@@ -126,7 +126,7 @@ const Results = ({ review }: { review: boolean }) => {
 
     return (
         <div className="row">
-            <div className={`p-0 ${state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}`}>
+            <div className={`p-0 ${state.review.assignmentID >= 0 ? "col-md-4" : "col-md-5"}`}>
                 {review ? <Release /> : null}
                 <Search placeholder={"Search by name ..."} className="mb-2" >
                     <Button
