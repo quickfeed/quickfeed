@@ -293,12 +293,13 @@ export const defaultTag = (date: Date): string => {
     return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
 }
 
+// Returns the current year, unless the date falls in November (10) or December (11),
+// in which case it returns the following year. This is used to prefill the default year
+// of the create course form when creating a new course. The rationale is that it is
+// unlikely a new course will be created in November or later for the current year.
 export const defaultYear = (date: Date): number => {
-    // TODO(Joachim): This statement is confusing
-    // Should it be? date.getMonth() == 11 && date.getDate() <= 31
-    // meaning its november ?
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10
-        ? (date.getFullYear() + 1)
+    return date.getMonth() >= 10
+        ? date.getFullYear() + 1
         : date.getFullYear()
 }
 
