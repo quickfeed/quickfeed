@@ -23,16 +23,12 @@ const isJSXElement = (element: RowElement): element is React.JSX.Element => {
 }
 
 const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
-
-    const [isMouseDown, setIsMouseDown] = React.useState(false)
-    const container = React.useRef<HTMLTableElement>(null)
     const searchQuery = useAppState().query
 
     if (!data || data.length === 0) {
         // Nothing to render
         return null
     }
-
 
     const isRowHidden = (row: Row) => {
         if (searchQuery.length === 0) {
@@ -70,8 +66,7 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
     const headerRowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
-            const style = cell.onClick ? { "cursor": "pointer" } : undefined
-            return <th key={index} className={cell.className} style={style} onClick={cell.onClick}>{element} {icon(cell)}</th>
+            return <th key={index} role="button" aria-hidden="true" className={cell.className} onClick={cell.onClick}>{element} {icon(cell)}</th>
         }
         return <th key={index}>{cell}</th>
     }
@@ -85,26 +80,8 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
         return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr>
     })
 
-    const onMouseDown = () => {
-        setIsMouseDown(true)
-    }
-
-    const onMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        e.preventDefault()
-        if (!isMouseDown) {
-            return
-        }
-        if (container.current) {
-            container.current.scrollLeft = container.current.scrollLeft - e.movementX
-        }
-    }
-
-    const onMouseUp = () => {
-        setIsMouseDown(false)
-    }
-
     return (
-        <div className="table-overflow" ref={container} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} role="button" aria-hidden="true">
+        <div className="table-overflow">
             <table className="table table-striped table-grp">
                 <thead className="thead-dark">
                     <tr>
