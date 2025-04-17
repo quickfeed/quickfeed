@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
@@ -16,11 +15,12 @@ import (
 const maxGroupNameLength = 20
 
 var (
-	ErrGroupNameEmpty     = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is empty"))
-	ErrGroupNameDuplicate = connect.NewError(connect.CodeAlreadyExists, errors.New("group name already in use"))
-	ErrGroupNameTooLong   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is too long"))
-	ErrGroupNameInvalid   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name contains invalid characters"))
-	ErrUserNotInGroup     = connect.NewError(connect.CodeNotFound, errors.New("user is not in group"))
+	ErrGroupNameEmpty     = errors.New("group name is empty")
+	ErrGroupNameDuplicate = errors.New("group name already in use")
+	ErrGroupNameTooLong   = errors.New("group name is too long")
+	ErrGroupNameInvalid   = errors.New("group name contains invalid characters")
+	ErrGroupDoesNotExist  = errors.New("group does not exist")
+	ErrUserNotInGroup     = errors.New("user is not in group")
 )
 
 // getGroupByUserAndCourse returns the group of the given user and course.
@@ -145,31 +145,28 @@ func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) 
 // that the group's users are not already enrolled in another group.
 func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) {
 	if len(request.GetUsers()) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no users in group"))
+		return nil, errors.New("no users in group")
 	}
 	var userIds []uint64
 	for _, user := range request.GetUsers() {
 		enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.GetCourseID(), user.GetID())
 		switch {
 		case err == gorm.ErrRecordNotFound:
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("user not enrolled in this course"))
+			return nil, errors.New("user not enrolled in this course")
 		case err != nil:
 			return nil, err
-		case enrollment.GetGroupID() > 0 && request.GetID() == 0:
+		case enrollment.GetGroupID() > 0 && (request.GetID() == 0 || enrollment.GetGroupID() != request.GetID()):
 			// new group check (request group ID should be 0)
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user already enrolled in another group"))
-		case enrollment.GetGroupID() > 0 && enrollment.GetGroupID() != request.GetID():
-			// update group check (request group ID should be non-0)
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user already enrolled in another group"))
+			return nil, errors.New("user already enrolled in another group")
 		case enrollment.Status < qf.Enrollment_STUDENT:
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user not yet accepted for this course"))
+			return nil, errors.New("user not yet accepted for this course")
 		}
 		userIds = append(userIds, user.GetID())
 	}
 
 	users, err := s.db.GetUsers(userIds...)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get users"))
+		return nil, errors.New("failed to get users")
 	}
 	if len(request.GetUsers()) != len(users) || len(users) != len(userIds) {
 		return nil, fmt.Errorf("invariant violation (request.Users=%d, users=%d, userIds=%d)",
@@ -194,7 +191,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 	}
 	courseGroups, err := s.db.GetGroupsByCourse(courseID)
 	if err != nil {
-		return connect.NewError(connect.CodeInternal, errors.New("failed to get groups"))
+		return ErrGroupDoesNotExist
 	}
 	for _, group := range courseGroups {
 		if strings.EqualFold(group.GetName(), groupName) {

@@ -5,7 +5,7 @@ import "github.com/quickfeed/quickfeed/qf"
 // editUserProfile updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
-func (s *QuickFeedService) editUserProfile(curUser *qf.User, request *qf.User) error {
+func (s *QuickFeedService) editUserProfile(curUser, request *qf.User) error {
 	updateUser, err := s.db.GetUser(request.GetID())
 	if err != nil {
 		return err

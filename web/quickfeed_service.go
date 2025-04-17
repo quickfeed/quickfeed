@@ -274,22 +274,23 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
 func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
 	group := in.Msg
-	if err := s.checkGroupName(in.Msg.GetCourseID(), in.Msg.GetName()); err != nil {
-		return nil, err
+	if err := s.checkGroupName(group.GetCourseID(), group.GetName()); err != nil {
+		s.logger.Errorf("CreateGroup: failed to validate group %s: %v", group.GetName(), err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 	// get users of group, check consistency of group request
-	if _, err := s.getGroupUsers(in.Msg); err != nil {
-		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %v", in.Msg.GetName(), err)
-		return nil, err
+	if _, err := s.getGroupUsers(group); err != nil {
+		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %v", group.GetName(), err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
 	// create new group and update groupID in enrollment table
-	if err := s.db.CreateGroup(in.Msg); err != nil {
+	if err := s.db.CreateGroup(group); err != nil {
 		s.logger.Errorf("CreateGroup failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
-	group, err := s.db.GetGroup(in.Msg.GetID())
+	group, err := s.db.GetGroup(group.GetID())
 	if err != nil {
-		s.logger.Errorf("CreateGroup failed to get group %d: %v", in.Msg.GetID(), err)
+		s.logger.Errorf("CreateGroup failed to get group %d: %v", group.GetID(), err)
 		if connect.CodeOf(err) != connect.CodeUnknown {
 			// err was already a status error; return it to client.
 			return nil, err
