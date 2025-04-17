@@ -11,18 +11,29 @@ const SubmissionScore = ({
     const className = score.Score === score.MaxScore ? "passed" : "failed"
     const percentage = (score.Score / score.MaxScore) * (score.Weight / totalWeight) * 100
     const maxPercentage = (score.MaxScore / score.MaxScore) * (score.Weight / totalWeight) * 100
+    const cellColor = percentage === maxPercentage ? "text-success" : "text-danger"
 
     return (
         <tr>
             <td className={`${className} pl-4`}>{score.TestName}</td>
-            <td className="text-right">
+            <td className="fixed-width-score">
                 {score.Score}/{score.MaxScore}
             </td>
-            <td className="text-right">
-                <span className={percentage === maxPercentage ? "text-success" : "text-danger"}>{percentage.toFixed(1)}%</span>
+
+            <td className="fixed-width-percent">
+                <span className={cellColor}>
+                    {percentage.toFixed(1)}%
+                </span>
             </td>
-            <td className="text-right">
-                <span style={{opacity: 0.5}}  data-toggle="tooltip" title={`Weight: ${score.Weight}`}>{maxPercentage.toFixed(1)}%</span>
+
+            <td className="fixed-width-percent">
+                <span
+                    style={{ opacity: 0.5 }}
+                    title={`Weight: ${score.Weight}`}
+                    aria-label={`Max weighted percentage is ${maxPercentage.toFixed(1)} percent, weight ${score.Weight}`}
+                >
+                    {maxPercentage.toFixed(1)}%
+                </span>
             </td>
         </tr>
     )

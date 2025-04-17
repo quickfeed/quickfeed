@@ -358,10 +358,14 @@ input {
 
 .table td {
     padding: 0.5rem !important;
+    font-family: monospace;
+    white-space: nowrap;
 }
 
 .table th {
     padding: 0.5rem !important;
+    font-family: monospace;
+    white-space: nowrap;
 }
 
 .passed {
@@ -748,4 +752,14 @@ body.login-page {
 }
 .nav-item.dropdown:hover .chevron-icon {
     transform: rotate(180deg); /* flips it upwards */
+}
+
+.fixed-width-score {
+    width: 8ch;
+    text-align: right;
+}
+
+.fixed-width-percent {
+    width: 7ch;
+    text-align: right;
 }
