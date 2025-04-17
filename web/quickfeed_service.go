@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"go.uber.org/zap"
 
@@ -16,6 +15,8 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
+
+var scmConnectErr = connect.NewError(connect.CodeNotFound, errors.New("unable to connect to the GitHub organization for the course"))
 
 // QuickFeedService holds references to the database and
 // other shared data structures.
@@ -85,7 +86,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to the gitHub organization: %s", in.Msg.GetScmOrganizationName()))
+		return nil, scmConnectErr
 	}
 	// ensure the course exists
 	_, err = s.db.GetCourse(in.Msg.GetID())
@@ -182,7 +183,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("unable to connect to the gitHub organization for the course"))
+		return nil, scmConnectErr
 	}
 	for _, enrollment := range in.Msg.GetEnrollments() {
 		if s.isCourseCreator(enrollment.GetCourseID(), enrollment.GetUserID()) {
@@ -272,6 +273,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 // by a teacher of the course using the updateGroup function below.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
 func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
+	group := in.Msg
 	if err := s.checkGroupName(in.Msg.GetCourseID(), in.Msg.GetName()); err != nil {
 		return nil, err
 	}
@@ -303,7 +305,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to the gitHub organization for the group: %s", in.Msg.GetName()))
+		return nil, scmConnectErr
 	}
 	err = s.internalUpdateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
@@ -330,7 +332,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.Msg.GetGroupID(), in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("unable to connect to the gitHub organization for the group"))
+		return nil, scmConnectErr
 	}
 	if err = s.internalDeleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
@@ -431,11 +433,12 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 
 // CreateBenchmark adds a new grading benchmark for an assignment.
 func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	if err := s.db.CreateBenchmark(in.Msg); err != nil {
+	benchmark := in.Msg
+	if err := s.db.CreateBenchmark(benchmark); err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create benchmark"))
 	}
-	return connect.NewResponse(in.Msg), nil
+	return connect.NewResponse(benchmark), nil
 }
 
 // UpdateBenchmark edits a grading benchmark for an assignment.
@@ -458,11 +461,12 @@ func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Reques
 
 // CreateCriterion adds a new grading criterion for an assignment.
 func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	if err := s.db.CreateCriterion(in.Msg); err != nil {
+	criterion := in.Msg
+	if err := s.db.CreateCriterion(criterion); err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add criterion"))
 	}
-	return connect.NewResponse(in.Msg), nil
+	return connect.NewResponse(criterion), nil
 }
 
 // UpdateCriterion edits a grading criterion for an assignment.
@@ -485,20 +489,22 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Reques
 
 // CreateReview adds a new submission review.
 func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	if err := s.db.CreateReview(in.Msg.GetReview()); err != nil {
+	review := in.Msg.GetReview()
+	if err := s.db.CreateReview(review); err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
 	}
-	return connect.NewResponse(in.Msg.GetReview()), nil
+	return connect.NewResponse(review), nil
 }
 
 // UpdateReview updates a submission review.
 func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	if err := s.db.UpdateReview(in.Msg.GetReview()); err != nil {
+	review := in.Msg.GetReview()
+	if err := s.db.UpdateReview(review); err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
 	}
-	return connect.NewResponse(in.Msg.GetReview()), nil
+	return connect.NewResponse(review), nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
@@ -538,7 +544,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to your github organization: %s", course.GetScmOrganizationName()))
+		return nil, scmConnectErr
 	}
 	assignments.UpdateFromTestsRepo(s.logger, s.runner, s.db, scmClient, course)
 
@@ -566,7 +572,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, scmConnectErr
 	}
 	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetScmOrganizationName(), Username: usr.GetLogin(), NewCourse: true})
 	if err != nil {
@@ -637,7 +643,7 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("unable to connect to your github organization: %s", course.GetScmOrganizationName()))
+		return nil, scmConnectErr
 	}
 
 	if err := isEmpty(ctx, scmClient, repos); err != nil {
