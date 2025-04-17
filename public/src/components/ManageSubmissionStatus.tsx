@@ -78,14 +78,12 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
     const getUserName = (userID: bigint): string =>
         state.courseEnrollments[courseID].find(enrollment => enrollment.userID === userID)?.user?.Name ?? ""
 
-    const buildText = rebuilding ? "Rebuilding..." : "Rebuild"
-    const gradesText = viewIndividualGrades ? "All Grades" : "Individual Grades"
     return (
         <>
             <div className="row mb-1 ml-auto mr-auto">
                 {state.selectedSubmission?.Grades && state.selectedSubmission.Grades.length > 1 && (
                     <DynamicButton
-                        text={gradesText}
+                        text={viewIndividualGrades ? "All Grades" : "Individual Grades"}
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
                         className="col mr-2"
@@ -94,7 +92,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                 )}
                 {!isManuallyGraded(reviewers) && (
                     <DynamicButton
-                        text={buildText}
+                        text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}
                         type={ButtonType.OUTLINE}
                         className="col mr-2"

@@ -45,20 +45,22 @@ const TableSort = ({ review }: { review: boolean }) => {
     ]
 
     const filterElements = submissionFilters.map((filter) => {
-        const denotedText = state.submissionFilters.includes(filter.name) ? <del>{filter.text}</del> : filter.text
-        return filter.show ? (
-            <DivButton key={filter.name} text={denotedText} onclick={() => actions.setSubmissionFilter(filter.name)} />
-        ) : null
+        const displayText = state.submissionFilters.includes(filter.name)
+            ? <del>{filter.text}</del>
+            : filter.text
+        return filter.show
+            ? <DivButton key={filter.name} text={displayText} onclick={() => actions.setSubmissionFilter(filter.name)} />
+            : null
     })
 
     const sortByButtons = [
-        { text: "Approved", className: boldText(SubmissionSort.Approved), onclick: () => handleChange(SubmissionSort.Approved) },
-        { text: "Score", className: boldText(SubmissionSort.Score), onclick: () => handleChange(SubmissionSort.Score) },
-        { text: <i className={pointer} />, key: "pointer", onclick: () => actions.setAscending(!state.sortAscending) }
+        { key: "approved", text: "Approved", className: boldText(SubmissionSort.Approved), onclick: () => handleChange(SubmissionSort.Approved) },
+        { key: "score", text: "Score", className: boldText(SubmissionSort.Score), onclick: () => handleChange(SubmissionSort.Score) },
+        { key: "pointer", text: <i className={pointer} />, onclick: () => actions.setAscending(!state.sortAscending) }
     ]
 
     const sortByElements = sortByButtons.map((button) => (
-        <DivButton key={button.key ?? button.text} text={button.text} className={button.className} onclick={button.onclick} />
+        <DivButton key={button.key} text={button.text} className={button.className} onclick={button.onclick} />
     ))
 
     return (
@@ -83,7 +85,6 @@ const TableSort = ({ review }: { review: boolean }) => {
 }
 
 interface DivButtonProps {
-
     text: string | React.JSX.Element
     key?: string
     className?: string

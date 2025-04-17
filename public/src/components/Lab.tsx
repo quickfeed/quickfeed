@@ -50,7 +50,8 @@ const Lab = () => {
                 return <CenteredMessage message={KnownMessage.NoSubmission} />
             }
 
-            const query = (s: Submission) => isGroupLab ? s.groupID > 0n
+            const query = (s: Submission) => isGroupLab
+                ? s.groupID > 0n
                 : s.userID === state.self.ID && s.groupID === 0n
 
             submission = submissions.find(s => query(s)) ?? null

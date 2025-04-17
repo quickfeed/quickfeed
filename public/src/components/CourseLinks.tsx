@@ -17,6 +17,7 @@ const CourseLinks = () => {
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     const repo = state.repositories[courseID.toString()]
+    const hasGroup = state.hasGroup(courseID.toString())
     const groupName = enrollment.group ? `(${enrollment.group?.name})` : ""
 
     const links: link[] = [
@@ -42,8 +43,6 @@ const CourseLinks = () => {
         </a>
     }
 
-    const groupLinkText = state.hasGroup(courseID.toString()) ? "View Group" : "Create a Group"
-    const groupLinkClassName = state.hasGroup(courseID.toString()) ? "" : "list-group-item-success"
     return (
         <div className="col-lg-3">
             <div className="list-group width-resize">
@@ -57,9 +56,9 @@ const CourseLinks = () => {
 
                 <Link
                     to={`/course/${courseID}/group`}
-                    className={`list-group-item list-group-item-action ${groupLinkClassName}`}
+                    className={`list-group-item list-group-item-action ${hasGroup ? "" : "list-group-item-success"}`}
                 >
-                    {groupLinkText}
+                    {hasGroup ? "View Group" : "Create a Group"}
                 </Link>
 
             </div>

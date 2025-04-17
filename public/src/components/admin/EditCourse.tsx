@@ -14,9 +14,11 @@ const EditCourse = () => {
         const badge = selected ? "badge badge-danger" : "badge badge-primary"
         const buttonText = selected ? "Cancel" : "Edit"
         return [
-            c.name, c.code, c.tag,
-            c.year.toString(), c.slipDays.toString(),
-
+            c.name,
+            c.code,
+            c.tag,
+            c.year.toString(),
+            c.slipDays.toString(),
             <button key={c.ID} className={`clickable ${badge}`} onClick={() => setCourse(selected ? undefined : c)}>
                 {buttonText}
             </button>

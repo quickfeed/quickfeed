@@ -19,10 +19,8 @@ export interface Notification {
 const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification, to?: string, onclick?: () => void }) => {
     const history = useHistory()
 
-    const notification = props.notification ?
-        <i className={`badge badge-${props.notification.color} float-right`}>
-            {props.notification.text}
-        </i>
+    const notification = props.notification
+        ? <i className={`badge badge-${props.notification.color} float-right`}> {props.notification.text} </i>
         : null
 
     // TODO: Maybe support both onclick and to, rather than having to choose one. Not sure where it would be used though.

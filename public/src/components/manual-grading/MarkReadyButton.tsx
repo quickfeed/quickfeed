@@ -19,7 +19,7 @@ const MarkReadyButton = ({ review }: { review: Review }) => {
     if (ready) {
         return (
             <Button
-                text="Mark In progress"
+                text="Mark in Progress"
                 color={Color.YELLOW}
                 type={ButtonType.BADGE}
                 className="float-right"

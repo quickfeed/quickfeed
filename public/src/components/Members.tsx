@@ -69,25 +69,22 @@ const Members = () => {
                 />
             </div>
         )
-
         const enrollmentBadgeIcon = (
             <i className={EnrollmentStatusBadge[enrollment.status]}>
                 {EnrollmentStatus[enrollment.status]}
             </i>
         )
+        // rolebuttons can either be accept/reject, promote/demote or just the badge icon (student/teacher)
+        const roleButtons = isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
         const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
         return [
             Name, Email, StudentID,
             getFormattedTime(enrollment.lastActivityDate),
             enrollment.totalApproved.toString(),
             enrollment.slipDaysRemaining.toString(),
-
-            isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
+            roleButtons,
         ]
     })
-
-    const toggleEditButtonText = edit ? "Done" : "Edit"
-    const toggleEditButtonColor = edit ? Color.RED : Color.BLUE
     return (
         <div className='container'>
             <div className="row no-gutters pb-2">
@@ -96,8 +93,8 @@ const Members = () => {
                 </div>
                 <div className="ml-auto">
                     <Button
-                        text={toggleEditButtonText}
-                        color={toggleEditButtonColor}
+                        text={edit ? "Done" : "Edit"}
+                        color={edit ? Color.RED : Color.BLUE}
                         type={ButtonType.BUTTON}
                         onClick={() => setEditing(!edit)}
                     />
