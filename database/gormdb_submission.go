@@ -19,6 +19,7 @@ var (
 	ErrAllReviewsCreated = func(submissionID uint64, assignmentName string, reviewers uint32) error {
 		return fmt.Errorf("failed to create a new review for submission %d to %s: all %d reviews already created", submissionID, assignmentName, reviewers)
 	}
+	ErrEmptyReviewID = errors.New("cannot update review with empty ID")
 )
 
 // CreateSubmission creates a new submission record or updates the most
@@ -284,11 +285,11 @@ func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 func (db *GormDB) CreateReview(query *qf.Review) error {
 	submission, err := db.GetSubmission(&qf.Submission{ID: query.GetSubmissionID()})
 	if err != nil {
-		return fmt.Errorf("failed to get submission: %v", err)
+		return err
 	}
 	assignment, err := db.GetAssignment(&qf.Assignment{ID: submission.GetAssignmentID()})
 	if err != nil {
-		return fmt.Errorf("failed to get assignment: %v", err)
+		return err
 	}
 	if len(submission.GetReviews()) >= int(assignment.GetReviewers()) {
 		return ErrAllReviewsCreated(submission.GetID(), assignment.GetName(), assignment.GetReviewers())
@@ -297,7 +298,7 @@ func (db *GormDB) CreateReview(query *qf.Review) error {
 	query.ComputeScore()
 	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: submission.GetAssignmentID()})
 	if err != nil {
-		return fmt.Errorf("failed to get benchmarks: %v", err)
+		return err
 	}
 	query.GradingBenchmarks = benchmarks
 	// Reset the IDs of the benchmarks and criteria to 0 so that
@@ -314,11 +315,11 @@ func (db *GormDB) CreateReview(query *qf.Review) error {
 // UpdateReview updates a review.
 func (db *GormDB) UpdateReview(query *qf.Review) error {
 	if query.GetID() == 0 {
-		return fmt.Errorf("cannot update review with empty ID")
+		return ErrEmptyReviewID
 	}
 	submission, err := db.GetSubmission(&qf.Submission{ID: query.GetSubmissionID()})
 	if err != nil {
-		return fmt.Errorf("failed to get submission: %v", err)
+		return err
 	}
 
 	query.Edited = timestamppb.Now()
@@ -336,16 +337,16 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 		ReviewerID:   query.GetReviewerID(),
 		Edited:       query.GetEdited(),
 	}).Error; err != nil {
-		return fmt.Errorf("failed to update review: %v", err)
+		return fmt.Errorf("failed to update review: %w", err)
 	}
 
 	for _, bm := range query.GetGradingBenchmarks() {
 		if err := db.UpdateBenchmark(bm); err != nil {
-			return fmt.Errorf("failed to update benchmark: %v", err)
+			return err
 		}
 		for _, c := range bm.GetCriteria() {
 			if err := db.UpdateCriterion(c); err != nil {
-				return fmt.Errorf("failed to update criterion: %v", err)
+				return err
 			}
 		}
 	}
@@ -353,7 +354,7 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 	if submission.GetScore() != query.GetScore() {
 		submission.Score = query.GetScore()
 		if err := db.UpdateSubmission(submission); err != nil {
-			return fmt.Errorf("failed to update submission: %v", err)
+			return err
 		}
 	}
 	return nil

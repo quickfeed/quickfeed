@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -41,7 +40,7 @@ func TestCreateReview(t *testing.T) {
 		{
 			name:    "No submission",
 			review:  &qf.Review{SubmissionID: 443},
-			wantErr: fmt.Errorf("failed to get submission: %v", gorm.ErrRecordNotFound),
+			wantErr: gorm.ErrRecordNotFound,
 		},
 		{
 			name:       "No reviewers for assignment",
@@ -101,12 +100,12 @@ func TestUpdateReview(t *testing.T) {
 		{
 			name:    "Empty review ID",
 			review:  &qf.Review{},
-			wantErr: fmt.Errorf("cannot update review with empty ID"),
+			wantErr: database.ErrEmptyReviewID,
 		},
 		{
 			name:    "No submission",
 			review:  &qf.Review{ID: 1, SubmissionID: 443},
-			wantErr: fmt.Errorf("failed to get submission: %v", gorm.ErrRecordNotFound),
+			wantErr: gorm.ErrRecordNotFound,
 		},
 		{
 			name:       "Add existing benchmark",
