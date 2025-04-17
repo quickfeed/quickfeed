@@ -201,10 +201,7 @@ export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return be
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
 export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
 
-export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
-    if (!submission) {
-        return Submission_Status.NONE
-    }
+export const getStatusByUser = (submission: Submission, userID: bigint): Submission_Status => {
     const grade = submission.Grades.find(grade => grade.UserID === userID)
     if (!grade) {
         return Submission_Status.NONE
@@ -296,8 +293,14 @@ export const defaultTag = (date: Date): string => {
     return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
 }
 
+// Returns the current year, unless the date falls in November (10) or December (11),
+// in which case it returns the following year. This is used to prefill the default year
+// of the create course form when creating a new course. The rationale is that it is
+// unlikely a new course will be created in November or later for the current year.
 export const defaultYear = (date: Date): number => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
+    return date.getMonth() >= 10
+        ? date.getFullYear() + 1
+        : date.getFullYear()
 }
 
 export const userLink = (user: User): string => {

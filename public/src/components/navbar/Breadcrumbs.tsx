@@ -9,7 +9,7 @@ const Breadcrumbs = () => {
     const state = useAppState()
     const actions = useActions()
     const location = useLocation()
-    const { width } = useWindowSize();
+    const { width } = useWindowSize()
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)
@@ -28,7 +28,7 @@ const Breadcrumbs = () => {
     const getAssignmentNameById = (id: string): string | null => {
         if (pathnames[0] === 'course' && pathnames[1]) {
             const assignment = state.assignments[pathnames[1]].find(assignment => assignment.ID.toString() === id)
-            return assignment ? assignment.name : null
+            return assignment?.name ?? null
         }
         return null
     }

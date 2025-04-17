@@ -26,23 +26,25 @@ const ReviewForm = () => {
         return review?.ReviewerID === state.self.ID
     }
 
-    const reviewers = selectedAssignment.reviewers ?? 0
     const reviews = state.review.reviews.get(selectedSubmission.ID) ?? []
     const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
+        const buttonText = review.ready ? "Ready" : "In Progress"
+        const buttonColor = review.ready ? Color.GREEN : Color.YELLOW
+        const className = state.review.selectedReview === index ? "active border border-dark" : ""
         selectReviewButton.push(
             <Button key={review.ID.toString()}
-                text={review.ready ? "Ready" : "In Progress"}
-                color={review.ready ? Color.GREEN : Color.YELLOW}
+                text={buttonText}
+                color={buttonColor}
                 type={ButtonType.BUTTON}
-                className={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
+                className={`mr-1 ${className}`}
                 onClick={() => { actions.review.setSelectedReview(index) }}
             />
         )
     })
 
-    if ((reviews.length === 0 || reviews.some(review => !isAuthor(review))) && (reviewers - reviews.length) > 0) {
+    if ((reviews.length === 0 || reviews.some(review => !isAuthor(review))) && (selectedAssignment.reviewers - reviews.length) > 0) {
         // Display a button to create a new review if:
         // there are no reviews or the current user is not the author of the review, and there are still available review slots
         selectReviewButton.push(

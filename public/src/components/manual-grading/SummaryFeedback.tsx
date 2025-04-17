@@ -10,7 +10,11 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
     const actions = useActions()
     const [editing, setEditing] = useState<boolean>(false)
 
-    const summaryFeedback = <td colSpan={3}><CriterionComment comment={review.feedback.length > 0 ? review.feedback : "No summary feedback"} /></td>
+    const summaryFeedback = (
+        <td colSpan={3}>
+            <CriterionComment comment={review.feedback.length > 0 ? review.feedback : "No summary feedback"} />
+        </td>
+    )
 
     if (!state.isTeacher) {
         return <tr>{summaryFeedback}</tr>

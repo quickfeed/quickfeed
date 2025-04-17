@@ -45,16 +45,16 @@ const Lab = () => {
             if (!assignment) {
                 return <CenteredMessage message={KnownMessage.NoAssignment} />
             }
-            const submissions = state.submissions.ForAssignment(assignment) ?? null
-            if (!submissions) {
+            const submissions = state.submissions.ForAssignment(assignment)
+            if (submissions.length === 0) {
                 return <CenteredMessage message={KnownMessage.NoSubmission} />
             }
 
-            if (isGroupLab) {
-                submission = submissions.find(s => s.groupID > 0n) ?? null
-            } else {
-                submission = submissions.find(s => s.userID === state.self.ID && s.groupID === 0n) ?? null
-            }
+            const query = (s: Submission) => isGroupLab
+                ? s.groupID > 0n
+                : s.userID === state.self.ID && s.groupID === 0n
+
+            submission = submissions.find(s => query(s)) ?? null
         }
 
         if (assignment && submission) {

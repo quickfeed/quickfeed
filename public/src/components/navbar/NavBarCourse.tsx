@@ -35,7 +35,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
                         {course?.code}
                     </div>
                     <div className="col" title="icon">
-                        <i className={active ? " icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"} />
+                        <i className={`icon fa fa-caret-down fa-lg float-right ${active ? "" : "fa-rotate-90"}`} />
                     </div>
                 </li>
             </div>
