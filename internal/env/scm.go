@@ -104,3 +104,11 @@ func HasAppID() bool {
 	_, err := AppID()
 	return err == nil
 }
+
+func GetAppURL() string {
+	return os.Getenv("QUICKFEED_APP_URL")
+}
+
+func GetOrganizationURL() string {
+	return os.Getenv("QUICKFEED_ORGANIZATION_URL")
+}
