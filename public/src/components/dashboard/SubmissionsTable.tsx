@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { assignmentStatusText, getFormattedTime, getStatusByUser, isApproved, SubmissionStatus, timeFormatter } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getStatusByUser, Icon, isApproved, SubmissionStatus, timeFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, SubmissionSchema } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
@@ -54,7 +54,7 @@ const SubmissionsTable = () => {
                         <td>
                             {assignment.name}
                             {assignment.isGroupLab ?
-                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment" /></span> : null}
+                                <span className="badge ml-2 float-right"><i className={Icon.GROUP} title="Group Assignment" /></span> : null}
                         </td>
                         <td><ProgressBar courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.deadline, true)}</td>

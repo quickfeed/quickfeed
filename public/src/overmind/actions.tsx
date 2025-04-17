@@ -1,6 +1,6 @@
 import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "."
-import { Organization, RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
+import {RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../proto/qf/requests_pb"
 import {
     Assignment,
     Course,
@@ -10,7 +10,6 @@ import {
     EnrollmentSchema,
     Grade,
     GradingBenchmark,
-    GradingBenchmarkSchema,
     GradingCriterion,
     Group,
     Group_GroupStatus,
@@ -21,13 +20,12 @@ import {
     User,
     UserSchema
 } from "../../proto/qf/types_pb"
-import { Response } from "../client"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../Helpers"
-import * as internalActions from "./internalActions"
+import {isEmptyRepo} from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "./state"
 import { clone, create, isMessage } from "@bufbuild/protobuf"
 
-export const internal = internalActions
+export const internal = {isEmptyRepo}
 
 export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
@@ -397,11 +395,6 @@ export const createGroup = async ({ state, actions, effects }: Context, group: C
     state.activeGroup = null
 }
 
-/** getOrganization returns the organization object for orgName retrieved from the server. */
-export const getOrganization = async ({ effects }: Context, orgName: string): Promise<Response<Organization>> => {
-    return await effects.api.client.getOrganization({ ScmOrganizationName: orgName })
-}
-
 /** Updates a given course and refreshes courses in state if successful  */
 export const editCourse = async ({ actions, effects }: Context, { course }: { course: Course }): Promise<void> => {
     const response = await effects.api.client.updateCourse(course)
@@ -504,7 +497,11 @@ export const setSelectedAssignmentID = ({ state }: Context, assignmentID: number
     state.selectedAssignmentID = assignmentID
 }
 
-export const setSelectedSubmission = ({ state }: Context, submission: Submission): void => {
+export const setSelectedSubmission = ({ state }: Context, { submission }: { submission: Submission | null }): void => {
+    if (!submission) {
+        state.selectedSubmission = null
+        return
+    }
     state.selectedSubmission = clone(SubmissionSchema, submission)
 }
 
@@ -620,51 +617,53 @@ export const updateGroup = async ({ state, actions, effects }: Context, group: G
     }
 }
 
-export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.ID)
+export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<boolean> => {
+    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.BenchmarkID)
     if (!benchmark) {
         // If a benchmark is not found, the criterion is invalid.
-        return
+        return false
     }
 
     // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
     if (criterion.ID) {
         const response = await effects.api.client.updateCriterion(criterion)
         if (response.error) {
-            return
+            return false
         }
         const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
         if (index > -1) {
             benchmark.criteria[index] = criterion
         }
     } else {
+        criterion.CourseID = assignment.CourseID // Needed for access control
         const response = await effects.api.client.createCriterion(criterion)
         if (response.error) {
-            return
+            return false
         }
         benchmark.criteria.push(response.message)
     }
+    return true
 }
 
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    // Check if this need cloning
-    const bm = clone(GradingBenchmarkSchema, benchmark)
+export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<boolean> => {
     if (benchmark.ID) {
-        const response = await effects.api.client.updateBenchmark(bm)
+        const response = await effects.api.client.updateBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
-        const index = assignment.gradingBenchmarks.indexOf(benchmark)
+        const index = assignment.gradingBenchmarks.findIndex(b => b.ID === benchmark.ID)
         if (index > -1) {
             assignment.gradingBenchmarks[index] = benchmark
         }
     } else {
+        benchmark.CourseID = assignment.CourseID // Needed for access control
         const response = await effects.api.client.createBenchmark(benchmark)
         if (response.error) {
-            return
+            return false
         }
         assignment.gradingBenchmarks.push(response.message)
     }
+    return true
 }
 
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
@@ -682,7 +681,8 @@ export const deleteCriterion = async ({ effects }: Context, { criterion, assignm
         return
     }
 
-    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion?.ID)
+    const benchmarks = assignment.gradingBenchmarks
+    const benchmark = benchmarks.find(bm => bm.ID === criterion?.BenchmarkID)
     if (!benchmark) {
         // Criterion has no parent benchmark
         return
@@ -700,11 +700,10 @@ export const deleteCriterion = async ({ effects }: Context, { criterion, assignm
     }
 
     // Remove criterion from benchmark in state if request was successful
-    const index = assignment.gradingBenchmarks.indexOf(benchmark)
+    const index = benchmarks.indexOf(benchmark)
     if (index > -1) {
-        assignment.gradingBenchmarks.splice(index, 1)
+        benchmarks[index].criteria = benchmarks[index].criteria.filter(c => c.ID !== criterion.ID)
     }
-
 }
 
 export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
@@ -835,7 +834,7 @@ export const errorHandler = (context: Context, { method, error }: { method: stri
         // error.rawMessage:  "failed to create github application: ..."
         //
         // If the current user is an admin, the method name is included along with the error code.
-        // e.g. "GetOrganization: [not_found] failed to create github application: ..."
+        // e.g. "GetCourse: [not_found] failed to create github application: ..."
         const message = context.state.self.IsAdmin ? `${method}: ${error.message}` : error.rawMessage
         context.actions.alert({
             text: message,

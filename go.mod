@@ -9,6 +9,7 @@ require (
 	github.com/alta/protopatch v0.5.3
 	github.com/beatlabs/github-auth v0.0.0-20240915075323-ab38acb2d2a1
 	github.com/docker/docker v28.0.1+incompatible
+	github.com/evanw/esbuild v0.25.2
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -22,7 +23,7 @@ require (
 	golang.org/x/crypto v0.36.0
 	golang.org/x/net v0.37.0
 	golang.org/x/oauth2 v0.28.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.5.7
 	gorm.io/gorm v1.25.12

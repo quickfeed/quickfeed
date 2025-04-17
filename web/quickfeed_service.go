@@ -563,33 +563,6 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// GetOrganization fetches a github organization by name.
-func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.Organization]) (*connect.Response[qf.Organization], error) {
-	usr, err := s.db.GetUser(userID(ctx))
-	if err != nil {
-		s.logger.Errorf("GetOrganization(userID=%d) failed: %v", userID(ctx), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
-	}
-	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
-	if err != nil {
-		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
-		return nil, scmConnectErr
-	}
-	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{Name: in.Msg.GetScmOrganizationName(), Username: usr.GetLogin(), NewCourse: true})
-	if err != nil {
-		s.logger.Errorf("GetOrganization failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
-			return nil, ctxErr
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found"))
-	}
-	return connect.NewResponse(org), nil
-}
-
 // GetRepositories returns URL strings for repositories of given type for the given course.
 func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID())
