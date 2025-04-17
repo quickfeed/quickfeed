@@ -10,11 +10,12 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-var public = func(s string) string {
-	return filepath.Join(env.PublicDir(), s)
-}
-
-var distDir = public("dist")
+var (
+	public = func(s string) string {
+		return filepath.Join(env.PublicDir(), s)
+	}
+	distDir = public("dist")
+)
 
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
@@ -48,6 +49,10 @@ var buildOptions = api.BuildOptions{
 	MinifySyntax:      true,
 	LogLevel:          api.LogLevelError,
 	Sourcemap:         api.SourceMapLinked,
+	Define: map[string]string{
+		"process.env.QUICKFEED_ORGANIZATION_URL": fmt.Sprintf(`"%s"`, env.GetOrganizationURL()),
+		"process.env.QUICKFEED_APP_URL":          fmt.Sprintf(`"%s"`, env.GetAppURL()),
+	},
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},
@@ -138,11 +143,9 @@ func createHtml(outputFiles []api.OutputFile) error {
 // used to perform dynamic updates depending on the dev flag and outputDir
 func getOptions(outputDir string, dev bool) api.BuildOptions {
 	if dev {
-		buildOptions.Define = map[string]string{
-			// Esbuild defaults to production when minifying files.
-			// We must explicitly set it to "development" for dev builds.
-			"process.env.NODE_ENV": `"development"`,
-		}
+		// Esbuild defaults to production when minifying files.
+		// We must explicitly set it to "development" for dev builds.
+		buildOptions.Define["process.env.NODE_ENV"] = `"development"`
 		buildOptions.LogLevel = api.LogLevelDebug
 	}
 	// enabling custom outputDir allow for testing without overwriting current build
