@@ -45,7 +45,7 @@ func TestUpdateAssignments(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := client.UpdateAssignments(context.Background(), &connect.Request[qf.CourseRequest]{Msg: test.request})
-			qtest.EvaluateError(t, err, test.wantErr)
+			qtest.CheckError(t, err, test.wantErr)
 		})
 	}
 }

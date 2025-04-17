@@ -54,7 +54,7 @@ func TestGetSubmissions(t *testing.T) {
 			}
 
 			submissions, err := db.GetSubmissions(test.query)
-			qtest.EvaluateError(t, err, test.wantError)
+			qtest.CheckError(t, err, test.wantError)
 
 			if test.wantError != nil {
 				return

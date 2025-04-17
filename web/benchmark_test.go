@@ -45,7 +45,7 @@ func TestCreateBenchmark(t *testing.T) {
 	for i, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			gotBenchmark, err := client.CreateBenchmark(context.Background(), &connect.Request[qf.GradingBenchmark]{Msg: test.benchmark})
-			qtest.EvaluateError(t, err, test.wantErr)
+			qtest.CheckError(t, err, test.wantErr)
 
 			if test.wantErr == nil {
 				test.benchmark.ID = uint64(i + 1)

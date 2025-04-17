@@ -377,17 +377,17 @@ func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	}
 }
 
-// EvaluateError checks if the gotError matches the wantErr.
+// CheckError checks if the got error matches the want error.
 // Should be used in tests to check if the error returned by a function is as expected.
-func EvaluateError(t *testing.T, gotError error, wantErr error) {
-	if gotError != nil {
-		if wantErr != nil && gotError.Error() != wantErr.Error() {
-			t.Fatalf("Expected error: %v, got: %v", wantErr, gotError)
+func CheckError(t *testing.T, got error, want error) {
+	if got != nil {
+		if want != nil && got.Error() != want.Error() {
+			t.Fatalf("Expected error: %v, got: %v", want, got)
 		}
-		if wantErr == nil {
-			t.Fatalf("Expected no error, but got: %v", gotError)
+		if want == nil {
+			t.Fatalf("Expected no error, but got: %v", got)
 		}
-	} else if gotError == nil && wantErr != nil {
-		t.Fatalf("Expected error: %v, got: nil", wantErr)
+	} else if got == nil && want != nil {
+		t.Fatalf("Expected error: %v, got: nil", want)
 	}
 }

@@ -21,7 +21,7 @@ func TestGetUserExpectUnknownUser(t *testing.T) {
 	defer cleanup()
 	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 	_, err := client.GetUser(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
-	qtest.EvaluateError(t, err, connect.NewError(connect.CodeNotFound, errors.New("unknown user")))
+	qtest.CheckError(t, err, connect.NewError(connect.CodeNotFound, errors.New("unknown user")))
 }
 
 func TestGetUsers(t *testing.T) {

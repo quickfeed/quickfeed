@@ -74,7 +74,7 @@ func TestGetSubmission(t *testing.T) {
 				},
 			}
 			response, err := client.GetSubmission(context.Background(), &connect.Request[qf.SubmissionRequest]{Msg: request})
-			qtest.EvaluateError(t, err, test.wantErr)
+			qtest.CheckError(t, err, test.wantErr)
 
 			if test.wantErr == nil {
 				qtest.Diff(t, "GetSubmission() mismatch", response.Msg, submission, protocmp.Transform())

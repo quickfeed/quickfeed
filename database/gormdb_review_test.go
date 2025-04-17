@@ -61,7 +61,7 @@ func TestCreateReview(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			qtest.EvaluateError(t, db.CreateReview(test.review), test.wantErr)
+			qtest.CheckError(t, db.CreateReview(test.review), test.wantErr)
 
 			// Skip comparing the reviews if we expect an error or the wanted review is nil
 			if test.wantErr != nil || test.wantReview == nil {
@@ -122,7 +122,7 @@ func TestUpdateReview(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			qtest.EvaluateError(t, db.UpdateReview(test.review), test.wantErr)
+			qtest.CheckError(t, db.UpdateReview(test.review), test.wantErr)
 			gotReview := qtest.GetReview(t, db, test.review.GetID())
 			if test.wantErr != nil {
 				return

@@ -173,7 +173,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := q.RebuildSubmissions(ctx, test.request)
-			qtest.EvaluateError(t, err, test.wantErr)
+			qtest.CheckError(t, err, test.wantErr)
 		})
 	}
 	rebuiltSubmissions := qtest.GetSubmissions(t, db, &qf.Submission{AssignmentID: assignment.GetID()})
