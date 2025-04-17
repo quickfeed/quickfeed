@@ -260,7 +260,7 @@ func TestStreamRecordResults(t *testing.T) {
 	}
 	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
-	group := qtest.CreateGroup(t, db, course, 3)
+	group := qtest.CreateFakeGroup(t, db, course, 3)
 
 	assignment := &qf.Assignment{
 		CourseID:         course.GetID(),

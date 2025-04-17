@@ -26,7 +26,7 @@ func TestBadGroupNames(t *testing.T) {
 	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 	groupNames := []struct {
 		name      string
-		wantError *connect.Error
+		wantError error
 	}{
 		{"abcdefghijklmnopqrstuvwxyz", web.ErrGroupNameTooLong},
 		{"groupNameStillTooLong", web.ErrGroupNameTooLong},
@@ -75,11 +75,12 @@ func TestBadGroupNames(t *testing.T) {
 				t.Errorf("got no error, want %v", tt.wantError)
 			}
 			if connErr, ok := err.(*connect.Error); ok {
-				if connErr.Code() != tt.wantError.Code() {
-					t.Errorf("got error code %v, want %v", connErr.Code(), tt.wantError.Code())
+				if connErr.Code() != connect.CodeInvalidArgument {
+					t.Errorf("got error code %v, want %v", connErr.Code(), connect.CodeInvalidArgument)
 				}
-				if connErr.Error() != tt.wantError.Error() {
-					t.Errorf("got error %v, want %v", connErr, tt.wantError)
+				wantConnErr := connect.NewError(connect.CodeInvalidArgument, tt.wantError)
+				if connErr.Error() != wantConnErr.Error() {
+					t.Errorf("got error %v, want %v", connErr, wantConnErr)
 				}
 			}
 		})

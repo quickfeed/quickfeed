@@ -9,8 +9,28 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 )
+
+func TestUpdateCourse(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs("admin"))
+	user := qtest.CreateFakeUser(t, db)
+	dat520 := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, user, dat520)
+	cookie := Cookie(t, tm, user)
+
+	// Update the course name
+	wantCourse := proto.Clone(dat520).(*qf.Course)
+	wantCourse.Name = "Updated Course Name"
+	if _, err := client.UpdateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie)); err != nil {
+		t.Error(err)
+	}
+	gotCourse := qtest.GetCourse(t, db, dat520.GetID())
+	qtest.Diff(t, "UpdateCourse() mismatch", gotCourse, wantCourse, protocmp.Transform())
+}
 
 func TestGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
