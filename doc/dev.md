@@ -1,16 +1,8 @@
 # QuickFeed Developer Guide
 
-This developer guide assumes that you have [installed and configured QuickFeed](./deploy.md) and its dependent components.
+This developer guide assumes that you have [installed go](./templates/setup-go.md), [installed and configured QuickFeed](./deploy.md) and its dependent components.
 
-## GitHub Integration
-
-- [GitHub Application Setup](./github.md)
-- [Setting up Course Organization](./teacher.md)
-
-## Tools
-
-QuickFeed provides a few command line tools.
-See [cmd/scm/README.md](cmd/scm/README.md) for documentation of the SCM tool.
+If you wish to run quickfeed through Wsl view [setup wsl](./templates/setup-wsl.md).
 
 ## Makefile
 
@@ -37,6 +29,8 @@ make ui
 ```
 
 ### Testing
+
+#### Backend
 
 To run all tests that does not require remote interactions.
 
@@ -72,6 +66,10 @@ cd web/hooks
 QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHook
 ```
 
+#### Frontend
+
+View [How to run Selenium tests](selenium-testing.md) or [Testing with Jest](jest-testing.md)
+
 ## Server architecture
 
 ### Default Configuration
@@ -80,8 +78,7 @@ TODO(meling) Update and improve this part. It is not correct anymore, I think.
 
 - **Primary Server Port:**
 By default, the server runs on port **:443**, the standard port for HTTPS traffic. This ensures secure communication right out of the box.
-- **Custom Port Configuration:**
-If you need to use a different port, you can easily change this by using the `-http.addr` flag when launching the server.
+
 - **HTTP to HTTPS Redirection:**
 Alongside the main server, we also initiate a secondary server on port **:80**. Its sole purpose is to redirect all incoming HTTP requests to HTTPS.
 This ensures that even if someone attempts to connect via the unsecured HTTP protocol, their request will be automatically upgraded to a secure connection.
@@ -132,7 +129,7 @@ In these cases the error is usually ephemeral in nature, and the action should b
 
 - Return generic "malformed request" message to the user.
 
-**GitHub API errors (request struct has missing/malformed fields)**
+**GitHub API errors (request struct has missing/malformed fields)**:
 
 - Return a custom error with detailed information for logging and generic "failed precondition" message to the user.
 
