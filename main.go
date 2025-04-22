@@ -67,15 +67,33 @@ func main() {
 		log.Fatalf("Failed to set domain: %s, err: %v", *domain, err)
 	}
 
+	generateSecret := *secret || env.AuthSecret() == ""
+
+	if generateSecret {
+		if err := env.NewAuthSecret(envFile); err != nil {
+			log.Fatalf("Failed to save secret: %v", err)
+		}
+		log.Println("Generated new random secret for signing JWT tokens...")
+		if *secret {
+			os.Exit(0)
+		}
+	}
+
 	var srvFn web.ServerType
+	var environment string
 	if env.DomainIsLocal() {
+		environment = "development"
 		srvFn = web.NewDevelopmentServer
 	} else {
+		environment = "production"
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on https://%s", env.DomainWithPort())
+	log.Printf("Starting QuickFeed %s server on https://%s", environment, env.DomainWithPort())
 
-	if *newApp || !env.HasAppID() {
+	// Generate a new GitHub app if requested or if the app ID is not set.
+	// The GitHub App is required to run QuickFeed.
+	createNewApp := *newApp || !env.HasAppID()
+	if createNewApp {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
@@ -83,13 +101,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	if *secret || env.AuthSecret() == "" {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.NewAuthSecret(envFile); err != nil {
-			log.Fatalf("Failed to save secret: %v", err)
-		}
-	}
-	if *secret || *newApp {
+	if generateSecret || createNewApp {
 		// Refresh environment variables
 		if err := env.Load(env.RootEnv(envFile)); err != nil {
 			log.Fatal(err)
