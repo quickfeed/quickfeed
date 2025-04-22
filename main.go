@@ -105,7 +105,7 @@ func main() {
 	}
 	defer func() { _ = logger.Sync() }()
 
-	db, err := database.NewGormDB(logger)
+	db, err := database.NewGormDB(env.DbFile(), logger)
 	if err != nil {
 		log.Fatalf("Can't connect to database: %v", err)
 	}
