@@ -8,10 +8,9 @@ import (
 	"strings"
 )
 
-// Prepared returns nil if the given env file exists and the corresponding backup file does not.
+// Prepared returns nil if the env backup file does not exist.
 // Otherwise, it returns an error.
 //
-// If the env file does not exist, a MissingError returned.
 // QuickFeed requires the env file to load (some) existing environment variables,
 // even when creating a new GitHub app, and overwriting some environment variables.
 // If the backup file exists, an ExistsError is returned.
@@ -20,9 +19,6 @@ func Prepared(filename string) error {
 	bakFilename := filename + ".bak"
 	if exists(bakFilename) {
 		return ExistsError(bakFilename)
-	}
-	if !exists(filename) {
-		return MissingError(filename)
 	}
 	return nil
 }
@@ -142,16 +138,4 @@ func ExistsError(filename string) error {
 
 func (e backupExistsError) Error() string {
 	return fmt.Sprintf("%s already exists; check its content before removing and try again", e.filename)
-}
-
-type missingEnvError struct {
-	filename string
-}
-
-func MissingError(filename string) error {
-	return missingEnvError{filename: filename}
-}
-
-func (e missingEnvError) Error() string {
-	return fmt.Sprintf("missing required %q file", e.filename)
 }

@@ -103,8 +103,7 @@ func TestExistsLogic(t *testing.T) {
 	}
 
 	const baseFilename = "env"
-	existsErr := env.ExistsError("dummy")   // will be replaced with other error with correct t.TempDir()
-	missingErr := env.MissingError("dummy") // will be replaced with other error with correct t.TempDir()
+	existsErr := env.ExistsError("dummy") // will be replaced with other error with correct t.TempDir()
 
 	tests := []struct {
 		name    string
@@ -112,7 +111,6 @@ func TestExistsLogic(t *testing.T) {
 		after   exist
 		wantErr error
 	}{
-		{name: "NoFileExists   ", before: exist{file: Ø, bak: Ø}, after: exist{file: Ø, bak: Ø}, wantErr: missingErr},
 		{name: "EnvFileExists  ", before: exist{file: E, bak: Ø}, after: exist{file: E, bak: Ø}, wantErr: nil},
 		{name: "BakFileExists  ", before: exist{file: Ø, bak: E}, after: exist{file: Ø, bak: E}, wantErr: existsErr},
 		{name: "BothFilesExists", before: exist{file: E, bak: E}, after: exist{file: E, bak: E}, wantErr: existsErr},
@@ -137,10 +135,6 @@ func TestExistsLogic(t *testing.T) {
 			if errors.Is(test.wantErr, existsErr) {
 				// use error with correct t.TempDir()
 				test.wantErr = env.ExistsError(bakFilename)
-			}
-			if errors.Is(test.wantErr, missingErr) {
-				// use error with correct t.TempDir()
-				test.wantErr = env.MissingError(filename)
 			}
 			if err := env.Prepared(filename); !errors.Is(err, test.wantErr) {
 				t.Errorf("Prepared(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
