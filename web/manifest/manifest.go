@@ -68,7 +68,7 @@ func AskForConfirmation(question string) error {
 }
 
 func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
-	m := New(env.DomainWithPort(), envFile, dev)
+	m := New(envFile, dev)
 	server, err := srvFn(m.Handler())
 	if err != nil {
 		return err
@@ -85,9 +85,9 @@ type Manifest struct {
 	build   func() error
 }
 
-func New(domain, envFile string, dev bool) *Manifest {
+func New(envFile string, dev bool) *Manifest {
 	m := &Manifest{
-		domain:  domain,
+		domain:  env.DomainWithPort(),
 		envFile: envFile,
 		client:  github.NewClient(nil),
 		done:    make(chan error),

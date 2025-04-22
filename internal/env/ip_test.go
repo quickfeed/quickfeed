@@ -13,9 +13,11 @@ func TestIsLocal(t *testing.T) {
 		want bool
 	}{
 		{"localhost", "localhost", true},
+		{"localhost", "localhost:443", true},
 		{"loopback", "127.0.0.1", true},
 		{"private", "172.31.120.166", true},
 		{"public", "84.22.1.92", false},
+		{"public", "example.com", false},
 	}
 
 	for _, tt := range tests {

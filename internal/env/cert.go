@@ -125,6 +125,11 @@ func CertPath() string {
 }
 
 func IsLocal(domain string) bool {
+	if strings.Contains(domain, ":") {
+		// only take the domain part of the address
+		domain = strings.Split(domain, ":")[0]
+	}
+
 	ips, err := net.LookupIP(domain)
 	if err != nil {
 		return false

@@ -152,7 +152,7 @@ func TestConversion(t *testing.T) {
 
 	scmClient := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockAppConfig(config))
 	manifest := Manifest{
-		domain:  "localhost",
+		domain:  "localhost:443",
 		client:  scmClient.Client(),
 		envFile: "testdata/test.env",
 		done:    make(chan error, 1),
