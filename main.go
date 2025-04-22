@@ -45,7 +45,6 @@ func init() {
 func main() {
 	var (
 		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
-		watch  = flag.Bool("watch", false, "watch for changes and reload")
 		newApp = flag.Bool("new", false, "create new GitHub app")
 		secret = flag.Bool("secret", false, "create new secret for JWT signing")
 		domain = flag.String("domain", "", "domain name for the server")
@@ -74,9 +73,9 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
+	log.Printf("Starting QuickFeed on https://%s", env.DomainWithPort())
 
-	if *newApp {
+	if *newApp || !env.HasAppID() {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
@@ -143,7 +142,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if *dev && *watch {
+	if *dev {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
 		handler = web.WatchHandler(ctx, handler)
