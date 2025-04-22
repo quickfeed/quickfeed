@@ -7,7 +7,7 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()
 
-    const handleSetGrade = (grade: GradingCriterion_Grade) => () => setGrade({ criterion: criterion, grade: grade })
+    const handleSetGrade = (grade: GradingCriterion_Grade) => () => setGrade({ criterion, grade })
 
     if (!isTeacher) {
         return null
@@ -23,7 +23,7 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
         const style = criterion.grade === button.status ? `col btn-xs btn-${button.style} mr-2 border` : `col btn-xs btn-outline-${button.style} mr-2 border`
         // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
-            <div key={button.icon} className={style} onClick={() => button.onClick()}>
+            <div key={button.icon} className={style} onClick={() => button.onClick()} role="button" aria-hidden="true">
                 <i className={button.icon} />
             </div>
         )

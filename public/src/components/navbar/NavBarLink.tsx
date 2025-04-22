@@ -15,7 +15,7 @@ const NavBarLink = (props: NavLink) => {
         props.icons.forEach((icon) => {
             if (icon) {
                 icons.push(
-                    <div key={icon.text.toString()} id="icon" className={icon.classname + " ml-2"}>
+                    <div key={icon.text.toString()} id="icon" className={`${icon.classname} ml-2`}>
                         {icon.text}
                     </div>
                 )
@@ -23,7 +23,7 @@ const NavBarLink = (props: NavLink) => {
         })
     }
     return (
-        <li onClick={() => history.push(props.link.to)} role="button" aria-hidden="true">
+        <li onClick={() => history.push(props.link.to)} role="button" aria-hidden="true"> {/* skipcq: JS-0761 */}
             <div className="col" id="title">
                 <Link to={props.link.to}>{props.link.text}</Link>
             </div>

@@ -35,7 +35,7 @@ const AssignmentElement = ({ assignment, courseID }: { assignment: Assignment, c
     const rebuild = async () => {
         if (confirm(`Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`)) {
             setButtonText("Rebuilding...")
-            const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.ID, courseID: courseID })
+            const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.ID, courseID })
             if (success) {
                 setButtonText("Finished rebuilding")
             } else {

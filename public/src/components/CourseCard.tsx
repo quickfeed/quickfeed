@@ -26,11 +26,11 @@ const CourseCard = ({ course, enrollment }: CardProps) => {
     const handleEnroll = useCallback(() => actions.enroll(course.ID), [actions, course.ID])
     const CourseEnrollmentButton = () => {
         if (hasNone(status)) {
-            return <div className="btn btn-primary course-button" onClick={handleEnroll}>Enroll</div>
+            return <button className="btn btn-primary course-button" onClick={handleEnroll}>Enroll</button>
         } else if (hasPending(status)) {
-            return <div className="btn btn-secondary course-button disabled">Pending</div>
+            return <button className="btn btn-secondary course-button disabled">Pending</button>
         }
-        return <div className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</div>
+        return <button className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</button>
     }
 
     const CourseEnrollmentStatus = () => {

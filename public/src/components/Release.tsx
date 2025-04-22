@@ -20,7 +20,7 @@ const Release = () => {
     }, [actions.review])
 
     const handleRelease = useCallback((approve: boolean, release: boolean) => () => {
-        return actions.review.releaseAll({ approve: approve, release: release })
+        return actions.review.releaseAll({ approve, release })
     }, [actions.review])
 
     if (!canRelease) {

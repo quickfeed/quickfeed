@@ -14,7 +14,7 @@ export type ButtonProps = {
     color: Color,
     type: ButtonType,
     className?: string,
-    onClick: () => void,
+    onClick: () => void | Promise<void>,
 }
 
 const Button = ({ children, text, color, type, className, onClick }: ButtonProps) => {
