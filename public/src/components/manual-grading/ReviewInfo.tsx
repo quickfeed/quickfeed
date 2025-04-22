@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
@@ -19,6 +19,7 @@ interface ReviewInfoProps {
 const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
     const actions = useActions()
+    const handleRelease = useCallback(() => actions.review.release({ submission, owner: state.submissionOwner }), [actions, submission, state.submissionOwner])
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
@@ -44,7 +45,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             color={submission.released ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON}
             className={`float-right ${!state.isCourseCreator && "disabled"} `}
-            onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
+            onClick={handleRelease}
         />
     )
     return (

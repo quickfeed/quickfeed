@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useCallback } from "react"
 import { useActions, useAppState } from "../overmind"
 import FormInput from "./forms/FormInput"
 import DynamicButton from "./DynamicButton"
@@ -14,10 +14,14 @@ const Release = () => {
         return () => actions.review.setMinimumScore(0)
     }, [state.review.assignmentID])
 
-    const handleMinimumScore = (event: React.FormEvent<HTMLInputElement>) => {
+    const handleMinimumScore = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         event.preventDefault()
         actions.review.setMinimumScore(parseInt(event.currentTarget.value))
-    }
+    }, [actions.review])
+
+    const handleRelease = useCallback((approve: boolean, release: boolean) => () => {
+        return actions.review.releaseAll({ approve: approve, release: release })
+    }, [actions.review])
 
     if (!canRelease) {
         return null
@@ -31,7 +35,7 @@ const Release = () => {
                         text="Approve all"
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        onClick={() => actions.review.releaseAll({ approve: true, release: false })}
+                        onClick={handleRelease(true, false)}
                     />
                 </div>
                 <div className="input-group-append">
@@ -39,7 +43,7 @@ const Release = () => {
                         text="Release all"
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        onClick={() => actions.review.releaseAll({ approve: false, release: true })}
+                        onClick={handleRelease(false, true)}
                     />
                 </div>
             </FormInput>

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { Color, getCourseID, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -36,7 +36,8 @@ const TeacherPage = () => {
     }
     const results = { title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results` }
     const assignments = { title: "Manage Assignments", text: "View and edit assignments.", buttonText: "Assignments", to: `${root}/assignments` }
-    const updateAssignments = { title: "Update Course Assignments", text: "Fetch assignments from GitHub.", buttonText: "Update Assignments", onclick: () => actions.updateAssignments(courseID) }
+    const handleUpdateAssignments = useCallback(() => actions.updateAssignments(courseID), [actions, courseID])
+    const updateAssignments = { title: "Update Course Assignments", text: "Fetch assignments from GitHub.", buttonText: "Update Assignments", onclick: handleUpdateAssignments }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
 
     return (

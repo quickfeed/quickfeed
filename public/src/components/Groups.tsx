@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
 import { Color, getCourseID, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -35,6 +35,10 @@ const Groups = () => {
         return true
     }
 
+    const approveGroup = useCallback((group: Group) => () => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED }), [actions])
+    const handleEditGroup = useCallback((group: Group) => () => actions.setActiveGroup(group), [actions])
+    const handleDeleteGroup = useCallback((group: Group) => () => actions.deleteGroup(group), [actions])
+
     const GroupButtons = ({ group }: { group: Group }) => {
         const buttons: React.JSX.Element[] = []
         if (isPendingGroup(group)) {
@@ -44,7 +48,7 @@ const Groups = () => {
                     text="Approve"
                     color={Color.BLUE}
                     type={ButtonType.BADGE}
-                    onClick={() => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED })}
+                    onClick={approveGroup(group)}
                 />
             )
         }
@@ -55,7 +59,7 @@ const Groups = () => {
                 color={Color.YELLOW}
                 type={ButtonType.BADGE}
                 className="ml-2"
-                onClick={() => actions.setActiveGroup(group)}
+                onClick={handleEditGroup(group)}
             />
         )
         buttons.push(
@@ -65,7 +69,7 @@ const Groups = () => {
                 color={Color.RED}
                 type={ButtonType.BADGE}
                 className="ml-2"
-                onClick={() => actions.deleteGroup(group)}
+                onClick={handleDeleteGroup(group)}
             />
         )
 

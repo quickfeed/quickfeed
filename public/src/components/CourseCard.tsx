@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useHistory } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
@@ -23,9 +23,10 @@ const CourseCard = ({ course, enrollment }: CardProps) => {
     const history = useHistory()
     const status = enrollment.status
 
+    const handleEnroll = useCallback(() => actions.enroll(course.ID), [actions, course.ID])
     const CourseEnrollmentButton = () => {
         if (hasNone(status)) {
-            return <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.ID)}>Enroll</div>
+            return <div className="btn btn-primary course-button" onClick={handleEnroll}>Enroll</div>
         } else if (hasPending(status)) {
             return <div className="btn btn-secondary course-button disabled">Pending</div>
         }

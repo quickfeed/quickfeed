@@ -75,11 +75,12 @@ export const generateRow = (
 }
 
 export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+    const handleSort = (sortBy: SubmissionSort) => () => actions.setSubmissionSort(sortBy)
     const base: Row = [
-        { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
+        { value: "Name", onClick: handleSort(SubmissionSort.Name) }
     ]
     if (isCourseManuallyGraded) {
-        base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
+        base.unshift({ value: "ID", onClick: handleSort(SubmissionSort.ID) })
     }
     for (const assignment of assignments) {
         const cell: CellElement = { value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }

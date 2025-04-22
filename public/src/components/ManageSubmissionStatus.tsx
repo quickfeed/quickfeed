@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useCallback } from "react"
 import { Grade, Submission_Status } from "../../proto/qf/types_pb"
 import { Color, hasAllStatus, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -20,26 +20,26 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
         }
     }, [state.selectedSubmission])
 
-    const handleRebuild = async () => {
+    const handleRebuild = useCallback(async () => {
         if (rebuilding) { return } // Don't allow multiple rebuilds at once
         setRebuilding(true)
         await actions.rebuildSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission })
         setRebuilding(false)
-    }
+    }, [rebuilding, actions, state.submissionOwner, state.selectedSubmission])
 
-    const handleSetStatus = async (status: Submission_Status) => {
+    const handleSetStatus = useCallback((status: Submission_Status) => async () => {
         if (updating !== Submission_Status.NONE) { return } // Don't allow multiple updates at once
         setUpdating(status)
         await actions.updateSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission, status })
         setUpdating(Submission_Status.NONE)
-    }
+    }, [actions, state.selectedSubmission, state.submissionOwner, updating])
 
-    const handleSetGrade = async (grade: Grade, status: Submission_Status) => {
+    const handleSetGrade = useCallback((grade: Grade, status: Submission_Status) => async () => {
         if (updating !== Submission_Status.NONE) { return } // Don't allow multiple updates at once
         setUpdating(status)
         await actions.updateGrade({ grade, status })
         setUpdating(Submission_Status.NONE)
-    }
+    }, [actions, updating])
 
     const getUserName = (userID: bigint): string => {
         const user = state.courseEnrollments[courseID].find(enrollment => enrollment.userID === userID)?.user
@@ -98,21 +98,21 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         color={Color.GREEN}
                         type={getButtonType(Submission_Status.APPROVED)}
                         className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.APPROVED)}
+                        onClick={handleSetStatus(Submission_Status.APPROVED)}
                     />
                     <DynamicButton
                         text="Revision"
                         color={Color.YELLOW}
                         type={getButtonType(Submission_Status.REVISION)}
                         className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.REVISION)}
+                        onClick={handleSetStatus(Submission_Status.REVISION)}
                     />
                     <DynamicButton
                         text="Reject"
                         color={Color.RED}
                         type={getButtonType(Submission_Status.REJECTED)}
                         className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.REJECTED)}
+                        onClick={handleSetStatus(Submission_Status.REJECTED)}
                     />
                 </div>
             )}
@@ -128,7 +128,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                         color={Color.GREEN}
                                         type={getGradeButtonType(grade, Submission_Status.APPROVED)}
                                         className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.APPROVED)}
+                                        onClick={handleSetGrade(grade, Submission_Status.APPROVED)}
                                     />
                                 </td>
                                 <td>
@@ -137,7 +137,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                         color={Color.YELLOW}
                                         type={getGradeButtonType(grade, Submission_Status.REVISION)}
                                         className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.REVISION)}
+                                        onClick={handleSetGrade(grade, Submission_Status.REVISION)}
                                     />
                                 </td>
                                 <td>
@@ -146,7 +146,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                         color={Color.RED}
                                         type={getGradeButtonType(grade, Submission_Status.REJECTED)}
                                         className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.REJECTED)}
+                                        onClick={handleSetGrade(grade, Submission_Status.REJECTED)}
                                     />
                                 </td>
                             </tr>

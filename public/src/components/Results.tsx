@@ -53,13 +53,34 @@ const Results = ({ review }: { review: boolean }) => {
         }
     }, [])
 
-    const handleLabClick = useCallback((labId: bigint) => {
+    const groupView = state.groupView
+    const handleSetGroupView = useCallback(() => {
+        actions.setGroupView(!groupView)
+        actions.review.setAssignmentID(BigInt(-1))
+    }, [actions, groupView])
+
+    const handleLabClick = useCallback((submission: Submission, owner: Enrollment | Group) => {
+        actions.setSelectedSubmission({ submission })
+        if (isMessage(owner, EnrollmentSchema)) {
+            actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
+        }
+        actions.setSubmissionOwner(owner)
         // Update the URL with the selected lab
         history.replace({
             pathname: location.pathname,
-            search: `?id=${labId}`
+            search: `?id=${submission.ID}`,
         })
-    }, [history])
+    }, [actions, history, location])
+
+    const handleReviewCellClick = useCallback((submission: Submission, owner: Enrollment | Group) => () => {
+        handleLabClick(submission, owner)
+        actions.review.setSelectedReview(-1)
+    }, [actions, handleLabClick])
+
+    const handleSubmissionCellClick = useCallback((submission: Submission, owner: Enrollment | Group) => () => {
+        handleLabClick(submission, owner)
+        actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
+    }, [actions, handleLabClick, state.activeCourse, state.submissionOwner])
 
     if (!state.loadedCourse[courseID.toString()]) {
         return <h1>Fetching Submissions...</h1>
@@ -86,15 +107,7 @@ const Results = ({ review }: { review: boolean }) => {
             iconClassName: submission.released ? "fa fa-unlock" : "fa fa-lock",
             value: `${reviews.length}/${numReviewers}`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
-            onClick: () => {
-                actions.setSelectedSubmission({ submission })
-                if (isMessage(owner, EnrollmentSchema)) {
-                    actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
-                }
-                actions.setSubmissionOwner(owner)
-                actions.review.setSelectedReview(-1)
-                handleLabClick(submission.ID)
-            }
+            onClick: handleReviewCellClick(submission, owner),
         })
     }
 
@@ -105,24 +118,14 @@ const Results = ({ review }: { review: boolean }) => {
         return ({
             value: `${submission.score} %`,
             className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
-            onClick: () => {
-                actions.setSelectedSubmission({ submission })
-                if (isMessage(owner, EnrollmentSchema)) {
-                    actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
-                }
-                actions.setSubmissionOwner(owner)
-                handleLabClick(submission.ID)
-                actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
-            }
+            onClick: handleSubmissionCellClick(submission, owner),
         })
     }
 
-    const groupView = state.groupView
     const header = generateAssignmentsHeader(assignments, groupView, actions, state.isCourseManuallyGraded)
 
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(members, generator, state)
-
 
     return (
         <div className="row">
@@ -134,7 +137,7 @@ const Results = ({ review }: { review: boolean }) => {
                         color={groupView ? Color.BLUE : Color.GREEN}
                         type={ButtonType.BUTTON}
                         className="ml-2"
-                        onClick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}
+                        onClick={handleSetGroupView}
                     />
                 </Search>
                 <TableSort review={review} />
