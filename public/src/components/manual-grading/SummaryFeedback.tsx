@@ -34,7 +34,7 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
             {editing &&
                 <tr>
                     <td colSpan={3}>
-                        <textarea rows={20} autoFocus onBlur={handleChange} defaultValue={review.feedback} className="form-control" />
+                        <textarea rows={20} autoFocus onBlur={handleChange} defaultValue={review.feedback} className="form-control" /> {/* skipcq: JS-0757 */}
                     </td>
                 </tr>
             }
