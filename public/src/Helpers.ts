@@ -231,8 +231,13 @@ export const setStatusAll = (submission: Submission, status: Submission_Status):
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): bigint => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const route = useParams<{ id?: string }>()
-    return route.id ? BigInt(route.id) : BigInt(0)
+    try {
+        return route.id ? BigInt(route.id) : BigInt(0)
+    } catch (e) {
+        return BigInt(0)
+    }
 }
 
 export const isHidden = (value: string, query: string): boolean => {

@@ -22,28 +22,27 @@ const App = () => {
             // user logged in without profile information: redirect to Profile page
             return (
                 <Switch>
-                    <Route path="/" component={Profile} />
-                    <Route path="/profile" component={Profile} />
+                    <Route path="*" component={Profile} />
                 </Switch>
             )
         } else if (state.isLoggedIn) {
             // user logged in: show Dashboard page
             return (
                 <Switch>
-                    <Route path="/" exact component={Dashboard} />
                     <Route path="/login" component={LoginPage} />
                     <Route path="/about" component={AboutPage} />
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={CoursePage} />
                     <Route path="/courses" exact component={Courses} />
                     <Route path="/admin" component={AdminPage} />
+                    <Route path="*" exact component={Dashboard} />
                 </Switch>
             )
         } else {
             //  user not logged in: show About page
             return (
                 <Switch>
-                    <Route path="/" component={LoginPage} />
+                    <Route path="*" component={LoginPage} />
                 </Switch>
             )
         }
