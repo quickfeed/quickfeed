@@ -136,3 +136,7 @@ func IsLocal(domain string) bool {
 	}
 	return true
 }
+
+func DomainIsLocal() bool {
+	return IsLocal(Domain())
+}

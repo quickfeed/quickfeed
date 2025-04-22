@@ -169,20 +169,17 @@ func main() {
 }
 
 func checkDomain() error {
-	if env.Domain() == "127.0.0.1" {
+	if env.DomainIsLocal() {
 		msg := `
-WARNING: You are creating a GitHub app on "127.0.0.1".
+WARNING: You are creating a GitHub app on a local domain.
 This is only for development purposes.
 In this mode, QuickFeed will not be able to receive webhook events from GitHub.
 To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.
 `
 		fmt.Println(msg)
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
-		fmt.Print("Do you want to continue? (Y/n) ")
-		var answer string
-		fmt.Scanln(&answer)
-		if !(answer == "Y" || answer == "y") {
-			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+		if err := manifest.AskForConfirmation("Do you want to continue?"); err != nil {
+			return err
 		}
 	}
 	return nil

@@ -34,7 +34,10 @@ const (
 // functions are called to perform additional checks.
 func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	if env.HasAppID() {
-		return fmt.Errorf("%s already contains App information", envFile)
+		fmt.Printf("%s already contains App information", envFile)
+		if err := AskForConfirmation("Do you want to overrite it?"); err != nil {
+			return err
+		}
 	}
 	// Check for missing .env file and if .env.bak already exists
 	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
@@ -47,6 +50,17 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func AskForConfirmation(question string) error {
+	var answer string
+	log.Printf("%s (y/n): ", question)
+	fmt.Scanln(&answer)
+	if strings.TrimSpace(strings.ToLower(answer)) != "y" {
+		fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+	}
+	log.Println("Overwriting existing App information")
 	return nil
 }
 
