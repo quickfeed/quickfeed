@@ -39,6 +39,33 @@ func DomainWithPort() string {
 	return Domain() + HttpAddr()
 }
 
+// ConfigureDomain updates the domain if its a valid domain
+// The new domain can't be empty, equal to current domain and is required
+// to be local in development mode and public in production mode
+func ConfigureDomain(rootEnvFile string, domain string, dev bool) error {
+	domainWithQuotes := fmt.Sprintf(`"%s"`, domain)
+	envVariables := map[string]string{"DOMAIN": domainWithQuotes}
+	if !dev {
+		envVariables["QUICKFEED_WHITELIST"] = domainWithQuotes
+	}
+
+	newDomain := Domain() != domain && domain != ""
+	publicAndProd := !IsLocal(domain) && !dev
+	if newDomain && (IsLocal(domain) && dev || publicAndProd) {
+		if err := Save(rootEnvFile, envVariables); err != nil {
+			return err
+		}
+		// Load will only load unset environment variables
+		os.Unsetenv("DOMAIN")
+		os.Unsetenv("QUICKFEED_WHITELIST")
+
+		return Load(RootEnv(rootEnvFile))
+	} else if newDomain {
+		return fmt.Errorf("domain: %s is not valid for this environment", domain)
+	}
+	return nil
+}
+
 // WhiteList returns a list of domains that the server will create certificates for.
 func Whitelist() ([]string, error) {
 	domains := os.Getenv("QUICKFEED_WHITELIST")

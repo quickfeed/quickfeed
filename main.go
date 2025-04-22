@@ -48,6 +48,7 @@ func main() {
 		watch  = flag.Bool("watch", false, "watch for changes and reload")
 		newApp = flag.Bool("new", false, "create new GitHub app")
 		secret = flag.Bool("secret", false, "create new secret for JWT signing")
+		domain = flag.String("domain", "", "domain name for the server")
 	)
 	flag.Parse()
 
@@ -60,12 +61,15 @@ func main() {
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	if env.Domain() == "" && *domain == "" {
+		log.Fatal("Domain is not set; use -domain flag to set it.")
+	}
+	if err := env.ConfigureDomain(envFile, *domain, *dev); err != nil {
+		log.Fatalf("Failed to set domain: %s, err: %v", *domain, err)
 	}
 
 	var srvFn web.ServerType
-	if *dev {
+	if env.IsLocal(*domain) {
 		srvFn = web.NewDevelopmentServer
 	} else {
 		srvFn = web.NewProductionServer
