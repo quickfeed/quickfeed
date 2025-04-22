@@ -116,7 +116,7 @@ const Groups = () => {
 
     // If a group is active (being edited), show the group form
     if (state.activeGroup) {
-        return <GroupForm />
+        return <GroupForm key={state.activeGroup.ID.toString()} />
     }
 
     const table = (
