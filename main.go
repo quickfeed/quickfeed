@@ -68,7 +68,7 @@ func main() {
 	}
 
 	var srvFn web.ServerType
-	if env.IsLocal(*domain) {
+	if env.DomainIsLocal() {
 		srvFn = web.NewDevelopmentServer
 	} else {
 		srvFn = web.NewProductionServer
@@ -83,7 +83,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	if *secret {
+	if *secret || env.AuthSecret() == "" {
 		log.Println("Generating new random secret for signing JWT tokens...")
 		if err := env.NewAuthSecret(envFile); err != nil {
 			log.Fatalf("Failed to save secret: %v", err)
@@ -94,9 +94,6 @@ func main() {
 		if err := env.Load(env.RootEnv(envFile)); err != nil {
 			log.Fatal(err)
 		}
-	}
-	if env.AuthSecret() == "" {
-		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
 	logger, err := qlog.Zap()

@@ -35,7 +35,7 @@ func SetupEnvFiles(envFile string, dev bool) error {
 
 			template := ".env-template"
 			if dev && i == 0 {
-				template = fmt.Sprintf("%s-dev", template)
+				template = ".env-dev-template"
 			}
 
 			dir := filepath.Dir(envFile)

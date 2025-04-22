@@ -4,7 +4,7 @@ import "os"
 
 func GetFileName(dev bool) string {
 	if dev {
-		return ".env-dev"
+		return ".env.dev"
 	}
 	return ".env"
 }
