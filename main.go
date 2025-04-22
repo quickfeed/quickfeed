@@ -51,9 +51,12 @@ func main() {
 	)
 	flag.Parse()
 
-	// Load environment variables from $QUICKFEED/.env.
+	// Load environment variables from $QUICKFEED/(.env or .env-dev).
 	// Will not override variables already defined in the environment.
-	const envFile = ".env"
+	envFile := env.GetFileName(*dev)
+	if err := env.SetupEnvFiles(envFile, *dev); err != nil {
+		log.Fatal(err)
+	}
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}

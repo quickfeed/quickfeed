@@ -2,7 +2,9 @@ package env
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,6 +23,35 @@ func Prepared(filename string) error {
 	}
 	if !exists(filename) {
 		return MissingError(filename)
+	}
+	return nil
+}
+
+// SetupEnvFiles creates the .env files if they do not exist.
+func SetupEnvFiles(envFile string, dev bool) error {
+	for i, envFile := range []string{RootEnv(envFile), PublicEnv(envFile)} {
+		if !exists(envFile) {
+			env, err := os.Create(envFile)
+			if err != nil {
+				return err
+			}
+			defer env.Close()
+
+			template := ".env-template"
+			if dev && i == 0 {
+				template = fmt.Sprintf("%s-dev", template)
+			}
+
+			dir := filepath.Dir(envFile)
+			envTemplate, err := os.Open(filepath.Join(dir, template))
+			if err != nil {
+				return err
+			}
+			_, err = io.Copy(env, envTemplate)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

@@ -2,6 +2,13 @@ package env
 
 import "os"
 
+func GetFileName(dev bool) string {
+	if dev {
+		return ".env-dev"
+	}
+	return ".env"
+}
+
 func DbFile() string {
 	dbFile := os.Getenv("QUICKFEED_DB_FILE_PATH")
 	if dbFile == "" {

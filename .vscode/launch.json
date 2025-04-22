@@ -26,7 +26,7 @@
             "type": "chrome", // Others: "msedge", "firefox"
             "request": "launch",
             // The url is here for convenience, as you can also input the URL in the browser
-            "url": "https://localhost:443", // Update PORT as needed. See .env file
+            "url": "https://localhost:8080", // Update PORT as needed. See .env-dev file
             "webRoot": "${workspaceFolder}/public",
         },
         {
