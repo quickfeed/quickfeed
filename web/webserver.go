@@ -38,7 +38,6 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	dist := http.FileServer(http.Dir(public + "/dist"))     // skipcq: GO-S1034
 
 	router.Handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// The robots.txt file tells search engines which of your site's pages they can crawl.
 		http.ServeFile(w, r, public+"/assets/robots.txt")
 	}))
 	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
