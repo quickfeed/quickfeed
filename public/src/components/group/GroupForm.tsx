@@ -41,7 +41,7 @@ const GroupForm = () => {
         return false
     }
 
-    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment =>  clone(EnrollmentSchema, enrollment))
+    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => clone(EnrollmentSchema, enrollment))
 
     // Determine the user's enrollment status (teacher or student)
     const isTeacher = hasTeacher(state.status[courseID.toString()])
@@ -143,8 +143,8 @@ const GroupForm = () => {
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedAndFilteredEnrollments.map((enrollment, index) => {
-                            return <AvailableUser key={index} enrollment={enrollment} />
+                        {sortedAndFilteredEnrollments.map((enrollment) => {
+                            return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
                         })}
                     </ul>
                 </div>

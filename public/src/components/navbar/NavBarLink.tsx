@@ -12,10 +12,10 @@ const NavBarLink = (props: NavLink) => {
 
     const icons: React.JSX.Element[] = []
     if (props.icons) {
-        props.icons.forEach((icon, index) => {
+        props.icons.forEach((icon) => {
             if (icon) {
                 icons.push(
-                    <div key={index} id="icon" className={icon.classname + " ml-2"}>
+                    <div key={icon.text.toString()} id="icon" className={icon.classname + " ml-2"}>
                         {icon.text}
                     </div>
                 )
