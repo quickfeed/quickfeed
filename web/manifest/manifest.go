@@ -35,10 +35,11 @@ const (
 // The optional chkFn functions are called to perform additional checks.
 func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	if env.HasAppID() {
-		fmt.Printf("%s already contains App information", envFile)
+		log.Printf("%s already contains App information", envFile)
 		if err := AskForConfirmation("Do you want to overrite it?"); err != nil {
 			return err
 		}
+		log.Println("Overwriting existing App information")
 	}
 	// Check if .env.bak already exists
 	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
@@ -56,12 +57,13 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 
 func AskForConfirmation(question string) error {
 	var answer string
-	log.Printf("%s (y/n): ", question)
-	fmt.Scanln(&answer)
-	if strings.TrimSpace(strings.ToLower(answer)) != "y" {
-		fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+	fmt.Printf("%s (y/n): ", question)
+	if _, err := fmt.Scanln(&answer); err != nil {
+		return fmt.Errorf("failed to retrieve user input to question: %s, err: %w", question, err)
 	}
-	log.Println("Overwriting existing App information")
+	if strings.TrimSpace(strings.ToLower(answer)) != "y" {
+		return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+	}
 	return nil
 }
 
