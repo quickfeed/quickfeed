@@ -44,8 +44,6 @@ func init() {
 
 func main() {
 	var (
-		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
-		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
 		watch  = flag.Bool("watch", false, "watch for changes and reload")
 		newApp = flag.Bool("new", false, "create new GitHub app")
@@ -101,7 +99,7 @@ func main() {
 	}
 	defer func() { _ = logger.Sync() }()
 
-	db, err := database.NewGormDB(*dbFile, logger)
+	db, err := database.NewGormDB(logger)
 	if err != nil {
 		log.Fatalf("Can't connect to database: %v", err)
 	}
@@ -133,7 +131,7 @@ func main() {
 
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, env.Public())
 	handler := h2c.NewHandler(router, &http2.Server{})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

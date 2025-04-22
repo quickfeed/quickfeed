@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -41,9 +42,9 @@ type GormDB struct {
 }
 
 // NewGormDB creates a new gorm database using the provided driver.
-func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
+func NewGormDB(logger *zap.Logger) (*GormDB, error) {
 	// We are conservative and use transactions for create/update/delete operations.
-	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{ // skipcq: GO-W1004
+	conn, err := gorm.Open(sqlite.Open(env.DbFile()), &gorm.Config{ // skipcq: GO-W1004
 		Logger:                 NewGORMLogger(logger),
 		SkipDefaultTransaction: false,
 	})
