@@ -14,7 +14,7 @@ export class StreamService {
     }
 
     // timeout returns a promise that resolves after the current backoff has elapsed
-    private async timeout() {
+    private timeout() {
         return new Promise(resolve => setTimeout(resolve, this.backoff))
     }
 

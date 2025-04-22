@@ -77,7 +77,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
                         className="col mr-2"
-                        onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
+                        onClick={() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades))}
                     />
                 )}
                 {!isManuallyGraded(reviewers) && (
