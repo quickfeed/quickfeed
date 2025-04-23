@@ -49,10 +49,6 @@ var buildOptions = api.BuildOptions{
 	MinifySyntax:      true,
 	LogLevel:          api.LogLevelError,
 	Sourcemap:         api.SourceMapLinked,
-	Define: map[string]string{
-		"process.env.QUICKFEED_ORGANIZATION_URL": fmt.Sprintf(`"%s"`, env.GetOrganizationURL()),
-		"process.env.QUICKFEED_APP_URL":          fmt.Sprintf(`"%s"`, env.GetAppURL()),
-	},
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},
@@ -142,6 +138,10 @@ func createHtml(outputFiles []api.OutputFile) error {
 // getOptions returns the build options for esbuild
 // used to perform dynamic updates depending on the dev flag and outputDir
 func getOptions(outputDir string, dev bool) api.BuildOptions {
+	// its important to call env.GetAppURL after the env variable is loaded
+	buildOptions.Define = map[string]string{
+		"process.env.QUICKFEED_APP_URL": fmt.Sprintf(`"%s"`, env.GetAppURL()),
+	}
 	if dev {
 		// Esbuild defaults to production when minifying files.
 		// We must explicitly set it to "development" for dev builds.
