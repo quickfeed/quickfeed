@@ -11,10 +11,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/input"
 	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -36,7 +36,7 @@ const (
 func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	if env.HasAppID() {
 		log.Printf("%s already contains App information", envFile)
-		if err := AskForConfirmation("Do you want to overrite it?"); err != nil {
+		if err := input.AskForConfirmation("Do you want to overrite the current app information?"); err != nil {
 			return err
 		}
 		log.Println("Overwriting existing App information")
@@ -51,18 +51,6 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 		if err := checker(); err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func AskForConfirmation(question string) error {
-	var answer string
-	fmt.Printf("%s (y/n): ", question)
-	if _, err := fmt.Scanln(&answer); err != nil {
-		return fmt.Errorf("failed to retrieve user input to question: %s, err: %w", question, err)
-	}
-	if strings.TrimSpace(strings.ToLower(answer)) != "y" {
-		return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 	}
 	return nil
 }

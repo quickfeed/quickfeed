@@ -15,6 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/input"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
@@ -187,7 +188,7 @@ To receive webhook events, you must run QuickFeed on a public domain or use a tu
 `
 		fmt.Println(msg)
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
-		if err := manifest.AskForConfirmation("Do you want to continue?"); err != nil {
+		if err := input.AskForConfirmation("Do you want to continue?"); err != nil {
 			return err
 		}
 	}

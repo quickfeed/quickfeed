@@ -1,7 +1,6 @@
 package env_test
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -77,75 +76,6 @@ WITHOUT_QUOTES="$QUICKFEED/cert/fullchain.pem"
 		if got := os.Getenv(k); got != v {
 			t.Errorf("os.Getenv(%q) = %q, wanted %q", k, got, v)
 		}
-	}
-}
-
-func TestExistsLogic(t *testing.T) {
-	const (
-		E = true  // exists
-		Ø = false // does not exist
-	)
-	type exist struct {
-		file bool
-		bak  bool
-	}
-
-	exists := func(filename string) bool {
-		_, err := os.Stat(filename)
-		return err == nil
-	}
-
-	msg := func(e bool) string {
-		if e {
-			return `"exists", wanted "does not exist"`
-		}
-		return `"does not exist", wanted "exists"`
-	}
-
-	const baseFilename = "env"
-	existsErr := env.ExistsError("dummy") // will be replaced with other error with correct t.TempDir()
-
-	tests := []struct {
-		name    string
-		before  exist
-		after   exist
-		wantErr error
-	}{
-		{name: "EnvFileExists  ", before: exist{file: E, bak: Ø}, after: exist{file: E, bak: Ø}, wantErr: nil},
-		{name: "BakFileExists  ", before: exist{file: Ø, bak: E}, after: exist{file: Ø, bak: E}, wantErr: existsErr},
-		{name: "BothFilesExists", before: exist{file: E, bak: E}, after: exist{file: E, bak: E}, wantErr: existsErr},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var (
-				dir         = t.TempDir()
-				filename    = filepath.Join(dir, baseFilename)
-				bakFilename = filename + ".bak"
-			)
-			if test.before.file {
-				if _, err := os.Create(filename); err != nil {
-					t.Fatal(err)
-				}
-			}
-			if test.before.bak {
-				if _, err := os.Create(bakFilename); err != nil {
-					t.Fatal(err)
-				}
-			}
-			if errors.Is(test.wantErr, existsErr) {
-				// use error with correct t.TempDir()
-				test.wantErr = env.ExistsError(bakFilename)
-			}
-			if err := env.Prepared(filename); !errors.Is(err, test.wantErr) {
-				t.Errorf("Prepared(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
-			}
-			if exists(filename) != test.after.file {
-				t.Errorf("%q: %s", filepath.Base(filename), msg(test.after.file))
-			}
-			if exists(bakFilename) != test.after.bak {
-				t.Errorf("%q: %s", filepath.Base(bakFilename), msg(test.after.bak))
-			}
-		})
 	}
 }
 

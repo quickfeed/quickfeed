@@ -3,9 +3,12 @@ package env
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/internal/input"
 )
 
 // Prepared returns nil if the env backup file does not exist.
@@ -13,12 +16,15 @@ import (
 //
 // QuickFeed requires the env file to load (some) existing environment variables,
 // even when creating a new GitHub app, and overwriting some environment variables.
-// If the backup file exists, an ExistsError is returned.
+// If the backup file exists, is the user asked for confirmation to overwrite it.
 // This is to avoid that QuickFeed overwrites an existing backup file.
 func Prepared(filename string) error {
 	bakFilename := filename + ".bak"
 	if exists(bakFilename) {
-		return ExistsError(bakFilename)
+		log.Printf("%s already exists", bakFilename)
+		if err := input.AskForConfirmation(fmt.Sprintf("Do you want overrite the backup file: %s?", bakFilename)); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -126,16 +132,4 @@ func update(filename, content string, env map[string]string) error {
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
-}
-
-type backupExistsError struct {
-	filename string
-}
-
-func ExistsError(filename string) error {
-	return backupExistsError{filename: filename}
-}
-
-func (e backupExistsError) Error() string {
-	return fmt.Sprintf("%s already exists; check its content before removing and try again", e.filename)
 }
