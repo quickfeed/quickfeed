@@ -76,6 +76,13 @@ func CreateAssignment(t *testing.T, db database.Database, assignment *qf.Assignm
 	}
 }
 
+func CreateBenchmark(t *testing.T, db database.Database, benchmark *qf.GradingBenchmark) {
+	t.Helper()
+	if err := db.CreateBenchmark(benchmark); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func CreateGroup(t *testing.T, db database.Database, course *qf.Course, groupSize int) *qf.Group {
 	t.Helper()
 	var users []*qf.User
@@ -189,5 +196,20 @@ func Ptr[T any](t T) *T {
 func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	if diff := cmp.Diff(got, want, opts...); diff != "" {
 		t.Errorf("%s: (-got +want)\n%s", msg, diff)
+	}
+}
+
+// CheckError checks if the got error matches the want error.
+// Should be used in tests to check if the error returned by a function is as expected.
+func CheckError(t *testing.T, got error, want error) {
+	if got != nil {
+		if want != nil && got.Error() != want.Error() {
+			t.Fatalf("Expected error: %v, got: %v", want, got)
+		}
+		if want == nil {
+			t.Fatalf("Expected no error, but got: %v", got)
+		}
+	} else if got == nil && want != nil {
+		t.Fatalf("Expected error: %v, got: nil", want)
 	}
 }

@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrInvalidCourseRelation = errors.New("entity belongs to a different course")
+
 /// Assignments ///
 
 // CreateAssignment creates a new assignment record.
@@ -220,6 +222,15 @@ func (db *GormDB) CreateBenchmark(query *qf.GradingBenchmark) error {
 	return db.conn.Create(query).Error
 }
 
+// getBenchmark fetches a benchmark by its ID
+func (db *GormDB) getBenchmark(benchmarkID uint64) (*qf.GradingBenchmark, error) {
+	var benchmark qf.GradingBenchmark
+	if err := db.conn.First(&benchmark, benchmarkID).Error; err != nil {
+		return nil, err
+	}
+	return &benchmark, nil
+}
+
 // UpdateBenchmark updates the given benchmark
 func (db *GormDB) UpdateBenchmark(query *qf.GradingBenchmark) error {
 	return db.conn.Select("*").
@@ -238,6 +249,13 @@ func (db *GormDB) DeleteBenchmark(query *qf.GradingBenchmark) error {
 
 // CreateCriterion creates a new grading criterion
 func (db *GormDB) CreateCriterion(query *qf.GradingCriterion) error {
+	benchmark, err := db.getBenchmark(query.GetBenchmarkID())
+	if err != nil {
+		return err
+	}
+	if benchmark.GetCourseID() != query.GetCourseID() {
+		return ErrInvalidCourseRelation
+	}
 	return db.conn.Create(query).Error
 }
 

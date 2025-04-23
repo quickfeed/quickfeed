@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
@@ -302,5 +303,62 @@ func TestUpdateBenchmarks(t *testing.T) {
 		if diff := cmp.Diff(assignment, gotAssignments[i], protocmp.Transform()); diff != "" {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
 		}
+	}
+}
+
+func TestCreateCriterion(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &qf.Assignment{
+		CourseID: course.GetID(),
+		Order:    1,
+	}
+	qtest.CreateAssignment(t, db, assignment)
+
+	benchmark := &qf.GradingBenchmark{
+		CourseID:     course.GetID(),
+		AssignmentID: assignment.GetID(),
+	}
+	qtest.CreateBenchmark(t, db, benchmark)
+
+	tests := []struct {
+		name      string
+		criterion *qf.GradingCriterion
+		wantErr   error
+	}{
+		{
+			name: "valid criterion",
+			criterion: &qf.GradingCriterion{
+				CourseID:    course.GetID(),
+				BenchmarkID: benchmark.GetID(),
+			},
+		},
+		{
+			name: "invalid benchmarkID",
+			criterion: &qf.GradingCriterion{
+				CourseID:    course.GetID(),
+				BenchmarkID: 3,
+			},
+			wantErr: gorm.ErrRecordNotFound,
+		},
+		{
+			name: "invalid courseID",
+			criterion: &qf.GradingCriterion{
+				CourseID:    5,
+				BenchmarkID: benchmark.GetID(),
+			},
+			wantErr: database.ErrInvalidCourseRelation,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qtest.CheckError(t, db.CreateCriterion(tt.criterion), tt.wantErr)
+		})
 	}
 }
