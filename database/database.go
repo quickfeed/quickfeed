@@ -21,6 +21,7 @@ type Database interface {
 
 	// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 	CreateCourse(uint64, *qf.Course) error
+	// GetCourse fetches course by ID.
 	GetCourse(uint64) (*qf.Course, error)
 	// GetCourseByStatus fetches course by ID. Depending on the enrollment status, preloads course
 	// assignments, active enrollments and groups.
@@ -48,7 +49,7 @@ type Database interface {
 	CreateEnrollment(*qf.Enrollment) error
 	// RejectEnrollment removes the user enrollment from the database
 	RejectEnrollment(userID, courseID uint64) error
-	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
+	// UpdateEnrollment changes status of the course enrollment for the given user and course.
 	UpdateEnrollment(*qf.Enrollment) error
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error)
@@ -142,7 +143,7 @@ type Database interface {
 	GetPullRequest(query *qf.PullRequest) (*qf.PullRequest, error)
 	// HandleMergingPR handles merging a pull request
 	HandleMergingPR(query *qf.PullRequest) error
-	// DeletePullRequest updates the pull request matching the given query
+	// UpdatePullRequest updates the pull request matching the given query
 	UpdatePullRequest(pullRequest *qf.PullRequest) error
 
 	// UpdateSlipDays updates used slip days for the given course enrollment
