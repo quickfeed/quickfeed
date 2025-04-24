@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -108,7 +109,14 @@ func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 }
 
 func WatchHandler(ctx context.Context, handler http.Handler) http.Handler {
-	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "dist"))
+	dist := filepath.Join(env.PublicDir(), "dist")
+	if _, err := os.Stat(dist); err != nil {
+		if err := os.Mkdir(dist, 0o755); err != nil {
+			log.Printf("Failed to create dist directory: %v", err)
+			return handler
+		}
+	}
+	watcher, err := reload.NewWatcher(ctx, dist)
 	if err != nil {
 		log.Printf("Failed to create watcher: %v", err)
 		return handler

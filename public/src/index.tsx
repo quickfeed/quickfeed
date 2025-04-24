@@ -6,6 +6,7 @@ import { config } from './overmind'
 import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import './style.scss'
+import './tailwind.css'
 
 (BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
     return this.toString()
@@ -18,6 +19,7 @@ const overmind = createOvermind(config, {
 })
 
 if (process.env.NODE_ENV === "development") {
+
     // EventSource will automatically try to reconnect if the connection is lost
     const eventSource = new EventSource("/watch")
     eventSource.onmessage = () => {

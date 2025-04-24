@@ -74,7 +74,7 @@ func New(domain, envFile string, dev bool) *Manifest {
 		envFile: envFile,
 		client:  github.NewClient(nil),
 		done:    make(chan error),
-		build:   func() error { return ui.Build("", dev) },
+		build:   func() error { return ui.Build() },
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())

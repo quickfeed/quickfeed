@@ -96,4 +96,5 @@
         "editor.tabSize": 2,
         "editor.formatOnSave": true,
     },
+    "css.lint.unknownAtRules": "ignore",
 }
