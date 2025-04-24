@@ -22,8 +22,8 @@
     "test": "jest",
     "test:ci": "jest --maxWorkers=1",
     "overmind": "npx overmind-devtools@29.0.6-1743431531002",
-    "build": "ts-node esbuild/build.ts",
-    "watch": "ts-node esbuild/watch.ts"
+    "build": "npx ts-node esbuild/build.ts",
+    "watch": "npx ts-node esbuild/watch.ts"
   },
   "devDependencies": {
     "@testing-library/react": "^16.2.0",
