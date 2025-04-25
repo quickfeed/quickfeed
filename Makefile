@@ -34,12 +34,12 @@ ifeq ($(OS),linux)
 endif
 
 ui: version-check
-	@echo "Running npm ci and esbuild"
+	@echo "Running npm ci, esbuild and tailwind"
 	@cd public; npm ci
 	@go run cmd/esbuild/main.go
 
 ui-update: version-check
-	@echo "Running npm install and esbuild"
+	@echo "Running npm install, esbuild and tailwind"
 	@cd public; npm i
 	@go run cmd/esbuild/main.go
 
