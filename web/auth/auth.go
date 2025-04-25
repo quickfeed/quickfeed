@@ -160,6 +160,12 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 	case err == nil:
 		logger.Debugf("Found user: %v in database", user)
 		user.RefreshToken = token.RefreshToken
+		// If the user has changed their login name since the last login, update it in the database.
+		// This is important since we need to use the login for several GitHub API calls.
+		if user.GetLogin() != externalUser.Login {
+			logger.Debugf("User %q has changed their login name to %q", user.GetLogin(), externalUser.Login)
+			user.Login = externalUser.Login
+		}
 		if err = db.UpdateUser(user); err != nil {
 			return nil, fmt.Errorf("failed to update access token for user %q: %w", externalUser.Login, err)
 		}
