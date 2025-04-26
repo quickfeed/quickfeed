@@ -226,8 +226,9 @@ func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error)
 
 // UpdateSubmission updates submission with the given approved status.
 func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
-	// full save associations is required to update the nested grades
-	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Updates(query).Error
+	// We need to use FullSaveAssociations to save the nested grades
+	// and select to update zero value fields.
+	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Model(query).Select("*").Updates(query).Error
 }
 
 // UpdateSubmissions approves and/or releases all submissions that have score
