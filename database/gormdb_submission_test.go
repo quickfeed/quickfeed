@@ -22,29 +22,53 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 	}
 }
 
-func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment) {
-	// create a course and an assignment
-	admin := qtest.CreateFakeUser(t, db)
-	course := &qf.Course{}
-	qtest.CreateCourse(t, db, admin, course)
-	assignment := &qf.Assignment{
-		CourseID: course.GetID(),
-		Order:    1,
-	}
-	if err := db.CreateAssignment(assignment); err != nil {
-		t.Fatal(err)
-	}
+func TestGetSubmissions(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
 
-	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db)
-	qtest.EnrollStudent(t, db, user, course)
-	return user, course, assignment
+	submission := &qf.Submission{AssignmentID: 1, UserID: 1}
+	submission1 := &qf.Submission{AssignmentID: 1, UserID: 2}
+
+	wantSubmissions := []*qf.Submission{}
+	tests := []struct {
+		name          string
+		query         *qf.Submission
+		newSubmission *qf.Submission
+		wantError     error
+	}{
+		{name: "No Assignment ID", query: &qf.Submission{}, wantError: gorm.ErrRecordNotFound},
+		{name: "Invalid assignment ID", query: &qf.Submission{AssignmentID: 4, UserID: 2}, wantError: gorm.ErrRecordNotFound},
+		{name: "First submission", query: &qf.Submission{AssignmentID: 1}, newSubmission: submission},
+		{name: "Second submission", query: &qf.Submission{AssignmentID: 1}, newSubmission: submission1},
+	}
+	for i, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Only create the course and assignment once we have tested the GetAssignment error path
+			if i == 1 {
+				_, _, _ = qtest.SetupCourseAssignment(t, db)
+				qtest.CreateFakeUser(t, db)
+			}
+			if test.newSubmission != nil {
+				qtest.CreateSubmission(t, db, test.newSubmission)
+				wantSubmissions = append(wantSubmissions, test.newSubmission)
+			}
+
+			submissions, err := db.GetSubmissions(test.query)
+			qtest.CheckError(t, err, test.wantError)
+
+			if test.wantError != nil {
+				return
+			}
+
+			qtest.Diff(t, "GetSubmissions() = mismatch", submissions, wantSubmissions, protocmp.Transform())
+		})
+	}
 }
 
 func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, _, assignment := setupCourseAssignment(t, db)
+	user, _, assignment := qtest.SetupCourseAssignment(t, db)
 
 	assignment.AutoApprove = true
 	assignment.ScoreLimit = 1
@@ -77,7 +101,7 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 
 	if err := db.CreateSubmission(&qf.Submission{
 		AssignmentID: assignment.GetID(),
@@ -137,7 +161,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 func TestGormDBUpdateSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 
 	// when we create a new submission for the same course lab and user, it will update the old one,
 	// instead of creating an extra record
@@ -223,7 +247,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 
 	// create teacher, course, user (student) and assignment
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 
 	// create a submission for the assignment for non-existing user; should fail
 	if err := db.CreateSubmission(&qf.Submission{
@@ -268,42 +292,30 @@ func TestGormDBInsertBadSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	// expected to fail
-	if err := db.CreateSubmission(&qf.Submission{}); !errors.Is(err, database.ErrInvalidAssignmentID) {
-		t.Fatal(err)
-	}
-	// expected to fail
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: 1}); !errors.Is(err, database.ErrInvalidSubmission) {
-		t.Fatal(err)
-	}
-	// expected to fail
-	if err := db.CreateSubmission(&qf.Submission{UserID: 1}); !errors.Is(err, database.ErrInvalidAssignmentID) {
-		t.Fatal(err)
-	}
-	// expected to fail with record not found
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: 1, UserID: 1}); !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Fatal(err)
-	}
-	// expected to fail with record not found
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: 1, GroupID: 6}); !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Fatal(err)
+	user, _, assignment := qtest.SetupCourseAssignment(t, db)
+
+	tests := []struct {
+		name    string
+		in      *qf.Submission
+		wantErr error
+	}{
+		{name: "Empty", in: &qf.Submission{}, wantErr: database.ErrInvalidAssignmentID},
+		{name: "No UserID or GroupID", in: &qf.Submission{AssignmentID: 1}, wantErr: database.ErrInvalidSubmission},
+		{name: "No AssignmentID", in: &qf.Submission{UserID: 1}, wantErr: database.ErrInvalidAssignmentID},
+		{name: "Invalid AssignmentID", in: &qf.Submission{AssignmentID: 5, UserID: user.GetID()}, wantErr: gorm.ErrRecordNotFound},
+		{name: "Non-existing user", in: &qf.Submission{AssignmentID: assignment.GetID(), UserID: 3}, wantErr: gorm.ErrRecordNotFound},
+		{name: "Non-existing group", in: &qf.Submission{AssignmentID: assignment.GetID(), GroupID: 9}, wantErr: gorm.ErrRecordNotFound},
+		{name: "Both UserID and GroupID", in: &qf.Submission{AssignmentID: 1, UserID: 1, GroupID: 2}, wantErr: database.ErrInvalidSubmission},
+		{name: "Non-existing submission", in: &qf.Submission{ID: 1, AssignmentID: assignment.GetID(), UserID: user.GetID()}, wantErr: gorm.ErrRecordNotFound},
+		{name: "valid submission", in: &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}, wantErr: nil},
 	}
 
-	// create teacher, course, user (student) and assignment
-	user, _, assignment := setupCourseAssignment(t, db)
-
-	// create a submission for the assignment for non-existing user; should fail
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.GetID(), UserID: 3}); !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Fatal(err)
-	}
-	// create a submission for the assignment for non-existing user; should fail
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.GetID(), GroupID: 9}); !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Fatal(err)
-	}
-
-	// create another submission for the assignment; now it should succeed
-	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}); err != nil {
-		t.Fatal(err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if err := db.CreateSubmission(test.in); !errors.Is(err, test.wantErr) {
+				t.Fatalf("got error '%v' wanted '%v'", err, test.wantErr)
+			}
+		})
 	}
 }
 
@@ -404,7 +416,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 
 	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{
@@ -502,7 +514,7 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 func TestGormDBSubmissionWithBuildDate(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 
 	if err := db.CreateSubmission(&qf.Submission{
 		AssignmentID: assignment.GetID(),
