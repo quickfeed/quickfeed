@@ -108,8 +108,8 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
+		if scmErr := userSCMError(err); scmErr != nil {
+			return nil, scmErr
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course"))
 	}
@@ -196,8 +196,8 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 				s.logger.Error(ctxErr)
 				return nil, ctxErr
 			}
-			if ok, parsedErr := parseSCMError(err); ok {
-				return nil, parsedErr
+			if scmErr := userSCMError(err); scmErr != nil {
+				return nil, scmErr
 			}
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update enrollments"))
 		}
@@ -315,8 +315,8 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
+		if scmErr := userSCMError(err); scmErr != nil {
+			return nil, scmErr
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update group"))
 	}
@@ -341,8 +341,8 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
+		if scmErr := userSCMError(err); scmErr != nil {
+			return nil, scmErr
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete group"))
 	}
