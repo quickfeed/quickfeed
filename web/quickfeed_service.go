@@ -98,12 +98,6 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{ID: in.Msg.GetScmOrganizationID()})
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: to get organization %s: %v", in.Msg.GetScmOrganizationName(), in.Msg.GetID(), err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get organization"))
-	}
-	in.Msg.ScmOrganizationName = org.GetScmOrganizationName()
-
-	if err = s.db.UpdateCourse(in.Msg); err != nil {
-		s.logger.Errorf("UpdateCourse failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
@@ -111,6 +105,12 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 		if scmErr := userSCMError(err); scmErr != nil {
 			return nil, scmErr
 		}
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get organization"))
+	}
+	in.Msg.ScmOrganizationName = org.GetScmOrganizationName()
+
+	if err = s.db.UpdateCourse(in.Msg); err != nil {
+		s.logger.Errorf("UpdateCourse failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course"))
 	}
 	return &connect.Response[qf.Void]{}, nil
