@@ -11,25 +11,24 @@ const NavBarLink = (props: NavLink) => {
     const history = useHistory()
 
     const icons: React.JSX.Element[] = []
-    if (props.icons) {
-        props.icons.forEach((icon, index) => {
-            if (icon) {
-                icons.push(
-                    <div key={index} id="icon" className={icon.classname + " ml-2"}>
-                        {icon.text}
-                    </div>
-                )
-            }
-        })
-    }
+    props.icons?.forEach((icon) => {
+        if (icon) {
+            icons.push(
+                <div key={icon.text} id="icon" className={`${icon.classname} ml-2`}>
+                    {icon.text}
+                </div>
+            )
+        }
+    })
+
     return (
         <li onClick={() => history.push(props.link.to)}>
             <div className="col" id="title">
                 <Link to={props.link.to}>{props.link.text}</Link>
             </div>
             <div className="col">
-                {icons ? icons : null}
-                {props.jsx ? props.jsx : null}
+                {icons}
+                {props.jsx ?? null}
             </div>
         </li>
     )
