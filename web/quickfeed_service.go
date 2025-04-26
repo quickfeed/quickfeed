@@ -98,19 +98,19 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{ID: in.Msg.GetScmOrganizationID()})
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: to get organization %s: %v", in.Msg.GetScmOrganizationName(), in.Msg.GetID(), err)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
+		}
+		if scmErr := userSCMError(err); scmErr != nil {
+			return nil, scmErr
+		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get organization"))
 	}
 	in.Msg.ScmOrganizationName = org.GetScmOrganizationName()
 
 	if err = s.db.UpdateCourse(in.Msg); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
-			return nil, ctxErr
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course"))
 	}
 	return &connect.Response[qf.Void]{}, nil
@@ -196,8 +196,8 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 				s.logger.Error(ctxErr)
 				return nil, ctxErr
 			}
-			if ok, parsedErr := parseSCMError(err); ok {
-				return nil, parsedErr
+			if scmErr := userSCMError(err); scmErr != nil {
+				return nil, scmErr
 			}
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update enrollments"))
 		}
@@ -291,11 +291,6 @@ func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf
 	group, err := s.db.GetGroup(group.GetID())
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed to get group %d: %v", group.GetID(), err)
-		if connect.CodeOf(err) != connect.CodeUnknown {
-			// err was already a status error; return it to client.
-			return nil, err
-		}
-		// err was not a status error; return a generic error to client.
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
 	return connect.NewResponse(group), nil
@@ -315,8 +310,8 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
+		if scmErr := userSCMError(err); scmErr != nil {
+			return nil, scmErr
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update group"))
 	}
@@ -341,8 +336,8 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
+		if scmErr := userSCMError(err); scmErr != nil {
+			return nil, scmErr
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete group"))
 	}
