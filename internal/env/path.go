@@ -70,7 +70,7 @@ func checkModulePath(root string) error {
 	modFile := filepath.Join(root, "go.mod")
 	data, err := os.ReadFile(modFile)
 	if err != nil {
-		return fmt.Errorf("failed to read %s: %v", modFile, err)
+		return fmt.Errorf("failed to read %s: %w", modFile, err)
 	}
 	if !bytes.Contains(data, []byte("module "+quickfeedModulePath)) {
 		return fmt.Errorf("invalid go.mod file: %s", modFile)
