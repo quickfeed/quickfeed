@@ -377,17 +377,16 @@ func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	}
 }
 
-// CheckError checks if the got error matches the want error.
-// Should be used in tests to check if the error returned by a function is as expected.
-func CheckError(t *testing.T, got error, want error) {
+// CheckError checks if the got error matches the want error and fails the test if not.
+func CheckError(t *testing.T, got, want error) {
 	if got != nil {
-		if want != nil && got.Error() != want.Error() {
+		if want == nil {
+			t.Fatalf("Expected no error, got: %v", got)
+		}
+		if got.Error() != want.Error() {
 			t.Fatalf("Expected error: %v, got: %v", want, got)
 		}
-		if want == nil {
-			t.Fatalf("Expected no error, but got: %v", got)
-		}
-	} else if got == nil && want != nil {
+	} else if want != nil {
 		t.Fatalf("Expected error: %v, got: nil", want)
 	}
 }
