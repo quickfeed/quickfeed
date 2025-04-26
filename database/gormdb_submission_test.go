@@ -101,7 +101,7 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 func TestGormDBUpdateSubmissionReleaseToFalse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, _, assignment := setupCourseAssignment(t, db)
+	user, _, assignment := qtest.SetupCourseAssignment(t, db)
 	submission := &qf.Submission{
 		AssignmentID: assignment.GetID(),
 		UserID:       user.GetID(),
