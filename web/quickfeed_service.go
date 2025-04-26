@@ -291,11 +291,6 @@ func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf
 	group, err := s.db.GetGroup(group.GetID())
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed to get group %d: %v", group.GetID(), err)
-		if connect.CodeOf(err) != connect.CodeUnknown {
-			// err was already a status error; return it to client.
-			return nil, err
-		}
-		// err was not a status error; return a generic error to client.
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
 	return connect.NewResponse(group), nil
