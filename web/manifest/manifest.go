@@ -282,7 +282,7 @@ func (m *Manifest) buildUI() error {
 func runNpmCi() bool {
 	log.Println("Running npm ci...")
 	c := exec.Command("npm", "ci")
-	c.Dir = "public"
+	c.Dir = env.PublicDir()
 	if err := c.Run(); err != nil {
 		log.Print(c.Output())
 		log.Print(err)
