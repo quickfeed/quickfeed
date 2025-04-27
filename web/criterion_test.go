@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -16,26 +17,45 @@ func TestCreateCriterion(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
-	_, _, assignment := qtest.SetupCourseAssignment(t, db)
-	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{AssignmentID: assignment.GetID()})
+	_, course, assignment := qtest.SetupCourseAssignment(t, db)
+	benchmark := &qf.GradingBenchmark{
+		CourseID:     course.GetID(),
+		AssignmentID: assignment.GetID(),
+	}
+	qtest.CreateBenchmark(t, db, benchmark)
 
-	wantCriterion := &qf.GradingCriterion{
-		ID:          1,
-		Description: "A great criterion",
-		Points:      10,
-		Comment:     "comment 1",
+	tests := []struct {
+		name      string
+		criterion *qf.GradingCriterion
+		wantErr   error
+	}{
+		{
+			name: "valid criterion",
+			criterion: &qf.GradingCriterion{
+				CourseID:    course.GetID(),
+				BenchmarkID: benchmark.GetID(),
+			},
+		},
+		{
+			name: "invalid criterion",
+			criterion: &qf.GradingCriterion{
+				CourseID:    course.GetID(),
+				BenchmarkID: 3,
+			},
+			wantErr: errors.New("invalid_argument: failed to add criterion"),
+		},
 	}
 
-	gotCriterion, err := client.CreateCriterion(context.Background(), &connect.Request[qf.GradingCriterion]{Msg: &qf.GradingCriterion{
-		Description: "A great criterion",
-		Points:      10,
-		Comment:     "comment 1",
-	}})
-	if err != nil {
-		t.Fatalf("CreateCriterion failed: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCriterion, err := client.CreateCriterion(context.Background(), &connect.Request[qf.GradingCriterion]{Msg: tt.criterion})
+			qtest.CheckError(t, err, tt.wantErr)
+			if err == nil {
+				tt.criterion.ID = 1
+				qtest.Diff(t, "CreateCriterion() mismatch", gotCriterion.Msg, tt.criterion, protocmp.Transform())
+			}
+		})
 	}
-
-	qtest.Diff(t, "CreateCriterion() mismatch", gotCriterion.Msg, wantCriterion, protocmp.Transform())
 }
 
 func TestUpdateCriterion(t *testing.T) {
