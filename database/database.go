@@ -106,7 +106,7 @@ type Database interface {
 	// GetSubmissions returns all submissions matching the query.
 	GetSubmissions(*qf.Submission) ([]*qf.Submission, error)
 	// GetCourseSubmissions returns the latest course submissions of the requested submission type.
-	GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error)
+	GetCourseSubmissions(request *qf.SubmissionRequest) (*qf.CourseSubmissions, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score.

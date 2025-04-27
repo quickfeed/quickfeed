@@ -91,7 +91,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	go func() {
 		if err := server.Serve(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %v", err)
+				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %w", err)
 				return
 			}
 			// server was closed prematurely, e.g., ctrl-C
