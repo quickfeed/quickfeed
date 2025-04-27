@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/input"
 	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -28,15 +29,19 @@ const (
 )
 
 // ReadyForAppCreation returns nil if the environment configuration (envFile)
-// is ready for creating a new GitHub App. Otherwise, it returns an error,
-// e.g., if the envFile already contains App information or if the .env is
-// missing and there is a corresponding .env.bak file. The optional chkFn
-// functions are called to perform additional checks.
+// is ready for creating a new GitHub App. Otherwise, it asks the user for
+// confirmation to overwrite the existing configuration. It checks,
+// if the envFile already contains App information or if the .env.bak files exists.
+// The optional chkFn functions are called to perform additional checks.
 func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	if env.HasAppID() {
-		return fmt.Errorf("%s already contains App information", envFile)
+		log.Printf("%s already contains App information", envFile)
+		if err := input.AskForConfirmation("Do you want to overrite the current app information?"); err != nil {
+			return err
+		}
+		log.Println("Overwriting existing App information")
 	}
-	// Check for missing .env file and if .env.bak already exists
+	// Check if .env.bak already exists
 	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
 		if err := env.Prepared(envFile); err != nil {
 			return err
@@ -51,7 +56,7 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 }
 
 func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
-	m := New(env.DomainWithPort(), envFile, dev)
+	m := New(envFile, dev)
 	server, err := srvFn(m.Handler())
 	if err != nil {
 		return err
@@ -68,9 +73,9 @@ type Manifest struct {
 	build   func() error
 }
 
-func New(domain, envFile string, dev bool) *Manifest {
+func New(envFile string, dev bool) *Manifest {
 	m := &Manifest{
-		domain:  domain,
+		domain:  env.DomainWithPort(),
 		envFile: envFile,
 		client:  github.NewClient(nil),
 		done:    make(chan error),

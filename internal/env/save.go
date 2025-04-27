@@ -2,25 +2,58 @@ package env
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/internal/input"
 )
 
-// Prepared returns nil if the given env file exists and the corresponding backup file does not.
+// Prepared returns nil if the env backup file does not exist.
 // Otherwise, it returns an error.
 //
-// If the env file does not exist, a MissingError returned.
 // QuickFeed requires the env file to load (some) existing environment variables,
 // even when creating a new GitHub app, and overwriting some environment variables.
-// If the backup file exists, an ExistsError is returned.
+// If the backup file exists, is the user asked for confirmation to overwrite it.
 // This is to avoid that QuickFeed overwrites an existing backup file.
 func Prepared(filename string) error {
 	bakFilename := filename + ".bak"
 	if exists(bakFilename) {
-		return ExistsError(bakFilename)
+		log.Printf("%s already exists", bakFilename)
+		if err := input.AskForConfirmation(fmt.Sprintf("Do you want overrite the backup file: %s?", bakFilename)); err != nil {
+			return err
+		}
 	}
-	if !exists(filename) {
-		return MissingError(filename)
+	return nil
+}
+
+// SetupEnvFiles creates the .env files if they do not exist.
+func SetupEnvFiles(envFile string, dev bool) error {
+	for i, envFile := range []string{RootEnv(envFile), PublicEnv(envFile)} {
+		if !exists(envFile) {
+			env, err := os.Create(envFile)
+			if err != nil {
+				return err
+			}
+			defer env.Close()
+
+			template := ".env-template"
+			if dev && i == 0 {
+				template = ".env-dev-template"
+			}
+
+			dir := filepath.Dir(envFile)
+			envTemplate, err := os.Open(filepath.Join(dir, template))
+			if err != nil {
+				return err
+			}
+			_, err = io.Copy(env, envTemplate)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -99,28 +132,4 @@ func update(filename, content string, env map[string]string) error {
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
-}
-
-type backupExistsError struct {
-	filename string
-}
-
-func ExistsError(filename string) error {
-	return backupExistsError{filename: filename}
-}
-
-func (e backupExistsError) Error() string {
-	return fmt.Sprintf("%s already exists; check its content before removing and try again", e.filename)
-}
-
-type missingEnvError struct {
-	filename string
-}
-
-func MissingError(filename string) error {
-	return missingEnvError{filename: filename}
-}
-
-func (e missingEnvError) Error() string {
-	return fmt.Sprintf("missing required %q file", e.filename)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/input"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
@@ -44,34 +45,56 @@ func init() {
 
 func main() {
 	var (
-		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
-		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
-		watch  = flag.Bool("watch", false, "watch for changes and reload")
 		newApp = flag.Bool("new", false, "create new GitHub app")
 		secret = flag.Bool("secret", false, "create new secret for JWT signing")
+		domain = flag.String("domain", "", "domain name for the server")
 	)
 	flag.Parse()
 
-	// Load environment variables from $QUICKFEED/.env.
+	// Load environment variables from $QUICKFEED/(.env or .env-dev).
 	// Will not override variables already defined in the environment.
-	const envFile = ".env"
+	envFile := env.GetFileName(*dev)
+	if err := env.SetupEnvFiles(envFile, *dev); err != nil {
+		log.Fatal(err)
+	}
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	if env.Domain() == "" && *domain == "" {
+		log.Fatal("Domain is not set; use -domain flag to set it.")
+	}
+	if err := env.ConfigureDomain(envFile, *domain, *dev); err != nil {
+		log.Fatalf("Failed to set domain: %s, err: %v", *domain, err)
+	}
+
+	generateSecret := *secret || env.AuthSecret() == ""
+
+	if generateSecret {
+		if err := env.NewAuthSecret(envFile); err != nil {
+			log.Fatalf("Failed to save secret: %v", err)
+		}
+		log.Println("Generated new random secret for signing JWT tokens...")
+		if *secret {
+			os.Exit(0)
+		}
 	}
 
 	var srvFn web.ServerType
-	if *dev {
+	var environment string
+	if env.DomainIsLocal() {
+		environment = "development"
 		srvFn = web.NewDevelopmentServer
 	} else {
+		environment = "production"
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
+	log.Printf("Starting QuickFeed %s server on https://%s", environment, env.DomainWithPort())
 
-	if *newApp {
+	// Generate a new GitHub app if requested or if the app ID is not set.
+	// The GitHub App is required to run QuickFeed.
+	createNewApp := *newApp || !env.HasAppID()
+	if createNewApp {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
@@ -79,20 +102,11 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	if *secret {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.NewAuthSecret(envFile); err != nil {
-			log.Fatalf("Failed to save secret: %v", err)
-		}
-	}
-	if *secret || *newApp {
+	if generateSecret || createNewApp {
 		// Refresh environment variables
 		if err := env.Load(env.RootEnv(envFile)); err != nil {
 			log.Fatal(err)
 		}
-	}
-	if env.AuthSecret() == "" {
-		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
 	logger, err := qlog.Zap()
@@ -101,7 +115,7 @@ func main() {
 	}
 	defer func() { _ = logger.Sync() }()
 
-	db, err := database.NewGormDB(*dbFile, logger)
+	db, err := database.NewGormDB(env.DbFile(), logger)
 	if err != nil {
 		log.Fatalf("Can't connect to database: %v", err)
 	}
@@ -133,12 +147,12 @@ func main() {
 
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, env.Public())
 	handler := h2c.NewHandler(router, &http2.Server{})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if *dev && *watch {
+	if *dev {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
 		handler = web.WatchHandler(ctx, handler)
@@ -165,20 +179,17 @@ func main() {
 }
 
 func checkDomain() error {
-	if env.Domain() == "127.0.0.1" {
+	if env.DomainIsLocal() {
 		msg := `
-WARNING: You are creating a GitHub app on "127.0.0.1".
+WARNING: You are creating a GitHub app on a local domain.
 This is only for development purposes.
 In this mode, QuickFeed will not be able to receive webhook events from GitHub.
 To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.
 `
 		fmt.Println(msg)
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
-		fmt.Print("Do you want to continue? (Y/n) ")
-		var answer string
-		fmt.Scanln(&answer)
-		if !(answer == "Y" || answer == "y") {
-			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+		if err := input.AskForConfirmation("Do you want to continue?"); err != nil {
+			return err
 		}
 	}
 	return nil
