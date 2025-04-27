@@ -231,7 +231,7 @@ func TestBuildUI(t *testing.T) {
 		t.Skipf("Skipping %s when running on GitHub", t.Name())
 	}
 	m := Manifest{
-		build: func() error { return ui.Build("", true) },
+		build: func() error { return ui.Build(t.TempDir(), true) },
 	}
 	if err := m.buildUI(); err != nil {
 		t.Errorf("buildUI() failed with error: %v", err)
