@@ -2,18 +2,19 @@ import React from "react"
 import { Link, useHistory } from "react-router-dom"
 
 export interface NavLink {
-    link: { text: string, to: string }
-    icons?: ({ text: string | number, classname: string } | null)[],
+    text: string
+    to: string
+    icons?: ({ text: string | number, classname: string } | null)[]
     jsx?: React.JSX.Element
 }
 
-const NavBarLink = (props: NavLink) => {
+const NavBarLink = ({ link: { text, to, icons, jsx } }: { link: NavLink }) => {
     const history = useHistory()
 
-    const icons: React.JSX.Element[] = []
-    props.icons?.forEach((icon) => {
+    const iconElements: React.JSX.Element[] = []
+    icons?.forEach((icon) => {
         if (icon) {
-            icons.push(
+            iconElements.push(
                 <div key={icon.text} id="icon" className={`${icon.classname} ml-2`}>
                     {icon.text}
                 </div>
@@ -22,13 +23,13 @@ const NavBarLink = (props: NavLink) => {
     })
 
     return (
-        <li onClick={() => history.push(props.link.to)} role="button" aria-hidden="true"> {/* skipcq: JS-0761 */}
+        <li onClick={() => history.push(to)} role="button" aria-hidden="true"> {/* skipcq: JS-0761 */}
             <div className="col" id="title">
-                <Link to={props.link.to}>{props.link.text}</Link>
+                <Link to={to}>{text}</Link>
             </div>
             <div className="col">
-                {icons}
-                {props.jsx ?? null}
+                {iconElements}
+                {jsx ?? null}
             </div>
         </li>
     )
