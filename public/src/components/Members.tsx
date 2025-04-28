@@ -43,7 +43,9 @@ const Members = () => {
         { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
     ]
 
-    const handleMemberChange = useCallback((enrollment: Enrollment, status: Enrollment_UserStatus) => () => actions.updateEnrollment({ enrollment, status }), [actions])
+    const handleMemberChange = useCallback((enrollment: Enrollment, status: Enrollment_UserStatus) => (
+        () => actions.updateEnrollment({ enrollment, status })
+    ), [actions])
     const handleApprovePendingEnrollments = useCallback(() => actions.approvePendingEnrollments(), [actions])
 
     const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {

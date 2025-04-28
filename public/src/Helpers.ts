@@ -1,4 +1,3 @@
-import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"

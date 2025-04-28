@@ -104,21 +104,19 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
             {!viewIndividualGrades && (
                 <div className="row m-auto">
                     <StatusButtons />
-                </div >
+                </div>
             )}
-            {
-                viewIndividualGrades &&
+            {viewIndividualGrades &&
                 <table className="table">
                     <tbody>
                         {state.selectedSubmission?.Grades.map((grade) => (
                             <tr key={grade.UserID.toString()}>
                                 <td className="td-center word-break">{getUserName(grade.UserID)}</td>
                                 <StatusButtons grade={grade} />
-                            </tr >
-                        ))
-                        }
-                    </tbody >
-                </table >
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             }
         </>
     )
