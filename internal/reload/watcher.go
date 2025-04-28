@@ -35,7 +35,7 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 	}
 	go watcher.start(ctx) // Start watching for file changes
 	if err := ui.Watch(); err != nil {
-		return nil, fmt.Errorf("failed to start watch process: %v", err)
+		return nil, fmt.Errorf("failed to start watch process: %w", err)
 	}
 	return watcher, nil
 }

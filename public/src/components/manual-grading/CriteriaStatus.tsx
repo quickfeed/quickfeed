@@ -20,10 +20,10 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
     ]
 
     const StatusButtons = buttons.map((button) => {
-        const style = criterion.grade === button.status ? `col btn-xs btn-${button.style} mr-2 border` : `col btn-xs btn-outline-${button.style} mr-2 border`
+        const style = criterion.grade === button.status ? button.style : `outline-${button.style}`
         // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
-            <div key={button.icon} className={style} onClick={() => button.onClick()} role="button" aria-hidden="true">
+            <div role="button" aria-hidden="true" key={button.icon} className={`col btn-xs btn-${style} mr-2 border`} onClick={() => button.onClick()}>
                 <i className={button.icon} />
             </div>
         )
