@@ -226,13 +226,6 @@ export const setStatusAll = (submission: Submission, status: Submission_Status):
     return create(SubmissionSchema, { ...submission, Grades: grades })
 }
 
-/** getCourseID returns the course ID determined by the current route */
-export const getCourseID = (): bigint => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const route = useParams<{ id?: string }>()
-    return route.id ? BigInt(route.id) : BigInt(0)
-}
-
 export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }

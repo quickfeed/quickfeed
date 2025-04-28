@@ -1,6 +1,6 @@
 import React, { useCallback } from "react"
 import { Route, Switch, useHistory } from "react-router"
-import { Color, getCourseID, isManuallyGraded } from "../Helpers"
+import { Color, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Card from "../components/Card"
 import GroupPage from "./GroupPage"
@@ -9,6 +9,7 @@ import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
 import Alerts from "../components/alerts/Alerts"
+import { useCourseID } from "../hooks/useCourseID"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -17,7 +18,7 @@ const RegularResults = () => <Results review={false} />
 const TeacherPage = () => {
     const state = useAppState()
     const actions = useActions()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`
     const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))

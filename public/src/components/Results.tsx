@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react"
 import { useHistory, useLocation } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor, Icon } from "../Helpers"
+import { Color, getSubmissionCellColor, Icon } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -12,11 +12,12 @@ import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
 import { clone, isMessage } from "@bufbuild/protobuf"
+import { useCourseID } from "../hooks/useCourseID"
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const history = useHistory()
     const location = useLocation()
 

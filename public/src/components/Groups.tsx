@@ -1,18 +1,19 @@
 import React, { useCallback } from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
-import { Color, getCourseID, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { Color, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
+import { useCourseID } from "../hooks/useCourseID"
 
 
 /* Lists all groups for a given course. */
 const Groups = () => {
     const state = useAppState()
     const actions = useActions()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
 
     const groupSearch = (group: Group) => {
         // Show all groups if query is empty
