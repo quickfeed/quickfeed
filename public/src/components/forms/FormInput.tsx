@@ -18,7 +18,7 @@ const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, c
             </div>
             <input className="form-control"
                 name={name}
-                type={type ? type : "text"}
+                type={type ?? "text"}
                 placeholder={placeholder}
                 defaultValue={defaultValue}
                 onChange={onChange}

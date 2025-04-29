@@ -19,7 +19,6 @@ const SubmissionScore = ({
             <td className="fixed-width-score">
                 {score.Score}/{score.MaxScore}
             </td>
-
             <td className="fixed-width-percent">
                 <span className={cellColor}>
                     {percentage.toFixed(1)}%

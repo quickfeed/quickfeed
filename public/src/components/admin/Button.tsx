@@ -19,7 +19,7 @@ export type ButtonProps = {
 
 const Button = ({ children, text, color, type, className, onClick }: ButtonProps) => {
     return (
-        <button className={`${type}-${color}${className ? " " + className : ""}`} onClick={onClick}>
+        <button className={`${type}-${color} ${className ?? ""}`} onClick={onClick}>
             {children}
             {text}
         </button>
