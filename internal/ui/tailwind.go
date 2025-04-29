@@ -1,4 +1,4 @@
-package tailwind
+package ui
 
 import (
 	"fmt"
@@ -12,11 +12,11 @@ var (
 	watch = []string{build, "--", "--watch=always"}
 )
 
-func Build() error {
+func tailwindBuild() error {
 	return run(build)
 }
 
-func Watch() {
+func tailwindWatch() {
 	err := run(watch...)
 	if err != nil {
 		fmt.Printf("Error running tailwind watcher: %v\n", err)

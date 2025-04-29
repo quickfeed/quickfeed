@@ -8,7 +8,6 @@ import (
 
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/ui/tailwind"
 )
 
 var public = func(s string) string {
@@ -153,22 +152,24 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 	return buildOptions
 }
 
-// Build compiles the tailwind css and outputs the file to public/assets/css folder
-// and builds the UI with esbuild and outputs to the public/dist folder
+// Build builds the UI with esbuild and tailwind.
+// Outputs to the public/dist folder by default.
 func Build(outputDir string, dev bool) error {
-	if err := tailwind.Build(); err != nil {
-		return fmt.Errorf("failed to build tailwind CSS: %w", err)
-	}
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {
 		return fmt.Errorf("failed to build UI: %v", result.Errors)
+	}
+	// important to run tailwind after esbuild
+	// as the Reset plugin empties the dist folder
+	if err := tailwindBuild(); err != nil {
+		return fmt.Errorf("failed to build tailwind CSS: %w", err)
 	}
 	return nil
 }
 
 // Watch starts a watch process for both tailwind and esbuild, rebuilding on changes
 func Watch() error {
-	go tailwind.Watch()
+	go tailwindWatch()
 	ctx, err := api.Context(getOptions("", true))
 	if err != nil {
 		return fmt.Errorf("failed to create build context: %w", err)

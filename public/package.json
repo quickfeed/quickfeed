@@ -22,7 +22,7 @@
     "test": "jest",
     "test:ci": "jest --maxWorkers=1",
     "overmind": "npx overmind-devtools@29.0.6-1743431531002",
-    "tailwind": "npx @tailwindcss/cli -i ./src/tailwind.css -o ./assets/css/tailwind.css --minify"
+    "tailwind": "npx @tailwindcss/cli -i ./src/tailwind.css -o ./dist/tailwind.css --minify"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.4",
