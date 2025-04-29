@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { Color, getCourseID, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -21,6 +21,10 @@ const TeacherPage = () => {
     const history = useHistory()
     const root = `/course/${courseID}`
     const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
+
+    useEffect(() => {
+        actions.refreshCourseSubmissions(courseID)
+    }, [courseID, actions])
 
     const members = {
         title: "View Members",

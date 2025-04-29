@@ -27,9 +27,6 @@ const Results = ({ review }: { review: boolean }) => {
     }, [state.assignments, courseID, state.review.assignmentID])
 
     useEffect(() => {
-        if (!state.loadedCourse[courseID.toString()]) {
-            actions.loadCourseSubmissions(courseID)
-        }
         return () => {
             actions.setGroupView(false)
             actions.review.setAssignmentID(-1n)
