@@ -1,4 +1,4 @@
-package web
+package database
 
 import (
 	"sort"
@@ -45,7 +45,7 @@ func TestOrderSubmissions(t *testing.T) {
 
 	// Sort the submissions by assignment order
 	sort.Slice(submissions, func(i, j int) bool {
-		return orderMap.Less(submissions[i].GetAssignmentID(), submissions[j].GetAssignmentID())
+		return orderMap.less(submissions[i].GetAssignmentID(), submissions[j].GetAssignmentID())
 	})
 
 	// Check that the submissions are sorted correctly

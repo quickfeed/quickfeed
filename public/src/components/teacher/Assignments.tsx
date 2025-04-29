@@ -15,7 +15,7 @@ const Assignments = () => {
     const actions = useActions()
     const state = useAppState()
 
-    const assignmentElement = (assignment: Assignment) => {
+    const AssignmentElement = ({ assignment }: { assignment: Assignment }) => {
         const [hidden, setHidden] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
@@ -73,10 +73,11 @@ const Assignments = () => {
         )
     }
 
-    const list = state.assignments[courseID.toString()]?.map(assignment => assignmentElement(assignment))
     return (
         <div className="column">
-            {list}
+            {state.assignments[courseID.toString()]?.map(assignment =>
+                <AssignmentElement key={assignment.ID} assignment={assignment} />
+            )}
         </div>
     )
 }

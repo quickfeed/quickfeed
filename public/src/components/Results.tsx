@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react"
 import { useHistory, useLocation } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
-import { Color, getCourseID, getSubmissionCellColor } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, Icon } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -13,7 +13,6 @@ import Release from "./Release"
 import Search from "./Search"
 import { clone, isMessage } from "@bufbuild/protobuf"
 
-
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
@@ -24,7 +23,7 @@ const Results = ({ review }: { review: boolean }) => {
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
     const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
-        return state.assignments[courseID.toString()]?.filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID) ?? []
+        return state.assignments[courseID.toString()]?.filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID)
     }, [state.assignments, courseID, state.review.assignmentID])
 
     useEffect(() => {
@@ -68,24 +67,25 @@ const Results = ({ review }: { review: boolean }) => {
 
     const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
         if (!state.isManuallyGraded(submission)) {
-            return { value: "N/A" }
+            return { iconTitle: "auto graded", iconClassName: Icon.DASH, value: "" }
         }
         const reviews = state.review.reviews.get(submission.ID) ?? []
         // Check if the current user has any pending reviews for this submission
         // Used to give cell a box shadow to indicate that the user has a pending review
-        const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID)
+        const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID) ? "pending-review" : ""
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
-        const isSelected = state.selectedSubmission?.ID === submission.ID
+        const isSelected = state.selectedSubmission?.ID === submission.ID ? "selected" : ""
         const score = reviews.reduce((acc, theReview) => acc + theReview.score, 0) / reviews.length
         // willBeReleased is true if the average score of all of this submission's reviews is greater than the set minimum score
         // Used to visually indicate that the submission will be released for the given minimum score
-        const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
+        const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore ? "release" : ""
         const numReviewers = state.assignments[state.activeCourse.toString()]?.find((a) => a.ID === submission.AssignmentID)?.reviewers ?? 0
         return ({
-            // TODO: Figure out a better way to visualize released submissions than '(r)'
-            value: `${reviews.length}/${numReviewers} ${submission.released ? "(r)" : ""}`,
-            className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""} ${pending ? "pending-review" : ""}`,
+            iconTitle: submission.released ? "Released" : "Not released",
+            iconClassName: submission.released ? "fa fa-unlock" : "fa fa-lock",
+            value: `${reviews.length}/${numReviewers}`,
+            className: `${getSubmissionCellColor(submission, owner)} ${isSelected} ${willBeReleased} ${pending}`,
             onClick: () => {
                 actions.setSelectedSubmission({ submission })
                 if (isMessage(owner, EnrollmentSchema)) {
@@ -101,10 +101,10 @@ const Results = ({ review }: { review: boolean }) => {
     const getSubmissionCell = (submission: Submission, owner: Enrollment | Group): CellElement => {
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
-        const isSelected = state.selectedSubmission?.ID === submission.ID
+        const isSelected = state.selectedSubmission?.ID === submission.ID ? "selected" : ""
         return ({
             value: `${submission.score} %`,
-            className: `${getSubmissionCellColor(submission, owner)} ${isSelected ? "selected" : ""}`,
+            className: `${getSubmissionCellColor(submission, owner)} ${isSelected}`,
             onClick: () => {
                 actions.setSelectedSubmission({ submission })
                 if (isMessage(owner, EnrollmentSchema)) {
@@ -112,7 +112,7 @@ const Results = ({ review }: { review: boolean }) => {
                 }
                 actions.setSubmissionOwner(owner)
                 handleLabClick(submission.ID)
-                actions.getSubmission({ submission: submission, owner: state.submissionOwner, courseID: state.activeCourse })
+                actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
             }
         })
     }
@@ -123,15 +123,17 @@ const Results = ({ review }: { review: boolean }) => {
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(members, generator, state)
 
-
+    const divWidth = state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"
+    const displayMode = state.groupView ? "Group" : "Student"
+    const buttonColor = state.groupView ? Color.BLUE : Color.GREEN
     return (
         <div className="row">
-            <div className={`p-0 ${state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}`}>
+            <div className={`p-0 ${divWidth}`}>
                 {review ? <Release /> : null}
                 <Search placeholder={"Search by name ..."} className="mb-2" >
                     <Button
-                        text={`View by ${groupView ? "student" : "group"}`}
-                        color={groupView ? Color.BLUE : Color.GREEN}
+                        text={`View by ${displayMode}`}
+                        color={buttonColor}
                         type={ButtonType.BUTTON}
                         className="ml-2"
                         onClick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(BigInt(-1)) }}

@@ -34,12 +34,18 @@ ifeq ($(OS),linux)
 endif
 
 ui: version-check
-	@echo "Running npm ci and webpack"
-	@cd public; npm ci; webpack
+	@echo "Running npm ci and esbuild"
+	@cd public; npm ci
+	@go run cmd/esbuild/main.go
 
 ui-update: version-check
-	@echo "Running npm install and webpack"
-	@cd public; npm i; webpack
+	@echo "Running npm install and esbuild"
+	@cd public; npm i
+	@go run cmd/esbuild/main.go
+
+overmind:
+	@echo "Running Overmind Devtools"
+	@cd public; npm run overmind
 
 proto:
 	buf dep update
@@ -51,13 +57,6 @@ proto-swift:
 test:
 	@go clean -testcache
 	@go test ./...
-
-webpack-dev-server:
-	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
-
-# TODO Should check that webpack-dev-server is running.
-selenium:
-	@cd public && npm run test:selenium
 
 qcm:
 	@cd cmd/qcm; go install

@@ -11,11 +11,11 @@ const CourseFavoriteButton = ({ enrollment, style }: { enrollment: Enrollment, s
     // Not having this will cause the component to not re-render when star is clicked
     useAppState()
 
+    const starIcon = isVisible(enrollment) ? 'fa fa-star' : "fa fa-star-o"
     return (
         // TODO: Consider creating a tooltip component.
         <span style={style} title="Favorite or unfavorite this course. Favorite courses will appear on your dashboard.">
-            <i role="button" aria-hidden="true" className={isVisible(enrollment) ? 'fa fa-star' : "fa fa-star-o"}
-                onClick={() => { actions.setEnrollmentState(enrollment) }} />
+            <i role="button" aria-hidden="true" className={starIcon} onClick={() => actions.setEnrollmentState(enrollment)} />
         </span>
     )
 }

@@ -1,10 +1,10 @@
 import { isMessage } from "@bufbuild/protobuf"
 import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../proto/qf/types_pb"
-import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
+import { groupRepoLink, Icon, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
 import { useActions } from "../overmind"
 import { AssignmentsMap, State } from "../overmind/state"
-import { Row, RowElement } from "./DynamicTable"
-
+import { CellElement, Row, RowElement } from "./DynamicTable"
+import { Icons } from "./Icons"
 
 export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {
     const course = state.courses.find(c => c.ID === state.activeCourse)
@@ -28,9 +28,8 @@ export const generateRow = (
     const isGroup = isMessage(enrollment, GroupSchema)
 
     if (withID) {
-        isEnrollment
-            ? row.push({ value: enrollment.userID.toString() })
-            : row.push({ value: enrollment.ID.toString() })
+        const ID = isEnrollment ? enrollment.userID : enrollment.ID
+        row.push({ value: ID.toString() })
     }
 
     if (isEnrollment && enrollment.user) {
@@ -69,12 +68,12 @@ export const generateRow = (
             row.push(generator(submission, enrollment))
             return
         }
-        row.push("N/A")
+        row.push(Icons.NotAvailable)
     })
     return row
 }
 
-export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
     const base: Row = [
         { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
     ]
@@ -82,12 +81,18 @@ export const generateAssignmentsHeader = (assignments: Assignment[], group: bool
         base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
     }
     for (const assignment of assignments) {
-        if (group && assignment.isGroupLab) {
-            base.push({ value: `${assignment.name} (g)`, onClick: () => actions.review.setAssignmentID(assignment.ID) })
+        const cell: CellElement = { value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }
+        // If we are viewing by group, ignore all non-group assignments
+        if (viewByGroup && !assignment.isGroupLab) {
+            continue
         }
-        if (!group) {
-            base.push({ value: assignment.isGroupLab ? `${assignment.name} (g)` : assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) })
+        // If group assignment, add group icon
+        if (assignment.isGroupLab) {
+            cell.iconTitle = "Group"; cell.iconClassName = Icon.GROUP
+        } else {
+            cell.iconTitle = "Individual"; cell.iconClassName = Icon.USER
         }
+        base.push(cell)
     }
     return base
 }

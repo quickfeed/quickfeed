@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
@@ -49,8 +50,8 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	return nil
 }
 
-func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string) error {
-	m := New(env.DomainWithPort(), envFile)
+func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
+	m := New(env.DomainWithPort(), envFile, dev)
 	server, err := srvFn(m.Handler())
 	if err != nil {
 		return err
@@ -59,21 +60,21 @@ func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string) error {
 }
 
 type Manifest struct {
-	domain     string
-	envFile    string
-	handler    http.Handler
-	done       chan error
-	client     *github.Client // optional, for testing
-	runWebpack bool           // run webpack only for production
+	domain  string
+	envFile string
+	handler http.Handler
+	done    chan error
+	client  *github.Client // optional, for testing
+	build   func() error
 }
 
-func New(domain, envFile string) *Manifest {
+func New(domain, envFile string, dev bool) *Manifest {
 	m := &Manifest{
-		domain:     domain,
-		envFile:    envFile,
-		client:     github.NewClient(nil),
-		done:       make(chan error),
-		runWebpack: true,
+		domain:  domain,
+		envFile: envFile,
+		client:  github.NewClient(nil),
+		done:    make(chan error),
+		build:   func() error { return ui.Build("", dev) },
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -90,7 +91,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	go func() {
 		if err := server.Serve(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %v", err)
+				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %w", err)
 				return
 			}
 			// server was closed prematurely, e.g., ctrl-C
@@ -172,6 +173,16 @@ func (m *Manifest) conversion() http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
+			return
+		}
+
+		// Build the UI if needed
+		if err := m.buildUI(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
+		} else {
+			log.Printf("UI built successfully")
 		}
 	}
 }
@@ -216,8 +227,9 @@ body {
   <div class="container">
     <div class="center">
       <h2>{{.Name}} GitHub App created</h2>
-	  <h3>Running webpack in the background</h3>
-	  <h3>Please wait for <b>Done webpack</b> in server logs before logging in...</h3>
+	  <h3>Running esbuild in the background</h3>
+	  <h3>Building the UI, please wait for "UI built successfully" in server logs before logging in<h3>
+	  <h4>Reloading soon...</h4>
     </div>
   </div>
 </body>
@@ -226,7 +238,7 @@ body {
 <script>
 	setTimeout(function() {
 		window.location.href = "/";
-	}, 10000);
+	}, 500);
 </script>
 `
 
@@ -248,25 +260,23 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	if m.runWebpack {
-		go runWebpack()
-	}
 	return nil
 }
 
-func runWebpack() {
-	log.Println("Running webpack...")
-	c := exec.Command("webpack")
-	c.Dir = "public"
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
-		log.Print("Failed to run webpack; trying npm ci")
+// buildUI builds the UI. If it fails, it runs npm ci and tries again.
+// This is useful when the UI may not be built yet.
+// The build function can be overridden for testing purposes.
+func (m *Manifest) buildUI() error {
+	if err := m.build(); err != nil {
 		if ok := runNpmCi(); !ok {
-			return
+			return fmt.Errorf("failed to run npm ci: %w", err)
+		}
+		// Attempt to build again
+		if err := m.build(); err != nil {
+			return fmt.Errorf("failed to rebuild the UI: %w", err)
 		}
 	}
-	log.Print("Done webpack")
+	return nil
 }
 
 func runNpmCi() bool {

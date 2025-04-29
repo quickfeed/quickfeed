@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -151,11 +152,11 @@ func TestConversion(t *testing.T) {
 
 	scmClient := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockAppConfig(config))
 	manifest := Manifest{
-		domain:     "localhost",
-		client:     scmClient.Client(),
-		envFile:    "testdata/test.env",
-		done:       make(chan error, 1),
-		runWebpack: false, // Disable webpack for testing
+		domain:  "localhost",
+		client:  scmClient.Client(),
+		envFile: "testdata/test.env",
+		done:    make(chan error, 1),
+		build:   func() error { return nil }, // Avoid building UI when testing
 	}
 
 	mux := http.NewServeMux()
@@ -222,5 +223,17 @@ func TestConversion(t *testing.T) {
 		if diff := cmp.Diff(cfg.GetPEM(), string(pem)); diff != "" {
 			t.Errorf("pem file content mismatch (-want +got):\n%s", diff)
 		}
+	}
+}
+
+func TestBuildUI(t *testing.T) {
+	if os.Getenv("CI") == "true" {
+		t.Skipf("Skipping %s when running on GitHub", t.Name())
+	}
+	m := Manifest{
+		build: func() error { return ui.Build("", true) },
+	}
+	if err := m.buildUI(); err != nil {
+		t.Errorf("buildUI() failed with error: %v", err)
 	}
 }

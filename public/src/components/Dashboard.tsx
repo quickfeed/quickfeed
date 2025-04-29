@@ -17,11 +17,8 @@ const Dashboard = () => {
     }
 
     return (
-        <div className='box'>
+        <div className='box mt-5'>
             <Alerts />
-            <div>
-                <h1>Welcome, {state.self.Name}!</h1>
-            </div>
             <SubmissionsTable />
             <Courses home />
         </div>
