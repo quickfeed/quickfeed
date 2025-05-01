@@ -53,7 +53,7 @@ const ReviewForm = () => {
                 color={Color.BLUE}
                 type={ButtonType.BUTTON}
                 className="mr-1"
-                onClick={async () => { await actions.review.createReview() }}
+                onClick={() => { actions.review.createReview() }}
             />
         )
     }

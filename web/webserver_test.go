@@ -23,7 +23,7 @@ func TestRegisterRouter(t *testing.T) {
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
 
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	public := createTempPublicDir(t)
 	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, public)
 

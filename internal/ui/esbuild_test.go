@@ -11,9 +11,7 @@ func TestBuild(t *testing.T) {
 	if os.Getenv("CI") == "true" {
 		t.Skipf("Skipping %s when running on GitHub", t.Name())
 	}
-	tmpDir := t.TempDir()
-	defer os.RemoveAll(tmpDir)
-	if err := ui.Build(tmpDir, true); err != nil {
+	if err := ui.Build(t.TempDir(), true); err != nil {
 		t.Errorf("Build failed: %v", err)
 	}
 }

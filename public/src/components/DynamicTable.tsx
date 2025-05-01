@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { isHidden } from "../Helpers"
 import { useAppState } from "../overmind"
 
@@ -22,7 +22,7 @@ const isJSXElement = (element: RowElement): element is React.JSX.Element => {
     return (element as React.JSX.Element).type !== undefined
 }
 
-const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
+const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
     const searchQuery = useAppState().query
 
     if (!data || data.length === 0) {
@@ -77,7 +77,7 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
         const generatedRow = row.map((cell, index) => {
             return rowCell(cell, index)
         })
-        return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr>
+        return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr> // skipcq: JS-0437
     })
 
     return (
@@ -94,6 +94,8 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }) => {
             </table>
         </div>
     )
-}
+})
+
+DynamicTable.displayName = "DynamicTable"
 
 export default DynamicTable
