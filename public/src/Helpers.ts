@@ -69,6 +69,21 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
+
+// isExpired returns true if the assignment's deadline has expired.
+// An assignment is considered expired if its deadline expired more than one month ago.
+export const isExpired = (assignment: Assignment): boolean => {
+    if (!assignment.deadline) {
+        return false
+    }
+    const date = timestampDate(assignment.deadline)
+    const now = new Date()
+    return (
+        date.getFullYear() !== now.getFullYear() ||
+        date.getMonth() > now.getMonth() + 1
+    )
+}
+
 export interface Deadline {
     className: string,
     message: string,
