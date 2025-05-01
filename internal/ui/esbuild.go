@@ -155,7 +155,8 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 	return buildOptions
 }
 
-// Build builds the UI with esbuild and outputs to the public/dist folder
+// Build builds the UI with esbuild. If outputDir is an empty string, it defaults to public/dist.
+// Test cases should pass a non-empty outputDir to avoid overwriting the current build.
 func Build(outputDir string, dev bool) error {
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {
