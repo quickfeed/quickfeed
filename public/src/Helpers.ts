@@ -87,6 +87,7 @@ export const isExpired = (assignment: Assignment): boolean => {
 export interface Deadline {
     className: string,
     message: string,
+    time: string,
 }
 
 /**
@@ -95,8 +96,8 @@ export interface Deadline {
  *
  * layoutTime = "2021-03-20T23:59:00"
  */
-export const timeFormatter = (deadline: Date, passed: boolean): Deadline => {
-    const timeToDeadline = deadline.getTime() - Date.now()
+export const deadlineFormatter = (assignment: Assignment, submissionScore: number): Deadline => {
+    const timeToDeadline = (new Date).getTime() - Date.now()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -104,15 +105,14 @@ export const timeFormatter = (deadline: Date, passed: boolean): Deadline => {
     let className = "table-primary"
     let message = `${days} days to deadline`
 
-    if (passed) {
+    if (submissionScore >= assignment.scoreLimit) {
         className = "table-success"
     } else if (timeToDeadline < 0) {
         const daysSince = -days
         const hoursSince = -hours
-        const expiredSince = daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`
 
         className = "table-danger"
-        message = `Expired ${expiredSince}`
+        message = `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`
     } else if (days === 0) {
         className = "table-danger"
         message = `${hours} hours and ${minutes} minutes to deadline!`
@@ -120,8 +120,11 @@ export const timeFormatter = (deadline: Date, passed: boolean): Deadline => {
         className = "table-warning"
         message = `${days} day${days === 1 ? " " : "s"} to deadline!`
     }
-
-    return { className, message }
+    return {
+        className,
+        message,
+        time: getFormattedTime(assignment.deadline, true),
+    }
 }
 
 
