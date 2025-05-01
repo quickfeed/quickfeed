@@ -335,18 +335,21 @@ func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Co
 	return enrollment
 }
 
-// CreateTmpFile creates a temporary file in the given directory and returns a cleanup function.
-func CreateTmpFile(t *testing.T, dir string) (func(), string) {
+// CreateTempFile creates a temporary file in the given directory.
+// The file is automatically removed when the test ends.
+func CreateTempFile(t *testing.T, dir string) string {
 	t.Helper()
 	tmpFile, err := os.CreateTemp(dir, "*")
 	if err != nil {
 		t.Fatal(err)
 	}
-	return func() {
-		if err := os.Remove(tmpFile.Name()); err != nil {
+	envFileName := tmpFile.Name()
+	t.Cleanup(func() {
+		if err := os.Remove(envFileName); err != nil {
 			t.Error(err)
 		}
-	}, tmpFile.Name()
+	})
+	return envFileName
 }
 
 func RandomString(t *testing.T) string {

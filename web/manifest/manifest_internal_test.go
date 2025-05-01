@@ -78,9 +78,16 @@ func TestForm(t *testing.T) {
 func TestConversion(t *testing.T) {
 	pemPath := env.Root("testdata", "private-key.pem")
 	t.Setenv(appKey, pemPath)
-	cleanup, tmpFile := qtest.CreateTmpFile(t, env.Root())
-	t.Cleanup(cleanup)
-	defer os.Remove(tmpFile + ".bak")
+	tmpEnvFile := qtest.CreateTempFile(t, env.Root())
+	t.Cleanup(func() {
+		// Remove also the backup file if it exists
+		bakFileName := tmpEnvFile + ".bak"
+		if _, err := os.Stat(bakFileName); err == nil {
+			if err := os.Remove(bakFileName); err != nil {
+				t.Error(err)
+			}
+		}
+	})
 
 	tests := []struct {
 		name string
@@ -156,7 +163,7 @@ func TestConversion(t *testing.T) {
 	manifest := Manifest{
 		domain:  "localhost",
 		client:  scmClient.Client(),
-		envFile: filepath.Base(tmpFile),
+		envFile: filepath.Base(tmpEnvFile),
 		done:    make(chan error, 1),
 		build:   func() error { return nil }, // Avoid building UI when testing
 	}
@@ -202,7 +209,7 @@ func TestConversion(t *testing.T) {
 		// after the conversion flow.
 		// This is done by the StartAppCreationFlow function in production,
 		// but for testing purposes we need to do it manually.
-		if err := env.Load(tmpFile); err != nil {
+		if err := env.Load(tmpEnvFile); err != nil {
 			t.Fatalf("failed to load .env file: %v", err)
 		}
 		for k, v := range tt.want {
