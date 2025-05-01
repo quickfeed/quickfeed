@@ -2,13 +2,13 @@ package web
 
 import "github.com/quickfeed/quickfeed/qf"
 
-// updateUser updates the user profile according to the user data in
+// editUserProfile updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
-func (s *QuickFeedService) updateUser(curUser *qf.User, request *qf.User) (*qf.User, error) {
+func (s *QuickFeedService) editUserProfile(curUser, request *qf.User) error {
 	updateUser, err := s.db.GetUser(request.GetID())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if request.GetName() != "" {
@@ -33,7 +33,5 @@ func (s *QuickFeedService) updateUser(curUser *qf.User, request *qf.User) (*qf.U
 	if curUser.GetIsAdmin() && request.GetID() > 1 {
 		updateUser.IsAdmin = request.GetIsAdmin()
 	}
-
-	err = s.db.UpdateUser(updateUser)
-	return updateUser, err
+	return s.db.UpdateUser(updateUser)
 }

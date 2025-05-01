@@ -13,7 +13,7 @@ import (
 func TestGormDBRemoveTest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 
 	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{

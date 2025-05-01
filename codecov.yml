@@ -11,3 +11,4 @@ ignore:
   - "internal/ui/**" # ignore esbuild code, as the tests use npm and can't be executed on github actions
   - "cmd/**"
   - "main.go"
+  - "internal/qtest/test_helper.go"

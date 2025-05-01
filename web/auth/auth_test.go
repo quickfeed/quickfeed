@@ -21,7 +21,7 @@ const (
 
 func TestOAuth2Login(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	// Incorrect request method.
 	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
 		Post(auth.Auth).
@@ -45,7 +45,7 @@ func TestOAuth2Login(t *testing.T) {
 
 func TestOAuth2LoginRedirect(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 
 	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
 		Get(authGithub).
@@ -69,7 +69,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 func TestOAuth2Callback(t *testing.T) {
 	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -111,7 +111,7 @@ func TestOAuth2Callback(t *testing.T) {
 
 func TestOAuth2CallbackUserExchange(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -176,7 +176,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 
 func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -221,7 +221,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 
 func TestOAuth2CallbackBadRequest(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)

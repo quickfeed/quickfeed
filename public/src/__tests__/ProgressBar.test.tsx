@@ -93,22 +93,20 @@ describe("ProgressBar", () => {
             </Provider>
         )
 
-
         const bar = container.getElementsByTagName("div").item(0)
         expect(bar?.style).toHaveProperty("right", `${100 - test.submission.score}%`)
-        expect(bar?.style).toHaveProperty(
-            "border-bottom",
-            test.submission.score >= test.assignment.scoreLimit
-                ? "2px solid green"
-                : "2px solid yellow"
-        )
+
+        const color = test.submission.score >= test.assignment.scoreLimit
+            ? "2px solid green"
+            : "2px solid yellow"
+        expect(bar?.style).toHaveProperty("border-bottom", color)
     })
 })
 
 const labTest = (test: ProgressBarTest) => {
     const submissions = new SubmissionsForUser()
     submissions.setSubmissions(1n, "USER", [test.submission])
-    const overmind = initializeOvermind({ assignments: { "1": test.assignment ? [test.assignment] : [] }, submissions })
+    const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions })
 
     const { container } = render(
         <Provider value={overmind}>

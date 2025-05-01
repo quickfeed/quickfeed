@@ -1,4 +1,3 @@
-import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
@@ -201,10 +200,7 @@ export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return be
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
 export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
 
-export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
-    if (!submission) {
-        return Submission_Status.NONE
-    }
+export const getStatusByUser = (submission: Submission, userID: bigint): Submission_Status => {
     const grade = submission.Grades.find(grade => grade.UserID === userID)
     if (!grade) {
         return Submission_Status.NONE
@@ -227,17 +223,6 @@ export const setStatusAll = (submission: Submission, status: Submission_Status):
         return create(GradeSchema, { ...grade, Status: status })
     })
     return create(SubmissionSchema, { ...submission, Grades: grades })
-}
-
-/** getCourseID returns the course ID determined by the current route */
-export const getCourseID = (): bigint => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const route = useParams<{ id?: string }>()
-    try {
-        return route.id ? BigInt(route.id) : BigInt(0)
-    } catch (e) {
-        return BigInt(0)
-    }
 }
 
 export const isHidden = (value: string, query: string): boolean => {
@@ -301,8 +286,14 @@ export const defaultTag = (date: Date): string => {
     return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
 }
 
+// Returns the current year, unless the date falls in November (10) or December (11),
+// in which case it returns the following year. This is used to prefill the default year
+// of the create course form when creating a new course. The rationale is that it is
+// unlikely a new course will be created in November or later for the current year.
 export const defaultYear = (date: Date): number => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
+    return date.getMonth() >= 10
+        ? date.getFullYear() + 1
+        : date.getFullYear()
 }
 
 export const userLink = (user: User): string => {

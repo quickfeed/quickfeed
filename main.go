@@ -121,7 +121,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	authConfig := auth.NewGitHubConfig(env.DomainWithPort(), scmConfig)
+	authConfig := auth.NewGitHubConfig(scmConfig)
 	log.Print("Callback: ", authConfig.RedirectURL)
 	scmManager := scm.NewSCMManager(scmConfig)
 
