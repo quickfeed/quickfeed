@@ -2,16 +2,86 @@ package web_test
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
+	"connectrpc.com/connect"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 )
+
+func TestSubmissionStream(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	logger := qtest.Logger(t)
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
+		interceptor.NewUserInterceptor(logger, tm),
+	))
+	user := qtest.CreateFakeUser(t, db)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	_, err = client.SubmissionStream(ctx, qtest.RequestWithCookie(&qf.Void{}, Cookie(t, tm, user)))
+	if err != nil && errors.Is(err, context.Canceled) {
+		t.Fatal(err)
+	}
+}
+
+func TestGetSubmission(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, _, assignment := qtest.SetupCourseAssignment(t, db)
+	submission := &qf.Submission{
+		UserID:       user.GetID(),
+		AssignmentID: assignment.GetID(),
+	}
+	qtest.CreateSubmission(t, db, submission)
+	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+
+	tests := []struct {
+		name         string
+		submissionID uint64
+		wantErr      error
+	}{
+		{
+			name:         "valid submission",
+			submissionID: submission.GetID(),
+		},
+		{
+			name:         "invalid submission",
+			submissionID: 999,
+			wantErr:      connect.NewError(connect.CodeNotFound, errors.New("failed to get submission")),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := &qf.SubmissionRequest{
+				FetchMode: &qf.SubmissionRequest_SubmissionID{
+					SubmissionID: test.submissionID,
+				},
+			}
+			response, err := client.GetSubmission(context.Background(), &connect.Request[qf.SubmissionRequest]{Msg: request})
+			qtest.CheckError(t, err, test.wantErr)
+
+			if test.wantErr == nil {
+				qtest.Diff(t, "GetSubmission() mismatch", response.Msg, submission, protocmp.Transform())
+			}
+		})
+	}
+}
 
 func TestApproveSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
