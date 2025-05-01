@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { assignmentStatusText, getFormattedTime, getStatusByUser, Icon, isApproved, SubmissionStatus, timeFormatter } from "../../Helpers"
+import { assignmentStatusText, getStatusByUser, Icon, isApproved, isExpired, SubmissionStatus, deadlineFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, Enrollment_UserStatus, SubmissionSchema } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
@@ -28,9 +28,12 @@ const SubmissionsTable = () => {
 
     const table: React.JSX.Element[] = []
     sortedAssignments().forEach(assignment => {
+        if (isExpired(assignment)) {
+            return // ignore expired assignments
+        }
         const courseID = assignment.CourseID
         const submissions = state.submissions.ForAssignment(assignment)
-        if (!submissions) {
+        if (submissions.length === 0) {
             return
         }
         if (state.enrollmentsByCourseID[courseID.toString()]?.status !== Enrollment_UserStatus.STUDENT) {
@@ -39,20 +42,8 @@ const SubmissionsTable = () => {
         // Submissions are indexed by the assignment order - 1.
         const submission = submissions.find(sub => sub.AssignmentID === assignment.ID) ?? create(SubmissionSchema)
         const status = getStatusByUser(submission, state.self.ID)
-        if (!isApproved(status) && assignment.deadline) {
-            const date = timestampDate(assignment.deadline)
-            const now = new Date()
-
-            /*
-                Only show assignments which are the same year as now and if one month after deadline month.
-                This way students will only see assignments which are the current year and the expired assignments
-                are shown for a month after the deadline.
-            */
-            if (date.getFullYear() !== now.getFullYear() || date.getMonth() > now.getMonth() + 1) {
-                return
-            }
-
-            const deadline = timeFormatter(date, submission.score >= assignment.scoreLimit)
+        if (!isApproved(status)) {
+            const deadline = deadlineFormatter(assignment, submission.score)
             const course = state.courses.find(c => c.ID === courseID)
             table.push(
                 <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
@@ -64,7 +55,7 @@ const SubmissionsTable = () => {
                             <span className="badge ml-2 float-right"><i className={Icon.GROUP} title="Group Assignment" /></span> : null}
                     </td>
                     <td><ProgressBar courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
-                    <td>{getFormattedTime(assignment.deadline, true)}</td>
+                    <td>{deadline.time}</td>
                     <td>{deadline.message}</td>
                     <td className={SubmissionStatus[status]}>
                         {assignmentStatusText(assignment, submission, status)}
