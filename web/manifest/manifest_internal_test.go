@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -77,9 +77,18 @@ func TestForm(t *testing.T) {
 }
 
 func TestConversion(t *testing.T) {
-	testDataPath := path.Join(env.Root(), "testdata")
-	pemPath := path.Join(testDataPath, "private-key.pem")
-	t.Setenv("QUICKFEED_APP_KEY", pemPath)
+	pemPath := env.Root("testdata", "private-key.pem")
+	t.Setenv(appKey, pemPath)
+	tmpEnvFile := qtest.CreateTempFile(t, env.Root())
+	t.Cleanup(func() {
+		// Remove also the backup file if it exists
+		bakFileName := tmpEnvFile + ".bak"
+		if _, err := os.Stat(bakFileName); err == nil {
+			if err := os.Remove(bakFileName); err != nil {
+				t.Error(err)
+			}
+		}
+	})
 
 	tests := []struct {
 		name string
@@ -93,27 +102,30 @@ func TestConversion(t *testing.T) {
 			name: "empty config",
 			code: "1",
 			want: map[string]string{
-				"QUICKFEED_APP_ID":        "0",
-				"QUICKFEED_CLIENT_ID":     "",
-				"QUICKFEED_CLIENT_SECRET": "",
+				appID:         "0",
+				clientID:      "",
+				clientSecret:  "",
+				webhookSecret: "",
 			},
 		},
 		{
 			name: "full config",
 			code: "2",
 			want: map[string]string{
-				"QUICKFEED_APP_ID":        "1",
-				"QUICKFEED_CLIENT_ID":     "client",
-				"QUICKFEED_CLIENT_SECRET": "secret",
+				appID:         "1",
+				clientID:      "client",
+				clientSecret:  "secret",
+				webhookSecret: "webhook-secret",
 			},
 		},
 		{
 			name: "full config",
 			code: "3",
 			want: map[string]string{
-				"QUICKFEED_APP_ID":        "123",
-				"QUICKFEED_CLIENT_ID":     "some-id",
-				"QUICKFEED_CLIENT_SECRET": "some-other-secret",
+				appID:         "123",
+				clientID:      "some-id",
+				clientSecret:  "some-other-secret",
+				webhookSecret: "some-webhook-secret",
 			},
 		},
 		{
@@ -133,20 +145,22 @@ func TestConversion(t *testing.T) {
 	config := map[string]github.AppConfig{
 		"1": {},
 		"2": {
-			Name:         qtest.Ptr("test"),
-			ID:           qtest.Ptr(int64(1)),
-			ClientID:     qtest.Ptr("client"),
-			ClientSecret: qtest.Ptr("secret"),
-			HTMLURL:      qtest.Ptr("https://example.com"),
-			PEM:          qtest.Ptr("secret"),
+			Name:          qtest.Ptr("test"),
+			ID:            qtest.Ptr(int64(1)),
+			ClientID:      qtest.Ptr("client"),
+			ClientSecret:  qtest.Ptr("secret"),
+			HTMLURL:       qtest.Ptr("https://example.com"),
+			PEM:           qtest.Ptr("secret"),
+			WebhookSecret: qtest.Ptr("webhook-secret"),
 		},
 		"3": {
-			Name:         qtest.Ptr("test"),
-			ID:           qtest.Ptr(int64(123)),
-			ClientID:     qtest.Ptr("some-id"),
-			ClientSecret: qtest.Ptr("some-other-secret"),
-			HTMLURL:      qtest.Ptr("https://another-example.com"),
-			PEM:          qtest.Ptr("super-secret"),
+			Name:          qtest.Ptr("test"),
+			ID:            qtest.Ptr(int64(123)),
+			ClientID:      qtest.Ptr("some-id"),
+			ClientSecret:  qtest.Ptr("some-other-secret"),
+			HTMLURL:       qtest.Ptr("https://another-example.com"),
+			PEM:           qtest.Ptr("super-secret"),
+			WebhookSecret: qtest.Ptr("some-webhook-secret"),
 		},
 		// TODO: Test with webhook config (manifest with non-private address)
 	}
@@ -155,7 +169,7 @@ func TestConversion(t *testing.T) {
 	t.Setenv("DOMAIN", "localhost")
 	manifest := Manifest{
 		client:  scmClient.Client(),
-		envFile: "testdata/test.env",
+		envFile: filepath.Base(tmpEnvFile),
 		done:    make(chan error, 1),
 		build:   func() error { return nil }, // Avoid building UI when testing
 	}
@@ -201,7 +215,7 @@ func TestConversion(t *testing.T) {
 		// after the conversion flow.
 		// This is done by the StartAppCreationFlow function in production,
 		// but for testing purposes we need to do it manually.
-		if err := env.Load(path.Join(testDataPath, "test.env")); err != nil {
+		if err := env.Load(tmpEnvFile); err != nil {
 			t.Fatalf("failed to load .env file: %v", err)
 		}
 		for k, v := range tt.want {
@@ -232,7 +246,7 @@ func TestBuildUI(t *testing.T) {
 		t.Skipf("Skipping %s when running on GitHub", t.Name())
 	}
 	m := Manifest{
-		build: func() error { return ui.Build("", true) },
+		build: func() error { return ui.Build(t.TempDir(), true) },
 	}
 	if err := m.buildUI(); err != nil {
 		t.Errorf("buildUI() failed with error: %v", err)
