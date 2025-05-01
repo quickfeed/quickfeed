@@ -22,6 +22,7 @@ import (
 const (
 	appID         = "QUICKFEED_APP_ID"
 	appKey        = "QUICKFEED_APP_KEY"
+	appUrl        = "QUICKFEED_APP_URL"
 	clientID      = "QUICKFEED_CLIENT_ID"
 	clientSecret  = "QUICKFEED_CLIENT_SECRET"  // skipcq: SCT-A000
 	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
@@ -156,6 +157,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		envToUpdate := map[string]string{
 			appID:         strconv.FormatInt(config.GetID(), 10),
 			appKey:        appKeyFile,
+			appUrl:        config.GetHTMLURL(),
 			clientID:      config.GetClientID(),
 			clientSecret:  config.GetClientSecret(),
 			webhookSecret: config.GetWebhookSecret(),
@@ -226,7 +228,7 @@ body {
 <body>
   <div class="container">
     <div class="center">
-      <h2>{{.Name}} GitHub App created</h2>
+      <h2>{{.}} GitHub App created</h2>
 	  <h3>Running esbuild in the background</h3>
 	  <h3>Building the UI, please wait for "UI built successfully" in server logs before logging in<h3>
 	  <h4>Reloading soon...</h4>
@@ -241,26 +243,9 @@ body {
 	}, 500);
 </script>
 `
-
 	log.Printf("Successfully created the %s GitHub App.", config.GetName())
-
-	data := struct {
-		Name string
-	}{
-		Name: config.GetName(),
-	}
 	t := template.Must(template.New("success").Parse(tpl))
-	if err := t.Execute(w, data); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
-	}
-	publicEnvFile := env.PublicEnv(m.envFile)
-	if err := env.Save(publicEnvFile, map[string]string{
-		"QUICKFEED_APP_URL": config.GetHTMLURL(),
-	}); err != nil {
-		return err
-	}
-	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	return nil
+	return t.Execute(w, config.GetName())
 }
 
 // buildUI builds the UI. If it fails, it runs npm ci and tries again.
