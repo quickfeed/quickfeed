@@ -1,16 +1,17 @@
-import React, { useState } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, getFormattedTime, isPending, isTeacher, sortEnrollments } from "../Helpers"
+import React, { useState, useCallback } from "react"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getFormattedTime, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
+import { useCourseID } from "../hooks/useCourseID"
 
 const Members = () => {
     const state = useAppState()
     const actions = useActions()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
 
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)
     const [descending, setDescending] = useState<boolean>(false)
@@ -41,6 +42,12 @@ const Members = () => {
         { value: "Slipdays", onClick: () => { setSort(EnrollmentSort.Slipdays) } },
         { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
     ]
+
+    const handleMemberChange = useCallback((enrollment: Enrollment, status: Enrollment_UserStatus) => (
+        () => actions.updateEnrollment({ enrollment, status })
+    ), [actions])
+    const handleApprovePendingEnrollments = useCallback(() => actions.approvePendingEnrollments(), [actions])
+
     const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
         const editAndTeacher = edit && isTeacher(enrollment)
 
@@ -59,13 +66,13 @@ const Members = () => {
                     color={buttonColor}
                     type={ButtonType.BADGE}
                     className="mr-2"
-                    onClick={() => actions.updateEnrollment({ enrollment, status: role })}
+                    onClick={handleMemberChange(enrollment, role)}
                 />
                 <DynamicButton
                     text={"Reject"}
                     color={Color.RED}
                     type={ButtonType.BADGE}
-                    onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
+                    onClick={handleMemberChange(enrollment, Enrollment_UserStatus.NONE)}
                 />
             </div>
         )
@@ -105,7 +112,7 @@ const Members = () => {
                             text="Approve All"
                             color={Color.GREEN}
                             type={ButtonType.BUTTON}
-                            onClick={() => actions.approvePendingEnrollments()}
+                            onClick={handleApprovePendingEnrollments}
                         />
                     </div> : null}
             </div>

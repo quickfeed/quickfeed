@@ -1,17 +1,18 @@
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/qf/types_pb"
-import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
+import { isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import EditBenchmark from "./EditBenchmark"
 import EditCriterion from "./EditCriterion"
+import { useCourseID } from "../../hooks/useCourseID"
 
 
 /** This component displays all assignments for the active course and:
  *  for assignments that are not manually graded, allows teachers to rebuild all submissions.
  *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
 const Assignments = () => {
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const actions = useActions()
     const state = useAppState()
 

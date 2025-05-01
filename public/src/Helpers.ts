@@ -1,4 +1,3 @@
-import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
@@ -224,12 +223,6 @@ export const setStatusAll = (submission: Submission, status: Submission_Status):
         return create(GradeSchema, { ...grade, Status: status })
     })
     return create(SubmissionSchema, { ...submission, Grades: grades })
-}
-
-/** getCourseID returns the course ID determined by the current route */
-export const getCourseID = (): bigint => {
-    const route = useParams<{ id?: string }>()
-    return route.id ? BigInt(route.id) : BigInt(0)
 }
 
 export const isHidden = (value: string, query: string): boolean => {
