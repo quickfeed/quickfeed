@@ -225,10 +225,12 @@ func (db *GormDB) DeleteBenchmark(query *qf.GradingBenchmark) error {
 
 // CreateCriterion creates a new grading criterion
 func (db *GormDB) CreateCriterion(query *qf.GradingCriterion) error {
+	// check that the given criterion's benchmark exists
 	benchmark, err := db.getBenchmark(query.GetBenchmarkID())
 	if err != nil {
 		return err
 	}
+	// check that the given criterion's course belongs to the corresponding benchmark
 	if benchmark.GetCourseID() != query.GetCourseID() {
 		return ErrInvalidCourseRelation
 	}
