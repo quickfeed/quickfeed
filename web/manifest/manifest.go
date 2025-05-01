@@ -52,7 +52,7 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 }
 
 func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
-	m := New(env.DomainWithPort(), envFile, dev)
+	m := New(envFile, dev)
 	server, err := srvFn(m.Handler())
 	if err != nil {
 		return err
@@ -61,7 +61,6 @@ func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error
 }
 
 type Manifest struct {
-	domain  string
 	envFile string
 	handler http.Handler
 	done    chan error
@@ -69,9 +68,8 @@ type Manifest struct {
 	build   func() error
 }
 
-func New(domain, envFile string, dev bool) *Manifest {
+func New(envFile string, dev bool) *Manifest {
 	m := &Manifest{
-		domain:  domain,
 		envFile: envFile,
 		client:  github.NewClient(nil),
 		done:    make(chan error),
@@ -192,7 +190,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 func (m *Manifest) createApp() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if err := form(w, m.domain); err != nil {
+		if err := form(w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			// only signal done on error
@@ -278,7 +276,7 @@ func runNpmCi() bool {
 	return true
 }
 
-func form(w http.ResponseWriter, domain string) error {
+func form(w http.ResponseWriter) error {
 	const tpl = `
 	<html>
 		<form id="create" action="https://github.com/settings/apps/new" method="post">
@@ -330,14 +328,14 @@ func form(w http.ResponseWriter, domain string) error {
 		WebhookURL    string
 		WebhookActive bool
 	}{
-		URL:           auth.GetBaseURL(domain),
+		URL:           auth.GetBaseURL(),
 		Name:          env.AppName(),
-		CallbackURL:   auth.GetCallbackURL(domain),
-		WebhookURL:    auth.GetEventsURL(domain),
+		CallbackURL:   auth.GetCallbackURL(),
+		WebhookURL:    auth.GetEventsURL(),
 		WebhookActive: true,
 	}
 
-	if env.IsLocal(domain) {
+	if env.IsDomainLocal() {
 		// Disable webhook for localhost, or any other non-public domain
 		data.WebhookActive = false
 	}

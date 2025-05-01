@@ -40,7 +40,8 @@ func TestForm(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			if err := form(rr, tt.domain); err != nil {
+			t.Setenv("DOMAIN", tt.domain)
+			if err := form(rr); err != nil {
 				t.Fatalf("form() failed with error: %v", err)
 			}
 			if status := rr.Code; status != tt.status {
@@ -165,8 +166,8 @@ func TestConversion(t *testing.T) {
 	}
 
 	scmClient := scm.NewMockedGithubSCMClient(qtest.Logger(t), scm.WithMockAppConfig(config))
+	t.Setenv("DOMAIN", "localhost")
 	manifest := Manifest{
-		domain:  "localhost",
 		client:  scmClient.Client(),
 		envFile: filepath.Base(tmpEnvFile),
 		done:    make(chan error, 1),
