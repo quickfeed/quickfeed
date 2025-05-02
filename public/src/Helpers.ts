@@ -87,40 +87,55 @@ export interface Deadline {
     time: string,
 }
 
+export enum TableColor {
+    BLUE = "table-primary",
+    GREEN = "table-success",
+    ORANGE = "table-warning",
+    RED = "table-danger",
+}
+
+const getDaysHoursAndMinutes = (deadline: Timestamp) => {
+    const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
+    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
+    const hours = Math.floor(timeToDeadline / (1000 * 3600))
+    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+    return { days, hours, minutes, timeToDeadline }
+}
+
 /**
  * Utility function for LandingPageTable to format the output string and class/css
  * depending on how far into the future the deadline is.
  *
  * layoutTime = "2021-03-20T23:59:00"
  */
-export const deadlineFormatter = (assignment: Assignment, submissionScore: number): Deadline => {
-    const timeToDeadline = (new Date).getTime() - Date.now()
-    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
-    const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+export const deadlineFormatter = (deadline: Timestamp, scoreLimit: number, submissionScore: number): Deadline => {
+    const { days, hours, minutes, timeToDeadline } = getDaysHoursAndMinutes(deadline)
+    const daysText = Math.abs(days) === 1 ? "day" : "days"
 
-    let className = "table-primary"
-    let message = `${days} days to deadline`
+    let className = TableColor.BLUE
+    let message = `${days} ${daysText} to deadline`
 
-    if (submissionScore >= assignment.scoreLimit) {
-        className = "table-success"
-    } else if (timeToDeadline < 0) {
-        const daysSince = -days
-        const hoursSince = -hours
-
-        className = "table-danger"
-        message = `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`
+    if (timeToDeadline < 0) {
+        className = TableColor.RED
+        message = days < 0
+            ? `Expired ${-days} ${daysText} ago`
+            : `Expired ${-hours} hours ago`
     } else if (days === 0) {
-        className = "table-danger"
-        message = `${hours} hours and ${minutes} minutes to deadline!`
+        className = TableColor.RED
+        message = `${hours === 0 ? "" : `${hours} hours and `}${minutes} minutes to deadline!`
     } else if (days < 3) {
-        className = "table-warning"
-        message = `${days} day${days === 1 ? " " : "s"} to deadline!`
+        className = TableColor.ORANGE
+        message = `${days} ${daysText} to deadline!`
     }
+
+    if (submissionScore >= scoreLimit) {
+        className = TableColor.GREEN
+    }
+
     return {
         className,
         message,
-        time: getFormattedTime(assignment.deadline, true),
+        time: getFormattedTime(deadline, true),
     }
 }
 

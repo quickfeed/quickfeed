@@ -28,7 +28,8 @@ const SubmissionsTable = () => {
 
     const table: React.JSX.Element[] = []
     sortedAssignments().forEach(assignment => {
-        if (isExpired(assignment)) {
+        const deadline = assignment.deadline
+        if (!deadline || isExpired(deadline)) {
             return // ignore expired assignments
         }
         const courseID = assignment.CourseID
@@ -43,10 +44,10 @@ const SubmissionsTable = () => {
         const submission = submissions.find(sub => sub.AssignmentID === assignment.ID) ?? create(SubmissionSchema)
         const status = getStatusByUser(submission, state.self.ID)
         if (!isApproved(status)) {
-            const deadline = deadlineFormatter(assignment, submission.score)
+            const deadlineInfo = deadlineFormatter(deadline, assignment.scoreLimit, submission.score)
             const course = state.courses.find(c => c.ID === courseID)
             table.push(
-                <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
+                <tr key={assignment.ID.toString()} className={`clickable-row ${deadlineInfo.className}`}
                     onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
                     <th scope="row">{course?.code}</th>
                     <td>
@@ -55,8 +56,8 @@ const SubmissionsTable = () => {
                             <span className="badge ml-2 float-right"><i className={Icon.GROUP} title="Group Assignment" /></span> : null}
                     </td>
                     <td><ProgressBar courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
-                    <td>{deadline.time}</td>
-                    <td>{deadline.message}</td>
+                    <td>{deadlineInfo.time}</td>
+                    <td>{deadlineInfo.message}</td>
                     <td className={SubmissionStatus[status]}>
                         {assignmentStatusText(assignment, submission, status)}
                     </td>
@@ -65,27 +66,28 @@ const SubmissionsTable = () => {
         }
     })
 
+    if (table.length === 0) {
+        return null
+    }
     return (
-        table.length !== 0 ? (
-            <div>
-                <h2> Assignment Deadlines </h2>
-                <table className="table rounded-lg table-bordered table-hover" id="LandingPageTable">
-                    <thead>
-                        <tr>
-                            <th scope="col">Course</th>
-                            <th scope="col">Assignment</th>
-                            <th scope="col">Progress</th>
-                            <th scope="col">Deadline</th>
-                            <th scope="col">Due in</th>
-                            <th scope="col">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {table}
-                    </tbody>
-                </table>
-            </div>
-        ) : null
+        <div>
+            <h2> Assignment Deadlines </h2>
+            <table className="table rounded-lg table-bordered table-hover" id="LandingPageTable">
+                <thead>
+                    <tr>
+                        <th scope="col">Course</th>
+                        <th scope="col">Assignment</th>
+                        <th scope="col">Progress</th>
+                        <th scope="col">Deadline</th>
+                        <th scope="col">Due in</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table}
+                </tbody>
+            </table>
+        </div>
     )
 }
 
