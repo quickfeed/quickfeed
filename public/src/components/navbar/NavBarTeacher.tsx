@@ -13,16 +13,16 @@ const NavBarTeacher = () => {
     const courseHasManualGrading = state.assignments[state.activeCourse.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
 
     const links: NavLink[] = [
-        { link: { text: "Results", to: `/course/${state.activeCourse}/results` } },
-        { link: { text: "Members", to: `/course/${state.activeCourse}/members` }, icons: [pending, enrolled] },
-        { link: { text: "Groups", to: `/course/${state.activeCourse}/groups` }, icons: [pendingGroups, approvedGroups] },
+        { text: "Results", to: `/course/${state.activeCourse}/results` },
+        { text: "Members", to: `/course/${state.activeCourse}/members`, icons: [pending, enrolled] },
+        { text: "Groups", to: `/course/${state.activeCourse}/groups`, icons: [pendingGroups, approvedGroups] },
     ]
 
     if (courseHasManualGrading) {
-        links.unshift({ link: { text: "Review", to: `/course/${state.activeCourse}/review` } })
+        links.unshift({ text: "Review", to: `/course/${state.activeCourse}/review` })
     }
 
-    const teacherLinks = links.map((link, index) => { return <NavBarLink key={index} link={link.link} icons={link.icons} /> })
+    const teacherLinks = links.map((link) => { return <NavBarLink key={link.text} link={link} /> })
     return <>{teacherLinks}</>
 }
 
