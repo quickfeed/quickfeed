@@ -93,7 +93,7 @@ const Members = () => {
         ]
     })
     return (
-        <div className='container'>
+        <>
             <div className="row no-gutters pb-2">
                 <div className="col-md-6">
                     <Search />
@@ -120,7 +120,7 @@ const Members = () => {
             <div>
                 <DynamicTable header={header} data={members} />
             </div>
-        </div>
+        </>
     )
 }
 
