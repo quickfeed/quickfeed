@@ -5,9 +5,10 @@ The java build uses the gradle build system and contains a build.gradle with the
 It is also modified to use the following folder structure when it builds the project:
 
 ## Folder structure for one assignment
-```
+
+```java
 rootfolder (project folder)
-    src (src root, needs to be named src) 
+    src (src root, needs to be named src)
         package1 (java package)
             javafile.java
             javafile2.java
@@ -25,8 +26,10 @@ rootfolder (project folder)
 ```
 
 ## Folder structure for assignments, tests, and solutions
+
 The assignment repo should look like this
-```
+
+```java
 assignments (repo)
     oving1 (project/assignment)
         src (source)
@@ -45,8 +48,10 @@ assignments (repo)
                 file3.java
                 file4.java
 ```
+
 Tests repository should look like this
-```
+
+```java
 tests (repo)
     oving1 (project/assignment)
         test (tests)
@@ -66,16 +71,17 @@ tests (repo)
                 file4.java
 ```
 
-The solutions repo should have the same folderstructure as assignments
+The solutions repo should have the same folder structure as assignments
 
 ## Shell files
-### runcontainer.sh: `usage: runcontainer.sh username baseurl`
 
-This is the mainfile to run the docker container. username is the name of the user to clone the repository for, and the baseurl is the url to the organisation. 
+### [runcontainer.sh](runcontainer.sh): `usage: runcontainer.sh username baseurl`
 
-### testjava.sh: `usage: testjava.sh username baseurl`
+This is the main file to run the docker container. username is the name of the user to clone the repository for, and the baseurl is the url to the organization.
 
-Is the bootstraping file sent to the container, to clone, create build.gradle files, and invoke junit inside the running container
+### [testjava.sh](testjava.sh): `usage: testjava.sh username baseurl`
+
+Is the bootstrapping file sent to the container, to clone, create build.gradle files, and invoke junit inside the running container
 
 ### build.gradle
 
