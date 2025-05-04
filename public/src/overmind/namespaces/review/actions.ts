@@ -1,6 +1,6 @@
 import { clone, create } from "@bufbuild/protobuf"
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, ReviewSchema, Submission, SubmissionSchema } from '../../../../proto/qf/types_pb'
+import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, ReviewSchema, Submission, Submission_Status, SubmissionSchema } from '../../../../proto/qf/types_pb'
 import { Color, isAuthor } from '../../../Helpers'
 import { SubmissionOwner } from '../../state'
 
@@ -129,10 +129,9 @@ export const setAssignmentID = ({ state }: Context, aid: bigint): void => {
 export const setMinimumScore = ({ state }: Context, minimumScore: number): void => {
     state.review.minimumScore = minimumScore
 }
-
 export const releaseAll = async ({ state, actions, effects }: Context, { release, approve }: { release: boolean, approve: boolean }): Promise<void> => {
     const assignment = state.assignments[state.activeCourse.toString()].find(a => a.ID === state.review.assignmentID)
-
+    const status = approve ? Submission_Status.APPROVED : Submission_Status.NONE
     const releaseString = () => {
         if (release && approve) return "release and approve"
         if (release) return "release"
@@ -150,9 +149,9 @@ export const releaseAll = async ({ state, actions, effects }: Context, { release
     const response = await effects.api.client.updateSubmissions({
         courseID: state.activeCourse,
         assignmentID: state.review.assignmentID,
-        scoreLimit: state.review.minimumScore,
+        score: state.review.minimumScore,
         release,
-        approve,
+        status,
     })
     if (response.error) {
         return
@@ -171,7 +170,7 @@ export const release = async ({ state, effects }: Context, { submission, owner }
         courseID: state.activeCourse,
         submissionID: submission.ID,
         grades: submission.Grades,
-        released: clonedSubmission.released,
+        release: clonedSubmission.released,
         score: submission.score,
     })
     if (response.error) {
