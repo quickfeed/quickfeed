@@ -152,7 +152,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 		if HasPrefix(line) {
 			sc, err := parse(line, secret)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
+				errs = append(errs, fmt.Errorf("failed on line '%s': %w", line, err))
 				continue
 			}
 			results.addScore(sc)

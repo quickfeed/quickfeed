@@ -67,7 +67,7 @@ func update(filename, content string, env map[string]string) error {
 	updated := make(map[string]bool)
 
 	// Scan existing file's content and update existing environment variables.
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(content), "\n") {
 		key, val, found := strings.Cut(line, "=")
 		if !found {
 			// Leave non-environment and blank lines unchanged.

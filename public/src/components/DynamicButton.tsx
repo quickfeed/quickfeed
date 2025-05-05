@@ -5,7 +5,7 @@ import { ButtonType } from "./admin/Button"
 
 export type DynamicButtonProps = {
     text: string,
-    onClick: () => Promise<unknown>,
+    onClick: () => Promise<void>,
     color: Color,
     type: ButtonType,
     className?: string,

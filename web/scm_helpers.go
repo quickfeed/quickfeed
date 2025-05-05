@@ -87,19 +87,18 @@ func ctxErr(ctx context.Context) error {
 	return nil
 }
 
-// Returns true and formatted error if error type is SCM error
-// designed to be shown to user
-func parseSCMError(err error) (bool, error) {
+// userSCMError returns a user-facing error if the error is an SCM error.
+func userSCMError(err error) error {
 	var scmErr *scm.SCMError
 	if errors.As(err, &scmErr) {
 		userErr := scmErr.UserError()
 		if errors.Is(err, scm.ErrAlreadyExists) {
-			return true, connect.NewError(connect.CodeAlreadyExists, userErr)
+			return connect.NewError(connect.CodeAlreadyExists, userErr)
 		}
 		if errors.Is(err, scm.ErrNotOwner) {
-			return true, connect.NewError(connect.CodePermissionDenied, userErr)
+			return connect.NewError(connect.CodePermissionDenied, userErr)
 		}
-		return true, connect.NewError(connect.CodeNotFound, userErr)
+		return connect.NewError(connect.CodeNotFound, userErr)
 	}
-	return false, nil
+	return nil
 }

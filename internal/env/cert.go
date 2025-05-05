@@ -109,3 +109,7 @@ func IsLocal(domain string) bool {
 	}
 	return true
 }
+
+func IsDomainLocal() bool {
+	return IsLocal(Domain())
+}

@@ -57,6 +57,7 @@ proto-swift:
 test:
 	@go clean -testcache
 	@go test ./...
+	@cd public && npm run test
 
 qcm:
 	@cd cmd/qcm; go install

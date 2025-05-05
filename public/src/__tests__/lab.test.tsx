@@ -16,7 +16,7 @@ describe("Lab view correctly re-renders on state change", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
-        getAssignments: mock("getAssignments", async (request) => {
+        getAssignments: mock("getAssignments", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
                 return { message: create(AssignmentsSchema), error: new ConnectError("course not found") }
@@ -24,7 +24,7 @@ describe("Lab view correctly re-renders on state change", () => {
             const assignments = MockData.mockedAssignments().filter(a => a.CourseID === request.courseID)
             return { message: create(AssignmentsSchema, { assignments }), error: null }
         }),
-        getSubmissions: mock("getSubmissions", async (request) => {
+        getSubmissions: mock("getSubmissions", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.CourseID)
             if (!course) {
                 return { message: create(SubmissionsSchema), error: new ConnectError("course not found") }
@@ -73,26 +73,26 @@ describe("Lab view correctly re-renders on state change", () => {
 
     test("No assignment", () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
     })
 
     test("No submission", async () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "Select a submission from the results table"
-        assertContent(KnownMessage.NoSubmission)
+        assertContent(KnownMessage.StudentNoSubmission)
     })
 
     test("Submission found", async () => {
         // TODO:  The previous tests are covered here, we could remove them
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "Select a submission from the results table"
-        assertContent(KnownMessage.NoSubmission)
+        assertContent(KnownMessage.StudentNoSubmission)
 
         // fetch submissions for the user
         await act(async () => {
@@ -106,7 +106,7 @@ describe("Lab view correctly re-renders on state change", () => {
         // we specifically check for the build log
         assertContent("Build log for submission 1")
         // trigger a receive event (this is what happens when a submission is received via streaming)
-        await act(async () => {
+        act(() => {
             const modifiedSubmission = clone(SubmissionSchema, submissions[0])
             if (modifiedSubmission.BuildInfo) {
                 modifiedSubmission.BuildInfo.BuildLog = "This is a build log"

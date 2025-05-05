@@ -22,12 +22,11 @@ func init() {
 // This function will panic if called when the working directory
 // is not within the quickfeed repository. In this case, the
 // environment variable $QUICKFEED must be set manually.
-func Root() string {
-	if quickfeedRoot != "" {
-		return quickfeedRoot
+func Root(paths ...string) string {
+	if quickfeedRoot == "" {
+		setRoot()
 	}
-	setRoot()
-	return quickfeedRoot
+	return filepath.Join(quickfeedRoot, filepath.Join(paths...))
 }
 
 func setRoot() {
@@ -70,7 +69,7 @@ func checkModulePath(root string) error {
 	modFile := filepath.Join(root, "go.mod")
 	data, err := os.ReadFile(modFile)
 	if err != nil {
-		return fmt.Errorf("failed to read %s: %v", modFile, err)
+		return fmt.Errorf("failed to read %s: %w", modFile, err)
 	}
 	if !bytes.Contains(data, []byte("module "+quickfeedModulePath)) {
 		return fmt.Errorf("invalid go.mod file: %s", modFile)
@@ -80,25 +79,25 @@ func checkModulePath(root string) error {
 
 // RootEnv returns the path $QUICKFEED/{envFile}.
 func RootEnv(envFile string) string {
-	return filepath.Join(Root(), envFile)
+	return Root(envFile)
 }
 
 // PublicEnv returns the path $QUICKFEED/public/{envFile}.
 func PublicEnv(envFile string) string {
-	return filepath.Join(Root(), "public", envFile)
+	return Root("public", envFile)
 }
 
 // PublicDir returns the path to the public directory.
 func PublicDir() string {
-	return filepath.Join(Root(), "public")
+	return Root("public")
 }
 
 // DatabasePath returns the path to the database file.
 func DatabasePath() string {
-	return filepath.Join(Root(), "qf.db")
+	return Root("qf.db")
 }
 
 // TestdataPath returns the path to the testdata/courses directory.
 func TestdataPath() string {
-	return filepath.Join(Root(), "testdata", "courses")
+	return Root("testdata", "courses")
 }

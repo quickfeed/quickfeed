@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
@@ -19,6 +19,7 @@ interface ReviewInfoProps {
 const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
     const actions = useActions()
+    const handleRelease = useCallback(() => actions.review.release({ submission, owner: state.submissionOwner }), [actions, submission, state.submissionOwner])
     const ready = review.ready
 
     const markReadyButton = <MarkReadyButton review={review} />
@@ -37,16 +38,22 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
         )
     }
 
-    const setReadyOrGradeButton = ready ? <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} /> : markReadyButton
+    const setReadyOrGradeButton = ready
+        ? <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
+        : markReadyButton
+    const buttonText = submission.released ? "Released" : "Release"
+    const buttonColor = submission.released ? Color.WHITE : Color.YELLOW
     const releaseButton = (
         <DynamicButton
-            text={submission.released ? "Released" : "Release"}
-            color={submission.released ? Color.WHITE : Color.YELLOW}
+            text={buttonText}
+            color={buttonColor}
             type={ButtonType.BUTTON}
             className={`float-right ${!state.isCourseCreator && "disabled"} `}
-            onClick={() => actions.review.release({ submission, owner: state.submissionOwner })}
+            onClick={handleRelease}
         />
     )
+    const submissionStatus = submission ? SubmissionStatus[status] : NoSubmission
+    const reviewStatus = ready ? "Ready" : "In progress"
     return (
         <ul className="list-group">
             <li className="list-group-item active">
@@ -62,11 +69,11 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[status] : NoSubmission}
+                {submissionStatus}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>
-                <span>{ready ? "Ready" : "In progress"}</span>
+                <span>{reviewStatus}</span>
                 {ready && markReadyButton}
             </li>
             <li className="list-group-item">
