@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -34,8 +35,12 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 		clients:   make(map[chan string]bool),
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	if err := ui.Watch(); err != nil {
-		return nil, fmt.Errorf("failed to start watch process: %w", err)
+	// Only start the ui watcher if the folder is "dist"
+	// Prevents the watcher from running in the test
+	if filepath.Base(path) == "dist" {
+		if err := ui.Watch(); err != nil {
+			return nil, fmt.Errorf("failed to start watch process: %w", err)
+		}
 	}
 	return watcher, nil
 }
