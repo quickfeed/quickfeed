@@ -35,7 +35,7 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 		clients:   make(map[chan string]bool),
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	// Only start the ui watcher if the path is "dist"
+	// Only start the ui watcher if the folder is "dist"
 	// Prevents the watcher from running in the test
 	if filepath.Base(path) == "dist" {
 		if err := ui.Watch(); err != nil {
