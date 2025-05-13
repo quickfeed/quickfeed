@@ -19,7 +19,9 @@ export interface Notification {
 const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification, to?: string, onclick?: () => void }) => {
     const navigate = useNavigate()
 
-    const notification = props.notification ? <i className={`badge badge-${props.notification.color} float-right`}>{props.notification.text}</i> : null
+    const notification = props.notification
+        ? <i className={`badge badge-${props.notification.color} float-right`}> {props.notification.text} </i>
+        : null
 
     // TODO: Maybe support both onclick and to, rather than having to choose one. Not sure where it would be used though.
     /* Runs the provided function, or redirect, on button click. If both 'to' and 'onclick' are provided, 'onclick' takes precedence */

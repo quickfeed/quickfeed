@@ -10,11 +10,12 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-var public = func(s string) string {
-	return filepath.Join(env.PublicDir(), s)
-}
-
-var distDir = public("dist")
+var (
+	public = func(s string) string {
+		return filepath.Join(env.PublicDir(), s)
+	}
+	distDir = public("dist")
+)
 
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
@@ -137,12 +138,14 @@ func createHtml(outputFiles []api.OutputFile) error {
 // getOptions returns the build options for esbuild
 // used to perform dynamic updates depending on the dev flag and outputDir
 func getOptions(outputDir string, dev bool) api.BuildOptions {
+	// its important to call env.GetAppURL after the env variable is loaded
+	buildOptions.Define = map[string]string{
+		"process.env.QUICKFEED_APP_URL": fmt.Sprintf(`"%s"`, env.GetAppURL()),
+	}
 	if dev {
-		buildOptions.Define = map[string]string{
-			// Esbuild defaults to production when minifying files.
-			// We must explicitly set it to "development" for dev builds.
-			"process.env.NODE_ENV": `"development"`,
-		}
+		// Esbuild defaults to production when minifying files.
+		// We must explicitly set it to "development" for dev builds.
+		buildOptions.Define["process.env.NODE_ENV"] = `"development"`
 		buildOptions.LogLevel = api.LogLevelDebug
 	}
 	// enabling custom outputDir allow for testing without overwriting current build
@@ -152,7 +155,8 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 	return buildOptions
 }
 
-// Build builds the UI with esbuild and outputs to the public/dist folder
+// Build builds the UI with esbuild. If outputDir is an empty string, it defaults to public/dist.
+// Test cases should pass a non-empty outputDir to avoid overwriting the current build.
 func Build(outputDir string, dev bool) error {
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {

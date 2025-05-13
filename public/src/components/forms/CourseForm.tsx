@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { useActions } from "../../overmind"
 import { Course, CourseSchema } from "../../../proto/qf/types_pb"
 import FormInput from "./FormInput"
@@ -20,7 +20,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(clone(CourseSchema, courseToEdit))
 
-    const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
+    const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
         switch (name) {
             case "courseName":
@@ -40,7 +40,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
                 break
         }
         setCourse(course)
-    }
+    }, [course])
 
     // Creates a new course if no course is being edited, otherwise updates the existing course
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {

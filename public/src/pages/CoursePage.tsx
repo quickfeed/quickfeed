@@ -1,9 +1,10 @@
 import React, { useEffect } from "react"
 import { useNavigate } from "react-router"
-import { getCourseID, isEnrolled, isTeacher } from "../Helpers"
+import { isEnrolled, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
+import { useCourseID } from "../hooks/useCourseID"
 
 
 /** The CoursePage component renders a Student or Teacher view
@@ -11,7 +12,7 @@ import TeacherPage from "./TeacherPage"
 const CoursePage = () => {
     const state = useAppState()
     const actions = useActions()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const navigate = useNavigate()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 

@@ -1,6 +1,5 @@
 import React from "react"
 import { Route, Routes } from "react-router"
-import { getCourseID } from "../Helpers"
 import CourseLabs from "../components/student/CourseLabs"
 import CourseLinks from "../components/CourseLinks"
 import GroupPage from "./GroupPage"
@@ -8,10 +7,11 @@ import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
 import Alerts from "../components/alerts/Alerts"
 import { useLocation } from "react-router"
+import { useCourseID } from "../hooks/useCourseID"
 
 
 const StudentPage = () => {
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const location = useLocation()
     const root = `/course/${courseID}`
 

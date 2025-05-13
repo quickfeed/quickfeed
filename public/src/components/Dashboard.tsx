@@ -17,10 +17,10 @@ const Dashboard = () => {
     }
 
     return (
-        <div className='box mt-5'>
+        <div className="mt-5">
             <Alerts />
-            <SubmissionsTable />
             <Courses home />
+            <SubmissionsTable />
         </div>
     )
 }

@@ -12,13 +12,17 @@ import (
 
 const maxContainers = 10
 
-// rebuildSubmission rebuilds the given assignment and submission.
-func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) error {
+// internalRebuildSubmission rebuilds the given assignment and submission.
+func (s *QuickFeedService) internalRebuildSubmission(request *qf.RebuildRequest) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return err
 	}
-	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.GetAssignmentID()})
+	assignment, err := s.db.GetAssignment(&qf.Assignment{ID: request.GetAssignmentID()})
+	if err != nil {
+		return err
+	}
+	course, err := s.db.GetCourse(assignment.GetCourseID())
 	if err != nil {
 		return err
 	}
@@ -69,10 +73,7 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) error {
 	return nil
 }
 
-func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error {
-	if _, err := s.db.GetAssignment(&qf.Assignment{ID: request.GetAssignmentID()}); err != nil {
-		return err
-	}
+func (s *QuickFeedService) internalRebuildAllSubmissions(request *qf.RebuildRequest) error {
 	submissions, err := s.db.GetSubmissions(&qf.Submission{AssignmentID: request.GetAssignmentID()})
 	if err != nil {
 		return err
@@ -93,7 +94,7 @@ func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error 
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {
 			sem <- struct{}{} // acquire semaphore
-			err := s.rebuildSubmission(rebuildReq)
+			err := s.internalRebuildSubmission(rebuildReq)
 			if err != nil {
 				atomic.AddInt32(&errCnt, 1)
 				s.logger.Errorf("Failed to rebuild submission %d: %v\n", rebuildReq.GetSubmissionID(), err)
@@ -106,8 +107,7 @@ func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error 
 	wg.Wait()
 	close(sem)
 
-	s.logger.Debugf("Rebuilt %d submissions in %v (failed: %d)",
-		len(submissions), time.Since(start), errCnt)
+	s.logger.Debugf("Rebuilt %d submissions in %v (failed: %d)", len(submissions), time.Since(start), errCnt)
 	return nil
 }
 
