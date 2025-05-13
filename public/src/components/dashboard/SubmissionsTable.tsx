@@ -1,5 +1,5 @@
 import React from "react"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { assignmentStatusText, getFormattedTime, getStatusByUser, Icon, isApproved, SubmissionStatus, timeFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, SubmissionSchema } from "../../../proto/qf/types_pb"
@@ -11,7 +11,7 @@ import { timestampDate } from "@bufbuild/protobuf/wkt"
 /* SubmissionsTable is a component that displays a table of assignments and their submissions for all courses. */
 const SubmissionsTable = () => {
     const state = useAppState()
-    const history = useHistory()
+    const navigate = useNavigate()
 
     const sortedAssignments = () => {
         const assignments: Assignment[] = []
@@ -49,7 +49,7 @@ const SubmissionsTable = () => {
                 const course = state.courses.find(c => c.ID === courseID)
                 table.push(
                     <tr key={assignment.ID.toString()} className={`clickable-row ${deadline.className}`}
-                        onClick={() => history.push(`/course/${courseID}/lab/${assignment.ID}`)}>
+                        onClick={() => navigate(`/course/${courseID}/lab/${assignment.ID}`)}>
                         <th scope="row">{course?.code}</th>
                         <td>
                             {assignment.name}

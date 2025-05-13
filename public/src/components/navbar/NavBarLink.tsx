@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useHistory } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 export interface NavLink {
     link: { text: string, to: string }
@@ -8,7 +8,7 @@ export interface NavLink {
 }
 
 const NavBarLink = (props: NavLink) => {
-    const history = useHistory()
+    const navigate = useNavigate()
 
     const icons: React.JSX.Element[] = []
     if (props.icons) {
@@ -23,7 +23,7 @@ const NavBarLink = (props: NavLink) => {
         })
     }
     return (
-        <li onClick={() => history.push(props.link.to)}>
+        <li onClick={() => navigate(props.link.to)}>
             <div className="col" id="title">
                 <Link to={props.link.to}>{props.link.text}</Link>
             </div>

@@ -1,15 +1,16 @@
 import React from "react"
-import { useHistory } from "react-router"
+import { useLocation, useNavigate } from "react-router"
 
 
 const RedirectButton = ({ to }: { to: string }) => {
-    const history = useHistory()
+    const navigate = useNavigate()
+    const location = useLocation()
 
     // The button is hidden if user is currently at the location the button redirects to
-    const isHidden = history.location.pathname == to ? true : false
+    const isHidden = location.pathname == to ? true : false
 
     return (
-        <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={isHidden}>
+        <div className={"btn btn-dark redirectButton"} onClick={() => navigate(to)} hidden={isHidden}>
             <i className="fa fa-arrow-left" />
         </div>
     )

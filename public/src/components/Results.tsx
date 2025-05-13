@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react"
-import { useHistory, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor, Icon } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -17,7 +17,7 @@ const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const history = useHistory()
+    const navigate = useNavigate()
     const location = useLocation()
 
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
@@ -55,9 +55,9 @@ const Results = ({ review }: { review: boolean }) => {
 
     const handleLabClick = useCallback((labId: bigint) => {
         // Update the URL with the selected lab
-        history.replace({
-            pathname: location.pathname,
-            search: `?id=${labId}`
+        navigate(location.pathname, {
+            state: { id: labId },
+            replace: true,
         })
     }, [history])
 

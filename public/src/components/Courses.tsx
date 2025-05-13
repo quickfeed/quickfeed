@@ -3,7 +3,7 @@ import { useAppState } from "../overmind"
 import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { Color, isVisible } from "../Helpers"
 import { create } from "@bufbuild/protobuf"
 
@@ -16,7 +16,7 @@ interface overview {
 /** This component lists the user's courses and courses available for enrollment. */
 const Courses = (overview: overview) => {
     const state = useAppState()
-    const history = useHistory()
+    const navigate = useNavigate()
 
     // Notify user if there are no courses (should only ever happen with a fresh database on backend)
     // Display shortcut buttons for admins to create new course or managing (promoting) users
@@ -31,13 +31,13 @@ const Courses = (overview: overview) => {
                             color={Color.GREEN}
                             type={ButtonType.BUTTON}
                             className="mr-3"
-                            onClick={() => history.push("/admin/create")}
+                            onClick={() => navigate("/admin/create")}
                         />
                         <Button
                             text="Manage users"
                             color={Color.BLUE}
                             type={ButtonType.BUTTON}
-                            onClick={() => history.push("/admin/manage")}
+                            onClick={() => navigate("/admin/manage")}
                         />
                     </div>
                     : null}

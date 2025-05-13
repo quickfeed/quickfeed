@@ -1,5 +1,5 @@
 import React from 'react'
-import { useHistory } from 'react-router'
+import { useNavigate } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
 import { Course, Enrollment } from '../../proto/qf/types_pb'
@@ -20,7 +20,7 @@ const CardColor = [
 
 const CourseCard = ({ course, enrollment }: CardProps) => {
     const actions = useActions()
-    const history = useHistory()
+    const navigate = useNavigate()
     const status = enrollment.status
 
     const CourseEnrollmentButton = () => {
@@ -29,7 +29,7 @@ const CourseCard = ({ course, enrollment }: CardProps) => {
         } else if (hasPending(status)) {
             return <div className="btn btn-secondary course-button disabled">Pending</div>
         }
-        return <div className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</div>
+        return <div className="btn btn-primary course-button" onClick={() => navigate(`/course/${enrollment.courseID}`)}>Go to Course</div>
     }
 
     const CourseEnrollmentStatus = () => {
