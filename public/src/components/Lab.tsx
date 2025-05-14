@@ -63,7 +63,10 @@ const Lab = () => {
             let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
-                buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>)
+                // using the index as the key is not ideal, but in this case it is acceptable
+                // because the log lines are not expected to change unless a new submission is made
+                // in which case the component will be re-rendered anyways
+                buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>) // skipcq: JS-0437
             }
 
             return (
