@@ -63,7 +63,7 @@ const Lab = () => {
             let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
-                buildLog = buildLogRaw.split("\n").map((logLine: string) => <span key={logLine}>{logLine}<br /></span>)
+                buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>)
             }
 
             return (
