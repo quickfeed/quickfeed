@@ -1,7 +1,6 @@
 import React from "react"
 import { AssignmentSchema, AssignmentsSchema, SubmissionSchema, SubmissionsSchema, UserSchema } from "../../proto/qf/types_pb"
-import { createMemoryHistory } from "history"
-import { Route, Router } from "react-router-dom"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { Provider } from "overmind-react"
 import { act, render, screen } from "@testing-library/react"
 import Lab from "../components/Lab"
@@ -34,7 +33,6 @@ describe("Lab view correctly re-renders on state change", () => {
         })
 
     }
-    const history = createMemoryHistory()
     let mockedOvermind = initializeOvermind({}, api)
 
     beforeEach(() => {
@@ -48,14 +46,13 @@ describe("Lab view correctly re-renders on state change", () => {
             courses: MockData.mockedCourses(),
             repositories: MockData.mockedRepositories()
         }, api)
-        history.push("/course/1/lab/1")
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history}>
-                    <Route path="/course/:id/lab/:lab">
-                        <Lab />
-                    </Route>
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/lab/1"]}>
+                    <Routes>
+                        <Route path="/course/:id/lab/:lab" element={<Lab />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
     })

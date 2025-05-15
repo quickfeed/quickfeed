@@ -3,8 +3,7 @@ import { Provider } from "overmind-react"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import Profile from "../components/profile/Profile"
-import { Router } from "react-router-dom"
-import { createMemoryHistory } from "history"
+import { MemoryRouter } from "react-router-dom"
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import { create } from "@bufbuild/protobuf"
@@ -19,12 +18,11 @@ describe("Profile", () => {
                 AvatarURL: "https://example.com/avatar.png",
             })
         })
-        const history = createMemoryHistory()
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history}>
+                <MemoryRouter>
                     <Profile />
-                </Router>
+                </MemoryRouter>
             </Provider>
         )
         const loggedIn = mockedOvermind.state.isLoggedIn

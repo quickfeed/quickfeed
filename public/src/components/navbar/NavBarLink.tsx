@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useHistory } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 export interface NavLink {
     text: string
@@ -9,7 +9,7 @@ export interface NavLink {
 }
 
 const NavBarLink = ({ link: { text, to, icons, jsx } }: { link: NavLink }) => {
-    const history = useHistory()
+    const navigate = useNavigate()
 
     const iconElements: React.JSX.Element[] = []
     icons?.forEach((icon) => {
@@ -23,7 +23,7 @@ const NavBarLink = ({ link: { text, to, icons, jsx } }: { link: NavLink }) => {
     })
 
     return (
-        <li onClick={() => history.push(to)} role="button" aria-hidden="true"> {/* skipcq: JS-0761 */}
+        <li onClick={() => navigate(to)} role="button" aria-hidden="true">
             <div className="col" id="title">
                 <Link to={to}>{text}</Link>
             </div>
