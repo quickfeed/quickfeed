@@ -16,13 +16,14 @@ const Profile = () => {
     const [editing, setEditing] = useState(false)
 
     // Redirect from "/" to "/profile" when user object is invalid
-    if (!state.isValid && location.pathname === "/") {
-        navigate("/profile")
-    }
+    useEffect(() => {
+        if (!state.isLoggedIn) {
+            navigate("/")
+        } else if (!state.isValid && location.pathname === "/") {
+            navigate("/profile")
+        }
+    }, [state.isLoggedIn, state.isValid, location.pathname, navigate])
 
-    if (!state.isLoggedIn) {
-        navigate("/")
-    }
     // Default to edit mode if user object does not contain valid information
     useEffect(() => {
         if (!state.isValid) {
