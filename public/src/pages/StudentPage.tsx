@@ -1,12 +1,11 @@
 import React from "react"
-import { Route, Routes } from "react-router"
+import { Route, Routes, useLocation } from "react-router"
 import CourseLabs from "../components/student/CourseLabs"
 import CourseLinks from "../components/CourseLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
 import Alerts from "../components/alerts/Alerts"
-import { useLocation } from "react-router"
 import { useCourseID } from "../hooks/useCourseID"
 
 

@@ -33,7 +33,7 @@ const ToggleSwitch = () => {
     const switchView = () => {
         actions.changeView().then(() => {
             updateStatus(isTeacher())
-            navigate("/course/" + activeCourse)
+            navigate(`/course/${activeCourse}/`)
         })
     }
 

@@ -50,7 +50,7 @@ const TeacherPage = () => {
         <div className="box">
             <RedirectButton to={root} />
             <Alerts />
-            <div className="row" hidden={location.pathname != root}>
+            <div className="row" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
                 <Card {...groups} />
@@ -59,7 +59,7 @@ const TeacherPage = () => {
                 <Card {...updateAssignments} />
             </div>
             <Routes>
-                <Route path={`/groups`} element={<GroupPage />} />
+                <Route path={"/groups"} element={<GroupPage />} />
                 <Route path={"/members"} element={<Members />} />
                 <Route path={"/review"} element={<ReviewResults />} />
                 <Route path={"/results"} element={<RegularResults />} />

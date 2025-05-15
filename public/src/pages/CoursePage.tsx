@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { useNavigate } from "react-router"
+import { Navigate } from "react-router"
 import { isEnrolled, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
@@ -13,7 +13,6 @@ const CoursePage = () => {
     const state = useAppState()
     const actions = useActions()
     const courseID = useCourseID()
-    const navigate = useNavigate()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 
     useEffect(() => {
@@ -30,7 +29,7 @@ const CoursePage = () => {
         }
         return <StudentPage />
     } else {
-        navigate("/")
+        return <Navigate to="/" replace />
     }
 }
 
