@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo } from "react"
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
+import { useSearchParams } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getSubmissionCellColor, Icon } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -18,15 +18,24 @@ const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
     const courseID = useCourseID()
-    const navigate = useNavigate()
-    const location = useLocation()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
     const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
-        return state.assignments[courseID.toString()]?.filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID)
+        return state.assignments[courseID.toString()]?.filter(
+            a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID
+        )
     }, [state.assignments, courseID, state.review.assignmentID])
+    const loaded = state.loadedCourse[courseID.toString()]
 
+    // Always keep latest state/actions/searchParams in a ref for effects
+    const latest = useRef({ state, actions, searchParams })
+    useEffect(() => {
+        latest.current = { state, actions, searchParams }
+    }, [state, actions, searchParams])
+
+    // Load the course submissions when the component mounts
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
             actions.loadCourseSubmissions(courseID)
@@ -37,22 +46,27 @@ const Results = ({ review }: { review: boolean }) => {
             actions.setActiveEnrollment(null)
             actions.setSelectedSubmission({ submission: null })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // Select submission from URL if not already selected, after loading is done
     useEffect(() => {
-        if (!state.selectedSubmission) {
-            // If no submission is selected, check if there is a selected lab in the URL
-            // and select it if it exists
-            const selectedLab = new URLSearchParams(location.search).get('id')
-            if (selectedLab) {
-                const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
-                if (submission) {
-                    actions.setSelectedSubmission({ submission })
-                    actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
-                }
+        const { state, actions, searchParams } = latest.current
+        if (state.selectedSubmission) {
+            // do nothing
+            return
+        }
+        // If no submission is selected, check if there is a selected lab in the URL
+        // and select it if it exists
+        const selectedLab = searchParams.get("id")
+        if (selectedLab) {
+            const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
+            if (submission) {
+                actions.setSelectedSubmission({ submission })
+                actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
             }
         }
-    }, [])
+    }, [loaded])
 
     const groupView = state.groupView
     const handleSetGroupView = useCallback(() => {
@@ -67,11 +81,8 @@ const Results = ({ review }: { review: boolean }) => {
         }
         actions.setSubmissionOwner(owner)
         // Update the URL with the selected lab
-        navigate(location.pathname, {
-            state: { id: submission.ID },
-            replace: true,
-        })
-    }, [actions, history, location])
+        setSearchParams({ id: submission.ID.toString() })
+    }, [actions, setSearchParams])
 
     const handleReviewCellClick = useCallback((submission: Submission, owner: Enrollment | Group) => () => {
         handleLabClick(submission, owner)
