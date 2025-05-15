@@ -220,8 +220,8 @@ func TestSetGradesAndRelease(t *testing.T) {
 		updateRequest *qf.UpdateSubmissionRequest
 		want          *qf.Submission
 	}{
-		{name: "Update grades, released and score", submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}}}, updateRequest: &qf.UpdateSubmissionRequest{Score: 1, Released: true, Grades: approvedGrade}, want: &qf.Submission{Score: 1, Released: true, Grades: approvedGrade}},
-		{name: "Update release. No grades and score is zero", submission: &qf.Submission{}, updateRequest: &qf.UpdateSubmissionRequest{Score: 0, Released: true}, want: &qf.Submission{Score: 0, Released: true}},
+		{name: "Update grades, released and score", submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}}}, updateRequest: &qf.UpdateSubmissionRequest{Score: 1, Release: true, Grades: approvedGrade}, want: &qf.Submission{Score: 1, Released: true, Grades: approvedGrade}},
+		{name: "Update release. No grades and score is zero", submission: &qf.Submission{}, updateRequest: &qf.UpdateSubmissionRequest{Score: 0, Release: true}, want: &qf.Submission{Score: 0, Released: true}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
