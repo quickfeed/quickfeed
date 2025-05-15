@@ -8,10 +8,6 @@ import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
 
-interface MatchProps {
-    id: string
-    lab: string
-}
 
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
  *  If the user is a teacher, Lab displays the currently selected submission.
@@ -19,8 +15,8 @@ interface MatchProps {
 const Lab = () => {
     const state = useAppState()
     const actions = useActions()
-    const { id, lab } = useParams<MatchProps>()
-    const courseID = id
+    const { id, lab } = useParams()
+    const courseID = id ?? ""
     const assignmentID = lab ? BigInt(lab) : BigInt(-1)
     const location = useLocation()
     const isGroupLab = location.pathname.includes("group-lab")
