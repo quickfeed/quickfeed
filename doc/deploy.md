@@ -1,8 +1,6 @@
 # Quickfeed Deployments
 
 - [Quickfeed Deployments](#quickfeed-deployments)
-  - [Technology Stack](#technology-stack)
-  - [Recommended VSCode Plugins](#recommended-vscode-plugins)
   - [Setup](#setup)
     - [Install Tools for Deployment](#install-tools-for-deployment)
     - [Install Tools for Development](#install-tools-for-development)
@@ -20,34 +18,13 @@
   - [Authentication Secret Handling in QuickFeed](#authentication-secret-handling-in-quickfeed)
   - [Troubleshooting](#troubleshooting)
 
-## Technology Stack
-
-QuickFeed depends on these technologies.
-
-- [Go](https://golang.org/doc/code.html)
-- [TypeScript](https://www.typescriptlang.org/)
-- Buf's [connect-go](https://buf.build/blog/connect-a-better-grpc) for gRPC
-- Buf's [connect-web](https://buf.build/blog/connect-web-protobuf-grpc-in-the-browser) replaces gRPC-Web
-- [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/proto3)
-
-## Recommended VSCode Plugins
-
-- Go
-- vscode-proto3
-- Code Spell Checker
-- ESLint
-- markdownlint
-- Better Comments
-- GitLens
-- Git History Diff
-- SQLite
-
 ## Setup
 
 ### Install Tools for Deployment
 
-This assumes you have homebrew installed.
-For systems without homebrew, the make target should list well-known packages available on most Unix distributions.
+This assumes you have [homebrew](https://brew.sh/?gad_source=1&gclid=Cj0KCQiA-aK8BhCDARIsAL_-H9nbD3jqSHwIYOpn3hzxCU-pmItDSXIroK-fhUm7KYkxUNdJwzbrElkaAglyEALw_wcB&gclsrc=aw.ds) and [make](https://www.gnu.org/software/make/) installed.
+
+**For systems without homebrew**, the make target should list well-known packages available on most Unix distributions. View [makefile](../Makefile)
 
 ```sh
 % make brew
