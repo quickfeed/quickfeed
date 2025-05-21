@@ -64,6 +64,14 @@ const Results = ({ review }: { review: boolean }) => {
             if (submission) {
                 actions.setSelectedSubmission({ submission })
                 actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+                if (submission.reviews.length > 0) {
+                    // If the submission has reviews we need to set the selected review to -1
+                    // to show the review form
+                    actions.review.setSelectedReview(-1)
+                } else {
+                    // Fetch full submission data since the submission data by default does not include the build log
+                    actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
+                }
             }
         }
     }, [loaded])
