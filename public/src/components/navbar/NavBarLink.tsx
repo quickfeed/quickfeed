@@ -23,14 +23,21 @@ const NavBarLink = ({ link: { text, to, icons, jsx } }: { link: NavLink }) => {
     })
 
     return (
-        <li onClick={() => navigate(to)} role="button" aria-hidden="true">
-            <div className="col" id="title">
-                <Link to={to}>{text}</Link>
-            </div>
-            <div className="col">
-                {iconElements}
-                {jsx ?? null}
-            </div>
+        <li>
+            <button
+                type="button"
+                onClick={() => navigate(to)}
+                className="navbar-link-btn"
+                style={{ background: "none", border: "none", padding: 0, width: "100%" }}
+            >
+                <div className="col" id="title">
+                    <Link to={to}>{text}</Link>
+                </div>
+                <div className="col">
+                    {iconElements}
+                    {jsx ?? null}
+                </div>
+            </button>
         </li>
     )
 }
