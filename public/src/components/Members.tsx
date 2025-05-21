@@ -52,11 +52,12 @@ const Members = () => {
         const editAndTeacher = edit && isTeacher(enrollment)
 
         const actionColor = editAndTeacher ? Color.YELLOW : Color.BLUE
-        const currentRole = editAndTeacher ? Enrollment_UserStatus.TEACHER : Enrollment_UserStatus.STUDENT
         const userRoleAction = editAndTeacher ? "Demote" : "Promote"
 
         const buttonColor = isPending(enrollment) ? Color.GREEN : actionColor
-        const role = isPending(enrollment) ? Enrollment_UserStatus.STUDENT : currentRole
+        const role = isPending(enrollment) || editAndTeacher
+            ? Enrollment_UserStatus.STUDENT
+            : Enrollment_UserStatus.TEACHER
         const enrollmentButtonText = isPending(enrollment) ? "Accept" : userRoleAction
 
         const buttons = (
