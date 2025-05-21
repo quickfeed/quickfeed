@@ -37,6 +37,9 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	assets := http.FileServer(http.Dir(public + "/assets")) // skipcq: GO-S1034
 	dist := http.FileServer(http.Dir(public + "/dist"))     // skipcq: GO-S1034
 
+	router.Handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, public+"/assets/robots.txt")
+	}))
 	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, public+"/assets/index.html")
 	}))
