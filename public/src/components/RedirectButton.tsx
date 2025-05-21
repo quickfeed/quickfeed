@@ -7,12 +7,17 @@ const RedirectButton = ({ to }: { to: string }) => {
     const location = useLocation()
 
     // The button is hidden if user is currently at the location the button redirects to
-    const isHidden = location.pathname === to ? true : false
+    const isHidden = location.pathname === to
 
     return (
-        <div className={"btn btn-dark redirectButton"} onClick={() => navigate(to)} hidden={isHidden}>
+        <button
+            className="btn btn-dark redirectButton"
+            type="button"
+            onClick={() => navigate(to)}
+            hidden={isHidden}
+        >
             <i className="fa fa-arrow-left" />
-        </div>
+        </button>
     )
 }
 
