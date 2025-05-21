@@ -921,6 +921,37 @@ export const setConnectionStatus = ({ state }: Context, status: ConnStatus) => {
     state.connectionStatus = status
 }
 
+// searchLogs searches all build logs for the current course for the given query.
+// returns all UserCourseSubmissions that have a build log that matches the query, with non-matching logs removed.
+export const searchLogs = async ({ state }: Context, query: string): Promise<Submission[]> => {
+    if (query.length === 0) {
+        return []
+    }
+
+    const submissions: Submission[] = []
+    const promises: Promise<Submission>[] = []
+    state.courseEnrollments[state.activeCourse.toString()]?.forEach(enrollment => {
+        if (isStudent(enrollment) || isTeacher(enrollment)) {
+            const subs = state.submissionsForCourse.ForUser(enrollment)
+            if (subs) {
+                submissions.push(...subs)
+            }
+        }
+    })
+
+    for (const submission of submissions) {
+        if (!submission.BuildInfo) {
+            continue
+        }
+        if (submission.BuildInfo?.BuildLog.includes(query)) {
+            promises.push(new Promise((resolve) => {
+                resolve(submission)
+            }))
+        }
+    }
+    return Promise.all(promises)
+}
+
 // setSubmissionOwner sets the owner of the currently selected submission.
 // The owner is either an enrollment or a group.
 export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group) => {

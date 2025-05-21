@@ -8,8 +8,10 @@ import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
+import SearchSubmissionLogs from "../components/buildlogs/SearchSubmissionLogs"
 import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
+
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -45,6 +47,7 @@ const TeacherPage = () => {
         onclick: handleUpdateAssignments
     }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
+    const buildLogSearch = { title: "Build Log Search", text: "Search build logs from all submissions.", buttonText: "Search", to: `${root}/buildlogs` }
 
     return (
         <div className="box">
@@ -57,6 +60,7 @@ const TeacherPage = () => {
                 <Card {...members} />
                 <Card {...assignments} />
                 <Card {...updateAssignments} />
+                <Card {...buildLogSearch} />
             </div>
             <Switch>
                 <Route path={`/course/:id/groups`} exact component={GroupPage} />
@@ -64,6 +68,7 @@ const TeacherPage = () => {
                 <Route path={"/course/:id/review"} component={ReviewResults} />
                 <Route path={"/course/:id/results"} component={RegularResults} />
                 <Route path={"/course/:id/assignments"} component={Assignments} />
+                <Route path={"/course/:id/buildlogs"} component={SearchSubmissionLogs} />
             </Switch>
         </div>
     )
