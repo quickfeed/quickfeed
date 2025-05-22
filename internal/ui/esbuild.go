@@ -155,18 +155,24 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 	return buildOptions
 }
 
-// Build builds the UI with esbuild. If outputDir is an empty string, it defaults to public/dist.
+// Build builds the UI with esbuild and tailwind. If outputDir is an empty string, it defaults to public/dist.
 // Test cases should pass a non-empty outputDir to avoid overwriting the current build.
 func Build(outputDir string, dev bool) error {
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {
 		return fmt.Errorf("failed to build UI: %v", result.Errors)
 	}
+	// important to run tailwind after esbuild
+	// as the Reset plugin empties the dist folder
+	if err := tailwindBuild(); err != nil {
+		return fmt.Errorf("failed to build tailwind CSS: %w", err)
+	}
 	return nil
 }
 
-// Watch starts a watch process for the frontend, rebuilding on changes
+// Watch starts a watch process for both tailwind and esbuild, rebuilding on changes
 func Watch() error {
+	go tailwindWatch()
 	ctx, err := api.Context(getOptions("", true))
 	if err != nil {
 		return fmt.Errorf("failed to create build context: %w", err)
