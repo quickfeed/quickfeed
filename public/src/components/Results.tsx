@@ -53,7 +53,7 @@ const Results = ({ review }: { review: boolean }) => {
     useEffect(() => {
         const { state, actions, searchParams } = latest.current
         if (state.selectedSubmission) {
-            // do nothing
+            // submission is already selected, nothing to do
             return
         }
         // If no submission is selected, check if there is a selected lab in the URL
