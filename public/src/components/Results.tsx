@@ -1,7 +1,9 @@
+import { clone, isMessage } from "@bufbuild/protobuf"
 import React, { useCallback, useEffect, useMemo, useRef } from "react"
 import { useSearchParams } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getSubmissionCellColor, Icon } from "../Helpers"
+import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -11,8 +13,6 @@ import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
-import { clone, isMessage } from "@bufbuild/protobuf"
-import { useCourseID } from "../hooks/useCourseID"
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
@@ -20,7 +20,7 @@ const Results = ({ review }: { review: boolean }) => {
     const courseID = useCourseID()
     const [searchParams, setSearchParams] = useSearchParams()
 
-    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
+    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers])
     const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
         return state.assignments[courseID.toString()]?.filter(
@@ -46,8 +46,7 @@ const Results = ({ review }: { review: boolean }) => {
             actions.setActiveEnrollment(null)
             actions.setSelectedSubmission({ submission: null })
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [actions, courseID, state.loadedCourse])
 
     // Select submission from URL if not already selected, after loading is done
     useEffect(() => {

@@ -2,11 +2,11 @@ import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
-import { useAppState, useActions } from '../overmind'
+import { useActions, useAppState } from '../overmind'
+import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
-import { CenteredMessage, KnownMessage } from './CenteredMessage'
 
 
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
@@ -25,7 +25,7 @@ const Lab = () => {
         if (!state.isTeacher) {
             actions.setSelectedAssignmentID(Number(lab))
         }
-    }, [lab])
+    }, [actions, lab, state.isTeacher])
 
     const InternalLab = () => {
         let submission: Submission | null

@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react'
+import { useNavigate } from 'react-router'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getFormattedTime, isValidSubmissionForAssignment } from "../../Helpers"
-import SubmissionRow from './SubmissionRow'
 import { DefaultProgressBar } from '../ProgressBar'
-import { useNavigate } from 'react-router'
+import SubmissionRow from './SubmissionRow'
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -20,7 +20,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
     } else {
       navigate(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
     }
-  }, [courseID])
+  }, [courseID, navigate])
   const validSubmissions = submissions.filter((submission) => isValidSubmissionForAssignment(submission, assignment))
   const hasSubmissions = validSubmissions.length > 0
   const redirectToSubmission = () => {
