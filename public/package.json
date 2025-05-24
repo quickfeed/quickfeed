@@ -20,6 +20,7 @@
     "tsc": "tsc",
     "test": "jest",
     "test:ci": "jest --maxWorkers=1",
+    "lint": "eslint . --ext .ts,.tsx",
     "overmind": "npx overmind-devtools@29.0.6-1743431531002"
   },
   "devDependencies": {
