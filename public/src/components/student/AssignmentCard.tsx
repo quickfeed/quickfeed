@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react'
+import { useNavigate } from 'react-router'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getFormattedTime, isValidSubmissionForAssignment } from "../../Helpers"
-import SubmissionRow from './SubmissionRow'
 import { DefaultProgressBar } from '../ProgressBar'
-import { useHistory } from 'react-router'
+import SubmissionRow from './SubmissionRow'
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -13,14 +13,14 @@ interface AssignmentCardProps {
 }
 
 const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions, courseID, selfID }) => {
-  const history = useHistory()
+  const navigate = useNavigate()
   const redirectTo = useCallback((submission: Submission) => {
     if (submission.groupID !== 0n) {
-      history.push(`/course/${courseID}/group-lab/${submission.AssignmentID.toString()}`)
+      navigate(`/course/${courseID}/group-lab/${submission.AssignmentID.toString()}`)
     } else {
-      history.push(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
+      navigate(`/course/${courseID}/lab/${submission.AssignmentID.toString()}`)
     }
-  }, [history, courseID])
+  }, [courseID, navigate])
   const validSubmissions = submissions.filter((submission) => isValidSubmissionForAssignment(submission, assignment))
   const hasSubmissions = validSubmissions.length > 0
   const redirectToSubmission = () => {

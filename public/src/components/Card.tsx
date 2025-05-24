@@ -1,5 +1,5 @@
 import React from "react"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { Color } from "../Helpers"
 
 
@@ -17,7 +17,7 @@ export interface Notification {
  * @param onclick: (Optional) The function to call when the button is clicked
  */
 const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification, to?: string, onclick?: () => void }) => {
-    const history = useHistory()
+    const navigate = useNavigate()
 
     const notification = props.notification
         ? <i className={`badge badge-${props.notification.color} float-right`}> {props.notification.text} </i>
@@ -29,7 +29,7 @@ const Card = (props: { title: string, text: string, buttonText: string, notifica
         if (props.onclick) {
             props.onclick()
         } else if (props.to) {
-            history.push(props.to) // Redirect to the given URL
+            navigate(props.to) // Redirect to the given URL
         }
     }
     return (

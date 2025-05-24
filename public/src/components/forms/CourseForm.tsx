@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react"
 import { useActions } from "../../overmind"
 import { Course, CourseSchema } from "../../../proto/qf/types_pb"
 import FormInput from "./FormInput"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { clone } from "@bufbuild/protobuf"
 
 
@@ -15,7 +15,7 @@ import { clone } from "@bufbuild/protobuf"
  *  If no course is provided, a new course will be created. */
 const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     const actions = useActions()
-    const history = useHistory()
+    const navigate = useNavigate()
 
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(clone(CourseSchema, courseToEdit))
@@ -46,7 +46,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         await actions.editCourse({ course })
-        history.push(`/course/${course.ID}`)
+        navigate(`/course/${course.ID}`)
     }
 
     return (
