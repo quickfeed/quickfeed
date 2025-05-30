@@ -505,13 +505,13 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
-func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	query := &qf.Submission{
 		AssignmentID: in.Msg.GetAssignmentID(),
-		Score:        in.Msg.GetScoreLimit(),
+		Score:        in.Msg.GetScore(),
 		Released:     in.Msg.GetRelease(),
 	}
-	err := s.db.UpdateSubmissions(query, true)
+	err := s.db.UpdateSubmissions(query, in.Msg.GetStatus())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed for request %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
