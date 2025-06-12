@@ -213,7 +213,6 @@ swiftui
 testcache
 testdata
 testdb
-Testersen
 testorg
 timestamppb
 tmpl
