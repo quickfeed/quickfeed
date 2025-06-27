@@ -42,7 +42,7 @@ describe("Correct permission status should be set", () => {
         api.client = {
             ...api.client,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            updateUser: mock("updateUser", async (_request) => {
+            updateUser: mock("updateUser", async (_request) => { // skipcq: JS-0116
                 return { message: create(VoidSchema), error: null }
             }),
         }

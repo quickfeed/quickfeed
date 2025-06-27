@@ -10,14 +10,17 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-var public = func(s string) string {
-	return filepath.Join(env.PublicDir(), s)
-}
+var (
+	public = func(s string) string {
+		return filepath.Join(env.PublicDir(), s)
+	}
+	distDir = public("dist")
+)
 
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
 var buildOptions = api.BuildOptions{
-	Outdir: public("dist"),
+	Outdir: distDir,
 	EntryPoints: []string{
 		public("src/index.tsx"),
 		public("src/App.tsx"),
@@ -61,7 +64,7 @@ var buildOptions = api.BuildOptions{
 									PluginName: "Reset",
 									Text:       "Failed to clear the dist folder",
 									Notes: []api.Note{
-										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", public("dist"))},
+										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", distDir)},
 										{Text: fmt.Sprintf("Error: %v", err)},
 									},
 								},
@@ -96,14 +99,15 @@ var buildOptions = api.BuildOptions{
 
 // resetDistFolder removes the dist folder and creates a new one
 func resetDistFolder() error {
-	path := public("dist")
-	if _, err := os.Stat(path); err == nil {
-		if err := os.RemoveAll(path); err != nil {
+	entries, err := os.ReadDir(distDir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		err = os.Remove(filepath.Join(distDir, entry.Name()))
+		if err != nil {
 			return err
 		}
-	}
-	if err := os.MkdirAll(path, 0o755); err != nil {
-		return err
 	}
 	return nil
 }
@@ -134,12 +138,14 @@ func createHtml(outputFiles []api.OutputFile) error {
 // getOptions returns the build options for esbuild
 // used to perform dynamic updates depending on the dev flag and outputDir
 func getOptions(outputDir string, dev bool) api.BuildOptions {
+	// its important to call env.GetAppURL after the env variable is loaded
+	buildOptions.Define = map[string]string{
+		"process.env.QUICKFEED_APP_URL": fmt.Sprintf(`"%s"`, env.GetAppURL()),
+	}
 	if dev {
-		buildOptions.Define = map[string]string{
-			// Esbuild defaults to production when minifying files.
-			// We must explicitly set it to "development" for dev builds.
-			"process.env.NODE_ENV": `"development"`,
-		}
+		// Esbuild defaults to production when minifying files.
+		// We must explicitly set it to "development" for dev builds.
+		buildOptions.Define["process.env.NODE_ENV"] = `"development"`
 		buildOptions.LogLevel = api.LogLevelDebug
 	}
 	// enabling custom outputDir allow for testing without overwriting current build
@@ -149,7 +155,8 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 	return buildOptions
 }
 
-// Build builds the UI with esbuild and outputs to the public/dist folder
+// Build builds the UI with esbuild. If outputDir is an empty string, it defaults to public/dist.
+// Test cases should pass a non-empty outputDir to avoid overwriting the current build.
 func Build(outputDir string, dev bool) error {
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {

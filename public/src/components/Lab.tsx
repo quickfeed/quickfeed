@@ -43,18 +43,18 @@ const Lab = () => {
             // Retrieve the student's submission
             assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
             if (!assignment) {
-                return <CenteredMessage message={KnownMessage.NoAssignment} />
+                return <CenteredMessage message={KnownMessage.StudentNoAssignment} />
             }
-            const submissions = state.submissions.ForAssignment(assignment) ?? null
-            if (!submissions) {
-                return <CenteredMessage message={KnownMessage.NoSubmission} />
+            const submissions = state.submissions.ForAssignment(assignment)
+            if (submissions.length === 0) {
+                return <CenteredMessage message={KnownMessage.StudentNoSubmission} />
             }
 
-            if (isGroupLab) {
-                submission = submissions.find(s => s.groupID > 0n) ?? null
-            } else {
-                submission = submissions.find(s => s.userID === state.self.ID && s.groupID === 0n) ?? null
-            }
+            const query = (s: Submission) => isGroupLab
+                ? s.groupID > 0n
+                : s.userID === state.self.ID && s.groupID === 0n
+
+            submission = submissions.find(s => query(s)) ?? null
         }
 
         if (assignment && submission) {
@@ -63,7 +63,10 @@ const Lab = () => {
             let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
-                buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)
+                // using the index as the key is not ideal, but in this case it is acceptable
+                // because the log lines are not expected to change unless a new submission is made
+                // in which case the component will be re-rendered anyways
+                buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>) // skipcq: JS-0437
             }
 
             return (
@@ -78,7 +81,7 @@ const Lab = () => {
                 </div>
             )
         }
-        return <CenteredMessage message={KnownMessage.NoSubmission} />
+        return <CenteredMessage message={state.isTeacher ? KnownMessage.TeacherNoSubmission : KnownMessage.StudentNoSubmission} />
     }
 
     return (

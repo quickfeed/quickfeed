@@ -23,6 +23,9 @@ const CreateCourse = () => {
         }
     }, [actions, orgName, state.courses])
 
+    const buttonClass = course ? "btn btn-success disabled" : "btn btn-primary"
+    const findTextOrIcon = course ? <i className="fa fa-check" /> : "Find"
+    const refreshIfNoCourse = course ? undefined : refresh
     return (
         <div className="container">
             <CourseCreationInfo />
@@ -32,8 +35,8 @@ const CreateCourse = () => {
                         <div className="input-group-text">Get Course</div>
                     </div>
                     <input className="form-control" disabled={course ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
-                    <span className={course ? "btn btn-success disabled" : "btn btn-primary"} onClick={!course ? () => refresh() : () => { return }}>
-                        {course ? <i className="fa fa-check" /> : "Find"}
+                    <span role="button" aria-hidden="true" className={buttonClass} onClick={refreshIfNoCourse}>
+                        {findTextOrIcon}
                     </span>
                 </div>
             </div>

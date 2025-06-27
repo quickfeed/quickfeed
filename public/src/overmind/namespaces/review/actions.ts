@@ -133,10 +133,12 @@ export const setMinimumScore = ({ state }: Context, minimumScore: number): void 
 export const releaseAll = async ({ state, actions, effects }: Context, { release, approve }: { release: boolean, approve: boolean }): Promise<void> => {
     const assignment = state.assignments[state.activeCourse.toString()].find(a => a.ID === state.review.assignmentID)
 
-    const releaseString = release && approve ? 'release and approve'
-        : release ? 'release'
-            : approve ? "approve"
-                : ""
+    const releaseString = () => {
+        if (release && approve) return "release and approve"
+        if (release) return "release"
+        if (approve) return "approve"
+        return ""
+    }
     const confirmText = `Are you sure you want to ${releaseString} all reviews for ${assignment?.name} above ${state.review.minimumScore} score?`
     const invalidMinimumScore = state.review.minimumScore < 0 || state.review.minimumScore > 100
 

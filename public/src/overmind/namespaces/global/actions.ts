@@ -720,7 +720,7 @@ export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignm
 }
 
 export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment | null): void => {
-    state.selectedEnrollment = enrollment ? enrollment : null
+    state.selectedEnrollment = enrollment
 }
 
 export const startSubmissionStream = ({ actions, effects }: Context) => {

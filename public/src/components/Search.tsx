@@ -7,6 +7,11 @@ import { useActions } from "../overmind"
 const Search = ({ placeholder, setQuery, className, children }: { placeholder?: string, setQuery?: (e: unknown) => void, className?: string, children?: React.ReactNode }) => {
     const actions = useActions().global
 
+    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        const value = e.currentTarget.value.toLowerCase()
+        setQuery ? setQuery(value) : actions.setQuery(value)
+    }
+
     useEffect(() => {
         // Reset query in state when component unmounts
         return () => { actions.setQuery("") }
@@ -17,8 +22,8 @@ const Search = ({ placeholder, setQuery, className, children }: { placeholder?: 
             <input
                 type={"text"}
                 className="form-control"
-                placeholder={placeholder ? placeholder : "Search"}
-                onKeyUp={(e) => setQuery ? setQuery(e.currentTarget.value.toLowerCase()) : actions.setQuery(e.currentTarget.value.toLowerCase())}
+                placeholder={placeholder ?? "Search"}
+                onKeyUp={handleKeyUp}
             />
             {children}
         </div>

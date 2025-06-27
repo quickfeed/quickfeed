@@ -1,11 +1,12 @@
 import React from "react"
-import { getCourseID, isPendingGroup } from "../../Helpers"
+import { isPendingGroup } from "../../Helpers"
 import { useAppState } from "../../overmind"
+import { useCourseID } from "../../hooks/useCourseID"
 
 
 const GroupComponent = () => {
     const state = useAppState()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
 
     const group = state.userGroup[courseID.toString()]
 

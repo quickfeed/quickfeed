@@ -28,7 +28,7 @@ const Breadcrumbs = () => {
     const getAssignmentNameById = (id: string): string | null => {
         if (pathnames[0] === 'course' && pathnames[1]) {
             const assignment = state.assignments[pathnames[1]].find(assignment => assignment.ID.toString() === id)
-            return assignment ? assignment.name : null
+            return assignment?.name ?? null
         }
         return null
     }

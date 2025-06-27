@@ -213,7 +213,6 @@ swiftui
 testcache
 testdata
 testdb
-Testersen
 testorg
 timestamppb
 tmpl
@@ -225,6 +224,7 @@ unmarshalling
 unmarshalls
 urfave
 URL's
+userids
 usermod
 varcheck
 vercheck

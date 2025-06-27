@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react"
 import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
-import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { Color, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import Search from "../Search"
 import { clone, create } from "@bufbuild/protobuf"
+import { useCourseID } from "../../hooks/useCourseID"
 
 
 const GroupForm = () => {
@@ -14,7 +15,7 @@ const GroupForm = () => {
 
     const [query, setQuery] = useState<string>("")
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
-    const courseID = getCourseID()
+    const courseID = useCourseID()
 
     const group = state.activeGroup
     useEffect(() => {
@@ -143,8 +144,8 @@ const GroupForm = () => {
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedAndFilteredEnrollments.map((enrollment, index) => {
-                            return <AvailableUser key={index} enrollment={enrollment} />
+                        {sortedAndFilteredEnrollments.map((enrollment) => {
+                            return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
                         })}
                     </ul>
                 </div>
