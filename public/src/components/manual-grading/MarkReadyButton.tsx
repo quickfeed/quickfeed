@@ -14,7 +14,7 @@ const MarkReadyButton = ({ review }: { review: Review }) => {
         if (allCriteriaGraded || ready) {
             actions.review.updateReady(!ready)
         }
-    }, [allCriteriaGraded, ready])
+    }, [actions.review, allCriteriaGraded, ready])
 
     if (ready) {
         return (

@@ -1,5 +1,5 @@
 import React, { useLayoutEffect } from "react"
-import { Redirect } from "react-router"
+import { Navigate } from "react-router"
 import { isEnrolled, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
@@ -30,7 +30,7 @@ const CoursePage = () => {
         }
         return <StudentPage />
     } else {
-        return <Redirect to={"/"} />
+        return <Navigate to="/" replace />
     }
 }
 

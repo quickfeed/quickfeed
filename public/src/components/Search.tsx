@@ -15,7 +15,7 @@ const Search = ({ placeholder, setQuery, className, children }: { placeholder?: 
     useEffect(() => {
         // Reset query in state when component unmounts
         return () => { actions.setQuery("") }
-    }, [])
+    }, [actions])
 
     return (
         <div className={`input-group ${className}`}>

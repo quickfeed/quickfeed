@@ -1,5 +1,5 @@
 import React from "react"
-import { Redirect, Route, Switch, useHistory } from "react-router"
+import { Route, Routes, useNavigate, useLocation } from "react-router"
 import { useAppState } from "../overmind"
 import EditCourse from "../components/admin/EditCourse"
 import Users from "../components/admin/Users"
@@ -12,7 +12,8 @@ import CreateCourse from "../components/admin/CreateCourse"
 // AdminPage is the page containing the admin-only components.
 const AdminPage = () => {
     const state = useAppState()
-    const history = useHistory()
+    const navigate = useNavigate()
+    const location = useLocation()
 
     // Objects containing props for the cards in the admin page.
     // TODO: Perhaps make a Card prop type.
@@ -22,7 +23,7 @@ const AdminPage = () => {
 
     // If the user is not an admin, redirect to the home page.
     if (!state.self.IsAdmin) {
-        return <Redirect to="/" />
+        navigate("/")
     }
 
     const root = "/admin"
@@ -30,23 +31,17 @@ const AdminPage = () => {
         <div className="box">
             <RedirectButton to={root} />
             <Alerts />
-            <div className="row" hidden={history.location.pathname !== root}>
+            <div className="row" hidden={location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
                 <Card {...editCourse} />
             </div>
 
-            <Switch>
-                <Route path="/admin/manage">
-                    <Users />
-                </Route>
-                <Route path="/admin/create">
-                    <CreateCourse />
-                </Route>
-                <Route path="/admin/edit">
-                    <EditCourse />
-                </Route>
-            </Switch>
+            <Routes>
+                <Route path="/manage" element={<Users />} />
+                <Route path="/create" element={<CreateCourse />} />
+                <Route path="/edit" element={<EditCourse />} />
+            </Routes>
         </div>
     )
 }
