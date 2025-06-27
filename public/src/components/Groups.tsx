@@ -12,7 +12,7 @@ import { useCourseID } from "../hooks/useCourseID"
 /* Lists all groups for a given course. */
 const Groups = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = useCourseID()
 
     const groupSearch = (group: Group) => {

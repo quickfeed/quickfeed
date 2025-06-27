@@ -74,7 +74,7 @@ export const generateRow = (
 }
 
 export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
-    const handleSort = (sortBy: SubmissionSort) => () => actions.setSubmissionSort(sortBy)
+    const handleSort = (sortBy: SubmissionSort) => () => actions.global.setSubmissionSort(sortBy)
     const base: Row = [
         { value: "Name", onClick: handleSort(SubmissionSort.Name) }
     ]

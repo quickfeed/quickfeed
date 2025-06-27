@@ -11,7 +11,7 @@ import { useCourseID } from "../hooks/useCourseID"
  *  depending on the active course and the user's enrollment status. */
 const CoursePage = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = useCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 

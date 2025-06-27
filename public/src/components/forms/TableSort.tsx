@@ -13,7 +13,7 @@ import { useActions, useAppState } from "../../overmind"
  */
 const TableSort = ({ review }: { review: boolean }) => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     useEffect(() => {
         return () => {

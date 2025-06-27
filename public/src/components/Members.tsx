@@ -10,7 +10,7 @@ import { useCourseID } from "../hooks/useCourseID"
 
 const Members = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = useCourseID()
 
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)

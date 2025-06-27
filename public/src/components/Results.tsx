@@ -29,13 +29,13 @@ const Results = ({ review }: { review: boolean }) => {
 
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
-            actions.loadCourseSubmissions(courseID)
+            actions.global.loadCourseSubmissions(courseID)
         }
         return () => {
-            actions.setGroupView(false)
+            actions.global.setGroupView(false)
             actions.review.setAssignmentID(-1n)
-            actions.setActiveEnrollment(null)
-            actions.setSelectedSubmission({ submission: null })
+            actions.global.setActiveEnrollment(null)
+            actions.global.setSelectedSubmission({ submission: null })
         }
     }, [])
 
@@ -47,8 +47,8 @@ const Results = ({ review }: { review: boolean }) => {
             if (selectedLab) {
                 const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
                 if (submission) {
-                    actions.setSelectedSubmission({ submission })
-                    actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+                    actions.global.setSelectedSubmission({ submission })
+                    actions.global.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
                 }
             }
         }
@@ -56,16 +56,16 @@ const Results = ({ review }: { review: boolean }) => {
 
     const groupView = state.groupView
     const handleSetGroupView = useCallback(() => {
-        actions.setGroupView(!groupView)
+        actions.global.setGroupView(!groupView)
         actions.review.setAssignmentID(BigInt(-1))
     }, [actions, groupView])
 
     const handleLabClick = useCallback((submission: Submission, owner: Enrollment | Group) => {
-        actions.setSelectedSubmission({ submission })
+        actions.global.setSelectedSubmission({ submission })
         if (isMessage(owner, EnrollmentSchema)) {
-            actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
+            actions.global.setActiveEnrollment(clone(EnrollmentSchema, owner))
         }
-        actions.setSubmissionOwner(owner)
+        actions.global.setSubmissionOwner(owner)
         // Update the URL with the selected lab
         history.replace({
             pathname: location.pathname,
@@ -80,7 +80,7 @@ const Results = ({ review }: { review: boolean }) => {
 
     const handleSubmissionCellClick = useCallback((submission: Submission, owner: Enrollment | Group) => () => {
         handleLabClick(submission, owner)
-        actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
+        actions.global.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
     }, [actions, handleLabClick, state.activeCourse, state.submissionOwner])
 
     if (!state.loadedCourse[courseID.toString()]) {

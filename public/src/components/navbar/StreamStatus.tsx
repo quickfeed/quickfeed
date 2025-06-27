@@ -6,7 +6,7 @@ import { useActions, useAppState } from "../../overmind"
 const StreamStatus = () => {
     const status = useAppState((state) => state.connectionStatus)
     const isLoggedIn = useAppState((state) => state.isLoggedIn)
-    const reconnect = useActions().startSubmissionStream
+    const reconnect = useActions().global.startSubmissionStream
     const [open, setOpen] = useState<boolean>(false)
 
     if (!isLoggedIn) {
