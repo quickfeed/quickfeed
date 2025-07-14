@@ -6,6 +6,7 @@ import { config } from './overmind'
 import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import './style.scss'
+import './tailwind.css'
 
 (BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
     return this.toString()
