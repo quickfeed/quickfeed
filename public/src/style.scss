@@ -41,12 +41,11 @@
 .sidebarList {
     width: 100%;
     height: auto;
-    /* override bootstrap */
     padding: 0 !important;
-    /* override bootstrap */
     margin: 0 !important;
 
-    li {
+    li,
+    button.navbar-link-btn {
         width: 100%;
         height: 60px;
         list-style-type: none;
@@ -56,31 +55,36 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        text-align: left;
+    }
 
-        &:hover {
-            background-color: rgb(20, 20, 20);
-        }
+    li:hover,
+    button.navbar-link-btn:hover {
+        background-color: rgb(20, 20, 20);
+    }
 
-        a {
-            width: 100%;
-            height: 100%;
-            display: block;
-            color: #d4d4d4;
-        }
+    a {
+        width: 100%;
+        height: 100%;
+        display: block;
+        color: #d4d4d4;
+    }
 
-        span {
-            margin: 0px;
-            display: inline-block;
-            text-align: center;
-            width: 100%;
-            height: 100%;
-            color: #d4d4d4;
-        }
+    span {
+        margin: 0px;
+        display: inline-block;
+        text-align: center;
+        width: 100%;
+        height: 100%;
+        color: #d4d4d4;
+    }
 
-        img {
-            width: 30px;
-            border-radius: 50%;
-        }
+    img {
+        width: 30px;
+        border-radius: 50%;
     }
 
     .inactive {
