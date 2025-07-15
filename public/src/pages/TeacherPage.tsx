@@ -17,7 +17,7 @@ const RegularResults = () => <Results review={false} />
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
 const TeacherPage = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = useCourseID()
     const location = useLocation()
     const root = `/course/${courseID}`

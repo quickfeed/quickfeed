@@ -38,13 +38,13 @@ const Results = ({ review }: { review: boolean }) => {
     // Load the course submissions when the component mounts
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
-            actions.loadCourseSubmissions(courseID)
+            actions.global.loadCourseSubmissions(courseID)
         }
         return () => {
-            actions.setGroupView(false)
+            actions.global.setGroupView(false)
             actions.review.setAssignmentID(-1n)
-            actions.setActiveEnrollment(null)
-            actions.setSelectedSubmission({ submission: null })
+            actions.global.setActiveEnrollment(null)
+            actions.global.setSelectedSubmission({ submission: null })
         }
     }, [actions, courseID, state.loadedCourse])
 
@@ -61,15 +61,15 @@ const Results = ({ review }: { review: boolean }) => {
         if (selectedLab) {
             const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
             if (submission) {
-                actions.setSelectedSubmission({ submission })
-                actions.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+                actions.global.setSelectedSubmission({ submission })
+                actions.global.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
                 if (submission.reviews.length > 0) {
                     // If the submission has reviews we need to set the selected review to -1
                     // to show the review form
                     actions.review.setSelectedReview(-1)
                 } else {
                     // Fetch full submission data since the submission data by default does not include the build log
-                    actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
+                    actions.global.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
                 }
             }
         }
@@ -77,16 +77,16 @@ const Results = ({ review }: { review: boolean }) => {
 
     const groupView = state.groupView
     const handleSetGroupView = useCallback(() => {
-        actions.setGroupView(!groupView)
+        actions.global.setGroupView(!groupView)
         actions.review.setAssignmentID(BigInt(-1))
     }, [actions, groupView])
 
     const handleLabClick = useCallback((submission: Submission, owner: Enrollment | Group) => {
-        actions.setSelectedSubmission({ submission })
+        actions.global.setSelectedSubmission({ submission })
         if (isMessage(owner, EnrollmentSchema)) {
-            actions.setActiveEnrollment(clone(EnrollmentSchema, owner))
+            actions.global.setActiveEnrollment(clone(EnrollmentSchema, owner))
         }
-        actions.setSubmissionOwner(owner)
+        actions.global.setSubmissionOwner(owner)
         // Update the URL with the selected lab
         setSearchParams({ id: submission.ID.toString() })
     }, [actions, setSearchParams])
@@ -98,7 +98,7 @@ const Results = ({ review }: { review: boolean }) => {
 
     const handleSubmissionCellClick = useCallback((submission: Submission, owner: Enrollment | Group) => () => {
         handleLabClick(submission, owner)
-        actions.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
+        actions.global.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
     }, [actions, handleLabClick, state.activeCourse, state.submissionOwner])
 
     if (!state.loadedCourse[courseID.toString()]) {

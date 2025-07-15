@@ -11,7 +11,7 @@ import Search from "../Search"
 
 const GroupForm = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     const [query, setQuery] = useState<string>("")
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)

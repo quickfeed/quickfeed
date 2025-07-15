@@ -14,7 +14,7 @@ import ReviewResult from './ReviewResult'
  */
 const Lab = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const { id, lab } = useParams()
     const courseID = id ?? ""
     const assignmentID = lab ? BigInt(lab) : BigInt(-1)

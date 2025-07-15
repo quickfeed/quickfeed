@@ -14,7 +14,7 @@ import { clone } from "@bufbuild/protobuf"
  *  If `editCourse` is provided, the existing course will be modified.
  *  If no course is provided, a new course will be created. */
 const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
-    const actions = useActions()
+    const actions = useActions().global
     const navigate = useNavigate()
 
     // Local state containing the course to be created or edited (if any)

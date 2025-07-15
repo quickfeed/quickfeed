@@ -5,7 +5,7 @@ import { Provider } from "overmind-react"
 import { act, render, screen } from "@testing-library/react"
 import Lab from "../components/Lab"
 import { MockData } from "./mock_data/mockData"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
 import { initializeOvermind, mock } from "./TestHelpers"
 import { create, clone } from "@bufbuild/protobuf"
 import { ConnectError } from "@connectrpc/connect"
@@ -64,7 +64,7 @@ describe("Lab view correctly re-renders on state change", () => {
 
     const fetchAssignments = async () => {
         await act(async () => {
-            await mockedOvermind.actions.getAssignments()
+            await mockedOvermind.actions.global.getAssignments()
         })
     }
 
@@ -93,7 +93,7 @@ describe("Lab view correctly re-renders on state change", () => {
 
         // fetch submissions for the user
         await act(async () => {
-            await mockedOvermind.actions.getUserSubmissions(1n)
+            await mockedOvermind.actions.global.getUserSubmissions(1n)
         })
         const submissions = mockedOvermind.state.submissions.ForAssignment(create(AssignmentSchema, { ID: 1n, CourseID: 1n }))
         expect(submissions).toBeDefined()
@@ -108,7 +108,7 @@ describe("Lab view correctly re-renders on state change", () => {
             if (modifiedSubmission.BuildInfo) {
                 modifiedSubmission.BuildInfo.BuildLog = "This is a build log"
             }
-            mockedOvermind.actions.receiveSubmission(modifiedSubmission)
+            mockedOvermind.actions.global.receiveSubmission(modifiedSubmission)
         })
         // verify that the updated submission is shown
         assertContent("This is a build log")

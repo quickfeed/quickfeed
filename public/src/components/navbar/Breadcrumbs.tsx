@@ -8,7 +8,7 @@ import { useActions, useAppState } from '../../overmind'
 
 const Breadcrumbs = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const location = useLocation()
     const { width } = useWindowSize()
     const [courseName, setCourseName] = useState<string | null>(null)

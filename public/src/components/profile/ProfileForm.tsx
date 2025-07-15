@@ -8,7 +8,7 @@ import { UserSchema } from "../../../proto/qf/types_pb"
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const navigate = useNavigate()
 
     // Create a copy of the user object, so that we can modify it without affecting the original object.
