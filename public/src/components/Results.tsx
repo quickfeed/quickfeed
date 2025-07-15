@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useMemo } from "react"
-import { useHistory, useLocation } from 'react-router-dom'
+import { clone, isMessage } from "@bufbuild/protobuf"
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
+import { useSearchParams } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
 import { Color, getSubmissionCellColor, Icon } from "../Helpers"
+import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
@@ -11,22 +13,29 @@ import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
-import { clone, isMessage } from "@bufbuild/protobuf"
-import { useCourseID } from "../hooks/useCourseID"
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
     const actions = useActions()
     const courseID = useCourseID()
-    const history = useHistory()
-    const location = useLocation()
+    const [searchParams, setSearchParams] = useSearchParams()
 
-    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers, state.groupView])
+    const members = useMemo(() => { return state.courseMembers }, [state.courseMembers])
     const assignments = useMemo(() => {
         // Filter out all assignments that are not the selected assignment, if any assignment is selected
-        return state.assignments[courseID.toString()]?.filter(a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID)
+        return state.assignments[courseID.toString()]?.filter(
+            a => state.review.assignmentID <= 0 || a.ID === state.review.assignmentID
+        )
     }, [state.assignments, courseID, state.review.assignmentID])
+    const loaded = state.loadedCourse[courseID.toString()]
 
+    // Always keep latest state/actions/searchParams in a ref for effects
+    const latest = useRef({ state, actions, searchParams })
+    useEffect(() => {
+        latest.current = { state, actions, searchParams }
+    }, [state, actions, searchParams])
+
+    // Load the course submissions when the component mounts
     useEffect(() => {
         if (!state.loadedCourse[courseID.toString()]) {
             actions.global.loadCourseSubmissions(courseID)
@@ -37,22 +46,34 @@ const Results = ({ review }: { review: boolean }) => {
             actions.global.setActiveEnrollment(null)
             actions.global.setSelectedSubmission({ submission: null })
         }
-    }, [])
+    }, [actions, courseID, state.loadedCourse])
 
+    // Select submission from URL if not already selected, after loading is done
     useEffect(() => {
-        if (!state.selectedSubmission) {
-            // If no submission is selected, check if there is a selected lab in the URL
-            // and select it if it exists
-            const selectedLab = new URLSearchParams(location.search).get('id')
-            if (selectedLab) {
-                const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
-                if (submission) {
-                    actions.global.setSelectedSubmission({ submission })
-                    actions.global.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+        const { state, actions, searchParams } = latest.current
+        if (state.selectedSubmission) {
+            // submission is already selected, nothing to do
+            return
+        }
+        // If no submission is selected, check if there is a selected lab in the URL
+        // and select it if it exists
+        const selectedLab = searchParams.get("id")
+        if (selectedLab) {
+            const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
+            if (submission) {
+                actions.global.setSelectedSubmission({ submission })
+                actions.global.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+                if (submission.reviews.length > 0) {
+                    // If the submission has reviews we need to set the selected review to -1
+                    // to show the review form
+                    actions.review.setSelectedReview(-1)
+                } else {
+                    // Fetch full submission data since the submission data by default does not include the build log
+                    actions.global.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
                 }
             }
         }
-    }, [])
+    }, [loaded])
 
     const groupView = state.groupView
     const handleSetGroupView = useCallback(() => {
@@ -67,11 +88,8 @@ const Results = ({ review }: { review: boolean }) => {
         }
         actions.global.setSubmissionOwner(owner)
         // Update the URL with the selected lab
-        history.replace({
-            pathname: location.pathname,
-            search: `?id=${submission.ID}`,
-        })
-    }, [actions, history, location])
+        setSearchParams({ id: submission.ID.toString() })
+    }, [actions, setSearchParams])
 
     const handleReviewCellClick = useCallback((submission: Submission, owner: Enrollment | Group) => () => {
         handleLabClick(submission, owner)

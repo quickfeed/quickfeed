@@ -1,10 +1,9 @@
 import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { createMemoryHistory } from "history"
 import React, { act } from "react"
 import Members from "../components/Members"
-import { Route, Router } from "react-router"
+import { Route, MemoryRouter, Routes } from "react-router-dom"
 import { Provider } from "overmind-react"
 import { render, screen } from "@testing-library/react"
 import { MockData } from "./mock_data/mockData"
@@ -91,14 +90,14 @@ describe("UpdateEnrollment in webpage", () => {
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
         })
-        const history = createMemoryHistory()
-        history.push("/course/1/members")
 
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
 
@@ -133,14 +132,14 @@ describe("UpdateEnrollment in webpage", () => {
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
         })
-        const history = createMemoryHistory()
-        history.push("/course/1/members")
 
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
 

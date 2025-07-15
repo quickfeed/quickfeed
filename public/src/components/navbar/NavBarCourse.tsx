@@ -1,5 +1,5 @@
 import React from "react"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { Enrollment } from "../../../proto/qf/types_pb"
 import { Status } from "../../consts"
 import { isStudent, isTeacher } from "../../Helpers"
@@ -11,7 +11,7 @@ import NavBarTeacher from "./NavBarTeacher"
 const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
     const state = useAppState()
     const actions = useActions().global
-    const history = useHistory()
+    const navigate = useNavigate()
     // Determines if a dropdown should be shown for the course
     const active = state.activeCourse === enrollment.courseID
     const course = state.courses.find(c => c.ID === enrollment.courseID)
@@ -20,10 +20,10 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
         if (active) {
             // Collapse active course dropdown
             actions.setActiveCourse(BigInt(0))
-            history.push("/")
+            navigate("/")
         } else {
-            history.push(`/course/${courseID}`)
             actions.setActiveCourse(courseID)
+            navigate(`/course/${courseID}`)
         }
     }
 

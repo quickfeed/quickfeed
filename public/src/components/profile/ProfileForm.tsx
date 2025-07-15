@@ -2,14 +2,14 @@ import React, { Dispatch, SetStateAction, useCallback, useState } from "react"
 import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { clone } from "@bufbuild/protobuf"
 import { UserSchema } from "../../../proto/qf/types_pb"
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
     const actions = useActions().global
-    const history = useHistory()
+    const navigate = useNavigate()
 
     // Create a copy of the user object, so that we can modify it without affecting the original object.
     const [user, setUser] = useState(clone(UserSchema, state.self))
@@ -45,7 +45,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
         // Disable editing after submission
         setEditing(false)
         if (!hasEnrollment(state.enrollments)) {
-            history.push("/courses")
+            navigate("/courses")
         }
     }
 
