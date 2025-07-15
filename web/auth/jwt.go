@@ -141,8 +141,7 @@ func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 
 // extractToken returns a JWT authentication token extracted from the request header's cookie.
 func extractToken(cookieString string) (string, error) {
-	cookies := strings.Split(cookieString, ";")
-	for _, cookie := range cookies {
+	for cookie := range strings.SplitSeq(cookieString, ";") {
 		_, cookieValue, ok := strings.Cut(cookie, CookieName+"=")
 		if ok {
 			return strings.TrimSpace(cookieValue), nil
