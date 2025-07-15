@@ -77,7 +77,7 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 		return nil, err
 	}
 	claims := &Claims{}
-	token, err := tm.parser.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
+	token, err := tm.parser.ParseWithClaims(tokenString, claims, func(*jwt.Token) (any, error) {
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
