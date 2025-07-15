@@ -40,11 +40,11 @@ func NewTokenManager(db database.Database) (*TokenManager, error) {
 	manager := &TokenManager{
 		db:     db,
 		secret: env.AuthSecret(),
+		parser: jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})),
 	}
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err
 	}
-	manager.parser = jwt.NewParser(jwt.WithValidMethods([]string{"HS256"}))
 	return manager, nil
 }
 
