@@ -1,6 +1,8 @@
 package auth_test
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -239,6 +241,65 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	if newClaims.Admin {
-		t.Error("Admin status in user claims for demoted user")
+		t.Error("Got admin status in user claims for non-admin user")
+	}
+}
+
+func TestExpiredTokenAndErrorCodePaths(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user := qtest.CreateFakeUser(t, db)
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	claims := &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-3 * time.Minute)), // token already expired
+		},
+		UserID: user.GetID(),
+	}
+	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(env.AuthSecret()))
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to sign token: %s", err))
+	}
+
+	newCookie := &http.Cookie{
+		Name:  auth.CookieName,
+		Value: signedToken,
+	}
+	newClaims, err := tm.GetClaims(newCookie.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if newClaims.UserID != user.GetID() {
+		t.Errorf("Expected user ID %d, got %d", user.GetID(), newClaims.UserID)
+	}
+	// TODO(meling): I'm a bit confused about GetClaims and how it handles expired tokens.
+	// The GetClaims returns a valid claims object even if the token is expired.
+	t.Logf("ExpiresAt: %s", newClaims.RegisteredClaims.ExpiresAt.Time)
+	if !newClaims.RegisteredClaims.ExpiresAt.Time.Before(time.Now()) {
+		t.Error("Expected token to be expired, but it is not")
+	}
+
+	otherClaims, err := tm.GetClaims("invalid-token")
+	if err == nil {
+		t.Fatal("expected error for invalid token, got nil")
+	}
+	if otherClaims != nil {
+		t.Error("expected nil claims for invalid token, got non-nil claims")
+	}
+
+	otherCookie := &http.Cookie{
+		Name:  auth.CookieName,
+		Value: "not-a-valid-token",
+	}
+	otherClaims, err = tm.GetClaims(otherCookie.String())
+	if err == nil {
+		t.Error("expected error for invalid token, got nil")
+	}
+	if otherClaims != nil {
+		t.Error("expected nil claims for invalid token, got non-nil claims")
 	}
 }
