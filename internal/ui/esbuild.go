@@ -36,7 +36,7 @@ var buildOptions = api.BuildOptions{
 		public("src/overmind/index.ts"),
 		public("src/overmind/namespaces/global/effects.ts"),
 		public("src/overmind/state.ts"),
-		public("src/overmind/internalActions.ts"),
+		public("src/overmind/namespaces/global/internalActions.ts"),
 	},
 	Bundle:            true,
 	Write:             true,
