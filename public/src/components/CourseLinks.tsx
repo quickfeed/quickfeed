@@ -1,8 +1,8 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Repository_Type } from "../../proto/qf/types_pb"
-import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
+import { useCourseID } from "../hooks/useCourseID"
 
 type link = {
     type: Repository_Type,
@@ -14,7 +14,7 @@ type link = {
 /** CourseLinks displays various repository links for the current course, in addition to links to take the user to the group page. */
 const CourseLinks = () => {
     const state = useAppState()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     const repo = state.repositories[courseID.toString()]
     const hasGroup = state.hasGroup(courseID.toString())

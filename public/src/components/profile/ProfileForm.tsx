@@ -1,22 +1,22 @@
-import React, { Dispatch, SetStateAction, useState } from "react"
+import React, { Dispatch, SetStateAction, useCallback, useState } from "react"
 import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { clone } from "@bufbuild/protobuf"
 import { UserSchema } from "../../../proto/qf/types_pb"
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
-    const actions = useActions()
-    const history = useHistory()
+    const actions = useActions().global
+    const navigate = useNavigate()
 
     // Create a copy of the user object, so that we can modify it without affecting the original object.
     const [user, setUser] = useState(clone(UserSchema, state.self))
     const [isValid, setIsValid] = useState(state.isValid)
 
     // Update the user object when user input changes, and update the state.
-    const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
+    const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
         switch (name) {
             case "name":
@@ -35,23 +35,24 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
         } else {
             setIsValid(false)
         }
-    }
+    }, [user])
 
 
     // Sends the updated user object to the server on submit.
-    const submitHandler = () => {
+    const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
         actions.updateUser(user)
         // Disable editing after submission
         setEditing(false)
         if (!hasEnrollment(state.enrollments)) {
-            history.push("/courses")
+            navigate("/courses")
         }
     }
 
     return (
         <div>
             {!isValid ? children : null}
-            <form className="form-group" onSubmit={e => { e.preventDefault(); submitHandler() }}>
+            <form className="form-group" onSubmit={submitHandler}>
                 <FormInput prepend="Name" name="name" defaultValue={user.Name} onChange={handleChange} />
                 <FormInput prepend="Email" name="email" defaultValue={user.Email} onChange={handleChange} type="email" />
                 <FormInput prepend="Student ID" name="studentid" defaultValue={user.StudentID} onChange={handleChange} type="number" />

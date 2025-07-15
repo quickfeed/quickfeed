@@ -14,7 +14,7 @@ export class StreamService {
     }
 
     // timeout returns a promise that resolves after the current backoff has elapsed
-    private async timeout() {
+    private timeout() {
         return new Promise(resolve => setTimeout(resolve, this.backoff))
     }
 
@@ -44,7 +44,7 @@ export class StreamService {
                 // Attempt to reconnect after a backoff
                 options.onStatusChange(ConnStatus.RECONNECTING)
                 await this.timeout()
-                this.submissionStream(options)
+                await this.submissionStream(options)
                 this.backoff *= 2
             } else {
                 this.backoff = 1000

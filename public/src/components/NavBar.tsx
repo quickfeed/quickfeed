@@ -8,7 +8,7 @@ import NavBarActiveCourse from "./navbar/NavBarActiveCourse"
 
 const NavBar = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     let hamburger = null
     if (state.isLoggedIn) {

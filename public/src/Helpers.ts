@@ -1,4 +1,3 @@
-import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
@@ -70,10 +69,37 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
+
+// isExpired returns true if the assignment's deadline has expired.
+// An assignment is considered expired if its deadline expired more than one month ago.
+export const isExpired = (deadline: Timestamp): boolean => {
+    const date = timestampDate(deadline)
+    const now = new Date()
+    return (
+        date.getFullYear() !== now.getFullYear() ||
+        date.getMonth() > now.getMonth() + 1
+    )
+}
+
 export interface Deadline {
     className: string,
     message: string,
-    daysUntil: number,
+    time: string,
+}
+
+export enum TableColor {
+    BLUE = "table-primary",
+    GREEN = "table-success",
+    ORANGE = "table-warning",
+    RED = "table-danger",
+}
+
+const getDaysHoursAndMinutes = (deadline: Timestamp) => {
+    const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
+    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
+    const hours = Math.floor(timeToDeadline / (1000 * 3600))
+    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+    return { days, hours, minutes, timeToDeadline }
 }
 
 /**
@@ -82,32 +108,37 @@ export interface Deadline {
  *
  * layoutTime = "2021-03-20T23:59:00"
  */
-export const timeFormatter = (deadline: Timestamp): Deadline => {
-    const timeToDeadline = timestampDate(deadline).getTime()
-    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
-    const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+export const deadlineFormatter = (deadline: Timestamp, scoreLimit: number, submissionScore: number): Deadline => {
+    const { days, hours, minutes, timeToDeadline } = getDaysHoursAndMinutes(deadline)
+    const daysText = Math.abs(days) === 1 ? "day" : "days"
+
+    let className = TableColor.BLUE
+    let message = `${days} ${daysText} to deadline`
 
     if (timeToDeadline < 0) {
-        const daysSince = -days
-        const hoursSince = -hours
-        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
+        className = TableColor.RED
+        message = days < 0
+            ? `Expired ${-days} ${daysText} ago`
+            : `Expired ${-hours} hours ago`
+    } else if (days === 0) {
+        className = TableColor.RED
+        message = `${hours === 0 ? "" : `${hours} hours and `}${minutes} minutes to deadline!`
+    } else if (days < 3) {
+        className = TableColor.ORANGE
+        message = `${days} ${daysText} to deadline!`
     }
 
-    if (days === 0) {
-        return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
+    if (submissionScore >= scoreLimit) {
+        className = TableColor.GREEN
     }
 
-    if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
+    return {
+        className,
+        message,
+        time: getFormattedTime(deadline, true),
     }
-
-    if (days < 14) {
-        return { className: "table-primary", message: `${days} days`, daysUntil: days }
-    }
-
-    return { className: "", message: "", daysUntil: days }
 }
+
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
@@ -224,12 +255,6 @@ export const setStatusAll = (submission: Submission, status: Submission_Status):
         return create(GradeSchema, { ...grade, Status: status })
     })
     return create(SubmissionSchema, { ...submission, Grades: grades })
-}
-
-/** getCourseID returns the course ID determined by the current route */
-export const getCourseID = (): bigint => {
-    const route = useParams<{ id?: string }>()
-    return route.id ? BigInt(route.id) : BigInt(0)
 }
 
 export const isHidden = (value: string, query: string): boolean => {

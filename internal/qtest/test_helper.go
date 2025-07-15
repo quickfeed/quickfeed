@@ -335,6 +335,23 @@ func EnrollUser(t *testing.T, db database.Database, user *qf.User, course *qf.Co
 	return enrollment
 }
 
+// CreateTempFile creates a temporary file in the given directory.
+// The file is automatically removed when the test ends.
+func CreateTempFile(t *testing.T, dir string) string {
+	t.Helper()
+	tmpFile, err := os.CreateTemp(dir, "*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	envFileName := tmpFile.Name()
+	t.Cleanup(func() {
+		if err := os.Remove(envFileName); err != nil {
+			t.Error(err)
+		}
+	})
+	return envFileName
+}
+
 func RandomString(t *testing.T) string {
 	t.Helper()
 	randomness := make([]byte, 10)

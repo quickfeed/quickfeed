@@ -12,7 +12,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
-    const [showComment, setShowComment] = React.useState<boolean>(true)
+    const [showComment, setShowComment] = useState<boolean>(true)
     const { isTeacher } = useAppState()
 
     // classname is used to style the first column of the row returned by this component

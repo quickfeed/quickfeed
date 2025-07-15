@@ -14,12 +14,12 @@ const ReviewForm = () => {
 
     const selectedSubmission = state.selectedSubmission
     if (!selectedSubmission) {
-        return <CenteredMessage message={KnownMessage.NoSubmission} />
+        return <CenteredMessage message={KnownMessage.TeacherNoSubmission} />
     }
 
     const selectedAssignment = state.selectedAssignment
     if (!selectedAssignment) {
-        return <CenteredMessage message={KnownMessage.NoAssignment} />
+        return <CenteredMessage message={KnownMessage.TeacherNoAssignment} />
     }
 
     const isAuthor = (review: Review) => {
@@ -53,7 +53,7 @@ const ReviewForm = () => {
                 color={Color.BLUE}
                 type={ButtonType.BUTTON}
                 className="mr-1"
-                onClick={async () => { await actions.review.createReview() }}
+                onClick={() => { actions.review.createReview() }}
             />
         )
     }
