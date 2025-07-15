@@ -32,6 +32,7 @@ type TokenManager struct {
 	tokensToUpdate []uint64 // User IDs for user who need a token update.
 	db             database.Database
 	secret         string
+	parser         *jwt.Parser
 }
 
 // NewTokenManager starts a new token manager. Will create a list with all tokens that need update.
@@ -43,6 +44,7 @@ func NewTokenManager(db database.Database) (*TokenManager, error) {
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err
 	}
+	manager.parser = jwt.NewParser(jwt.WithValidMethods([]string{"HS256"}))
 	return manager, nil
 }
 
@@ -75,12 +77,7 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 		return nil, err
 	}
 	claims := &Claims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
-		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
-		//  (ref https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
-		if t.Header["alg"] != alg {
-			return nil, fmt.Errorf("incorrect signing algorithm, expected %s, got %s", alg, t.Header["alg"])
-		}
+	token, err := tm.parser.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
