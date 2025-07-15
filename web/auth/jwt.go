@@ -84,9 +84,11 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
-		// token has expired; if signature is valid, update it.
-		if err = tm.validateSignature(token); err == nil {
-			return claims, nil
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			// token has expired; if signature is valid, update it.
+			if err = tm.validateSignature(token); err == nil {
+				return claims, nil
+			}
 		}
 		return nil, err
 	}
