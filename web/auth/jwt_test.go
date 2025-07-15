@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -28,8 +28,8 @@ func TestNewManager(t *testing.T) {
 	}
 	// User 1 should not be in the update list.
 	user1claims := auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
 		UserID:  user1.GetID(),
 		Admin:   true,
@@ -44,7 +44,7 @@ func TestNewManager(t *testing.T) {
 	}
 
 	// But must require update if claims are about to expire.
-	user1claims.StandardClaims.ExpiresAt = time.Now().Unix() - 10
+	user1claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-10 * time.Second))
 	cookie, err = manager.UpdateCookie(&user1claims)
 	if err != nil {
 		t.Error(err)
@@ -55,8 +55,8 @@ func TestNewManager(t *testing.T) {
 
 	// User 2 must be in the update list.
 	user2claims := auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
 		UserID: user2.GetID(),
 		Admin:  false,
@@ -143,8 +143,8 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Fatal(err)
 	}
 	claims := &auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
 		UserID: admin.GetID(),
 		Admin:  false,
@@ -213,8 +213,8 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	claims := &auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 3).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(3 * time.Minute)),
 		},
 		UserID: user.GetID(),
 		Admin:  false,

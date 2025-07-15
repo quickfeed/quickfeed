@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
@@ -20,11 +20,11 @@ type requestID interface {
 
 // Claims contain the bearer information.
 type Claims struct {
-	jwt.StandardClaims
 	UserID  uint64                              `json:"user_id"`
 	Admin   bool                                `json:"admin"`
 	Courses map[uint64]qf.Enrollment_UserStatus `json:"courses"`
 	Groups  []uint64                            `json:"groups"`
+	jwt.RegisteredClaims
 }
 
 // TokenManager creates and updates JWTs.
@@ -75,7 +75,7 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 		return nil, err
 	}
 	claims := &Claims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
 		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
 		//  (ref https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
 		if t.Header["alg"] != alg {
@@ -84,11 +84,9 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
-		if tokenExpired(err) {
-			// token has expired; if signature is valid, update it.
-			if err = tm.validateSignature(token); err == nil {
-				return claims, nil
-			}
+		// token has expired; if signature is valid, update it.
+		if err = tm.validateSignature(token); err == nil {
+			return claims, nil
 		}
 		return nil, err
 	}
@@ -119,9 +117,9 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	}
 
 	return &Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tokenExpirationTime).Unix(),
-			IssuedAt:  time.Now().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExpirationTime)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "QuickFeed",
 		},
 		UserID:  userID,
@@ -129,15 +127,6 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 		Courses: userCourses,
 		Groups:  userGroups,
 	}, nil
-}
-
-// tokenExpired returns true if the given JWT validation error is due to an expired token.
-func tokenExpired(err error) bool {
-	v, ok := err.(*jwt.ValidationError)
-	if ok {
-		return v.Errors == jwt.ValidationErrorExpired
-	}
-	return ok
 }
 
 // validateSignature checks the validity of the signature.

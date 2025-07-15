@@ -58,7 +58,7 @@ func (tm *TokenManager) updateRequired(claims *Claims) bool {
 			return true
 		}
 	}
-	return claims.ExpiresAt <= time.Now().Unix()
+	return claims.ExpiresAt.Before(time.Now())
 }
 
 // updateTokenList fetches IDs of users who need token updates from the database
