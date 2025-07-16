@@ -10,10 +10,11 @@ type Job struct {
 	Name string
 	// Image names the image to use to run the job.
 	Image string
-	// Dockerfile contents.
-	// If empty, the image is assumed to exist.
-	// If non-empty, the image is built from this Dockerfile.
-	Dockerfile string
+	// BuildContext is a list of files to include in the build context.
+	// These files are copied to the image's /quickfeed directory.
+	// If the Dockerfile isn't present, the image is assumed to exist.
+	// If the Dockerfile is present, the image is built from the Dockerfile.
+	BuildContext map[string]string
 	// BindDir is the directory to bind to the container's /quickfeed directory.
 	BindDir string
 	// Env is a list of environment variables to set for the job.
