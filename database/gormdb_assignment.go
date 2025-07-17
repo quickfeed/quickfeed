@@ -64,7 +64,10 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
 func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
-	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
+	if err := db.conn.
+		Preload("Assignments").
+		Preload("Assignments.ExpectedTests").
+		First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
 	for _, a := range course.GetAssignments() {
@@ -101,6 +104,8 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			if err := db.updateGradingCriteria(tx, v); err != nil {
 				return err // will rollback transaction
 			}
+			// TODO(meling): we may need to create a updateExpectedTests function that's called here similar to updateGradingCriteria.
+			// Or is there a more obvious way to do this (overwrite the existing expected tests with the new ones)?
 
 			if err := tx.Model(v).Where(&qf.Assignment{
 				ID: assignment.GetID(),
@@ -118,6 +123,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				// Submissions:       v.GetSubmissions(),
 				Tasks:             v.GetTasks(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),
+				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {
 				return err
 			}
