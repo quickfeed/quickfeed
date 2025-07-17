@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -59,13 +58,11 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 			Order:      1,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-01-24T14:00:00"),
-			Submissions: []*qf.Submission{{
-				Scores: []*score.Score{
-					{TestName: "TestGitQuestionsAG", MaxScore: 10, Weight: 1},
-					{TestName: "TestMissingSemesterQuestionsAG", MaxScore: 9, Weight: 1},
-					{TestName: "TestShellQuestionsAG", MaxScore: 20, Weight: 1},
-				},
-			}},
+			ExpectedTests: []*qf.TestInfo{
+				{TestName: "TestGitQuestionsAG", MaxScore: 10, Weight: 1},
+				{TestName: "TestMissingSemesterQuestionsAG", MaxScore: 9, Weight: 1},
+				{TestName: "TestShellQuestionsAG", MaxScore: 20, Weight: 1},
+			},
 		},
 		{
 			Name:       "lab2",
@@ -73,24 +70,22 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 			Order:      2,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-01-31T16:00:00"),
-			Submissions: []*qf.Submission{{
-				Scores: []*score.Score{
-					{TestName: "Test0Formatting", MaxScore: 1, Weight: 5},
-					{TestName: "Test0Lint", MaxScore: 1, Weight: 5},
-					{TestName: "Test0TODOItems", MaxScore: 1, Weight: 5},
-					{TestName: "Test0VetCheck", MaxScore: 1, Weight: 5},
-					{TestName: "TestGrpc_ProtoGeneration", MaxScore: 2, Weight: 20},
-					{TestName: "TestGrpc_RequestSequence", MaxScore: 14, Weight: 50},
-					{TestName: "TestGrpc_ServerRaceCondition", MaxScore: 1, Weight: 50},
-					{TestName: "TestNetworkQuestions", MaxScore: 5, Weight: 1},
-					{TestName: "TestWeb_Counter", MaxScore: 5, Weight: 10},
-					{TestName: "TestWeb_FizzBuzz", MaxScore: 18, Weight: 30},
-					{TestName: "TestWeb_NonExisting", MaxScore: 6, Weight: 10},
-					{TestName: "TestWeb_Redirect", MaxScore: 4, Weight: 20},
-					{TestName: "TestWeb_Root", MaxScore: 1, Weight: 10},
-					{TestName: "TestWeb_ServerFull", MaxScore: 39, Weight: 20},
-				},
-			}},
+			ExpectedTests: []*qf.TestInfo{
+				{TestName: "Test0Formatting", MaxScore: 1, Weight: 5},
+				{TestName: "Test0Lint", MaxScore: 1, Weight: 5},
+				{TestName: "Test0TODOItems", MaxScore: 1, Weight: 5},
+				{TestName: "Test0VetCheck", MaxScore: 1, Weight: 5},
+				{TestName: "TestGrpc_ProtoGeneration", MaxScore: 2, Weight: 20},
+				{TestName: "TestGrpc_RequestSequence", MaxScore: 14, Weight: 50},
+				{TestName: "TestGrpc_ServerRaceCondition", MaxScore: 1, Weight: 50},
+				{TestName: "TestNetworkQuestions", MaxScore: 5, Weight: 1},
+				{TestName: "TestWeb_Counter", MaxScore: 5, Weight: 10},
+				{TestName: "TestWeb_FizzBuzz", MaxScore: 18, Weight: 30},
+				{TestName: "TestWeb_NonExisting", MaxScore: 6, Weight: 10},
+				{TestName: "TestWeb_Redirect", MaxScore: 4, Weight: 20},
+				{TestName: "TestWeb_Root", MaxScore: 1, Weight: 10},
+				{TestName: "TestWeb_ServerFull", MaxScore: 39, Weight: 20},
+			},
 		},
 		{
 			Name:       "lab3",
