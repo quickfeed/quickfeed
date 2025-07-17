@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -15,6 +16,7 @@ const (
 	assignmentFile     = "assignment.yml"
 	assignmentFileYaml = "assignment.yaml"
 	criteriaFile       = "criteria.json"
+	testsFile          = "tests.json"
 	dockerfile         = "Dockerfile"
 	taskFilePattern    = "task-*.md"
 )
@@ -23,6 +25,7 @@ var patterns = []string{
 	assignmentFile,
 	assignmentFileYaml,
 	criteriaFile,
+	testsFile,
 	dockerfile,
 	taskFilePattern,
 }
@@ -90,6 +93,22 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 				}
 			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
+
+		case testsFile:
+			var testInfos []*score.Score
+			if err := json.Unmarshal(contents, &testInfos); err != nil {
+				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", testsFile, err)
+			}
+			// Create a dummy submission with test information for initializing scores
+			// This follows the pattern suggested in comments: using the zeroth entry in submissions
+			if len(testInfos) > 0 {
+				testInfoSubmission := &qf.Submission{
+					ID:           0, // dummy ID to indicate this is test info
+					AssignmentID: assignmentsMap[assignmentName].GetID(),
+					Scores:       testInfos,
+				}
+				assignmentsMap[assignmentName].Submissions = append([]*qf.Submission{testInfoSubmission}, assignmentsMap[assignmentName].GetSubmissions()...)
+			}
 
 		case dockerfile:
 			courseDockerfile = string(contents)

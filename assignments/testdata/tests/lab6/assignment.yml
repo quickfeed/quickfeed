@@ -1,0 +1,6 @@
+name: lab6
+language: go
+deadline: 2019-01-26T14:00:00
+order: 6
+scorelimit: 90
+autoapprove: true
