@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -15,6 +16,7 @@ const (
 	assignmentFile     = "assignment.yml"
 	assignmentFileYaml = "assignment.yaml"
 	criteriaFile       = "criteria.json"
+	testsFile          = "tests.json"
 	dockerfile         = "Dockerfile"
 	taskFilePattern    = "task-*.md"
 )
@@ -23,6 +25,7 @@ var patterns = []string{
 	assignmentFile,
 	assignmentFileYaml,
 	criteriaFile,
+	testsFile,
 	dockerfile,
 	taskFilePattern,
 }
@@ -90,6 +93,18 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 				}
 			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
+
+		case testsFile:
+			// load expected tests from tests.json; these are the tests that the students
+			// are expected to pass and will be used to compute test scores, instead of
+			// relying on the output from student tests alone.
+			var expectedTests []*score.Score
+			if err := json.Unmarshal(contents, &expectedTests); err != nil {
+				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", testsFile, err)
+			}
+			assignmentsMap[assignmentName].Submissions = []*qf.Submission{{
+				Scores: expectedTests,
+			}}
 
 		case dockerfile:
 			courseDockerfile = string(contents)
