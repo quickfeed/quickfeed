@@ -86,7 +86,7 @@ The `username` is actually the github user name. This repository will initially 
 
 The `tests` folder is used by QuickFeed to run the tests for each of the assignments.
 The folder structure inside `tests` must correspond to the structure in the `assignments` repository.
-Each `assignment` folder in the tests repository contains one or more test file and an `assignment.yml` configuration file that will be picked up by QuickFeed test runner.
+Each `assignment` folder in the tests repository contains one or more test file and an `assignment.json` configuration file that will be picked up by QuickFeed test runner.
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
 
@@ -147,7 +147,7 @@ To facilitate automated testing and scoring of student submitted solutions, a te
 This is the purpose of the `tests` repository.
 
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
-The `assignment.yml` files contains the [assignment information](#assignment-information).
+The `assignment.json` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
 
 The `scripts` folder may contain a course-specific [test runner](#test-runners), named `run.sh`, for running the tests.
@@ -169,17 +169,17 @@ Henceforth, if a particular ordering is desired, the teacher may prefix the titl
 ```text
 tests┐
      ├── lab1
-     │   ├── assignment.yml
+     │   ├── assignment.json
      │   └── run.sh
      ├── lab2
-     │   └── assignment.yml
+     │   └── assignment.json
      ├── lab3
-     │   ├── assignment.yml
+     │   ├── assignment.json
      │   ├── task-go-questions.md
      │   ├── task-learn-go.md
      │   └── task-tour-of-go.md
      ├── lab4
-     │   ├── assignment.yml
+     │   ├── assignment.json
      │   └── criteria.json
      └── scripts
          ├── Dockerfile
@@ -188,20 +188,22 @@ tests┐
 
 ### Assignment Information
 
-As mentioned above, the `tests` repository must contain one `assignment.yml` file for each assignment.
+As mentioned above, the `tests` repository must contain one `assignment.json` file for each assignment.
 This file provide assignment information used by QuickFeed.
 An example is shown below.
 
-```yml
-order: 1
-title: "Introduction to Unix"
-deadline: "2020-08-30T23:59:00"
-effort: "8-10 hours"
-isgrouplab: false
-autoapprove: true
-scorelimit: 90
-reviewers: 2
-containertimeout: 10
+```json
+{
+  "order": 1,
+  "title": "Introduction to Unix",
+  "deadline": "2020-08-30T23:59:00",
+  "effort": "8-10 hours",
+  "isgrouplab": false,
+  "autoapprove": true,
+  "scorelimit": 90,
+  "reviewers": 2,
+  "containertimeout": 10
+}
 ```
 
 QuickFeed only use the fields in the table below.
