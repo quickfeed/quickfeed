@@ -76,7 +76,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	}
 }
 
-func TestUpdateAssignment(t *testing.T) {
+func TestUpdateAssignments(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -135,6 +135,63 @@ func TestUpdateAssignment(t *testing.T) {
 		if diff := cmp.Diff(wantAssignments[i], gotAssignments[i], protocmp.Transform()); diff != "" {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
 		}
+	}
+}
+
+func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	wantAssignment := &qf.Assignment{
+		CourseID:      course.GetID(),
+		Name:          "Test Assignment",
+		Deadline:      qtest.Timestamp(t, "2022-11-11T23:59:00"),
+		AutoApprove:   false,
+		Order:         1,
+		IsGroupLab:    false,
+		ExpectedTests: []*qf.TestInfo{{TestName: "test1", MaxScore: 10, Weight: 10}},
+	}
+	if err := db.CreateAssignment(wantAssignment); err != nil {
+		t.Fatal(err)
+	}
+
+	assignments, err := db.GetAssignmentsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 1 {
+		t.Errorf("expected 1 assignment, got %d", len(assignments))
+	}
+	gotAssignment := assignments[0]
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignmentsByCourse() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Update the assignment with new expected tests
+	wantAssignment.ExpectedTests[0].MaxScore = 20
+	wantAssignment.ExpectedTests[0].Weight = 20
+	wantAssignment.ExpectedTests = append(wantAssignment.ExpectedTests, &qf.TestInfo{TestName: "test2", MaxScore: 15, Weight: 15})
+
+	updateExpectedTests := []*qf.Assignment{wantAssignment}
+	err = db.UpdateAssignments(updateExpectedTests)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assignments, err = db.GetAssignmentsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 1 {
+		t.Fatalf("expected 1 assignment after update, got %d", len(assignments))
+	}
+	gotAssignment = assignments[0]
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignmentsByCourse() mismatch (-want +got):\n%s", diff)
 	}
 }
 

@@ -12,8 +12,6 @@ import (
 
 var ErrInvalidCourseRelation = errors.New("entity belongs to a different course")
 
-/// Assignments ///
-
 // CreateAssignment creates a new assignment record.
 func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 	// Course id and assignment order must be given.
@@ -64,7 +62,10 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
 func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
-	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
+	if err := db.conn.
+		Preload("Assignments").
+		Preload("Assignments.ExpectedTests").
+		First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
 	for _, a := range course.GetAssignments() {
@@ -101,6 +102,16 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			if err := db.updateGradingCriteria(tx, v); err != nil {
 				return err // will rollback transaction
 			}
+			// This sets the assignment ID (and ID if it already exists) for each expected test.
+			// This is required to avoid duplicates in the database.
+			for _, info := range v.GetExpectedTests() {
+				if err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
+					AssignmentID: v.GetID(),
+					TestName:     info.GetTestName(),
+				}).FirstOrInit(info).Error; err != nil {
+					return err // will rollback transaction
+				}
+			}
 
 			if err := tx.Model(v).Where(&qf.Assignment{
 				ID: assignment.GetID(),
@@ -118,6 +129,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				// Submissions:       v.GetSubmissions(),
 				Tasks:             v.GetTasks(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),
+				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {
 				return err
 			}
