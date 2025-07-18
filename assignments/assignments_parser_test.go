@@ -285,19 +285,6 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, wantAssignment := range assignments {
-		for _, gotAssignment := range gotAssignments {
-			if wantAssignment.GetName() == gotAssignment.GetName() {
-				if len(wantAssignment.Submissions) != len(gotAssignment.Submissions) {
-					t.Errorf("%s has %d submissions, want %d", wantAssignment.GetName(), len(gotAssignment.Submissions), len(wantAssignment.Submissions))
-				}
-				if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
-					t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
-				}
-			}
-		}
-	}
-
 	if diff := cmp.Diff(assignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "ID")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
@@ -331,46 +318,9 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	if len(gotNewAssignments) != 3 {
 		t.Errorf("len(assignments) = %d, want %d", len(gotNewAssignments), 3)
 	}
-
-	for _, wantAssignment := range newAssignments {
-		for _, gotAssignment := range gotNewAssignments {
-			if wantAssignment.GetName() == gotAssignment.GetName() {
-
-				if len(wantAssignment.ExpectedTests) > 0 && len(gotAssignment.ExpectedTests) > 0 {
-					t.Logf("want assignment: %s", wantAssignment.ExpectedTests[0])
-					t.Logf(" got assignment: %s", gotAssignment.ExpectedTests[0])
-				}
-				if len(wantAssignment.ExpectedTests) != len(gotAssignment.ExpectedTests) {
-					t.Errorf("%s has %d expected tests, want %d", wantAssignment.GetName(), len(gotAssignment.ExpectedTests), len(wantAssignment.ExpectedTests))
-				}
-				if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "ID")); diff != "" {
-					t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
-				}
-			}
-		}
-	}
-
 	// Check that the new assignments are the same as the ones we parsed
 	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "ID")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
-		for i := range gotNewAssignments {
-			for j := range gotNewAssignments[i].ExpectedTests {
-				t.Logf(" got expected test: %s", gotNewAssignments[i].ExpectedTests[j])
-			}
-			for j := range newAssignments[i].ExpectedTests {
-				t.Logf("want expected test: %s", newAssignments[i].ExpectedTests[j])
-			}
-		}
-		// for i := range gotNewAssignments {
-		// 	t.Logf("want assignment: %s", newAssignments[i])
-		// 	t.Logf(" got assignment: %s", gotNewAssignments[i])
-		// }
-		// for i := range gotNewAssignments {
-		// 	newAssignments[i].ExpectedTests = nil
-		// 	gotNewAssignments[i].ExpectedTests = nil
-		// 	t.Logf("want assignment: %s", newAssignments[i])
-		// 	t.Logf(" got assignment: %s", gotNewAssignments[i])
-		// }
 	}
 }
 
