@@ -106,6 +106,16 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			}
 			// TODO(meling): we may need to create a updateExpectedTests function that's called here similar to updateGradingCriteria.
 			// Or is there a more obvious way to do this (overwrite the existing expected tests with the new ones)?
+			// This sets the assignment ID (and ID if it already exists) for each expected test.
+			// This is required to avoid duplicates in the database.
+			for _, info := range v.GetExpectedTests() {
+				if err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
+					AssignmentID: v.GetID(),
+					TestName:     info.GetTestName(),
+				}).FirstOrInit(info).Error; err != nil {
+					return err
+				}
+			}
 
 			if err := tx.Model(v).Where(&qf.Assignment{
 				ID: assignment.GetID(),
