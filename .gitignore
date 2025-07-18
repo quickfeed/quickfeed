@@ -5,7 +5,7 @@ debug
 !public/.vscode/tasks.json
 public/dist/bundle.js*
 public/dist/bundle.js.map
-./quickfeed
+quickfeed
 backups
 scratchpad
 proto-include
