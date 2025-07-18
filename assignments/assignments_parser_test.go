@@ -285,7 +285,8 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(assignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "ID")); diff != "" {
+
+	if diff := cmp.Diff(assignments, gotAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
 
@@ -318,8 +319,9 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	if len(gotNewAssignments) != 3 {
 		t.Errorf("len(assignments) = %d, want %d", len(gotNewAssignments), 3)
 	}
+
 	// Check that the new assignments are the same as the ones we parsed
-	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "ID")); diff != "" {
+	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
 }
