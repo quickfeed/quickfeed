@@ -1,7 +1,10 @@
 package assignments
 
 import (
+	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
@@ -12,22 +15,34 @@ import (
 const defaultAutoApproveScoreLimit = 80
 
 // assignmentData holds information about a single assignment.
-// This is only used for parsing the 'assignment.yml' file.
+// This is used for parsing both 'assignment.yml' and 'assignment.json' files.
 // Note that the struct can be private, but the fields must be
 // public to allow parsing.
 type assignmentData struct {
-	Order            uint32 `yaml:"order"`
-	Deadline         string `yaml:"deadline"`
-	IsGroupLab       bool   `yaml:"isgrouplab"`
-	AutoApprove      bool   `yaml:"autoapprove"`
-	ScoreLimit       uint32 `yaml:"scorelimit"`
-	Reviewers        uint32 `yaml:"reviewers"`
-	ContainerTimeout uint32 `yaml:"containertimeout"`
+	Order            uint32 `yaml:"order" json:"order"`
+	Deadline         string `yaml:"deadline" json:"deadline"`
+	IsGroupLab       bool   `yaml:"isgrouplab" json:"isgrouplab"`
+	AutoApprove      bool   `yaml:"autoapprove" json:"autoapprove"`
+	ScoreLimit       uint32 `yaml:"scorelimit" json:"scorelimit"`
+	Reviewers        uint32 `yaml:"reviewers" json:"reviewers"`
+	ContainerTimeout uint32 `yaml:"containertimeout" json:"containertimeout"`
 }
 
-func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, error) {
+func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64, filename string) (*qf.Assignment, error) {
 	var newAssignment assignmentData
-	err := yaml.Unmarshal(contents, &newAssignment)
+	var err error
+	
+	// Determine file format based on extension
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".json":
+		err = json.Unmarshal(contents, &newAssignment)
+	case ".yml", ".yaml":
+		err = yaml.Unmarshal(contents, &newAssignment)
+	default:
+		return nil, fmt.Errorf("unsupported assignment file format: %s", ext)
+	}
+	
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
 	}

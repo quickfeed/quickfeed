@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	readmeTmplFile = "readme_tmpl.md"
-	readmeFile     = "README.md"
-	assignmentFile = "assignment.yml"
+	readmeTmplFile     = "readme_tmpl.md"
+	readmeFile         = "README.md"
+	assignmentFile     = "assignment.yml"
+	assignmentFileJSON = "assignment.json"
 )
 
 // LabHeader contains a string representation of the content to be written as a lab header
@@ -91,18 +92,18 @@ func generateReadme(repo string, labs map[string][]string) map[int]*AssignmentIn
 	return assignments
 }
 
-// findLabsWithReadmeTmpl returns a map of labs with assignment.yml files
+// findLabsWithReadmeTmpl returns a map of labs with assignment.yml or assignment.json files
 // and a slice of their corresponding readme_tmpl.md files.
 func findLabsWithReadmeTmpl(repo string) (map[string][]string, error) {
 	labs := make(map[string][]string)
 
-	// find all labs with assignment.yml files
+	// find all labs with assignment.yml or assignment.json files
 	err := filepath.WalkDir(repo, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		var emptySlice []string
-		if !d.IsDir() && d.Name() == assignmentFile {
+		if !d.IsDir() && (d.Name() == assignmentFile || d.Name() == assignmentFileJSON) {
 			dir := filepath.Dir(path)
 			labs[dir] = emptySlice
 		}
@@ -144,15 +145,30 @@ func findLabsWithReadmeTmpl(repo string) (map[string][]string, error) {
 	return labs, nil
 }
 
-// parseAssignmentHeader returns a header by parsing assignment.yml.
+// parseAssignmentHeader returns a header by parsing assignment.yml or assignment.json.
+// JSON files take precedence over YAML files.
 func parseAssignmentHeader(lab, headerTemplate string, assignments map[int]*AssignmentInfo) string {
-	assignment, err := parseAssignment(filepath.Join(lab, assignmentFile))
+	var assignmentFilePath string
+	// Check for JSON file first, then YAML
+	jsonPath := filepath.Join(lab, assignmentFileJSON)
+	yamlPath := filepath.Join(lab, assignmentFile)
+	
+	if _, err := os.Stat(jsonPath); err == nil {
+		assignmentFilePath = jsonPath
+	} else if _, err := os.Stat(yamlPath); err == nil {
+		assignmentFilePath = yamlPath
+	} else {
+		fmt.Printf("No assignment file found in %s\n", lab)
+		return ""
+	}
+	
+	assignment, err := parseAssignment(assignmentFilePath)
 	check(err)
 
 	// make sure all assignments has CourseOrg field set
 	assignment.CourseOrg = course()
 	if _, found := assignments[assignment.Order]; !found {
-		// add to assignments only once; this is since the assignment.yml
+		// add to assignments only once; this is since the assignment.yml or assignment.json
 		// may exist for multiple versions of the same assignment README.md.
 		assignments[assignment.Order] = assignment
 	}

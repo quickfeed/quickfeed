@@ -17,6 +17,7 @@ const (
 	renameLegacyTestsCmd  = "rename-tests"
 	addLintCheckersCmd    = "add-lint-checkers"
 	addMainTestsCmd       = "add-main-tests"
+	convertAssignmentsCmd = "convert-assignments"
 )
 
 func main() {
@@ -48,6 +49,8 @@ func main() {
 		addLintCheckers(args)
 	case addMainTestsCmd:
 		addMainTests()
+	case convertAssignmentsCmd:
+		convertAssignments(args)
 	// case "sync":
 	// case "help":
 	default:
