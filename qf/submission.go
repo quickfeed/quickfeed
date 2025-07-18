@@ -4,7 +4,7 @@ import (
 	"slices"
 	"time"
 
-	score "github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func (s *Submission) IsApproved(userID uint64) bool {
