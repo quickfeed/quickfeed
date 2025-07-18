@@ -27,6 +27,8 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab4/criteria.json":        {},
 		"testdata/tests/lab5/assignment.yml":       {},
 		"testdata/tests/lab5/criteria.json":        {},
+		"testdata/tests/lab6/assignment.yml":       {},
+		"testdata/tests/lab6/tests.json":           {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
@@ -149,6 +151,65 @@ func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			checkLabWithInvalidCriteriaFile(t, tc.folder)
 		})
+	}
+}
+
+func TestReadTestsRepositoryContentWithTestsJSON(t *testing.T) {
+	// Test specifically for tests.json functionality
+	gotAssignments, _, err := readTestsRepositoryContent(testsFolder, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	// Find lab6 which has tests.json
+	var lab6Assignment *qf.Assignment
+	for _, assignment := range gotAssignments {
+		if assignment.GetName() == "lab6" {
+			lab6Assignment = assignment
+			break
+		}
+	}
+	
+	if lab6Assignment == nil {
+		t.Fatal("lab6 assignment not found")
+	}
+	
+	submissions := lab6Assignment.GetSubmissions()
+	if len(submissions) == 0 {
+		t.Fatal("expected at least one submission (test info) for lab6")
+	}
+	
+	// Check that the first submission has dummy ID 0 (test info)
+	testInfoSubmission := submissions[0]
+	if testInfoSubmission.GetID() != 0 {
+		t.Errorf("expected test info submission to have ID 0, got %d", testInfoSubmission.GetID())
+	}
+	
+	scores := testInfoSubmission.GetScores()
+	if len(scores) != 2 {
+		t.Errorf("expected 2 test scores, got %d", len(scores))
+	}
+	
+	expectedTests := map[string]struct {
+		maxScore int32
+		weight   int32
+	}{
+		"TestExample1": {maxScore: 100, weight: 10},
+		"TestExample2": {maxScore: 50, weight: 5},
+	}
+	
+	for _, score := range scores {
+		expected, ok := expectedTests[score.GetTestName()]
+		if !ok {
+			t.Errorf("unexpected test %s", score.GetTestName())
+			continue
+		}
+		if score.GetMaxScore() != expected.maxScore {
+			t.Errorf("test %s: expected max score %d, got %d", score.GetTestName(), expected.maxScore, score.GetMaxScore())
+		}
+		if score.GetWeight() != expected.weight {
+			t.Errorf("test %s: expected weight %d, got %d", score.GetTestName(), expected.weight, score.GetWeight())
+		}
 	}
 }
 

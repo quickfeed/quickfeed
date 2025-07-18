@@ -1,0 +1,12 @@
+[
+    {
+        "TestName": "TestExample1",
+        "MaxScore": 100,
+        "Weight": 10
+    },
+    {
+        "TestName": "TestExample2",
+        "MaxScore": 50,
+        "Weight": 5
+    }
+]
