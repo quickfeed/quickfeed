@@ -54,11 +54,14 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 
 	// Process all assignment files
 	assignmentsMap := make(map[string]*qf.Assignment)
+	var courseDockerfile string
+
+	// First pass: Process assignment files only
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
-		filename := filepath.Base(path)
-		if filename == assignmentFileJson {
-			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID, filename)
+		
+		if filepath.Base(path) == assignmentFileJson {
+			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID)
 			if err != nil {
 				return nil, "", err
 			}
@@ -66,14 +69,11 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		}
 	}
 
-	var courseDockerfile string
-
-	// Process other files in tests repository
+	// Second pass: Process other files in tests repository
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
-		filename := filepath.Base(path)
-
-		switch filename {
+		
+		switch filepath.Base(path) {
 		case criteriaFile:
 			if assignment, exists := assignmentsMap[assignmentName]; exists {
 				var benchmarks []*qf.GradingBenchmark
@@ -95,9 +95,9 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			courseDockerfile = string(contents)
 		}
 
-		if match(filename, taskFilePattern) {
+		if match(filepath.Base(path), taskFilePattern) {
 			if assignment := assignmentsMap[assignmentName]; assignment != nil {
-				taskName := taskName(filename)
+				taskName := taskName(filepath.Base(path))
 				task, err := newTask(contents, assignment.GetOrder(), taskName)
 				if err != nil {
 					return nil, "", err

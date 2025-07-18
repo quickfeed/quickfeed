@@ -25,10 +25,9 @@ type assignmentData struct {
 	ContainerTimeout uint32 `json:"containertimeout"`
 }
 
-func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64, filename string) (*qf.Assignment, error) {
+func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, error) {
 	var newAssignment assignmentData
 	
-	// Parse JSON assignment file
 	err := json.Unmarshal(contents, &newAssignment)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)

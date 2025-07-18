@@ -424,3 +424,21 @@ func TestFixDeadline(t *testing.T) {
 		}
 	}
 }
+
+func TestParseInvalidJSONFormat(t *testing.T) {
+	testsDir := t.TempDir()
+	
+	// Create a file with invalid JSON content
+	invalidJSON := `some content`
+	writeFile(t, testsDir, "lab1", "assignment.json", invalidJSON)
+	
+	_, _, err := readTestsRepositoryContent(testsDir, 0)
+	if err == nil {
+		t.Error("Expected error for invalid JSON format, got nil")
+	}
+	
+	expectedError := "error unmarshalling assignment: invalid character 's' looking for beginning of value"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error %q, got %q", expectedError, err.Error())
+	}
+}
