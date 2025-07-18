@@ -1,7 +1,10 @@
 package qf
 
 import (
+	"slices"
 	"time"
+
+	score "github.com/quickfeed/quickfeed/kit/score"
 )
 
 func (s *Submission) IsApproved(userID uint64) bool {
@@ -71,6 +74,28 @@ func (s *Submission) SetGradeAll(status Submission_Status) {
 func (s *Submission) SetGradesIfApproved(a *Assignment, score uint32) {
 	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
 		s.SetGradeAll(Submission_APPROVED)
+	}
+}
+
+// EnsureAllTestsInSubmissionScores ensures that all expected tests for the assignment
+// are present in the submission's scores. If a test is missing, it is added with
+// the default values from the assignment's expected tests, with a zero score.
+// This ensures that the submission always contains all expected tests, even if they
+// were not executed or scored in the test run.
+func (s *Submission) EnsureAllTestsInSubmissionScores(assignment *Assignment) {
+	for _, testInfo := range assignment.GetExpectedTests() {
+		scores := s.GetScores()
+		if !slices.ContainsFunc(scores, func(sc *score.Score) bool {
+			return sc.GetTestName() == testInfo.GetTestName()
+		}) {
+			// If the test is not present in the submission, add it from the assignment.
+			// This is done to ensure that the scores are always present in the submission.
+			s.Scores = append(s.Scores, &score.Score{
+				TestName: testInfo.GetTestName(),
+				MaxScore: testInfo.GetMaxScore(),
+				Weight:   testInfo.GetWeight(),
+			})
+		}
 	}
 }
 
