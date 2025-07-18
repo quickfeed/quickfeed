@@ -25,7 +25,7 @@ import "patch/go.proto";
 // To define a field that must be stored in the database as a specific type, use:
 // [(go.field) = {tags: 'gorm:"type:<type>"'}]
 
-// USERS AND USERGROUPS //
+// USERS AND USER GROUPS //
 
 message User {
     uint64 ID        = 1;
@@ -168,11 +168,11 @@ message Assignment {
 
 message TestInfo {
     uint64 ID           = 1;
-    uint64 AssignmentID = 2 [(go.field) = { tags: 'gorm:"foreignKey:ID"' }];
-    string TestName     = 3;  // name of the test
-    int32 MaxScore      = 4;  // max score possible to get on this test
-    int32 Weight        = 5;  // the weight of this test; used to compute final grade
-    string Details      = 6;  // if populated, the frontend may display these details
+    uint64 AssignmentID = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:testinfo"' }];  // foreign key
+    string TestName     = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:testinfo"' }];  // name of the test
+    int32 MaxScore      = 4;                                                         // max score possible to get on this test
+    int32 Weight        = 5;                                                         // the weight of this test; used to compute final grade
+    string Details      = 6;                                                         // if populated, the frontend may display these details
 }
 
 message Task {

@@ -1376,11 +1376,11 @@ func (x *Assignment) GetExpectedTests() []*TestInfo {
 type TestInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"foreignKey:ID"`
-	TestName      string                 `protobuf:"bytes,3,opt,name=TestName,proto3" json:"TestName,omitempty"`  // name of the test
-	MaxScore      int32                  `protobuf:"varint,4,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"` // max score possible to get on this test
-	Weight        int32                  `protobuf:"varint,5,opt,name=Weight,proto3" json:"Weight,omitempty"`     // the weight of this test; used to compute final grade
-	Details       string                 `protobuf:"bytes,6,opt,name=Details,proto3" json:"Details,omitempty"`    // if populated, the frontend may display these details
+	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"uniqueIndex:testinfo"` // foreign key
+	TestName      string                 `protobuf:"bytes,3,opt,name=TestName,proto3" json:"TestName,omitempty" gorm:"uniqueIndex:testinfo"`          // name of the test
+	MaxScore      int32                  `protobuf:"varint,4,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`                                     // max score possible to get on this test
+	Weight        int32                  `protobuf:"varint,5,opt,name=Weight,proto3" json:"Weight,omitempty"`                                         // the weight of this test; used to compute final grade
+	Details       string                 `protobuf:"bytes,6,opt,name=Details,proto3" json:"Details,omitempty"`                                        // if populated, the frontend may display these details
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2457,11 +2457,11 @@ const file_qf_types_proto_rawDesc = "" +
 	"\vsubmissions\x18\v \x03(\v2\x0e.qf.SubmissionR\vsubmissions\x12\x1e\n" +
 	"\x05tasks\x18\f \x03(\v2\b.qf.TaskR\x05tasks\x12B\n" +
 	"\x11gradingBenchmarks\x18\r \x03(\v2\x14.qf.GradingBenchmarkR\x11gradingBenchmarks\x122\n" +
-	"\rExpectedTests\x18\x0e \x03(\v2\f.qf.TestInfoR\rExpectedTests\"\xc5\x01\n" +
+	"\rExpectedTests\x18\x0e \x03(\v2\f.qf.TestInfoR\rExpectedTests\"\xf0\x01\n" +
 	"\bTestInfo\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12?\n" +
-	"\fAssignmentID\x18\x02 \x01(\x04B\x1bʵ\x03\x17\xa2\x01\x14gorm:\"foreignKey:ID\"R\fAssignmentID\x12\x1a\n" +
-	"\bTestName\x18\x03 \x01(\tR\bTestName\x12\x1a\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12F\n" +
+	"\fAssignmentID\x18\x02 \x01(\x04B\"ʵ\x03\x1e\xa2\x01\x1bgorm:\"uniqueIndex:testinfo\"R\fAssignmentID\x12>\n" +
+	"\bTestName\x18\x03 \x01(\tB\"ʵ\x03\x1e\xa2\x01\x1bgorm:\"uniqueIndex:testinfo\"R\bTestName\x12\x1a\n" +
 	"\bMaxScore\x18\x04 \x01(\x05R\bMaxScore\x12\x16\n" +
 	"\x06Weight\x18\x05 \x01(\x05R\x06Weight\x12\x18\n" +
 	"\aDetails\x18\x06 \x01(\tR\aDetails\"\xc5\x01\n" +
