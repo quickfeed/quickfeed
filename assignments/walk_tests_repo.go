@@ -12,8 +12,6 @@ import (
 )
 
 const (
-	assignmentFile     = "assignment.yml"
-	assignmentFileYaml = "assignment.yaml"
 	assignmentFileJson = "assignment.json"
 	criteriaFile       = "criteria.json"
 	dockerfile         = "Dockerfile"
@@ -21,8 +19,6 @@ const (
 )
 
 var patterns = []string{
-	assignmentFile,
-	assignmentFileYaml,
 	assignmentFileJson,
 	criteriaFile,
 	dockerfile,
@@ -49,44 +45,19 @@ func match(filename, pattern string) bool {
 
 // readTestsRepositoryContent reads dir and returns a list of assignments and
 // the course's Dockerfile content if there exists a 'tests/scripts/Dockerfile'.
-// Assignments are extracted from 'assignment.yml', 'assignment.yaml', or 'assignment.json' files, one for each assignment.
+// Assignments are extracted from 'assignment.json' files, one for each assignment.
 func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// Process all assignment files first, with JSON taking precedence over YAML
+	// Process all assignment files
 	assignmentsMap := make(map[string]*qf.Assignment)
-	// First pass: collect all assignment files by directory
-	assignmentFiles := make(map[string][]string)
-	for path := range files {
+	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
 		filename := filepath.Base(path)
-		if filename == assignmentFile || filename == assignmentFileYaml || filename == assignmentFileJson {
-			assignmentFiles[assignmentName] = append(assignmentFiles[assignmentName], path)
-		}
-	}
-	
-	// Second pass: process assignment files with JSON priority
-	for assignmentName, paths := range assignmentFiles {
-		var selectedPath string
-		// Prefer JSON, then YAML, then YML
-		for _, path := range paths {
-			filename := filepath.Base(path)
-			if filename == assignmentFileJson {
-				selectedPath = path
-				break
-			} else if filename == assignmentFileYaml && selectedPath == "" {
-				selectedPath = path
-			} else if filename == assignmentFile && selectedPath == "" {
-				selectedPath = path
-			}
-		}
-		
-		if selectedPath != "" {
-			contents := files[selectedPath]
-			filename := filepath.Base(selectedPath)
+		if filename == assignmentFileJson {
 			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID, filename)
 			if err != nil {
 				return nil, "", err
@@ -104,32 +75,35 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 
 		switch filename {
 		case criteriaFile:
-			var benchmarks []*qf.GradingBenchmark
-			if err := json.Unmarshal(contents, &benchmarks); err != nil {
-				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
-			}
-			// Benchmarks and criteria must have courseID
-			// for access control checks.
-			for _, bm := range benchmarks {
-				bm.CourseID = courseID
-				for _, c := range bm.GetCriteria() {
-					c.CourseID = courseID
+			if assignment, exists := assignmentsMap[assignmentName]; exists {
+				var benchmarks []*qf.GradingBenchmark
+				if err := json.Unmarshal(contents, &benchmarks); err != nil {
+					return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
 				}
+				// Benchmarks and criteria must have courseID
+				// for access control checks.
+				for _, bm := range benchmarks {
+					bm.CourseID = courseID
+					for _, c := range bm.GetCriteria() {
+						c.CourseID = courseID
+					}
+				}
+				assignment.GradingBenchmarks = benchmarks
 			}
-			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
 
 		case dockerfile:
 			courseDockerfile = string(contents)
 		}
 
 		if match(filename, taskFilePattern) {
-			assignment := assignmentsMap[assignmentName]
-			taskName := taskName(filename)
-			task, err := newTask(contents, assignment.GetOrder(), taskName)
-			if err != nil {
-				return nil, "", err
+			if assignment := assignmentsMap[assignmentName]; assignment != nil {
+				taskName := taskName(filename)
+				task, err := newTask(contents, assignment.GetOrder(), taskName)
+				if err != nil {
+					return nil, "", err
+				}
+				assignment.Tasks = append(assignment.GetTasks(), task)
 			}
-			assignmentsMap[assignmentName].Tasks = append(assignmentsMap[assignmentName].GetTasks(), task)
 		}
 	}
 

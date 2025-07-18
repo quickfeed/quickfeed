@@ -15,7 +15,6 @@ import (
 const (
 	readmeTmplFile     = "readme_tmpl.md"
 	readmeFile         = "README.md"
-	assignmentFile     = "assignment.yml"
 	assignmentFileJSON = "assignment.json"
 )
 
@@ -49,7 +48,7 @@ func generateReadme(repo string, labs map[string][]string) map[int]*AssignmentIn
 	for _, lab := range slices.Sorted(maps.Keys(labs)) {
 		for _, readme := range labs[lab] {
 			// prepare paths for log output and for output file
-			assignPath := strings.Replace(filepath.Join(lab, assignmentFile), repo, course(), 1)
+			assignPath := strings.Replace(filepath.Join(lab, assignmentFileJSON), repo, course(), 1)
 			readmePath := strings.Replace(readme, repo, course(), 1)
 			readmeMDPath := strings.Replace(readme, readmeTmplFile, readmeFile, 1)
 			readmeMDPathShort := strings.Replace(readmeMDPath, repo, course(), 1)
@@ -92,18 +91,18 @@ func generateReadme(repo string, labs map[string][]string) map[int]*AssignmentIn
 	return assignments
 }
 
-// findLabsWithReadmeTmpl returns a map of labs with assignment.yml or assignment.json files
+// findLabsWithReadmeTmpl returns a map of labs with assignment.json files
 // and a slice of their corresponding readme_tmpl.md files.
 func findLabsWithReadmeTmpl(repo string) (map[string][]string, error) {
 	labs := make(map[string][]string)
 
-	// find all labs with assignment.yml or assignment.json files
+	// find all labs with assignment.json files
 	err := filepath.WalkDir(repo, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		var emptySlice []string
-		if !d.IsDir() && (d.Name() == assignmentFile || d.Name() == assignmentFileJSON) {
+		if !d.IsDir() && d.Name() == assignmentFileJSON {
 			dir := filepath.Dir(path)
 			labs[dir] = emptySlice
 		}
@@ -125,7 +124,7 @@ func findLabsWithReadmeTmpl(repo string) (map[string][]string, error) {
 			} else {
 				for level := 4; !found && level > 0; level-- {
 					// traverse up the hierarchy looking for existing lab dir
-					// with a previously recorded assignment.yml file;
+					// with a previously recorded assignment.json file;
 					// stop when level reach 0
 					dir := filepath.Dir(dir)
 					if _, found = labs[dir]; found {
@@ -133,7 +132,7 @@ func findLabsWithReadmeTmpl(repo string) (map[string][]string, error) {
 					}
 				}
 				if !found {
-					fmt.Printf("ignoring %s: couldn't find %s in or above %v\n", path, assignmentFile, dir)
+					fmt.Printf("ignoring %s: couldn't find %s in or above %v\n", path, assignmentFileJSON, dir)
 				}
 			}
 		}
@@ -145,20 +144,12 @@ func findLabsWithReadmeTmpl(repo string) (map[string][]string, error) {
 	return labs, nil
 }
 
-// parseAssignmentHeader returns a header by parsing assignment.yml or assignment.json.
-// JSON files take precedence over YAML files.
+// parseAssignmentHeader returns a header by parsing assignment.json.
 func parseAssignmentHeader(lab, headerTemplate string, assignments map[int]*AssignmentInfo) string {
-	var assignmentFilePath string
-	// Check for JSON file first, then YAML
-	jsonPath := filepath.Join(lab, assignmentFileJSON)
-	yamlPath := filepath.Join(lab, assignmentFile)
+	assignmentFilePath := filepath.Join(lab, assignmentFileJSON)
 	
-	if _, err := os.Stat(jsonPath); err == nil {
-		assignmentFilePath = jsonPath
-	} else if _, err := os.Stat(yamlPath); err == nil {
-		assignmentFilePath = yamlPath
-	} else {
-		fmt.Printf("No assignment file found in %s\n", lab)
+	if _, err := os.Stat(assignmentFilePath); err != nil {
+		fmt.Printf("No assignment.json file found in %s\n", lab)
 		return ""
 	}
 	
@@ -168,7 +159,7 @@ func parseAssignmentHeader(lab, headerTemplate string, assignments map[int]*Assi
 	// make sure all assignments has CourseOrg field set
 	assignment.CourseOrg = course()
 	if _, found := assignments[assignment.Order]; !found {
-		// add to assignments only once; this is since the assignment.yml or assignment.json
+		// add to assignments only once; this is since the assignment.json
 		// may exist for multiple versions of the same assignment README.md.
 		assignments[assignment.Order] = assignment
 	}

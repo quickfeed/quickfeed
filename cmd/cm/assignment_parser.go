@@ -4,11 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -20,29 +16,29 @@ const (
 	defaultGroup      = "Group"
 )
 
-// AssignmentInfo contains fields present in the assignment.yml or assignment.json files which accompany each lab.
+// AssignmentInfo contains fields present in the assignment.json files which accompany each lab.
 type AssignmentInfo struct {
-	Order         int    `yaml:"order" json:"order"`
-	Name          string `yaml:"name" json:"name"`
-	ScriptFile    string `yaml:"scriptfile" json:"scriptfile"`
-	Deadline      string `yaml:"deadline" json:"deadline"` // time.Time
-	ShortDeadline string `yaml:"-" json:"-"`               // only date
-	Year          string `yaml:"-" json:"-"`               // derived from deadline
-	AutoApprove   bool   `yaml:"autoapprove" json:"autoapprove"`
-	IsGroupLab    bool   `yaml:"isgrouplab" json:"isgrouplab"`
-	ScoreLimit    int    `yaml:"scorelimit" json:"scorelimit"`
-	Reviewers     int    `yaml:"reviewers" json:"reviewers"`
-	Title         string `yaml:"title" json:"title"`
-	HoursMin      int    `yaml:"hoursmin" json:"hoursmin"`
-	HoursMax      int    `yaml:"hoursmax" json:"hoursmax"`
+	Order         int    `json:"order"`
+	Name          string `json:"name"`
+	ScriptFile    string `json:"scriptfile"`
+	Deadline      string `json:"deadline"` // time.Time
+	ShortDeadline string `json:"-"`        // only date
+	Year          string `json:"-"`        // derived from deadline
+	AutoApprove   bool   `json:"autoapprove"`
+	IsGroupLab    bool   `json:"isgrouplab"`
+	ScoreLimit    int    `json:"scorelimit"`
+	Reviewers     int    `json:"reviewers"`
+	Title         string `json:"title"`
+	HoursMin      int    `json:"hoursmin"`
+	HoursMax      int    `json:"hoursmax"`
 	// defaults to $COURSE $NAME
-	Subject string `yaml:"subject" json:"subject"`
+	Subject string `json:"subject"`
 	// defaults to defaultGrading
-	Grading string `yaml:"grading" json:"grading"`
+	Grading string `json:"grading"`
 	// SubmissionType is interpreted based on the value of IsGroupLab ("Individually" or "Group")
-	SubmissionType string `yaml:"-" json:"-"`
-	ApproveType    string `yaml:"-" json:"-"`
-	CourseOrg      string `yaml:"-" json:"-"` // this field is populated after parsing by the main script
+	SubmissionType string `json:"-"`
+	ApproveType    string `json:"-"`
+	CourseOrg      string `json:"-"` // this field is populated after parsing by the main script
 }
 
 func parseAssignment(filename string) (*AssignmentInfo, error) {
@@ -53,25 +49,14 @@ func parseAssignment(filename string) (*AssignmentInfo, error) {
 
 	res := &AssignmentInfo{}
 	
-	// Determine file format based on extension
-	ext := strings.ToLower(filepath.Ext(filename))
-	switch ext {
-	case ".json":
-		err = json.Unmarshal(contents, res)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
-		}
-	case ".yml", ".yaml":
-		err = yaml.UnmarshalStrict(contents, res)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
-		}
-	default:
-		return nil, fmt.Errorf("unsupported file format: %s", ext)
+	// Parse JSON assignment file
+	err = json.Unmarshal(contents, res)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	if res.Subject == "" {
-		res.Subject = fmt.Sprintf("%s %s", strings.ToUpper(course()), name())
+		res.Subject = fmt.Sprintf("%s %s", course(), name())
 	}
 
 	if res.AutoApprove {

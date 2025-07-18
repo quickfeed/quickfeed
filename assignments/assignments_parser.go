@@ -3,46 +3,33 @@ package assignments
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gopkg.in/yaml.v2"
 )
 
 const defaultAutoApproveScoreLimit = 80
 
 // assignmentData holds information about a single assignment.
-// This is used for parsing both 'assignment.yml' and 'assignment.json' files.
+// This is used for parsing 'assignment.json' files.
 // Note that the struct can be private, but the fields must be
 // public to allow parsing.
 type assignmentData struct {
-	Order            uint32 `yaml:"order" json:"order"`
-	Deadline         string `yaml:"deadline" json:"deadline"`
-	IsGroupLab       bool   `yaml:"isgrouplab" json:"isgrouplab"`
-	AutoApprove      bool   `yaml:"autoapprove" json:"autoapprove"`
-	ScoreLimit       uint32 `yaml:"scorelimit" json:"scorelimit"`
-	Reviewers        uint32 `yaml:"reviewers" json:"reviewers"`
-	ContainerTimeout uint32 `yaml:"containertimeout" json:"containertimeout"`
+	Order            uint32 `json:"order"`
+	Deadline         string `json:"deadline"`
+	IsGroupLab       bool   `json:"isgrouplab"`
+	AutoApprove      bool   `json:"autoapprove"`
+	ScoreLimit       uint32 `json:"scorelimit"`
+	Reviewers        uint32 `json:"reviewers"`
+	ContainerTimeout uint32 `json:"containertimeout"`
 }
 
 func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64, filename string) (*qf.Assignment, error) {
 	var newAssignment assignmentData
-	var err error
 	
-	// Determine file format based on extension
-	ext := strings.ToLower(filepath.Ext(filename))
-	switch ext {
-	case ".json":
-		err = json.Unmarshal(contents, &newAssignment)
-	case ".yml", ".yaml":
-		err = yaml.Unmarshal(contents, &newAssignment)
-	default:
-		return nil, fmt.Errorf("unsupported assignment file format: %s", ext)
-	}
-	
+	// Parse JSON assignment file
+	err := json.Unmarshal(contents, &newAssignment)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
 	}
@@ -57,7 +44,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	if err != nil {
 		return nil, fmt.Errorf("error parsing deadline: %w", err)
 	}
-	// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
+	// AssignmentID field from the parsed JSON is used to set Order, not assignment ID,
 	// or it will cause a database constraint violation (IDs must be unique)
 	// The Name field below is the folder name of the assignment.
 	assignment := &qf.Assignment{

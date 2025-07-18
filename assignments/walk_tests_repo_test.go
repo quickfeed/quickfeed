@@ -19,15 +19,13 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab3/task-tour-of-go.md":   {},
 		"testdata/tests/scripts/Dockerfile":        {},
 		"testdata/tests/scripts/run.sh":            {},
-		"testdata/tests/lab1/assignment.yml":       {},
 		"testdata/tests/lab1/assignment.json":      {},
 		"testdata/tests/lab1/run.sh":               {},
-		"testdata/tests/lab2/assignment.yml":       {},
 		"testdata/tests/lab2/assignment.json":      {},
-		"testdata/tests/lab3/assignment.yml":       {},
-		"testdata/tests/lab4/assignment.yml":       {},
+		"testdata/tests/lab3/assignment.json":      {},
+		"testdata/tests/lab4/assignment.json":      {},
 		"testdata/tests/lab4/criteria.json":        {},
-		"testdata/tests/lab5/assignment.yml":       {},
+		"testdata/tests/lab5/assignment.json":      {},
 		"testdata/tests/lab5/criteria.json":        {},
 	}
 	files, err := walkTestsRepository(testsFolder)
