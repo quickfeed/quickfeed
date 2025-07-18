@@ -9,7 +9,7 @@ protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check install ui proto test qcm cm
+.PHONY: download brew version-check install ui proto test qcm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -61,6 +61,3 @@ test:
 
 qcm:
 	@cd cmd/qcm; go install
-
-cm:
-	@go install github.com/quickfeed/quickfeed/cmd/cm
