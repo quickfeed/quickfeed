@@ -1,16 +1,15 @@
 import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { createMemoryHistory } from "history"
 import React, { act } from "react"
 import Members from "../components/Members"
-import { Route, Router } from "react-router"
+import { Route, MemoryRouter, Routes } from "react-router-dom"
 import { Provider } from "overmind-react"
 import { render, screen } from "@testing-library/react"
 import { MockData } from "./mock_data/mockData"
 import { VoidSchema } from "../../proto/qf/requests_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
 import { create } from "@bufbuild/protobuf"
 import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { ConnectError } from "@connectrpc/connect"
@@ -57,8 +56,8 @@ describe("UpdateEnrollment", () => {
     beforeAll(async () => {
         // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
-        await mockedOvermind.actions.getCourseData({ courseID: BigInt(2) })
-        await mockedOvermind.actions.getCourseData({ courseID: BigInt(1) })
+        await mockedOvermind.actions.global.getCourseData({ courseID: BigInt(2) })
+        await mockedOvermind.actions.global.getCourseData({ courseID: BigInt(1) })
     })
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
@@ -66,9 +65,9 @@ describe("UpdateEnrollment", () => {
         if (!enrollment) {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
-        mockedOvermind.actions.setActiveCourse(test.courseID)
+        mockedOvermind.actions.global.setActiveCourse(test.courseID)
         window.confirm = jest.fn(() => true)
-        await mockedOvermind.actions.updateEnrollment({ enrollment, status: test.want })
+        await mockedOvermind.actions.global.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })
 })
@@ -91,14 +90,14 @@ describe("UpdateEnrollment in webpage", () => {
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
         })
-        const history = createMemoryHistory()
-        history.push("/course/1/members")
 
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
 
@@ -133,14 +132,14 @@ describe("UpdateEnrollment in webpage", () => {
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
         })
-        const history = createMemoryHistory()
-        history.push("/course/1/members")
 
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
 

@@ -1,8 +1,11 @@
 import React from 'react'
 
 export enum KnownMessage {
-    NoSubmission = "Select a submission from the results table",
-    NoAssignment = "Assignment does not have a submission",
+    TeacherNoSubmission = "Select a submission from the results table",
+    TeacherNoAssignment = "Assignment does not have a submission",
+
+    StudentNoSubmission = "No submission found",
+    StudentNoAssignment = "Assignment not found",
 }
 
 // CenteredMessage is a component that displays a message in the center of the screen

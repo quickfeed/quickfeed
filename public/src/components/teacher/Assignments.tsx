@@ -13,7 +13,7 @@ import { useCourseID } from "../../hooks/useCourseID"
  *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
 const Assignments = () => {
     const courseID = useCourseID()
-    const actions = useActions()
+    const actions = useActions().global
     const state = useAppState()
 
     const AssignmentElement = ({ assignment }: { assignment: Assignment }) => {

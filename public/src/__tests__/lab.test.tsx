@@ -1,12 +1,11 @@
 import React from "react"
 import { AssignmentSchema, AssignmentsSchema, SubmissionSchema, SubmissionsSchema, UserSchema } from "../../proto/qf/types_pb"
-import { createMemoryHistory } from "history"
-import { Route, Router } from "react-router-dom"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { Provider } from "overmind-react"
 import { act, render, screen } from "@testing-library/react"
 import Lab from "../components/Lab"
 import { MockData } from "./mock_data/mockData"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
 import { initializeOvermind, mock } from "./TestHelpers"
 import { create, clone } from "@bufbuild/protobuf"
 import { ConnectError } from "@connectrpc/connect"
@@ -34,7 +33,6 @@ describe("Lab view correctly re-renders on state change", () => {
         })
 
     }
-    const history = createMemoryHistory()
     let mockedOvermind = initializeOvermind({}, api)
 
     beforeEach(() => {
@@ -48,14 +46,13 @@ describe("Lab view correctly re-renders on state change", () => {
             courses: MockData.mockedCourses(),
             repositories: MockData.mockedRepositories()
         }, api)
-        history.push("/course/1/lab/1")
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history}>
-                    <Route path="/course/:id/lab/:lab">
-                        <Lab />
-                    </Route>
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/lab/1"]}>
+                    <Routes>
+                        <Route path="/course/:id/lab/:lab" element={<Lab />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
     })
@@ -67,36 +64,36 @@ describe("Lab view correctly re-renders on state change", () => {
 
     const fetchAssignments = async () => {
         await act(async () => {
-            await mockedOvermind.actions.getAssignments()
+            await mockedOvermind.actions.global.getAssignments()
         })
     }
 
     test("No assignment", () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
     })
 
     test("No submission", async () => {
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "Select a submission from the results table"
-        assertContent(KnownMessage.NoSubmission)
+        assertContent(KnownMessage.StudentNoSubmission)
     })
 
     test("Submission found", async () => {
         // TODO:  The previous tests are covered here, we could remove them
         // Lab should show "Assignment not found" if the assignment is not found
-        assertContent(KnownMessage.NoAssignment)
+        assertContent(KnownMessage.StudentNoAssignment)
         await fetchAssignments()
         expect(mockedOvermind.state.assignments["1"]).toBeDefined()
         // after the assignment is fetched it should show "Select a submission from the results table"
-        assertContent(KnownMessage.NoSubmission)
+        assertContent(KnownMessage.StudentNoSubmission)
 
         // fetch submissions for the user
         await act(async () => {
-            await mockedOvermind.actions.getUserSubmissions(1n)
+            await mockedOvermind.actions.global.getUserSubmissions(1n)
         })
         const submissions = mockedOvermind.state.submissions.ForAssignment(create(AssignmentSchema, { ID: 1n, CourseID: 1n }))
         expect(submissions).toBeDefined()
@@ -111,7 +108,7 @@ describe("Lab view correctly re-renders on state change", () => {
             if (modifiedSubmission.BuildInfo) {
                 modifiedSubmission.BuildInfo.BuildLog = "This is a build log"
             }
-            mockedOvermind.actions.receiveSubmission(modifiedSubmission)
+            mockedOvermind.actions.global.receiveSubmission(modifiedSubmission)
         })
         // verify that the updated submission is shown
         assertContent("This is a build log")

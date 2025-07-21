@@ -1,21 +1,21 @@
 import React, { useCallback, useEffect } from "react"
-import { isHidden, Color, userLink } from "../../Helpers"
-import { useAppState, useActions } from "../../overmind"
+import { User } from "../../../proto/qf/types_pb"
+import { Color, isHidden, userLink } from "../../Helpers"
+import { useActions, useAppState } from "../../overmind"
 import DynamicButton from "../DynamicButton"
 import DynamicTable from "../DynamicTable"
 import Search from "../Search"
 import { ButtonType } from "./Button"
 import UserComponent from "./User"
-import { User } from "../../../proto/qf/types_pb"
 
 
 const Users = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     useEffect(() => {
         actions.getUsers()
-    }, [])
+    }, [actions])
 
     const handlePromoteAdmin = useCallback((user: User) => () => actions.updateAdmin(user), [actions])
 

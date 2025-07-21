@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { useHistory } from 'react-router'
+import { useNavigate } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
 import { Course, Enrollment } from '../../proto/qf/types_pb'
@@ -19,8 +19,8 @@ const CardColor = [
 ]
 
 const CourseCard = ({ course, enrollment }: CardProps) => {
-    const actions = useActions()
-    const history = useHistory()
+    const actions = useActions().global
+    const navigate = useNavigate()
     const status = enrollment.status
 
     const handleEnroll = useCallback(() => actions.enroll(course.ID), [actions, course.ID])
@@ -30,7 +30,7 @@ const CourseCard = ({ course, enrollment }: CardProps) => {
         } else if (hasPending(status)) {
             return <button className="btn btn-secondary course-button disabled">Pending</button>
         }
-        return <button className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</button>
+        return <button className="btn btn-primary course-button" onClick={() => navigate(`/course/${enrollment.courseID}`)}>Go to Course</button>
     }
 
     const CourseEnrollmentStatus = () => {

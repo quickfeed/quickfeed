@@ -1,50 +1,49 @@
 import React, { useEffect, useState } from 'react'
-import { useLocation, Link } from 'react-router-dom'
-import { useActions, useAppState } from '../../overmind'
-import useWindowSize from "../../hooks/windowsSize"
+import { Link, useLocation } from 'react-router-dom'
+import { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"
+import useWindowSize from "../../hooks/windowsSize"
+import { useActions, useAppState } from '../../overmind'
 
 
 const Breadcrumbs = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const location = useLocation()
     const { width } = useWindowSize()
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)
 
-    const getCourseNameById = (id: string): string | null => {
-        const course = state.courses.find(course => course.ID.toString() === id)
-        if (!course) {
-            return null
-        }
-        if (width < ScreenSize.ExtraLarge) {
-            return course.code
-        }
-        return course.name
-    }
-
-    const getAssignmentNameById = (id: string): string | null => {
-        if (pathnames[0] === 'course' && pathnames[1]) {
-            const assignment = state.assignments[pathnames[1]].find(assignment => assignment.ID.toString() === id)
-            return assignment?.name ?? null
-        }
-        return null
-    }
-
     const handleDashboard = () => {
         actions.setActiveCourse(0n)
     }
 
+    // Returns course name (or code if small screen)
+    const resolveCourseName = (courses: Course[], courseId: string, width: number): string | null => {
+        const course = courses.find(c => c.ID.toString() === courseId)
+        if (!course) return null
+        return width < ScreenSize.ExtraLarge ? course.code : course.name
+    }
+
+    // Returns assignment name (or null if not found)
+    const resolveAssignmentName = (assignments: Assignment[], assignmentId: string): string | null => {
+        const assignment = assignments.find(a => a.ID.toString() === assignmentId)
+        return assignment?.name ?? null
+    }
+
     useEffect(() => {
-        if (pathnames[0] === 'course' && pathnames[1]) {
-            setCourseName(getCourseNameById(pathnames[1]))
+        const [prefix, courseId, section, assignmentId] = pathnames
+
+        if (prefix === 'course' && courseId) {
+            setCourseName(resolveCourseName(state.courses, courseId, width))
+
+            if (section === 'lab' && assignmentId) {
+                const courseAssignments = state.assignments?.[courseId] ?? []
+                setAssignmentName(resolveAssignmentName(courseAssignments, assignmentId))
+            }
         }
-        if (pathnames[2] === 'lab' && pathnames[3]) {
-            setAssignmentName(getAssignmentNameById(pathnames[3]))
-        }
-    }, [pathnames, width])
+    }, [pathnames, state.courses, state.assignments, width])
 
     return (
         <nav aria-label="breadcrumb">
