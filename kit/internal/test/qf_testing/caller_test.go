@@ -1,3 +1,8 @@
+// Package qf_testing is only used for testing the robustness of the internal
+// [test.CallerName] function to ensure that module or package names with
+// a testing suffix are not accidentally matched (in [test.unwindCallFrames])
+// before reaching the actual std lib testing package in the call stack.
+// This was introduced as a fix for issue #1387.
 package qf_testing
 
 import (
