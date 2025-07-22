@@ -83,7 +83,7 @@
     },
     "breadcrumbs.enabled": true,
     "clang-format.executable": "/usr/bin/clang-format",
-    "clang-format.style": "{ IndentWidth: 4, BasedOnStyle: google, AlignConsecutiveAssignments: true, ColumnLimit: 120 }",
+    "clang-format.style": "{ IndentWidth: 4, BasedOnStyle: google, AlignConsecutiveAssignments: true, ColumnLimit: 140 }",
     "markdownlint.config": {
         "MD024": false,
         "default": true,

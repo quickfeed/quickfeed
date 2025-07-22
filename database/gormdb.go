@@ -64,6 +64,7 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 		&qf.Repository{},
 		&qf.UsedSlipDays{},
 		&qf.GradingBenchmark{},
+		&qf.TestInfo{},
 		&qf.GradingCriterion{},
 		&qf.Review{},
 		&qf.Issue{},

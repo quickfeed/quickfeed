@@ -52,6 +52,7 @@ autoapprove: false
 	script   = `Default script`
 	script1  = `Script for Lab1`
 	df       = `A dockerfile in training`
+	testJson = `[{"TestName":"TestGitQuestionsAG","MaxScore":10,"Weight":1},{"TestName":"TestMissingSemesterQuestionsAG","MaxScore":9,"Weight":1},{"TestName":"TestShellQuestionsAG","MaxScore":20,"Weight":1}]`
 	criteria = `
 	[
 		{
@@ -250,6 +251,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 		path, filename, content string
 	}{
 		{"lab1", "assignment.yml", y1},
+		{"lab1", "tests.json", testJson},
 		{"lab2", "assignment.yml", y2},
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)

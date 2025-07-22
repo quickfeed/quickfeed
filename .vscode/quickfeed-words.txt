@@ -118,6 +118,7 @@ itest
 jinzhu
 Jostein
 jsonpb
+Justfile
 JWTs
 Kandidatnr
 keepalive
@@ -213,6 +214,7 @@ swiftui
 testcache
 testdata
 testdb
+testinfo
 testorg
 timestamppb
 tmpl
