@@ -8,7 +8,7 @@ The system now supports pre-initializing assignment scores by storing test infor
 
 ## Using tests.json Files
 
-The simplest way to provide test information is to create a `tests.json` file in each assignment directory alongside the `assignment.yml` file.
+The simplest way to provide test information is to create a `tests.json` file in each assignment directory alongside the `assignment.json` file.
 
 ### Format
 
@@ -40,11 +40,11 @@ The `tests.json` file should contain an array of test objects with the following
 ```text
 tests/
 ├── lab1/
-│   ├── assignment.yml
+│   ├── assignment.json
 │   ├── tests.json
 │   └── ...
 ├── lab2/
-│   ├── assignment.yml
+│   ├── assignment.json
 │   ├── tests.json
 │   └── ...
 ```

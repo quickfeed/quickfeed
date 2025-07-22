@@ -12,17 +12,15 @@ import (
 )
 
 const (
-	assignmentFile     = "assignment.yml"
-	assignmentFileYaml = "assignment.yaml"
-	criteriaFile       = "criteria.json"
-	testsFile          = "tests.json"
-	dockerfile         = "Dockerfile"
-	taskFilePattern    = "task-*.md"
+	assignmentFile  = "assignment.json"
+	criteriaFile    = "criteria.json"
+	testsFile       = "tests.json"
+	dockerfile      = "Dockerfile"
+	taskFilePattern = "task-*.md"
 )
 
 var patterns = []string{
 	assignmentFile,
-	assignmentFileYaml,
 	criteriaFile,
 	testsFile,
 	dockerfile,
@@ -95,7 +93,7 @@ func processTaskFile(contents []byte, assignment *qf.Assignment, filename string
 
 // readTestsRepositoryContent reads dir and returns a list of assignments and
 // the course's Dockerfile content if there exists a 'tests/scripts/Dockerfile'.
-// Assignments are extracted from 'assignment.yml' files, one for each assignment.
+// Assignments are extracted from 'assignment.json' files, one for each assignment.
 func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
@@ -164,13 +162,13 @@ func walkTestsRepository(dir string) (map[string][]byte, error) {
 	return files, nil
 }
 
-// processAssignmentFiles processes assignment.yml/yaml files and returns assignments map.
+// processAssignmentFiles processes assignment.json files and returns assignments map.
 func processAssignmentFiles(files map[string][]byte, courseID uint64) (map[string]*qf.Assignment, error) {
 	assignmentsMap := make(map[string]*qf.Assignment)
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
 		filename := filepath.Base(path)
-		if filename == assignmentFile || filename == assignmentFileYaml {
+		if filename == assignmentFile {
 			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID)
 			if err != nil {
 				return nil, err
