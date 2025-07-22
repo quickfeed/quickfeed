@@ -118,6 +118,7 @@ itest
 jinzhu
 Jostein
 jsonpb
+Justfile
 JWTs
 Kandidatnr
 keepalive
