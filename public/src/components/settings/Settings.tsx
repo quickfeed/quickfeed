@@ -116,7 +116,7 @@ const Settings = () => {
                             ""
                         )}
                         onChange={handleRangeChange}
-                        min="0"
+                        min="2"
                         max="20"
                         step="1"
                     />
