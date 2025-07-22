@@ -67,7 +67,7 @@ const Settings = () => {
 
     const handleRangeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         actions.settings.updateSettings({
-            "bar-width": event.target.value + "px",
+            "bar-width": `${event.target.value}px`,
         })
     }
 
@@ -143,7 +143,7 @@ const Settings = () => {
                 <code
                     className="card-body"
                     style={{ color: "#c7254e", wordBreak: "break-word" }}
-                ></code>
+                />
             </div>
 
             {isTeacher ? (

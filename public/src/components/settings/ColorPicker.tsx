@@ -1,9 +1,9 @@
-import React from 'react';
-import { useActions, useAppState } from '../../overmind';
-import { UserSettings } from '../../overmind/namespaces/settings/state';
+import React from 'react'
+import { useActions, useAppState } from '../../overmind'
+import { UserSettings } from '../../overmind/namespaces/settings/state'
 
 export interface ColorOption {
-    name: string;
+    name: string
     colors: Partial<UserSettings>
 }
 
@@ -19,11 +19,11 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ colorOptions }) => {
     const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target
         actions.settings.updateSettings({ [name]: value })
-    };
+    }
 
     const handleColorOptionSelect = (colors: Partial<UserSettings>) => {
         actions.settings.updateSettings(colors)
-    };
+    }
 
     // Convert a setting key to a user-friendly label
     const toLabel = (key: string) => key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
@@ -52,7 +52,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ colorOptions }) => {
                             <span
                                 key={key}
                                 style={{ backgroundColor: color, width: '20px', height: '20px', marginRight: '5px' }}
-                            ></span>
+                            />
                         ))}
                     </div>
                 </button>
@@ -81,7 +81,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ colorOptions }) => {
                     </div>
                 ))}
         </div>
-    );
-};
+    )
+}
 
 export default ColorPicker

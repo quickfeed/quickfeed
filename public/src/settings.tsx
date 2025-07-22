@@ -14,12 +14,12 @@ export const ThemeProvider: React.FC<ThemeContextProps> = ({ children }) => {
         const theme = settings.settings
         Object.entries(theme).forEach(([key, value]) => {
             if (value === undefined) return
-            document.documentElement.style.setProperty('--' + key, value)
+            document.documentElement.style.setProperty(`--${key}`, value)
 
         })
     }, [settings.settings])
 
     return <ThemeContext.Provider value={{}}>{children}</ThemeContext.Provider>
-};
+}
 
 export const useTheme = () => useContext(ThemeContext)
