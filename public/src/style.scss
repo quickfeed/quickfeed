@@ -366,25 +366,25 @@ input {
     white-space: nowrap;
 }
 
-.table th {
-    padding: 0.5rem !important;
+.table {
+    padding: 0.5rem;
     font-family: monospace;
     white-space: nowrap;
-}
 
-.passed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--passed-color) var(--bar-width) 0px 0px inset;
-    padding-left: calc(var(--bar-width) + 10px) !important;
-}
+    .passed {
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--passed-color) var(--bar-width) 0px 0px inset;
+        padding-left: calc(var(--bar-width) + 10px);
+    }
 
-.failed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--failed-color) var(--bar-width) 0px 0px inset;
-    padding-left: calc(var(--bar-width) + 10px) !important;
-}
+    .failed {
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--failed-color) var(--bar-width) 0px 0px inset;
+        padding-left: calc(var(--bar-width) + 10px);
+    }
 
-.not-graded {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, rgba(0, 0, 0, 0.2) var(--bar-width) 0px 0px inset;
-    padding-left: calc(var(--bar-width) + 10px) !important;
+    .not-graded {
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, rgba(0, 0, 0, 0.2) var(--bar-width) 0px 0px inset;
+        padding-left: calc(var(--bar-width) + 10px);
+    }
 }
 
 .dropdown-menu-center {
