@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v2"
 )
 
 var cli struct {
@@ -26,6 +29,11 @@ var cli struct {
 		Docker bool   `help:"Run tests using Docker." default:"false"`
 		Lab    string `help:"Assignment to test."`
 	} `cmd:"" help:"Clone repositories for local test execution."`
+	
+	Convert struct {
+		Source string `help:"Source directory containing assignment.yml files." required:""`
+		DryRun bool   `help:"Show what would be converted without making changes." default:"false"`
+	} `cmd:"" help:"Convert assignment.yml files to assignment.json format."`
 }
 
 func main() {
@@ -52,6 +60,9 @@ func main() {
 			// Only run tests if lab is specified
 			runTests(logger, client, destDir)
 		}
+
+	case "convert":
+		convertAssignments()
 
 	default:
 		panic(ctx.Command())
@@ -170,4 +181,128 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// assignmentData structure for conversion (copied from assignments package)
+type assignmentData struct {
+	Order            uint32 `yaml:"order" json:"order"`
+	Deadline         string `yaml:"deadline" json:"deadline"`
+	IsGroupLab       bool   `yaml:"isgrouplab" json:"isgrouplab"`
+	AutoApprove      bool   `yaml:"autoapprove" json:"autoapprove"`
+	ScoreLimit       uint32 `yaml:"scorelimit" json:"scorelimit"`
+	Reviewers        uint32 `yaml:"reviewers" json:"reviewers"`
+	ContainerTimeout uint32 `yaml:"containertimeout" json:"containertimeout"`
+}
+
+func convertAssignments() {
+	sourceDir := cli.Convert.Source
+	
+	if !exists(sourceDir) {
+		fmt.Printf("Error: Source directory '%s' does not exist\n", sourceDir)
+		os.Exit(1)
+	}
+	
+	var conversions []conversionInfo
+	var errors []string
+	
+	// Walk the source directory to find assignment.yml/yaml files
+	err := filepath.WalkDir(sourceDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		
+		if d.IsDir() {
+			return nil
+		}
+		
+		filename := d.Name()
+		if filename == "assignment.yml" || filename == "assignment.yaml" {
+			info, convErr := processAssignmentFile(path)
+			if convErr != nil {
+				errors = append(errors, fmt.Sprintf("%s: %v", path, convErr))
+			} else {
+				conversions = append(conversions, info)
+			}
+		}
+		
+		return nil
+	})
+	
+	if err != nil {
+		fmt.Printf("Error walking directory: %v\n", err)
+		os.Exit(1)
+	}
+	
+	if len(errors) > 0 {
+		fmt.Printf("Conversion errors found:\n")
+		for _, errMsg := range errors {
+			fmt.Printf("  %s\n", errMsg)
+		}
+		os.Exit(1)
+	}
+	
+	if len(conversions) == 0 {
+		fmt.Printf("No assignment.yml or assignment.yaml files found in '%s'\n", sourceDir)
+		return
+	}
+	
+	fmt.Printf("Found %d assignment files to convert:\n", len(conversions))
+	for _, conv := range conversions {
+		fmt.Printf("  %s -> %s\n", conv.SourcePath, conv.TargetPath)
+	}
+	
+	if cli.Convert.DryRun {
+		fmt.Printf("\nDry run mode: no files were modified\n")
+		return
+	}
+	
+	// Perform the actual conversions
+	for _, conv := range conversions {
+		err := os.WriteFile(conv.TargetPath, conv.JSONContent, 0644)
+		if err != nil {
+			fmt.Printf("Error writing %s: %v\n", conv.TargetPath, err)
+			continue
+		}
+		fmt.Printf("Converted: %s\n", conv.TargetPath)
+	}
+	
+	fmt.Printf("\nConversion complete! Converted %d files.\n", len(conversions))
+	fmt.Printf("Note: Original YAML files were not removed. You can delete them manually after verifying the JSON files work correctly.\n")
+}
+
+type conversionInfo struct {
+	SourcePath  string
+	TargetPath  string
+	JSONContent []byte
+}
+
+func processAssignmentFile(yamlPath string) (conversionInfo, error) {
+	var info conversionInfo
+	info.SourcePath = yamlPath
+	
+	// Determine target path (replace .yml/.yaml with .json)
+	dir := filepath.Dir(yamlPath)
+	info.TargetPath = filepath.Join(dir, "assignment.json")
+	
+	// Read YAML file
+	yamlContent, err := os.ReadFile(yamlPath)
+	if err != nil {
+		return info, fmt.Errorf("failed to read file: %w", err)
+	}
+	
+	// Parse YAML
+	var assignment assignmentData
+	err = yaml.Unmarshal(yamlContent, &assignment)
+	if err != nil {
+		return info, fmt.Errorf("failed to parse YAML: %w", err)
+	}
+	
+	// Convert to JSON with proper formatting
+	jsonContent, err := json.MarshalIndent(assignment, "", "  ")
+	if err != nil {
+		return info, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	
+	info.JSONContent = jsonContent
+	return info, nil
 }

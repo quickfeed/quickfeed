@@ -49,6 +49,31 @@ expected_effort: "10 hours"
 autoapprove: false
 `
 
+	// JSON equivalents for testing JSON parsing
+	j1 = `{
+	"order": 1,
+	"deadline": "27-08-2017 12:00",
+	"autoapprove": false
+}`
+	j2 = `{
+	"order": 2,
+	"deadline": "27-08-2018 12:00",
+	"autoapprove": false
+}`
+	j3 = `{
+	"order": 3,
+	"deadline": "27-08-2018 12:00",
+	"autoapprove": false
+}`
+	jUnknownFields = `{
+	"order": 1,
+	"deadline": "27-08-2017 12:00",
+	"autoapprove": false,
+	"subject": "Go Programming for Fun and Profit",
+	"grading": "Pass/Fail",
+	"expected_effort": "10 hours"
+}`
+
 	script   = `Default script`
 	script1  = `Script for Lab1`
 	df       = `A dockerfile in training`
@@ -418,6 +443,151 @@ func TestFixDeadline(t *testing.T) {
 		got := fixed.AsTime().Format(qf.TimeLayout)
 		if got != c.want {
 			t.Errorf("FixDeadline(%q) == %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
+func TestParseJSON(t *testing.T) {
+	testsDir := t.TempDir()
+
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.json", j1},
+		{"lab2", "assignment.json", j2},
+		{"scripts", "run.sh", script},
+		{"lab1", "run.sh", script1},
+		{"scripts", "Dockerfile", df},
+		{"lab2", "criteria.json", criteria},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+
+	wantCriteria := []*qf.GradingBenchmark{
+		{
+			Heading: "First benchmark",
+			Criteria: []*qf.GradingCriterion{
+				{
+					Description: "Test 1",
+					Points:      5,
+				},
+				{
+					Description: "Test 2",
+					Points:      10,
+				},
+			},
+		},
+		{
+			Heading: "Second benchmark",
+			Criteria: []*qf.GradingCriterion{
+				{
+					Description: "Test 3",
+					Points:      5,
+				},
+			},
+		},
+	}
+
+	// We expect assignment names to be set based on
+	// assignment folder names.
+	wantAssignment1 := &qf.Assignment{
+		Name:        "lab1",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
+		AutoApprove: false,
+		Order:       1,
+		ScoreLimit:  80,
+	}
+
+	wantAssignment2 := &qf.Assignment{
+		Name:              "lab2",
+		Deadline:          qtest.Timestamp(t, "2018-08-27T12:00:00"),
+		AutoApprove:       false,
+		Order:             2,
+		ScoreLimit:        80,
+		GradingBenchmarks: wantCriteria,
+	}
+
+	assignments, dockerfile, err := readTestsRepositoryContent(testsDir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 2 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
+	}
+	if dockerfile != df {
+		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, dockerfile)
+	}
+	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(assignments[1].GetGradingBenchmarks(), wantCriteria, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch when parsing criteria (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseJSONUnknownFields(t *testing.T) {
+	testsDir := t.TempDir()
+
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.json", jUnknownFields},
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+
+	// We expect assignment names to be set based on
+	// assignment folder names.
+	wantAssignment1 := &qf.Assignment{
+		Name:        "lab1",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
+		AutoApprove: false,
+		Order:       1,
+		ScoreLimit:  80,
+	}
+
+	assignments, _, err := readTestsRepositoryContent(testsDir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 1 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
+	}
+	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseMixedFormats(t *testing.T) {
+	testsDir := t.TempDir()
+
+	// Test mixing YAML and JSON files in the same repository
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.yml", y1},   // YAML
+		{"lab2", "assignment.json", j2},  // JSON
+		{"lab3", "assignment.yaml", y3},  // YAML with .yaml extension
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+
+	assignments, _, err := readTestsRepositoryContent(testsDir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 3 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 3)
+	}
+
+	// Verify assignments are sorted by order
+	expectedOrders := []uint32{1, 2, 3}
+	for i, assignment := range assignments {
+		if assignment.GetOrder() != expectedOrders[i] {
+			t.Errorf("assignment[%d].Order = %d, want %d", i, assignment.GetOrder(), expectedOrders[i])
 		}
 	}
 }

@@ -14,6 +14,7 @@ import (
 const (
 	assignmentFile     = "assignment.yml"
 	assignmentFileYaml = "assignment.yaml"
+	assignmentFileJson = "assignment.json"
 	criteriaFile       = "criteria.json"
 	testsFile          = "tests.json"
 	dockerfile         = "Dockerfile"
@@ -23,6 +24,7 @@ const (
 var patterns = []string{
 	assignmentFile,
 	assignmentFileYaml,
+	assignmentFileJson,
 	criteriaFile,
 	testsFile,
 	dockerfile,
@@ -164,13 +166,13 @@ func walkTestsRepository(dir string) (map[string][]byte, error) {
 	return files, nil
 }
 
-// processAssignmentFiles processes assignment.yml/yaml files and returns assignments map.
+// processAssignmentFiles processes assignment.yml/yaml/json files and returns assignments map.
 func processAssignmentFiles(files map[string][]byte, courseID uint64) (map[string]*qf.Assignment, error) {
 	assignmentsMap := make(map[string]*qf.Assignment)
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
 		filename := filepath.Base(path)
-		if filename == assignmentFile || filename == assignmentFileYaml {
+		if filename == assignmentFile || filename == assignmentFileYaml || filename == assignmentFileJson {
 			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID)
 			if err != nil {
 				return nil, err
