@@ -11,6 +11,9 @@ scratchpad
 proto-include
 bin
 
+# Build artifacts
+cmd/qcm/qcm
+
 # Environment and shell scripts
 cyclone.sh
 start.sh

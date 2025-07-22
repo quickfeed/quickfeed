@@ -86,7 +86,7 @@ The `username` is actually the github user name. This repository will initially 
 
 The `tests` folder is used by QuickFeed to run the tests for each of the assignments.
 The folder structure inside `tests` must correspond to the structure in the `assignments` repository.
-Each `assignment` folder in the tests repository contains one or more test file and an `assignment.yml` configuration file that will be picked up by QuickFeed test runner.
+Each `assignment` folder in the tests repository contains one or more test file and an `assignment.yml` or `assignment.json` configuration file that will be picked up by QuickFeed test runner.
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
 
@@ -147,7 +147,7 @@ To facilitate automated testing and scoring of student submitted solutions, a te
 This is the purpose of the `tests` repository.
 
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
-The `assignment.yml` files contains the [assignment information](#assignment-information).
+The `assignment.yml` or `assignment.json` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
 
 The `scripts` folder may contain a course-specific [test runner](#test-runners), named `run.sh`, for running the tests.
@@ -188,7 +188,7 @@ tests┐
 
 ### Assignment Information
 
-As mentioned above, the `tests` repository must contain one `assignment.yml` file for each assignment.
+As mentioned above, the `tests` repository must contain one `assignment.yml` or `assignment.json` file for each assignment.
 This file provide assignment information used by QuickFeed.
 An example is shown below.
 
@@ -216,6 +216,55 @@ The `title` and `effort` are used by other tooling to create a README.md file fo
 | `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                            |
 | `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 1.    |
 | `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes. |
+
+### Assignment Configuration Formats
+
+QuickFeed supports both YAML and JSON formats for assignment configuration files:
+
+#### YAML Format (Legacy)
+
+```yml
+order: 1
+deadline: "2020-08-30T23:59:00"
+isgrouplab: false
+autoapprove: true
+scorelimit: 90
+reviewers: 2
+containertimeout: 10
+```
+
+#### JSON Format (Recommended)
+
+```json
+{
+  "order": 1,
+  "deadline": "2020-08-30T23:59:00",
+  "isgrouplab": false,
+  "autoapprove": true,
+  "scorelimit": 90,
+  "reviewers": 2,
+  "containertimeout": 10
+}
+```
+
+Both formats are fully supported, and you can mix them within the same course (some assignments with `.yml` files, others with `.json` files). However, we recommend using the JSON format for new assignments to avoid potential YAML security vulnerabilities.
+
+#### Migration from YAML to JSON
+
+To convert existing YAML assignment files to JSON format, you can use the QuickFeed course manager tool (`qcm`):
+
+```bash
+# Install qcm (from the quickfeed repository root)
+cd cmd/qcm && go install
+
+# Convert all assignment.yml files in a directory
+qcm convert --source /path/to/tests/repository
+
+# Preview conversion without making changes
+qcm convert --source /path/to/tests/repository --dry-run
+```
+
+The conversion tool will create `assignment.json` files alongside the existing `assignment.yml` files. After verifying that the JSON files work correctly, you can manually remove the YAML files.
 
 ### Test Runners
 
