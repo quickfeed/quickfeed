@@ -10,7 +10,11 @@ export const onInitializeOvermind = async ({ actions, effects }: Context) => {
 }
 
 /* Set the index of the selected review */
-export const updateSettings = ({ state, effects }: Context, newSettings: Partial<UserSettings>) => {
+export const updateSettings = ({ state, effects }: Context, newSettings: Partial<UserSettings> | null) => {
+    if (!newSettings) {
+        // If newSettings is null, reset to default settings
+        newSettings = defaultSettings
+    }
     if (newSettings["bar-width"]) {
         const width = parseInt(newSettings["bar-width"])
         if (isNaN(width) || width < 2 || width > 20) {

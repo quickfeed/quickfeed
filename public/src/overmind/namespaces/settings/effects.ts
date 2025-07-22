@@ -5,7 +5,7 @@ export const settings = {
     saveSettings(settings: UserSettings) {
         localStorage.setItem('userSettings', JSON.stringify(settings))
     },
-    loadSettings(): UserSettings {
+    loadSettings(): UserSettings | null {
         const settings = localStorage.getItem('userSettings')
         return settings ? JSON.parse(settings) : null
     },
