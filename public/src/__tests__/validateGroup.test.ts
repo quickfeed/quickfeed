@@ -1,5 +1,5 @@
-import { validateGroup } from "../Helpers";
-import { CourseGroup } from "../overmind/state";
+import { validateGroup } from "../Helpers"
+import { CourseGroup } from "../overmind/state"
 
 
 describe('validateGroup', () => {
@@ -33,7 +33,7 @@ describe('validateGroup', () => {
 
     test.each(tests)(`Group name: expect "$name" to be $valid`, ({ name, users, valid }) => {
         const group: CourseGroup = { name, users: users, courseID: 1n }
-        const result = validateGroup(group);
-        expect(result.valid).toBe(valid);
+        const result = validateGroup(group)
+        expect(result.valid).toBe(valid)
     })
 })

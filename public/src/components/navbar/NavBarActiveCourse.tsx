@@ -3,15 +3,15 @@ import { useAppState } from "../../overmind"
 import CourseFavoriteButton from "../CourseFavoriteButton"
 import ToggleSwitch from "./ToggleSwitch"
 import Breadcrumbs from "./Breadcrumbs"
+import { useLocation } from "react-router"
 
-
-
-const NavBarActiveCourse = (): JSX.Element | null => {
+const NavBarActiveCourse = () => {
+    const location = useLocation()
     const activeCourse = useAppState((state) => state.activeCourse ? (state.courses.find((c) => c.ID === state.activeCourse) ?? null) : null)
     const enrollment = useAppState((state) => state.enrollmentsByCourseID[state.activeCourse?.toString() ?? ""] ?? null)
     const { isLoggedIn } = useAppState()
 
-    if (!isLoggedIn || !activeCourse || !enrollment) {
+    if (!isLoggedIn || !activeCourse || !enrollment || location.pathname === "/") {
         return null
     }
 

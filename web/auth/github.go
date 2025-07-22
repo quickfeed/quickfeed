@@ -7,12 +7,12 @@ import (
 )
 
 // NewGitHubConfig creates a new OAuth config for GitHub.
-func NewGitHubConfig(baseURL string, c *scm.Config) *oauth2.Config {
+func NewGitHubConfig(c *scm.Config) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
 		Endpoint:     github.Endpoint,
-		RedirectURL:  GetCallbackURL(baseURL),
+		RedirectURL:  GetCallbackURL(),
 		Scopes:       []string{"repo:invite", "write:org"},
 	}
 }

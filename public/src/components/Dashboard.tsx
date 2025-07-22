@@ -1,5 +1,5 @@
 import React from "react"
-import { Redirect } from "react-router"
+import { Navigate } from "react-router"
 import { hasEnrollment } from "../Helpers"
 import { useAppState } from "../overmind"
 import Alerts from "./alerts/Alerts"
@@ -8,22 +8,19 @@ import SubmissionsTable from "./dashboard/SubmissionsTable"
 
 
 /* Dashboard for a signed in user. */
-const Dashboard = (): JSX.Element => {
+const Dashboard = () => {
     const state = useAppState()
 
     // Users that are not enrolled in any courses are redirected to the course list.
     if (!hasEnrollment(state.enrollments)) {
-        return <Redirect to={"/courses"} />
+        return <Navigate to={"/courses"} />
     }
 
     return (
-        <div className='box'>
+        <div className="mt-5">
             <Alerts />
-            <div>
-                <h1>Welcome, {state.self.Name}!</h1>
-            </div>
-            <SubmissionsTable />
             <Courses home />
+            <SubmissionsTable />
         </div>
     )
 }

@@ -7,12 +7,7 @@ import MarkReadyButton from "./manual-grading/MarkReadyButton"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
-const ReviewResult = ({ review }: { review?: Review }): JSX.Element | null => {
-
-    if (!review) {
-        return null
-    }
-
+const ReviewResult = ({ review }: { review: Review }) => {
     const result = hasBenchmarks(review) ? review.gradingBenchmarks.map(benchmark => {
         return (
             <Benchmark key={benchmark.ID.toString()} bm={benchmark}>

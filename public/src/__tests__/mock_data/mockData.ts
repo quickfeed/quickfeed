@@ -1,41 +1,48 @@
 /* eslint-disable no-unused-vars */
-import { Timestamp } from "@bufbuild/protobuf"
-import { BuildInfo, Score } from "../../../proto/kit/score/score_pb"
+import { create } from "@bufbuild/protobuf"
+import { BuildInfoSchema, ScoreSchema } from "../../../proto/kit/score/score_pb"
 import {
-    CourseSubmissions,
+    CourseSubmissionsSchema,
     Organization,
+    OrganizationSchema,
 } from "../../../proto/qf/requests_pb"
 import {
     Assignment,
-    Course,
+    AssignmentSchema,
+    CourseSchema,
     Enrollment,
     Enrollment_DisplayState,
     Enrollment_UserStatus,
-    Enrollments,
-    Grade,
+    EnrollmentSchema,
+    EnrollmentsSchema,
+    GradeSchema,
     GradingBenchmark,
-    GradingCriterion,
+    GradingBenchmarkSchema,
     GradingCriterion_Grade,
-    Group,
+    GradingCriterionSchema,
     Group_GroupStatus,
-    Groups,
+    GroupSchema,
+    GroupsSchema,
     Repository_Type,
     Review,
-    Submission,
+    ReviewSchema,
     Submission_Status,
-    Submissions,
+    SubmissionSchema,
+    SubmissionsSchema,
     User,
+    UserSchema,
 } from "../../../proto/qf/types_pb"
 import { SubmissionsForCourse } from "../../Helpers"
+import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 
 export class MockData {
     public static mockedUsers(): User[] {
         const userList: User[] = []
         userList.push(
-            new User({
+            create(UserSchema, {
                 ID: BigInt(1),
-                Name: "Test Testersen",
-                Email: "test@testersen.no",
+                Name: "Test User",
+                Email: "test@example.com",
                 Login: "Test User",
                 StudentID: "9999",
                 IsAdmin: true,
@@ -43,7 +50,7 @@ export class MockData {
         )
 
         userList.push(
-            new User({
+            create(UserSchema, {
                 ID: BigInt(2),
                 Name: "Admin Admin",
                 Email: "admin@admin",
@@ -54,7 +61,7 @@ export class MockData {
         )
 
         userList.push(
-            new User({
+            create(UserSchema, {
                 ID: BigInt(3),
                 Name: "Test Student",
                 Email: "test@student.no",
@@ -65,7 +72,7 @@ export class MockData {
         )
 
         userList.push(
-            new User({
+            create(UserSchema, {
                 ID: BigInt(4),
                 Name: "Bob Bobsen",
                 Email: "bob@bobsen.no",
@@ -76,7 +83,7 @@ export class MockData {
         )
 
         userList.push(
-            new User({
+            create(UserSchema, {
                 ID: BigInt(5),
                 Name: "Petter Pan",
                 Email: "petter@pan.no",
@@ -88,18 +95,18 @@ export class MockData {
     }
 
     public static mockedAssignments(): Assignment[] {
-        const ts = Timestamp.fromDate(new Date(2017, 5, 25))
-        const a0 = new Assignment()
-        const a1 = new Assignment()
-        const a2 = new Assignment()
-        const a3 = new Assignment()
-        const a4 = new Assignment()
-        const a5 = new Assignment()
-        const a6 = new Assignment()
-        const a7 = new Assignment()
-        const a8 = new Assignment()
-        const a9 = new Assignment()
-        const a10 = new Assignment()
+        const ts = timestampFromDate(new Date(2017, 5, 25))
+        const a0 = create(AssignmentSchema)
+        const a1 = create(AssignmentSchema)
+        const a2 = create(AssignmentSchema)
+        const a3 = create(AssignmentSchema)
+        const a4 = create(AssignmentSchema)
+        const a5 = create(AssignmentSchema)
+        const a6 = create(AssignmentSchema)
+        const a7 = create(AssignmentSchema)
+        const a8 = create(AssignmentSchema)
+        const a9 = create(AssignmentSchema)
+        const a10 = create(AssignmentSchema)
 
         a0.ID = BigInt(1)
         a0.CourseID = BigInt(1)
@@ -197,11 +204,11 @@ export class MockData {
     }
 
     public static mockedCourses() {
-        const course0 = new Course()
-        const course1 = new Course()
-        const course2 = new Course()
-        const course3 = new Course()
-        const course4 = new Course()
+        const course0 = create(CourseSchema)
+        const course1 = create(CourseSchema)
+        const course2 = create(CourseSchema)
+        const course3 = create(CourseSchema)
+        const course4 = create(CourseSchema)
 
         course0.ID = BigInt(1)
         course0.name = "Object Oriented Programming"
@@ -243,10 +250,10 @@ export class MockData {
     }
 
     public static mockedEnrollments() {
-        const enrollments = new Enrollments()
+        const enrollments = create(EnrollmentsSchema)
         const localEnrols: Enrollment[] = []
         localEnrols.push(
-            new Enrollment({
+            create(EnrollmentSchema, {
                 ID: BigInt(1),
                 courseID: BigInt(1),
                 userID: BigInt(1),
@@ -258,7 +265,7 @@ export class MockData {
         )
 
         localEnrols.push(
-            new Enrollment({
+            create(EnrollmentSchema, {
                 ID: BigInt(2),
                 courseID: BigInt(2),
                 userID: BigInt(1),
@@ -269,7 +276,7 @@ export class MockData {
         )
 
         localEnrols.push(
-            new Enrollment({
+            create(EnrollmentSchema, {
                 ID: BigInt(3),
                 courseID: BigInt(1),
                 userID: BigInt(2),
@@ -280,7 +287,7 @@ export class MockData {
         )
 
         localEnrols.push(
-            new Enrollment({
+            create(EnrollmentSchema, {
                 ID: BigInt(4),
                 courseID: BigInt(2),
                 userID: BigInt(2),
@@ -290,7 +297,7 @@ export class MockData {
         )
 
         localEnrols.push(
-            new Enrollment({
+            create(EnrollmentSchema, {
                 ID: BigInt(5),
                 courseID: BigInt(1),
                 userID: BigInt(3),
@@ -301,7 +308,7 @@ export class MockData {
         )
 
         localEnrols.push(
-            new Enrollment({
+            create(EnrollmentSchema, {
                 ID: BigInt(6),
                 courseID: BigInt(1),
                 userID: BigInt(4),
@@ -316,7 +323,7 @@ export class MockData {
 
     public static mockedOrganizations(): Organization[] {
         const localOrgs: Organization[] = []
-        const localOrg = new Organization()
+        const localOrg = create(OrganizationSchema)
         localOrg.ScmOrganizationID = BigInt(23650610)
         localOrg.ScmOrganizationName = "test"
         localOrgs.push(localOrg)
@@ -324,16 +331,16 @@ export class MockData {
     }
 
     public static mockedGroups() {
-        const groups = new Groups()
+        const groups = create(GroupsSchema)
 
-        const group1 = new Group({
+        const group1 = create(GroupSchema, {
             ID: BigInt(1),
             name: "Group 1",
             status: Group_GroupStatus.APPROVED,
             courseID: BigInt(1),
         })
 
-        const group2 = new Group({
+        const group2 = create(GroupSchema, {
             ID: BigInt(2),
             name: "Group 2",
             status: Group_GroupStatus.PENDING,
@@ -345,31 +352,31 @@ export class MockData {
     }
 
     public static mockedSubmissions() {
-        const submissions = new Submissions()
+        const submissions = create(SubmissionsSchema)
         submissions.submissions = [
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(1),
                 AssignmentID: BigInt(1),
                 userID: BigInt(1),
                 Grades: [
-                    new Grade({
+                    create(GradeSchema, {
                         Status: Submission_Status.APPROVED,
                         SubmissionID: BigInt(1),
                         UserID: BigInt(1),
                     })
                 ],
-                BuildInfo: new BuildInfo({
+                BuildInfo: create(BuildInfoSchema, {
                     ID: BigInt(1),
                     SubmissionID: BigInt(1),
                     ExecTime: BigInt(1),
-                    BuildDate: Timestamp.fromDate(new Date(2017, 6, 4)),
-                    SubmissionDate: Timestamp.fromDate(new Date(2017, 6, 4)),
+                    BuildDate: timestampFromDate(new Date(2017, 6, 4)),
+                    SubmissionDate: timestampFromDate(new Date(2017, 6, 4)),
                     BuildLog: "Build log for submission 1",
                 }),
                 score: 100,
                 commitHash: "abc",
                 Scores: [
-                    new Score({
+                    create(ScoreSchema, {
                         ID: BigInt(1),
                         SubmissionID: BigInt(1),
                         MaxScore: 10,
@@ -377,7 +384,7 @@ export class MockData {
                         TestName: "Test 1",
                         Weight: 2
                     }),
-                    new Score({
+                    create(ScoreSchema, {
                         ID: BigInt(2),
                         SubmissionID: BigInt(1),
                         MaxScore: 10,
@@ -388,7 +395,7 @@ export class MockData {
                 ],
             }),
 
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(2),
                 AssignmentID: BigInt(2),
                 userID: BigInt(2),
@@ -396,27 +403,27 @@ export class MockData {
                 commitHash: "bcd",
             }),
 
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(3),
                 AssignmentID: BigInt(3),
                 userID: BigInt(1),
                 score: 80,
                 released: true,
                 reviews: [
-                    new Review({
+                    create(ReviewSchema, {
                         ID: BigInt(1),
                         SubmissionID: BigInt(3),
                         score: 80,
                         feedback: "Well done!",
                         ReviewerID: BigInt(1),
                         gradingBenchmarks: [
-                            new GradingBenchmark({
+                            create(GradingBenchmarkSchema, {
                                 ID: BigInt(1),
                                 AssignmentID: BigInt(2),
                                 heading: "HTML",
                                 ReviewID: BigInt(1),
                                 criteria: [
-                                    new GradingCriterion({
+                                    create(GradingCriterionSchema, {
                                         ID: BigInt(1),
                                         BenchmarkID: BigInt(1),
                                         description: "Add div",
@@ -424,7 +431,7 @@ export class MockData {
                                         grade: GradingCriterion_Grade.PASSED,
                                         points: BigInt(10),
                                     }),
-                                    new GradingCriterion({
+                                    create(GradingCriterionSchema, {
                                         ID: BigInt(2),
                                         BenchmarkID: BigInt(1),
                                         description: "Div has text",
@@ -434,13 +441,13 @@ export class MockData {
                                     })
                                 ]
                             }),
-                            new GradingBenchmark({
+                            create(GradingBenchmarkSchema, {
                                 ID: BigInt(2),
                                 AssignmentID: BigInt(2),
                                 heading: "CSS",
                                 ReviewID: BigInt(1),
                                 criteria: [
-                                    new GradingCriterion({
+                                    create(GradingCriterionSchema, {
                                         ID: BigInt(3),
                                         BenchmarkID: BigInt(2),
                                         description: "Div centered",
@@ -448,7 +455,7 @@ export class MockData {
                                         grade: GradingCriterion_Grade.PASSED,
                                         points: BigInt(10),
                                     }),
-                                    new GradingCriterion({
+                                    create(GradingCriterionSchema, {
                                         ID: BigInt(4),
                                         BenchmarkID: BigInt(2),
                                         description: "Div colored",
@@ -462,14 +469,14 @@ export class MockData {
                     }),
                 ]
             }),
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(4),
                 AssignmentID: BigInt(4),
                 groupID: BigInt(1),
                 score: 90,
                 commitHash: "def",
             }),
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(5),
                 AssignmentID: BigInt(5),
                 userID: BigInt(1),
@@ -477,27 +484,27 @@ export class MockData {
                 commitHash: "efg",
             }),
 
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(6),
                 AssignmentID: BigInt(1),
                 userID: BigInt(3),
                 score: 50,
                 commitHash: "test",
                 Grades: [
-                    new Grade({
+                    create(GradeSchema, {
                         Status: Submission_Status.NONE,
                         SubmissionID: BigInt(6),
                         UserID: BigInt(3),
                     })
                 ],
-                BuildInfo: new BuildInfo({
+                BuildInfo: create(BuildInfoSchema, {
                     ID: BigInt(3),
-                    BuildDate: Timestamp.fromDate(new Date(2022, 6, 4)),
+                    BuildDate: timestampFromDate(new Date(2022, 6, 4)),
                     BuildLog: "Build log for test student",
                     ExecTime: BigInt(1),
                 }),
                 Scores: [
-                    new Score({
+                    create(ScoreSchema, {
                         ID: BigInt(3),
                         MaxScore: 10,
                         Score: 5,
@@ -506,7 +513,7 @@ export class MockData {
                         TestDetails: "Test details for test 1",
                         Weight: 5,
                     }),
-                    new Score({
+                    create(ScoreSchema, {
                         ID: BigInt(4),
                         MaxScore: 10,
                         Score: 7,
@@ -517,7 +524,7 @@ export class MockData {
                     }),
                 ]
             }),
-            new Submission({
+            create(SubmissionSchema, {
                 ID: BigInt(7),
                 AssignmentID: BigInt(4),
                 userID: BigInt(2),
@@ -530,8 +537,8 @@ export class MockData {
     }
 
     public static mockedCourseSubmissions(courseID: bigint): SubmissionsForCourse {
-        const userSubmissions = new CourseSubmissions()
-        const groupSubmissions = new CourseSubmissions()
+        const userSubmissions = create(CourseSubmissionsSchema)
+        const groupSubmissions = create(CourseSubmissionsSchema)
 
         const assignments = MockData.mockedAssignments().filter((a) => a.CourseID === courseID)
         const submissions = MockData.mockedSubmissions().submissions.filter((s) => assignments.map((a) => a.ID).includes(s.AssignmentID))
@@ -540,12 +547,12 @@ export class MockData {
         const sfc = new SubmissionsForCourse()
         for (const enrollment of enrollments) {
             const subs = submissions.filter((s) => s.userID === enrollment.userID)
-            userSubmissions.submissions[enrollment.ID.toString()] = new Submissions({ submissions: subs })
+            userSubmissions.submissions[enrollment.ID.toString()] = create(SubmissionsSchema, { submissions: subs })
         }
 
         for (const group of groups) {
             const groupSubs = submissions.filter((s) => s.groupID === group.ID)
-            groupSubmissions.submissions[group.ID.toString()] = new Submissions({ submissions: groupSubs })
+            groupSubmissions.submissions[group.ID.toString()] = create(SubmissionsSchema, { submissions: groupSubs })
         }
 
         sfc.setSubmissions("USER", userSubmissions)
@@ -557,18 +564,18 @@ export class MockData {
         const templateBenchmarks = []
 
         templateBenchmarks.push(
-            new GradingBenchmark({
+            create(GradingBenchmarkSchema, {
                 ID: BigInt(1),
                 AssignmentID: BigInt(1),
                 heading: "HTML",
                 criteria: [
-                    new GradingCriterion({
+                    create(GradingCriterionSchema, {
                         ID: BigInt(1),
                         BenchmarkID: BigInt(1),
                         description: "Add div",
                         points: BigInt(10),
                     }),
-                    new GradingCriterion({
+                    create(GradingCriterionSchema, {
                         ID: BigInt(2),
                         BenchmarkID: BigInt(1),
                         description: "Div has text",
@@ -576,18 +583,18 @@ export class MockData {
                     }),
                 ]
             }),
-            new GradingBenchmark({
+            create(GradingBenchmarkSchema, {
                 ID: BigInt(2),
                 AssignmentID: BigInt(2),
                 heading: "CSS",
                 criteria: [
-                    new GradingCriterion({
+                    create(GradingCriterionSchema, {
                         ID: BigInt(3),
                         BenchmarkID: BigInt(2),
                         description: "Div centered",
                         points: BigInt(10),
                     }),
-                    new GradingCriterion({
+                    create(GradingCriterionSchema, {
                         ID: BigInt(4),
                         BenchmarkID: BigInt(2),
                         description: "Div colored",

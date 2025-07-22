@@ -14,12 +14,12 @@ export type ButtonProps = {
     color: Color,
     type: ButtonType,
     className?: string,
-    onClick: () => void,
+    onClick: () => void | Promise<void>,
 }
 
-const Button = ({ children, text, color, type, className, onClick }: ButtonProps): JSX.Element => {
+const Button = ({ children, text, color, type, className, onClick }: ButtonProps) => {
     return (
-        <button className={`${type}-${color}${className ? " " + className : ""}`} onClick={onClick}>
+        <button className={`${type}-${color} ${className ?? ""}`} onClick={onClick}>
             {children}
             {text}
         </button>
