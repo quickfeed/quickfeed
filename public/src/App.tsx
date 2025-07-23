@@ -9,6 +9,7 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
+import Settings from './components/settings/Settings'
 import LoginPage from './pages/LoginPage'
 
 const App = () => {
@@ -32,6 +33,7 @@ const App = () => {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
                     <Route path="/course/:id/*" element={<CoursePage />} />
                     <Route path="/courses" element={<Courses home={false} />} />
                     <Route path="/admin/*" element={<AdminPage />} />
