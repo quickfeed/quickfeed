@@ -91,7 +91,7 @@ func (wh GitHubWebHook) getPullRequest(payload *github.PushEvent) (*qf.PullReque
 			// If this happens, QF should not do anything
 			return nil, fmt.Errorf("no pull request found for ref: %s", payload.GetRef())
 		}
-		return nil, fmt.Errorf("failed to get pull request from database: %v", err)
+		return nil, fmt.Errorf("failed to get pull request from database: %w", err)
 	}
 	return pullRequest, nil
 }
@@ -246,7 +246,7 @@ func findIssue(body string, issues []*qf.Issue) (*qf.Issue, error) {
 		// ignore error since regular expression ensure it is a positive number
 		issueNum, _ := strconv.ParseUint(issue, 10, 64)
 		for _, issue := range issues {
-			if issue.ScmIssueNumber == issueNum {
+			if issue.GetScmIssueNumber() == issueNum {
 				return issue, nil
 			}
 		}

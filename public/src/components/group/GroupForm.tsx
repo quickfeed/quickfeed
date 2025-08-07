@@ -1,30 +1,32 @@
+import { clone, create } from "@bufbuild/protobuf"
 import React, { useEffect, useState } from "react"
-import { Enrollment, Enrollment_UserStatus, Group } from "../../../proto/qf/types_pb"
-import { Color, getCourseID, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
+import { Color, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import Search from "../Search"
 
 
-const GroupForm = (): JSX.Element | null => {
+const GroupForm = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     const [query, setQuery] = useState<string>("")
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
-    const courseID = getCourseID()
+    const courseID = useCourseID()
 
     const group = state.activeGroup
     useEffect(() => {
         if (isStudent(state.enrollmentsByCourseID[courseID.toString()])) {
-            actions.setActiveGroup(new Group())
-            actions.updateGroupUsers(state.self.clone())
+            actions.setActiveGroup(create(GroupSchema))
+            actions.updateGroupUsers(clone(UserSchema, state.self))
         }
         return () => {
             actions.setActiveGroup(null)
         }
-    }, [])
+    }, [actions, courseID, state.enrollmentsByCourseID, state.self])
     if (!group) {
         return null
     }
@@ -40,7 +42,7 @@ const GroupForm = (): JSX.Element | null => {
         return false
     }
 
-    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => enrollment.clone())
+    const enrollments = state.courseEnrollments[courseID.toString()].map(enrollment => clone(EnrollmentSchema, enrollment))
 
     // Determine the user's enrollment status (teacher or student)
     const isTeacher = hasTeacher(state.status[courseID.toString()])
@@ -142,8 +144,8 @@ const GroupForm = (): JSX.Element | null => {
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedAndFilteredEnrollments.map((enrollment, index) => {
-                            return <AvailableUser key={index} enrollment={enrollment} />
+                        {sortedAndFilteredEnrollments.map((enrollment) => {
+                            return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
                         })}
                     </ul>
                 </div>

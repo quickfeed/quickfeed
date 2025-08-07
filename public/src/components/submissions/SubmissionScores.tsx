@@ -1,16 +1,18 @@
 import React, { useCallback } from 'react'
 import { Submission } from "../../../proto/qf/types_pb"
 import SubmissionScore from "./SubmissionScore"
+import { ScoreSchema } from "../../../proto/kit/score/score_pb"
+import { clone } from "@bufbuild/protobuf"
 
 type ScoreSort = "name" | "score" | "weight" | "percentage"
 
-const SubmissionScores = ({submission}: {submission: Submission}) => {
+const SubmissionScores = ({ submission }: { submission: Submission }) => {
     const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
     const [sortAscending, setSortAscending] = React.useState<boolean>(true)
 
     const sortScores = () => {
         const sortBy = sortAscending ? 1 : -1
-        const scores = submission.clone().Scores
+        const scores = submission.Scores.map(score => clone(ScoreSchema, score))
         const totalWeight = scores.reduce((acc, score) => acc + score.Weight, 0)
         return scores.sort((a, b) => {
             switch (sortKey) {
@@ -45,12 +47,12 @@ const SubmissionScores = ({submission}: {submission: Submission}) => {
             <thead className="thead-dark">
                 <tr>
                     <th colSpan={1} className="col-md-8" data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
-                    <th colSpan={1} className="text-right col-md-auto" data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                    <th colSpan={1} className="text-right col-md-auto" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
-                    <th colSpan={1} className="text-right col-md-auto" data-key={"weight"} data-toggle="tooltip" title={"Maximum % contribution to total score"} role="button" onClick={handleSort}>Max</th>
+                    <th colSpan={1} className="fixed-width-percent" data-key={"score"} role="button" onClick={handleSort}>Score</th>
+                    <th colSpan={1} className="fixed-width-percent" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
+                    <th colSpan={1} className="fixed-width-percent" data-key={"weight"} data-toggle="tooltip" title={"Maximum % contribution to total score"} role="button" onClick={handleSort}>Max</th>
                 </tr>
             </thead>
-            <tbody style={{"wordBreak": "break-word"}}>
+            <tbody>
                 {sortedScores.map(score =>
                     <SubmissionScore key={score.ID.toString()} score={score} totalWeight={totalWeight} />
                 )}

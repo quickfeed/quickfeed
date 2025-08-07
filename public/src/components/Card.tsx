@@ -1,5 +1,5 @@
 import React from "react"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { Color } from "../Helpers"
 
 
@@ -10,16 +10,18 @@ export interface Notification {
 
 /**  This component displays a card with a header, a body and a button in the footer
  * @param title: The title of the card
- * @param text: The text in body of the card 
+ * @param text: The text in body of the card
  * @param buttonText: The text of the button in the footer
- * @param notification: (optional) Notification to display. Floats right of title. 
- * @param to: (Optional) The path to navigate to when the button is clicked 
- * @param onclick: (Optional) The function to call when the button is clicked 
+ * @param notification: (optional) Notification to display. Floats right of title.
+ * @param to: (Optional) The path to navigate to when the button is clicked
+ * @param onclick: (Optional) The function to call when the button is clicked
  */
-const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification,  to?: string, onclick?: () => void }): JSX.Element => {
-    const history = useHistory()
+const Card = (props: { title: string, text: string, buttonText: string, notification?: Notification, to?: string, onclick?: () => void }) => {
+    const navigate = useNavigate()
 
-    const notification = props.notification ? <i className={`badge badge-${props.notification.color} float-right`}>{props.notification.text}</i> : null
+    const notification = props.notification
+        ? <i className={`badge badge-${props.notification.color} float-right`}> {props.notification.text} </i>
+        : null
 
     // TODO: Maybe support both onclick and to, rather than having to choose one. Not sure where it would be used though.
     /* Runs the provided function, or redirect, on button click. If both 'to' and 'onclick' are provided, 'onclick' takes precedence */
@@ -27,7 +29,7 @@ const Card = (props: { title: string, text: string, buttonText: string, notifica
         if (props.onclick) {
             props.onclick()
         } else if (props.to) {
-            history.push(props.to) // Redirect to the given URL
+            navigate(props.to) // Redirect to the given URL
         }
     }
     return (

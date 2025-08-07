@@ -1,10 +1,11 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
+import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 import { Color, isVisible } from "../Helpers"
+import { create } from "@bufbuild/protobuf"
 
 // If home is set to true, display only favorite courses. Otherwise, display all courses.
 // Can be used on dashboard to let the user choose which courses to display based on favorites.
@@ -13,9 +14,9 @@ interface overview {
 }
 
 /** This component lists the user's courses and courses available for enrollment. */
-const Courses = (overview: overview): JSX.Element => {
+const Courses = (overview: overview) => {
     const state = useAppState()
-    const history = useHistory()
+    const navigate = useNavigate()
 
     // Notify user if there are no courses (should only ever happen with a fresh database on backend)
     // Display shortcut buttons for admins to create new course or managing (promoting) users
@@ -30,13 +31,13 @@ const Courses = (overview: overview): JSX.Element => {
                             color={Color.GREEN}
                             type={ButtonType.BUTTON}
                             className="mr-3"
-                            onClick={() => history.push("/admin/create")}
+                            onClick={() => navigate("/admin/create")}
                         />
                         <Button
                             text="Manage users"
                             color={Color.BLUE}
                             type={ButtonType.BUTTON}
-                            onClick={() => history.push("/admin/manage")}
+                            onClick={() => navigate("/admin/manage")}
                         />
                     </div>
                     : null}
@@ -46,12 +47,12 @@ const Courses = (overview: overview): JSX.Element => {
 
     // Push to separate arrays for layout purposes. Favorite - Student - Teacher - Pending
     const courses = () => {
-        const favorite: JSX.Element[] = []
-        const student: JSX.Element[] = []
-        const teacher: JSX.Element[] = []
-        const pending: JSX.Element[] = []
-        const availableCourses: JSX.Element[] = []
-        state.courses.map(course => {
+        const favorite: React.JSX.Element[] = []
+        const student: React.JSX.Element[] = []
+        const teacher: React.JSX.Element[] = []
+        const pending: React.JSX.Element[] = []
+        const availableCourses: React.JSX.Element[] = []
+        state.courses.forEach(course => {
             const enrol = state.enrollmentsByCourseID[course.ID.toString()]
             if (enrol) {
                 const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
@@ -72,7 +73,7 @@ const Courses = (overview: overview): JSX.Element => {
                 }
             } else {
                 availableCourses.push(
-                    <CourseCard key={course.ID.toString()} course={course} enrollment={new Enrollment} />
+                    <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} />
                 )
             }
         })

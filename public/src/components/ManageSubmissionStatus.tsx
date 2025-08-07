@@ -1,14 +1,13 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useCallback } from "react"
 import { Grade, Submission_Status } from "../../proto/qf/types_pb"
 import { Color, hasAllStatus, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 
-const ManageSubmissionStatus = (): JSX.Element => {
-    const actions = useActions()
+const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, reviewers: number }) => {
+    const actions = useActions().global
     const state = useAppState()
-    const assignment = state.selectedAssignment
 
     const [rebuilding, setRebuilding] = React.useState(false)
     const [updating, setUpdating] = React.useState<Submission_Status>(Submission_Status.NONE)
@@ -21,56 +20,63 @@ const ManageSubmissionStatus = (): JSX.Element => {
         }
     }, [state.selectedSubmission])
 
-    const handleRebuild = async () => {
+    const handleRebuild = useCallback(async () => {
         if (rebuilding) { return } // Don't allow multiple rebuilds at once
         setRebuilding(true)
         await actions.rebuildSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission })
         setRebuilding(false)
-    }
+    }, [rebuilding, actions, state.submissionOwner, state.selectedSubmission])
 
-    const handleSetStatus = async (status: Submission_Status) => {
+    // handleSetStatusOrGrade updates the grade if it exist and if doesn't it update the submission status
+    const handleSetStatusOrGrade = useCallback(async (status: Submission_Status, grade?: Grade) => {
         if (updating !== Submission_Status.NONE) { return } // Don't allow multiple updates at once
         setUpdating(status)
-        await actions.updateSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission, status })
-        setUpdating(Submission_Status.NONE)
-    }
-
-    const handleSetGrade = async (grade: Grade, status: Submission_Status) => {
-        if (updating !== Submission_Status.NONE) { return } // Don't allow multiple updates at once
-        setUpdating(status)
-        await actions.updateGrade({ grade, status })
-        setUpdating(Submission_Status.NONE)
-    }
-
-    const getUserName = (userID: bigint): string => {
-        if (!assignment) {
-            return ""
+        if (grade) {
+            await actions.updateGrade({ grade, status })
+        } else {
+            await actions.updateSubmission({ owner: state.submissionOwner, submission: state.selectedSubmission, status })
         }
-        const user = state.courseEnrollments[assignment.CourseID.toString()].find(enrollment => enrollment.userID === userID)?.user
-        if (!user) {
-            return ""
-        }
-        return user.Name
-    }
+        setUpdating(Submission_Status.NONE)
+    }, [updating, actions, state.submissionOwner, state.selectedSubmission])
 
-    const getButtonType = (status: Submission_Status): ButtonType => {
+    const getButtonType = (status: Submission_Status, grade?: Grade) => {
         const submission = state.selectedSubmission
-        const grades = submission?.Grades
-        if (!grades) {
-            return ButtonType.OUTLINE
-        }
-        if (hasAllStatus(submission, status)) {
+        if (grade?.Status === status || (submission?.Grades && hasAllStatus(submission, status))) {
             return ButtonType.BUTTON
         }
         return ButtonType.OUTLINE
     }
 
-    const getGradeButtonType = (grade: Grade, status: Submission_Status): ButtonType => {
-        if (grade.Status === status) {
-            return ButtonType.BUTTON
+    const StatusButtons = ({ grade }: { grade?: Grade }) => {
+        const buttonsInfo = [
+            { text: "Approve", color: Color.GREEN, status: Submission_Status.APPROVED },
+            { text: "Revision", color: Color.YELLOW, status: Submission_Status.REVISION },
+            { text: "Reject", color: Color.RED, status: Submission_Status.REJECTED }
+        ]
+
+        const dynamicButtons = buttonsInfo.map(({ text, color, status }) => (
+            <DynamicButton
+                key={text}
+                text={text}
+                color={color}
+                type={getButtonType(status, grade)}
+                className={`mr-2 ${viewIndividualGrades ? "" : "col"}`}
+                onClick={() => handleSetStatusOrGrade(status, grade)}
+            />
+        ))
+
+        if (grade) {
+            return dynamicButtons
         }
-        return ButtonType.OUTLINE
+        return dynamicButtons.map((button, index) => (
+            <div key={`${buttonsInfo[index].text}-divButton`} className="col">
+                {button}
+            </div>
+        ))
     }
+
+    const getUserName = (userID: bigint): string =>
+        state.courseEnrollments[courseID].find(enrollment => enrollment.userID === userID)?.user?.Name ?? ""
 
     return (
         <>
@@ -81,10 +87,10 @@ const ManageSubmissionStatus = (): JSX.Element => {
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
                         className="col mr-2"
-                        onClick={async () => setViewIndividualGrades(!viewIndividualGrades)}
+                        onClick={() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades))}
                     />
                 )}
-                {assignment && !isManuallyGraded(assignment) && (
+                {!isManuallyGraded(reviewers) && (
                     <DynamicButton
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}
@@ -94,30 +100,10 @@ const ManageSubmissionStatus = (): JSX.Element => {
                     />
                 )}
             </div>
-            
+
             {!viewIndividualGrades && (
                 <div className="row m-auto">
-                    <DynamicButton
-                        text="Approve"
-                        color={Color.GREEN}
-                        type={getButtonType(Submission_Status.APPROVED)}
-                        className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.APPROVED)}
-                    />
-                    <DynamicButton
-                        text="Revision"
-                        color={Color.YELLOW}
-                        type={getButtonType(Submission_Status.REVISION)}
-                        className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.REVISION)}
-                    />
-                    <DynamicButton
-                        text="Reject"
-                        color={Color.RED}
-                        type={getButtonType(Submission_Status.REJECTED)}
-                        className="col mr-2"
-                        onClick={() => handleSetStatus(Submission_Status.REJECTED)}
-                    />
+                    <StatusButtons />
                 </div>
             )}
             {viewIndividualGrades &&
@@ -126,33 +112,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
                         {state.selectedSubmission?.Grades.map((grade) => (
                             <tr key={grade.UserID.toString()}>
                                 <td className="td-center word-break">{getUserName(grade.UserID)}</td>
-                                <td>
-                                    <DynamicButton
-                                        text="Approve"
-                                        color={Color.GREEN}
-                                        type={getGradeButtonType(grade, Submission_Status.APPROVED)}
-                                        className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.APPROVED)}
-                                    />
-                                </td>
-                                <td>
-                                    <DynamicButton
-                                        text="Revision"
-                                        color={Color.YELLOW}
-                                        type={getGradeButtonType(grade, Submission_Status.REVISION)}
-                                        className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.REVISION)}
-                                    />
-                                </td>
-                                <td>
-                                    <DynamicButton
-                                        text="Reject"
-                                        color={Color.RED}
-                                        type={getGradeButtonType(grade, Submission_Status.REJECTED)}
-                                        className="mr-2"
-                                        onClick={() => handleSetGrade(grade, Submission_Status.REJECTED)}
-                                    />
-                                </td>
+                                <StatusButtons grade={grade} />
                             </tr>
                         ))}
                     </tbody>

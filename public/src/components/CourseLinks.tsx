@@ -1,15 +1,47 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Repository_Type } from "../../proto/qf/types_pb"
-import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
+import { useCourseID } from "../hooks/useCourseID"
+
+type link = {
+    type: Repository_Type,
+    text: string
+    className?: string,
+    style?: React.CSSProperties
+}
 
 /** CourseLinks displays various repository links for the current course, in addition to links to take the user to the group page. */
-const CourseLinks = (): JSX.Element => {
+const CourseLinks = () => {
     const state = useAppState()
-    const courseID = getCourseID()
+    const courseID = useCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     const repo = state.repositories[courseID.toString()]
+    const hasGroup = state.hasGroup(courseID.toString())
+    const groupName = enrollment.group ? `(${enrollment.group?.name})` : ""
+
+    const links: link[] = [
+        { type: Repository_Type.USER, text: "User Repository" },
+        { type: Repository_Type.GROUP, text: `Group Repository ${groupName}`, style: { textAlign: "left" }, className: "overflow-ellipses" },
+        { type: Repository_Type.ASSIGNMENTS, text: "Assignments" },
+        { type: Repository_Type.INFO, text: "Course Info" }
+    ]
+
+    const LinkElement = ({ link }: { link: link }) => {
+        if (repo[link.type] === undefined) {
+            return null
+        }
+
+        return <a
+            href={repo[link.type]}
+            target={"_blank"}
+            rel="noopener noreferrer"
+            className={`list-group-item list-group-item-action ${link.className ?? ""}`}
+            style={link.style}
+        >
+            {link.text}
+        </a>
+    }
 
     return (
         <div className="col-lg-3">
@@ -20,60 +52,15 @@ const CourseLinks = (): JSX.Element => {
                     </h6>
                 </div>
 
-                <a
-                    href={repo[Repository_Type.USER]}
-                    target={"_blank"}
-                    rel="noopener noreferrer"
-                    className="list-group-item list-group-item-action"
+                {links.map(link => { return <LinkElement key={link.type} link={link} /> })}
+
+                <Link
+                    to={`/course/${courseID}/group`}
+                    className={`list-group-item list-group-item-action ${hasGroup ? "" : "list-group-item-success"}`}
                 >
-                    User Repository
-                </a>
+                    {hasGroup ? "View Group" : "Create a Group"}
+                </Link>
 
-                {repo[Repository_Type.GROUP] ? (
-                    <a
-                        href={repo[Repository_Type.GROUP]}
-                        target={"_blank"}
-                        rel="noopener noreferrer"
-                        className="list-group-item list-group-item-action overflow-ellipses"
-                        style={{ textAlign: "left" }}
-                    >
-                        Group Repository ({enrollment.group?.name})
-                    </a>
-                ) : null}
-
-                <a
-                    href={repo[Repository_Type.ASSIGNMENTS]}
-                    target={"_blank"}
-                    rel="noopener noreferrer"
-                    className="list-group-item list-group-item-action"
-                >
-                    Assignments
-                </a>
-
-                <a
-                    href={repo[Repository_Type.INFO]}
-                    target={"_blank"}
-                    rel="noopener noreferrer"
-                    className="list-group-item list-group-item-action"
-                >
-                    Course Info
-                </a>
-
-                {state.hasGroup(courseID.toString()) ? (
-                    <Link
-                        to={`/course/${courseID}/group`}
-                        className="list-group-item list-group-item-action"
-                    >
-                        View Group
-                    </Link>
-                ) : (
-                    <Link
-                        to={`/course/${courseID}/group`}
-                        className="list-group-item list-group-item-action list-group-item-success"
-                    >
-                        Create a Group
-                    </Link>
-                )}
             </div>
         </div>
     )

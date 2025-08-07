@@ -1,10 +1,12 @@
 package auth_test
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -28,10 +30,10 @@ func TestNewManager(t *testing.T) {
 	}
 	// User 1 should not be in the update list.
 	user1claims := auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
-		UserID:  user1.ID,
+		UserID:  user1.GetID(),
 		Admin:   true,
 		Courses: make(map[uint64]qf.Enrollment_UserStatus, 0),
 	}
@@ -44,7 +46,7 @@ func TestNewManager(t *testing.T) {
 	}
 
 	// But must require update if claims are about to expire.
-	user1claims.StandardClaims.ExpiresAt = time.Now().Unix() - 10
+	user1claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-10 * time.Second))
 	cookie, err = manager.UpdateCookie(&user1claims)
 	if err != nil {
 		t.Error(err)
@@ -55,10 +57,10 @@ func TestNewManager(t *testing.T) {
 
 	// User 2 must be in the update list.
 	user2claims := auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
-		UserID: user2.ID,
+		UserID: user2.GetID(),
 		Admin:  false,
 	}
 	cookie, err = manager.UpdateCookie(&user2claims)
@@ -79,7 +81,7 @@ func TestNewCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cookie, err := manager.NewAuthCookie(user.ID)
+	cookie, err := manager.NewAuthCookie(user.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +107,7 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	adminCookie, err := manager.NewAuthCookie(admin.ID)
+	adminCookie, err := manager.NewAuthCookie(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,8 +115,8 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if adminClaims.UserID != admin.ID {
-		t.Errorf("Incorrect user ID: expected %d, got %d", admin.ID, adminClaims.UserID)
+	if adminClaims.UserID != admin.GetID() {
+		t.Errorf("Incorrect user ID: expected %d, got %d", admin.GetID(), adminClaims.UserID)
 	}
 	if adminClaims.Issuer != "QuickFeed" {
 		t.Errorf("Incorrect claims issuer: expecter 'QuickFeed', got %s", adminClaims.Issuer)
@@ -143,10 +145,10 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Fatal(err)
 	}
 	claims := &auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
-		UserID: admin.ID,
+		UserID: admin.GetID(),
 		Admin:  false,
 	}
 	// Admin should not be in the token update list.
@@ -159,15 +161,15 @@ func TestUpdateTokenList(t *testing.T) {
 	}
 
 	// Adding user must update manager's update list and database record.
-	if err := manager.Add(admin.ID); err != nil {
+	if err := manager.Add(admin.GetID()); err != nil {
 		t.Fatal(err)
 	}
 	// Check database record first.
-	updatedUser, err := db.GetUser(admin.ID)
+	updatedUser, err := db.GetUser(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !updatedUser.UpdateToken {
+	if !updatedUser.GetUpdateToken() {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
 	// UpdateCookie will remove user from token list and update the database record.
@@ -180,18 +182,18 @@ func TestUpdateTokenList(t *testing.T) {
 	}
 
 	// Adding and then removing user from the list.
-	if err := manager.Add(admin.ID); err != nil {
+	if err := manager.Add(admin.GetID()); err != nil {
 		t.Fatal(err)
 	}
-	if err := manager.Remove(admin.ID); err != nil {
+	if err := manager.Remove(admin.GetID()); err != nil {
 		t.Fatal(err)
 	}
 	// Database record should be updated.
-	updatedUser, err = db.GetUser(admin.ID)
+	updatedUser, err = db.GetUser(admin.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updatedUser.UpdateToken {
+	if updatedUser.GetUpdateToken() {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
 	// UpdateCookie must return nil and not an updated cookie.
@@ -213,10 +215,10 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	claims := &auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 3).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(3 * time.Minute)),
 		},
-		UserID: user.ID,
+		UserID: user.GetID(),
 		Admin:  false,
 	}
 	user.IsAdmin = false
@@ -224,7 +226,7 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	// To trigger cookie update add user to the update list.
-	if err := tm.Add(user.ID); err != nil {
+	if err := tm.Add(user.GetID()); err != nil {
 		t.Error(err)
 	}
 	newCookie, err := tm.UpdateCookie(claims)
@@ -239,6 +241,65 @@ func TestUpdateCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	if newClaims.Admin {
-		t.Error("Admin status in user claims for demoted user")
+		t.Error("Got admin status in user claims for non-admin user")
+	}
+}
+
+func TestExpiredTokenAndErrorCodePaths(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user := qtest.CreateFakeUser(t, db)
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	claims := &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-3 * time.Minute)), // token already expired
+		},
+		UserID: user.GetID(),
+	}
+	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(env.AuthSecret()))
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to sign token: %s", err))
+	}
+
+	newCookie := &http.Cookie{
+		Name:  auth.CookieName,
+		Value: signedToken,
+	}
+	newClaims, err := tm.GetClaims(newCookie.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if newClaims.UserID != user.GetID() {
+		t.Errorf("Expected user ID %d, got %d", user.GetID(), newClaims.UserID)
+	}
+	// TODO(meling): I'm a bit confused about GetClaims and how it handles expired tokens.
+	// The GetClaims returns a valid claims object even if the token is expired.
+	t.Logf("ExpiresAt: %s", newClaims.RegisteredClaims.ExpiresAt.Time)
+	if !newClaims.RegisteredClaims.ExpiresAt.Time.Before(time.Now()) {
+		t.Error("Expected token to be expired, but it is not")
+	}
+
+	otherClaims, err := tm.GetClaims("invalid-token")
+	if err == nil {
+		t.Fatal("expected error for invalid token, got nil")
+	}
+	if otherClaims != nil {
+		t.Error("expected nil claims for invalid token, got non-nil claims")
+	}
+
+	otherCookie := &http.Cookie{
+		Name:  auth.CookieName,
+		Value: "not-a-valid-token",
+	}
+	otherClaims, err = tm.GetClaims(otherCookie.String())
+	if err == nil {
+		t.Error("expected error for invalid token, got nil")
+	}
+	if otherClaims != nil {
+		t.Error("expected nil claims for invalid token, got non-nil claims")
 	}
 }

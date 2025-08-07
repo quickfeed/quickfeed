@@ -32,11 +32,11 @@ func TestUserVerifier(t *testing.T) {
 	adminUser := qtest.CreateFakeUser(t, db)
 	student := qtest.CreateFakeUser(t, db)
 
-	adminCookie, err := tm.NewAuthCookie(adminUser.ID)
+	adminCookie, err := tm.NewAuthCookie(adminUser.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	studentCookie, err := tm.NewAuthCookie(student.ID)
+	studentCookie, err := tm.NewAuthCookie(student.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}

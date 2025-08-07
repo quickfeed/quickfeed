@@ -6,6 +6,7 @@
   - [Setup](#setup)
     - [Install Tools for Deployment](#install-tools-for-deployment)
     - [Install Tools for Development](#install-tools-for-development)
+    - [The PORT environment variable](#the-port-environment-variable)
     - [Preparing the Environment for Production](#preparing-the-environment-for-production)
     - [Preparing the Environment for Testing](#preparing-the-environment-for-testing)
     - [First-time Installation](#first-time-installation)
@@ -16,6 +17,7 @@
     - [Flags](#flags)
     - [Running Server on a Privileged Port](#running-server-on-a-privileged-port)
     - [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost)
+  - [Authentication Secret Handling in QuickFeed](#authentication-secret-handling-in-quickfeed)
   - [Troubleshooting](#troubleshooting)
 
 ## Technology Stack
@@ -53,14 +55,36 @@ For systems without homebrew, the make target should list well-known packages av
 
 ### Install Tools for Development
 
-The development tools are only needed for development, and can be skipped for deployment only.
-To install:
+Tools for development are managed via `go.mod` and does not need to be installed separately.
+They are used via the `go tool` command, which are invoked via:
 
 ```sh
-% make devtools
+% make proto
 ```
 
-The `devtools` make target will download and install various Protobuf compiler plugins and the grpcweb Protobuf compiler.
+For additional details, see the file `buf.gen.yaml` in the repository's root folder:
+
+```yaml
+version: v2
+plugins:
+  - local: ["go", "tool", "protoc-gen-go-patch"]
+    out: ./
+    opt:
+      - plugin=go
+      - paths=source_relative
+  - local: ["go", "tool", "protoc-gen-connect-go"]
+    out: ./
+    opt:
+      - paths=source_relative
+```
+
+### The PORT environment variable
+
+The `PORT` environment variable can be changed to any valid port, and we strongly advise running Quickfeed a secure port in production.
+It can be set to an unprivileged port and prevent permission issues when [running on a privileged port](#running-server-on-a-privileged-port).
+This is helpful for debugging, as it allows you to run Quickfeed directly by setting program to `"${workspaceFolder}/main.go"`, in the launch profile.
+Alternatively, you can grant the Quickfeed binary access to the privileged port and run it as an executable.
+The launch profile program should then be set to `"${env:GOPATH}/bin/quickfeed"`.
 
 ### Preparing the Environment for Production
 
@@ -79,6 +103,8 @@ QUICKFEED_WEBHOOK_SECRET=""
 
 # QuickFeed server domain or ip
 DOMAIN="example.com"
+# Quickfeed server port
+PORT="443"
 
 # Comma-separated list of domains to allow certificates for.
 # IP addresses and "localhost" are *not* valid.
@@ -102,6 +128,8 @@ QUICKFEED_CERT_FILE=$QUICKFEED/internal/config/certs/fullchain.pem
 
 # QuickFeed server domain or ip
 DOMAIN="127.0.0.1"
+# Quickfeed server port
+PORT="443"
 ```
 
 The [QuickFeed App installation process](#first-time-installation) will guide you through the rest of the setup,
@@ -217,14 +245,15 @@ To view the full usage details:
 | **Flag**        | **Description**                                      | **Example** |
 | --------------- | ---------------------------------------------------- | ----------- |
 | `database.file` | Path to QuickFeed database                           | `qf.db`     |
-| `http.addr`     | Listener address for HTTP service                    | `:8081`     |
+| `http.public`   | Path to content to serve                             |             |
 | `dev`           | Run development server with self-signed certificates |             |
 | `new`           | Create a new QuickFeed App                           |             |
+| `watch`         | Watch for changes and reload frontend                |             |
+| `secret`        | Create new secret for JWT signing                    |             |
 
 ### Running Server on a Privileged Port
 
-It is possible to run server in development mode on different ports by setting the `http.addr` flag.
-However, by default the server will run on port `:443`.
+It is possible to run server in development mode on different ports by updating the environment variable `PORT`, which is by default the standard HTTPS port: `443`.
 If the quickfeed binary cannot access port `:443` on your Linux system, you can enable it by running:
 
 ```sh
@@ -249,6 +278,28 @@ After that it will be possible to receive webhook events on QuickFeed server run
 After that any webhook events your GitHub app is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
 
 Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
+
+## Authentication Secret Handling in QuickFeed
+
+QuickFeed uses the `QUICKFEED_AUTH_SECRET` environment variable to sign JWT tokens for user authentication.
+Two modes are supported for handling the authentication secret:
+
+1. Starting the server with the `-secret` flag; this will
+   - Generate a new random authentication secret.
+   - Save the new secret in the `.env` file, making it the default for future server restarts.
+   - Log out all currently logged-in users, requiring them to sign in again.
+   - This mode is useful for deployments where periodic secret rotation is necessary.
+2. Starting the server without the `-secret` flag; this will
+   - Use the previously saved secret from the `.env` file.
+   - Allow server restarts without logging users out.
+   - Ensure that existing JWT tokens remain valid across restarts.
+
+For custom secret management, users can manually set the `QUICKFEED_AUTH_SECRET` environment variable.
+This will override the secret saved in the `.env` file and is useful for deployments where the secret is managed externally.
+
+**Security Warning:**
+It is important that this secret is kept secure, as exposure can lead to compromised JWT tokens.
+Always use a long randomly generated secret value to maintain security.
 
 ## Troubleshooting
 

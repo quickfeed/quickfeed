@@ -1,36 +1,36 @@
-import { Course, Enrollment, Enrollment_UserStatus, User } from "../../proto/qf/types_pb"
+import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { createMemoryHistory } from "history"
-import React from "react"
+import React, { act } from "react"
 import Members from "../components/Members"
-import { Route, Router } from "react-router"
+import { Route, MemoryRouter, Routes } from "react-router-dom"
 import { Provider } from "overmind-react"
 import { render, screen } from "@testing-library/react"
 import { MockData } from "./mock_data/mockData"
-import { Void } from "../../proto/qf/requests_pb"
+import { VoidSchema } from "../../proto/qf/requests_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
-import { ApiClient } from "../overmind/effects"
-import { Timestamp } from "@bufbuild/protobuf"
-import { ConnectError } from "@bufbuild/connect"
+import { ApiClient } from "../overmind/namespaces/global/effects"
+import { create } from "@bufbuild/protobuf"
+import { timestampFromDate } from "@bufbuild/protobuf/wkt"
+import { ConnectError } from "@connectrpc/connect"
 
 
 describe("UpdateEnrollment", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
-        getCourse: mock("getCourse", async (request) => {
+        getCourse: mock("getCourse", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
-                return { message: new Course(), error: new ConnectError("course not found") }
+                return { message: create(CourseSchema), error: new ConnectError("course not found") }
             }
             course.enrollments = MockData.mockedEnrollments().enrollments.filter(e => e.courseID === request.courseID)
             return { message: course, error: null }
         }),
-        updateEnrollments: mock("updateEnrollments", async (request) => {
+        updateEnrollments: mock("updateEnrollments", async (request) => { // skipcq: JS-0116
             const enrollments = request.enrollments ?? []
             if (enrollments.length === 0) {
-                return { message: new Void(), error: null }
+                return { message: create(VoidSchema), error: null }
             }
             enrollments.forEach(e => {
                 const enrollment = MockData.mockedEnrollments().enrollments.find(en => en.ID === e.ID)
@@ -39,7 +39,7 @@ describe("UpdateEnrollment", () => {
                 }
                 enrollment.status = e.status
             })
-            return { message: new Void(), error: null }
+            return { message: create(VoidSchema), error: null }
         }),
     }
     const mockedOvermind = initializeOvermind({}, api)
@@ -56,8 +56,8 @@ describe("UpdateEnrollment", () => {
     beforeAll(async () => {
         // mock getEnrollmentsByCourse() to load enrollments into state
         // Load enrollments into state before running tests
-        await mockedOvermind.actions.getCourseData({ courseID: BigInt(2) })
-        await mockedOvermind.actions.getCourseData({ courseID: BigInt(1) })
+        await mockedOvermind.actions.global.getCourseData({ courseID: BigInt(2) })
+        await mockedOvermind.actions.global.getCourseData({ courseID: BigInt(1) })
     })
 
     test.each(updateEnrollmentTests)(`$desc`, async (test) => {
@@ -65,23 +65,23 @@ describe("UpdateEnrollment", () => {
         if (!enrollment) {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
-        mockedOvermind.actions.setActiveCourse(test.courseID)
+        mockedOvermind.actions.global.setActiveCourse(test.courseID)
         window.confirm = jest.fn(() => true)
-        await mockedOvermind.actions.updateEnrollment({ enrollment, status: test.want })
+        await mockedOvermind.actions.global.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })
 })
 
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
-        const user = new User({ ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
-        const enrollment = new Enrollment({
+        const user = create(UserSchema, { ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
+        const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
             courseID: BigInt(1),
-            status: 3,
+            status: Enrollment_UserStatus.TEACHER,
             user,
             slipDaysRemaining: 3,
-            lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
+            lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
 
@@ -90,38 +90,41 @@ describe("UpdateEnrollment in webpage", () => {
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
         })
-        const history = createMemoryHistory()
-        history.push("/course/1/members")
 
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
 
         const editButton = screen.getByText("Edit")
-        editButton.click()
+        expect(editButton).toBeTruthy()
+        act(() => {
+            editButton.click()
+        })
 
         expect(screen.getByText("Demote")).toBeTruthy()
         expect(screen.queryByText("Promote")).toBeFalsy()
     })
 
     it("If status is student, button should display promote", () => {
-        const user = new User({
+        const user = create(UserSchema, {
             ID: BigInt(1),
             Name: "Test User",
             StudentID: "6583969706",
             Email: "test@gmail.com"
         })
-        const enrollment = new Enrollment({
+        const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
             courseID: BigInt(1),
-            status: 2,
+            status: Enrollment_UserStatus.STUDENT,
             user,
             slipDaysRemaining: 3,
-            lastActivityDate: Timestamp.fromDate(new Date(2022, 3, 10)),
+            lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
         const mockedOvermind = createOvermindMock(config, (state) => {
@@ -129,19 +132,21 @@ describe("UpdateEnrollment in webpage", () => {
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
         })
-        const history = createMemoryHistory()
-        history.push("/course/1/members")
 
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
             </Provider>
         )
 
         const editButton = screen.getByText("Edit")
-        editButton.click()
+        act(() => {
+            editButton.click()
+        })
 
         expect(screen.getByText("Promote")).toBeTruthy()
         expect(screen.queryByText("Demote")).toBeFalsy()
