@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/ui"
 )
 
@@ -10,6 +11,9 @@ import (
 // The frontend src code is located in the public directory.
 // The compiled code is placed in the dist directory.
 func main() {
+	if err := env.Load(env.RootEnv(".env")); err != nil {
+		panic(err)
+	} // Load environment variables from .env file
 	// Errors and warnings will be logged by Esbuild
 	_ = ui.Build("", true)
 }
