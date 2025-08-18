@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -54,8 +57,44 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
 		}
+
+		// TODO(jostein): The next query parameter has to be added in the frontend when redirecting to the login page.
+		// TODO(jostein): But Referer is used if next is not present.
+		// Prefer an explicit ?next=; otherwise try Referer; finally "/"
+		rawNext := r.URL.Query().Get("next")
+		if rawNext == "" {
+			rawNext = r.Referer()
+			// If Referer is full URL, take only its path+query
+			if rawNext != "" {
+				if u, err := url.Parse(rawNext); err == nil {
+					// preserve query string if present
+					if u.RawQuery != "" {
+						rawNext = u.Path + "?" + u.RawQuery
+					} else {
+						rawNext = u.Path
+					}
+				} else {
+					rawNext = ""
+				}
+			}
+		}
+		next := sanitizeNext(rawNext)
+
+		// Store for the callback (5 minutes)
+		http.SetCookie(w, &http.Cookie{
+			Name:     nextCookieName,
+			Value:    url.QueryEscape(next),
+			Domain:   env.Domain(),
+			Path:     "/",
+			MaxAge:   300,
+			Expires:  time.Now().Add(5 * time.Minute),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		redirectURL := authConfig.AuthCodeURL(secret)
-		logger.Debugf("Redirecting to AuthURL: %v", redirectURL)
+		logger.Debugf("Redirecting to AuthURL: %v (next=%q)", redirectURL, next)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
@@ -94,7 +133,27 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			return
 		}
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusFound)
+		// pull desired redirect
+		dest := "/"
+		if c, err := r.Cookie(nextCookieName); err == nil {
+			if v, e := url.QueryUnescape(c.Value); e == nil {
+				dest = sanitizeNext(v)
+			}
+			// delete cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     nextCookieName,
+				Value:    "",
+				Domain:   env.Domain(),
+				Path:     "/",
+				MaxAge:   -1,
+				Expires:  time.Unix(0, 0),
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+			})
+		}
+
+		http.Redirect(w, r, dest, http.StatusFound)
 	}
 }
 
@@ -185,4 +244,28 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 	}
 	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
 	return db.GetUserByRemoteIdentity(externalUser.ID)
+}
+
+// sanitizeNext sanitizes the next URL to ensure it is a valid path.
+// It removes leading/trailing whitespace, checks for absolute URLs, and cleans the path.
+// If the next URL is invalid or otherwise unsafe, it returns the root path "/".
+func sanitizeNext(next string) string {
+	next = strings.TrimSpace(next)
+	if next == "" {
+		return "/"
+	}
+	// reject absolute/authority forms
+	if strings.HasPrefix(next, "http://") || strings.HasPrefix(next, "https://") || strings.HasPrefix(next, "//") {
+		return "/"
+	}
+	// must be a path that starts with "/"
+	if !strings.HasPrefix(next, "/") {
+		return "/"
+	}
+	// clean removes .., duplicate slashes, etc.
+	cleaned := path.Clean(next)
+	if cleaned == "." { // path.Clean("/") == "/"; path.Clean("") == "."
+		return "/"
+	}
+	return cleaned
 }
