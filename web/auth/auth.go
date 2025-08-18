@@ -58,29 +58,13 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 			return
 		}
 
-		// TODO(jostein): The next query parameter has to be added in the frontend when redirecting to the login page.
-		// TODO(jostein): But Referer is used if next is not present.
-		// Prefer an explicit ?next=; otherwise try Referer; finally "/"
+		// If no next URL is provided, next will be the root path ("/").
+		// This is used to redirect the user back to the page they were on after logging in.
+		// The next URL is sanitized to ensure it is a valid path.
 		rawNext := r.URL.Query().Get("next")
-		if rawNext == "" {
-			rawNext = r.Referer()
-			// If Referer is full URL, take only its path+query
-			if rawNext != "" {
-				if u, err := url.Parse(rawNext); err == nil {
-					// preserve query string if present
-					if u.RawQuery != "" {
-						rawNext = u.Path + "?" + u.RawQuery
-					} else {
-						rawNext = u.Path
-					}
-				} else {
-					rawNext = ""
-				}
-			}
-		}
 		next := sanitizeNext(rawNext)
 
-		// Store for the callback (5 minutes)
+		// Store the next URL in a (short-lived) cookie so we can redirect the user back to it in the callback handler.
 		http.SetCookie(w, &http.Cookie{
 			Name:     nextCookieName,
 			Value:    url.QueryEscape(next),
