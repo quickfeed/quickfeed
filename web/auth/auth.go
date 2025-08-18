@@ -238,14 +238,22 @@ func sanitizeNext(next string) string {
 	if next == "" {
 		return "/"
 	}
-	// reject absolute/authority forms
-	if strings.HasPrefix(next, "http://") || strings.HasPrefix(next, "https://") || strings.HasPrefix(next, "//") {
+
+	u, err := url.Parse(next)
+	if err != nil {
 		return "/"
 	}
-	// must be a path that starts with "/"
-	if !strings.HasPrefix(next, "/") {
+	// Check if the URL is absolute and has a scheme (e.g., http, https)
+	// If it starts with // or contains a backslash, treat it as invalid.
+	if u.IsAbs() || strings.HasPrefix(next, "//") || strings.Contains(next, `\`) {
 		return "/"
 	}
+
+	// If the path is empty or does not start with a slash, return the root path.
+	if u.Path == "" || !strings.HasPrefix(u.Path, "/") {
+		return "/"
+	}
+
 	// clean removes .., duplicate slashes, etc.
 	cleaned := path.Clean(next)
 	if cleaned == "." { // path.Clean("/") == "/"; path.Clean("") == "."
