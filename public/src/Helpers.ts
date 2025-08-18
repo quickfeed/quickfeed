@@ -346,6 +346,13 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
+// nextURL returns the current URL path and query parameters.
+// This is used to redirect the user back to the page they were on after logging in.
+export const nextURL = (): string => {
+    const next = encodeURIComponent(window.location.pathname + window.location.search)
+    return next
+}
+
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
