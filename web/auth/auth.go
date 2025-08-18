@@ -62,7 +62,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		// This is used to redirect the user back to the page they were on after logging in.
 		// The next URL is sanitized to ensure it is a valid path.
 		rawNext := r.URL.Query().Get("next")
-		next := sanitizeNext(rawNext)
+		next := SanitizeNext(rawNext)
 
 		// Store the next URL in a (short-lived) cookie so we can redirect the user back to it in the callback handler.
 		http.SetCookie(w, &http.Cookie{
@@ -121,7 +121,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 		dest := "/"
 		if c, err := r.Cookie(nextCookieName); err == nil {
 			if v, e := url.QueryUnescape(c.Value); e == nil {
-				dest = sanitizeNext(v)
+				dest = SanitizeNext(v)
 			}
 			// delete cookie
 			http.SetCookie(w, &http.Cookie{
@@ -230,10 +230,10 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 	return db.GetUserByRemoteIdentity(externalUser.ID)
 }
 
-// sanitizeNext sanitizes the next URL to ensure it is a valid path.
+// SanitizeNext sanitizes the next URL to ensure it is a valid path.
 // It removes leading/trailing whitespace, checks for absolute URLs, and cleans the path.
 // If the next URL is invalid or otherwise unsafe, it returns the root path "/".
-func sanitizeNext(next string) string {
+func SanitizeNext(next string) string {
 	next = strings.TrimSpace(next)
 	if next == "" {
 		return "/"
