@@ -21,7 +21,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        
+
         // Basic validation
         if (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10) {
             alert('Please provide at least 10 words in either "What did you like?" or "What would make it better?"')
@@ -34,7 +34,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         }
 
         setIsSubmitting(true)
-        
+
         try {
             const feedback: AssignmentFeedback = create(AssignmentFeedbackSchema, {
                 ID: BigInt(0), // Will be set by backend
@@ -52,7 +52,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             await actions.feedback.createAssignmentFeedback({ courseID, feedback })
             setIsSubmitted(true)
             setIsOpen(false)
-            
+
             // Reset form
             setLikedContent('')
             setImprovementSuggestions('')
@@ -73,7 +73,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                         <i className="fa fa-check-circle me-2"></i>
                         Feedback Submitted
                     </h5>
-                    <p className="card-text">Thank you for your feedback on "{assignment.name}"!</p>
+                    <p className="card-text">Thank you for your feedback on {assignment.name}!</p>
                 </div>
             </div>
         )
@@ -82,7 +82,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     return (
         <div className="card mt-3">
             <div className="card-header">
-                <button 
+                <button
                     className="btn btn-link p-0 text-decoration-none w-100 text-start"
                     onClick={() => setIsOpen(!isOpen)}
                     type="button"
@@ -94,7 +94,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                     </h5>
                 </button>
             </div>
-            
+
             {isOpen && (
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
@@ -163,8 +163,8 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                         </div>
 
                         <div className="d-flex gap-2">
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="btn btn-primary"
                                 disabled={isSubmitting || (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10)}
                             >
@@ -177,8 +177,8 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                     'Submit Feedback'
                                 )}
                             </button>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 className="btn btn-secondary"
                                 onClick={() => setIsOpen(false)}
                             >
