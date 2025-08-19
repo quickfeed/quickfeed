@@ -22,15 +22,15 @@ const AssignmentFeedbackForm = ({ assignment, courseID }) => {
         setIsSubmitting(true);
         try {
             const feedback = {
-                assignmentID: assignment.ID,
-                userID: anonymous ? BigInt(0) : undefined,
-                likedContent: likedContent.trim(),
-                improvementSuggestions: improvementSuggestions.trim(),
-                timeSpent: timeSpent.trim(),
-                commitHash: '',
-                submissionID: BigInt(0),
-                createdAt: undefined,
-                ID: BigInt(0)
+                ID: BigInt(0),
+                AssignmentID: assignment.ID,
+                UserID: anonymous ? BigInt(0) : undefined,
+                LikedContent: likedContent.trim(),
+                ImprovementSuggestions: improvementSuggestions.trim(),
+                TimeSpent: timeSpent.trim(),
+                CommitHash: '',
+                SubmissionID: BigInt(0),
+                CreatedAt: undefined,
             };
             await actions.feedback.createAssignmentFeedback({ courseID, feedback });
             setIsSubmitted(true);

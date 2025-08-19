@@ -1,11 +1,11 @@
-export const createAssignmentFeedback = async ({ state, effects }, { courseID, feedback }) => {
+export const createAssignmentFeedback = async ({ state, effects }, { feedback }) => {
     try {
         const response = await effects.global.api.client.createAssignmentFeedback(feedback);
         if (response.error) {
             throw new Error('Failed to create assignment feedback');
         }
         const feedbackMap = new Map(state.feedback.feedback);
-        feedbackMap.set(feedback.assignmentID, response.message);
+        feedbackMap.set(feedback.AssignmentID, response.message);
         state.feedback.feedback = feedbackMap;
     }
     catch (error) {
@@ -16,9 +16,9 @@ export const createAssignmentFeedback = async ({ state, effects }, { courseID, f
 export const getAssignmentFeedback = async ({ state, effects }, { courseID, assignmentID, userID }) => {
     try {
         const response = await effects.global.api.client.getAssignmentFeedback({
-            courseID: BigInt(courseID),
-            assignmentID,
-            userID: userID || BigInt(0)
+            CourseID: BigInt(courseID),
+            AssignmentID: assignmentID,
+            UserID: userID || BigInt(0)
         });
         if (response.error) {
             return null;
