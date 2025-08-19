@@ -286,3 +286,15 @@ message Review {
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
     google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }
+
+message AssignmentFeedback {
+    uint64 ID                                 = 1;
+    uint64 AssignmentID                       = 2;  // foreign key - required
+    uint64 UserID                             = 3;  // optional - for non-anonymous feedback
+    string LikedContent                       = 4;  // What did you like about this assignment?
+    string ImprovementSuggestions             = 5;  // What would make it better?
+    string TimeSpent                          = 6;  // Time used to complete the assignment
+    string CommitHash                         = 7;  // optional - most recent commit when feedback was given
+    uint64 SubmissionID                       = 8;  // optional - associated submission
+    google.protobuf.Timestamp CreatedAt       = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+}

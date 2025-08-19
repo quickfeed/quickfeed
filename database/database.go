@@ -148,4 +148,9 @@ type Database interface {
 
 	// UpdateSlipDays updates used slip days for the given course enrollment
 	UpdateSlipDays([]*qf.UsedSlipDays) error
+
+	// CreateAssignmentFeedback creates a new assignment feedback
+	CreateAssignmentFeedback(*qf.AssignmentFeedback) error
+	// GetAssignmentFeedback returns assignment feedback for the given assignment and user (if specified)
+	GetAssignmentFeedback(query *qf.AssignmentFeedbackRequest) (*qf.AssignmentFeedback, error)
 }
