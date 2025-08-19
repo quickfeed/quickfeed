@@ -68,6 +68,9 @@ const Lab = () => {
 
             return (
                 <div key={submission.ID.toString()} className="mb-4">
+                    {!state.isTeacher && submission.score > assignment.scoreLimit && (
+                        <AssignmentFeedbackForm assignment={assignment} courseID={courseID} />
+                    )}
                     <LabResultTable submission={submission} assignment={assignment} />
 
                     {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}
@@ -75,10 +78,6 @@ const Lab = () => {
                     <div className="card bg-light">
                         <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}>{buildLog}</code>
                     </div>
-                    
-                    {!state.isTeacher && (
-                        <AssignmentFeedbackForm assignment={assignment} courseID={courseID} />
-                    )}
                 </div>
             )
         }
