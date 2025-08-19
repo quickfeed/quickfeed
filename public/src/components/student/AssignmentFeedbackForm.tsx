@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Assignment, AssignmentFeedback, AssignmentFeedbackSchema } from '../../../proto/qf/types_pb'
 import { useActions, useAppState } from '../../overmind'
 import { create } from "@bufbuild/protobuf"
+import { Color } from "../../Helpers"
 
 interface AssignmentFeedbackFormProps {
     assignment: Assignment
@@ -24,12 +25,12 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
 
         // Basic validation
         if (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10) {
-            alert('Please provide at least 10 words in either "What did you like?" or "What would make it better?"')
+            actions.global.alert({ color: Color.RED, text: 'Please provide at least 10 words in either "What did you like?" or "What would make it better?"' })
             return
         }
 
         if (likedContent.length > 200 || improvementSuggestions.length > 200 || timeSpent.length > 100) {
-            alert('Please keep responses under the word limit (200 words for feedback, 100 for time spent)')
+            actions.global.alert({ color: Color.RED, text: 'Please keep responses under the word limit (200 words for feedback, 100 for time spent)' })
             return
         }
 
@@ -58,8 +59,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             setImprovementSuggestions('')
             setTimeSpent('')
         } catch (error) {
-            console.error('Failed to submit feedback:', error)
-            alert('Failed to submit feedback. Please try again.')
+            actions.global.alert({ color: Color.RED, text: 'Failed to submit feedback. Please try again later.' })
         } finally {
             setIsSubmitting(false)
         }
