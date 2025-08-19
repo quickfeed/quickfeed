@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Assignment, AssignmentFeedback } from '../../../proto/qf/types_pb'
-import { useActions } from '../../overmind'
+import { Assignment, AssignmentFeedback, AssignmentFeedbackSchema } from '../../../proto/qf/types_pb'
+import { useActions, useAppState } from '../../overmind'
+import { create } from "@bufbuild/protobuf"
 
 interface AssignmentFeedbackFormProps {
     assignment: Assignment
@@ -8,6 +9,7 @@ interface AssignmentFeedbackFormProps {
 }
 
 const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignment, courseID }) => {
+    const state = useAppState()
     const actions = useActions()
     const [isOpen, setIsOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,17 +36,18 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         setIsSubmitting(true)
         
         try {
-            const feedback: AssignmentFeedback = {
+            const feedback: AssignmentFeedback = create(AssignmentFeedbackSchema, {
                 ID: BigInt(0), // Will be set by backend
+                CourseID: assignment.CourseID,
                 AssignmentID: assignment.ID,
-                UserID: anonymous ? BigInt(0) : undefined, // Will be set by backend if not anonymous
+                UserID: anonymous ? BigInt(0) : state.self.ID, // Will be set by backend if not anonymous
                 LikedContent: likedContent.trim(),
                 ImprovementSuggestions: improvementSuggestions.trim(),
                 TimeSpent: timeSpent.trim(),
                 CommitHash: '', // Could be populated from current submission
                 SubmissionID: BigInt(0), // Could be populated from current submission
                 CreatedAt: undefined, // Will be set by backend
-            }
+            })
 
             await actions.feedback.createAssignmentFeedback({ courseID, feedback })
             setIsSubmitted(true)
