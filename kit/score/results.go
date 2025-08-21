@@ -3,6 +3,7 @@ package score
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"time"
 
@@ -143,11 +144,20 @@ func (pe parseErrors) Error() string {
 }
 
 // ExtractResults returns the results from a test execution extracted from the given out string.
-func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
+// The provided zeroScoreTests must contain a zero score value for all tests that are expected
+// to be present in the results.
+func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests []*Score) (*Results, error) {
 	var filteredLog []string
 	errs := make(parseErrors, 0)
 	results := newResults()
-	for _, line := range strings.Split(out, "\n") {
+
+	// first, add all expected tests (assumed to already have zero scores)
+	for _, expectedTest := range zeroScoreTests {
+		results.addScore(expectedTest)
+	}
+
+	// parse the output and update scores with actual results
+	for line := range strings.SplitSeq(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
 			sc, err := parse(line, secret)
@@ -155,7 +165,12 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 				errs = append(errs, fmt.Errorf("failed on line '%s': %w", line, err))
 				continue
 			}
-			results.addScore(sc)
+			// only add the score if it's in the expected tests
+			if slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
+				return expected.GetTestName() == sc.GetTestName()
+			}) {
+				results.addScore(sc)
+			}
 		} else if line != "" { // include only non-empty lines
 			// the filtered log without JSON score strings
 			filteredLog = append(filteredLog, line)
