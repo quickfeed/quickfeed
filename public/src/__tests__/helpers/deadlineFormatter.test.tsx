@@ -41,6 +41,15 @@ describe("DeadlineFormatter", () => {
 
     test.each(tests)("Expected className: $deadlineInfo.className and message: $deadlineInfo.message", ({ deadline, scoreLimit, submissionScore, deadlineInfo }) => {
         const result = deadlineFormatter(deadline, scoreLimit, submissionScore)
+        
+        // Debug logging for the failing test
+        if (deadlineInfo.message === "Expired 31 days ago") {
+            console.log("DEBUG: Current time:", new Date())
+            console.log("DEBUG: Deadline timestamp:", deadline)
+            console.log("DEBUG: Expected:", deadlineInfo)
+            console.log("DEBUG: Actual result:", result)
+        }
+        
         expect(result).toStrictEqual(deadlineInfo)
     })
 })
