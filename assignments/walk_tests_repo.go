@@ -119,7 +119,10 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		}
 
 		assignmentName := filepath.Base(filepath.Dir(path))
-		assignment := assignmentsMap[assignmentName]
+		assignment, exists := assignmentsMap[assignmentName]
+		if !exists {
+			return nil, "", fmt.Errorf("missing %q for %q", filepath.Join(assignmentName, assignmentFile), path)
+		}
 
 		// Process known file types registered in processors map
 		if processor, exists := processors[filename]; exists {
