@@ -58,14 +58,6 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 			if err := tx.Where("submission_id = ?", submission.GetID()).Delete(&score.BuildInfo{}).Error; err != nil {
 				return err // will rollback transaction
 			}
-
-			// Find the submission's associated assignment
-			var assignment qf.Assignment
-			if err := tx.Preload("ExpectedTests").First(&assignment, submission.GetAssignmentID()).Error; err != nil {
-				return err // will rollback transaction
-			}
-			submission.EnsureAllTestsInSubmissionScores(&assignment)
-
 			if submission.GetBuildInfo() != nil {
 				submission.BuildInfo.SubmissionID = submission.GetID()
 			}
@@ -112,10 +104,9 @@ func setGrades(tx *gorm.DB, submission *qf.Submission) error {
 
 	// Find the submission's associated assignment
 	var assignment qf.Assignment
-	if err := tx.Preload("ExpectedTests").First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
 		return err
 	}
-	submission.EnsureAllTestsInSubmissionScores(&assignment)
 	submission.SetGradesIfApproved(&assignment, submission.GetScore())
 	return nil
 }
