@@ -167,20 +167,10 @@ func (db *GormDB) updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) er
 			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
 		}
 		if len(expectedTests) > 0 {
-			if cmp.Equal(assignment.GetExpectedTests(), expectedTests, cmp.Options{
-				protocmp.Transform(),
-				protocmp.IgnoreFields(&qf.TestInfo{}, "ID", "AssignmentID"),
-				protocmp.IgnoreEnums(),
-			}) {
-				// no changes in the expected tests (from the tests repository)
-				// we set this to nil to avoid duplicates in the database
-				assignment.ExpectedTests = nil
-			} else {
-				// expected tests changed for this assignment, remove old tests
-				for _, test := range expectedTests {
-					if err := tx.Delete(test).Error; err != nil {
-						return fmt.Errorf("failed to delete expected test %d: %w", test.GetID(), err)
-					}
+			// expected tests changed for this assignment, remove old tests
+			for _, test := range expectedTests {
+				if err := tx.Delete(test).Error; err != nil {
+					return fmt.Errorf("failed to delete expected test %d: %w", test.GetID(), err)
 				}
 			}
 		}
