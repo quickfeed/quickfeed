@@ -51,6 +51,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 	var assignment qf.Assignment
 	if err := db.conn.Where(query).
+		Preload("ExpectedTests").
 		Preload("GradingBenchmarks").
 		Preload("GradingBenchmarks.Criteria").
 		First(&assignment).Error; err != nil {

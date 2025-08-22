@@ -159,6 +159,17 @@ func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Get single assignment
+	assignment, err := db.GetAssignment(&qf.Assignment{Name: "Test Assignment", CourseID: course.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotAssignment := assignment
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Get all course assignments
 	assignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
@@ -166,7 +177,7 @@ func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
 	if len(assignments) != 1 {
 		t.Errorf("expected 1 assignment, got %d", len(assignments))
 	}
-	gotAssignment := assignments[0]
+	gotAssignment = assignments[0]
 	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsByCourse() mismatch (-want +got):\n%s", diff)
 	}
@@ -182,6 +193,17 @@ func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Get single assignment
+	assignment, err = db.GetAssignment(&qf.Assignment{Name: "Test Assignment", CourseID: course.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotAssignment = assignment
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Get all course assignments
 	assignments, err = db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
