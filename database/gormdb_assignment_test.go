@@ -148,7 +148,7 @@ func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
 
 	wantAssignment := &qf.Assignment{
 		CourseID:      course.GetID(),
-		Name:          "Test Assignment",
+		Name:          "LabName",
 		Deadline:      qtest.Timestamp(t, "2022-11-11T23:59:00"),
 		AutoApprove:   false,
 		Order:         1,
@@ -159,25 +159,24 @@ func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get single assignment
-	assignment, err := db.GetAssignment(&qf.Assignment{Name: "Test Assignment", CourseID: course.GetID()})
+	// Get single gotAssignment
+	gotAssignment, err := db.GetAssignment(&qf.Assignment{Name: "LabName", CourseID: course.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotAssignment := assignment
 	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
 	}
 
-	// Get all course assignments
-	assignments, err := db.GetAssignmentsByCourse(course.GetID())
+	// Get all course gotAssignments
+	gotAssignments, err := db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(assignments) != 1 {
-		t.Errorf("expected 1 assignment, got %d", len(assignments))
+	if len(gotAssignments) != 1 {
+		t.Errorf("expected 1 assignment, got %d", len(gotAssignments))
 	}
-	gotAssignment = assignments[0]
+	gotAssignment = gotAssignments[0]
 	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsByCourse() mismatch (-want +got):\n%s", diff)
 	}
@@ -194,26 +193,68 @@ func TestUpdateAssignmentsWithExpectedTests(t *testing.T) {
 	}
 
 	// Get single assignment
-	assignment, err = db.GetAssignment(&qf.Assignment{Name: "Test Assignment", CourseID: course.GetID()})
+	gotAssignment, err = db.GetAssignment(&qf.Assignment{Name: "LabName", CourseID: course.GetID()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotAssignment = assignment
 	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Get all course assignments
-	assignments, err = db.GetAssignmentsByCourse(course.GetID())
+	gotAssignments, err = db.GetAssignmentsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(assignments) != 1 {
-		t.Fatalf("expected 1 assignment after update, got %d", len(assignments))
+	if len(gotAssignments) != 1 {
+		t.Fatalf("expected 1 assignment after update, got %d", len(gotAssignments))
 	}
-	gotAssignment = assignments[0]
+	gotAssignment = gotAssignments[0]
 	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsByCourse() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestUpdateExpectedTestsWithNewName(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	wantAssignment := &qf.Assignment{
+		CourseID:      course.GetID(),
+		Name:          "LabName",
+		Deadline:      qtest.Timestamp(t, "2022-11-11T23:59:00"),
+		AutoApprove:   false,
+		Order:         1,
+		IsGroupLab:    false,
+		ExpectedTests: []*qf.TestInfo{{TestName: "test1", MaxScore: 10, Weight: 10}},
+	}
+	if err := db.CreateAssignment(wantAssignment); err != nil {
+		t.Fatal(err)
+	}
+	gotAssignment, err := db.GetAssignment(&qf.Assignment{Name: "LabName", CourseID: course.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Update the assignment with new expected test name and new scores; should overwrite all previous tests
+	wantAssignment.ExpectedTests = []*qf.TestInfo{{TestName: "test2", MaxScore: 20, Weight: 50}}
+	err = db.UpdateAssignments([]*qf.Assignment{wantAssignment})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotAssignment, err = db.GetAssignment(&qf.Assignment{Name: "LabName", CourseID: course.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
 	}
 }
 

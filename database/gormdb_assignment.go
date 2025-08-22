@@ -103,15 +103,8 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			if err := db.updateGradingCriteria(tx, v); err != nil {
 				return err // will rollback transaction
 			}
-			// This sets the assignment ID (and ID if it already exists) for each expected test.
-			// This is required to avoid duplicates in the database.
-			for _, info := range v.GetExpectedTests() {
-				if err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
-					AssignmentID: v.GetID(),
-					TestName:     info.GetTestName(),
-				}).FirstOrInit(info).Error; err != nil {
-					return err // will rollback transaction
-				}
+			if err := db.updateExpectedTests(tx, v); err != nil {
+				return err // will rollback transaction
 			}
 
 			if err := tx.Model(v).Where(&qf.Assignment{
@@ -156,6 +149,41 @@ func check(tx *gorm.DB, assignment *qf.Assignment) error {
 	}
 	if course != 1 {
 		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (db *GormDB) updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
+	if len(assignment.GetExpectedTests()) > 0 {
+		var expectedTests []*qf.TestInfo
+		err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
+			AssignmentID: assignment.GetID(),
+		}).Find(&expectedTests).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// a new assignment, no actions required
+				return nil
+			}
+			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
+		}
+		if len(expectedTests) > 0 {
+			if cmp.Equal(assignment.GetExpectedTests(), expectedTests, cmp.Options{
+				protocmp.Transform(),
+				protocmp.IgnoreFields(&qf.TestInfo{}, "ID", "AssignmentID"),
+				protocmp.IgnoreEnums(),
+			}) {
+				// no changes in the expected tests (from the tests repository)
+				// we set this to nil to avoid duplicates in the database
+				assignment.ExpectedTests = nil
+			} else {
+				// expected tests changed for this assignment, remove old tests
+				for _, test := range expectedTests {
+					if err := tx.Delete(test).Error; err != nil {
+						return fmt.Errorf("failed to delete expected test %d: %w", test.GetID(), err)
+					}
+				}
+			}
+		}
 	}
 	return nil
 }
