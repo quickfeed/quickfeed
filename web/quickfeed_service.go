@@ -504,7 +504,7 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 }
 
 // CreateAssignmentFeedback creates a new assignment feedback.
-func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (s *QuickFeedService) CreateAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
 	feedback := in.Msg
 	if err := s.db.CreateAssignmentFeedback(feedback); err != nil {
 		s.logger.Errorf("CreateAssignmentFeedback failed for feedback %+v: %v", in, err)
@@ -514,7 +514,7 @@ func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *con
 }
 
 // GetAssignmentFeedback returns assignment feedback for the given request.
-func (s *QuickFeedService) GetAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error) {
 	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
