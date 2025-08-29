@@ -2342,9 +2342,7 @@ type AssignmentFeedback struct {
 	LikedContent           string                 `protobuf:"bytes,5,opt,name=LikedContent,proto3" json:"LikedContent,omitempty"`                     // What did you like about this assignment?
 	ImprovementSuggestions string                 `protobuf:"bytes,6,opt,name=ImprovementSuggestions,proto3" json:"ImprovementSuggestions,omitempty"` // What would make it better?
 	TimeSpent              string                 `protobuf:"bytes,7,opt,name=TimeSpent,proto3" json:"TimeSpent,omitempty"`                           // Time used to complete the assignment
-	CommitHash             string                 `protobuf:"bytes,8,opt,name=CommitHash,proto3" json:"CommitHash,omitempty"`                         // optional - most recent commit when feedback was given
-	SubmissionID           uint64                 `protobuf:"varint,9,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty"`                    // optional - associated submission
-	CreatedAt              *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty" gorm:"serializer:timestamp;type:datetime"`
+	CreatedAt              *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -2426,20 +2424,6 @@ func (x *AssignmentFeedback) GetTimeSpent() string {
 		return x.TimeSpent
 	}
 	return ""
-}
-
-func (x *AssignmentFeedback) GetCommitHash() string {
-	if x != nil {
-		return x.CommitHash
-	}
-	return ""
-}
-
-func (x *AssignmentFeedback) GetSubmissionID() uint64 {
-	if x != nil {
-		return x.SubmissionID
-	}
-	return 0
 }
 
 func (x *AssignmentFeedback) GetCreatedAt() *timestamppb.Timestamp {
@@ -2678,7 +2662,7 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x05ready\x18\x05 \x01(\bR\x05ready\x12\x14\n" +
 	"\x05score\x18\x06 \x01(\rR\x05score\x12e\n" +
 	"\x11gradingBenchmarks\x18\a \x03(\v2\x14.qf.GradingBenchmarkB!ʵ\x03\x1d\xa2\x01\x1agorm:\"foreignKey:ReviewID\"R\x11gradingBenchmarks\x12d\n" +
-	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xa6\x03\n" +
+	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xe2\x02\n" +
 	"\x12AssignmentFeedback\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
 	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\"\n" +
@@ -2686,13 +2670,8 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x06UserID\x18\x04 \x01(\x04R\x06UserID\x12\"\n" +
 	"\fLikedContent\x18\x05 \x01(\tR\fLikedContent\x126\n" +
 	"\x16ImprovementSuggestions\x18\x06 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
-	"\tTimeSpent\x18\a \x01(\tR\tTimeSpent\x12\x1e\n" +
-	"\n" +
-	"CommitHash\x18\b \x01(\tR\n" +
-	"CommitHash\x12\"\n" +
-	"\fSubmissionID\x18\t \x01(\x04R\fSubmissionID\x12j\n" +
-	"\tCreatedAt\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAtB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
+	"\tTimeSpent\x18\a \x01(\tR\tTimeSpent\x12j\n" +
+	"\tCreatedAt\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAtB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
 	file_qf_types_proto_rawDescOnce sync.Once
