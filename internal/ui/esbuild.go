@@ -48,7 +48,10 @@ var buildOptions = api.BuildOptions{
 	MinifyIdentifiers: true,
 	MinifySyntax:      true,
 	LogLevel:          api.LogLevelError,
-	Sourcemap:         api.SourceMapLinked,
+	LogOverride: map[string]api.LogLevel{
+		"unsupported-dynamic-import": api.LogLevelSilent,
+	},
+	Sourcemap: api.SourceMapLinked,
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},
