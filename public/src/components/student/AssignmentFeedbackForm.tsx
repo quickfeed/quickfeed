@@ -67,7 +67,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             <div className="card mt-3">
                 <div className="card-body">
                     <h5 className="card-title text-success">
-                        <i className="fa fa-check-circle me-2"></i>
+                        <i className="fa fa-check-circle me-2" />
                         Feedback Submitted
                     </h5>
                     <p className="card-text">Thank you for your feedback on {assignment.name}!</p>
@@ -86,7 +86,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                     aria-expanded={isOpen}
                 >
                     <h5 className="mb-0">
-                        <i className={`fa fa-chevron-${isOpen ? 'down' : 'right'} me-2`}></i>
+                        <i className={`fa fa-chevron-${isOpen ? 'down' : 'right'} me-2`} />
                         Give Feedback on This Assignment
                     </h5>
                 </button>
@@ -167,7 +167,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                             >
                                 {isSubmitting ? (
                                     <>
-                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
                                         Submitting...
                                     </>
                                 ) : (
