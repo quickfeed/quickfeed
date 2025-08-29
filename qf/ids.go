@@ -132,8 +132,6 @@ func (r *AssignmentFeedback) IDFor(role string) uint64 {
 		return r.GetCourseID()
 	case "user":
 		return r.GetUserID()
-	case "submission":
-		return r.GetSubmissionID()
 	}
 	return 0
 }
