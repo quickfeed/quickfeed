@@ -7,9 +7,9 @@ describe("DeadlineFormatter", () => {
     const expectedDeadlineTextToday = `${59 - (new Date()).getMinutes()} minutes to deadline!`
 
     const twoMonthsAgo = timeStamp({ months: -1 })
-    const fourDaysUntilDeadline = timeStamp({ days: 5 })
-    const fourDaysAgo = timeStamp({ days: -3 })
-    const twoDaysUntilDeadline = timeStamp({ days: 3 })
+    const fourDaysUntilDeadline = timeStamp({ days: 4 })
+    const fourDaysAgo = timeStamp({ days: -4 })
+    const twoDaysUntilDeadline = timeStamp({ days: 2 })
 
     const scoreLimit = 50
     const tests = [
@@ -23,7 +23,7 @@ describe("DeadlineFormatter", () => {
         },
         {
             deadline: twoMonthsAgo, scoreLimit, submissionScore: scoreLimit,
-            deadlineInfo: { className: TableColor.GREEN, message: "Expired 32 days ago", time: getFormattedTime(twoMonthsAgo, true) }
+            deadlineInfo: { className: TableColor.GREEN, message: "Expired 31 days ago", time: getFormattedTime(twoMonthsAgo, true) }
         },
         {
             deadline: fourDaysAgo, scoreLimit, submissionScore: 0,
