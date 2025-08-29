@@ -2336,9 +2336,9 @@ func (x *Review) GetEdited() *timestamppb.Timestamp {
 type AssignmentFeedback struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
 	ID                     uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	AssignmentID           uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"`                    // foreign key - required
-	UserID                 uint64                 `protobuf:"varint,3,opt,name=UserID,proto3" json:"UserID,omitempty"`                                // optional - for non-anonymous feedback
-	CourseID               uint64                 `protobuf:"varint,4,opt,name=CourseID,proto3" json:"CourseID,omitempty"`                            // foreign key - required
+	CourseID               uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"`                            // foreign key - required
+	AssignmentID           uint64                 `protobuf:"varint,3,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"`                    // foreign key - required
+	UserID                 uint64                 `protobuf:"varint,4,opt,name=UserID,proto3" json:"UserID,omitempty"`                                // optional - for non-anonymous feedback
 	LikedContent           string                 `protobuf:"bytes,5,opt,name=LikedContent,proto3" json:"LikedContent,omitempty"`                     // What did you like about this assignment?
 	ImprovementSuggestions string                 `protobuf:"bytes,6,opt,name=ImprovementSuggestions,proto3" json:"ImprovementSuggestions,omitempty"` // What would make it better?
 	TimeSpent              string                 `protobuf:"bytes,7,opt,name=TimeSpent,proto3" json:"TimeSpent,omitempty"`                           // Time used to complete the assignment
@@ -2386,6 +2386,13 @@ func (x *AssignmentFeedback) GetID() uint64 {
 	return 0
 }
 
+func (x *AssignmentFeedback) GetCourseID() uint64 {
+	if x != nil {
+		return x.CourseID
+	}
+	return 0
+}
+
 func (x *AssignmentFeedback) GetAssignmentID() uint64 {
 	if x != nil {
 		return x.AssignmentID
@@ -2396,13 +2403,6 @@ func (x *AssignmentFeedback) GetAssignmentID() uint64 {
 func (x *AssignmentFeedback) GetUserID() uint64 {
 	if x != nil {
 		return x.UserID
-	}
-	return 0
-}
-
-func (x *AssignmentFeedback) GetCourseID() uint64 {
-	if x != nil {
-		return x.CourseID
 	}
 	return 0
 }
@@ -2680,10 +2680,10 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x11gradingBenchmarks\x18\a \x03(\v2\x14.qf.GradingBenchmarkB!ʵ\x03\x1d\xa2\x01\x1agorm:\"foreignKey:ReviewID\"R\x11gradingBenchmarks\x12d\n" +
 	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xa6\x03\n" +
 	"\x12AssignmentFeedback\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
-	"\fAssignmentID\x18\x02 \x01(\x04R\fAssignmentID\x12\x16\n" +
-	"\x06UserID\x18\x03 \x01(\x04R\x06UserID\x12\x1a\n" +
-	"\bCourseID\x18\x04 \x01(\x04R\bCourseID\x12\"\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
+	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\"\n" +
+	"\fAssignmentID\x18\x03 \x01(\x04R\fAssignmentID\x12\x16\n" +
+	"\x06UserID\x18\x04 \x01(\x04R\x06UserID\x12\"\n" +
 	"\fLikedContent\x18\x05 \x01(\tR\fLikedContent\x126\n" +
 	"\x16ImprovementSuggestions\x18\x06 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
 	"\tTimeSpent\x18\a \x01(\tR\tTimeSpent\x12\x1e\n" +

@@ -288,14 +288,14 @@ message Review {
 }
 
 message AssignmentFeedback {
-    uint64 ID                                 = 1;
-    uint64 AssignmentID                       = 2;  // foreign key - required
-    uint64 UserID                             = 3;  // optional - for non-anonymous feedback
-    uint64 CourseID                           = 4;  // foreign key - required
-    string LikedContent                       = 5;  // What did you like about this assignment?
-    string ImprovementSuggestions             = 6;  // What would make it better?
-    string TimeSpent                          = 7;  // Time used to complete the assignment
-    string CommitHash                         = 8;  // optional - most recent commit when feedback was given
-    uint64 SubmissionID                       = 9;  // optional - associated submission
-    google.protobuf.Timestamp CreatedAt       = 10 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    uint64 ID                           = 1;
+    uint64 CourseID                     = 2;  // foreign key - required
+    uint64 AssignmentID                 = 3;  // foreign key - required
+    uint64 UserID                       = 4;  // optional - for non-anonymous feedback
+    string LikedContent                 = 5;  // What did you like about this assignment?
+    string ImprovementSuggestions       = 6;  // What would make it better?
+    string TimeSpent                    = 7;  // Time used to complete the assignment
+    string CommitHash                   = 8;  // optional - most recent commit when feedback was given
+    uint64 SubmissionID                 = 9;  // optional - associated submission
+    google.protobuf.Timestamp CreatedAt = 10 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }
