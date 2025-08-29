@@ -82,7 +82,7 @@ These will be created automatically when a course is created.
 The `assignments` folder has a separate folder for each assignment.
 See section [The Assignments Repository](#the-assignments-repository) for more details.
 
-The `username` is actually the github user name. This repository will initially be empty, and the student will need to set up a remote label called `assignments` pointing to the `assignments` repository, and pull from it to get any template code provided by the teaching staff.
+The `username` is actually the github user name. This repository will be automatically populated with the initial content from the `assignments` repository when created, allowing students to start working immediately without having to manually copy code or deal with "unrelated histories" git issues. Students will still need to set up a remote label called `assignments` pointing to the `assignments` repository to pull in future updates provided by the teaching staff.
 
 The `tests` folder is used by QuickFeed to run the tests for each of the assignments.
 The folder structure inside `tests` must correspond to the structure in the `assignments` repository.
