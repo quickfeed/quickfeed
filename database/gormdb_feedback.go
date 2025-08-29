@@ -4,10 +4,13 @@ import (
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // CreateAssignmentFeedback creates a new assignment feedback.
 func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback) error {
+	// Set the creation timestamp
+	feedback.CreatedAt = timestamppb.Now()
 	if err := db.conn.Create(feedback).Error; err != nil {
 		return fmt.Errorf("failed to create assignment feedback: %w", err)
 	}
