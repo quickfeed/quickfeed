@@ -126,7 +126,7 @@ func (c *GradingCriterion) IsValid() bool {
 // IsValid ensures that feedback always belongs to an assignment
 // and has meaningful content.
 func (f *AssignmentFeedback) IsValid() bool {
-	return f.GetAssignmentID() > 0 && 
+	return f.GetAssignmentID() > 0 &&
 		(len(f.GetLikedContent()) > 0 || len(f.GetImprovementSuggestions()) > 0)
 }
 

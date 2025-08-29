@@ -243,7 +243,7 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 		{name: "UserNotFound", request: &qf.RepositoryRequest{CourseID: course.GetID(), UserID: 123}, wantErr: false},   // lookup invalid user should have no repositories (no error)
 		{name: "GroupNotFound", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 123}, wantErr: false}, // lookup invalid group should have no repositories (no error)
 
-		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.GetID()}, wantErr: false},                    // lookup valid user with no repositories should return no repositories (no error)
+		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.GetID()}, wantErr: false},                         // lookup valid user with no repositories should return no repositories (no error)
 		{name: "GroupHasNoRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, wantErr: false},            // lookup valid group with no repositories should return no repositories (no error)
 		{name: "GroupHasRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, create: true, wantErr: true}, // lookup for group with repositories -> error
 	}
