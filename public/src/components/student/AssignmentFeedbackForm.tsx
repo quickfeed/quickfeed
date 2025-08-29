@@ -1,7 +1,7 @@
+import { create } from "@bufbuild/protobuf"
 import React, { useState } from 'react'
 import { Assignment, AssignmentFeedback, AssignmentFeedbackSchema } from '../../../proto/qf/types_pb'
 import { useActions, useAppState } from '../../overmind'
-import { create } from "@bufbuild/protobuf"
 
 interface AssignmentFeedbackFormProps {
     assignment: Assignment
@@ -44,9 +44,6 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                 LikedContent: likedContent.trim(),
                 ImprovementSuggestions: improvementSuggestions.trim(),
                 TimeSpent: timeSpent.trim(),
-                CommitHash: '', // Could be populated from current submission
-                SubmissionID: BigInt(0), // Could be populated from current submission
-                CreatedAt: undefined, // Will be set by backend
             })
 
             await actions.feedback.createAssignmentFeedback({ courseID, feedback })
