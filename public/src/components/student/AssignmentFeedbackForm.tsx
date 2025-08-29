@@ -1,6 +1,7 @@
 import { create } from "@bufbuild/protobuf"
 import React, { useState } from 'react'
 import { Assignment, AssignmentFeedback, AssignmentFeedbackSchema } from '../../../proto/qf/types_pb'
+import { Color } from "../../Helpers"
 import { useActions, useAppState } from '../../overmind'
 
 interface AssignmentFeedbackFormProps {
@@ -22,14 +23,13 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        // Basic validation
         if (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10) {
-            alert('Please provide at least 10 words in either "What did you like?" or "What would make it better?"')
+            actions.global.alert({ text: 'Please provide at least 10 words of feedback', color: Color.YELLOW })
             return
         }
 
-        if (likedContent.length > 200 || improvementSuggestions.length > 200 || timeSpent.length > 100) {
-            alert('Please keep responses under the word limit (200 words for feedback, 100 for time spent)')
+        if (likedContent.length > 200 || improvementSuggestions.length > 200 || timeSpent.length > 30) {
+            actions.global.alert({ text: 'Please keep responses under the 200 word limit', color: Color.YELLOW })
             return
         }
 
@@ -56,7 +56,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             setTimeSpent('')
         } catch (error) {
             console.error('Failed to submit feedback:', error)
-            alert('Failed to submit feedback. Please try again.')
+            actions.global.alert({ text: 'Failed to submit feedback. Please try again.', color: Color.RED })
         } finally {
             setIsSubmitting(false)
         }
