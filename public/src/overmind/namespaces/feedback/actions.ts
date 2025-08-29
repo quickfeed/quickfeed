@@ -27,9 +27,9 @@ export const getAssignmentFeedback = async (
 ): Promise<AssignmentFeedback | null> => {
     try {
         const response = await effects.global.api.client.getAssignmentFeedback({
-            courseID: BigInt(courseID),
-            assignmentID: assignmentID,
-            userID: userID || BigInt(0)
+            CourseID: BigInt(courseID),
+            AssignmentID: assignmentID,
+            UserID: userID || BigInt(0)
         })
         if (response.error) {
             return null

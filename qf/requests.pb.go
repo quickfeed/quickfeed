@@ -861,9 +861,9 @@ func (x *RebuildRequest) GetSubmissionID() uint64 {
 
 type AssignmentFeedbackRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CourseID      uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
-	UserID        uint64                 `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"` // optional - for filtering by user
+	CourseID      uint64                 `protobuf:"varint,1,opt,name=CourseID,proto3" json:"CourseID,omitempty"`
+	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"`
+	UserID        uint64                 `protobuf:"varint,3,opt,name=UserID,proto3" json:"UserID,omitempty"` // optional - for filtering by user
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1023,9 +1023,9 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\"\n" +
 	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"s\n" +
 	"\x19AssignmentFeedbackRequest\x12\x1a\n" +
-	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12\"\n" +
-	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\x16\n" +
-	"\x06userID\x18\x03 \x01(\x04R\x06userID\"\x06\n" +
+	"\bCourseID\x18\x01 \x01(\x04R\bCourseID\x12\"\n" +
+	"\fAssignmentID\x18\x02 \x01(\x04R\fAssignmentID\x12\x16\n" +
+	"\x06UserID\x18\x03 \x01(\x04R\x06UserID\"\x06\n" +
 	"\x04VoidB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (

@@ -89,9 +89,9 @@ message RebuildRequest {
 }
 
 message AssignmentFeedbackRequest {
-    uint64 courseID     = 1;
-    uint64 assignmentID = 2;
-    uint64 userID       = 3;  // optional - for filtering by user
+    uint64 CourseID     = 1;
+    uint64 AssignmentID = 2;
+    uint64 UserID       = 3;  // optional - for filtering by user
 }
 
 message Void {}
