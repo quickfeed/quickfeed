@@ -96,4 +96,5 @@ tool (
 	connectrpc.com/connect/cmd/protoc-gen-connect-go
 	github.com/alta/protopatch/cmd/protoc-gen-go-patch
 	google.golang.org/protobuf/cmd/protoc-gen-go
+	golang.org/x/tools/cmd/stringer
 )
