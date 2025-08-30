@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -15,7 +14,7 @@ import (
 
 func TestCreateBenchmark(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 	cookie := client.Cookie(t, user)
@@ -47,7 +46,7 @@ func TestCreateBenchmark(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			gotBenchmark, err := client.CreateBenchmark(context.Background(), qtest.RequestWithCookie(test.benchmark, cookie))
+			gotBenchmark, err := client.CreateBenchmark(t.Context(), qtest.RequestWithCookie(test.benchmark, cookie))
 			qtest.CheckError(t, err, test.wantErr)
 
 			if test.wantErr == nil {
@@ -60,7 +59,7 @@ func TestCreateBenchmark(t *testing.T) {
 
 func TestUpdateBenchmark(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{AssignmentID: assignment.GetID(), CourseID: course.GetID()})
@@ -74,10 +73,10 @@ func TestUpdateBenchmark(t *testing.T) {
 		Comment:      "Updated comment",
 	}
 
-	if _, err := client.UpdateBenchmark(context.Background(), qtest.RequestWithCookie(wantBenchmark, cookie)); err != nil {
+	if _, err := client.UpdateBenchmark(t.Context(), qtest.RequestWithCookie(wantBenchmark, cookie)); err != nil {
 		t.Fatal(err)
 	}
-	benchmarks := qtest.GetBenchmarks(t, db, 1)
+	benchmarks := qtest.GetBenchmarks(t, db, assignment.GetID())
 	if len(benchmarks) != 1 {
 		t.Fatalf("expected 1 benchmark, got %d", len(benchmarks))
 	}
@@ -87,7 +86,7 @@ func TestUpdateBenchmark(t *testing.T) {
 
 func TestDeleteBenchmark(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 	benchmark := &qf.GradingBenchmark{
@@ -99,14 +98,11 @@ func TestDeleteBenchmark(t *testing.T) {
 	qtest.CreateBenchmark(t, db, benchmark)
 	cookie := client.Cookie(t, user)
 
-	if _, err := client.DeleteBenchmark(context.Background(), qtest.RequestWithCookie(benchmark, cookie)); err != nil {
+	if _, err := client.DeleteBenchmark(t.Context(), qtest.RequestWithCookie(benchmark, cookie)); err != nil {
 		t.Fatalf("DeleteBenchmark failed: %v", err)
 	}
 
 	benchmarks := qtest.GetBenchmarks(t, db, assignment.GetID())
-	if len(benchmarks) != 0 {
-		t.Fatalf("expected 0 benchmarks, got %d", len(benchmarks))
-	}
 	if len(benchmarks) != 0 {
 		t.Fatalf("expected 0 benchmarks, got %d", len(benchmarks))
 	}
