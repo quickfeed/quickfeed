@@ -18,6 +18,7 @@ type (
 	}
 )
 
+//go:generate stringer -type=role
 const (
 	none role = iota
 	// user role implies that user attempts to access information about himself.

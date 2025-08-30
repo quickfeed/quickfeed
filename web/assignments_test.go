@@ -32,7 +32,7 @@ func TestUpdateAssignments(t *testing.T) {
 			request: &qf.CourseRequest{
 				CourseID: 111,
 			},
-			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for UpdateAssignments: required roles [4] not satisfied by claims: UserID: 1 (admin): Courses: map[1:TEACHER], Groups: []")),
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for UpdateAssignments: required roles [teacher] not satisfied by claims: UserID: 1 (admin): Courses: map[1:TEACHER], Groups: []")),
 		},
 		{
 			name: "Valid course ID but failed to clone repository",
