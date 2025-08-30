@@ -514,13 +514,17 @@ func (s *QuickFeedService) CreateAssignmentFeedback(_ context.Context, in *conne
 }
 
 // GetAssignmentFeedback returns assignment feedback for the given request.
+// For backward compatibility, returns the first feedback found.
 func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error) {
-	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
+	feedbackList, err := s.db.GetAssignmentFeedback(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
 	}
-	return connect.NewResponse(feedback), nil
+	if len(feedbackList) == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
+	}
+	return connect.NewResponse(feedbackList[0]), nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment

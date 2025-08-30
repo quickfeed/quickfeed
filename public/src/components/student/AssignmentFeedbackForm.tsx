@@ -17,8 +17,37 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [likedContent, setLikedContent] = useState('')
     const [improvementSuggestions, setImprovementSuggestions] = useState('')
-    const [timeSpent, setTimeSpent] = useState('')
-    const [anonymous, setAnonymous] = useState(true)
+    const [hours, setHours] = useState('')
+    const [minutes, setMinutes] = useState('')
+
+    const validateTimeInput = (value: string, max: number): boolean => {
+        if (value === '') return true
+        const num = parseInt(value, 10)
+        return !isNaN(num) && num >= 0 && num <= max
+    }
+
+    const handleHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        if (validateTimeInput(value, 100)) {
+            setHours(value)
+        }
+    }
+
+    const handleMinutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        if (validateTimeInput(value, 59)) {
+            setMinutes(value)
+        }
+    }
+
+    const getTimeSpentString = (): string => {
+        const h = parseInt(hours || '0', 10)
+        const m = parseInt(minutes || '0', 10)
+        if (h === 0 && m === 0) return ''
+        if (h === 0) return `${m} minute${m !== 1 ? 's' : ''}`
+        if (m === 0) return `${h} hour${h !== 1 ? 's' : ''}`
+        return `${h} hour${h !== 1 ? 's' : ''} and ${m} minute${m !== 1 ? 's' : ''}`
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -28,8 +57,20 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             return
         }
 
-        if (likedContent.length > 200 || improvementSuggestions.length > 200 || timeSpent.length > 30) {
+        if (likedContent.length > 200 || improvementSuggestions.length > 200) {
             actions.global.alert({ text: 'Please keep responses under the 200 word limit', color: Color.YELLOW })
+            return
+        }
+
+        // Validate time input
+        if (!hours && !minutes) {
+            actions.global.alert({ text: 'Please specify the time you spent on this assignment', color: Color.YELLOW })
+            return
+        }
+
+        const timeSpentString = getTimeSpentString()
+        if (!timeSpentString) {
+            actions.global.alert({ text: 'Please enter a valid time duration', color: Color.YELLOW })
             return
         }
 
@@ -40,10 +81,10 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                 ID: BigInt(0), // Will be set by backend
                 CourseID: assignment.CourseID,
                 AssignmentID: assignment.ID,
-                UserID: anonymous ? BigInt(0) : state.self.ID, // Will be set by backend if not anonymous
+                UserID: BigInt(0), // Always anonymous
                 LikedContent: likedContent.trim(),
                 ImprovementSuggestions: improvementSuggestions.trim(),
-                TimeSpent: timeSpent.trim(),
+                TimeSpent: timeSpentString,
             })
 
             await actions.feedback.createAssignmentFeedback({ courseID, feedback })
@@ -53,7 +94,8 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             // Reset form
             setLikedContent('')
             setImprovementSuggestions('')
-            setTimeSpent('')
+            setHours('')
+            setMinutes('')
         } catch (error) {
             console.error('Failed to submit feedback:', error)
             actions.global.alert({ text: 'Failed to submit feedback. Please try again.', color: Color.RED })
@@ -132,38 +174,54 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                         </div>
 
                         <div className="mb-3">
-                            <label htmlFor="timeSpent" className="form-label">
-                                How much time did you spend on this assignment? <small className="text-muted">(optional)</small>
+                            <label className="form-label">
+                                How much time did you spend on this assignment? <span className="text-danger">*</span>
                             </label>
-                            <input
-                                id="timeSpent"
-                                type="text"
-                                className="form-control"
-                                value={timeSpent}
-                                onChange={(e) => setTimeSpent(e.target.value)}
-                                placeholder="e.g., 2 hours, 3 days, 1 week"
-                                maxLength={100}
-                            />
+                            <p className="text-muted small mb-2">Enter hours and minutes (max 100 hours)</p>
+                            <div className="row">
+                                <div className="col-6">
+                                    <div className="input-group">
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            value={hours}
+                                            onChange={handleHoursChange}
+                                            placeholder="0"
+                                            min="0"
+                                            max="100"
+                                        />
+                                        <span className="input-group-text">hours</span>
+                                    </div>
+                                </div>
+                                <div className="col-6">
+                                    <div className="input-group">
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            value={minutes}
+                                            onChange={handleMinutesChange}
+                                            placeholder="0"
+                                            min="0"
+                                            max="59"
+                                        />
+                                        <span className="input-group-text">minutes</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="mb-3 form-check">
-                            <input
-                                id="anonymous"
-                                type="checkbox"
-                                className="form-check-input"
-                                checked={anonymous}
-                                onChange={(e) => setAnonymous(e.target.checked)}
-                            />
-                            <label htmlFor="anonymous" className="form-check-label">
-                                Submit feedback anonymously
-                            </label>
+                        <div className="mb-3">
+                            <small className="text-muted">
+                                <i className="fa fa-info-circle me-1"></i>
+                                Your feedback will be submitted anonymously to help improve the course.
+                            </small>
                         </div>
 
                         <div className="d-flex gap-2">
                             <button
                                 type="submit"
                                 className="btn btn-primary"
-                                disabled={isSubmitting || (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10)}
+                                disabled={isSubmitting || (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10) || (!hours && !minutes)}
                             >
                                 {isSubmitting ? (
                                     <>
