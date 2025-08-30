@@ -16,7 +16,7 @@ func TestGetRepositories(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	teacher := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -109,10 +109,10 @@ func TestGetRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teacherCookie := Cookie(t, tm, teacher)
-	studentCookie := Cookie(t, tm, student)
-	groupStudentCookie := Cookie(t, tm, groupStudent)
-	missingEnrollmentCookie := Cookie(t, tm, notEnrolledUser)
+	teacherCookie := client.Cookie(t, teacher)
+	studentCookie := client.Cookie(t, student)
+	groupStudentCookie := client.Cookie(t, groupStudent)
+	missingEnrollmentCookie := client.Cookie(t, notEnrolledUser)
 
 	ctx := context.Background()
 
@@ -197,7 +197,7 @@ func TestGetRepositories(t *testing.T) {
 func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user"})
 	course := qtest.MockCourses[0]
