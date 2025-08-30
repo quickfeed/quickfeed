@@ -18,9 +18,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 	defer cleanup()
 
 	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
-	student, course, assignment := qtest.SetupCourseAssignment(t, db)
-	teacher := qtest.CreateFakeUser(t, db)
-	qtest.EnrollTeacher(t, db, teacher, course)
+	teacher, course, assignment, student := qtest.SetupCourseAssignmentTeacherStudent(t, db)
 
 	tests := []struct {
 		name     string
@@ -118,25 +116,16 @@ func TestGetAssignmentFeedback(t *testing.T) {
 	defer cleanup()
 
 	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
-	admin := qtest.CreateFakeUser(t, db)
-	student1 := qtest.CreateFakeUser(t, db)
+	teacher, course, assignment, student1 := qtest.SetupCourseAssignmentTeacherStudent(t, db)
+
+	// Enroll an additional student
 	student2 := qtest.CreateFakeUser(t, db)
-	course := qtest.MockCourses[0]
-	qtest.CreateCourse(t, db, admin, course)
-	qtest.EnrollStudent(t, db, student1, course)
 	qtest.EnrollStudent(t, db, student2, course)
 
-	assignment := &qf.Assignment{
-		CourseID: course.GetID(),
-		Order:    1,
-		Name:     "Assignment 1",
-	}
-	qtest.CreateAssignment(t, db, assignment)
-
-	// Create feedback as students
+	// Create cookies for authentication
+	teacherCookie := client.Cookie(t, teacher)
 	student1Cookie := client.Cookie(t, student1)
 	student2Cookie := client.Cookie(t, student2)
-	teacherCookie := client.Cookie(t, admin)
 	ctx := context.Background()
 
 	// Create feedback from student1
@@ -171,12 +160,14 @@ func TestGetAssignmentFeedback(t *testing.T) {
 
 	tests := []struct {
 		name    string
+		cookie  string
 		request *qf.AssignmentFeedbackRequest
 		want    *qf.AssignmentFeedback
 		wantErr error
 	}{
 		{
-			name: "Get feedback by assignment ID only (returns first found)",
+			name:   "Teacher can get feedback by assignment ID only (returns first found)",
+			cookie: teacherCookie,
 			request: &qf.AssignmentFeedbackRequest{
 				CourseID:     course.GetID(),
 				AssignmentID: assignment.GetID(),
@@ -184,7 +175,8 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			want: createdFeedback1, // Should return first feedback created
 		},
 		{
-			name: "Get feedback by assignment ID and user ID",
+			name:   "Teacher can get feedback by assignment ID and user ID",
+			cookie: teacherCookie,
 			request: &qf.AssignmentFeedbackRequest{
 				CourseID:     course.GetID(),
 				AssignmentID: assignment.GetID(),
@@ -193,7 +185,37 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			want: createdFeedback2,
 		},
 		{
-			name: "Get feedback for non-existent assignment",
+			name:   "Student cannot get feedback once submitted",
+			cookie: student1Cookie,
+			request: &qf.AssignmentFeedbackRequest{
+				CourseID:     course.GetID(),
+				AssignmentID: assignment.GetID(),
+				UserID:       student1.GetID(),
+			},
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: required roles [teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+		},
+		{
+			name:   "Student cannot get other student's feedback",
+			cookie: student1Cookie,
+			request: &qf.AssignmentFeedbackRequest{
+				CourseID:     course.GetID(),
+				AssignmentID: assignment.GetID(),
+				UserID:       student2.GetID(),
+			},
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: required roles [teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+		},
+		{
+			name:   "Student cannot get feedback without specifying user ID",
+			cookie: student2Cookie,
+			request: &qf.AssignmentFeedbackRequest{
+				CourseID:     course.GetID(),
+				AssignmentID: assignment.GetID(),
+			},
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: required roles [teacher] not satisfied by claims: UserID: 3: Courses: map[1:STUDENT], Groups: []")),
+		},
+		{
+			name:   "Teacher can get feedback for non-existent assignment",
+			cookie: teacherCookie,
 			request: &qf.AssignmentFeedbackRequest{
 				CourseID:     course.GetID(),
 				AssignmentID: 999999,
@@ -201,7 +223,8 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found")),
 		},
 		{
-			name: "Get feedback for non-existent user",
+			name:   "Teacher can get feedback for non-existent user",
+			cookie: teacherCookie,
 			request: &qf.AssignmentFeedbackRequest{
 				CourseID:     course.GetID(),
 				AssignmentID: assignment.GetID(),
@@ -213,7 +236,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			resp, err := client.GetAssignmentFeedback(ctx, qtest.RequestWithCookie(test.request, teacherCookie))
+			resp, err := client.GetAssignmentFeedback(ctx, qtest.RequestWithCookie(test.request, test.cookie))
 			if hasError := qtest.CheckCode(t, err, test.wantErr); hasError {
 				return // cannot continue since resp is invalid
 			}

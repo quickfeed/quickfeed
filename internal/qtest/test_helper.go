@@ -64,8 +64,8 @@ func SetupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	return user, course, assignment
 }
 
-// SetupCourseAssignmentTeacher returns the admin user, course, an assignment, and a teacher (separate from the admin).
-func SetupCourseAssignmentTeacher(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment, *qf.User) {
+// SetupCourseAssignmentTeacherStudent returns the admin (teacher) user, course, an assignment, and a student user.
+func SetupCourseAssignmentTeacherStudent(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment, *qf.User) {
 	admin := CreateFakeUser(t, db)
 	course := &qf.Course{}
 	CreateCourse(t, db, admin, course)
@@ -74,9 +74,9 @@ func SetupCourseAssignmentTeacher(t *testing.T, db database.Database) (*qf.User,
 		Order:    1,
 	}
 	CreateAssignment(t, db, assignment)
-	teacher := CreateFakeUser(t, db)
-	EnrollTeacher(t, db, teacher, course)
-	return admin, course, assignment, teacher
+	user := CreateFakeUser(t, db)
+	EnrollStudent(t, db, user, course)
+	return admin, course, assignment, user
 }
 
 // PrepareGitRepo creates copies src/repo folder to dst and initializes
