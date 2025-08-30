@@ -606,3 +606,21 @@ func TestMockDeleteGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestPopulateRepoWithAssignments(t *testing.T) {
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithMockOrgs())
+	ctx := context.Background()
+
+	// Test that populateRepoWithAssignments doesn't break when assignments repo doesn't exist
+	// In the mock setup, there's no actual git repository, so this should log a warning but not fail
+	err := s.populateRepoWithAssignments(ctx, "foo", "test-repo")
+	if err != nil {
+		t.Errorf("populateRepoWithAssignments should not fail when assignments repo is missing: %v", err)
+	}
+
+	// Test with non-existent organization
+	err = s.populateRepoWithAssignments(ctx, "nonexistent", "test-repo")
+	if err != nil {
+		t.Errorf("populateRepoWithAssignments should not fail with non-existent org: %v", err)
+	}
+}
