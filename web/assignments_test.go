@@ -46,7 +46,7 @@ func TestUpdateAssignments(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := client.UpdateAssignments(context.Background(), qtest.RequestWithCookie(test.request, cookie))
-			if hasError := qtest.CheckCode(t, err, test.wantErr); hasError {
+			if qtest.CheckCode(t, err, test.wantErr) {
 				return // cannot continue since resp is invalid
 			}
 		})

@@ -95,7 +95,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			resp, err := client.CreateAssignmentFeedback(t.Context(), qtest.RequestWithCookie(test.feedback, test.cookie))
-			if hasError := qtest.CheckCode(t, err, test.wantErr); hasError {
+			if qtest.CheckCode(t, err, test.wantErr) {
 				return // cannot continue since resp is invalid
 			}
 			if resp.Msg.GetID() == 0 {
@@ -237,7 +237,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			resp, err := client.GetAssignmentFeedback(ctx, qtest.RequestWithCookie(test.request, test.cookie))
-			if hasError := qtest.CheckCode(t, err, test.wantErr); hasError {
+			if qtest.CheckCode(t, err, test.wantErr) {
 				return // cannot continue since resp is invalid
 			}
 			got := resp.Msg
