@@ -231,7 +231,7 @@ func GetBenchmarks(t *testing.T, db database.Database, assignmentID uint64) []*q
 	return benchmarks
 }
 
-func GetBenchmark(t *testing.T, db database.Database, assignmentID uint64, benchmarkID uint64) *qf.GradingBenchmark {
+func GetBenchmark(t *testing.T, db database.Database, assignmentID, benchmarkID uint64) *qf.GradingBenchmark {
 	t.Helper()
 	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignmentID})
 	if err != nil {

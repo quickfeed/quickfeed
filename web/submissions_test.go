@@ -843,7 +843,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	ctx := context.Background()
 	cookie := client.Cookie(t, admin)
 
-	reviews := []*qf.Review{}
+	var reviews []*qf.Review
 	for _, s := range submissions {
 		if err := db.CreateSubmission(s); err != nil {
 			t.Fatal(err)
