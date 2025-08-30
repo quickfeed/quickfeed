@@ -16,8 +16,9 @@ import (
 func TestCreateBenchmark(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
-	_, _, assignment := qtest.SetupCourseAssignment(t, db)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
+	cookie := client.Cookie(t, user)
 
 	tests := []struct {
 		name      string
@@ -27,6 +28,7 @@ func TestCreateBenchmark(t *testing.T) {
 		{
 			name: "Valid benchmark",
 			benchmark: &qf.GradingBenchmark{
+				CourseID:     course.GetID(),
 				AssignmentID: assignment.GetID(),
 				Heading:      "Benchmark 1",
 				Comment:      "comment 1",
@@ -35,6 +37,7 @@ func TestCreateBenchmark(t *testing.T) {
 		{
 			name: "Non-existing assignment",
 			benchmark: &qf.GradingBenchmark{
+				CourseID:     course.GetID(),
 				AssignmentID: 111,
 				Heading:      "This is a test benchmark",
 				Comment:      "",
@@ -44,7 +47,7 @@ func TestCreateBenchmark(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			gotBenchmark, err := client.CreateBenchmark(context.Background(), &connect.Request[qf.GradingBenchmark]{Msg: test.benchmark})
+			gotBenchmark, err := client.CreateBenchmark(context.Background(), qtest.RequestWithCookie(test.benchmark, cookie))
 			qtest.CheckError(t, err, test.wantErr)
 
 			if test.wantErr == nil {
@@ -58,47 +61,52 @@ func TestCreateBenchmark(t *testing.T) {
 func TestUpdateBenchmark(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
-	_, _, assignment := qtest.SetupCourseAssignment(t, db)
-	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{AssignmentID: assignment.GetID()})
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
+	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{AssignmentID: assignment.GetID(), CourseID: course.GetID()})
+	cookie := client.Cookie(t, user)
 
 	wantBenchmark := &qf.GradingBenchmark{
 		ID:           1,
+		CourseID:     course.GetID(),
 		AssignmentID: assignment.GetID(),
 		Heading:      "Updated Benchmark",
 		Comment:      "Updated comment",
 	}
 
-	if _, err := client.UpdateBenchmark(context.Background(), &connect.Request[qf.GradingBenchmark]{Msg: wantBenchmark}); err != nil {
+	if _, err := client.UpdateBenchmark(context.Background(), qtest.RequestWithCookie(wantBenchmark, cookie)); err != nil {
 		t.Fatal(err)
 	}
 	benchmarks := qtest.GetBenchmarks(t, db, 1)
 	if len(benchmarks) != 1 {
-		t.Fatalf("expected 0 benchmarks, got %d", len(benchmarks))
+		t.Fatalf("expected 1 benchmark, got %d", len(benchmarks))
 	}
 	gotBenchmark := benchmarks[0]
-	qtest.Diff(t, "CreateBenchmark mismatch", gotBenchmark, wantBenchmark, protocmp.Transform())
+	qtest.Diff(t, "UpdateBenchmark mismatch", gotBenchmark, wantBenchmark, protocmp.Transform())
 }
 
 func TestDeleteBenchmark(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
-	_, _, assignment := qtest.SetupCourseAssignment(t, db)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
 	benchmark := &qf.GradingBenchmark{
+		CourseID:     course.GetID(),
 		AssignmentID: assignment.GetID(),
 		Heading:      "Benchmark 1",
 		Comment:      "comment 1",
 	}
 	qtest.CreateBenchmark(t, db, benchmark)
+	cookie := client.Cookie(t, user)
 
-	if _, err := client.DeleteBenchmark(context.Background(), &connect.Request[qf.GradingBenchmark]{Msg: &qf.GradingBenchmark{
-		ID: benchmark.GetID(),
-	}}); err != nil {
+	if _, err := client.DeleteBenchmark(context.Background(), qtest.RequestWithCookie(benchmark, cookie)); err != nil {
 		t.Fatalf("DeleteBenchmark failed: %v", err)
 	}
 
-	benchmarks := qtest.GetBenchmarks(t, db, benchmark.GetID())
+	benchmarks := qtest.GetBenchmarks(t, db, assignment.GetID())
+	if len(benchmarks) != 0 {
+		t.Fatalf("expected 0 benchmarks, got %d", len(benchmarks))
+	}
 	if len(benchmarks) != 0 {
 		t.Fatalf("expected 0 benchmarks, got %d", len(benchmarks))
 	}

@@ -58,9 +58,9 @@ func SetupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 		Order:    1,
 	}
 	CreateAssignment(t, db, assignment)
-	// create user and enroll as student
+	// create user and enroll as teacher
 	user := CreateFakeUser(t, db)
-	EnrollStudent(t, db, user, course)
+	EnrollTeacher(t, db, user, course)
 	return user, course, assignment
 }
 
