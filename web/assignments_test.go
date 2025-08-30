@@ -46,12 +46,8 @@ func TestUpdateAssignments(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := client.UpdateAssignments(context.Background(), qtest.RequestWithCookie(test.request, cookie))
-			qtest.CheckError(t, err, test.wantErr)
-			// Check error code and that message contains expected key phrase
-			gotCode := connect.CodeOf(err)
-			wantCode := connect.CodeOf(test.wantErr)
-			if gotCode != wantCode {
-				t.Errorf("expected error code %v, got %v", wantCode, gotCode)
+			if hasError := qtest.CheckCode(t, err, test.wantErr); hasError {
+				return // cannot continue since resp is invalid
 			}
 		})
 	}
