@@ -19,6 +19,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 
 	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
 	student, course, assignment := qtest.SetupCourseAssignment(t, db)
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, course)
 
 	tests := []struct {
 		name     string
@@ -51,17 +53,43 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			},
 		},
 		{
+			name:   "Valid teacher feedback",
+			cookie: client.Cookie(t, teacher),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               course.GetID(),
+				AssignmentID:           assignment.GetID(),
+				UserID:                 teacher.GetID(),
+				LikedContent:           "Great check that also teachers can provide feedback.",
+				ImprovementSuggestions: "Maybe add some extra challenges for advanced teachers.",
+				TimeSpent:              "2.5 hours",
+			},
+		},
+		{
 			name:   "Missing course ID",
 			cookie: client.Cookie(t, student),
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               0, // Missing
 				AssignmentID:           assignment.GetID(),
 				UserID:                 student.GetID(),
-				LikedContent:           "Good assignment",
+				LikedContent:           "Good assignment in invalid course",
 				ImprovementSuggestions: "Could be better",
 				TimeSpent:              "1 hour",
 			},
-			// This should fail with permission denied because course ID 0 means no access
+			// This should fail with permission denied because course ID 0 is invalid
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: required roles [student teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+		},
+		{
+			name:   "Non-existing course ID",
+			cookie: client.Cookie(t, student),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               999, // Non-existing
+				AssignmentID:           assignment.GetID(),
+				UserID:                 student.GetID(),
+				LikedContent:           "Good assignment for non-existing course",
+				ImprovementSuggestions: "You could at least create the course man!",
+				TimeSpent:              "50 hours",
+			},
+			// This should fail with permission denied because course ID 999 does not exist
 			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: required roles [student teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
 		},
 	}
