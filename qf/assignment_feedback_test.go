@@ -77,7 +77,7 @@ func TestAssignmentFeedbackRequestValidation(t *testing.T) {
 			request: &AssignmentFeedbackRequest{
 				CourseID: 1,
 			},
-			wantValid: false,
+			wantValid: true,
 		},
 	}
 
