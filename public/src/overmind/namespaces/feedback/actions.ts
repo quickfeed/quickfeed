@@ -1,39 +1,50 @@
+import { create } from "@bufbuild/protobuf"
 import { Context } from '../..'
-import { AssignmentFeedback } from '../../../../proto/qf/types_pb'
+import { AssignmentFeedbackRequestSchema } from "../../../../proto/qf/requests_pb"
+import { AssignmentFeedback, AssignmentFeedbacks } from '../../../../proto/qf/types_pb'
 
 export const createAssignmentFeedback = async (
-    { state, effects }: Context,
+    { effects }: Context,
     { feedback }: { courseID: string, feedback: AssignmentFeedback }
-): Promise<void> => {
+): Promise<boolean> => {
     const response = await effects.global.api.client.createAssignmentFeedback(feedback)
     if (response.error) {
-        return
+        return false
     }
-
-    // Store the feedback in state
-    const feedbackMap = new Map(state.feedback.feedback)
-    feedbackMap.set(feedback.AssignmentID, response.message)
-    state.feedback.feedback = feedbackMap
+    return true
 }
 
 export const getAssignmentFeedback = async (
     { state, effects }: Context,
-    { courseID, assignmentID, userID }: { courseID: string, assignmentID: bigint, userID?: bigint }
-): Promise<AssignmentFeedback | null> => {
-    const response = await effects.global.api.client.getAssignmentFeedback({
-        CourseID: BigInt(courseID),
-        AssignmentID: assignmentID,
-        UserID: userID || BigInt(0)
+    { courseID, category, categoryValue }: { courseID: bigint, category: "assignmentID" | "userID", categoryValue: bigint }
+): Promise<AssignmentFeedbacks | null> => {
+    const req = create(AssignmentFeedbackRequestSchema, {
+        courseID: courseID,
+        Mode: {
+            case: category,
+            value: categoryValue
+        }
     })
+    const response = await effects.global.api.client.getAssignmentFeedback(req)
 
     if (response.error) {
         return null
     }
 
-    // Store the feedback in state
-    const feedbackMap = new Map(state.feedback.feedback)
-    feedbackMap.set(assignmentID, response.message)
-    state.feedback.feedback = feedbackMap
+    // Organize feedbacks by assignment within the course
+    const byAssignment = new Map<bigint, AssignmentFeedback[]>()
+    response.message.feedbacks.forEach(feedback => {
+        if (!byAssignment.has(feedback.AssignmentID)) {
+            byAssignment.set(feedback.AssignmentID, [])
+        }
+        byAssignment.get(feedback.AssignmentID)?.push(feedback)
+    })
+
+    // Store in state organized by course
+    state.feedback.feedback.set(courseID, {
+        byAssignment,
+        all: response.message.feedbacks
+    })
 
     return response.message
 }
