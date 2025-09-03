@@ -522,7 +522,7 @@ func (s *QuickFeedService) CreateAssignmentFeedback(_ context.Context, in *conne
 }
 
 // GetAssignmentFeedback returns assignment feedback for the given request.
-func (s *QuickFeedService) GetAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
+func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
 	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
