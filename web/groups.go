@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
@@ -16,19 +15,21 @@ import (
 const maxGroupNameLength = 20
 
 var (
-	ErrGroupNameDuplicate = connect.NewError(connect.CodeAlreadyExists, errors.New("group name already in use"))
-	ErrGroupNameTooLong   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is too long"))
-	ErrGroupNameInvalid   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name contains invalid characters"))
-	ErrUserNotInGroup     = connect.NewError(connect.CodeNotFound, errors.New("user is not in group"))
+	ErrGroupNameEmpty     = errors.New("group name is empty")
+	ErrGroupNameDuplicate = errors.New("group name already in use")
+	ErrGroupNameTooLong   = errors.New("group name is too long")
+	ErrGroupNameInvalid   = errors.New("group name contains invalid characters")
+	ErrGroupDoesNotExist  = errors.New("group does not exist")
+	ErrUserNotInGroup     = errors.New("user is not in group")
 )
 
 // getGroupByUserAndCourse returns the group of the given user and course.
 func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*qf.Group, error) {
-	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.GetCourseID(), request.GetUserID())
 	if err != nil {
 		return nil, err
 	}
-	grp, err := s.db.GetGroup(enrollment.GroupID)
+	grp, err := s.db.GetGroup(enrollment.GetGroupID())
 	if err != nil && err == gorm.ErrRecordNotFound {
 		err = ErrUserNotInGroup
 	}
@@ -36,61 +37,41 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 }
 
 // DeleteGroup deletes group with the provided ID.
-func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
+func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
 	}
 	if err := s.db.DeleteGroup(request.GetGroupID()); err != nil {
-		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.Code, group.Name, err)
+		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.GetCode(), group.GetName(), err)
 		// continue with other delete operations
 	}
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
+		return fmt.Errorf("failed to get %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
 	}
 	if repo == nil {
-		s.logger.Debugf("No %s repository found for group %q: %v", course.Code, group.Name, err)
+		s.logger.Debugf("No %s repository found for group %q: %v", course.GetCode(), group.GetName(), err)
 		// cannot continue without repository information
 		return nil
 	}
 
 	// when deleting an approved group, remove github repository as well
 	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, group.Name, err)
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), group.GetName(), err)
 		// continue with other delete operations
 	}
 	opt := &scm.RepositoryOptions{
 		ID: repo.GetScmRepositoryID(),
 	}
-	return sc.DeleteGroup(ctx, opt)
-}
-
-// createGroup creates a new group for the given course and users.
-// This function is typically called by a student when creating
-// a group, which will later be (optionally) edited and approved
-// by a teacher of the course using the updateGroup function below.
-func (s *QuickFeedService) createGroup(request *qf.Group) (*qf.Group, error) {
-	if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
-		return nil, err
-	}
-	// get users of group, check consistency of group request
-	if _, err := s.getGroupUsers(request); err != nil {
-		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %v", request.GetName(), err)
-		return nil, err
-	}
-	// create new group and update groupID in enrollment table
-	if err := s.db.CreateGroup(request); err != nil {
-		return nil, err
-	}
-	return s.db.GetGroup(request.ID)
+	return sc.DeleteGroup(ctx, opt.ID)
 }
 
 // updateGroup updates the group for the given group request.
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
-func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
+func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
 	course, group, err := s.getCourseGroup(&qf.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
@@ -114,7 +95,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
+		return fmt.Errorf("failed to get %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
 	}
 	if repo == nil {
 		repo, err := createRepo(ctx, sc, course, newGroup)
@@ -142,19 +123,19 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 
 // newGroup returns a new group based on the request and the existing group.
 func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) (*qf.Group, error) {
-	if group.Name != request.Name && group.Status == qf.Group_PENDING {
+	if group.GetName() != request.GetName() && group.GetStatus() == qf.Group_PENDING {
 		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
 			return nil, err // group name is invalid
 		}
-		group.Name = request.Name
+		group.Name = request.GetName()
 	}
 	return &qf.Group{
-		ID:          group.ID,
-		Name:        group.Name,
-		CourseID:    group.CourseID,
-		Status:      group.Status,
+		ID:          group.GetID(),
+		Name:        group.GetName(),
+		CourseID:    group.GetCourseID(),
+		Status:      group.GetStatus(),
 		Users:       users,
-		Enrollments: group.Enrollments,
+		Enrollments: group.GetEnrollments(),
 	}, nil
 }
 
@@ -163,36 +144,33 @@ func (s *QuickFeedService) newGroup(group, request *qf.Group, users []*qf.User) 
 // that the enrollment has been accepted, and
 // that the group's users are not already enrolled in another group.
 func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) {
-	if len(request.Users) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no users in group"))
+	if len(request.GetUsers()) == 0 {
+		return nil, errors.New("no users in group")
 	}
 	var userIds []uint64
-	for _, user := range request.Users {
-		enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, user.ID)
+	for _, user := range request.GetUsers() {
+		enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.GetCourseID(), user.GetID())
 		switch {
 		case err == gorm.ErrRecordNotFound:
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("user not enrolled in this course"))
+			return nil, errors.New("user not enrolled in this course")
 		case err != nil:
 			return nil, err
-		case enrollment.GroupID > 0 && request.ID == 0:
+		case enrollment.GetGroupID() > 0 && (request.GetID() == 0 || enrollment.GetGroupID() != request.GetID()):
 			// new group check (request group ID should be 0)
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user already enrolled in another group"))
-		case enrollment.GroupID > 0 && enrollment.GroupID != request.ID:
-			// update group check (request group ID should be non-0)
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user already enrolled in another group"))
+			return nil, errors.New("user already enrolled in another group")
 		case enrollment.Status < qf.Enrollment_STUDENT:
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user not yet accepted for this course"))
+			return nil, errors.New("user not yet accepted for this course")
 		}
-		userIds = append(userIds, user.ID)
+		userIds = append(userIds, user.GetID())
 	}
 
 	users, err := s.db.GetUsers(userIds...)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to get users")
 	}
-	if len(request.Users) != len(users) || len(users) != len(userIds) {
+	if len(request.GetUsers()) != len(users) || len(users) != len(userIds) {
 		return nil, fmt.Errorf("invariant violation (request.Users=%d, users=%d, userIds=%d)",
-			len(request.Users), len(users), len(userIds))
+			len(request.GetUsers()), len(users), len(userIds))
 	}
 	return users, nil
 }
@@ -202,6 +180,9 @@ var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
 
 // checkGroupName returns an error if the group name is invalid; otherwise nil is returned.
 func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) error {
+	if groupName == "" {
+		return ErrGroupNameEmpty
+	}
 	if len(groupName) > maxGroupNameLength {
 		return ErrGroupNameTooLong
 	}
@@ -210,7 +191,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 	}
 	courseGroups, err := s.db.GetGroupsByCourse(courseID)
 	if err != nil {
-		return err
+		return ErrGroupDoesNotExist
 	}
 	for _, group := range courseGroups {
 		if strings.EqualFold(group.GetName(), groupName) {
@@ -226,7 +207,7 @@ func (s *QuickFeedService) getCourseGroup(request *qf.GroupRequest) (*qf.Course,
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, nil, err
 	}

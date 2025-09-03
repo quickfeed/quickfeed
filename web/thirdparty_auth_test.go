@@ -21,18 +21,18 @@ func TestThirdPartyAppAuth(t *testing.T) {
 	defer cleanup()
 	user := fillDatabase(t, db, token)
 
-	client, _ := web.MockClientWithOption(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithClientOptions(connect.WithInterceptors(
 		interceptor.NewTokenAuthClientInterceptor(token),
-	))
+	)))
 	ctx := context.Background()
 
 	userInfo, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))
 	check(t, err)
-	if userInfo.Msg.ID != user.ID {
-		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
+	if userInfo.Msg.GetID() != user.GetID() {
+		t.Errorf("expected user id %d, got %d", user.GetID(), userInfo.Msg.GetID())
 	}
-	if userInfo.Msg.Login != user.Login {
-		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Msg.Login)
+	if userInfo.Msg.GetLogin() != user.GetLogin() {
+		t.Errorf("expected user login %s, got %s", user.GetLogin(), userInfo.Msg.GetLogin())
 	}
 }
 

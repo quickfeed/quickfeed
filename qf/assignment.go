@@ -4,6 +4,7 @@ import (
 	context "context"
 	"time"
 
+	"github.com/quickfeed/quickfeed/kit/score"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -29,27 +30,6 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 	return context.WithTimeout(context.Background(), timeout)
 }
 
-// IsApproved returns an approved submission status if this assignment is already approved
-// for the latest submission, or if the score of the latest submission is sufficient
-// to autoapprove the assignment.
-func (a *Assignment) IsApproved(latest *Submission, score uint32) []*Grade {
-	switch {
-	case latest.GetGroupID() > 0 && !a.IsGroupLab:
-		// If a group submits to a student assignment, ignore the submission.
-		latest.SetGradeAll(Submission_NONE)
-	case latest.GetUserID() > 0 && a.IsGroupLab:
-		// If a student submits to a group assignment, ignore the submission.
-		latest.SetGradeAll(Submission_NONE)
-	case latest.GetUserID() > 0 && latest.GetGroupID() > 0:
-		// submission cannot be both group and individual
-		return nil
-	case a.GetAutoApprove() && score >= a.GetScoreLimit():
-		latest.SetGradeAll(Submission_APPROVED)
-	}
-	// keep existing status if already approved/revision/rejected
-	return latest.GetGrades()
-}
-
 // CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 	clone := proto.Clone(a).(*Assignment)
@@ -60,4 +40,23 @@ func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 // GradedManually returns true if the assignment will be graded manually.
 func (a *Assignment) GradedManually() bool {
 	return a.GetReviewers() > 0
+}
+
+// ZeroScoreTests returns a slice of score.Score objects with zero scores
+// for all expected tests in this assignment.
+func (a *Assignment) ZeroScoreTests() []*score.Score {
+	expectedTests := a.GetExpectedTests()
+	if len(expectedTests) == 0 {
+		return nil
+	}
+
+	scores := make([]*score.Score, len(expectedTests))
+	for i, testInfo := range expectedTests {
+		scores[i] = &score.Score{
+			TestName: testInfo.GetTestName(),
+			MaxScore: testInfo.GetMaxScore(),
+			Weight:   testInfo.GetWeight(),
+		}
+	}
+	return scores
 }

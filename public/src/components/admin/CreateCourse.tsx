@@ -6,9 +6,9 @@ import CourseCreationInfo from "./CourseCreationInfo"
 import { Color } from "../../Helpers"
 
 
-const CreateCourse = (): JSX.Element => {
+const CreateCourse = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const [course, setCourse] = useState<Course>()
     const [orgName, setOrgName] = useState("")
 
@@ -19,10 +19,13 @@ const CreateCourse = (): JSX.Element => {
             await actions.getEnrollmentsByUser()
             setCourse(c)
         } else {
-            actions.alert({ text: "Course not found", color: Color.YELLOW, delay: 5000 })
+            actions.alert({ text: "Course not found. Make sure the organization name is correct and that you have installed the GitHub App.", color: Color.YELLOW, delay: 10000 })
         }
     }, [actions, orgName, state.courses])
 
+    const buttonClass = course ? "btn btn-success disabled" : "btn btn-primary"
+    const findTextOrIcon = course ? <i className="fa fa-check" /> : "Find"
+    const refreshIfNoCourse = course ? undefined : refresh
     return (
         <div className="container">
             <CourseCreationInfo />
@@ -32,8 +35,8 @@ const CreateCourse = (): JSX.Element => {
                         <div className="input-group-text">Get Course</div>
                     </div>
                     <input className="form-control" disabled={course ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
-                    <span className={course ? "btn btn-success disabled" : "btn btn-primary"} onClick={!course ? () => refresh() : () => { return }}>
-                        {course ? <i className="fa fa-check" /> : "Find"}
+                    <span role="button" aria-hidden="true" className={buttonClass} onClick={refreshIfNoCourse}>
+                        {findTextOrIcon}
                     </span>
                 </div>
             </div>

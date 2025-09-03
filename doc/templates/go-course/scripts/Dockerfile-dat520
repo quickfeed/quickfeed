@@ -1,0 +1,39 @@
+# syntax=docker/dockerfile:1.4
+# Stage 1: Build golangci-lint
+FROM golang:1.24-rc-alpine as builder
+
+# Install bash and git (and build-base to get gcc)
+# (this is required when building FROM: golang:alpine)
+# RUN apk update && apk add --no-cache git bash build-base binutils docker openrc
+
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev git mercurial binutils binutils-gold bash docker openrc
+
+# related to https://github.com/golangci/golangci-lint/issues/3107
+ENV GOROOT /usr/local/go
+ENV GOTOOLCHAIN auto
+# Set Go module cache location in the builder stage
+ENV GOMODCACHE=/go-build-cache
+
+# Install golangci-lint
+RUN go install -ldflags="-extldflags=-fuse-ld=bfd" github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Stage 2: Final image
+FROM golang:1.24-rc-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache bash git docker openrc
+
+ENV GOROOT /usr/local/go
+ENV GOTOOLCHAIN auto
+# Set Go module cache location in the runtime stage
+ENV GOMODCACHE=/quickfeed-go-mod-cache
+
+# Create a quickfeed user with UID 1001 to match the host user
+RUN adduser -D -u 1001 quickfeed
+
+# Copy the golangci-lint binary from the builder stage
+COPY --from=builder /go/bin/golangci-lint /usr/local/bin/golangci-lint
+
+WORKDIR /quickfeed
+USER quickfeed

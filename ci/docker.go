@@ -20,13 +20,13 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/quickfeed/quickfeed/internal/multierr"
 	"go.uber.org/zap"
 )
 
 var (
 	DefaultContainerTimeout = time.Duration(10 * time.Minute)
 	QuickFeedPath           = "/quickfeed"
+	GoModCache              = "/quickfeed-go-mod-cache"
 	maxToScan               = 1_000_000 // bytes
 	maxLogSize              = 30_000    // bytes
 	lastSegmentSize         = 1_000     // bytes
@@ -60,7 +60,7 @@ func (d *Docker) Close() error {
 		syncErr = d.logger.Sync()
 	}
 	closeErr := d.client.Close()
-	return multierr.Join(syncErr, closeErr)
+	return errors.Join(syncErr, closeErr)
 }
 
 // Run implements the CI interface. This method blocks until the job has been
@@ -138,12 +138,21 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 	var hostConfig *container.HostConfig
 	if job.BindDir != "" {
+		goModCacheSrc, err := moduleCachePath()
+		if err != nil {
+			return nil, err
+		}
 		hostConfig = &container.HostConfig{
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
 					Source: job.BindDir,
 					Target: QuickFeedPath,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: goModCacheSrc,
+					Target: GoModCache,
 				},
 			},
 		}

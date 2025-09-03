@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 )
 
@@ -53,12 +54,10 @@ func (tm *TokenManager) Add(userID uint64) error {
 // updateRequired returns true if JWT update is needed for this user ID
 // because the user's role has changed or the JWT is about to expire.
 func (tm *TokenManager) updateRequired(claims *Claims) bool {
-	for _, token := range tm.tokensToUpdate {
-		if claims.UserID == token {
-			return true
-		}
+	if slices.Contains(tm.tokensToUpdate, claims.UserID) {
+		return true
 	}
-	return claims.ExpiresAt <= time.Now().Unix()
+	return claims.ExpiresAt.Before(time.Now())
 }
 
 // updateTokenList fetches IDs of users who need token updates from the database
@@ -69,8 +68,8 @@ func (tm *TokenManager) updateTokenList() error {
 	}
 	var tokens []uint64
 	for _, user := range users {
-		if user.UpdateToken {
-			tokens = append(tokens, user.ID)
+		if user.GetUpdateToken() {
+			tokens = append(tokens, user.GetID())
 		}
 	}
 	tm.tokensToUpdate = tokens

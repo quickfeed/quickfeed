@@ -15,7 +15,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     const delivered = getFormattedTime(buildInfo?.SubmissionDate)
     const built = getFormattedTime(buildInfo?.BuildDate)
     const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
-    
+
     const status = getStatusByUser(submission, enrollment.userID)
     const className = isAllApproved(submission) ? "passed" : "failed"
     return (
@@ -52,10 +52,10 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                 }
                 <tr>
                     <td colSpan={2}>Deadline</td>
-                    <td>{getFormattedTime(assignment.deadline)}</td>
+                    <td>{getFormattedTime(assignment.deadline, true)}</td>
                 </tr>
 
-                {!isManuallyGraded(assignment) ? (
+                {!isManuallyGraded(assignment.reviewers) ? (
                     <tr>
                         <td colSpan={2}>Tests Passed</td>
                         <td>{getPassedTestsCount(submission.Scores)}</td>

@@ -1,5 +1,5 @@
-import React from 'react'
-import { useHistory } from 'react-router'
+import React, { useCallback } from 'react'
+import { useNavigate } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
 import { Course, Enrollment } from '../../proto/qf/types_pb'
@@ -18,41 +18,43 @@ const CardColor = [
     "success"
 ]
 
-const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
-    const actions = useActions()
-    const history = useHistory()
+const CourseCard = ({ course, enrollment }: CardProps) => {
+    const actions = useActions().global
+    const navigate = useNavigate()
     const status = enrollment.status
 
-    const CourseEnrollmentButton = (): JSX.Element => {
+    const handleEnroll = useCallback(() => actions.enroll(course.ID), [actions, course.ID])
+    const CourseEnrollmentButton = () => {
         if (hasNone(status)) {
-            return <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.ID)}>Enroll</div>
+            return <button className="btn btn-primary course-button" onClick={handleEnroll}>Enroll</button>
         } else if (hasPending(status)) {
-            return <div className="btn btn-secondary course-button disabled">Pending</div>
+            return <button className="btn btn-secondary course-button disabled">Pending</button>
         }
-        return <div className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</div>
+        return <button className="btn btn-primary course-button" onClick={() => navigate(`/course/${enrollment.courseID}`)}>Go to Course</button>
     }
 
-    const CourseEnrollmentStatus = (): JSX.Element | null => {
+    const CourseEnrollmentStatus = () => {
         if (!hasEnrolled(status)) {
             return null
         }
         return (
-            <>
-                <CourseFavoriteButton enrollment={enrollment} style={{ "float": "right" }} />
-                <p className="float-sm-right mr-2">{EnrollmentStatus[status]}</p>
-            </>
+            <div className="d-flex align-items-center">
+                <CourseFavoriteButton enrollment={enrollment} style={{ marginLeft: 'auto' }} />
+                <p className="mb-0 ml-2 text-white">{EnrollmentStatus[status]}</p>
+            </div>
         )
     }
 
     return (
-        <div className="card course-card">
-            <div className={`card-header bg-${CardColor[status]} text-white`}>
-                {course.code}
+        <div className="card course-card mb-4 shadow-sm">
+            <div className={`card-header bg-${CardColor[status]} text-white d-flex justify-content-between align-items-center`}>
+                <span>{course.code}</span>
                 <CourseEnrollmentStatus />
             </div>
 
-            <div className="card-body position-relative">
-                <h5 className="card-title">{course.name} - {course.tag}/{course.year}</h5>
+            <div className="card-body">
+                <h5 className="card-title">{course.name}</h5>
+                <p className="card-text text-muted">{course.tag} {course.year}</p>
                 <CourseEnrollmentButton />
             </div>
         </div>

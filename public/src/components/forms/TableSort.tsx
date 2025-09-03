@@ -13,7 +13,7 @@ import { useActions, useAppState } from "../../overmind"
  */
 const TableSort = ({ review }: { review: boolean }) => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     useEffect(() => {
         return () => {
@@ -22,11 +22,46 @@ const TableSort = ({ review }: { review: boolean }) => {
             actions.setAscending(true)
             actions.clearSubmissionFilter()
         }
-    }, [])
+    }, [actions])
 
     const handleChange = (sort: SubmissionSort) => {
         actions.setSubmissionSort(sort)
     }
+
+    const toggleIndividualSubmissions = () => {
+        actions.setIndividualSubmissionsView(!state.individualSubmissionView)
+    }
+
+    const boldText = (sort: SubmissionSort) => {
+        return state.sortSubmissionsBy === sort ? "font-weight-bold" : ""
+    }
+    const pointer = state.sortAscending ? "fa fa-caret-down" : "fa fa-caret-down fa-rotate-180"
+    const textForToggleIndividualViewButton = state.individualSubmissionView ? "Individual" : "Group"
+
+    const submissionFilters = [
+        { name: "teachers", text: "Teachers", show: true },
+        { name: "approved", text: "Graded", show: true },
+        { name: "released", text: "Released", show: review }
+    ]
+
+    const filterElements = submissionFilters.map((filter) => {
+        const displayText = state.submissionFilters.includes(filter.name)
+            ? <del>{filter.text}</del>
+            : filter.text
+        return filter.show
+            ? <DivButton key={filter.name} text={displayText} onclick={() => actions.setSubmissionFilter(filter.name)} />
+            : null
+    })
+
+    const sortByButtons = [
+        { key: "approved", text: "Approved", className: boldText(SubmissionSort.Approved), onclick: () => handleChange(SubmissionSort.Approved) },
+        { key: "score", text: "Score", className: boldText(SubmissionSort.Score), onclick: () => handleChange(SubmissionSort.Score) },
+        { key: "pointer", text: <i className={pointer} />, onclick: () => actions.setAscending(!state.sortAscending) }
+    ]
+
+    const sortByElements = sortByButtons.map((button) => (
+        <DivButton key={button.key} text={button.text} className={button.className} onclick={button.onclick} />
+    ))
 
     return (
         <div className="p-1 mb-2 bg-dark text-white d-flex flex-row">
@@ -34,33 +69,32 @@ const TableSort = ({ review }: { review: boolean }) => {
                 <div className="p-2">
                     <span>Sort by:</span>
                 </div>
-                <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Approved)}>
-                    Approved
-                </div>
-                <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Score)}>
-                    Score
-                </div>
-                <div className="p-2" role={"button"} onClick={() => actions.setAscending(!state.sortAscending)}>
-                    <i className={state.sortAscending ? "icon fa fa-caret-down" : "icon fa fa-caret-down fa-rotate-180"} />
-                </div>
+                {sortByElements}
             </div>
             <div className="d-inline-flex flex-row">
                 <div className="p-2">
                     Show:
                 </div>
-                <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("teachers")}>
-                    {state.submissionFilters.includes("teachers") ? <del>Teachers</del> : "Teachers"}
-                </div>
-                <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("approved")}>
-                    {state.submissionFilters.includes("approved") ? <del>Graded</del> : "Graded"}
-                </div>
-                {review ?
-                    <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("released")}>
-                        {state.submissionFilters.includes("released") ? <del>Released</del> : "Released"}
-                    </div>
-                    : null
-                }
+                {filterElements}
             </div>
+            <div className="d-inline-flex flex-row">
+                <DivButton text={textForToggleIndividualViewButton} onclick={toggleIndividualSubmissions} />
+            </div>
+        </div>
+    )
+}
+
+interface DivButtonProps {
+    text: string | React.JSX.Element
+    key?: string
+    className?: string
+    onclick: () => void
+}
+
+const DivButton = ({ text, key, className, onclick }: DivButtonProps) => {
+    return (
+        <div key={key} className={`${className ?? ""} p-2`} role="button" aria-hidden="true" onClick={onclick}>
+            {text}
         </div>
     )
 }

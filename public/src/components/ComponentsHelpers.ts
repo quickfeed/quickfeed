@@ -1,28 +1,35 @@
-import { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
-import { groupRepoLink, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
-import { AssignmentsMap } from "../overmind/state"
-import { Row, RowElement } from "./DynamicTable"
+import { isMessage } from "@bufbuild/protobuf"
+import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../proto/qf/types_pb"
+import { groupRepoLink, Icon, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
+import { useActions } from "../overmind"
+import { AssignmentsMap, State } from "../overmind/state"
+import { CellElement, Row, RowElement } from "./DynamicTable"
+import { Icons } from "./Icons"
 
-
-export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement): Row[] => {
-    const state = useAppState()
+export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {
     const course = state.courses.find(c => c.ID === state.activeCourse)
     const assignments = state.getAssignmentsMap(state.activeCourse)
     return elements.map(element => {
-        return generateRow(element, assignments, state.submissionsForCourse, generator, course, state.isCourseManuallyGraded)
+        return generateRow(element, assignments, state.submissionsForCourse, generator, state.individualSubmissionView, course, state.isCourseManuallyGraded)
     })
 }
 
-export const generateRow = (enrollment: Enrollment | Group, assignments: AssignmentsMap, submissions: SubmissionsForCourse, generator: (s: Submission, e?: Enrollment | Group) => RowElement, course?: Course, withID?: boolean): Row => {
+export const generateRow = (
+    enrollment: Enrollment | Group,
+    assignments: AssignmentsMap,
+    submissions: SubmissionsForCourse,
+    generator: (s: Submission, e?: Enrollment | Group) => RowElement,
+    individual: boolean,
+    course?: Course,
+    withID?: boolean
+): Row => {
     const row: Row = []
-    const isEnrollment = enrollment instanceof Enrollment
-    const isGroup = enrollment instanceof Group
+    const isEnrollment = isMessage(enrollment, EnrollmentSchema)
+    const isGroup = isMessage(enrollment, GroupSchema)
 
     if (withID) {
-        isEnrollment
-            ? row.push({ value: enrollment.userID.toString() })
-            : row.push({ value: enrollment.ID.toString() })
+        const ID = isEnrollment ? enrollment.userID : enrollment.ID
+        row.push({ value: ID.toString() })
     }
 
     if (isEnrollment && enrollment.user) {
@@ -39,44 +46,54 @@ export const generateRow = (enrollment: Enrollment | Group, assignments: Assignm
             return
         }
 
-        if (isGroupLab && isEnrollment && enrollment.groupID === 0n) {
-            // If we're dealing with a group assignment, and the enrollment is not part of a group
-            // we should try to find an individual submission instead
-            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
-        } else if (isGroupLab) {
-            // If the previous conditions are not met, we have this situation:
-            // - The assignment is a group assignment
-            // - We're either dealing with an enrollment that is part of a group
-            // - or we're dealing with a group
+        if (isGroup && isGroupLab) {
+            // If we're dealing with a group assignment and a group, we should try to find a group submission
             submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
-        } else if (isEnrollment) {
-            submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
         }
+
+        if (isEnrollment) {
+            if (isGroupLab && enrollment.groupID === 0n) {
+                // If we're dealing with a group assignment, and the enrollment is not part of a group
+                // we should try to find an individual submission instead
+                submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            } else if (isGroupLab && !individual) {
+                // If we're dealing with a group assignment, and the user is not viewing individual submissions
+                submission = submissions.ForGroup(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            } else {
+                submission = submissions.ForUser(enrollment)?.find(s => s.AssignmentID.toString() === assignmentID)
+            }
+        }
+
         if (submission) {
             row.push(generator(submission, enrollment))
             return
         }
-        row.push("N/A")
+        row.push(Icons.NotAvailable)
     })
     return row
 }
 
-export const generateAssignmentsHeader = (assignments: Assignment[], group: boolean): Row => {
-    const isCourseManuallyGraded = useAppState((state) => state.isCourseManuallyGraded)
-    const actions = useActions()
+export const generateAssignmentsHeader = (assignments: Assignment[], viewByGroup: boolean, actions: ReturnType<typeof useActions>, isCourseManuallyGraded: boolean): Row => {
+    const handleSort = (sortBy: SubmissionSort) => () => actions.global.setSubmissionSort(sortBy)
     const base: Row = [
-        { value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }
+        { value: "Name", onClick: handleSort(SubmissionSort.Name) }
     ]
     if (isCourseManuallyGraded) {
-        base.unshift({ value: "ID", onClick: () => actions.setSubmissionSort(SubmissionSort.ID) })
+        base.unshift({ value: "ID", onClick: handleSort(SubmissionSort.ID) })
     }
     for (const assignment of assignments) {
-        if (group && assignment.isGroupLab) {
-            base.push({ value: `${assignment.name} (g)`, onClick: () => actions.review.setAssignmentID(assignment.ID) })
+        const cell: CellElement = { value: assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) }
+        // If we are viewing by group, ignore all non-group assignments
+        if (viewByGroup && !assignment.isGroupLab) {
+            continue
         }
-        if (!group) {
-            base.push({ value: assignment.isGroupLab ? `${assignment.name} (g)` : assignment.name, onClick: () => actions.review.setAssignmentID(assignment.ID) })
+        // If group assignment, add group icon
+        if (assignment.isGroupLab) {
+            cell.iconTitle = "Group"; cell.iconClassName = Icon.GROUP
+        } else {
+            cell.iconTitle = "Individual"; cell.iconClassName = Icon.USER
         }
+        base.push(cell)
     }
     return base
 }

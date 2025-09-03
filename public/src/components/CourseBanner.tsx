@@ -1,15 +1,15 @@
 import React from "react"
-import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 import CourseFavoriteButton from "./CourseFavoriteButton"
 import RoleSwitch from "./teacher/RoleSwitch"
+import { useCourseID } from "../hooks/useCourseID"
 
 
 // TODO: Maybe add route specific information, ex. if user is viewing a lab, show that in the banner. Could use state in components to display.
 // TODO(jostein): This information could possibly be shown in the navbar.
-const CourseBanner = (): JSX.Element => {
+const CourseBanner = () => {
     const state = useAppState()
-    const enrollment = state.enrollmentsByCourseID[getCourseID().toString()]
+    const enrollment = state.enrollmentsByCourseID[useCourseID().toString()]
 
     return (
         <div className="jumbotron">

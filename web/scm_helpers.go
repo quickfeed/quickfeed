@@ -21,11 +21,11 @@ func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm
 
 // getSCMForCourse returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
-	course, err := q.db.GetCourse(courseID, false)
+	course, err := q.db.GetCourse(courseID)
 	if err != nil {
 		return nil, err
 	}
-	return q.getSCM(ctx, course.ScmOrganizationName)
+	return q.getSCM(ctx, course.GetScmOrganizationName())
 }
 
 // createRepo invokes the SCM to create a repository for the
@@ -35,7 +35,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, error) {
 	opt := &scm.GroupOptions{
-		Organization: course.ScmOrganizationName,
+		Organization: course.GetScmOrganizationName(),
 		GroupName:    group.GetName(),
 		Users:        group.UserNames(),
 	}
@@ -55,7 +55,7 @@ func createRepo(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Gr
 
 func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgName string) error {
 	opt := &scm.GroupOptions{
-		GroupName:    group.Name,
+		GroupName:    group.GetName(),
 		Organization: orgName,
 		Users:        group.UserNames(),
 	}
@@ -87,19 +87,18 @@ func ctxErr(ctx context.Context) error {
 	return nil
 }
 
-// Returns true and formatted error if error type is SCM error
-// designed to be shown to user
-func parseSCMError(err error) (bool, error) {
+// userSCMError returns a user-facing error if the error is an SCM error.
+func userSCMError(err error) error {
 	var scmErr *scm.SCMError
 	if errors.As(err, &scmErr) {
 		userErr := scmErr.UserError()
 		if errors.Is(err, scm.ErrAlreadyExists) {
-			return true, connect.NewError(connect.CodeAlreadyExists, userErr)
+			return connect.NewError(connect.CodeAlreadyExists, userErr)
 		}
 		if errors.Is(err, scm.ErrNotOwner) {
-			return true, connect.NewError(connect.CodePermissionDenied, userErr)
+			return connect.NewError(connect.CodePermissionDenied, userErr)
 		}
-		return true, connect.NewError(connect.CodeNotFound, userErr)
+		return connect.NewError(connect.CodeNotFound, userErr)
 	}
-	return false, nil
+	return nil
 }
