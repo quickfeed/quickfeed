@@ -19,6 +19,24 @@ export const AssignmentFeedbackView = () => {
     const courseFeedbackData = state.feedback.feedback.get(state.activeCourse)
     const assignments = state.assignments[state.activeCourse.toString()]
 
+    const avgTimeSpent = (assignmentID: bigint): [number, number] => {
+        const feedbacks = courseFeedbackData?.byAssignment.get(assignmentID) || []
+        const numWithTimeSpent = feedbacks.filter(fb => fb.TimeSpent > 0).length
+        const total = feedbacks.reduce((acc, fb) => {
+            return acc + (fb.TimeSpent || 0)
+        }, 0)
+
+
+        // convert total minutes to hours and minutes
+        return convertToHoursAndMinutes(total / numWithTimeSpent)
+    }
+
+    const convertToHoursAndMinutes = (totalMinutes: number): [number, number] => {
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = Math.floor(totalMinutes % 60)
+        return [hours, minutes]
+    }
+
     // If assignmentID is provided, show detailed view for that assignment
     if (assignmentID) {
         const assignmentIDBigInt = BigInt(assignmentID)
@@ -50,7 +68,14 @@ export const AssignmentFeedbackView = () => {
                                             <i className="fa fa-user mr-2"></i>
                                             Feedback #{fb.ID.toString()}
                                             {fb.TimeSpent > 0 && (
-                                                <span className="badge badge-pill badge-light ml-2">{fb.TimeSpent}h</span>
+                                                <span className="badge badge-pill badge-light ml-2">
+                                                    {(() => {
+                                                        const [hours, minutes] = convertToHoursAndMinutes(fb.TimeSpent)
+                                                        if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`
+                                                        if (hours > 0) return `${hours}h`
+                                                        return `${minutes}m`
+                                                    })()}
+                                                </span>
                                             )}
                                         </h5>
                                     </div>
@@ -104,9 +129,7 @@ export const AssignmentFeedbackView = () => {
                 <div className="row">
                     {assignments.map(assignment => {
                         const feedbacks = courseFeedbackData.byAssignment.get(assignment.ID) || []
-                        const avgTimeSpent = feedbacks.length > 0
-                            ? feedbacks.reduce((sum, fb) => sum + fb.TimeSpent, 0) / feedbacks.length
-                            : 0
+                        const [avgHours, avgMinutes] = avgTimeSpent(assignment.ID)
 
                         return (
                             <div className="col-md-6 mb-4" key={assignment.ID.toString()}>
@@ -132,7 +155,7 @@ export const AssignmentFeedbackView = () => {
                                             </div>
                                             <div className="col-6">
                                                 <div className="h3 text-success mb-0">
-                                                    {avgTimeSpent > 0 ? `${avgTimeSpent.toFixed(1)}h` : 'N/A'}
+                                                    {(avgHours > 0 || avgMinutes > 0) ? `${avgHours}h ${avgMinutes}m` : 'N/A'}
                                                 </div>
                                                 <small className="text-muted">Avg. Time</small>
                                             </div>

@@ -30,6 +30,10 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         const value = e.target.value
         if (validateTimeInput(value, 100)) {
             setHours(value)
+            // timeSpent is a combination of hours and minutes in minutes
+            const totalHours = parseInt(value, 10)
+            const totalMinutes = parseInt(minutes || '0', 10)
+            setTimeSpent(totalHours * 60 + totalMinutes)
         }
     }
 
@@ -37,6 +41,10 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         const value = e.target.value
         if (validateTimeInput(value, 59)) {
             setMinutes(value)
+            // timeSpent is a combination of hours and minutes in minutes
+            const totalHours = parseInt(hours || '0', 10)
+            const totalMinutes = parseInt(value, 10)
+            setTimeSpent(totalHours * 60 + totalMinutes)
         }
     }
 
@@ -229,7 +237,15 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                             <button
                                 type="submit"
                                 className="btn btn-primary ml-2"
-                                disabled={isSubmitting || (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10) || (!hours && !minutes)}
+                                disabled={
+                                    isSubmitting ||
+                                    (
+                                        likedContent.trim().length < 10 ||
+                                        improvementSuggestions.trim().length < 10 ||
+                                        Boolean(!hours) ||
+                                        Boolean(!minutes)
+                                    )
+                                }
                             >
                                 {isSubmitting ? (
                                     <>
