@@ -13,6 +13,7 @@
     "noUnusedParameters": true,
     "moduleResolution": "node",
     "allowJs": true,
+    "noEmit": true
   },
   "include": [
     "src/**/*"

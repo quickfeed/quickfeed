@@ -39,6 +39,7 @@ consts
 containertimeout
 copytruncate
 covermode
+coverpkg
 coverprofile
 CSRF
 dateext

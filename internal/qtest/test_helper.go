@@ -58,10 +58,25 @@ func SetupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 		Order:    1,
 	}
 	CreateAssignment(t, db, assignment)
-	// create user and enroll as teacher
+	// create user and enroll as student
 	user := CreateFakeUser(t, db)
-	EnrollTeacher(t, db, user, course)
+	EnrollStudent(t, db, user, course)
 	return user, course, assignment
+}
+
+// SetupCourseAssignmentTeacherStudent returns the admin (teacher) user, course, an assignment, and a student user.
+func SetupCourseAssignmentTeacherStudent(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment, *qf.User) {
+	admin := CreateFakeUser(t, db)
+	course := &qf.Course{}
+	CreateCourse(t, db, admin, course)
+	assignment := &qf.Assignment{
+		CourseID: course.GetID(),
+		Order:    1,
+	}
+	CreateAssignment(t, db, assignment)
+	user := CreateFakeUser(t, db)
+	EnrollStudent(t, db, user, course)
+	return admin, course, assignment, user
 }
 
 // PrepareGitRepo creates copies src/repo folder to dst and initializes
@@ -406,4 +421,23 @@ func CheckError(t *testing.T, got, want error) {
 	} else if want != nil {
 		t.Fatalf("Expected error: %v, got: nil", want)
 	}
+}
+
+// CheckCode checks if the got error matches the want error, and its code, and fails the test if not.
+// It returns true if got is an error, which indicates that the test should stop.
+func CheckCode(t *testing.T, got, want error) bool {
+	if got != nil {
+		if want == nil {
+			t.Fatalf("Expected no error, got: %v", got)
+		}
+		if got.Error() != want.Error() {
+			t.Errorf("Expected error: %v, got: %v", want, got)
+		}
+	} else if want != nil {
+		t.Errorf("Expected error: %v, got: nil", want)
+	}
+	if connect.CodeOf(got) != connect.CodeOf(want) {
+		t.Errorf("Expected error code: %v, got: %v", connect.CodeOf(want), connect.CodeOf(got))
+	}
+	return got != nil
 }

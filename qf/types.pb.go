@@ -2333,6 +2333,150 @@ func (x *Review) GetEdited() *timestamppb.Timestamp {
 	return nil
 }
 
+type AssignmentFeedback struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	ID                     uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	CourseID               uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"`                            // foreign key - required
+	AssignmentID           uint64                 `protobuf:"varint,3,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"`                    // foreign key - required
+	UserID                 uint64                 `protobuf:"varint,4,opt,name=UserID,proto3" json:"UserID,omitempty"`                                // optional - for non-anonymous feedback
+	LikedContent           string                 `protobuf:"bytes,5,opt,name=LikedContent,proto3" json:"LikedContent,omitempty"`                     // What did you like about this assignment?
+	ImprovementSuggestions string                 `protobuf:"bytes,6,opt,name=ImprovementSuggestions,proto3" json:"ImprovementSuggestions,omitempty"` // What would make it better?
+	TimeSpent              uint32                 `protobuf:"varint,7,opt,name=TimeSpent,proto3" json:"TimeSpent,omitempty"`                          // Time used to complete the assignment
+	CreatedAt              *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty" gorm:"serializer:timestamp;type:datetime"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *AssignmentFeedback) Reset() {
+	*x = AssignmentFeedback{}
+	mi := &file_qf_types_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssignmentFeedback) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssignmentFeedback) ProtoMessage() {}
+
+func (x *AssignmentFeedback) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssignmentFeedback.ProtoReflect.Descriptor instead.
+func (*AssignmentFeedback) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *AssignmentFeedback) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *AssignmentFeedback) GetCourseID() uint64 {
+	if x != nil {
+		return x.CourseID
+	}
+	return 0
+}
+
+func (x *AssignmentFeedback) GetAssignmentID() uint64 {
+	if x != nil {
+		return x.AssignmentID
+	}
+	return 0
+}
+
+func (x *AssignmentFeedback) GetUserID() uint64 {
+	if x != nil {
+		return x.UserID
+	}
+	return 0
+}
+
+func (x *AssignmentFeedback) GetLikedContent() string {
+	if x != nil {
+		return x.LikedContent
+	}
+	return ""
+}
+
+func (x *AssignmentFeedback) GetImprovementSuggestions() string {
+	if x != nil {
+		return x.ImprovementSuggestions
+	}
+	return ""
+}
+
+func (x *AssignmentFeedback) GetTimeSpent() uint32 {
+	if x != nil {
+		return x.TimeSpent
+	}
+	return 0
+}
+
+func (x *AssignmentFeedback) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type AssignmentFeedbacks struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Feedbacks     []*AssignmentFeedback  `protobuf:"bytes,1,rep,name=feedbacks,proto3" json:"feedbacks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssignmentFeedbacks) Reset() {
+	*x = AssignmentFeedbacks{}
+	mi := &file_qf_types_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssignmentFeedbacks) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssignmentFeedbacks) ProtoMessage() {}
+
+func (x *AssignmentFeedbacks) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssignmentFeedbacks.ProtoReflect.Descriptor instead.
+func (*AssignmentFeedbacks) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *AssignmentFeedbacks) GetFeedbacks() []*AssignmentFeedback {
+	if x != nil {
+		return x.Feedbacks
+	}
+	return nil
+}
+
 var File_qf_types_proto protoreflect.FileDescriptor
 
 const file_qf_types_proto_rawDesc = "" +
@@ -2562,7 +2706,18 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x05ready\x18\x05 \x01(\bR\x05ready\x12\x14\n" +
 	"\x05score\x18\x06 \x01(\rR\x05score\x12e\n" +
 	"\x11gradingBenchmarks\x18\a \x03(\v2\x14.qf.GradingBenchmarkB!ʵ\x03\x1d\xa2\x01\x1agorm:\"foreignKey:ReviewID\"R\x11gradingBenchmarks\x12d\n" +
-	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06editedB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
+	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xe2\x02\n" +
+	"\x12AssignmentFeedback\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
+	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\"\n" +
+	"\fAssignmentID\x18\x03 \x01(\x04R\fAssignmentID\x12\x16\n" +
+	"\x06UserID\x18\x04 \x01(\x04R\x06UserID\x12\"\n" +
+	"\fLikedContent\x18\x05 \x01(\tR\fLikedContent\x126\n" +
+	"\x16ImprovementSuggestions\x18\x06 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
+	"\tTimeSpent\x18\a \x01(\rR\tTimeSpent\x12j\n" +
+	"\tCreatedAt\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"K\n" +
+	"\x13AssignmentFeedbacks\x124\n" +
+	"\tfeedbacks\x18\x01 \x03(\v2\x16.qf.AssignmentFeedbackR\tfeedbacksB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
 	file_qf_types_proto_rawDescOnce sync.Once
@@ -2577,7 +2732,7 @@ func file_qf_types_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_qf_types_proto_goTypes = []any{
 	(Group_GroupStatus)(0),        // 0: qf.Group.GroupStatus
 	(Repository_Type)(0),          // 1: qf.Repository.Type
@@ -2609,9 +2764,11 @@ var file_qf_types_proto_goTypes = []any{
 	(*Benchmarks)(nil),            // 27: qf.Benchmarks
 	(*GradingCriterion)(nil),      // 28: qf.GradingCriterion
 	(*Review)(nil),                // 29: qf.Review
-	(*timestamppb.Timestamp)(nil), // 30: google.protobuf.Timestamp
-	(*score.BuildInfo)(nil),       // 31: score.BuildInfo
-	(*score.Score)(nil),           // 32: score.Score
+	(*AssignmentFeedback)(nil),    // 30: qf.AssignmentFeedback
+	(*AssignmentFeedbacks)(nil),   // 31: qf.AssignmentFeedbacks
+	(*timestamppb.Timestamp)(nil), // 32: google.protobuf.Timestamp
+	(*score.BuildInfo)(nil),       // 33: score.BuildInfo
+	(*score.Score)(nil),           // 34: score.Score
 }
 var file_qf_types_proto_depIdxs = []int32{
 	14, // 0: qf.User.Enrollments:type_name -> qf.Enrollment
@@ -2632,10 +2789,10 @@ var file_qf_types_proto_depIdxs = []int32{
 	9,  // 15: qf.Enrollment.group:type_name -> qf.Group
 	2,  // 16: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
 	3,  // 17: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
-	30, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
+	32, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
 	15, // 19: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
 	14, // 20: qf.Enrollments.enrollments:type_name -> qf.Enrollment
-	30, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
+	32, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
 	23, // 22: qf.Assignment.submissions:type_name -> qf.Submission
 	19, // 23: qf.Assignment.tasks:type_name -> qf.Task
 	26, // 24: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
@@ -2644,22 +2801,24 @@ var file_qf_types_proto_depIdxs = []int32{
 	4,  // 27: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
 	17, // 28: qf.Assignments.assignments:type_name -> qf.Assignment
 	25, // 29: qf.Submission.Grades:type_name -> qf.Grade
-	30, // 30: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
+	32, // 30: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
 	29, // 31: qf.Submission.reviews:type_name -> qf.Review
-	31, // 32: qf.Submission.BuildInfo:type_name -> score.BuildInfo
-	32, // 33: qf.Submission.Scores:type_name -> score.Score
+	33, // 32: qf.Submission.BuildInfo:type_name -> score.BuildInfo
+	34, // 33: qf.Submission.Scores:type_name -> score.Score
 	23, // 34: qf.Submissions.submissions:type_name -> qf.Submission
 	5,  // 35: qf.Grade.Status:type_name -> qf.Submission.Status
 	28, // 36: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
 	26, // 37: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
 	6,  // 38: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
 	26, // 39: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	30, // 40: qf.Review.edited:type_name -> google.protobuf.Timestamp
-	41, // [41:41] is the sub-list for method output_type
-	41, // [41:41] is the sub-list for method input_type
-	41, // [41:41] is the sub-list for extension type_name
-	41, // [41:41] is the sub-list for extension extendee
-	0,  // [0:41] is the sub-list for field type_name
+	32, // 40: qf.Review.edited:type_name -> google.protobuf.Timestamp
+	32, // 41: qf.AssignmentFeedback.CreatedAt:type_name -> google.protobuf.Timestamp
+	30, // 42: qf.AssignmentFeedbacks.feedbacks:type_name -> qf.AssignmentFeedback
+	43, // [43:43] is the sub-list for method output_type
+	43, // [43:43] is the sub-list for method input_type
+	43, // [43:43] is the sub-list for extension type_name
+	43, // [43:43] is the sub-list for extension extendee
+	0,  // [0:43] is the sub-list for field type_name
 }
 
 func init() { file_qf_types_proto_init() }
@@ -2673,7 +2832,7 @@ func file_qf_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_types_proto_rawDesc), len(file_qf_types_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   23,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

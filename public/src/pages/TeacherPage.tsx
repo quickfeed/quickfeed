@@ -10,6 +10,7 @@ import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
 import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
+import AssignmentFeedbackView from "../components/teacher/AssignmentFeedbackView"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -45,6 +46,7 @@ const TeacherPage = () => {
         onclick: handleUpdateAssignments
     }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
+    const feedback = { title: "View Assignment Feedback", text: "View feedback provided by students on assignments.", buttonText: "Feedback", to: `${root}/feedback` }
 
     return (
         <div className="box">
@@ -57,6 +59,7 @@ const TeacherPage = () => {
                 <Card {...members} />
                 <Card {...assignments} />
                 <Card {...updateAssignments} />
+                <Card {...feedback} />
             </div>
             <Routes>
                 <Route path={"/groups"} element={<GroupPage />} />
@@ -64,6 +67,8 @@ const TeacherPage = () => {
                 <Route path={"/review"} element={<ReviewResults />} />
                 <Route path={"/results"} element={<RegularResults />} />
                 <Route path={"/assignments"} element={<Assignments />} />
+                <Route path={"/feedback"} element={<AssignmentFeedbackView />} />
+                <Route path={"/feedback/:assignmentID"} element={<AssignmentFeedbackView />} />
             </Routes>
         </div>
     )
