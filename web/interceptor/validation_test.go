@@ -41,7 +41,7 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.GradingBenchmark":          {cleaner: F, validator: T},
 		"qf.Review":                    {cleaner: F, validator: T},
 		"qf.AssignmentFeedback":        {cleaner: F, validator: T},
-		"qf.AssignmentFeedbacks":       {cleaner: F, validator: F},
+		"qf.AssignmentFeedbacks":       {cleaner: T, validator: F},
 		"qf.Benchmarks":                {cleaner: F, validator: F},
 		"qf.Issue":                     {cleaner: F, validator: F},
 		"qf.UpdateSubmissionRequest":   {cleaner: F, validator: T},
