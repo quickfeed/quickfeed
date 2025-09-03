@@ -29,40 +29,44 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
             return
         }
 
-        if (likedContent.length > 200 || improvementSuggestions.length > 200 || timeSpent.length > 100) {
-            actions.global.alert({ color: Color.RED, text: 'Please keep responses under the word limit (200 words for feedback, 100 for time spent)' })
+        if (likedContent.length > 200 || improvementSuggestions.length > 200 || (timeSpent && Number(timeSpent) > 200)) {
+            actions.global.alert({ color: Color.RED, text: 'Please keep responses under the word limit (200 words for feedback, 200 for time spent)' })
             return
         }
 
         setIsSubmitting(true)
 
-        try {
-            const feedback: AssignmentFeedback = create(AssignmentFeedbackSchema, {
-                ID: BigInt(0), // Will be set by backend
-                CourseID: assignment.CourseID,
-                AssignmentID: assignment.ID,
-                UserID: anonymous ? BigInt(0) : state.self.ID, // Will be set by backend if not anonymous
-                LikedContent: likedContent.trim(),
-                ImprovementSuggestions: improvementSuggestions.trim(),
-                TimeSpent: timeSpent.trim(),
-                CommitHash: '', // Could be populated from current submission
-                SubmissionID: BigInt(0), // Could be populated from current submission
-                CreatedAt: undefined, // Will be set by backend
-            })
 
-            await actions.feedback.createAssignmentFeedback({ courseID, feedback })
-            setIsSubmitted(true)
-            setIsOpen(false)
+        const feedback: AssignmentFeedback = create(AssignmentFeedbackSchema, {
+            ID: BigInt(0), // Will be set by backend
+            CourseID: assignment.CourseID,
+            AssignmentID: assignment.ID,
+            UserID: anonymous ? BigInt(0) : state.self.ID, // Will be set by backend if not anonymous
+            LikedContent: likedContent.trim(),
+            ImprovementSuggestions: improvementSuggestions.trim(),
+            TimeSpent: timeSpent ? Number(timeSpent) : 0,
+            CommitHash: '', // Could be populated from current submission
+            SubmissionID: BigInt(0), // Could be populated from current submission
+            CreatedAt: undefined, // Will be set by backend
+        })
 
-            // Reset form
-            setLikedContent('')
-            setImprovementSuggestions('')
-            setTimeSpent('')
-        } catch (error) {
+        const success = await actions.feedback.createAssignmentFeedback({ courseID, feedback })
+        if (!success) {
             actions.global.alert({ color: Color.RED, text: 'Failed to submit feedback. Please try again later.' })
-        } finally {
             setIsSubmitting(false)
+            return
         }
+        setIsSubmitted(true)
+        setIsOpen(false)
+
+        // Reset form
+        setLikedContent('')
+        setImprovementSuggestions('')
+        setTimeSpent('')
+
+
+        setIsSubmitting(false)
+
     }
 
     if (isSubmitted) {
@@ -140,32 +144,33 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                             </label>
                             <input
                                 id="timeSpent"
-                                type="text"
+                                type="number"
                                 className="form-control"
                                 value={timeSpent}
                                 onChange={(e) => setTimeSpent(e.target.value)}
-                                placeholder="e.g., 2 hours, 3 days, 1 week"
-                                maxLength={100}
+                                placeholder="How much time did you spend on this assignment? (in hours)"
+                                max={200}
+                                min={0}
                             />
                         </div>
 
-                        <div className="mb-3 form-check">
-                            <input
-                                id="anonymous"
-                                type="checkbox"
-                                className="form-check-input"
-                                checked={anonymous}
-                                onChange={(e) => setAnonymous(e.target.checked)}
-                            />
-                            <label htmlFor="anonymous" className="form-check-label">
-                                Submit feedback anonymously
-                            </label>
-                        </div>
 
-                        <div className="d-flex gap-2">
+                        <div className="d-flex justify-content-end">
+                            <div className="form-check align-self-center">
+                                <input
+                                    id="anonymous"
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={anonymous}
+                                    onChange={(e) => setAnonymous(e.target.checked)}
+                                />
+                                <label htmlFor="anonymous" className="form-check-label">
+                                    Submit feedback anonymously
+                                </label>
+                            </div>
                             <button
                                 type="submit"
-                                className="btn btn-primary"
+                                className="btn btn-primary ml-2"
                                 disabled={isSubmitting || (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10)}
                             >
                                 {isSubmitting ? (
@@ -179,7 +184,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-secondary"
+                                className="btn btn-secondary ml-2"
                                 onClick={() => setIsOpen(false)}
                             >
                                 Cancel
