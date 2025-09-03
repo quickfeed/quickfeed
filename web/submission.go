@@ -13,7 +13,7 @@ func (s *QuickFeedService) streamUserScopedSubmission(sub *qf.Submission) {
 		return
 	}
 
-	if !sub.GetReleased() || len(sub.GetReviews()) != 0 {
+	if !(sub.GetReleased() || len(sub.GetReviews()) == 0) {
 		// Submission is not released or has reviews, do not send to users.
 		return
 	}
