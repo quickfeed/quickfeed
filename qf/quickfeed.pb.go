@@ -24,7 +24,7 @@ var File_qf_quickfeed_proto protoreflect.FileDescriptor
 
 const file_qf_quickfeed_proto_rawDesc = "" +
 	"\n" +
-	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x0eqf/types.proto\x1a\x11qf/requests.proto2\xfb\x0e\n" +
+	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x0eqf/types.proto\x1a\x11qf/requests.proto2\xfc\x0e\n" +
 	"\x10QuickFeedService\x12\x1f\n" +
 	"\aGetUser\x12\b.qf.Void\x1a\b.qf.User\"\x00\x12!\n" +
 	"\bGetUsers\x12\b.qf.Void\x1a\t.qf.Users\"\x00\x12\"\n" +
@@ -64,8 +64,8 @@ const file_qf_quickfeed_proto_rawDesc = "" +
 	".qf.Review\"\x00\x12/\n" +
 	"\fUpdateReview\x12\x11.qf.ReviewRequest\x1a\n" +
 	".qf.Review\"\x00\x12L\n" +
-	"\x18CreateAssignmentFeedback\x12\x16.qf.AssignmentFeedback\x1a\x16.qf.AssignmentFeedback\"\x00\x12P\n" +
-	"\x15GetAssignmentFeedback\x12\x1d.qf.AssignmentFeedbackRequest\x1a\x16.qf.AssignmentFeedback\"\x00\x128\n" +
+	"\x18CreateAssignmentFeedback\x12\x16.qf.AssignmentFeedback\x1a\x16.qf.AssignmentFeedback\"\x00\x12Q\n" +
+	"\x15GetAssignmentFeedback\x12\x1d.qf.AssignmentFeedbackRequest\x1a\x17.qf.AssignmentFeedbacks\"\x00\x128\n" +
 	"\x0fGetRepositories\x12\x11.qf.CourseRequest\x1a\x10.qf.Repositories\"\x00\x120\n" +
 	"\vIsEmptyRepo\x12\x15.qf.RepositoryRequest\x1a\b.qf.Void\"\x00\x120\n" +
 	"\x10SubmissionStream\x12\b.qf.Void\x1a\x0e.qf.Submission\"\x000\x01B&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
@@ -98,7 +98,8 @@ var file_qf_quickfeed_proto_goTypes = []any{
 	(*Submissions)(nil),               // 24: qf.Submissions
 	(*CourseSubmissions)(nil),         // 25: qf.CourseSubmissions
 	(*Review)(nil),                    // 26: qf.Review
-	(*Repositories)(nil),              // 27: qf.Repositories
+	(*AssignmentFeedbacks)(nil),       // 27: qf.AssignmentFeedbacks
+	(*Repositories)(nil),              // 28: qf.Repositories
 }
 var file_qf_quickfeed_proto_depIdxs = []int32{
 	0,  // 0: qf.QuickFeedService.GetUser:input_type -> qf.Void
@@ -169,8 +170,8 @@ var file_qf_quickfeed_proto_depIdxs = []int32{
 	26, // 65: qf.QuickFeedService.CreateReview:output_type -> qf.Review
 	26, // 66: qf.QuickFeedService.UpdateReview:output_type -> qf.Review
 	16, // 67: qf.QuickFeedService.CreateAssignmentFeedback:output_type -> qf.AssignmentFeedback
-	16, // 68: qf.QuickFeedService.GetAssignmentFeedback:output_type -> qf.AssignmentFeedback
-	27, // 69: qf.QuickFeedService.GetRepositories:output_type -> qf.Repositories
+	27, // 68: qf.QuickFeedService.GetAssignmentFeedback:output_type -> qf.AssignmentFeedbacks
+	28, // 69: qf.QuickFeedService.GetRepositories:output_type -> qf.Repositories
 	0,  // 70: qf.QuickFeedService.IsEmptyRepo:output_type -> qf.Void
 	23, // 71: qf.QuickFeedService.SubmissionStream:output_type -> qf.Submission
 	36, // [36:72] is the sub-list for method output_type

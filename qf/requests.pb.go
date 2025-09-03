@@ -860,10 +860,13 @@ func (x *RebuildRequest) GetSubmissionID() uint64 {
 }
 
 type AssignmentFeedbackRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CourseID      uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
-	UserID        uint64                 `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"` // optional - for filtering by user
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	CourseID uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	// Types that are valid to be assigned to Mode:
+	//
+	//	*AssignmentFeedbackRequest_AssignmentID
+	//	*AssignmentFeedbackRequest_UserID
+	Mode          isAssignmentFeedbackRequest_Mode `protobuf_oneof:"Mode"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -905,19 +908,46 @@ func (x *AssignmentFeedbackRequest) GetCourseID() uint64 {
 	return 0
 }
 
+func (x *AssignmentFeedbackRequest) GetMode() isAssignmentFeedbackRequest_Mode {
+	if x != nil {
+		return x.Mode
+	}
+	return nil
+}
+
 func (x *AssignmentFeedbackRequest) GetAssignmentID() uint64 {
 	if x != nil {
-		return x.AssignmentID
+		if x, ok := x.Mode.(*AssignmentFeedbackRequest_AssignmentID); ok {
+			return x.AssignmentID
+		}
 	}
 	return 0
 }
 
 func (x *AssignmentFeedbackRequest) GetUserID() uint64 {
 	if x != nil {
-		return x.UserID
+		if x, ok := x.Mode.(*AssignmentFeedbackRequest_UserID); ok {
+			return x.UserID
+		}
 	}
 	return 0
 }
+
+type isAssignmentFeedbackRequest_Mode interface {
+	isAssignmentFeedbackRequest_Mode()
+}
+
+type AssignmentFeedbackRequest_AssignmentID struct {
+	AssignmentID uint64 `protobuf:"varint,2,opt,name=assignmentID,proto3,oneof"`
+}
+
+type AssignmentFeedbackRequest_UserID struct {
+	UserID uint64 `protobuf:"varint,3,opt,name=userID,proto3,oneof"` // optional - for filtering by user
+}
+
+func (*AssignmentFeedbackRequest_AssignmentID) isAssignmentFeedbackRequest_Mode() {}
+
+func (*AssignmentFeedbackRequest_UserID) isAssignmentFeedbackRequest_Mode() {}
 
 type Void struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1021,11 +1051,12 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\x0eRebuildRequest\x12\x1a\n" +
 	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12\"\n" +
 	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\"\n" +
-	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"s\n" +
+	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"\x7f\n" +
 	"\x19AssignmentFeedbackRequest\x12\x1a\n" +
-	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12\"\n" +
-	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\x16\n" +
-	"\x06userID\x18\x03 \x01(\x04R\x06userID\"\x06\n" +
+	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12$\n" +
+	"\fassignmentID\x18\x02 \x01(\x04H\x00R\fassignmentID\x12\x18\n" +
+	"\x06userID\x18\x03 \x01(\x04H\x00R\x06userIDB\x06\n" +
+	"\x04Mode\"\x06\n" +
 	"\x04VoidB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
@@ -1095,6 +1126,10 @@ func file_qf_requests_proto_init() {
 		(*SubmissionRequest_GroupID)(nil),
 		(*SubmissionRequest_SubmissionID)(nil),
 		(*SubmissionRequest_Type)(nil),
+	}
+	file_qf_requests_proto_msgTypes[12].OneofWrappers = []any{
+		(*AssignmentFeedbackRequest_AssignmentID)(nil),
+		(*AssignmentFeedbackRequest_UserID)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
