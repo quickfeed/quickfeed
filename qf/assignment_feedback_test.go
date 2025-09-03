@@ -10,11 +10,11 @@ import (
 func TestAssignmentFeedbackValidation(t *testing.T) {
 	// Test valid feedback
 	validFeedback := &AssignmentFeedback{
-		AssignmentID:             1,
-		LikedContent:            "Great assignment with clear instructions",
-		ImprovementSuggestions:  "Could use more examples",
-		TimeSpent:               "2 hours",
-		CreatedAt:               timestamppb.New(time.Now()),
+		AssignmentID:           1,
+		LikedContent:           "Great assignment with clear instructions",
+		ImprovementSuggestions: "Could use more examples",
+		TimeSpent:              2,
+		CreatedAt:              timestamppb.New(time.Now()),
 	}
 
 	if !validFeedback.IsValid() {

@@ -386,17 +386,23 @@ func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback) erro
 // GetAssignmentFeedback returns assignment feedback matching the given query.
 // If userID is specified, returns feedback from that user.
 // Otherwise, returns the first feedback found for the assignment.
-func (db *GormDB) GetAssignmentFeedback(query *qf.AssignmentFeedbackRequest) (*qf.AssignmentFeedback, error) {
-	var feedback qf.AssignmentFeedback
-	dbQuery := db.conn.Where("assignment_id = ?", query.GetAssignmentID())
-	
-	// If userID is specified, filter by user
-	if query.GetUserID() > 0 {
-		dbQuery = dbQuery.Where("user_id = ?", query.GetUserID())
+func (db *GormDB) GetAssignmentFeedback(query *qf.AssignmentFeedbackRequest) (*qf.AssignmentFeedbacks, error) {
+	var feedbacks []*qf.AssignmentFeedback
+	dbQuery := db.conn.Model(&qf.AssignmentFeedback{})
+
+	if query.GetAssignmentID() > 0 || query.GetUserID() > 0 {
+		switch query.GetMode().(type) {
+		case *qf.AssignmentFeedbackRequest_AssignmentID:
+			dbQuery = dbQuery.Where("assignment_id = ?", query.GetAssignmentID())
+		case *qf.AssignmentFeedbackRequest_UserID:
+			dbQuery = dbQuery.Where("user_id = ?", query.GetUserID())
+		}
 	}
-	
-	if err := dbQuery.First(&feedback).Error; err != nil {
+
+	dbQuery = dbQuery.Where("course_id = ?", query.GetCourseID())
+
+	if err := dbQuery.Find(&feedbacks).Error; err != nil {
 		return nil, fmt.Errorf("failed to get assignment feedback: %w", err)
 	}
-	return &feedback, nil
+	return &qf.AssignmentFeedbacks{Feedbacks: feedbacks}, nil
 }

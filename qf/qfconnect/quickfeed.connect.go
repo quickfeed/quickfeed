@@ -180,7 +180,7 @@ type QuickFeedServiceClient interface {
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	CreateAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error)
-	GetAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error)
+	GetAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error)
 	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect.Request[qf.Void]) (*connect.ServerStreamForClient[qf.Submission], error)
@@ -389,7 +389,7 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("CreateAssignmentFeedback")),
 			connect.WithClientOptions(opts...),
 		),
-		getAssignmentFeedback: connect.NewClient[qf.AssignmentFeedbackRequest, qf.AssignmentFeedback](
+		getAssignmentFeedback: connect.NewClient[qf.AssignmentFeedbackRequest, qf.AssignmentFeedbacks](
 			httpClient,
 			baseURL+QuickFeedServiceGetAssignmentFeedbackProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("GetAssignmentFeedback")),
@@ -450,7 +450,7 @@ type quickFeedServiceClient struct {
 	createReview             *connect.Client[qf.ReviewRequest, qf.Review]
 	updateReview             *connect.Client[qf.ReviewRequest, qf.Review]
 	createAssignmentFeedback *connect.Client[qf.AssignmentFeedback, qf.AssignmentFeedback]
-	getAssignmentFeedback    *connect.Client[qf.AssignmentFeedbackRequest, qf.AssignmentFeedback]
+	getAssignmentFeedback    *connect.Client[qf.AssignmentFeedbackRequest, qf.AssignmentFeedbacks]
 	getRepositories          *connect.Client[qf.CourseRequest, qf.Repositories]
 	isEmptyRepo              *connect.Client[qf.RepositoryRequest, qf.Void]
 	submissionStream         *connect.Client[qf.Void, qf.Submission]
@@ -617,7 +617,7 @@ func (c *quickFeedServiceClient) CreateAssignmentFeedback(ctx context.Context, r
 }
 
 // GetAssignmentFeedback calls qf.QuickFeedService.GetAssignmentFeedback.
-func (c *quickFeedServiceClient) GetAssignmentFeedback(ctx context.Context, req *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (c *quickFeedServiceClient) GetAssignmentFeedback(ctx context.Context, req *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
 	return c.getAssignmentFeedback.CallUnary(ctx, req)
 }
 
@@ -673,7 +673,7 @@ type QuickFeedServiceHandler interface {
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	CreateAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error)
-	GetAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error)
+	GetAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error)
 	GetRepositories(context.Context, *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error)
 	IsEmptyRepo(context.Context, *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error)
 	SubmissionStream(context.Context, *connect.Request[qf.Void], *connect.ServerStream[qf.Submission]) error
@@ -1113,7 +1113,7 @@ func (UnimplementedQuickFeedServiceHandler) CreateAssignmentFeedback(context.Con
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateAssignmentFeedback is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (UnimplementedQuickFeedServiceHandler) GetAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetAssignmentFeedback is not implemented"))
 }
 

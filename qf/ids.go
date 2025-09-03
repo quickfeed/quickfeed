@@ -137,3 +137,7 @@ func (r *AssignmentFeedback) IDFor(role string) uint64 {
 	}
 	return 0
 }
+
+func (r *AssignmentFeedbackRequest) IDFor(_ string) uint64 {
+	return r.GetCourseID()
+}
