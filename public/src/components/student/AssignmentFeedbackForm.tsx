@@ -48,43 +48,29 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         }
     }
 
-    const getTimeSpentString = (): string => {
-        const h = parseInt(hours || '0', 10)
-        const m = parseInt(minutes || '0', 10)
-        if (h === 0 && m === 0) return ''
-        if (h === 0) return `${m} minute${m !== 1 ? 's' : ''}`
-        if (m === 0) return `${h} hour${h !== 1 ? 's' : ''}`
-        return `${h} hour${h !== 1 ? 's' : ''} and ${m} minute${m !== 1 ? 's' : ''}`
+    const countWords = (text: string): number => {
+        return text.trim().split(/\s+/).filter(word => word.length > 0).length
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (likedContent.trim().length < 10 && improvementSuggestions.trim().length < 10) {
+        const likedWordsCount = countWords(likedContent)
+        const improvementWordsCount = countWords(improvementSuggestions)
+
+        if (likedWordsCount < 10 && improvementWordsCount < 10) {
             actions.global.alert({ color: Color.RED, text: 'Please provide at least 10 words in either "What did you like?" or "What would make it better?"' })
             return
         }
 
-        if (likedContent.length > 200 || improvementSuggestions.length > 200 || (timeSpent && Number(timeSpent) > 200)) {
-            actions.global.alert({ color: Color.RED, text: 'Please keep responses under the word limit (200 words for feedback, 200 for time spent)' })
-            actions.global.alert({ text: 'Please provide at least 10 words of feedback', color: Color.YELLOW })
-            return
-        }
-
-        if (likedContent.length > 200 || improvementSuggestions.length > 200) {
-            actions.global.alert({ text: 'Please keep responses under the 200 word limit', color: Color.YELLOW })
+        if (likedWordsCount > 200 || improvementWordsCount > 200 || (timeSpent && Number(timeSpent) > 6000)) {
+            actions.global.alert({ color: Color.RED, text: 'Please keep responses under the word limit (200 words for feedback, 100 hours for time spent)' })
             return
         }
 
         // Validate time input
         if (!hours && !minutes) {
             actions.global.alert({ text: 'Please specify the time you spent on this assignment', color: Color.YELLOW })
-            return
-        }
-
-        const timeSpentString = getTimeSpentString()
-        if (!timeSpentString) {
-            actions.global.alert({ text: 'Please enter a valid time duration', color: Color.YELLOW })
             return
         }
 
@@ -164,10 +150,10 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                 value={likedContent}
                                 onChange={(e) => setLikedContent(e.target.value)}
                                 placeholder="What worked well? What was interesting or helpful?"
-                                maxLength={200}
+                                maxLength={2000}
                             />
                             <small className="form-text text-muted">
-                                {likedContent.length}/200 characters
+                                {countWords(likedContent)}/200 words
                             </small>
                         </div>
 
@@ -182,10 +168,10 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                 value={improvementSuggestions}
                                 onChange={(e) => setImprovementSuggestions(e.target.value)}
                                 placeholder="What was confusing? What could be improved?"
-                                maxLength={200}
+                                maxLength={2000}
                             />
                             <small className="form-text text-muted">
-                                {improvementSuggestions.length}/200 characters
+                                {countWords(improvementSuggestions)}/200 words
                             </small>
                         </div>
 
@@ -240,10 +226,9 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                 disabled={
                                     isSubmitting ||
                                     (
-                                        likedContent.trim().length < 10 ||
-                                        improvementSuggestions.trim().length < 10 ||
-                                        Boolean(!hours) ||
-                                        Boolean(!minutes)
+                                        countWords(likedContent) < 10 ||
+                                        countWords(improvementSuggestions) < 10 ||
+                                        timeSpent > 6000 || timeSpent === 0
                                     )
                                 }
                             >
