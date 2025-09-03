@@ -151,6 +151,6 @@ type Database interface {
 
 	// CreateAssignmentFeedback creates a new assignment feedback
 	CreateAssignmentFeedback(*qf.AssignmentFeedback) error
-	// GetAssignmentFeedback returns assignment feedback for the given assignment and user (if specified)
+	// GetAssignmentFeedback returns a list of assignment feedback for the given assignment and user (if specified)
 	GetAssignmentFeedback(query *qf.AssignmentFeedbackRequest) (*qf.AssignmentFeedbacks, error)
 }

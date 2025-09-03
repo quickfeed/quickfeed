@@ -96,7 +96,7 @@ export enum TableColor {
 
 const getDaysHoursAndMinutes = (deadline: Timestamp) => {
     const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
-    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
+    const days = Math.round(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
     return { days, hours, minutes, timeToDeadline }

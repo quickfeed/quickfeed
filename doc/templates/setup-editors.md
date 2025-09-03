@@ -15,6 +15,27 @@ You install the Go extension from the marketplace within VSCode.
 Another useful VSCode extension is [Code Runner](https://marketplace.visualstudio.com/items?itemName=formulahendry.code-runner), which allows to run code using a keyboard shortcut or right-clicking a file instead of using ``go run``.
 Runs code by default in a read-only editor.
 
+### Configuring VSCode
+
+To configure VSCode, open the settings by pressing `Ctrl+,` (or `Cmd+,` on macOS).
+You can also open the settings by clicking the gear icon in the lower left corner of the window.
+
+Please use the following settings:
+
+```json
+  "go.useLanguageServer": true,
+  "gopls": {
+    "formatting.gofumpt": true,
+    "ui.semanticTokens": true,
+    "build.directoryFilters": ["-public", "-dev", "-doc"],
+    // Add parameter placeholders when completing a function.
+    "usePlaceholders": false,
+    // If true, enable additional analyses with staticcheck.
+    // Warning: This will significantly increase memory usage.
+    "staticcheck": true
+  },
+```
+
 ### Developing in WSL with VSCode
 
 If you are developing with WSL on Windows you can use VSCode for interacting with the WSL environment.
@@ -22,8 +43,8 @@ The VSCode documentation has [detailed instructions](https://code.visualstudio.c
 
 ## GoLand
 
-[GoLand](https://www.jetbrains.com/go/) is a proper IDE specially designed for the Go language.
-This software is not free, but as a student you can create a [free student user account](https://www.jetbrains.com/community/education/?fromMenu), and thus use GoLand for free.
+[GoLand](https://www.jetbrains.com/go/) is a commercial IDE specially designed for the Go language.
+As a student you can create a [free student user account](https://www.jetbrains.com/community/education/?fromMenu), and thus use GoLand for free.
 
 Some of GoLand's features include:
 
@@ -35,12 +56,12 @@ Some of GoLand's features include:
 ## Other Editors
 
 If you prefer some other editor there exists Go support for many editors, such as Atom, Emacs, and vim.
-The Go wiki maintains a [comprehensive list](https://github.com/golang/go/wiki/IDEsAndTextEditorPlugins) of several IDEs and text editors that can be used for Go programming.
+The Go wiki maintains a [comprehensive list](https://go.dev/wiki/IDEsAndTextEditorPlugins) of several IDEs and text editors that can be used for Go programming.
 
-Whichever editor you choose, it is highly recommended that you configure it to use the [`goreturns`](https://github.com/sqs/goreturns) tool.
+Whichever editor you choose, it is highly recommended that you configure it to use the [`gofumpt`](https://github.com/mvdan/gofumpt) tool.
 This will reformat your code to follow the Go style, and make sure that all the necessary import statements are inserted (so you don’t need to write the import statement when you start using a new package.)
-The `goreturns` tool is compatible with most editors, but may require some configuration.
-Using the Go plugin for VSCode should automatically configure `goreturns`.
+The `gofumpt` tool is compatible with most editors, but may require some configuration.
+Using the Go plugin for VSCode should automatically configure `gofumpt`.
 
 Note that editors may also be able to run your code within the editor itself, but it may require some configuration.
 However, using the go tool from the command line is often times preferred.

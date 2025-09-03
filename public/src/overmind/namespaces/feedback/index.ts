@@ -1,3 +1,3 @@
-import * as actions from './actions'
+import * as actions from './actions' // skipcq: JS-C1003
 import { state } from './state'
-export { state, actions }
+export { actions, state }

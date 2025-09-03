@@ -8,70 +8,84 @@ import (
 )
 
 func TestAssignmentFeedbackValidation(t *testing.T) {
-	// Test valid feedback
-	validFeedback := &AssignmentFeedback{
-		AssignmentID:           1,
-		LikedContent:           "Great assignment with clear instructions",
-		ImprovementSuggestions: "Could use more examples",
-		TimeSpent:              2,
-		CreatedAt:              timestamppb.New(time.Now()),
-	}
-
-	if !validFeedback.IsValid() {
-		t.Error("Valid feedback should pass validation")
-	}
-
-	// Test invalid feedback (missing assignment ID)
-	invalidFeedback := &AssignmentFeedback{
-		LikedContent:           "Good assignment",
-		ImprovementSuggestions: "Needs improvement",
-	}
-
-	if invalidFeedback.IsValid() {
-		t.Error("Feedback without assignment ID should fail validation")
-	}
-
-	// Test invalid feedback (no content)
-	emptyFeedback := &AssignmentFeedback{
-		AssignmentID: 1,
-	}
-
-	if emptyFeedback.IsValid() {
-		t.Error("Feedback without content should fail validation")
-	}
-}
-
-func TestAssignmentFeedbackRequestValidation(t *testing.T) {
-	// Test valid request
 	tests := []struct {
-		name  string
-		input isAssignmentFeedbackRequest_Mode
-		valid bool
+		name      string
+		feedback  *AssignmentFeedback
+		wantValid bool
 	}{
 		{
-			name:  "Invalid request",
-			input: nil,
-			valid: false,
+			name: "valid feedback with all fields",
+			feedback: &AssignmentFeedback{
+				AssignmentID:           1,
+				LikedContent:           "Great assignment with clear instructions",
+				ImprovementSuggestions: "Could use more examples",
+				TimeSpent:              2,
+				CreatedAt:              timestamppb.New(time.Now()),
+			},
+			wantValid: true,
 		},
 		{
-			name:  "Valid request with course ID",
-			input: &AssignmentFeedbackRequest_UserID{UserID: 1},
-			valid: true,
+			name: "invalid feedback missing assignment ID",
+			feedback: &AssignmentFeedback{
+				LikedContent:           "Good assignment",
+				ImprovementSuggestions: "Needs improvement",
+			},
+			wantValid: false,
 		},
 		{
-			name:  "Valid request with user ID",
-			input: &AssignmentFeedbackRequest_AssignmentID{AssignmentID: 1},
-			valid: true,
+			name: "invalid feedback with no content",
+			feedback: &AssignmentFeedback{
+				AssignmentID: 1,
+			},
+			wantValid: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := &AssignmentFeedbackRequest{
-				Mode: tt.input,
+			got := tt.feedback.IsValid()
+			if got != tt.wantValid {
+				t.Errorf("AssignmentFeedback.IsValid() = %v, want %v", got, tt.wantValid)
 			}
-			if req.IsValid() != tt.valid {
-				t.Errorf("IsValid() = %v, want %v", req.IsValid(), tt.valid)
+		})
+	}
+}
+
+func TestAssignmentFeedbackRequestValidation(t *testing.T) {
+	tests := []struct {
+		name      string
+		request   *AssignmentFeedbackRequest
+		wantValid bool
+	}{
+		{
+			name: "valid request with all required fields",
+			request: &AssignmentFeedbackRequest{
+				CourseID: 1,
+				Mode:     &AssignmentFeedbackRequest_AssignmentID{AssignmentID: 1},
+			},
+			wantValid: true,
+		},
+		{
+			name: "invalid request missing course ID",
+			request: &AssignmentFeedbackRequest{
+				Mode: &AssignmentFeedbackRequest_AssignmentID{AssignmentID: 1},
+			},
+			wantValid: false,
+		},
+		{
+			name: "invalid request missing assignment ID",
+			request: &AssignmentFeedbackRequest{
+				CourseID: 1,
+			},
+			wantValid: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.request.IsValid()
+			if got != tt.wantValid {
+				t.Errorf("AssignmentFeedbackRequest.IsValid() = %v, want %v", got, tt.wantValid)
 			}
 		})
 	}

@@ -132,12 +132,16 @@ func (r *AssignmentFeedback) IDFor(role string) uint64 {
 		return r.GetCourseID()
 	case "user":
 		return r.GetUserID()
-	case "submission":
-		return r.GetSubmissionID()
 	}
 	return 0
 }
 
-func (r *AssignmentFeedbackRequest) IDFor(_ string) uint64 {
-	return r.GetCourseID()
+func (r *AssignmentFeedbackRequest) IDFor(role string) uint64 {
+	switch role {
+	case "course":
+		return r.GetCourseID()
+	case "user":
+		return r.GetUserID()
+	}
+	return 0
 }

@@ -58,14 +58,6 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 			if err := tx.Where("submission_id = ?", submission.GetID()).Delete(&score.BuildInfo{}).Error; err != nil {
 				return err // will rollback transaction
 			}
-
-			// Find the submission's associated assignment
-			var assignment qf.Assignment
-			if err := tx.Preload("ExpectedTests").First(&assignment, submission.GetAssignmentID()).Error; err != nil {
-				return err // will rollback transaction
-			}
-			submission.EnsureAllTestsInSubmissionScores(&assignment)
-
 			if submission.GetBuildInfo() != nil {
 				submission.BuildInfo.SubmissionID = submission.GetID()
 			}
@@ -112,10 +104,9 @@ func setGrades(tx *gorm.DB, submission *qf.Submission) error {
 
 	// Find the submission's associated assignment
 	var assignment qf.Assignment
-	if err := tx.Preload("ExpectedTests").First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
 		return err
 	}
-	submission.EnsureAllTestsInSubmissionScores(&assignment)
 	submission.SetGradesIfApproved(&assignment, submission.GetScore())
 	return nil
 }
@@ -373,36 +364,4 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 // DeleteReview removes all reviews matching the query.
 func (db *GormDB) DeleteReview(query *qf.Review) error {
 	return db.conn.Delete(&qf.Review{}, &query).Error
-}
-
-// CreateAssignmentFeedback creates a new assignment feedback.
-func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback) error {
-	if err := db.conn.Create(feedback).Error; err != nil {
-		return fmt.Errorf("failed to create assignment feedback: %w", err)
-	}
-	return nil
-}
-
-// GetAssignmentFeedback returns assignment feedback matching the given query.
-// If userID is specified, returns feedback from that user.
-// Otherwise, returns the first feedback found for the assignment.
-func (db *GormDB) GetAssignmentFeedback(query *qf.AssignmentFeedbackRequest) (*qf.AssignmentFeedbacks, error) {
-	var feedbacks []*qf.AssignmentFeedback
-	dbQuery := db.conn.Model(&qf.AssignmentFeedback{})
-
-	if query.GetAssignmentID() > 0 || query.GetUserID() > 0 {
-		switch query.GetMode().(type) {
-		case *qf.AssignmentFeedbackRequest_AssignmentID:
-			dbQuery = dbQuery.Where("assignment_id = ?", query.GetAssignmentID())
-		case *qf.AssignmentFeedbackRequest_UserID:
-			dbQuery = dbQuery.Where("user_id = ?", query.GetUserID())
-		}
-	}
-
-	dbQuery = dbQuery.Where("course_id = ?", query.GetCourseID())
-
-	if err := dbQuery.Find(&feedbacks).Error; err != nil {
-		return nil, fmt.Errorf("failed to get assignment feedback: %w", err)
-	}
-	return &qf.AssignmentFeedbacks{Feedbacks: feedbacks}, nil
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/assignments"
@@ -505,7 +504,7 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 }
 
 // CreateAssignmentFeedback creates a new assignment feedback.
-func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (s *QuickFeedService) CreateAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
 	feedback := in.Msg
 
 	// Set the user ID if not provided (for non-anonymous feedback)
@@ -513,11 +512,6 @@ func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *con
 		// Allow anonymous feedback by not setting userID
 		// but if we want to track the user, we can set it here
 		// feedback.UserID = userID(ctx)
-	}
-
-	// Set the creation timestamp
-	if feedback.GetCreatedAt() == nil {
-		feedback.CreatedAt = timestamppb.Now()
 	}
 
 	if err := s.db.CreateAssignmentFeedback(feedback); err != nil {
@@ -532,6 +526,9 @@ func (s *QuickFeedService) GetAssignmentFeedback(ctx context.Context, in *connec
 	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
+	}
+	if len(feedback.GetFeedbacks()) == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
 	}
 	return connect.NewResponse(feedback), nil
