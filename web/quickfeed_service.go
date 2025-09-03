@@ -504,14 +504,14 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 }
 
 // CreateAssignmentFeedback creates a new assignment feedback.
-func (s *QuickFeedService) CreateAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
 	feedback := in.Msg
 
 	// Set the user ID if not provided (for non-anonymous feedback)
 	if feedback.GetUserID() == 0 {
 		// Allow anonymous feedback by not setting userID
 		// but if we want to track the user, we can set it here
-		// feedback.UserID = userID(ctx)
+		feedback.UserID = userID(ctx)
 	}
 
 	if err := s.db.CreateAssignmentFeedback(feedback); err != nil {
