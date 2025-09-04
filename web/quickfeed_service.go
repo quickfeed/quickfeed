@@ -404,8 +404,11 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
 	}
-	// send submission to all submission owners
-	s.streamUserScopedSubmission(submission)
+	// send submission to all submission owners if submission is released
+	// or if there are no reviews
+	if (submission.GetReleased() || len(submission.GetReviews()) == 0) && len(submission.GetUserIDs()) > 0 {
+		s.streams.Submission.SendTo(submission, submission.GetUserIDs()...)
+	}
 	return &connect.Response[qf.Void]{}, nil
 }
 
