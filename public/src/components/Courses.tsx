@@ -55,6 +55,23 @@ const Courses = (overview: overview) => {
     const teacher: CourseCardElement[] = []
     const pending: CourseCardElement[] = []
     const availableCourses: CourseCardElement[] = []
+    const sortByYearTerm = (a: CourseCardElement, b: CourseCardElement) => {
+        const courseA = a.props.course
+        const courseB = b.props.course
+        if (courseA.year !== courseB.year) {
+            return courseB.year - courseA.year // Descending order for year
+        }
+
+        // Map terms to an order value
+        const termOrder: Record<string, number> = {
+            Fall: 2,
+            Spring: 1,
+        }
+        // tag is used to represent term, e.g. "Spring" < "Fall"
+        // fall should come before spring in the same year as that is
+        // the more recent term
+        return termOrder[courseB.tag] - termOrder[courseA.tag]
+    }
 
         if (overview.home) {
             // Render only favorite courses.
@@ -86,8 +103,8 @@ const Courses = (overview: overview) => {
                     <div className="container-fluid myCourses">
                         <h2>My Courses</h2>
                         <div className="card-deck course-card-row">
-                            {teacher}
-                            {student}
+                        {teacher.sort(sortByYearTerm)}
+                        {student.sort(sortByYearTerm)}
                         </div>
                     </div>
                 }
@@ -102,19 +119,8 @@ const Courses = (overview: overview) => {
                     </div>
                 }
 
-                {availableCourses.length > 0 &&
-                    <>
-                        <h2>Available Courses</h2>
-                        <div className="card-deck course-card-row">
-                            {availableCourses}
-                        </div>
-                    </>
-                }
-            </div>
-        )
-    }
-    return courses()
-
+                        {availableCourses.sort(sortByYearTerm)}
+                    </div>
 }
 
 export default Courses
