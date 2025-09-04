@@ -1,6 +1,7 @@
-import React from "react"
+import React, { ComponentProps } from "react"
+import Collapsible from "./Collapsible"
 import { useAppState } from "../overmind"
-import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
+import { Course, Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
 import { useNavigate } from "react-router"
@@ -55,6 +56,42 @@ const Courses = (overview: overview) => {
     const teacher: CourseCardElement[] = []
     const pending: CourseCardElement[] = []
     const availableCourses: CourseCardElement[] = []
+    const unavailableCourses: CourseCardElement[] = []
+    state.courses.forEach(course => {
+        const enrol = state.enrollmentsByCourseID[course.ID.toString()]
+        if (enrol) {
+            const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
+            if (isVisible(enrol)) {
+                favorite.push(courseCard)
+            } else {
+                switch (enrol.status) {
+                    case Enrollment_UserStatus.PENDING:
+                        pending.push(courseCard)
+                        break
+                    case Enrollment_UserStatus.STUDENT:
+                        student.push(courseCard)
+                        break
+                    case Enrollment_UserStatus.TEACHER:
+                        teacher.push(courseCard)
+                        break
+                }
+            }
+            return
+        }
+
+        if (shouldBeUnavailable(course)) {
+            unavailableCourses.push(
+                <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} unavailable={true} />
+            )
+            return
+        }
+        availableCourses.push(
+            <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} />
+        )
+
+    })
+
+    // sort courses by year and term, most recent first
     const sortByYearTerm = (a: CourseCardElement, b: CourseCardElement) => {
         const courseA = a.props.course
         const courseB = b.props.course
@@ -73,54 +110,77 @@ const Courses = (overview: overview) => {
         return termOrder[courseB.tag] - termOrder[courseA.tag]
     }
 
-        if (overview.home) {
-            // Render only favorite courses.
-            return (
-                <>
-                    {favorite.length > 0 &&
-                        <div className="container-fluid">
-                            <div className="card-deck course-card-row favorite-row">
-                                {favorite}
-                            </div>
-                        </div>
-                    }
-                </>
-            )
-        }
-
+    if (overview.home) {
+        // Render only favorite courses.
         return (
-            <div className="box container-fluid">
+            <>
                 {favorite.length > 0 &&
                     <div className="container-fluid">
-                        <h2>Favorites</h2>
                         <div className="card-deck course-card-row favorite-row">
                             {favorite}
                         </div>
                     </div>
                 }
+            </>
+        )
+    }
 
-                {(student.length > 0 || teacher.length > 0) &&
-                    <div className="container-fluid myCourses">
-                        <h2>My Courses</h2>
-                        <div className="card-deck course-card-row">
+    return (
+        <div className="box container-fluid mb-5">
+            {favorite.length > 0 &&
+                <div className="container-fluid">
+                    <h2>Favorites</h2>
+                    <div className="card-deck course-card-row favorite-row">
+                        {favorite}
+                    </div>
+                </div>
+            }
+
+            {(student.length > 0 || teacher.length > 0) &&
+                <div className="container-fluid myCourses">
+                    <h2>My Courses</h2>
+                    <div className="card-deck course-card-row">
                         {teacher.sort(sortByYearTerm)}
                         {student.sort(sortByYearTerm)}
-                        </div>
                     </div>
-                }
-                {pending.length > 0 &&
-                    <div className="container-fluid">
-                        {(student.length === 0 && teacher.length === 0) &&
-                            <h2>My Courses</h2>
-                        }
-                        <div className="card-deck">
-                            {pending}
-                        </div>
+                </div>
+            }
+            {pending.length > 0 &&
+                <div className="container-fluid">
+                    {(student.length === 0 && teacher.length === 0) &&
+                        <h2>My Courses</h2>
+                    }
+                    <div className="card-deck">
+                        {pending}
                     </div>
-                }
+                </div>
+            }
 
+            {availableCourses.length > 0 &&
+                <>
+                    <h2>Available Courses</h2>
+                    <div className="card-deck course-card-row">
                         {availableCourses.sort(sortByYearTerm)}
                     </div>
+                </>
+            }
+            {unavailableCourses.length > 0 &&
+                <Collapsible title={`Unavailable Courses (${unavailableCourses.length})`}>
+                    <div className="card-deck course-card-row">
+                        {unavailableCourses.sort(sortByYearTerm)}
+                    </div>
+                </Collapsible>
+            }
+        </div>
+    )
+}
+
+const shouldBeUnavailable = (course: Course): boolean => {
+    const now = new Date()
+    if (now.getFullYear() > course.year) {
+        return true
+    }
+    return false
 }
 
 export default Courses
