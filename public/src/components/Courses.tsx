@@ -116,7 +116,7 @@ const Courses = (overview: overview) => {
             <>
                 {favorite.length > 0 &&
                     <div className="container-fluid">
-                        <div className="card-deck course-card-row favorite-row">
+                        <div className="card-deck">
                             {favorite}
                         </div>
                     </div>
@@ -130,7 +130,7 @@ const Courses = (overview: overview) => {
             {favorite.length > 0 &&
                 <div className="container-fluid">
                     <h2>Favorites</h2>
-                    <div className="card-deck course-card-row favorite-row">
+                    <div className="card-deck course-card-row">
                         {favorite}
                     </div>
                 </div>
