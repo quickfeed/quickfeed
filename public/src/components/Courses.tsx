@@ -13,6 +13,10 @@ interface overview {
     home: boolean
 }
 
+// Type for a course card element
+type CourseCardElement = React.ReactElement<ComponentProps<typeof CourseCard>>
+
+
 /** This component lists the user's courses and courses available for enrollment. */
 const Courses = (overview: overview) => {
     const state = useAppState()
@@ -46,37 +50,11 @@ const Courses = (overview: overview) => {
     }
 
     // Push to separate arrays for layout purposes. Favorite - Student - Teacher - Pending
-    const courses = () => {
-        const favorite: React.JSX.Element[] = []
-        const student: React.JSX.Element[] = []
-        const teacher: React.JSX.Element[] = []
-        const pending: React.JSX.Element[] = []
-        const availableCourses: React.JSX.Element[] = []
-        state.courses.forEach(course => {
-            const enrol = state.enrollmentsByCourseID[course.ID.toString()]
-            if (enrol) {
-                const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
-                if (isVisible(enrol)) {
-                    favorite.push(courseCard)
-                } else {
-                    switch (enrol.status) {
-                        case Enrollment_UserStatus.PENDING:
-                            pending.push(courseCard)
-                            break
-                        case Enrollment_UserStatus.STUDENT:
-                            student.push(courseCard)
-                            break
-                        case Enrollment_UserStatus.TEACHER:
-                            teacher.push(courseCard)
-                            break
-                    }
-                }
-            } else {
-                availableCourses.push(
-                    <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} />
-                )
-            }
-        })
+    const favorite: CourseCardElement[] = []
+    const student: CourseCardElement[] = []
+    const teacher: CourseCardElement[] = []
+    const pending: CourseCardElement[] = []
+    const availableCourses: CourseCardElement[] = []
 
         if (overview.home) {
             // Render only favorite courses.
