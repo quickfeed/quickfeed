@@ -166,6 +166,10 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 			Owner:   org.GetScmOrganizationName(),
 			Private: private,
 		}
+		if path == qf.AssignmentsRepo {
+			// Assignments repository is used as a template for student repositories
+			repoOptions.IsTemplate = true
+		}
 		repo, err := s.createRepository(ctx, repoOptions)
 		if err != nil {
 			return nil, err
@@ -375,11 +379,22 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// repo does not exist, create it
-	s.logger.Debugf("CreateRepository: creating %s", opt.Repo)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
-		Name:    github.String(opt.Repo),
-		Private: github.Bool(opt.Private),
-	})
+	if _, ok := RepoPaths[opt.Repo]; ok {
+		// creating a default course repository
+		s.logger.Debugf("CreateRepository: creating %s", opt.Repo)
+		repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
+			Name:       github.String(opt.Repo),
+			Private:    github.Bool(opt.Private),
+			IsTemplate: github.Bool(opt.IsTemplate),
+		})
+	} else {
+		// creating a student / group repository from template
+		s.logger.Debugf("CreateRepository: creating student/group repository %s from template", opt.Repo)
+		repo, _, err = s.client.Repositories.CreateFromTemplate(ctx, opt.Owner, qf.AssignmentsRepo, &github.TemplateRepoRequest{
+			Name:    github.String(opt.Repo),
+			Private: github.Bool(opt.Private),
+		})
+	}
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)
 	}
