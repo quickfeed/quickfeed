@@ -176,7 +176,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                         </div>
 
                         <div className="mb-3">
-                            <label className="form-label">
+                            <label htmlFor="hours" className="form-label">
                                 How much time did you spend on this assignment? <span className="text-danger">*</span>
                             </label>
                             <p className="text-muted small mb-2">Enter hours and minutes (max 100 hours)</p>
@@ -184,6 +184,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                 <div className="col-6">
                                     <div className="input-group">
                                         <input
+                                            id="hours"
                                             type="number"
                                             className="form-control"
                                             value={hours}
@@ -198,6 +199,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                 <div className="col-6">
                                     <div className="input-group">
                                         <input
+                                            id="minutes"
                                             type="number"
                                             className="form-control"
                                             value={minutes}

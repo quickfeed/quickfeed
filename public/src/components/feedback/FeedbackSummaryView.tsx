@@ -35,6 +35,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
                                     className="card shadow-sm h-100 cursor-pointer"
                                     onClick={() => navigate(`/course/${state.activeCourse}/feedback/${assignment.ID}`)}
                                     style={{ cursor: 'pointer' }}
+                                    aria-hidden="true"
                                 >
                                     <div className="card-header bg-primary text-white">
                                         <h5 className="mb-0 d-flex justify-content-between align-items-center">

@@ -8,10 +8,7 @@ export const createAssignmentFeedback = async (
     { feedback }: { courseID: string, feedback: AssignmentFeedback }
 ): Promise<boolean> => {
     const response = await effects.global.api.client.createAssignmentFeedback(feedback)
-    if (response.error) {
-        return false
-    }
-    return true
+    return response.error === null
 }
 
 export const getAssignmentFeedback = async (
