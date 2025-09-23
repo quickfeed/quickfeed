@@ -50,7 +50,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
                         <span className="badge badge-info">User ID: {feedback.UserID.toString()}</span>
                     ) : null}
                     {feedback.CreatedAt && (
-                        <small className="text-muted">
+                        <small className="text-muted ml-auto">
                             {new Date(Number(feedback.CreatedAt.seconds) * 1000).toLocaleDateString()}
                         </small>
                     )}
