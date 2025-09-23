@@ -19,7 +19,7 @@ export const AssignmentFeedbackView = () => {
             })
         }
 
-        fetchFeedback()
+        void fetchFeedback()
     }, [actions.feedback, state.activeCourse])
 
     const courseFeedbackData = state.feedback.feedback.get(state.activeCourse)
