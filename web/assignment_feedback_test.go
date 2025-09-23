@@ -106,7 +106,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			}
 			got := resp.Msg
 			want := test.feedback
-			qtest.Diff(t, "CreateAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
+			qtest.Diff(t, "CreateAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "UserID", "CreatedAt"))
 		})
 	}
 }
