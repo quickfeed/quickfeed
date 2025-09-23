@@ -10,7 +10,7 @@ import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
 import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
-import AssignmentFeedbackView from "../components/teacher/AssignmentFeedbackView"
+import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
