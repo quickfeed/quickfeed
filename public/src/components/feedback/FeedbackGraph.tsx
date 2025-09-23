@@ -62,12 +62,12 @@ export const FeedbackGraph: React.FC<FeedbackGraphProps> = ({
             <div className="card">
                 <div className="card-header">
                     <h5 className="mb-0">
-                        <i className="fa fa-chart-bar mr-2"></i>
+                        <i className="fa fa-chart-bar mr-2" />
                         {title}
                     </h5>
                 </div>
                 <div className="card-body text-center text-muted">
-                    <i className="fa fa-clock-o fa-3x mb-3"></i>
+                    <i className="fa fa-clock-o fa-3x mb-3" />
                     <p>No time data available yet</p>
                 </div>
             </div>
@@ -78,16 +78,16 @@ export const FeedbackGraph: React.FC<FeedbackGraphProps> = ({
         <div className="card w-100 m-3">
             <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">
-                    <i className="fa fa-chart-bar mr-2"></i>
+                    <i className="fa fa-chart-bar mr-2" />
                     {title}
                 </h5>
                 <div className="text-muted small">
                     <span className="mr-3">
-                        <i className="fa fa-users mr-1"></i>
+                        <i className="fa fa-users mr-1" />
                         {totalResponses} responses
                     </span>
                     <span>
-                        <i className="fa fa-clock-o mr-1"></i>
+                        <i className="fa fa-clock-o mr-1" />
                         Avg: {getAverageTime()}
                     </span>
                 </div>

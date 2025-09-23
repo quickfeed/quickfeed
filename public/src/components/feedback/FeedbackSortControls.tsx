@@ -32,14 +32,14 @@ export const FeedbackSortControls: React.FC<FeedbackSortControlsProps> = ({
     return (
         <div className="d-flex justify-content-between align-items-center mb-3">
             <h3 className="mb-0">
-                <i className="fa fa-list mr-2"></i>
+                <i className="fa fa-list mr-2" />
                 Individual Feedback ({feedbackCount})
             </h3>
             <button
                 className={`btn btn-outline-secondary ${sortOrder !== 'none' ? 'active' : ''}`}
                 onClick={toggleSort}
             >
-                <i className={`fa ${getSortIcon()} mr-2`}></i>
+                <i className={`fa ${getSortIcon()} mr-2`} />
                 {getSortLabel()}
             </button>
         </div>

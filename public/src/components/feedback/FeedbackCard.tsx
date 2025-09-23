@@ -14,7 +14,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
         <div className="card shadow-sm h-100">
             <div className="card-header bg-primary text-white">
                 <h5 className="mb-0">
-                    <i className="fa fa-user mr-2"></i>
+                    <i className="fa fa-user mr-2" />
                     Feedback #{feedback.ID.toString()}
                     {feedback.TimeSpent > 0 && (
                         <span className="badge badge-pill badge-light ml-2">
@@ -31,7 +31,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
             <div className="card-body">
                 <div className="mb-3">
                     <h6 className="text-primary">
-                        <i className="fa fa-heart mr-2"></i>What they liked:
+                        <i className="fa fa-heart mr-2" /> What they liked:
                     </h6>
                     <p className="card-text">
                         {feedback.LikedContent || <span className="text-muted">No feedback provided</span>}
@@ -39,7 +39,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
                 </div>
                 <div className="mb-3">
                     <h6 className="text-primary">
-                        <i className="fa fa-lightbulb mr-2"></i>Suggestions for improvement:
+                        <i className="fa fa-lightbulb-o mr-2" /> Suggestions for improvement:
                     </h6>
                     <p className="card-text">
                         {feedback.ImprovementSuggestions || <span className="text-muted">No suggestions provided</span>}

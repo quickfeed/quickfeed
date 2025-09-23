@@ -121,7 +121,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     }
 
     return (
-        <div className="card mt-3">
+        <div className="card mt-3 mb-3">
             <div className="card-header">
                 <button
                     className="btn btn-link p-0 text-decoration-none w-100 text-start"
@@ -214,7 +214,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
 
                         <div className="mb-3">
                             <small className="text-muted">
-                                <i className="fa fa-info-circle me-1"></i>
+                                <i className="fa fa-info-circle me-1" />
                                 Your feedback will be submitted anonymously to help improve the course.
                             </small>
                         </div>

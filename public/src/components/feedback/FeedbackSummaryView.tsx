@@ -21,7 +21,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
     return (
         <div className="container mt-4">
             <h1 className="mb-4 text-primary">
-                <i className="fa fa-comments mr-2"></i>Assignment Feedback Summary
+                <i className="fa fa-comments mr-2" /> Assignment Feedback Summary
             </h1>
             {assignments && courseFeedbackData ? (
                 <div className="row">
@@ -39,7 +39,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
                                     <div className="card-header bg-primary text-white">
                                         <h5 className="mb-0 d-flex justify-content-between align-items-center">
                                             <span>
-                                                <i className="fa fa-book mr-2"></i>
+                                                <i className="fa fa-book mr-2" />
                                                 {assignment.name}
                                             </span>
                                         </h5>
@@ -60,7 +60,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
                                         {feedbacks.length > 0 && (
                                             <div className="mt-3">
                                                 <small className="text-muted">
-                                                    <i className="fa fa-hand-pointer-o mr-1"></i>
+                                                    <i className="fa fa-hand-pointer-o mr-1" />
                                                     Click to view detailed feedback
                                                 </small>
                                             </div>
@@ -73,7 +73,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
                 </div>
             ) : (
                 <div className="alert alert-info">
-                    <i className="fa fa-info-circle mr-2"></i>
+                    <i className="fa fa-info-circle mr-2" />
                     No feedback available for this course yet.
                 </div>
             )}

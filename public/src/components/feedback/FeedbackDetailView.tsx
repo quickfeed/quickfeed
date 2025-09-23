@@ -44,10 +44,10 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
                     className="btn btn-outline-secondary mr-3"
                     onClick={() => navigate(`/course/${state.activeCourse}/feedback`)}
                 >
-                    <i className="fa fa-arrow-left mr-2"></i>Back to Summary
+                    <i className="fa fa-arrow-left mr-2" /> Back to Summary
                 </button>
                 <h1 className="text-primary mb-0">
-                    <i className="fa fa-comments mr-2"></i>
+                    <i className="fa fa-comments mr-2" />
                     Feedback for {assignment?.name || `Assignment ${assignmentID}`}
                 </h1>
             </div>
@@ -77,7 +77,7 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
                 </>
             ) : (
                 <div className="alert alert-info">
-                    <i className="fa fa-info-circle mr-2"></i>
+                    <i className="fa fa-info-circle mr-2" />
                     No feedback available for this assignment yet.
                 </div>
             )}

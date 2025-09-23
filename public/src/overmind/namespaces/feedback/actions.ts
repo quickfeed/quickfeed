@@ -19,7 +19,7 @@ export const getAssignmentFeedback = async (
     { courseID, category, categoryValue }: { courseID: bigint, category: "assignmentID" | "userID", categoryValue: bigint }
 ): Promise<AssignmentFeedbacks | null> => {
     const req = create(AssignmentFeedbackRequestSchema, {
-        courseID: courseID,
+        courseID,
         Mode: {
             case: category,
             value: categoryValue
