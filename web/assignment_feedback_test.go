@@ -238,7 +238,8 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			}
 			got := resp.Msg
 			want := test.want
-			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "CreatedAt"))
+			// UserID is removed in responses, so we ignore it in the comparison
+			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "CreatedAt", "UserID"))
 		})
 	}
 }
