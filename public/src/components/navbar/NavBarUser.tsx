@@ -5,6 +5,7 @@ import { useAppState } from "../../overmind"
 import ProfileButton from "../navbar-buttons/ProfileButton"
 import LogoutButton from "../navbar-buttons/LogoutButton"
 import StreamStatus from "./StreamStatus"
+import SettingsButton from "../navbar-buttons/SettingsButton"
 
 const NavBarUser = () => {
     const { self, isLoggedIn } = useAppState()
@@ -26,6 +27,7 @@ const NavBarUser = () => {
                     <ProfileButton />
                     <AboutButton />
                     <AdminButton />
+                    <SettingsButton />
                     <LogoutButton />
                 </ul>
             </ul>
