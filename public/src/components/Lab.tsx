@@ -7,7 +7,7 @@ import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
-import AssignmentFeedbackForm from './student/AssignmentFeedbackForm'
+import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
 
 
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
