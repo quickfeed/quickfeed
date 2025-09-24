@@ -20,6 +20,10 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     const [hours, setHours] = useState('')
     const [minutes, setMinutes] = useState('')
 
+    // Minimum words required in either likedContent or improvementSuggestions
+    // in order to submit feedback
+    const minWords = 1
+
     const validateTimeInput = (value: string, max: number): boolean => {
         if (value === '') return true
         const num = parseInt(value, 10)
@@ -48,6 +52,17 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         }
     }
 
+    const validateForm = (): boolean => {
+        const likedWordsCount = countWords(likedContent)
+        const improvementWordsCount = countWords(improvementSuggestions)
+
+        return (likedWordsCount >= minWords || improvementWordsCount >= minWords) &&
+            likedWordsCount <= 200 &&
+            improvementWordsCount <= 200 &&
+            timeSpent > 0 &&
+            timeSpent <= 6000
+    }
+
     const countWords = (text: string): number => {
         return text.trim().split(/\s+/).filter(word => word.length > 0).length
     }
@@ -58,8 +73,8 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
         const likedWordsCount = countWords(likedContent)
         const improvementWordsCount = countWords(improvementSuggestions)
 
-        if (likedWordsCount < 10 && improvementWordsCount < 10) {
-            actions.global.alert({ color: Color.RED, text: 'Please provide at least 10 words in either "What did you like?" or "What would make it better?"' })
+        if (likedWordsCount < minWords && improvementWordsCount < minWords) {
+            actions.global.alert({ color: Color.RED, text: `Please provide at least ${minWords} words in either "What did you like?" or "What would make it better?"` })
             return
         }
 
