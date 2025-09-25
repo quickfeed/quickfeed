@@ -73,6 +73,22 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 	}
 
 	tx := db.conn.Begin()
+	tx.Model(group).Association("Users").Replace(group.GetUsers())
+
+	var userids []uint64
+	for _, u := range group.GetUsers() {
+		userids = append(userids, u.GetID())
+	}
+	var enrollments []qf.Enrollment
+	if err := tx.Model(&qf.Enrollment{}).
+		Where(&qf.Enrollment{GroupID: group.GetID()}).
+		Where("user_id IN (?)", userids).
+		Find(&enrollments).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Model(group).Association("Enrollments").Replace(enrollments)
+
 	if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
 		tx.Rollback()
 		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
