@@ -96,32 +96,6 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		}
 		return err
 	}
-	// Set group ID to zero to remove all enrollments from the given group to safely add all members of the incoming group request.
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.GetID()).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	var userids []uint64
-	for _, u := range group.GetUsers() {
-		userids = append(userids, u.GetID())
-	}
-	query := tx.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
-		Where("user_id IN (?)", userids).
-		Where("status IN (?)", []qf.Enrollment_UserStatus{
-			qf.Enrollment_STUDENT,
-			qf.Enrollment_TEACHER,
-		}).Updates(&qf.Enrollment{GroupID: group.GetID()})
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return ErrUpdateGroup
-	}
-
 	tx.Commit()
 	return nil
 }
