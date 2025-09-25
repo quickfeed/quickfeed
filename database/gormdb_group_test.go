@@ -352,3 +352,96 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Errorf("Expected one pending and one approved group, got %d pending, %d approved", len(pendingGroups), len(approvedGroups))
 	}
 }
+
+func TestGormDBCreateAndUpdateGroup(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	var users []*qf.User
+	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
+	// create as many users as the desired number of enrollments
+	for i := range enrollments {
+		user := qtest.CreateFakeUser(t, db)
+		users = append(users, user)
+
+		// enroll users in course
+		if err := db.CreateEnrollment(&qf.Enrollment{
+			CourseID: course.GetID(),
+			UserID:   users[i].GetID(),
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		query, err := db.GetEnrollmentByCourseAndUser(course.GetID(), users[i].GetID())
+		if err != nil {
+			t.Fatal(err)
+		}
+		query.Status = qf.Enrollment_STUDENT
+		if err := db.UpdateEnrollment(query); err != nil {
+			t.Fatal(err)
+		}
+
+	}
+
+	group := &qf.Group{
+		Name:     "SomeGroup",
+		CourseID: course.GetID(),
+		Users:    users,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// gotEnrollments should have group ID set
+	gotEnrollments, err := db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_STUDENT)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var found int
+	for _, enrollment := range gotEnrollments {
+		if enrollment.GetGroupID() == group.GetID() {
+			found++
+		}
+	}
+
+	if found != len(users) {
+		t.Errorf("have %d enrollments with group ID, want %d", found, len(users))
+	}
+
+	group.Users = users[0:1]
+	if err := db.UpdateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// gotEnrollments should have group ID set only for one of the users
+	gotEnrollments, err = db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_STUDENT)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found = 0
+	for _, enrollment := range gotEnrollments {
+		if enrollment.GetGroupID() == group.GetID() {
+			found++
+		}
+	}
+	if found != 1 {
+		t.Errorf("have %d enrollments with group ID, want 1", found)
+	}
+
+	gotGroups, err := db.GetGroupsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(gotGroups) != 1 {
+		t.Fatalf("have %d groups, want 1", len(gotGroups))
+	}
+	gotGroup := gotGroups[0]
+	if len(gotGroup.GetUsers()) != 1 {
+		t.Errorf("have %d users in group, want 1", len(gotGroup.GetUsers()))
+	}
+}
