@@ -3,6 +3,7 @@ package database_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -137,5 +138,89 @@ func TestUpdateReview(t *testing.T) {
 			}
 			qtest.Diff(t, "Expected same review", gotReview, test.review, protocmp.Transform(), protocmp.IgnoreFields(test.review, "edited", "score"))
 		})
+	}
+}
+
+func TestCreateUpdateReview(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, _, assignment := qtest.SetupCourseAssignment(t, db)
+
+	assignment.Reviewers = 1
+	benchmarks := []*qf.GradingBenchmark{
+		{
+			Heading: "Major league baseball",
+			Criteria: []*qf.GradingCriterion{
+				{
+					Description: "my description",
+				},
+			},
+		},
+	}
+	assignment.GradingBenchmarks = benchmarks
+	// Update assignments to create template benchmarks and criteria in the database.
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateSubmission(&qf.Submission{
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	review := &qf.Review{
+		SubmissionID: 1,
+		ReviewerID:   1,
+	}
+
+	// Create a new review for submission ID 1.
+	// This should copy the assignment benchmarks and criteria to the review.
+	if err := db.CreateReview(review); err != nil {
+		t.Errorf("failed to create review: %v", err)
+	}
+	sub, err := db.GetSubmission(&qf.Submission{ID: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sub.GetReviews()) != 1 {
+		t.Fatalf("have %d reviews want %d", len(sub.GetReviews()), 1)
+	}
+	var gotReview *qf.Review
+	for _, r := range sub.GetReviews() {
+		gotReview = r
+	}
+
+	if diff := cmp.Diff(gotReview, review, cmp.Options{protocmp.Transform(), protocmp.IgnoreFields(&qf.Review{}, "edited")}); diff != "" {
+		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
+	}
+
+	if len(gotReview.GetGradingBenchmarks()) != 1 {
+		t.Fatalf("have %d benchmarks want %d: %+v", len(gotReview.GetGradingBenchmarks()), 1, review)
+	}
+	if len(gotReview.GetGradingBenchmarks()[0].GetCriteria()) != 1 {
+		t.Fatalf("have %d criteria want %d", len(gotReview.GetGradingBenchmarks()[0].GetCriteria()), 1)
+	}
+
+	// Set the grade of the first criterion to PASSED and update the review.
+	review.GetGradingBenchmarks()[0].GetCriteria()[0].Grade = qf.GradingCriterion_PASSED
+	if err := db.UpdateReview(review); err != nil {
+		t.Errorf("failed to update review: %v", err)
+	}
+	sub, err = db.GetSubmission(&qf.Submission{ID: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sub.GetReviews()) != 1 {
+		t.Fatalf("have %d reviews want %d", len(sub.GetReviews()), 1)
+	}
+	for _, r := range sub.GetReviews() {
+		gotReview = r
+	}
+
+	// Verify that the updated review matches the expected review.
+	if diff := cmp.Diff(gotReview, review, cmp.Options{protocmp.Transform(), protocmp.IgnoreFields(&qf.Review{}, "edited")}); diff != "" {
+		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
 	}
 }
