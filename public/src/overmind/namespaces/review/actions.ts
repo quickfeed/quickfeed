@@ -90,6 +90,26 @@ export const setGrade = async ({ actions }: Context, { criterion, grade }: { cri
     }
 }
 
+export const setAllGrade = async ({ state, actions }: Context, grade: GradingCriterion_Grade): Promise<void> => {
+    if (!state.review.currentReview) {
+        return
+    }
+    const review = state.review.currentReview
+    const oldReview = clone(ReviewSchema, review)
+
+    // Set all criteria to the specified grade
+    review.gradingBenchmarks.forEach((bm: GradingBenchmark) => {
+        bm.criteria.forEach((c: GradingCriterion) => {
+            c.grade = grade
+        })
+    })
+    const ok = await actions.review.updateReview()
+    if (!ok) {
+        // Revert to the old review if the update failed
+        state.review.currentReview = oldReview
+    }
+}
+
 /* createReview creates a new review for the current submission and course */
 export const createReview = async ({ state, actions, effects }: Context): Promise<void> => {
     if (!confirm('Are you sure you want to create a new review?')) {
