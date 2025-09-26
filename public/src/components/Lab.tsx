@@ -7,6 +7,7 @@ import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
+import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
 
 
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
@@ -67,6 +68,9 @@ const Lab = () => {
 
             return (
                 <div key={submission.ID.toString()} className="mb-4">
+                    {!state.isTeacher && submission.score > assignment.scoreLimit && (
+                        <AssignmentFeedbackForm assignment={assignment} courseID={courseID} />
+                    )}
                     <LabResultTable submission={submission} assignment={assignment} />
 
                     {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}

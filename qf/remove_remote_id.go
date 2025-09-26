@@ -65,3 +65,10 @@ func (c *Courses) RemoveRemoteID() {
 		crs.RemoveRemoteID()
 	}
 }
+
+// RemoveRemoteID removes user IDs for assignment feedback
+func (f *AssignmentFeedbacks) RemoveRemoteID() {
+	for _, feedback := range f.GetFeedbacks() {
+		feedback.UserID = 0
+	}
+}

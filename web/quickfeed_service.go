@@ -503,6 +503,37 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 	return connect.NewResponse(review), nil
 }
 
+// CreateAssignmentFeedback creates a new assignment feedback.
+func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
+	feedback := in.Msg
+
+	// Set the user ID if not provided (for non-anonymous feedback)
+	if feedback.GetUserID() == 0 {
+		// Allow anonymous feedback by not setting userID
+		// but if we want to track the user, we can set it here
+		feedback.UserID = userID(ctx)
+	}
+
+	if err := s.db.CreateAssignmentFeedback(feedback); err != nil {
+		s.logger.Errorf("CreateAssignmentFeedback failed for feedback %+v: %v", in, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create assignment feedback"))
+	}
+	return connect.NewResponse(feedback), nil
+}
+
+// GetAssignmentFeedback returns assignment feedback for the given request.
+func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.Request[qf.AssignmentFeedbackRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
+	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
+	if err != nil {
+		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
+	}
+	if len(feedback.GetFeedbacks()) == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
+	}
+	return connect.NewResponse(feedback), nil
+}
+
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
 func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
