@@ -27,16 +27,16 @@ const ReviewResult = ({ review }: { review: Review }) => {
                     <th>{review.score}</th>
                     <th />
                 </tr>
-                {state.isTeacher ? <tr>
-                    <th colSpan={1} className="text-info">Set all criteria to:</th>
-                    <th colSpan={1}><GradeAllCriteria /></th>
-                    <th />
-                </tr> : null}
                 <tr>
                     <th scope="col">Criteria</th>
                     <th scope="col">Status</th>
                     <th scope="col">Comment</th>
                 </tr>
+                {state.isTeacher ? <tr>
+                    <td colSpan={1}>Set all criteria to:</td>
+                    <td colSpan={1}><GradeAllCriteria /></td>
+                    <td />
+                </tr> : null}
             </thead>
             <tbody>
                 {result}
