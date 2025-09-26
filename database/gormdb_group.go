@@ -113,11 +113,15 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 	}
 
 	tx := db.conn.Begin()
-	if err := tx.Delete(group).Error; err != nil {
+	if err := tx.Model(group).Association("Users").Clear(); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, groupID).Error; err != nil {
+	if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Delete(group).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
