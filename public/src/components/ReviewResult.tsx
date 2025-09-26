@@ -6,6 +6,7 @@ import Criteria from "./manual-grading/Criterion"
 import MarkReadyButton from "./manual-grading/MarkReadyButton"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 import { useAppState } from "../overmind"
+import GradeAllCriteria from "./manual-grading/GradeAllCriteria"
 
 
 const ReviewResult = ({ review }: { review: Review }) => {
@@ -26,6 +27,11 @@ const ReviewResult = ({ review }: { review: Review }) => {
                     <th>{review.score}</th>
                     <th />
                 </tr>
+                {state.isTeacher ? <tr>
+                    <th colSpan={1} className="text-info">Set all criteria to:</th>
+                    <th colSpan={1}><GradeAllCriteria /></th>
+                    <th />
+                </tr> : null}
                 <tr>
                     <th scope="col">Criteria</th>
                     <th scope="col">Status</th>
