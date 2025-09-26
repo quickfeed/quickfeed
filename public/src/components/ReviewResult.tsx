@@ -33,8 +33,8 @@ const ReviewResult = ({ review }: { review: Review }) => {
                     <th scope="col">Comment</th>
                 </tr>
                 {state.isTeacher ? <tr>
-                    <td colSpan={1}>Set all criteria to:</td>
-                    <td colSpan={1}><GradeAllCriteria /></td>
+                    <td>Set all criteria to:</td>
+                    <td><GradeAllCriteria /></td>
                     <td />
                 </tr> : null}
             </thead>
