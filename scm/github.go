@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"slices"
 
 	"go.uber.org/zap"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/fileop"
+	"github.com/quickfeed/quickfeed/kit/sh"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
@@ -283,6 +287,13 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 			return nil, E(op, m, err)
 		}
 	}
+	
+	// Populate the repository with assignments content
+	if err := s.populateRepoWithAssignments(ctx, opt.Organization, opt.GroupName); err != nil {
+		// Log error but don't fail repository creation
+		s.logger.Errorf("Failed to populate group repository with assignments: %v", err)
+	}
+	
 	return repo, nil
 }
 
@@ -407,6 +418,85 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 	return nil
 }
 
+// populateRepoWithAssignments clones the assignments repository and copies its content 
+// to the newly created repository, then commits and pushes the initial content.
+func (s *GithubSCM) populateRepoWithAssignments(ctx context.Context, organization, repoName string) error {
+	const op Op = "populateRepoWithAssignments"
+	
+	// Create temporary directory for cloning
+	tempDir, err := os.MkdirTemp("", "quickfeed-populate-*")
+	if err != nil {
+		return E(op, M("failed to create temp directory"), err)
+	}
+	defer os.RemoveAll(tempDir)
+	
+	// Clone assignments repository to temporary directory
+	assignmentsPath, err := s.Clone(ctx, &CloneOptions{
+		Organization: organization,
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      tempDir,
+	})
+	if err != nil {
+		// If assignments repository doesn't exist or can't be cloned, just return without error
+		// This allows the repository to remain empty as before
+		s.logger.Warnf("Could not clone assignments repository for %s/%s: %v", organization, repoName, err)
+		return nil
+	}
+	
+	// Clone the newly created repository
+	repoPath, err := s.Clone(ctx, &CloneOptions{
+		Organization: organization,
+		Repository:   repoName,
+		DestDir:      tempDir,
+	})
+	if err != nil {
+		return E(op, M("failed to clone newly created repository %s", repoName), err)
+	}
+	
+	// Copy content from assignments to the new repository (excluding .git)
+	if err := fileop.CopyDir(assignmentsPath, filepath.Dir(repoPath)); err != nil {
+		return E(op, M("failed to copy assignments content"), err)
+	}
+	
+	// Check if there's any content to commit
+	output, err := sh.OutputA("git", "-C", repoPath, "status", "--porcelain")
+	if err != nil {
+		return E(op, M("failed to check git status"), err)
+	}
+	
+	// If there are no changes, nothing to commit
+	if output == "" {
+		s.logger.Debugf("No content to copy from assignments to %s/%s", organization, repoName)
+		return nil
+	}
+	
+	// Configure git user for the commit
+	if err := sh.RunA("git", "-C", repoPath, "config", "user.email", "noreply@quickfeed.io"); err != nil {
+		return E(op, M("failed to configure git user email"), err)
+	}
+	if err := sh.RunA("git", "-C", repoPath, "config", "user.name", "QuickFeed"); err != nil {
+		return E(op, M("failed to configure git user name"), err)
+	}
+	
+	// Add all files
+	if err := sh.RunA("git", "-C", repoPath, "add", "."); err != nil {
+		return E(op, M("failed to add files"), err)
+	}
+	
+	// Commit the initial content
+	if err := sh.RunA("git", "-C", repoPath, "commit", "-m", "Initial assignment templates from assignments repository"); err != nil {
+		return E(op, M("failed to commit initial content"), err)
+	}
+	
+	// Push to the repository
+	if err := sh.RunA("git", "-C", repoPath, "push"); err != nil {
+		return E(op, M("failed to push initial content"), err)
+	}
+	
+	s.logger.Debugf("Successfully populated %s/%s with assignments content", organization, repoName)
+	return nil
+}
+
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
@@ -422,6 +512,13 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user st
 	if err := s.addUser(ctx, repo.Owner, repo.Repo, user, pushAccess); err != nil {
 		return nil, err
 	}
+	
+	// Populate the repository with assignments content
+	if err := s.populateRepoWithAssignments(ctx, organization, qf.StudentRepoName(user)); err != nil {
+		// Log error but don't fail repository creation
+		s.logger.Errorf("Failed to populate student repository with assignments: %v", err)
+	}
+	
 	return repo, nil
 }
 

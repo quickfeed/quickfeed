@@ -18,6 +18,7 @@ Note that the videos were recorded in a previous semester, and some details may 
 
    The second is your own private repository named `username-labs`.
    You will have write access to this repository.
+   This repository is automatically populated with the initial content from the `assignments` repository when created, so you can start working immediately.
    Your solution to the assignments should be pushed here.
 
 2. First, you will need to set up GitHub authentication.
@@ -75,15 +76,15 @@ Note that the videos were recorded in a previous semester, and some details may 
    git clone git@github.com:COURSE_ORG/username-labs assignments
    ```
 
-4. Next, you will need to add the course's `assignments` repository as a remote repository.
+4. Next, you will need to add the course's `assignments` repository as a remote repository for future updates.
 
    ```console
    cd assignments
    git remote add course-assignments git@github.com:COURSE_ORG/assignments
-   git pull course-assignments main
    ```
 
    This will allow you to pull in updates from the `assignments` repository, as we publish them.
+   Since your repository was automatically populated with the initial assignments content, you typically won't need to pull immediately unless there are updates.
    See the [Update Local Working Copy from Course Assignments](#update-local-working-copy-from-course-assignments) section for more details.
 
 5. One of the most useful git commands is: `git status`.
@@ -233,16 +234,16 @@ Note that the videos were recorded in a previous semester, and some details may 
 
 ## Working with Group Assignments
 
-To work on group assignments, you need to clone your group's repository to your own machine, and pull the `assignments` repository into the group's repository.
+To work on group assignments, you need to clone your group's repository to your own machine, and set up the `assignments` repository as a remote for future updates.
 In the instructions below, replace `groupname` with your group's repository name.
 We assume you have already created the `COURSE_ORG` directory on your machine.
+Note that group repositories are automatically populated with the initial assignments content when created.
 
 ```console
 cd $HOME/COURSE_ORG
 git clone git@github.com:COURSE_ORG/groupname.git
 cd groupname
 git remote add course-assignments git@github.com:COURSE_ORG/assignments
-git pull course-assignments main
 ```
 
 All group members will have write access to the `groupname` repository, and it is this repository that your solutions should be pushed to.

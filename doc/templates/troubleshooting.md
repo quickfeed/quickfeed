@@ -150,7 +150,7 @@ But for that to work, you need to [configure it properly](https://docs.github.co
 
 4. Unrelated histories when merging
 
-   If you get an fatal error like the one bellow when doing a merge/pull:
+   If you get a fatal error like the one below when doing a merge/pull:
 
    ```console
    $ git pull course-assignments main
@@ -166,15 +166,11 @@ But for that to work, you need to [configure it properly](https://docs.github.co
    fatal: refusing to merge unrelated histories
    ```
 
-   It is because you are probably trying to merge two unrelated projects into a single branch.
-   This situation may happen if, right after cloning your lab repository for the first time (initially empty),
-   you created some files and made some commits, and only later on you realized that you should have first synced with
-   the `course-assignments` to retrieve the lab assignments.
-   Then when you try to pull from the `course-assignments` remote, you get this kind of error.
+   This error is much less common now that student and group repositories are automatically populated with assignments content when created. However, it can still occur in some situations, particularly if you created files and made commits before setting up the course-assignments remote, or if there were issues during the initial repository setup.
 
    As stated in the [git documentation](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---allow-unrelated-histories),
    by default git refuses to merge histories that do not share a common ancestor.
-   You can use the option `--allow-unrelated-histories` in the git pull command to override this setting, like below:
+   You can use the option `--allow-unrelated-histories` in the git pull command to override this setting:
 
    ```console
    git pull course-assignments main --allow-unrelated-histories
