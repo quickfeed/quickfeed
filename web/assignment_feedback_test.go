@@ -186,6 +186,223 @@ func TestGetAssignmentFeedback(t *testing.T) {
 		})
 	}
 }
+
+func TestFeedbackReceiptCreation(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
+	teacher, course, assignment, student := qtest.SetupCourseAssignmentTeacherStudent(t, db)
+
+	// Create a second assignment for testing multiple receipts
+	assignment2 := &qf.Assignment{
+		CourseID: course.GetID(),
+		Order:    2,
+		Name:     "lab2",
+	}
+	if err := db.CreateAssignment(assignment2); err != nil {
+		t.Fatalf("failed to create assignment2: %v", err)
+	}
+
+	// Create a second student for testing
+	student2 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student2, course)
+
+	ctx := context.Background()
+	studentCookie := client.Cookie(t, student)
+	student2Cookie := client.Cookie(t, student2)
+
+	// Helper function to get user's feedback receipts
+	getUserReceipts := func(cookie string) ([]*qf.FeedbackReceipt, error) {
+		resp, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, cookie))
+		if err != nil {
+			return nil, err
+		}
+		return resp.Msg.GetFeedbackReceipts(), nil
+	}
+
+	// Helper function to create feedback
+	createFeedback := func(cookie string, assignmentID uint64) (*qf.AssignmentFeedback, error) {
+		feedback := &qf.AssignmentFeedback{
+			CourseID:               course.GetID(),
+			AssignmentID:           assignmentID,
+			LikedContent:           "Well structured assignment with clear goals.",
+			ImprovementSuggestions: "Add more test cases for edge conditions.",
+			TimeSpent:              240, // 4 hours
+		}
+		resp, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback, cookie))
+		if err != nil {
+			return nil, err
+		}
+		return resp.Msg, nil
+	}
+
+	tests := []struct {
+		name          string
+		setupFunc     func() error
+		verifyFunc    func() error
+		expectedError error
+	}{
+		{
+			name: "Student starts with zero feedback receipts",
+			setupFunc: func() error {
+				return nil // No setup needed
+			},
+			verifyFunc: func() error {
+				receipts, err := getUserReceipts(studentCookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts) != 0 {
+					return errors.New("expected 0 receipts")
+				}
+				return nil
+			},
+		},
+		{
+			name: "Student gets receipt after submitting feedback for assignment 1",
+			setupFunc: func() error {
+				_, err := createFeedback(studentCookie, assignment.GetID())
+				return err
+			},
+			verifyFunc: func() error {
+				receipts, err := getUserReceipts(studentCookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts) != 1 {
+					return errors.New("expected 1 receipt")
+				}
+				receipt := receipts[0]
+				if receipt.GetAssignmentID() != assignment.GetID() {
+					return errors.New("assignment ID mismatch")
+				}
+
+				return nil
+			},
+		},
+		{
+			name: "Student gets second receipt after submitting feedback for assignment 2",
+			setupFunc: func() error {
+				_, err := createFeedback(studentCookie, assignment2.GetID())
+				return err
+			},
+			verifyFunc: func() error {
+				receipts, err := getUserReceipts(studentCookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts) != 2 {
+					return errors.New("expected 2 receipts")
+				}
+
+				// Verify we have receipts for both assignments
+				assignmentIDs := make(map[uint64]bool)
+				for _, receipt := range receipts {
+					assignmentIDs[receipt.GetAssignmentID()] = true
+				}
+
+				if !assignmentIDs[assignment.GetID()] {
+					return errors.New("missing receipt for assignment 1")
+				}
+				if !assignmentIDs[assignment2.GetID()] {
+					return errors.New("missing receipt for assignment 2")
+				}
+				return nil
+			},
+		},
+		{
+			name: "Duplicate feedback submission fails and doesn't create duplicate receipt",
+			setupFunc: func() error {
+				// Try to create feedback for assignment 1 again (should fail)
+				_, err := createFeedback(studentCookie, assignment.GetID())
+				if err == nil {
+					return errors.New("expected error when creating duplicate feedback")
+				}
+				return nil // Expected to fail
+			},
+			verifyFunc: func() error {
+				receipts, err := getUserReceipts(studentCookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts) != 2 {
+					return errors.New("expected 2 receipts (no duplicates)")
+				}
+				return nil
+			},
+		},
+		{
+			name: "Different student can create feedback for same assignment",
+			setupFunc: func() error {
+				_, err := createFeedback(student2Cookie, assignment.GetID())
+				return err
+			},
+			verifyFunc: func() error {
+				// Verify student1 still has 2 receipts
+				receipts1, err := getUserReceipts(studentCookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts1) != 2 {
+					return errors.New("student1 expected 2 receipts")
+				}
+
+				// Verify student2 has 1 receipt
+				receipts2, err := getUserReceipts(student2Cookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts2) != 1 {
+					return errors.New("student2 expected 1 receipt")
+				}
+
+				receipt := receipts2[0]
+				if receipt.GetAssignmentID() != assignment.GetID() {
+					return errors.New("assignment ID mismatch for student2")
+				}
+				return nil
+			},
+		},
+		{
+			name: "Teacher can create feedback and get receipt",
+			setupFunc: func() error {
+				teacherCookie := client.Cookie(t, teacher)
+				_, err := createFeedback(teacherCookie, assignment2.GetID())
+				return err
+			},
+			verifyFunc: func() error {
+				teacherCookie := client.Cookie(t, teacher)
+				receipts, err := getUserReceipts(teacherCookie)
+				if err != nil {
+					return err
+				}
+				if len(receipts) != 1 {
+					return errors.New("teacher expected 1 receipt")
+				}
+
+				receipt := receipts[0]
+				if receipt.GetAssignmentID() != assignment2.GetID() {
+					return errors.New("assignment ID mismatch for teacher")
+				}
+				return nil
+			},
+		},
+	}
+
+	// Run tests sequentially since they build on each other
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if err := test.setupFunc(); err != nil {
+				if test.expectedError == nil {
+					t.Fatalf("Setup failed: %v", err)
+				}
+				// Expected error during setup, continue to verify
+			}
+
+			if err := test.verifyFunc(); err != nil {
+				t.Errorf("Verification failed: %v", err)
+			}
 		})
 	}
 }
