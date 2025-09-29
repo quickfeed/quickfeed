@@ -386,20 +386,21 @@ func (GradingCriterion_Grade) EnumDescriptor() ([]byte, []int) {
 }
 
 type User struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	IsAdmin       bool                   `protobuf:"varint,2,opt,name=IsAdmin,proto3" json:"IsAdmin,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=Name,proto3" json:"Name,omitempty"`
-	StudentID     string                 `protobuf:"bytes,4,opt,name=StudentID,proto3" json:"StudentID,omitempty"`
-	Email         string                 `protobuf:"bytes,5,opt,name=Email,proto3" json:"Email,omitempty"`
-	AvatarURL     string                 `protobuf:"bytes,6,opt,name=AvatarURL,proto3" json:"AvatarURL,omitempty"`
-	Login         string                 `protobuf:"bytes,7,opt,name=Login,proto3" json:"Login,omitempty"`
-	UpdateToken   bool                   `protobuf:"varint,8,opt,name=UpdateToken,proto3" json:"UpdateToken,omitempty"`   // Filter; True if user's JWT token needs to be updated.
-	ScmRemoteID   uint64                 `protobuf:"varint,9,opt,name=ScmRemoteID,proto3" json:"ScmRemoteID,omitempty"`   // Filter; The user's ID on the remote provider.
-	RefreshToken  string                 `protobuf:"bytes,10,opt,name=RefreshToken,proto3" json:"RefreshToken,omitempty"` // Filter; The user's refresh token that may be exchanged for an access token.
-	Enrollments   []*Enrollment          `protobuf:"bytes,11,rep,name=Enrollments,proto3" json:"Enrollments,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ID               uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	IsAdmin          bool                   `protobuf:"varint,2,opt,name=IsAdmin,proto3" json:"IsAdmin,omitempty"`
+	Name             string                 `protobuf:"bytes,3,opt,name=Name,proto3" json:"Name,omitempty"`
+	StudentID        string                 `protobuf:"bytes,4,opt,name=StudentID,proto3" json:"StudentID,omitempty"`
+	Email            string                 `protobuf:"bytes,5,opt,name=Email,proto3" json:"Email,omitempty"`
+	AvatarURL        string                 `protobuf:"bytes,6,opt,name=AvatarURL,proto3" json:"AvatarURL,omitempty"`
+	Login            string                 `protobuf:"bytes,7,opt,name=Login,proto3" json:"Login,omitempty"`
+	UpdateToken      bool                   `protobuf:"varint,8,opt,name=UpdateToken,proto3" json:"UpdateToken,omitempty"`   // Filter; True if user's JWT token needs to be updated.
+	ScmRemoteID      uint64                 `protobuf:"varint,9,opt,name=ScmRemoteID,proto3" json:"ScmRemoteID,omitempty"`   // Filter; The user's ID on the remote provider.
+	RefreshToken     string                 `protobuf:"bytes,10,opt,name=RefreshToken,proto3" json:"RefreshToken,omitempty"` // Filter; The user's refresh token that may be exchanged for an access token.
+	Enrollments      []*Enrollment          `protobuf:"bytes,11,rep,name=Enrollments,proto3" json:"Enrollments,omitempty"`
+	FeedbackReceipts []*FeedbackReceipt     `protobuf:"bytes,12,rep,name=FeedbackReceipts,proto3" json:"FeedbackReceipts,omitempty" gorm:"foreignKey:UserID"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *User) Reset() {
@@ -505,6 +506,13 @@ func (x *User) GetRefreshToken() string {
 func (x *User) GetEnrollments() []*Enrollment {
 	if x != nil {
 		return x.Enrollments
+	}
+	return nil
+}
+
+func (x *User) GetFeedbackReceipts() []*FeedbackReceipt {
+	if x != nil {
+		return x.FeedbackReceipts
 	}
 	return nil
 }
@@ -2338,11 +2346,10 @@ type AssignmentFeedback struct {
 	ID                     uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	CourseID               uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"`                            // foreign key - required
 	AssignmentID           uint64                 `protobuf:"varint,3,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"`                    // foreign key - required
-	UserID                 uint64                 `protobuf:"varint,4,opt,name=UserID,proto3" json:"UserID,omitempty"`                                // optional - for non-anonymous feedback
-	LikedContent           string                 `protobuf:"bytes,5,opt,name=LikedContent,proto3" json:"LikedContent,omitempty"`                     // What did you like about this assignment?
-	ImprovementSuggestions string                 `protobuf:"bytes,6,opt,name=ImprovementSuggestions,proto3" json:"ImprovementSuggestions,omitempty"` // What would make it better?
-	TimeSpent              uint32                 `protobuf:"varint,7,opt,name=TimeSpent,proto3" json:"TimeSpent,omitempty"`                          // Time used to complete the assignment
-	CreatedAt              *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty" gorm:"serializer:timestamp;type:datetime"`
+	LikedContent           string                 `protobuf:"bytes,4,opt,name=LikedContent,proto3" json:"LikedContent,omitempty"`                     // What did you like about this assignment?
+	ImprovementSuggestions string                 `protobuf:"bytes,5,opt,name=ImprovementSuggestions,proto3" json:"ImprovementSuggestions,omitempty"` // What would make it better?
+	TimeSpent              uint32                 `protobuf:"varint,6,opt,name=TimeSpent,proto3" json:"TimeSpent,omitempty"`                          // Time used to complete the assignment
+	CreatedAt              *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -2398,13 +2405,6 @@ func (x *AssignmentFeedback) GetAssignmentID() uint64 {
 	return 0
 }
 
-func (x *AssignmentFeedback) GetUserID() uint64 {
-	if x != nil {
-		return x.UserID
-	}
-	return 0
-}
-
 func (x *AssignmentFeedback) GetLikedContent() string {
 	if x != nil {
 		return x.LikedContent
@@ -2433,6 +2433,66 @@ func (x *AssignmentFeedback) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type FeedbackReceipt struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"uniqueIndex:feedback_receipt"`
+	UserID        uint64                 `protobuf:"varint,3,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"uniqueIndex:feedback_receipt"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FeedbackReceipt) Reset() {
+	*x = FeedbackReceipt{}
+	mi := &file_qf_types_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FeedbackReceipt) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FeedbackReceipt) ProtoMessage() {}
+
+func (x *FeedbackReceipt) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FeedbackReceipt.ProtoReflect.Descriptor instead.
+func (*FeedbackReceipt) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *FeedbackReceipt) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *FeedbackReceipt) GetAssignmentID() uint64 {
+	if x != nil {
+		return x.AssignmentID
+	}
+	return 0
+}
+
+func (x *FeedbackReceipt) GetUserID() uint64 {
+	if x != nil {
+		return x.UserID
+	}
+	return 0
+}
+
 type AssignmentFeedbacks struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Feedbacks     []*AssignmentFeedback  `protobuf:"bytes,1,rep,name=feedbacks,proto3" json:"feedbacks,omitempty"`
@@ -2442,7 +2502,7 @@ type AssignmentFeedbacks struct {
 
 func (x *AssignmentFeedbacks) Reset() {
 	*x = AssignmentFeedbacks{}
-	mi := &file_qf_types_proto_msgTypes[24]
+	mi := &file_qf_types_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2454,7 +2514,7 @@ func (x *AssignmentFeedbacks) String() string {
 func (*AssignmentFeedbacks) ProtoMessage() {}
 
 func (x *AssignmentFeedbacks) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[24]
+	mi := &file_qf_types_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2467,7 +2527,7 @@ func (x *AssignmentFeedbacks) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignmentFeedbacks.ProtoReflect.Descriptor instead.
 func (*AssignmentFeedbacks) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{24}
+	return file_qf_types_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *AssignmentFeedbacks) GetFeedbacks() []*AssignmentFeedback {
@@ -2481,7 +2541,7 @@ var File_qf_types_proto protoreflect.FileDescriptor
 
 const file_qf_types_proto_rawDesc = "" +
 	"\n" +
-	"\x0eqf/types.proto\x12\x02qf\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15kit/score/score.proto\x1a\x0epatch/go.proto\"\xc6\x02\n" +
+	"\x0eqf/types.proto\x12\x02qf\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15kit/score/score.proto\x1a\x0epatch/go.proto\"\xa8\x03\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x18\n" +
 	"\aIsAdmin\x18\x02 \x01(\bR\aIsAdmin\x12\x12\n" +
@@ -2494,7 +2554,8 @@ const file_qf_types_proto_rawDesc = "" +
 	"\vScmRemoteID\x18\t \x01(\x04R\vScmRemoteID\x12\"\n" +
 	"\fRefreshToken\x18\n" +
 	" \x01(\tR\fRefreshToken\x120\n" +
-	"\vEnrollments\x18\v \x03(\v2\x0e.qf.EnrollmentR\vEnrollments\"'\n" +
+	"\vEnrollments\x18\v \x03(\v2\x0e.qf.EnrollmentR\vEnrollments\x12`\n" +
+	"\x10FeedbackReceipts\x18\f \x03(\v2\x13.qf.FeedbackReceiptB\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"foreignKey:UserID\"R\x10FeedbackReceipts\"'\n" +
 	"\x05Users\x12\x1e\n" +
 	"\x05users\x18\x01 \x03(\v2\b.qf.UserR\x05users\"\xda\x02\n" +
 	"\x05Group\x12\x0e\n" +
@@ -2706,16 +2767,19 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x05ready\x18\x05 \x01(\bR\x05ready\x12\x14\n" +
 	"\x05score\x18\x06 \x01(\rR\x05score\x12e\n" +
 	"\x11gradingBenchmarks\x18\a \x03(\v2\x14.qf.GradingBenchmarkB!ʵ\x03\x1d\xa2\x01\x1agorm:\"foreignKey:ReviewID\"R\x11gradingBenchmarks\x12d\n" +
-	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xe2\x02\n" +
+	"\x06edited\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xca\x02\n" +
 	"\x12AssignmentFeedback\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
 	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\"\n" +
-	"\fAssignmentID\x18\x03 \x01(\x04R\fAssignmentID\x12\x16\n" +
-	"\x06UserID\x18\x04 \x01(\x04R\x06UserID\x12\"\n" +
-	"\fLikedContent\x18\x05 \x01(\tR\fLikedContent\x126\n" +
-	"\x16ImprovementSuggestions\x18\x06 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
-	"\tTimeSpent\x18\a \x01(\rR\tTimeSpent\x12j\n" +
-	"\tCreatedAt\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"K\n" +
+	"\fAssignmentID\x18\x03 \x01(\x04R\fAssignmentID\x12\"\n" +
+	"\fLikedContent\x18\x04 \x01(\tR\fLikedContent\x126\n" +
+	"\x16ImprovementSuggestions\x18\x05 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
+	"\tTimeSpent\x18\x06 \x01(\rR\tTimeSpent\x12j\n" +
+	"\tCreatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"\xb5\x01\n" +
+	"\x0fFeedbackReceipt\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12N\n" +
+	"\fAssignmentID\x18\x02 \x01(\x04B*ʵ\x03&\xa2\x01#gorm:\"uniqueIndex:feedback_receipt\"R\fAssignmentID\x12B\n" +
+	"\x06UserID\x18\x03 \x01(\x04B*ʵ\x03&\xa2\x01#gorm:\"uniqueIndex:feedback_receipt\"R\x06UserID\"K\n" +
 	"\x13AssignmentFeedbacks\x124\n" +
 	"\tfeedbacks\x18\x01 \x03(\v2\x16.qf.AssignmentFeedbackR\tfeedbacksB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
@@ -2732,7 +2796,7 @@ func file_qf_types_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_qf_types_proto_goTypes = []any{
 	(Group_GroupStatus)(0),        // 0: qf.Group.GroupStatus
 	(Repository_Type)(0),          // 1: qf.Repository.Type
@@ -2765,60 +2829,62 @@ var file_qf_types_proto_goTypes = []any{
 	(*GradingCriterion)(nil),      // 28: qf.GradingCriterion
 	(*Review)(nil),                // 29: qf.Review
 	(*AssignmentFeedback)(nil),    // 30: qf.AssignmentFeedback
-	(*AssignmentFeedbacks)(nil),   // 31: qf.AssignmentFeedbacks
-	(*timestamppb.Timestamp)(nil), // 32: google.protobuf.Timestamp
-	(*score.BuildInfo)(nil),       // 33: score.BuildInfo
-	(*score.Score)(nil),           // 34: score.Score
+	(*FeedbackReceipt)(nil),       // 31: qf.FeedbackReceipt
+	(*AssignmentFeedbacks)(nil),   // 32: qf.AssignmentFeedbacks
+	(*timestamppb.Timestamp)(nil), // 33: google.protobuf.Timestamp
+	(*score.BuildInfo)(nil),       // 34: score.BuildInfo
+	(*score.Score)(nil),           // 35: score.Score
 }
 var file_qf_types_proto_depIdxs = []int32{
 	14, // 0: qf.User.Enrollments:type_name -> qf.Enrollment
-	7,  // 1: qf.Users.users:type_name -> qf.User
-	0,  // 2: qf.Group.status:type_name -> qf.Group.GroupStatus
-	7,  // 3: qf.Group.users:type_name -> qf.User
-	14, // 4: qf.Group.enrollments:type_name -> qf.Enrollment
-	9,  // 5: qf.Groups.groups:type_name -> qf.Group
-	2,  // 6: qf.Course.enrolled:type_name -> qf.Enrollment.UserStatus
-	14, // 7: qf.Course.enrollments:type_name -> qf.Enrollment
-	17, // 8: qf.Course.assignments:type_name -> qf.Assignment
-	9,  // 9: qf.Course.groups:type_name -> qf.Group
-	11, // 10: qf.Courses.courses:type_name -> qf.Course
-	1,  // 11: qf.Repository.repoType:type_name -> qf.Repository.Type
-	20, // 12: qf.Repository.issues:type_name -> qf.Issue
-	7,  // 13: qf.Enrollment.user:type_name -> qf.User
-	11, // 14: qf.Enrollment.course:type_name -> qf.Course
-	9,  // 15: qf.Enrollment.group:type_name -> qf.Group
-	2,  // 16: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
-	3,  // 17: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
-	32, // 18: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
-	15, // 19: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
-	14, // 20: qf.Enrollments.enrollments:type_name -> qf.Enrollment
-	32, // 21: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
-	23, // 22: qf.Assignment.submissions:type_name -> qf.Submission
-	19, // 23: qf.Assignment.tasks:type_name -> qf.Task
-	26, // 24: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	18, // 25: qf.Assignment.ExpectedTests:type_name -> qf.TestInfo
-	20, // 26: qf.Task.issues:type_name -> qf.Issue
-	4,  // 27: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
-	17, // 28: qf.Assignments.assignments:type_name -> qf.Assignment
-	25, // 29: qf.Submission.Grades:type_name -> qf.Grade
-	32, // 30: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
-	29, // 31: qf.Submission.reviews:type_name -> qf.Review
-	33, // 32: qf.Submission.BuildInfo:type_name -> score.BuildInfo
-	34, // 33: qf.Submission.Scores:type_name -> score.Score
-	23, // 34: qf.Submissions.submissions:type_name -> qf.Submission
-	5,  // 35: qf.Grade.Status:type_name -> qf.Submission.Status
-	28, // 36: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
-	26, // 37: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
-	6,  // 38: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
-	26, // 39: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	32, // 40: qf.Review.edited:type_name -> google.protobuf.Timestamp
-	32, // 41: qf.AssignmentFeedback.CreatedAt:type_name -> google.protobuf.Timestamp
-	30, // 42: qf.AssignmentFeedbacks.feedbacks:type_name -> qf.AssignmentFeedback
-	43, // [43:43] is the sub-list for method output_type
-	43, // [43:43] is the sub-list for method input_type
-	43, // [43:43] is the sub-list for extension type_name
-	43, // [43:43] is the sub-list for extension extendee
-	0,  // [0:43] is the sub-list for field type_name
+	31, // 1: qf.User.FeedbackReceipts:type_name -> qf.FeedbackReceipt
+	7,  // 2: qf.Users.users:type_name -> qf.User
+	0,  // 3: qf.Group.status:type_name -> qf.Group.GroupStatus
+	7,  // 4: qf.Group.users:type_name -> qf.User
+	14, // 5: qf.Group.enrollments:type_name -> qf.Enrollment
+	9,  // 6: qf.Groups.groups:type_name -> qf.Group
+	2,  // 7: qf.Course.enrolled:type_name -> qf.Enrollment.UserStatus
+	14, // 8: qf.Course.enrollments:type_name -> qf.Enrollment
+	17, // 9: qf.Course.assignments:type_name -> qf.Assignment
+	9,  // 10: qf.Course.groups:type_name -> qf.Group
+	11, // 11: qf.Courses.courses:type_name -> qf.Course
+	1,  // 12: qf.Repository.repoType:type_name -> qf.Repository.Type
+	20, // 13: qf.Repository.issues:type_name -> qf.Issue
+	7,  // 14: qf.Enrollment.user:type_name -> qf.User
+	11, // 15: qf.Enrollment.course:type_name -> qf.Course
+	9,  // 16: qf.Enrollment.group:type_name -> qf.Group
+	2,  // 17: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
+	3,  // 18: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
+	33, // 19: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
+	15, // 20: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
+	14, // 21: qf.Enrollments.enrollments:type_name -> qf.Enrollment
+	33, // 22: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
+	23, // 23: qf.Assignment.submissions:type_name -> qf.Submission
+	19, // 24: qf.Assignment.tasks:type_name -> qf.Task
+	26, // 25: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	18, // 26: qf.Assignment.ExpectedTests:type_name -> qf.TestInfo
+	20, // 27: qf.Task.issues:type_name -> qf.Issue
+	4,  // 28: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
+	17, // 29: qf.Assignments.assignments:type_name -> qf.Assignment
+	25, // 30: qf.Submission.Grades:type_name -> qf.Grade
+	33, // 31: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
+	29, // 32: qf.Submission.reviews:type_name -> qf.Review
+	34, // 33: qf.Submission.BuildInfo:type_name -> score.BuildInfo
+	35, // 34: qf.Submission.Scores:type_name -> score.Score
+	23, // 35: qf.Submissions.submissions:type_name -> qf.Submission
+	5,  // 36: qf.Grade.Status:type_name -> qf.Submission.Status
+	28, // 37: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
+	26, // 38: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
+	6,  // 39: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
+	26, // 40: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	33, // 41: qf.Review.edited:type_name -> google.protobuf.Timestamp
+	33, // 42: qf.AssignmentFeedback.CreatedAt:type_name -> google.protobuf.Timestamp
+	30, // 43: qf.AssignmentFeedbacks.feedbacks:type_name -> qf.AssignmentFeedback
+	44, // [44:44] is the sub-list for method output_type
+	44, // [44:44] is the sub-list for method input_type
+	44, // [44:44] is the sub-list for extension type_name
+	44, // [44:44] is the sub-list for extension extendee
+	0,  // [0:44] is the sub-list for field type_name
 }
 
 func init() { file_qf_types_proto_init() }
@@ -2832,7 +2898,7 @@ func file_qf_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_types_proto_rawDesc), len(file_qf_types_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   25,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

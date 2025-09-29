@@ -859,96 +859,6 @@ func (x *RebuildRequest) GetSubmissionID() uint64 {
 	return 0
 }
 
-type AssignmentFeedbackRequest struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	CourseID uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	// Types that are valid to be assigned to Mode:
-	//
-	//	*AssignmentFeedbackRequest_AssignmentID
-	//	*AssignmentFeedbackRequest_UserID
-	Mode          isAssignmentFeedbackRequest_Mode `protobuf_oneof:"Mode"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AssignmentFeedbackRequest) Reset() {
-	*x = AssignmentFeedbackRequest{}
-	mi := &file_qf_requests_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AssignmentFeedbackRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AssignmentFeedbackRequest) ProtoMessage() {}
-
-func (x *AssignmentFeedbackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AssignmentFeedbackRequest.ProtoReflect.Descriptor instead.
-func (*AssignmentFeedbackRequest) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *AssignmentFeedbackRequest) GetCourseID() uint64 {
-	if x != nil {
-		return x.CourseID
-	}
-	return 0
-}
-
-func (x *AssignmentFeedbackRequest) GetMode() isAssignmentFeedbackRequest_Mode {
-	if x != nil {
-		return x.Mode
-	}
-	return nil
-}
-
-func (x *AssignmentFeedbackRequest) GetAssignmentID() uint64 {
-	if x != nil {
-		if x, ok := x.Mode.(*AssignmentFeedbackRequest_AssignmentID); ok {
-			return x.AssignmentID
-		}
-	}
-	return 0
-}
-
-func (x *AssignmentFeedbackRequest) GetUserID() uint64 {
-	if x != nil {
-		if x, ok := x.Mode.(*AssignmentFeedbackRequest_UserID); ok {
-			return x.UserID
-		}
-	}
-	return 0
-}
-
-type isAssignmentFeedbackRequest_Mode interface {
-	isAssignmentFeedbackRequest_Mode()
-}
-
-type AssignmentFeedbackRequest_AssignmentID struct {
-	AssignmentID uint64 `protobuf:"varint,2,opt,name=assignmentID,proto3,oneof"`
-}
-
-type AssignmentFeedbackRequest_UserID struct {
-	UserID uint64 `protobuf:"varint,3,opt,name=userID,proto3,oneof"` // optional - for filtering by user
-}
-
-func (*AssignmentFeedbackRequest_AssignmentID) isAssignmentFeedbackRequest_Mode() {}
-
-func (*AssignmentFeedbackRequest_UserID) isAssignmentFeedbackRequest_Mode() {}
-
 type Void struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -957,7 +867,7 @@ type Void struct {
 
 func (x *Void) Reset() {
 	*x = Void{}
-	mi := &file_qf_requests_proto_msgTypes[13]
+	mi := &file_qf_requests_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -969,7 +879,7 @@ func (x *Void) String() string {
 func (*Void) ProtoMessage() {}
 
 func (x *Void) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[13]
+	mi := &file_qf_requests_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -982,7 +892,7 @@ func (x *Void) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Void.ProtoReflect.Descriptor instead.
 func (*Void) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{13}
+	return file_qf_requests_proto_rawDescGZIP(), []int{12}
 }
 
 var File_qf_requests_proto protoreflect.FileDescriptor
@@ -1051,12 +961,7 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\x0eRebuildRequest\x12\x1a\n" +
 	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12\"\n" +
 	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\"\n" +
-	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"\x7f\n" +
-	"\x19AssignmentFeedbackRequest\x12\x1a\n" +
-	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12$\n" +
-	"\fassignmentID\x18\x02 \x01(\x04H\x00R\fassignmentID\x12\x18\n" +
-	"\x06userID\x18\x03 \x01(\x04H\x00R\x06userIDB\x06\n" +
-	"\x04Mode\"\x06\n" +
+	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"\x06\n" +
 	"\x04VoidB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
@@ -1072,7 +977,7 @@ func file_qf_requests_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_qf_requests_proto_goTypes = []any{
 	(SubmissionRequest_SubmissionType)(0), // 0: qf.SubmissionRequest.SubmissionType
 	(*CourseSubmissions)(nil),             // 1: qf.CourseSubmissions
@@ -1087,23 +992,22 @@ var file_qf_requests_proto_goTypes = []any{
 	(*RepositoryRequest)(nil),             // 10: qf.RepositoryRequest
 	(*Repositories)(nil),                  // 11: qf.Repositories
 	(*RebuildRequest)(nil),                // 12: qf.RebuildRequest
-	(*AssignmentFeedbackRequest)(nil),     // 13: qf.AssignmentFeedbackRequest
-	(*Void)(nil),                          // 14: qf.Void
-	nil,                                   // 15: qf.CourseSubmissions.SubmissionsEntry
-	nil,                                   // 16: qf.Repositories.URLsEntry
-	(*Review)(nil),                        // 17: qf.Review
-	(Enrollment_UserStatus)(0),            // 18: qf.Enrollment.UserStatus
-	(*Grade)(nil),                         // 19: qf.Grade
-	(*Submissions)(nil),                   // 20: qf.Submissions
+	(*Void)(nil),                          // 13: qf.Void
+	nil,                                   // 14: qf.CourseSubmissions.SubmissionsEntry
+	nil,                                   // 15: qf.Repositories.URLsEntry
+	(*Review)(nil),                        // 16: qf.Review
+	(Enrollment_UserStatus)(0),            // 17: qf.Enrollment.UserStatus
+	(*Grade)(nil),                         // 18: qf.Grade
+	(*Submissions)(nil),                   // 19: qf.Submissions
 }
 var file_qf_requests_proto_depIdxs = []int32{
-	15, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
-	17, // 1: qf.ReviewRequest.review:type_name -> qf.Review
-	18, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
+	14, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
+	16, // 1: qf.ReviewRequest.review:type_name -> qf.Review
+	17, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
 	0,  // 3: qf.SubmissionRequest.Type:type_name -> qf.SubmissionRequest.SubmissionType
-	19, // 4: qf.UpdateSubmissionRequest.grades:type_name -> qf.Grade
-	16, // 5: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
-	20, // 6: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
+	18, // 4: qf.UpdateSubmissionRequest.grades:type_name -> qf.Grade
+	15, // 5: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
+	19, // 6: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
 	7,  // [7:7] is the sub-list for method output_type
 	7,  // [7:7] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -1127,17 +1031,13 @@ func file_qf_requests_proto_init() {
 		(*SubmissionRequest_SubmissionID)(nil),
 		(*SubmissionRequest_Type)(nil),
 	}
-	file_qf_requests_proto_msgTypes[12].OneofWrappers = []any{
-		(*AssignmentFeedbackRequest_AssignmentID)(nil),
-		(*AssignmentFeedbackRequest_UserID)(nil),
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_requests_proto_rawDesc), len(file_qf_requests_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   16,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
