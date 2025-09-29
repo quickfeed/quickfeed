@@ -1,6 +1,6 @@
 import { create } from "@bufbuild/protobuf"
 import { Context } from '../..'
-import { AssignmentFeedbackRequestSchema } from "../../../../proto/qf/requests_pb"
+import { CourseRequestSchema } from "../../../../proto/qf/requests_pb"
 import { AssignmentFeedback, AssignmentFeedbacks } from '../../../../proto/qf/types_pb'
 
 export const createAssignmentFeedback = async (
@@ -13,14 +13,10 @@ export const createAssignmentFeedback = async (
 
 export const getAssignmentFeedback = async (
     { state, effects }: Context,
-    { courseID, category, categoryValue }: { courseID: bigint, category: "assignmentID" | "userID", categoryValue: bigint }
+    { courseID }: { courseID: bigint }
 ): Promise<AssignmentFeedbacks | null> => {
-    const req = create(AssignmentFeedbackRequestSchema, {
+    const req = create(CourseRequestSchema, {
         courseID,
-        Mode: {
-            case: category,
-            value: categoryValue
-        }
     })
     const response = await effects.global.api.client.getAssignmentFeedback(req)
 

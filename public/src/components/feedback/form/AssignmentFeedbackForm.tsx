@@ -2,7 +2,7 @@ import { create } from "@bufbuild/protobuf"
 import React, { useState } from 'react'
 import { Assignment, AssignmentFeedback, AssignmentFeedbackSchema } from '../../../../proto/qf/types_pb'
 import { Color } from "../../../Helpers"
-import { useActions } from '../../../overmind'
+import { useActions, useAppState } from '../../../overmind'
 import FeedbackSubmittedCard from "./FeedbackSubmitted"
 import FeedbackTextInput from "./FeedbackTextInput"
 import FeedbackFormActions from "./FeedbackFormActions"
@@ -14,6 +14,7 @@ interface AssignmentFeedbackFormProps {
 }
 
 const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignment, courseID }) => {
+    const state = useAppState()
     const actions = useActions()
     const [isOpen, setIsOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -25,6 +26,11 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     const [minutes, setMinutes] = useState('')
 
     const minWords = 1
+
+    if (state.self.FeedbackReceipts?.some(r => r.AssignmentID === assignment.ID)) {
+        // User has already submitted feedback for this assignment
+        return null
+    }
 
     const validateTimeInput = (value: string, max: number): boolean => {
         if (value === '') return true

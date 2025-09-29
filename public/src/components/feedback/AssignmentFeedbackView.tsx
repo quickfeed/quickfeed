@@ -14,8 +14,6 @@ export const AssignmentFeedbackView = () => {
         const fetchFeedback = async () => {
             await actions.feedback.getAssignmentFeedback({
                 courseID: state.activeCourse,
-                category: "assignmentID",
-                categoryValue: BigInt(0)
             })
         }
 
