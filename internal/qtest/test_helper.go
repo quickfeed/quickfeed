@@ -58,9 +58,9 @@ func SetupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 		Order:    1,
 	}
 	CreateAssignment(t, db, assignment)
-	// create user and enroll as student
+	// create user and enroll as teacher
 	user := CreateFakeUser(t, db)
-	EnrollStudent(t, db, user, course)
+	EnrollTeacher(t, db, user, course)
 	return user, course, assignment
 }
 
@@ -231,7 +231,7 @@ func GetBenchmarks(t *testing.T, db database.Database, assignmentID uint64) []*q
 	return benchmarks
 }
 
-func GetBenchmark(t *testing.T, db database.Database, assignmentID uint64, benchmarkID uint64) *qf.GradingBenchmark {
+func GetBenchmark(t *testing.T, db database.Database, assignmentID, benchmarkID uint64) *qf.GradingBenchmark {
 	t.Helper()
 	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignmentID})
 	if err != nil {

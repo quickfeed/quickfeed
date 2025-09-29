@@ -16,7 +16,7 @@ import (
 func TestCreateCriterion(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	_, course, assignment := qtest.SetupCourseAssignment(t, db)
 	benchmark := &qf.GradingBenchmark{
 		CourseID:     course.GetID(),
@@ -61,7 +61,7 @@ func TestCreateCriterion(t *testing.T) {
 func TestUpdateCriterion(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	_, _, assignment := qtest.SetupCourseAssignment(t, db)
 	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{AssignmentID: assignment.GetID()})
 	qtest.CreateCriterion(t, db, &qf.GradingCriterion{BenchmarkID: 1})
@@ -92,7 +92,7 @@ func TestUpdateCriterion(t *testing.T) {
 func TestDeleteCriterion(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	_, _, assignment := qtest.SetupCourseAssignment(t, db)
 	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{AssignmentID: assignment.GetID()})
 	qtest.CreateCriterion(t, db, &qf.GradingCriterion{BenchmarkID: 1})

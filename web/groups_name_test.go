@@ -23,7 +23,7 @@ func TestBadGroupNames(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	groupNames := []struct {
 		name      string
 		wantError error
