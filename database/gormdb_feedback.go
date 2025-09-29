@@ -8,11 +8,19 @@ import (
 )
 
 // CreateAssignmentFeedback creates a new assignment feedback.
-func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback) error {
+func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback, userID uint64) error {
 	// Set the creation timestamp
 	feedback.CreatedAt = timestamppb.Now()
 	if err := db.conn.Create(feedback).Error; err != nil {
 		return fmt.Errorf("failed to create assignment feedback: %w", err)
+	}
+	// Create a receipt for the feedback
+	receipt := &qf.FeedbackReceipt{
+		AssignmentID: feedback.GetAssignmentID(),
+		UserID:       userID,
+	}
+	if err := db.conn.Create(receipt).Error; err != nil {
+		return fmt.Errorf("failed to create feedback receipt: %w", err)
 	}
 	return nil
 }
