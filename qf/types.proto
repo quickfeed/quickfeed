@@ -41,6 +41,8 @@ message User {
     string RefreshToken = 10;  // Filter; The user's refresh token that may be exchanged for an access token.
 
     repeated Enrollment Enrollments = 11;
+    repeated FeedbackReceipt FeedbackReceipts = 12 [(go.field) = { tags: 'gorm:"foreignKey:UserID"' }];
+
 }
 
 message Users {
@@ -291,11 +293,16 @@ message AssignmentFeedback {
     uint64 ID                           = 1;
     uint64 CourseID                     = 2;  // foreign key - required
     uint64 AssignmentID                 = 3;  // foreign key - required
-    uint64 UserID                       = 4;  // optional - for non-anonymous feedback
-    string LikedContent                 = 5;  // What did you like about this assignment?
-    string ImprovementSuggestions       = 6;  // What would make it better?
-    uint32 TimeSpent                    = 7;  // Time used to complete the assignment
-    google.protobuf.Timestamp CreatedAt = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    string LikedContent                 = 4;  // What did you like about this assignment?
+    string ImprovementSuggestions       = 5;  // What would make it better?
+    uint32 TimeSpent                    = 6;  // Time used to complete the assignment
+    google.protobuf.Timestamp CreatedAt = 7 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+}
+
+message FeedbackReceipt {
+    uint64 ID                           = 1;
+    uint64 AssignmentID                 = 2  [(go.field) = { tags: 'gorm:"uniqueIndex:feedback_receipt"' }];
+    uint64 UserID                       = 3  [(go.field) = { tags: 'gorm:"uniqueIndex:feedback_receipt"' }];
 }
 
 message AssignmentFeedbacks {
