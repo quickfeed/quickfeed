@@ -88,12 +88,4 @@ message RebuildRequest {
     uint64 submissionID = 3;
 }
 
-message AssignmentFeedbackRequest {
-    uint64 courseID     = 1;
-    oneof Mode {
-        uint64 assignmentID = 2;
-        uint64 userID       = 3;  // optional - for filtering by user
-    }
-}
-
 message Void {}
