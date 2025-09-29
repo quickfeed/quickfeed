@@ -54,30 +54,22 @@ func TestAssignmentFeedbackValidation(t *testing.T) {
 func TestAssignmentFeedbackRequestValidation(t *testing.T) {
 	tests := []struct {
 		name      string
-		request   *AssignmentFeedbackRequest
+		request   *CourseRequest
 		wantValid bool
 	}{
 		{
 			name: "valid request with all required fields",
-			request: &AssignmentFeedbackRequest{
+			request: &CourseRequest{
 				CourseID: 1,
-				Mode:     &AssignmentFeedbackRequest_AssignmentID{AssignmentID: 1},
 			},
 			wantValid: true,
 		},
 		{
 			name: "invalid request missing course ID",
-			request: &AssignmentFeedbackRequest{
-				Mode: &AssignmentFeedbackRequest_AssignmentID{AssignmentID: 1},
+			request: &CourseRequest{
+				CourseID: 0,
 			},
 			wantValid: false,
-		},
-		{
-			name: "invalid request missing assignment ID",
-			request: &AssignmentFeedbackRequest{
-				CourseID: 1,
-			},
-			wantValid: true,
 		},
 	}
 
