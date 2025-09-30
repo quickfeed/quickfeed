@@ -16,6 +16,7 @@ func TestAssignmentFeedbackValidation(t *testing.T) {
 		{
 			name: "valid feedback with all fields",
 			feedback: &AssignmentFeedback{
+				CourseID:               1,
 				AssignmentID:           1,
 				LikedContent:           "Great assignment with clear instructions",
 				ImprovementSuggestions: "Could use more examples",
@@ -27,6 +28,7 @@ func TestAssignmentFeedbackValidation(t *testing.T) {
 		{
 			name: "invalid feedback missing assignment ID",
 			feedback: &AssignmentFeedback{
+				CourseID:               1,
 				LikedContent:           "Good assignment",
 				ImprovementSuggestions: "Needs improvement",
 			},
