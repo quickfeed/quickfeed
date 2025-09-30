@@ -274,7 +274,7 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Helper function to get user's feedback receipts
+	// Helper: get user's feedback receipts
 	getUserReceipts := func(cookie string) []*qf.FeedbackReceipt {
 		resp, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, cookie))
 		if err != nil {
@@ -283,143 +283,180 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 		return resp.Msg.GetFeedbackReceipts()
 	}
 
-	// Helper function to create feedback
-	createFeedback := func(cookie string, assignmentID uint64) *qf.AssignmentFeedback {
+	// Helper: create feedback
+	createFeedback := func(cookie string, assignmentID uint64) error {
 		feedback := &qf.AssignmentFeedback{
 			CourseID:               course.GetID(),
 			AssignmentID:           assignmentID,
 			LikedContent:           "Well structured assignment with clear goals.",
 			ImprovementSuggestions: "Add more test cases for edge conditions.",
-			TimeSpent:              240, // 4 hours
-		}
-		resp, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback, cookie))
-		if err != nil {
-			t.Fatalf("failed to create feedback: %v", err)
-		}
-		return resp.Msg
-	}
-
-	// Helper function to try creating feedback (expecting failure)
-	tryCreateFeedback := func(cookie string, assignmentID uint64) error {
-		feedback := &qf.AssignmentFeedback{
-			CourseID:               course.GetID(),
-			AssignmentID:           assignmentID,
-			LikedContent:           "Duplicate feedback attempt",
-			ImprovementSuggestions: "This should fail",
-			TimeSpent:              180,
+			TimeSpent:              240,
 		}
 		_, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback, cookie))
 		return err
 	}
 
-	studentCookie := client.Cookie(t, student)
-	student2Cookie := client.Cookie(t, student2)
-	teacherCookie := client.Cookie(t, teacher)
+	teacherID := teacher.GetID()
+	studentID := student.GetID()
+	student2ID := student2.GetID()
 
-	// Test 1: Student starts with zero feedback receipts
-	t.Run("initial state", func(t *testing.T) {
-		receipts := getUserReceipts(studentCookie)
-		if len(receipts) != 0 {
-			t.Errorf("expected 0 receipts, got %d", len(receipts))
+	cookies := map[uint64]string{
+		studentID:  client.Cookie(t, student),
+		student2ID: client.Cookie(t, student2),
+		teacherID:  client.Cookie(t, teacher),
+	}
+
+	// Assertions helpers
+	checkCount := func(t *testing.T, userID uint64, want int) {
+		t.Helper()
+		rcpts := getUserReceipts(cookies[userID])
+		if got := len(rcpts); got != want {
+			t.Fatalf("expected %d receipts, got %d", want, got)
 		}
-	})
+	}
 
-	// Test 2: Student gets receipt after submitting feedback for assignment 1
-	t.Run("single receipt creation", func(t *testing.T) {
-		createFeedback(studentCookie, assignment.GetID())
-
-		receipts := getUserReceipts(studentCookie)
-		if len(receipts) != 1 {
-			t.Fatalf("expected 1 receipt, got %d", len(receipts))
+	checkHas := func(t *testing.T, userID uint64, wantAssignmentIDs ...uint64) {
+		t.Helper()
+		rcpts := getUserReceipts(cookies[userID])
+		seen := make(map[uint64]bool)
+		for _, r := range rcpts {
+			if r.GetUserID() != userID {
+				t.Errorf("expected user ID %d, got %d", userID, r.GetUserID())
+			}
+			seen[r.GetAssignmentID()] = true
 		}
-
-		receipt := receipts[0]
-		if receipt.GetAssignmentID() != assignment.GetID() {
-			t.Errorf("expected assignment ID %d, got %d", assignment.GetID(), receipt.GetAssignmentID())
-		}
-		if receipt.GetUserID() != student.GetID() {
-			t.Errorf("expected user ID %d, got %d", student.GetID(), receipt.GetUserID())
-		}
-	})
-
-	// Test 3: Student gets second receipt after submitting feedback for assignment 2
-	t.Run("multiple receipts", func(t *testing.T) {
-		createFeedback(studentCookie, assignment2.GetID())
-
-		receipts := getUserReceipts(studentCookie)
-		if len(receipts) != 2 {
-			t.Fatalf("expected 2 receipts, got %d", len(receipts))
-		}
-
-		assignmentIDs := make(map[uint64]bool)
-		for _, receipt := range receipts {
-			assignmentIDs[receipt.GetAssignmentID()] = true
-			if receipt.GetUserID() != student.GetID() {
-				t.Errorf("expected user ID %d, got %d", student.GetID(), receipt.GetUserID())
+		for _, id := range wantAssignmentIDs {
+			if !seen[id] {
+				t.Errorf("missing receipt for assignment %d", id)
 			}
 		}
+	}
 
-		if !assignmentIDs[assignment.GetID()] {
-			t.Error("missing receipt for assignment 1")
-		}
-		if !assignmentIDs[assignment2.GetID()] {
-			t.Error("missing receipt for assignment 2")
-		}
-	})
+	type action int
+	const (
+		none action = iota
+		create
+		duplicate
+	)
 
-	// Test 4: Duplicate feedback submission fails and doesn't create duplicate receipt
-	t.Run("duplicate prevention", func(t *testing.T) {
-		err := tryCreateFeedback(studentCookie, assignment.GetID())
-		if err == nil {
-			t.Error("expected error when creating duplicate feedback")
-		}
+	tests := []struct {
+		name         string
+		do           action
+		userID       uint64
+		assignmentID uint64
+		expectCount  map[uint64]int      // expected total receipts per user
+		expectHas    map[uint64][]uint64 // expected assignment IDs present for user
+		expectErr    bool                // only relevant for duplicate actions
+	}{
+		{
+			name: "initial state",
+			do:   none,
+			expectCount: map[uint64]int{
+				studentID:  0,
+				student2ID: 0,
+				teacherID:  0,
+			},
+		},
+		{
+			name:         "student1 creates feedback for assignment1 -> gets 1 receipt",
+			do:           create,
+			userID:       studentID,
+			assignmentID: assignment.GetID(),
+			expectCount: map[uint64]int{
+				studentID:  1,
+				student2ID: 0,
+				teacherID:  0,
+			},
+			expectHas: map[uint64][]uint64{
+				studentID: {assignment.GetID()},
+			},
+		},
+		{
+			name:         "student1 creates feedback for assignment2 -> now 2 receipts",
+			do:           create,
+			userID:       studentID,
+			assignmentID: assignment2.GetID(),
+			expectCount: map[uint64]int{
+				studentID:  2,
+				student2ID: 0,
+				teacherID:  0,
+			},
+			expectHas: map[uint64][]uint64{
+				studentID: {assignment.GetID(), assignment2.GetID()},
+			},
+		},
+		{
+			name:         "duplicate prevention for student1 on assignment1",
+			do:           duplicate,
+			userID:       studentID,
+			assignmentID: assignment.GetID(),
+			expectErr:    true,
+			expectCount: map[uint64]int{
+				studentID: 2, // unchanged
+			},
+			expectHas: map[uint64][]uint64{
+				studentID: {assignment.GetID(), assignment2.GetID()},
+			},
+		},
+		{
+			name:         "student2 can create feedback for same assignment1",
+			do:           create,
+			userID:       student2ID,
+			assignmentID: assignment.GetID(),
+			expectCount: map[uint64]int{
+				studentID:  2,
+				student2ID: 1,
+				teacherID:  0,
+			},
+			expectHas: map[uint64][]uint64{
+				student2ID: {assignment.GetID()},
+			},
+		},
+		{
+			name:         "teacher creates feedback for assignment2",
+			do:           create,
+			userID:       teacherID,
+			assignmentID: assignment2.GetID(),
+			expectCount: map[uint64]int{
+				teacherID:  1,
+				studentID:  2,
+				student2ID: 1,
+			},
+			expectHas: map[uint64][]uint64{
+				teacherID: {assignment2.GetID()},
+			},
+		},
+	}
 
-		receipts := getUserReceipts(studentCookie)
-		if len(receipts) != 2 {
-			t.Errorf("expected 2 receipts after duplicate attempt, got %d", len(receipts))
-		}
-	})
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			switch test.do {
+			case create:
+				if err := createFeedback(cookies[test.userID], test.assignmentID); err != nil {
+					t.Fatalf("failed to create feedback: %v", err)
+				}
 
-	// Test 5: Different student can create feedback for same assignment
-	t.Run("different student receipts", func(t *testing.T) {
-		createFeedback(student2Cookie, assignment.GetID())
+			case duplicate:
+				err := createFeedback(cookies[test.userID], test.assignmentID)
+				if test.expectErr && err == nil {
+					t.Fatalf("expected error for duplicate feedback, got nil")
+				}
+				if !test.expectErr && err != nil {
+					t.Fatalf("did not expect error, got %v", err)
+				}
 
-		// Verify student1 still has 2 receipts
-		receipts1 := getUserReceipts(studentCookie)
-		if len(receipts1) != 2 {
-			t.Errorf("student1 expected 2 receipts, got %d", len(receipts1))
-		}
+			case none:
+				// no-op
+			}
 
-		// Verify student2 has 1 receipt
-		receipts2 := getUserReceipts(student2Cookie)
-		if len(receipts2) != 1 {
-			t.Errorf("student2 expected 1 receipt, got %d", len(receipts2))
-		}
-
-		receipt := receipts2[0]
-		if receipt.GetAssignmentID() != assignment.GetID() {
-			t.Errorf("expected assignment ID %d for student2, got %d", assignment.GetID(), receipt.GetAssignmentID())
-		}
-		if receipt.GetUserID() != student2.GetID() {
-			t.Errorf("expected user ID %d for student2, got %d", student2.GetID(), receipt.GetUserID())
-		}
-	})
-
-	// Test 6: Teacher can create feedback and get receipt
-	t.Run("teacher receipts", func(t *testing.T) {
-		createFeedback(teacherCookie, assignment2.GetID())
-
-		receipts := getUserReceipts(teacherCookie)
-		if len(receipts) != 1 {
-			t.Errorf("teacher expected 1 receipt, got %d", len(receipts))
-		}
-
-		receipt := receipts[0]
-		if receipt.GetAssignmentID() != assignment2.GetID() {
-			t.Errorf("expected assignment ID %d for teacher, got %d", assignment2.GetID(), receipt.GetAssignmentID())
-		}
-		if receipt.GetUserID() != teacher.GetID() {
-			t.Errorf("expected user ID %d for teacher, got %d", teacher.GetID(), receipt.GetUserID())
-		}
-	})
+			// Verify counts
+			for userID, want := range test.expectCount {
+				checkCount(t, userID, want)
+			}
+			// Verify presence of receipts
+			for userID, ids := range test.expectHas {
+				checkHas(t, userID, ids...)
+			}
+		})
+	}
 }
