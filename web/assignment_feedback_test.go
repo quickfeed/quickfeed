@@ -58,8 +58,60 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 				ImprovementSuggestions: "Could be better",
 				TimeSpent:              60, // 1 hour
 			},
-			// This should fail with permission denied because course ID 0 is invalid
-			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: required roles [student teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+			// This should fail with invalid payload because course ID 0 is invalid
+			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
+		},
+		{
+			name:   "Missing assignment ID",
+			cookie: client.Cookie(t, student),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               course.GetID(),
+				AssignmentID:           0, // Missing
+				LikedContent:           "Good assignment with missing ID",
+				ImprovementSuggestions: "Could be better",
+				TimeSpent:              60, // 1 hour
+			},
+			// This should fail with invalid payload because assignment ID 0 is invalid
+			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
+		},
+		{
+			name:   "Empty liked content",
+			cookie: client.Cookie(t, student),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               course.GetID(),
+				AssignmentID:           assignment.GetID(),
+				LikedContent:           "", // Missing
+				ImprovementSuggestions: "Could be better",
+				TimeSpent:              60, // 1 hour
+			},
+			// This should fail with invalid payload because liked content is empty
+			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
+		},
+		{
+			name:   "Empty improvement suggestions",
+			cookie: client.Cookie(t, student),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               course.GetID(),
+				AssignmentID:           assignment.GetID(),
+				LikedContent:           "Good assignment",
+				ImprovementSuggestions: "", // Missing
+				TimeSpent:              60, // 1 hour
+			},
+			// This should fail with invalid payload because improvement suggestions is empty
+			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
+		},
+		{
+			name:   "Zero time spent",
+			cookie: client.Cookie(t, student),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               course.GetID(),
+				AssignmentID:           assignment.GetID(),
+				LikedContent:           "Good assignment",
+				ImprovementSuggestions: "Could be better",
+				TimeSpent:              0, // Missing
+			},
+			// This should fail with invalid payload because time spent is zero
+			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 		{
 			name:   "Non-existing course ID",
@@ -73,6 +125,18 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			},
 			// This should fail with permission denied because course ID 999 does not exist
 			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: required roles [student teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+		},
+		{
+			name:   "Non-existing assignment ID",
+			cookie: client.Cookie(t, student),
+			feedback: &qf.AssignmentFeedback{
+				CourseID:               course.GetID(),
+				AssignmentID:           99999, // Non-existing
+				LikedContent:           "Good assignment for non-existing assignment",
+				ImprovementSuggestions: "You could at least create the assignment",
+			},
+			// This should fail with permission denied because assignment ID 99999 does not exist
+			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 	}
 
