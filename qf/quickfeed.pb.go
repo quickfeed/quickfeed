@@ -24,7 +24,7 @@ var File_qf_quickfeed_proto protoreflect.FileDescriptor
 
 const file_qf_quickfeed_proto_rawDesc = "" +
 	"\n" +
-	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x0eqf/types.proto\x1a\x11qf/requests.proto2\xf0\x0e\n" +
+	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x0eqf/types.proto\x1a\x11qf/requests.proto2\xe2\x0e\n" +
 	"\x10QuickFeedService\x12\x1f\n" +
 	"\aGetUser\x12\b.qf.Void\x1a\b.qf.User\"\x00\x12!\n" +
 	"\bGetUsers\x12\b.qf.Void\x1a\t.qf.Users\"\x00\x12\"\n" +
@@ -63,8 +63,8 @@ const file_qf_quickfeed_proto_rawDesc = "" +
 	"\fCreateReview\x12\x11.qf.ReviewRequest\x1a\n" +
 	".qf.Review\"\x00\x12/\n" +
 	"\fUpdateReview\x12\x11.qf.ReviewRequest\x1a\n" +
-	".qf.Review\"\x00\x12L\n" +
-	"\x18CreateAssignmentFeedback\x12\x16.qf.AssignmentFeedback\x1a\x16.qf.AssignmentFeedback\"\x00\x12E\n" +
+	".qf.Review\"\x00\x12>\n" +
+	"\x18CreateAssignmentFeedback\x12\x16.qf.AssignmentFeedback\x1a\b.qf.Void\"\x00\x12E\n" +
 	"\x15GetAssignmentFeedback\x12\x11.qf.CourseRequest\x1a\x17.qf.AssignmentFeedbacks\"\x00\x128\n" +
 	"\x0fGetRepositories\x12\x11.qf.CourseRequest\x1a\x10.qf.Repositories\"\x00\x120\n" +
 	"\vIsEmptyRepo\x12\x15.qf.RepositoryRequest\x1a\b.qf.Void\"\x00\x120\n" +
@@ -168,7 +168,7 @@ var file_qf_quickfeed_proto_depIdxs = []int32{
 	0,  // 64: qf.QuickFeedService.DeleteCriterion:output_type -> qf.Void
 	25, // 65: qf.QuickFeedService.CreateReview:output_type -> qf.Review
 	25, // 66: qf.QuickFeedService.UpdateReview:output_type -> qf.Review
-	16, // 67: qf.QuickFeedService.CreateAssignmentFeedback:output_type -> qf.AssignmentFeedback
+	0,  // 67: qf.QuickFeedService.CreateAssignmentFeedback:output_type -> qf.Void
 	26, // 68: qf.QuickFeedService.GetAssignmentFeedback:output_type -> qf.AssignmentFeedbacks
 	27, // 69: qf.QuickFeedService.GetRepositories:output_type -> qf.Repositories
 	0,  // 70: qf.QuickFeedService.IsEmptyRepo:output_type -> qf.Void

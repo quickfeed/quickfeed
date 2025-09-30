@@ -36,6 +36,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 				ImprovementSuggestions: "Maybe add some extra challenges for advanced students.",
 				TimeSpent:              150, // 2.5 hours
 			},
+			wantErr: nil,
 		},
 		{
 			name:   "Valid teacher feedback",
@@ -47,6 +48,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 				ImprovementSuggestions: "Maybe add some extra challenges for advanced teachers.",
 				TimeSpent:              150, // 2.5 hours
 			},
+			wantErr: nil,
 		},
 		{
 			name:   "Missing course ID",
@@ -142,19 +144,13 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			resp, err := client.CreateAssignmentFeedback(t.Context(), qtest.RequestWithCookie(test.feedback, test.cookie))
-			if qtest.CheckCode(t, err, test.wantErr) {
-				return // cannot continue since resp is invalid
+			_, err := client.CreateAssignmentFeedback(t.Context(), qtest.RequestWithCookie(test.feedback, test.cookie))
+			if err == nil && test.wantErr == nil {
+				return // both nil, all good
 			}
-			if resp.Msg.GetID() == 0 {
-				t.Error("Expected feedback ID to be set")
+			if !qtest.CheckCode(t, err, test.wantErr) {
+				t.Errorf("CreateAssignmentFeedback() unexpected error: %v, %T, want: %v, %T", err, err, test.wantErr, test.wantErr)
 			}
-			if resp.Msg.GetCreatedAt() == nil {
-				t.Error("Expected CreatedAt to be set")
-			}
-			got := resp.Msg
-			want := test.feedback
-			qtest.Diff(t, "CreateAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
 		})
 	}
 }
@@ -184,11 +180,10 @@ func TestGetAssignmentFeedback(t *testing.T) {
 		ImprovementSuggestions: "Add more test cases for edge conditions.",
 		TimeSpent:              240, // 4 hours
 	}
-	resp1, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback1, student1Cookie))
+	_, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback1, student1Cookie))
 	if err != nil {
 		t.Fatalf("Failed to create feedback1: %v", err)
 	}
-	createdFeedback1 := resp1.Msg
 
 	// Create feedback from student2
 	feedback2 := &qf.AssignmentFeedback{
@@ -198,11 +193,10 @@ func TestGetAssignmentFeedback(t *testing.T) {
 		ImprovementSuggestions: "Maybe provide starter code templates.",
 		TimeSpent:              300, // 5 hours
 	}
-	resp2, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback2, student2Cookie))
+	_, err = client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback2, student2Cookie))
 	if err != nil {
 		t.Fatalf("Failed to create feedback2: %v", err)
 	}
-	createdFeedback2 := resp2.Msg
 
 	tests := []struct {
 		name    string
@@ -217,7 +211,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			request: &qf.CourseRequest{
 				CourseID: course.GetID(),
 			},
-			want: &qf.AssignmentFeedbacks{Feedbacks: []*qf.AssignmentFeedback{createdFeedback1, createdFeedback2}},
+			want: &qf.AssignmentFeedbacks{Feedbacks: []*qf.AssignmentFeedback{feedback1, feedback2}},
 		},
 		{
 			name:   "Student cannot get feedback once submitted",
@@ -246,7 +240,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			got := resp.Msg
 			want := test.want
 			// UserID is removed in responses, so we ignore it in the comparison
-			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "CreatedAt"))
+			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
 		})
 	}
 }

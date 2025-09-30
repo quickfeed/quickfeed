@@ -504,13 +504,13 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 }
 
 // CreateAssignmentFeedback creates a new assignment feedback.
-func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.AssignmentFeedback], error) {
+func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.Void], error) {
 	feedback := in.Msg
 	if err := s.db.CreateAssignmentFeedback(feedback, userID(ctx)); err != nil {
 		s.logger.Errorf("CreateAssignmentFeedback failed for feedback %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create assignment feedback"))
 	}
-	return connect.NewResponse(feedback), nil
+	return connect.NewResponse(&qf.Void{}), nil
 }
 
 // GetAssignmentFeedback returns assignment feedback for the given request.
