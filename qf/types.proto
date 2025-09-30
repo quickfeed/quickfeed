@@ -300,9 +300,8 @@ message AssignmentFeedback {
 }
 
 message FeedbackReceipt {
-    uint64 ID                           = 1;
-    uint64 AssignmentID                 = 2  [(go.field) = { tags: 'gorm:"uniqueIndex:feedback_receipt"' }];
-    uint64 UserID                       = 3  [(go.field) = { tags: 'gorm:"uniqueIndex:feedback_receipt"' }];
+    uint64 AssignmentID                 = 1  [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
+    uint64 UserID                       = 2  [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
 }
 
 message AssignmentFeedbacks {

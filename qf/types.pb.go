@@ -2435,9 +2435,8 @@ func (x *AssignmentFeedback) GetCreatedAt() *timestamppb.Timestamp {
 
 type FeedbackReceipt struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"uniqueIndex:feedback_receipt"`
-	UserID        uint64                 `protobuf:"varint,3,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"uniqueIndex:feedback_receipt"`
+	AssignmentID  uint64                 `protobuf:"varint,1,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"primaryKey;autoIncrement:false"`
+	UserID        uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"primaryKey;autoIncrement:false"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2470,13 +2469,6 @@ func (x *FeedbackReceipt) ProtoReflect() protoreflect.Message {
 // Deprecated: Use FeedbackReceipt.ProtoReflect.Descriptor instead.
 func (*FeedbackReceipt) Descriptor() ([]byte, []int) {
 	return file_qf_types_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *FeedbackReceipt) GetID() uint64 {
-	if x != nil {
-		return x.ID
-	}
-	return 0
 }
 
 func (x *FeedbackReceipt) GetAssignmentID() uint64 {
@@ -2775,11 +2767,10 @@ const file_qf_types_proto_rawDesc = "" +
 	"\fLikedContent\x18\x04 \x01(\tR\fLikedContent\x126\n" +
 	"\x16ImprovementSuggestions\x18\x05 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
 	"\tTimeSpent\x18\x06 \x01(\rR\tTimeSpent\x12j\n" +
-	"\tCreatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"\xb5\x01\n" +
-	"\x0fFeedbackReceipt\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12N\n" +
-	"\fAssignmentID\x18\x02 \x01(\x04B*ʵ\x03&\xa2\x01#gorm:\"uniqueIndex:feedback_receipt\"R\fAssignmentID\x12B\n" +
-	"\x06UserID\x18\x03 \x01(\x04B*ʵ\x03&\xa2\x01#gorm:\"uniqueIndex:feedback_receipt\"R\x06UserID\"K\n" +
+	"\tCreatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"\xa9\x01\n" +
+	"\x0fFeedbackReceipt\x12P\n" +
+	"\fAssignmentID\x18\x01 \x01(\x04B,ʵ\x03(\xa2\x01%gorm:\"primaryKey;autoIncrement:false\"R\fAssignmentID\x12D\n" +
+	"\x06UserID\x18\x02 \x01(\x04B,ʵ\x03(\xa2\x01%gorm:\"primaryKey;autoIncrement:false\"R\x06UserID\"K\n" +
 	"\x13AssignmentFeedbacks\x124\n" +
 	"\tfeedbacks\x18\x01 \x03(\v2\x16.qf.AssignmentFeedbackR\tfeedbacksB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
