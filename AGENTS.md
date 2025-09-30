@@ -2,6 +2,7 @@
 
 QuickFeed is a Go/TypeScript web application for automated feedback on programming assignments.
 It features a Go backend with gRPC/Connect services and a React/TypeScript frontend with Overmind state management.
+This file focuses on helping AI agents understand how to develop QuickFeed effectively, with emphasis on code quality, testing patterns, and architectural understanding rather than deployment procedures.
 
 ## Code Style Guidelines
 
@@ -36,8 +37,10 @@ Use proper interfaces and type definitions for all data structures.
 
 ### Documentation Style
 
-When writing documentation in markdown files, ensure proper formatting and structure.
+When writing documentation in markdown files, ensure proper formatting and structure that follows formatting and style guidelines of the markdown linter.
 Follow the one sentence per line rule for better readability and version control diffs.
+
+Whenever you update code or add a new feature, make sure to update the relevant documentation files in `doc/` to reflect the changes.
 
 ## Development Workflow
 
@@ -58,22 +61,23 @@ Study the existing tests in the web package to understand how to use this helper
 The MockClient test helper allows you to simulate RPC calls and assert the expected behavior of your service methods without relying on a real backend.
 
 Example MockClient usage pattern:
+
 ```go
 func TestMyRPCMethod(t *testing.T) {
     db, cleanup := qtest.TestDB(t)
     defer cleanup()
-    
+
     client := web.MockClient(t, db, scm.WithMockOrgs("admin"), nil)
     // For authenticated requests:
     // client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs("admin"))
-    
+
     // Test your RPC method
     response, err := client.MyRPCMethod(context.Background(), &connect.Request[qf.MyRequest]{
         Msg: &qf.MyRequest{
             // Request parameters
         },
     })
-    
+
     // Assert expected behavior
     if err != nil {
         t.Error(err)
@@ -119,13 +123,16 @@ Ensure components render correctly with different props and state configurations
 ### Key Development Patterns
 
 #### Protocol Buffer Workflow
+
 When editing protocol buffers in `qf/*.proto`:
+
 1. Run `make proto` to regenerate Go and TypeScript code
 2. Update affected Go service methods in `web/` package
 3. Update frontend TypeScript code to use new types
 4. Add comprehensive tests for new RPC methods
 
 #### RPC Service Development
+
 1. Define the RPC method in appropriate `.proto` file
 2. Implement the method in the corresponding `web/` service file
 3. Add comprehensive tests using `MockClient` test helper
@@ -133,7 +140,9 @@ When editing protocol buffers in `qf/*.proto`:
 5. Add frontend tests for the new functionality
 
 #### Database Changes
+
 When modifying database models or queries:
+
 1. Update the model structs in `database/` package
 2. Add database migration if schema changes are needed
 3. Update related RPC service methods
@@ -145,6 +154,7 @@ When modifying database models or queries:
 ### Before Committing
 
 Always run these commands before committing:
+
 1. `gofumpt -w .` - Format Go code consistently
 2. `cd public && npm run lint` - Check frontend code style
 3. `make test` - Run complete test suite to ensure nothing is broken
@@ -154,6 +164,7 @@ Always run these commands before committing:
 
 Always handle errors appropriately in Go code.
 Use the `connect` package error types for RPC methods:
+
 ```go
 if err != nil {
     return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to process request: %w", err))
@@ -173,14 +184,16 @@ Use React best practices for state management and component lifecycle.
 ## Quick Reference
 
 ### Essential Build Commands
+
 ```bash
 make download        # Download Go dependencies (~20 seconds)
-make install         # Build Go backend (~52 seconds)  
+make install         # Build Go backend (~52 seconds)
 make ui             # Build frontend (~4.5 seconds)
 make test           # Run all tests (~93 seconds)
 ```
 
 ### Development Server
+
 ```bash
 # Setup (one-time)
 cp .env-template .env
@@ -191,6 +204,7 @@ PORT=8080 quickfeed -dev
 ```
 
 ### Testing Specific Areas
+
 ```bash
 go test ./web/...           # Test web services
 go test ./database/...      # Test database layer
@@ -198,9 +212,8 @@ cd public && npm run test   # Test frontend
 ```
 
 ### Code Formatting
+
 ```bash
 gofumpt -w .               # Format Go code
 cd public && npm run lint  # Check frontend style
 ```
-
-This file focuses on helping AI agents understand how to develop QuickFeed effectively, with emphasis on code quality, testing patterns, and architectural understanding rather than deployment procedures.
