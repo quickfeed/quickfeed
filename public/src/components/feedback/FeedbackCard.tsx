@@ -46,9 +46,6 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
                     </p>
                 </div>
                 <div className="d-flex justify-content-between">
-                    {feedback.UserID > 0n ? (
-                        <span className="badge badge-info">User ID: {feedback.UserID.toString()}</span>
-                    ) : null}
                     {feedback.CreatedAt && (
                         <small className="text-muted ml-auto">
                             {new Date(Number(feedback.CreatedAt.seconds) * 1000).toLocaleDateString()}
