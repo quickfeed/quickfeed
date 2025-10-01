@@ -81,7 +81,7 @@ const Courses = (overview: overview) => {
 
         if (shouldBeUnavailable(course)) {
             unavailableCourses.push(
-                <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} unavailable={true} />
+                <CourseCard key={course.ID.toString()} course={course} enrollment={create(EnrollmentSchema)} unavailable />
             )
             return
         }
