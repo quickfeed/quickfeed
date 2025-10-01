@@ -181,6 +181,36 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			}
 		}),
 	)
+	// repos/%v/%v/forks
+	postReposForksByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposForksByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(postReposForksByOwnerByRepo, owner, repo))
+			opts := mustRead[github.RepositoryCreateForkOptions](r.Body)
+
+			found := s.matchOrgFunc(owner, func(o github.Organization) {
+				s.repoID++
+				fork := github.Repository{
+					ID:           &s.repoID,
+					Organization: &o,
+					Name:         github.String(opts.Name),
+					Owner:        &github.User{Login: github.String(opts.Organization)},
+					Fork:         github.Bool(true),
+				}
+				s.repos = append(s.repos, fork)
+				if s.groups[owner] == nil {
+					s.groups[owner] = make(map[string][]github.User)
+				}
+				s.groups[owner][fork.GetName()] = make([]github.User, 0)
+				mustWrite(w, fork)
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound) // repo not found
+			}
+		}),
+	)
 	getOrgsMembershipsByOrgByUsernameHandler := WithRequestMatchHandler(
 		getOrgsMembershipsByOrgByUsername,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -678,6 +708,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		patchOrgsByOrgHandler,
 		getOrgsReposByOrgHandler,
 		postOrgsReposByOrgHandler,
+		postReposForksByOwnerByRepoHandler,
 		getOrgsMembershipsByOrgByUsernameHandler,
 		putOrgsMembershipsByOrgByUsernameHandler,
 		deleteOrgsMembersByOrgByUsernameHandler,

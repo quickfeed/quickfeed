@@ -6,6 +6,7 @@ const (
 	patchOrgsByOrg                                            = "PATCH /orgs/{org}"                                                  // CreateCourse
 	getOrgsReposByOrg                                         = "GET /orgs/{org}/repos"                                              // GetRepositories
 	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"                                             // CreateCourse, createRepository
+	postReposForksByOwnerByRepo                               = "POST /repos/{owner}/{repo}/forks"                                   // createRepository
 	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"                             // GetOrganization
 	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"                             // UpdateEnrollment, DemoteTeacherToStudent
 	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"                              // RejectEnrollment
