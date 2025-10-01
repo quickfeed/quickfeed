@@ -29,15 +29,12 @@ func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback, user
 	return err
 }
 
-// GetAssignmentFeedback returns a list of assignment feedback matching the given query.
-// If userID is specified, returns feedback from that user only.
-// Otherwise, returns all feedback for the assignment.
+// GetAssignmentFeedback returns a list of assignment feedback matching the given course.
 func (db *GormDB) GetAssignmentFeedback(query *qf.CourseRequest) (*qf.AssignmentFeedbacks, error) {
 	var feedbacks []*qf.AssignmentFeedback
-	dbQuery := db.conn.Model(&qf.AssignmentFeedback{})
-	dbQuery = dbQuery.Where("course_id = ?", query.GetCourseID())
-
-	if err := dbQuery.Find(&feedbacks).Error; err != nil {
+	if err := db.conn.Model(&qf.AssignmentFeedback{}).Where(&qf.AssignmentFeedback{
+		CourseID: query.GetCourseID(),
+	}).Find(&feedbacks).Error; err != nil {
 		return nil, fmt.Errorf("failed to get assignment feedback: %w", err)
 	}
 	return &qf.AssignmentFeedbacks{Feedbacks: feedbacks}, nil
