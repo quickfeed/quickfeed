@@ -290,11 +290,11 @@ message Review {
 
 message AssignmentFeedback {
     uint64 ID                           = 1;
-    uint64 CourseID                     = 2;  // foreign key - required
-    uint64 AssignmentID                 = 3;  // foreign key - required
-    string LikedContent                 = 4;  // What did you like about this assignment?
-    string ImprovementSuggestions       = 5;  // What would make it better?
-    uint32 TimeSpent                    = 6;  // Time used to complete the assignment
+    uint64 CourseID                     = 2;  // Required: foreign key
+    uint64 AssignmentID                 = 3;  // Required: foreign key
+    string LikedContent                 = 4;  // Required: What did you like about this assignment?
+    string ImprovementSuggestions       = 5;  // Required: What would make it better?
+    uint32 TimeSpent                    = 6;  // Required: Time used to complete the assignment
     google.protobuf.Timestamp CreatedAt = 7 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }
 
