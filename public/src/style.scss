@@ -303,17 +303,17 @@ input {
 }
 
 .result-approved {
-    background-color: #ccffcc;
+    background-color: var(--approved-color);
     cursor: pointer;
 }
 
 .result-rejected {
-    background-color: #ffcccc;
+    background-color: var(--rejected-color);
     cursor: pointer;
 }
 
 .result-revision {
-    background-color: #ffffcc;
+    background-color: var(--revision-color);
     cursor: pointer;
 }
 
@@ -360,29 +360,26 @@ input {
     color: slategrey;
 }
 
-.table td {
-    padding: 0.5rem !important;
+
+.table {
+    padding: 0.5rem;
     font-family: monospace;
     white-space: nowrap;
-}
 
-.table th {
-    padding: 0.5rem !important;
-    font-family: monospace;
-    white-space: nowrap;
-}
+    .passed {
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--passed-color) var(--bar-width) 0px 0px inset;
+        padding-left: calc(var(--bar-width) + 10px);
+    }
 
-.passed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
-}
+    .failed {
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--failed-color) var(--bar-width) 0px 0px inset;
+        padding-left: calc(var(--bar-width) + 10px);
+    }
 
-.failed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, red 5px 0px 0px inset;
-}
-
-.not-graded {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset,
-        rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
+    .not-graded {
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, rgba(0, 0, 0, 0.2) var(--bar-width) 0px 0px inset;
+        padding-left: calc(var(--bar-width) + 10px);
+    }
 }
 
 .dropdown-menu-center {
@@ -604,14 +601,16 @@ nav.flexbox {
     &.comment-passed {
         /* green */
         td::before {
-            background-color: rgba(0, 128, 0, 0.3);
+            background-color: var(--passed-color);
+            opacity: 0.3;
         }
     }
 
     &.comment-failed {
         /* red */
         td::before {
-            background-color: rgba(255, 0, 0, 0.3);
+            background-color: var(--failed-color);
+            opacity: 0.3;
         }
     }
 
@@ -643,6 +642,22 @@ nav.flexbox {
     &.hidden {
         display: none;
     }
+}
+
+.uniform-button {
+    display: inline-block;
+    width: 150px;
+    height: 100px;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.fixed-prepend {
+    width: 150px;
+    text-align: left;
 }
 
 .breadcrumb {
