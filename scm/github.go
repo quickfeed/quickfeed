@@ -166,10 +166,6 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 			Owner:   org.GetScmOrganizationName(),
 			Private: private,
 		}
-		if path == qf.AssignmentsRepo {
-			// Assignments repository is used as a template for student repositories
-			repoOptions.IsTemplate = true
-		}
 		repo, err := s.createRepository(ctx, repoOptions)
 		if err != nil {
 			return nil, err
@@ -383,17 +379,17 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 		// creating a default course repository
 		s.logger.Debugf("CreateRepository: creating %s", opt.Repo)
 		repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
-			Name:       github.String(opt.Repo),
-			Private:    github.Bool(opt.Private),
-			IsTemplate: github.Bool(opt.IsTemplate),
-		})
-	} else {
-		// creating a student / group repository from template
-		s.logger.Debugf("CreateRepository: creating student/group repository %s from template", opt.Repo)
-		repo, _, err = s.client.Repositories.CreateFromTemplate(ctx, opt.Owner, qf.AssignmentsRepo, &github.TemplateRepoRequest{
-			Owner:   github.String(opt.Owner),
 			Name:    github.String(opt.Repo),
 			Private: github.Bool(opt.Private),
+		})
+	} else {
+		// forking a student or group repository from the assignments repository
+		s.logger.Debugf("CreateRepository: creating student/group repository %s from template", opt.Repo)
+		repo, _, err = s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
+			Organization: opt.Owner,
+			Name:         opt.Repo,
+			// A forked repository retains the visibility of the parent repository.
+			// Since the assignments repository is private, the fork will also be private.
 		})
 	}
 	if err != nil {

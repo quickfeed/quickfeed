@@ -60,10 +60,9 @@ func (opt RepositoryOptions) valid() bool {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Owner      string
-	Repo       string
-	Private    bool
-	IsTemplate bool
+	Owner   string
+	Repo    string
+	Private bool
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
