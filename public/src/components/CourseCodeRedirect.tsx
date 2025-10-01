@@ -20,12 +20,7 @@ export const CourseCodeRedirect = () => {
         return (prev.year > current.year) ? prev : current
     })
 
-    if (course) {
-        // redirect to the course page
-        return <Navigate to={`/course/${course.ID}`} replace />
-    }
-
-    return <Navigate to="/courses" replace />
+    return <Navigate to={`/course/${course.ID}`} replace />
 }
 
 export default CourseCodeRedirect
