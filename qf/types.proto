@@ -40,9 +40,8 @@ message User {
     uint64 ScmRemoteID  = 9;   // Filter; The user's ID on the remote provider.
     string RefreshToken = 10;  // Filter; The user's refresh token that may be exchanged for an access token.
 
-    repeated Enrollment Enrollments = 11;
+    repeated Enrollment Enrollments           = 11;
     repeated FeedbackReceipt FeedbackReceipts = 12 [(go.field) = { tags: 'gorm:"foreignKey:UserID"' }];
-
 }
 
 message Users {
@@ -300,8 +299,8 @@ message AssignmentFeedback {
 }
 
 message FeedbackReceipt {
-    uint64 AssignmentID                 = 1  [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
-    uint64 UserID                       = 2  [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
+    uint64 AssignmentID = 1 [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
+    uint64 UserID       = 2 [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
 }
 
 message AssignmentFeedbacks {
