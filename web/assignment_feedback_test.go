@@ -170,7 +170,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 	teacherCookie := client.Cookie(t, teacher)
 	student1Cookie := client.Cookie(t, student1)
 	student2Cookie := client.Cookie(t, student2)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Create feedback from student1
 	feedback1 := &qf.AssignmentFeedback{
@@ -222,7 +222,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: required roles [teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
 		},
 		{
-			name:   "Teacher can get feedback for non-existent course",
+			name:   "Teacher cannot get feedback for non-existent course",
 			cookie: teacherCookie,
 			request: &qf.CourseRequest{
 				CourseID: 99999,
@@ -303,17 +303,17 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 	// Assertions helpers
 	checkCount := func(t *testing.T, userID uint64, want int) {
 		t.Helper()
-		rcpts := getUserReceipts(cookies[userID])
-		if got := len(rcpts); got != want {
+		receipts := getUserReceipts(cookies[userID])
+		if got := len(receipts); got != want {
 			t.Fatalf("expected %d receipts, got %d", want, got)
 		}
 	}
 
 	checkHas := func(t *testing.T, userID uint64, wantAssignmentIDs ...uint64) {
 		t.Helper()
-		rcpts := getUserReceipts(cookies[userID])
+		receipts := getUserReceipts(cookies[userID])
 		seen := make(map[uint64]bool)
-		for _, r := range rcpts {
+		for _, r := range receipts {
 			if r.GetUserID() != userID {
 				t.Errorf("expected user ID %d, got %d", userID, r.GetUserID())
 			}
