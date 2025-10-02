@@ -125,3 +125,7 @@ func (r *GradingCriterion) IDFor(_ string) uint64 {
 func (*Organization) IDFor(_ string) uint64 {
 	return 0
 }
+
+func (r *AssignmentFeedback) IDFor(_ string) uint64 {
+	return r.GetCourseID()
+}
