@@ -5,13 +5,14 @@ import { useAppState } from "../../overmind"
 import ProfileButton from "../navbar-buttons/ProfileButton"
 import LogoutButton from "../navbar-buttons/LogoutButton"
 import StreamStatus from "./StreamStatus"
+import { nextURL } from "../../Helpers"
 
 const NavBarUser = () => {
     const { self, isLoggedIn } = useAppState()
 
     if (!isLoggedIn) {
         return (
-            <a href="/auth/github" className="flex-user signIn mr-2">Sign In</a>
+            <a href={`/auth/github?next=${nextURL()}`} className="flex-user signIn mr-2">Sign In</a>
         )
     }
 
