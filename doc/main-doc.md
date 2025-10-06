@@ -6,7 +6,8 @@ Read [Overview of QuickFeed's code base](qf-overview.md)
 
 ## For Teachers
 
-Please review the [User Manual](teacher.md) to setup QuickFeed, and you'ed also want to copy the [sign up instructions](templates/signup.md) and [lab submission instructions](templates/lab-submission.md), and make the necessary adjustments for your course.
+Please review the [User Manual](teacher.md) to setup QuickFeed.
+You may also want to copy the [sign up instructions](templates/signup.md) and [lab submission instructions](templates/lab-submission.md), and make the necessary adjustments for your course.
 
 ## Technology Stack
 
@@ -27,6 +28,9 @@ View [Recommended extensions](../.vscode/extensions.json)
 View [QuickFeed Developer Guide](dev.md)
 
 ## Kit - release guide
+
+The kit package contains helper functions to be used in course specific test cases so that QuickFeed can compute a score for the code submitted by students.
+It also contains code to help score multiple choice exercises and command line execution that returns a given expected output.
 
 View [Preparing a new Release of QuickFeed's kit Module](release-guide.md)
 
