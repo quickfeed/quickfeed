@@ -174,10 +174,7 @@ const Courses = (overview: overview) => {
 
 const shouldBeUnavailable = (course: Course): boolean => {
     const now = new Date()
-    if (now.getFullYear() > course.year) {
-        return true
-    }
-    return false
+    return now.getFullYear() > course.year
 }
 
 export default Courses
