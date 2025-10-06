@@ -3,6 +3,7 @@ package interceptor
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -18,6 +19,7 @@ type (
 	}
 )
 
+//go:generate stringer -type=role
 const (
 	none role = iota
 	// user role implies that user attempts to access information about himself.
@@ -34,40 +36,42 @@ const (
 
 // If there are several roles that can call a method, a role with the least privilege must come first.
 var accessRolesFor = map[string]roles{
-	"GetUser":                {none},
-	"GetCourse":              {none},
-	"GetCourses":             {none},
-	"SubmissionStream":       {none}, // No role required as long as the user is authenticated, i.e. has a valid token.
-	"CreateEnrollment":       {user},
-	"UpdateCourseVisibility": {user},
-	"UpdateUser":             {user, admin},
-	"GetEnrollments":         {user, student, teacher, admin},
-	"GetSubmissions":         {student, group, teacher},
-	"GetSubmission":          {teacher},
-	"CreateGroup":            {group, teacher},
-	"GetGroup":               {group, teacher},
-	"GetAssignments":         {student, teacher},
-	"GetRepositories":        {student, teacher},
-	"UpdateGroup":            {teacher},
-	"DeleteGroup":            {teacher},
-	"GetGroupsByCourse":      {teacher},
-	"UpdateCourse":           {teacher},
-	"UpdateEnrollments":      {teacher},
-	"UpdateAssignments":      {teacher},
-	"UpdateSubmission":       {teacher},
-	"UpdateSubmissions":      {teacher},
-	"RebuildSubmissions":     {teacher},
-	"CreateBenchmark":        {teacher},
-	"UpdateBenchmark":        {teacher},
-	"DeleteBenchmark":        {teacher},
-	"CreateCriterion":        {teacher},
-	"UpdateCriterion":        {teacher},
-	"DeleteCriterion":        {teacher},
-	"CreateReview":           {teacher},
-	"UpdateReview":           {teacher},
-	"IsEmptyRepo":            {teacher},
-	"GetSubmissionsByCourse": {teacher},
-	"GetUsers":               {admin},
+	"GetUser":                  {none},
+	"GetCourse":                {none},
+	"GetCourses":               {none},
+	"SubmissionStream":         {none}, // No role required as long as the user is authenticated, i.e. has a valid token.
+	"CreateEnrollment":         {user},
+	"UpdateCourseVisibility":   {user},
+	"UpdateUser":               {user, admin},
+	"GetEnrollments":           {user, student, teacher, admin},
+	"GetSubmissions":           {student, group, teacher},
+	"GetSubmission":            {teacher},
+	"CreateGroup":              {group, teacher},
+	"GetGroup":                 {group, teacher},
+	"GetAssignments":           {student, teacher},
+	"GetRepositories":          {student, teacher},
+	"UpdateGroup":              {teacher},
+	"DeleteGroup":              {teacher},
+	"GetGroupsByCourse":        {teacher},
+	"UpdateCourse":             {teacher},
+	"UpdateEnrollments":        {teacher},
+	"UpdateAssignments":        {teacher},
+	"UpdateSubmission":         {teacher},
+	"UpdateSubmissions":        {teacher},
+	"RebuildSubmissions":       {teacher},
+	"CreateBenchmark":          {teacher},
+	"UpdateBenchmark":          {teacher},
+	"DeleteBenchmark":          {teacher},
+	"CreateCriterion":          {teacher},
+	"UpdateCriterion":          {teacher},
+	"DeleteCriterion":          {teacher},
+	"CreateReview":             {teacher},
+	"UpdateReview":             {teacher},
+	"CreateAssignmentFeedback": {student, teacher},
+	"GetAssignmentFeedback":    {teacher},
+	"IsEmptyRepo":              {teacher},
+	"GetSubmissionsByCourse":   {teacher},
+	"GetUsers":                 {admin},
 }
 
 type AccessControlInterceptor struct {
@@ -102,8 +106,7 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 		}
 		claims, ok := auth.ClaimsFromContext(ctx)
 		if !ok {
-			return nil, connect.NewError(connect.CodePermissionDenied,
-				fmt.Errorf("access denied for %s: failed to get claims from request context", method))
+			return nil, accessDeniedError(method, "failed to get claims from request context")
 		}
 		for _, role := range accessRolesFor[method] {
 			switch role {
@@ -114,9 +117,8 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					// Make sure the user is not updating own admin status.
 					if method == "UpdateUser" {
 						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
-							return nil, connect.NewError(connect.CodePermissionDenied,
-								fmt.Errorf("access denied for %s: user %d attempted to change admin status from %v to %v",
-									method, claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin()))
+							return nil, accessDeniedError(method, "user %d attempted to change admin status from %v to %v",
+								claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
 						}
 					}
 					return next(ctx, request)
@@ -130,9 +132,8 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 						continue
 					}
 					if !claims.SameUser(req) {
-						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("access denied for %s: ID mismatch in claims (%d) and request (%d)",
-								method, claims.UserID, req.IDFor("user")))
+						return nil, accessDeniedError(method, "ID mismatch in claims (%d) and request (%d)",
+							claims.UserID, req.IDFor("user"))
 					}
 				}
 				if claims.HasCourseStatus(req, qf.Enrollment_STUDENT) {
@@ -145,23 +146,19 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					notMember := !req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})
 					notTeacher := !claims.HasCourseStatus(req, qf.Enrollment_TEACHER)
 					if notMember && notTeacher {
-						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("access denied for %s: user %d tried to create group while not teacher or group member", method, claims.UserID))
+						return nil, accessDeniedError(method, "user %d tried to create group while not teacher or group member", claims.UserID)
 					}
 					// Otherwise, create the group.
 					return next(ctx, request)
 				}
 				groupID := req.IDFor("group")
-				for _, group := range claims.Groups {
-					if group == groupID {
-						return next(ctx, request)
-					}
+				if slices.Contains(claims.Groups, groupID) {
+					return next(ctx, request)
 				}
 			case teacher:
 				if method == "RebuildSubmissions" || method == "UpdateSubmission" {
 					if !isValidSubmission(a.tokenManager.Database(), req) {
-						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("access denied for %s: %v", method, "invalid submission"))
+						return nil, accessDeniedError(method, "invalid submission")
 					}
 				}
 				if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
@@ -173,7 +170,12 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 				}
 			}
 		}
-		return nil, connect.NewError(connect.CodePermissionDenied,
-			fmt.Errorf("access denied for %s: required roles %v not satisfied by claims: %s", method, accessRolesFor[method], claims))
+		return nil, accessDeniedError(method, "required roles %v not satisfied by claims: %s", accessRolesFor[method], claims)
 	})
+}
+
+// accessDeniedError creates a standardized access denied error for the given method and reason.
+func accessDeniedError(method, reason string, args ...any) error {
+	message := fmt.Sprintf("access denied for %s: %s", method, fmt.Sprintf(reason, args...))
+	return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("%s", message))
 }
