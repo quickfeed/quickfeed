@@ -62,12 +62,12 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		// This is used to redirect the user back to the page they were on after logging in.
 		// The next URL is sanitized to ensure it is a valid path.
 		rawNext := r.URL.Query().Get("next")
-		next := SanitizeNext(rawNext)
+		nextURL := SanitizeNext(rawNext)
 
 		// Store the next URL in a (short-lived) cookie so we can redirect the user back to it in the callback handler.
 		http.SetCookie(w, &http.Cookie{
 			Name:     nextCookieName,
-			Value:    url.QueryEscape(next),
+			Value:    url.QueryEscape(nextURL),
 			Domain:   env.Domain(),
 			Path:     "/",
 			MaxAge:   300,
@@ -78,7 +78,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		})
 
 		redirectURL := authConfig.AuthCodeURL(secret)
-		logger.Debugf("Redirecting to AuthURL: %v (next=%q)", redirectURL, next)
+		logger.Debugf("Redirecting to AuthURL: %v (nextURL=%q)", redirectURL, nextURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
