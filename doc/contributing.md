@@ -96,7 +96,3 @@ For Go, we expect code to follow these style guidelines and list of common mista
 
 For Typescript, we think these [style guidelines](https://github.com/basarat/typescript-book/blob/master/docs/styleguide/styleguide.md) look reasonable.
 Moreover, the `formatOnSave` and `tslint.run` options in VSCode should help maintain reasonable style.
-
-Note that we currently violate the [interface naming](https://github.com/basarat/typescript-book/blob/master/docs/styleguide/styleguide.md#interface)
-guideline by using the `I` prefix on some interfaces, and several of the other guidelines.
-We have started to rename these interfaces, and will eventually rename all such interfaces.
