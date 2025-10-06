@@ -17,7 +17,6 @@ const (
 	SetCookie            = "Set-Cookie"
 	tokenExpirationTime  = 15 * time.Minute
 	cookieExpirationTime = 24 * time.Hour * 14 // 2 weeks
-	alg                  = "HS256"
 
 	// nextCookieName is the name of the cookie that stores the next URL to redirect to after login.
 	nextCookieName = "qf_next"
