@@ -55,13 +55,13 @@ This can be done using a token auth client interceptor, as shown in the followin
 
 ```go
 func NewQuickFeed(serverURL, token string) qfconnect.QuickFeedServiceClient {
- return qfconnect.NewQuickFeedServiceClient(
-  http.DefaultClient,
-  serverURL,
-  connect.WithInterceptors(
-   interceptor.NewTokenAuthClientInterceptor(token),
-  ),
- )
+	return qfconnect.NewQuickFeedServiceClient(
+		http.DefaultClient,
+		serverURL,
+		connect.WithInterceptors(
+			interceptor.NewTokenAuthClientInterceptor(token),
+		),
+	)
 }
 ```
 

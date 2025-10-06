@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v62/github"
-	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -29,8 +28,8 @@ func (s mockOptions) DumpState() string {
 	for i, org := range s.orgs {
 		fmt.Fprintf(b, "Org[%d]: %v\n", i, org)
 	}
-	for i, repo := range s.repos {
-		fmt.Fprintf(b, "Repo[%d]: %v\n", i, repo)
+	for i := range s.repos {
+		fmt.Fprintf(b, "Repo[%d]: %v\n", i, s.repos[i])
 	}
 	for i, member := range s.members {
 		fmt.Fprintf(b, "Member[%d]: %v\n", i, member)
@@ -68,7 +67,8 @@ func (s mockOptions) DumpState() string {
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
 func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
-	for _, repo := range s.repos {
+	for i := range s.repos {
+		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
 			return true
 		}
@@ -204,8 +204,8 @@ func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
 
 var toOrg = func(course *qf.Course) github.Organization {
 	return github.Organization{
-		ID:    github.Int64(int64(course.ScmOrganizationID)),
-		Login: github.String(slug.Make(course.ScmOrganizationName)),
+		ID:    github.Int64(int64(course.GetScmOrganizationID())),
+		Login: github.String(course.GetScmOrganizationName()),
 	}
 }
 

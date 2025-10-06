@@ -1,9 +1,10 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, Grade } from "../proto/qf/types_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
-import { Timestamp } from "@bufbuild/protobuf"
+import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt"
 import { CourseSubmissions } from "../proto/qf/requests_pb"
+import { create, isMessage } from "@bufbuild/protobuf"
 
 export enum Color {
     RED = "danger",
@@ -28,32 +29,38 @@ export enum ConnStatus {
     RECONNECTING,
 }
 
+export enum Icon {
+    DASH = "fa fa-minus grey",
+    USER = "fa fa-user",
+    GROUP = "fa fa-users",
+}
+
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a timestamp
- * 
+ *
  *  The offset parameter is used to remove the timezone offset from the timestamp.
  *  For example, deadlines are defined in our `assignment.yaml` files in UTC time (ex. 2023-12-31 23:59:00).
  *  If we don't remove the timezone offset, the date will be off by the timezone offset (from above: 2024-01-01 00:59:00).
  *  We want to display the date as it is defined in the assignment file, so we remove the timezone offset.
  *  - offset: true
  *      - 2023-12-31T23:59:00Z will be displayed as "31 December 2023 23:59"
- * 
+ *
  *  In other cases such as the build date for submissions, we want to display the date in the user's local timezone.
  *  In this case, we *don't* remove the timezone offset. Otherwise the date will be off by the timezone offset.
  *  - offset: false
  *      - 2023-12-31T23:59:00Z will be displayed as "1 January 2024 00:59"
- * 
+ *
  *  Note that in UTC+1 the offset is -60 minutes, adding the offset will effectively subtract 60 minutes from the date.
  */
 export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: boolean): string => {
     if (!timestamp) {
         return "N/A"
     }
-    const date = timestamp.toDate()
-    
+    const date = timestampDate(timestamp)
+
     // dates are stored in UTC, so we might need to adjust for the local timezone
-    // otherwise the date will be off by the timezone offset, e.g. 
+    // otherwise the date will be off by the timezone offset, e.g.
     // 2024-02-08T23:59:00Z will be displayed to users in UTC+1 as "9 February 2024 00:59"
     // not "8 February 2024 23:59" as expected
     const tzOffset = offset ? date.getTimezoneOffset() * 60000 : 0
@@ -76,7 +83,7 @@ export interface Deadline {
  * layoutTime = "2021-03-20T23:59:00"
  */
 export const timeFormatter = (deadline: Timestamp): Deadline => {
-    const timeToDeadline = deadline.toDate().getTime()
+    const timeToDeadline = timestampDate(deadline).getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -158,7 +165,7 @@ export const isAuthor = (user: User, review: Review): boolean => { return user.I
 /** isValidSubmissionForAssignment returns true if the submission is valid for the assignment
  *  A submission is considered valid if the assignment is a group lab, or the submission is not part of a group.
  *  This is used to filter out submissions that are not to be displayed in the UI.
- * 
+ *
  *  - If the assignment is a group lab, all submissions (solo and group) are valid.
  *  - If the assignment is not a group lab, only submissions that are not part of a group are valid.
  */
@@ -168,8 +175,8 @@ export const isValidSubmissionForAssignment = (submission: Submission, assignmen
 
 export const isGroupSubmission = (submission: Submission): boolean => { return submission.groupID > 0n }
 
-export const isManuallyGraded = (assignment: Assignment): boolean => {
-    return assignment.reviewers > 0
+export const isManuallyGraded = (reviewers: number): boolean => {
+    return reviewers > 0
 }
 
 export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
@@ -208,18 +215,18 @@ export const getStatusByUser = (submission: Submission | null, userID: bigint): 
 export const setStatusByUser = (submission: Submission, userID: bigint, status: Submission_Status): Submission => {
     const grades = submission.Grades.map(grade => {
         if (grade.UserID === userID) {
-            return new Grade({ ...grade, Status: status })
+            return create(GradeSchema, { ...grade, Status: status })
         }
         return grade
     })
-    return new Submission({ ...submission, Grades: grades })
+    return create(SubmissionSchema, { ...submission, Grades: grades })
 }
 
 export const setStatusAll = (submission: Submission, status: Submission_Status): Submission => {
     const grades = submission.Grades.map(grade => {
-        return new Grade({ ...grade, Status: status })
+        return create(GradeSchema, { ...grade, Status: status })
     })
-    return new Submission({ ...submission, Grades: grades })
+    return create(SubmissionSchema, { ...submission, Grades: grades })
 }
 
 /** getCourseID returns the course ID determined by the current route */
@@ -311,8 +318,8 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
-export const getSubmissionCellColor = (submission: Submission, owner:  Enrollment | Group): string => {
-    if (owner instanceof Group) {
+export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
+    if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
             return "result-approved"
         }
@@ -415,7 +422,7 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
         }
         case EnrollmentSort.Activity:
             if (a.lastActivityDate && b.lastActivityDate) {
-                return sortOrder * (a.lastActivityDate.toDate().getTime() - b.lastActivityDate.toDate().getTime())
+                return sortOrder * (timestampDate(a.lastActivityDate).getTime() - timestampDate(b.lastActivityDate).getTime())
             }
             return 0
         case EnrollmentSort.Slipdays:
@@ -449,7 +456,7 @@ export class SubmissionsForCourse {
 
     /** ForGroup returns group submissions for the given group or enrollment */
     ForGroup(group: Group | Enrollment): Submission[] {
-        if (group instanceof Group) {
+        if (isMessage(group, GroupSchema)) {
             return this.groupSubmissions.get(group.ID)?.submissions ?? []
         }
         return this.groupSubmissions.get(group.groupID)?.submissions ?? []
@@ -509,10 +516,10 @@ export class SubmissionsForCourse {
         }
         if (owner.type === "GROUP") {
             const clone = new Map(this.groupSubmissions)
-            this.groupSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+            this.groupSubmissions = clone.set(owner.id, create(SubmissionsSchema, { submissions }))
         } else {
             const clone = new Map(this.userSubmissions)
-            this.userSubmissions = clone.set(owner.id, new Submissions({ submissions }))
+            this.userSubmissions = clone.set(owner.id, create(SubmissionsSchema, { submissions }))
         }
     }
 
@@ -584,7 +591,8 @@ export class SubmissionsForUser {
             const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
                 submissions[index] = submission
-                this.submissions.set(courseID, submissions)
+                const clone = new Map(this.submissions)
+                this.submissions = clone.set(courseID, submissions)
                 return
             }
         }
@@ -593,7 +601,8 @@ export class SubmissionsForUser {
             const index = submissions.findIndex(s => s.ID === submission.ID)
             if (index !== -1) {
                 submissions[index] = submission
-                this.groupSubmissions.set(courseID, submissions)
+                const clone = new Map(this.groupSubmissions)
+                this.groupSubmissions = clone.set(courseID, submissions)
                 return
             }
         }
@@ -601,10 +610,12 @@ export class SubmissionsForUser {
 
     setSubmissions(courseID: bigint, type: "USER" | "GROUP", submissions: Submission[]) {
         if (type === "USER") {
-            this.submissions.set(courseID, submissions)
+            const clone = new Map(this.submissions)
+            this.submissions = clone.set(courseID, submissions)
         }
         if (type === "GROUP") {
-            this.groupSubmissions.set(courseID, submissions)
+            const clone = new Map(this.groupSubmissions)
+            this.groupSubmissions = clone.set(courseID, submissions)
         }
     }
 }

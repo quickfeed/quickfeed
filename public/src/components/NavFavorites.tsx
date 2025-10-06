@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import NavBarCourse from "./navbar/NavBarCourse"
 import { isEnrolled, isVisible } from "../Helpers"
 
-const NavFavorites = (): JSX.Element => {
+const NavFavorites = () => {
     const state = useAppState()
 
     const visible = state.enrollments.filter(enrollment => isEnrolled(enrollment) && isVisible(enrollment))

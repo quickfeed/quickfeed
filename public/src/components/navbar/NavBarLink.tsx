@@ -4,13 +4,13 @@ import { Link, useHistory } from "react-router-dom"
 export interface NavLink {
     link: { text: string, to: string }
     icons?: ({ text: string | number, classname: string } | null)[],
-    jsx?: JSX.Element
+    jsx?: React.JSX.Element
 }
 
-const NavBarLink = (props: NavLink): JSX.Element => {
+const NavBarLink = (props: NavLink) => {
     const history = useHistory()
 
-    const icons: JSX.Element[] = []
+    const icons: React.JSX.Element[] = []
     if (props.icons) {
         props.icons.forEach((icon, index) => {
             if (icon) {

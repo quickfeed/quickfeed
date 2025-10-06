@@ -166,16 +166,16 @@ func TestMockGetOrganization(t *testing.T) {
 
 	s = NewMockedGithubSCMClient(qtest.Logger(t), WithMockOrgs())
 	for _, course := range qtest.MockCourses {
-		name := qtest.Name(course.Name, []string{"ScmOrgID", "ScmOrgName"}, course.ScmOrganizationID, course.ScmOrganizationName)
+		name := qtest.Name(course.Name, []string{"ScmOrgID", "ScmOrgName"}, course.GetScmOrganizationID(), course.GetScmOrganizationName())
 		t.Run(name, func(t *testing.T) {
-			gotOrg, err := s.GetOrganization(context.Background(), &OrganizationOptions{Name: course.ScmOrganizationName})
+			gotOrg, err := s.GetOrganization(context.Background(), &OrganizationOptions{Name: course.GetScmOrganizationName()})
 			if err != nil {
 				t.Errorf("GetOrganization() error = %v, want <nil>", err)
 			}
 			if gotOrg == nil {
 				t.Errorf("GetOrganization() = <nil>, want non-nil organization")
 			}
-			gotOrg, err = s.GetOrganization(context.Background(), &OrganizationOptions{ID: course.ScmOrganizationID})
+			gotOrg, err = s.GetOrganization(context.Background(), &OrganizationOptions{ID: course.GetScmOrganizationID()})
 			if err != nil {
 				t.Errorf("GetOrganization() error = %v, want <nil>", err)
 			}
