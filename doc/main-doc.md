@@ -1,12 +1,12 @@
-# Quickfeed Documentation
+# QuickFeed Documentation
 
-## Learn more about the quickfeed system
+## Learn more about the QuickFeed system
 
-Read [Overview of Quickfeed's code base](qf-overview.md)
+Read [Overview of QuickFeed's code base](qf-overview.md)
 
 ## For Teachers
 
-Please review the [User Manual](teacher.md) to setup quickfeed, and you'ed also want to copy the [sign up instructions](templates/signup.md) and [lab submission instructions](templates/lab-submission.md), and make the necessary adjustments for your course.
+Please review the [User Manual](teacher.md) to setup QuickFeed, and you'ed also want to copy the [sign up instructions](templates/signup.md) and [lab submission instructions](templates/lab-submission.md), and make the necessary adjustments for your course.
 
 ## Technology Stack
 
