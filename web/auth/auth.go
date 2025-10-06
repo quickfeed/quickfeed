@@ -117,11 +117,12 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			return
 		}
 		http.SetCookie(w, cookie)
-		// pull desired redirect
-		dest := "/"
+
+		// pull the redirect URL from the cookie (if any) and delete it
+		redirectURL := "/"
 		if c, err := r.Cookie(nextCookieName); err == nil {
 			if v, e := url.QueryUnescape(c.Value); e == nil {
-				dest = SanitizeNext(v)
+				redirectURL = SanitizeNext(v)
 			}
 			// delete cookie
 			http.SetCookie(w, &http.Cookie{
@@ -136,8 +137,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 				SameSite: http.SameSiteLaxMode,
 			})
 		}
-
-		http.Redirect(w, r, dest, http.StatusFound)
+		http.Redirect(w, r, redirectURL, http.StatusFound)
 	}
 }
 
