@@ -14,14 +14,26 @@ const MarkReadyButton = ({ review }: { review: Review }) => {
         if (allCriteriaGraded || ready) {
             actions.review.updateReady(!ready)
         }
-    }, [allCriteriaGraded, ready])
+    }, [actions.review, allCriteriaGraded, ready])
+
+    if (ready) {
+        return (
+            <Button
+                text="Mark in Progress"
+                color={Color.YELLOW}
+                type={ButtonType.BADGE}
+                className="float-right"
+                onClick={handleMarkReady}
+            />
+        )
+    }
 
     return (
         <Button
-            text={ready ? "Mark In progress" : "Mark Ready"}
-            color={ready ? Color.YELLOW : Color.GREEN}
-            type={ready ? ButtonType.BADGE : ButtonType.BUTTON}
-            className={ready ? "float-right" : allCriteriaGraded ? "" : "disabled"}
+            text="Mark Ready"
+            color={Color.GREEN}
+            type={ButtonType.BUTTON}
+            className={allCriteriaGraded ? "" : "disabled"}
             onClick={handleMarkReady}
         />
     )

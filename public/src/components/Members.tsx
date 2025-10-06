@@ -1,16 +1,17 @@
-import React, { useState } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, getFormattedTime, isPending, isTeacher, sortEnrollments } from "../Helpers"
+import React, { useState, useCallback } from "react"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getFormattedTime, isPending, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
+import { useCourseID } from "../hooks/useCourseID"
 
 const Members = () => {
     const state = useAppState()
-    const actions = useActions()
-    const courseID = getCourseID()
+    const actions = useActions().global
+    const courseID = useCourseID()
 
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)
     const [descending, setDescending] = useState<boolean>(false)
@@ -41,59 +42,81 @@ const Members = () => {
         { value: "Slipdays", onClick: () => { setSort(EnrollmentSort.Slipdays) } },
         { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
     ]
+
+    const handleMemberChange = useCallback((enrollment: Enrollment, status: Enrollment_UserStatus) => (
+        () => actions.updateEnrollment({ enrollment, status })
+    ), [actions])
+    const handleApprovePendingEnrollments = useCallback(() => actions.approvePendingEnrollments(), [actions])
+
     const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
-        const data: Row = []
-        data.push(enrollment.user ? enrollment.user.Name : "")
-        data.push(enrollment.user ? enrollment.user.Email : "")
-        data.push(enrollment.user ? enrollment.user.StudentID : "")
-        data.push(getFormattedTime(enrollment.lastActivityDate))
-        data.push(enrollment.totalApproved.toString())
-        data.push(enrollment.slipDaysRemaining.toString())
-
-        if (isPending(enrollment)) {
-            data.push(
-                <div className="d-flex">
-                    <DynamicButton
-                        text={"Accept"}
-                        color={Color.GREEN}
-                        type={ButtonType.BADGE}
-                        className="mr-2"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.STUDENT })}
-                    />
-                    <DynamicButton
-                        text={"Reject"}
-                        color={Color.RED}
-                        type={ButtonType.BADGE}
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
-                    />
-                </div>)
-        } else {
-            data.push(edit ? (
-                <div className="d-flex">
-                    <DynamicButton
-                        text={isTeacher(enrollment) ? "Demote" : "Promote"}
-                        color={isTeacher(enrollment) ? Color.YELLOW : Color.BLUE}
-                        type={ButtonType.BADGE}
-                        className="mr-2"
-                        onClick={() => actions.updateEnrollment({ enrollment, status: isTeacher(enrollment) ? Enrollment_UserStatus.STUDENT : Enrollment_UserStatus.TEACHER })}
-                    />
-                    <DynamicButton
-                        text={"Reject"}
-                        color={Color.RED}
-                        type={ButtonType.BADGE}
-                        onClick={() => actions.updateEnrollment({ enrollment, status: Enrollment_UserStatus.NONE })}
-                    />
-                </div>) :
-                <i className={EnrollmentStatusBadge[enrollment.status]}>
-                    {EnrollmentStatus[enrollment.status]}
-                </i>
-            )
+        // Button color and text are determined by the enrollment status
+        // These are used to determine what action we can take on the enrollment
+        // and what the button should say
+        let buttonColor = Color.GREEN
+        let enrollmentButtonText = ""
+        let role = Enrollment_UserStatus.STUDENT
+        switch (enrollment.status) {
+            case Enrollment_UserStatus.PENDING:
+                // if the enrollment is pending, we can accept them as a student
+                role = Enrollment_UserStatus.STUDENT
+                enrollmentButtonText = "Accept"
+                buttonColor = Color.GREEN
+                break
+            case Enrollment_UserStatus.STUDENT:
+                // if the enrollment is a student, we can promote them to teacher
+                role = Enrollment_UserStatus.TEACHER
+                enrollmentButtonText = "Promote"
+                buttonColor = Color.BLUE
+                break
+            case Enrollment_UserStatus.TEACHER:
+                // if the enrollment is a teacher, we can demote them to student
+                role = Enrollment_UserStatus.STUDENT
+                enrollmentButtonText = "Demote"
+                buttonColor = Color.YELLOW
+                break
+            default:
+                // we do not handle the case where the enrollment is NONE
+                // as this status is only used by the server to reject (delete) enrollments
+                // if the enrollment has any other status, we should not do anything
+                role = enrollment.status
+                break
         }
-        return data
-    })
 
+        const buttons = (
+            <div className="d-flex">
+                <DynamicButton
+                    text={enrollmentButtonText}
+                    color={buttonColor}
+                    type={ButtonType.BADGE}
+                    className="mr-2"
+                    onClick={handleMemberChange(enrollment, role)}
+                />
+                <DynamicButton
+                    text={"Reject"}
+                    color={Color.RED}
+                    type={ButtonType.BADGE}
+                    onClick={handleMemberChange(enrollment, Enrollment_UserStatus.NONE)}
+                />
+            </div>
+        )
+        const enrollmentBadgeIcon = (
+            <i className={EnrollmentStatusBadge[enrollment.status]}>
+                {EnrollmentStatus[enrollment.status]}
+            </i>
+        )
+        // rolebuttons can either be accept/reject, promote/demote or just the badge icon (student/teacher)
+        const roleButtons = isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
+        const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
+        return [
+            Name, Email, StudentID,
+            getFormattedTime(enrollment.lastActivityDate),
+            enrollment.totalApproved.toString(),
+            enrollment.slipDaysRemaining.toString(),
+            roleButtons,
+        ]
+    })
     return (
-        <div className='container'>
+        <>
             <div className="row no-gutters pb-2">
                 <div className="col-md-6">
                     <Search />
@@ -112,7 +135,7 @@ const Members = () => {
                             text="Approve All"
                             color={Color.GREEN}
                             type={ButtonType.BUTTON}
-                            onClick={() => actions.approvePendingEnrollments()}
+                            onClick={handleApprovePendingEnrollments}
                         />
                     </div> : null}
             </div>
@@ -120,7 +143,7 @@ const Members = () => {
             <div>
                 <DynamicTable header={header} data={members} />
             </div>
-        </div>
+        </>
     )
 }
 

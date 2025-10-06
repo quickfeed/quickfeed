@@ -2,8 +2,11 @@ package web_test
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
+	"connectrpc.com/connect"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
@@ -13,11 +16,74 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
+func TestSubmissionStream(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+		web.WithInterceptors(
+			web.UserInterceptorFunc,
+		),
+	)
+	user := qtest.CreateFakeUser(t, db)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	_, err := client.SubmissionStream(ctx, qtest.RequestWithCookie(&qf.Void{}, client.Cookie(t, user)))
+	if err != nil && errors.Is(err, context.Canceled) {
+		t.Fatal(err)
+	}
+}
+
+func TestGetSubmission(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, _, assignment := qtest.SetupCourseAssignment(t, db)
+	submission := &qf.Submission{
+		UserID:       user.GetID(),
+		AssignmentID: assignment.GetID(),
+	}
+	qtest.CreateSubmission(t, db, submission)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
+
+	tests := []struct {
+		name         string
+		submissionID uint64
+		wantErr      error
+	}{
+		{
+			name:         "valid submission",
+			submissionID: submission.GetID(),
+		},
+		{
+			name:         "invalid submission",
+			submissionID: 999,
+			wantErr:      connect.NewError(connect.CodeNotFound, errors.New("failed to get submission")),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := &qf.SubmissionRequest{
+				FetchMode: &qf.SubmissionRequest_SubmissionID{
+					SubmissionID: test.submissionID,
+				},
+			}
+			response, err := client.GetSubmission(context.Background(), &connect.Request[qf.SubmissionRequest]{Msg: request})
+			qtest.CheckError(t, err, test.wantErr)
+
+			if test.wantErr == nil {
+				qtest.Diff(t, "GetSubmission() mismatch", response.Msg, submission, protocmp.Transform())
+			}
+		})
+	}
+}
+
 func TestApproveSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -45,7 +111,7 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	cookie := Cookie(t, tm, admin)
+	cookie := client.Cookie(t, admin)
 
 	if _, err := client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.GetID(),
@@ -90,7 +156,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[2]
@@ -103,7 +169,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	qtest.EnrollStudent(t, db, student3, course)
 
 	ctx := context.Background()
-	cookie := Cookie(t, tm, admin)
+	cookie := client.Cookie(t, admin)
 
 	enrols, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_CourseID{
@@ -262,7 +328,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -361,7 +427,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantAssignments2 := []*qf.Assignment{lab1c2, lab2c2}
 
 	ctx := context.Background()
-	cookie := Cookie(t, tm, admin)
+	cookie := client.Cookie(t, admin)
 
 	assignments1, err := client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course1.GetID(),
@@ -481,7 +547,7 @@ func TestCreateApproveList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -637,7 +703,7 @@ func TestCreateApproveList(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	cookie := Cookie(t, tm, admin)
+	cookie := client.Cookie(t, admin)
 
 	gotSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.GetID(),
@@ -672,7 +738,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 
@@ -775,9 +841,9 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	cookie := Cookie(t, tm, admin)
+	cookie := client.Cookie(t, admin)
 
-	reviews := []*qf.Review{}
+	var reviews []*qf.Review
 	for _, s := range submissions {
 		if err := db.CreateSubmission(s); err != nil {
 			t.Fatal(err)
@@ -866,7 +932,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// We want to make sure that submissions received by the student do not leak data
-	studentCookie := Cookie(t, tm, student1)
+	studentCookie := client.Cookie(t, student1)
 
 	gotStudentSubmissions, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 		CourseID: course.GetID(),

@@ -23,7 +23,7 @@ func TestRegisterRouter(t *testing.T) {
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
 
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	public := createTempPublicDir(t)
 	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, public)
 
@@ -33,6 +33,14 @@ func TestRegisterRouter(t *testing.T) {
 		Expect(t).
 		Status(http.StatusOK).
 		Body("hello, world!").
+		End()
+
+	apitest.New("Robots").
+		Handler(mux).
+		Get("/robots.txt").
+		Expect(t).
+		Status(http.StatusOK).
+		Body("User-agent: *\nDisallow: /").
 		End()
 
 	partialUrl := "/" + qfconnect.QuickFeedServiceName + "/"
@@ -75,15 +83,25 @@ func createTempPublicDir(t *testing.T) string {
 	if err := os.MkdirAll(publicDir+"/assets", 0o700); err != nil {
 		t.Fatal(err)
 	}
-	file, err := os.Create(publicDir + "/assets/index.html")
+	if err := createFile(t, publicDir+"/assets/index.html", "hello, world!"); err != nil {
+		t.Fatal(err)
+	}
+	if err := createFile(t, publicDir+"/assets/robots.txt", "User-agent: *\nDisallow: /"); err != nil {
+		t.Fatal(err)
+	}
+	return publicDir
+}
+
+func createFile(t *testing.T, path, content string) error {
+	file, err := os.Create(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := file.WriteString("hello, world!"); err != nil {
+	if _, err := file.WriteString(content); err != nil {
 		t.Fatal(err)
 	}
 	if err := file.Close(); err != nil {
 		t.Fatal(err)
 	}
-	return publicDir
+	return nil
 }

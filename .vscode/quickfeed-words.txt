@@ -40,6 +40,7 @@ consts
 containertimeout
 copytruncate
 covermode
+coverpkg
 coverprofile
 CSRF
 dateext
@@ -127,6 +128,7 @@ JAVATEST
 jinzhu
 Jostein
 jsonpb
+Justfile
 JWTs
 Kandidatnr
 keepalive
@@ -239,6 +241,7 @@ testdb
 Testersen
 testjava
 testjavafile
+testinfo
 testorg
 testpackage
 timestamppb
@@ -251,6 +254,7 @@ unmarshalling
 unmarshalls
 urfave
 URL's
+userids
 usermod
 varcheck
 vercheck

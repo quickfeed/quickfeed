@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAppState } from './overmind'
 import NavBar from "./components/NavBar"
-import { Switch, Route } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import Profile from "./components/profile/Profile"
 import CoursePage from "./pages/CoursePage"
 import Courses from "./components/Courses"
@@ -21,30 +21,29 @@ const App = () => {
         } else if (!state.isValid && state.isLoggedIn) {
             // user logged in without profile information: redirect to Profile page
             return (
-                <Switch>
-                    <Route path="/" component={Profile} />
-                    <Route path="/profile" component={Profile} />
-                </Switch>
+                <Routes>
+                    <Route path="*" element={<Profile />} />
+                </Routes>
             )
         } else if (state.isLoggedIn) {
             // user logged in: show Dashboard page
             return (
-                <Switch>
-                    <Route path="/" exact component={Dashboard} />
-                    <Route path="/login" component={LoginPage} />
-                    <Route path="/about" component={AboutPage} />
-                    <Route path="/profile" component={Profile} />
-                    <Route path="/course/:id" component={CoursePage} />
-                    <Route path="/courses" exact component={Courses} />
-                    <Route path="/admin" component={AdminPage} />
-                </Switch>
+                <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/course/:id/*" element={<CoursePage />} />
+                    <Route path="/courses" element={<Courses home={false} />} />
+                    <Route path="/admin/*" element={<AdminPage />} />
+                    <Route path="*" element={<Dashboard />} />
+                </Routes>
             )
         } else {
             //  user not logged in: show About page
             return (
-                <Switch>
-                    <Route path="/" component={LoginPage} />
-                </Switch>
+                <Routes>
+                    <Route path="*" element={<LoginPage />} />
+                </Routes>
             )
         }
     }

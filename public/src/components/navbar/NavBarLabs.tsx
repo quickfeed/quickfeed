@@ -3,7 +3,7 @@ import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
-import { useHistory, useLocation } from "react-router"
+import { useNavigate, useLocation } from "react-router"
 import { Status } from "../../consts"
 import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
 import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
@@ -11,7 +11,7 @@ import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
 
 const NavBarLabs = () => {
     const state = useAppState()
-    const history = useHistory()
+    const navigate = useNavigate()
     const location = useLocation()
 
     if (!state.assignments[state.activeCourse.toString()]) {
@@ -56,17 +56,21 @@ const NavBarLabs = () => {
             if (!isValidSubmissionForAssignment(submission, assignment)) {
                 return null
             }
-            const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}` }, jsx: submissionIcon(submission) }
+            const link: NavLink = {
+                text: assignment.name,
+                to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}`,
+                jsx: submissionIcon(submission)
+            }
             return (
                 <div
                     className={highlightSubmission(submission, assignment)}
                     style={{ position: "relative" }}
                     key={submission.ID.toString()}
-                    onClick={() => { history.push(link.link.to) }}
+                    onClick={() => { navigate(link.to) }}
                     role="button"
                     aria-hidden="true"
                 >
-                    <NavBarLink link={link.link} jsx={link.jsx} />
+                    <NavBarLink link={link} />
                     <ProgressBar courseID={state.activeCourse.toString()} submission={submission} type={Progress.NAV} />
                 </div>
             )
