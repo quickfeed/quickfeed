@@ -6,6 +6,7 @@
 
 OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 github_user	:= $(shell gh auth status 2>/dev/null | awk '/Logged in to/ {print $$(NF-1)}')
+dev_db		:= ./testdata/db/qf.db
 protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
@@ -27,8 +28,13 @@ version-check:
 	@go run cmd/vercheck/main.go
 
 dev-db:
+	@if [ ! -f $(dev_db) ]; then \
+		echo "Error: Database file not found at $(dev_db)"; \
+		echo "Please download the database file from the QuickFeed organization."; \
+		exit 1; \
+	fi
 	@echo "Updating development database with GitHub user: $(github_user) as QuickFeed admin"
-	@python3 cmd/anonymize/main.py --database ./testdata/db/qf.db --admin $(github_user)
+	@python3 cmd/anonymize/main.py --database $(dev_db) --admin $(github_user)
 
 install:
 	@echo go install
