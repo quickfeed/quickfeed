@@ -113,15 +113,12 @@ const Courses = (overview: overview) => {
     if (overview.home) {
         // Render only favorite courses.
         return (
-            <>
-                {favorite.length > 0 &&
-                    <div className="container-fluid">
-                        <div className="card-deck">
-                            {favorite}
-                        </div>
-                    </div>
-                }
-            </>
+            favorite.length > 0 &&
+            <div className="container-fluid">
+                <div className="card-deck">
+                    {favorite}
+                </div>
+            </div>
         )
     }
 
