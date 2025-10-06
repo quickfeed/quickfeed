@@ -162,7 +162,7 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
+func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
 	req, err := http.NewRequest("GET", githubUserAPI, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
@@ -196,7 +196,7 @@ func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
 }
 
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
-func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *externalUser) (*qf.User, error) {
+func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
 	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
 	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
 	switch {
