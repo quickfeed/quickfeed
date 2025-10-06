@@ -163,7 +163,7 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 
 // fetchExternalUser fetches information about the user from the provider.
 func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
-	req, err := http.NewRequest("GET", githubUserAPI, nil)
+	req, err := http.NewRequest("GET", githubUserAPI, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
 	}
