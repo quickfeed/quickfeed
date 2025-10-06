@@ -1,198 +1,83 @@
-import React from 'react'
-import Alerts from '../components/alerts/Alerts'
+import React, { JSX } from "react"
+import Alerts from "../components/alerts/Alerts"
+import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
+import BackToTop from "../components/BackToTop"
 
-
-/* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
+/* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users on the LoginPage.tsx. */
 const AboutPage = () => {
     return (
         <div>
-            <div className="banner">
-                <div key="jb" id="0" className="jumbotron">
-                    <div key="cblock" className="centerblock container">
-                        <h1>Automated student feedback</h1>
-                        <p>
-                            <strong>QuickFeed </strong>
-                            provides instantaneous feedback to students on
-                            their programming assignments. It is also a
-                            valuable tool for teachers when grading lab
-                            assignments.
-                        </p>
-                        <p>
-                            <a className="btn btn-primary btn-lg" href="#quickfeed" role="button">Learn more »</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
             <Alerts />
-            <div key="container" className="container">
-
+            <div className="container">
+                <h2 className="featurette-heading mt-5">About QuickFeed</h2>
+                <p className="lead">
+                    QuickFeed is a tool for providing automated feedback to students on their lab assignments.
+                    QuickFeed builds upon version control systems and continuous integration.
+                    When students upload code to their repositories, QuickFeed automatically builds their code and provides feedback based on tests supplied by the teaching staff.
+                    When grading assignments, teaching staff can access the results of test execution and have a valuable tool in the grading process.
+                </p>
+                <hr className="loginDivider" />
                 <div key="rowheader" className="row marketing">
-                    <div key="gh" className="col-lg-4">
-                        <img
-                            className="img-circle"
-                            src="/assets/img/GitHub-Mark-120px-plus.png"
-                            alt="GitHub logo" style={{ width: "140px", height: "140px" }} />
-                        <h2>GitHub Integration</h2>
-                        <p>
-                            Manage all students and courses on GitHub.
-                            Each student gets their own repository.
-                            Teachers get separate repositories for publishing assignments and information to students.
-                            All taken care of automatically.
-                        </p>
-                        <p>
-                            <a className="btn btn-default" href="#versioncontrol" role="button">View details »</a>
-                        </p>
-                    </div>
-                    <div key="ci" className="col-lg-4">
-
-                        <img
-                            className="img-circle"
-                            src="/assets/img/overlapping-arrows.png"
-                            style={{ width: "140px", height: "140px" }}
-                        />
-                        <h2>Continuous Integration</h2>
-                        <p>
-                            Instantaneous feedback to students on how well their code performs.
-                            Students can quickly identify what they need to focus on to improve.
-                            All customizable for the teaching staff.
-                        </p>
-                        <p>
-                            <a className="btn btn-default" href="#ci" role="button">
-                                View details »
-                            </a>
-                        </p>
-                    </div>
-                    <div key="grade" className="col-lg-4">
-                        <img
-                            className="img-circle"
-                            src="/assets/img/Aplus2.png"
-                            alt="A+ image" style={{ width: "140px", height: "140px" }} />
-                        <h2>Fair Grading</h2>
-                        <p>
-                            On due date of an assignment, the most recent version
-                            of each student&apos;s code is available through GitHub.
-                            Easily accessible for the teachers.
-                            Together with latest build log, this makes grading easier and more fair.
-                        </p>
-                        <p>
-                            <a className="btn btn-default" href="#grading" role="button">View details »</a>
-                        </p>
-                    </div>
+                    <MiniFeatureBlock
+                        title="GitHub Integration"
+                        content="Manage all students and courses on GitHub. Each student gets their own repository. Teachers get separate repositories for publishing assignments and information to students. All taken care of automatically."
+                        media={<i className="fa fa-github" style={{ fontSize: "140px" }} />}
+                    />
+                    <MiniFeatureBlock
+                        title="Continuous Integration"
+                        content="Instantaneous feedback to students on how well their code performs. Students can quickly identify what they need to focus on to improve. All customizable for the teaching staff."
+                        media={imageMedia("/assets/img/overlapping-arrows-no-background.webp", "Continuous Integration")}
+                    />
+                    <MiniFeatureBlock
+                        title="Fair Grading"
+                        content="On due date of an assignment, the most recent version of each student&apos;s code is available through GitHub. Easily accessible for the teachers. Together with latest build log, this makes grading easier and more fair."
+                        media={imageMedia("/assets/img/Aplus2-no-background.webp", "Fair Grading")}
+                    />
                 </div>
-                <section id="#quickfeed">
-                    <hr className="featurette-divider" />
-                    <div key="row1" className="row featurette">
-                        <div key="c1r1" className="col-md-7">
-                            <h2 className="featurette-heading">
-                                QuickFeed: <span className="text-muted">Automated student feedback</span>
-                            </h2>
-                            <p className="lead">
-                                QuickFeed aims to provide students with fast
-                                feedback on their lab assignments, and is designed
-                                to help students learn about state-of-the-art tools
-                                used in the industry.
-                                QuickFeed builds upon version control systems and
-                                continuous integration.
-                                When students upload code to their repositories,
-                                QuickFeed automatically builds their code and
-                                provides feedback based on tests supplied by the
-                                teaching staff.
-                                When grading assignments, teaching staff can access
-                                the results of test execution and have a valuable
-                                tool in the grading process.
-                            </p>
-                        </div>
-                        <div key="c2r1" className="col-md-5">
-                            <img
-                                className="featurette-image img-responsive about"
-                                src="/assets/img/intro1.png"
-                                alt="Generic placeholder image" />
-                        </div>
-                    </div>
-                </section>
-
-                <section id="versioncontrol">
-
-                    <hr className="featurette-divider" />
-                    <div key="row2" className="row featurette">
-                        <div key="c1r2" className="col-md-5">
-                            <img
-                                className="featurette-image img-responsive about"
-                                src="/assets/img/intro3.png"
-                                alt="Generic placeholder image" />
-                        </div>
-                        <div key="c2r2" className="col-md-7">
-                            <h2 className="featurette-heading">
-                                GitHub Integration: <span className="text-muted">Managing courses and students</span>
-                            </h2>
-                            <p className="lead">
-                                A course is an organization on GitHub.
-                                Students get access to their own private GitHub repository.
-                                Uploading their code for review or grading, students can
-                                learn to use git for version control.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="ci">
-
-                    <hr className="featurette-divider" />
-                    <div key="row3" className="row featurette">
-                        <div key="c1r3" className="col-md-7">
-                            <h2 className="featurette-heading">
-                                Continuous Integration: <span className="text-muted">builds and tests student code. </span>
-                            </h2>
-                            <p className="lead">
-                                As code gets pushed up to GitHub, an automatic build process
-                                defined by the teacher, generates feedback to students.
-                                When the build process is completed, student gets immediate
-                                access to this feedback on their personal course page.
-                                Tests defined by either teachers or students will be processed
-                                and tell students about their progress on the assignments.
-                            </p>
-                        </div>
-                        <div key="c2r3" className="col-md-5">
-                            <img
-                                className="featurette-image img-responsive about"
-                                src="/assets/img/intro2.png"
-                                alt="Generic placeholder image" />
-                        </div>
-                    </div>
-                </section>
-
-                <section id="grading">
-
-                    <hr className="featurette-divider" />
-                    <div key="row4" className="row featurette">
-                        <div key="c1r4" className="col-md-5">
-                            <img
-                                className="featurette-image img-responsive about"
-                                src="/assets/img/intro4.png"
-                                alt="Generic placeholder image" />
-                        </div>
-                        <div key="c2r4" className="col-md-7">
-                            <h2 className="featurette-heading">
-                                Grading: <span className="text-muted">Easy and Fair</span>
-                            </h2>
-                            <p className="lead">
-                                On the due date, teachers can access the test results and
-                                use this as a tool in the grading process.
-                                The teaching staff will immediately know which of their
-                                tests passed, and how much of the code is covered by the tests.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                <footer>
-                    <hr />
-                    <p className="pull-right"><a href="#">Back to top</a></p>
-                </footer>
+                <hr className="loginDivider" />
+                <FeatureBlock
+                    heading="QuickFeed"
+                    subheading="Automated student feedback"
+                    content="QuickFeed aims to provide students with fast feedback on their lab assignments, and is designed to help students learn about state-of-the-art tools used in the industry. QuickFeed builds upon version control systems and continuous integration. When students upload code to their repositories, QuickFeed automatically builds their code and provides feedback based on tests supplied by the teaching staff. When grading assignments, teaching staff can access the results of test execution and have a valuable tool in the grading process."
+                    imageSrc="/assets/img/intro1.png"
+                />
+                <hr className="loginDivider" />
+                <FeatureBlock
+                    heading="GitHub Integration"
+                    subheading="Managing courses and students"
+                    content="A course is an organization on GitHub. Students get access to their own private GitHub repository. Uploading their code for review or grading, students can learn to use git for version control."
+                    imageSrc="/assets/img/intro3.png"
+                    reverse
+                />
+                <hr className="loginDivider" />
+                <FeatureBlock
+                    heading="Continuous Integration"
+                    subheading="Builds and tests student code"
+                    content="As code gets pushed up to GitHub, an automatic build process defined by the teacher, generates feedback to students. When the build process is completed, student gets immediate access to this feedback on their personal course page. Tests defined by either teachers or students will be processed and tell students about their progress on the assignments."
+                    imageSrc="/assets/img/intro2.png"
+                />
+                <hr className="loginDivider" />
+                <FeatureBlock
+                    heading="Grading"
+                    subheading="Easy and Fair"
+                    content="On the due date, teachers can access the test results and use this as a tool in the grading process. The teaching staff will immediately know which of their tests passed, and how much of the code is covered by the tests."
+                    imageSrc="/assets/img/intro4.png"
+                    reverse
+                />
+                <BackToTop />
             </div>
         </div>
 
     )
 }
 
+function imageMedia(src: string, alt: string): JSX.Element {
+    return (
+        <img
+            src={src}
+            alt={alt}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        />
+    )
+}
 export default AboutPage

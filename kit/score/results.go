@@ -3,6 +3,7 @@ package score
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"time"
 
@@ -93,30 +94,27 @@ func (r *Results) TaskSum(taskName string) uint32 {
 // The values are in the range 0-1.
 func (r *Results) internalSum(taskName string) (float64, float64) {
 	totalWeight := float64(0)
-	var max, score, weight []float64
+	var maxScore, score, weight []float64
 	for _, ts := range r.Scores {
-		if taskName != "" && taskName != ts.TaskName {
+		if taskName != "" && taskName != ts.GetTaskName() {
 			continue
 		}
-		testScore := ts.Score
-		if ts.Score < 0 {
-			// If the score is negative, it means that the test is faulty (e.g. duplicate).
-			// We need to set the score to zero to avoid certain edge cases where
-			// the total score would end up being -1 or lower. If not, the total score
-			// would end up being uint32(-1) = 4294967295. See #975
-			testScore = 0
-		}
-		totalWeight += float64(ts.Weight)
-		weight = append(weight, float64(ts.Weight))
+		// If the score is negative, it means that the test is faulty (e.g. duplicate).
+		// We need to set the score to zero to avoid certain edge cases where
+		// the total score would end up being -1 or lower. If not, the total score
+		// would end up being uint32(-1) = 4294967295. See issue #975
+		testScore := max(ts.GetScore(), 0)
+		totalWeight += float64(ts.GetWeight())
+		weight = append(weight, float64(ts.GetWeight()))
 		score = append(score, float64(testScore))
-		max = append(max, float64(ts.MaxScore))
+		maxScore = append(maxScore, float64(ts.GetMaxScore()))
 	}
 	total := float64(0)
 	for i := 0; i < len(score); i++ {
-		if score[i] > max[i] {
-			score[i] = max[i]
+		if score[i] > maxScore[i] {
+			score[i] = maxScore[i]
 		}
-		total += weightedScore(score[i], max[i], weight[i], totalWeight)
+		total += weightedScore(score[i], maxScore[i], weight[i], totalWeight)
 	}
 	return total, totalWeight
 }
@@ -143,19 +141,33 @@ func (pe parseErrors) Error() string {
 }
 
 // ExtractResults returns the results from a test execution extracted from the given out string.
-func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
+// The provided zeroScoreTests must contain a zero score value for all tests that are expected
+// to be present in the results.
+func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests []*Score) (*Results, error) {
 	var filteredLog []string
 	errs := make(parseErrors, 0)
 	results := newResults()
-	for _, line := range strings.Split(out, "\n") {
+
+	// first, add all expected tests (assumed to already have zero scores)
+	for _, expectedTest := range zeroScoreTests {
+		results.addScore(expectedTest)
+	}
+
+	// parse the output and update scores with actual results
+	for line := range strings.SplitSeq(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
 			sc, err := parse(line, secret)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
+				errs = append(errs, fmt.Errorf("failed on line '%s': %w", line, err))
 				continue
 			}
-			results.addScore(sc)
+			// only add the score if it's in the expected tests
+			if slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
+				return expected.GetTestName() == sc.GetTestName()
+			}) {
+				results.addScore(sc)
+			}
 		} else if line != "" { // include only non-empty lines
 			// the filtered log without JSON score strings
 			filteredLog = append(filteredLog, line)
@@ -174,4 +186,12 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 		return res, errs
 	}
 	return res, nil
+}
+
+// GetBuildInfo returns the build info for the results object after nil check.
+func (r *Results) GetBuildInfo() *BuildInfo {
+	if r != nil && r.BuildInfo != nil {
+		return r.BuildInfo
+	}
+	return &BuildInfo{}
 }

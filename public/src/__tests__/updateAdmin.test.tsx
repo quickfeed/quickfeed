@@ -1,7 +1,8 @@
-import { User } from "../../proto/qf/types_pb"
-import { Void } from "../../proto/qf/requests_pb"
+import { User, UserSchema } from "../../proto/qf/types_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
-import { ApiClient } from "../overmind/effects"
+import { ApiClient } from "../overmind/namespaces/global/effects"
+import { create } from "@bufbuild/protobuf"
+import { VoidSchema } from "../../proto/qf/requests_pb"
 
 
 
@@ -10,7 +11,7 @@ describe("Correct permission status should be set", () => {
     const updateAdminTests: { desc: string, user: User, confirm: boolean, want: boolean }[] = [
         {
             desc: "If user is not admin, promote to admin",
-            user: new User({
+            user: create(UserSchema, {
                 ID: BigInt(1),
                 IsAdmin: false,
             }),
@@ -19,7 +20,7 @@ describe("Correct permission status should be set", () => {
         },
         {
             desc: "If user is admin, demote to non-admin",
-            user: new User({
+            user: create(UserSchema, {
                 ID: BigInt(1),
                 IsAdmin: true,
             }),
@@ -28,7 +29,7 @@ describe("Correct permission status should be set", () => {
         },
         {
             desc: "If user does not confirm, do not change status",
-            user: new User({
+            user: create(UserSchema, {
                 ID: BigInt(1),
                 IsAdmin: true,
             }),
@@ -41,13 +42,13 @@ describe("Correct permission status should be set", () => {
         api.client = {
             ...api.client,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            updateUser: mock("updateUser", async (_request) => {
-                return { message: new Void(), error: null }
+            updateUser: mock("updateUser", async (_request) => { // skipcq: JS-0116
+                return { message: create(VoidSchema), error: null }
             }),
         }
-        const { state, actions } = initializeOvermind({ allUsers: [test.user], review: { reviewer: new User() } }, api)
+        const { state, actions } = initializeOvermind({ allUsers: [test.user], review: { reviewer: create(UserSchema) } }, api)
         window.confirm = jest.fn(() => test.confirm)
-        await actions.updateAdmin(test.user)
+        await actions.global.updateAdmin(test.user)
         expect(state.allUsers[0].IsAdmin).toEqual(test.want)
     })
 })

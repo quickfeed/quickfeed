@@ -39,6 +39,7 @@ consts
 containertimeout
 copytruncate
 covermode
+coverpkg
 coverprofile
 CSRF
 dateext
@@ -53,8 +54,10 @@ Eivind
 envoyproxy
 errcheck
 Errorf
+esbuild
 espeland
 Etternavn
+evanw
 excelize
 extendee
 extldflags
@@ -81,6 +84,7 @@ googleapis
 gopath
 gopb
 gopls
+goreleaser
 Gorm
 gormlogger
 GOROOT
@@ -94,6 +98,7 @@ Grafana's
 groupname
 grpc
 grpcpb
+grpcurl
 grpcweb
 Hein
 Hein's
@@ -114,6 +119,7 @@ itest
 jinzhu
 Jostein
 jsonpb
+Justfile
 JWTs
 Kandidatnr
 keepalive
@@ -143,7 +149,6 @@ newkey
 ngrok
 nocheck
 npmtools
-npmwebpack
 NTNU
 oneof
 openrc
@@ -210,7 +215,7 @@ swiftui
 testcache
 testdata
 testdb
-Testersen
+testinfo
 testorg
 timestamppb
 tmpl
@@ -222,11 +227,12 @@ unmarshalling
 unmarshalls
 urfave
 URL's
+userids
 usermod
 varcheck
+vercheck
 verdana
 Warnf
-webpack's
 wojtekmaj
 WORKDIR
 Worktree

@@ -24,7 +24,6 @@ func TestWatcher(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to create file: %v", err)
 	}
-	defer file.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -39,7 +38,9 @@ func TestWatcher(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	go func() {
+	go func(file *os.File) {
+		defer file.Close()
+
 		// wait some time before writing to the file
 		time.Sleep(2 * time.Second)
 		// try to write to the file multiple times
@@ -52,7 +53,7 @@ func TestWatcher(t *testing.T) {
 				t.Errorf("failed to write to file: %v", err)
 			}
 		}
-	}()
+	}(file)
 
 	// connect to the server
 	resp, err := server.Client().Get(server.URL + "/watch")
