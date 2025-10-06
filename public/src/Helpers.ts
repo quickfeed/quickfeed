@@ -408,7 +408,7 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
 // Can be used to generate IDs for client-only objects
 // such as the Alert object
 export const newID = (() => {
-    let id: number = 0
+    let id = 0
     return () => {
         return id++
     }
