@@ -2,7 +2,7 @@
 
 This developer guide assumes that you have [installed go](./templates/setup-go.md), [installed and configured QuickFeed](./deploy.md) and its dependent components.
 
-If you wish to run quickfeed through Wsl view [setup wsl](./templates/setup-wsl.md).
+If you wish to run QuickFeed through WSL, view [setup wsl](./templates/setup-wsl.md).
 
 ## Makefile
 
@@ -68,7 +68,7 @@ QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHoo
 
 #### Frontend
 
-View [How to run Selenium tests](selenium-testing.md) or [Testing with Jest](jest-testing.md)
+View [Testing with Jest](jest-testing.md)
 
 ## Server architecture
 
