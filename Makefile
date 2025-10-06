@@ -5,11 +5,12 @@
 -include .env
 
 OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
+github_user	:= $(shell gh auth status 2>/dev/null | awk '/Logged in to/ {print $$(NF-1)}')
 protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check install ui proto test qcm
+.PHONY: download brew version-check dev-db install ui proto test qcm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -24,6 +25,10 @@ endif
 
 version-check:
 	@go run cmd/vercheck/main.go
+
+dev-db:
+	@echo "Updating development database with GitHub user: $(github_user) as QuickFeed admin"
+	@python3 cmd/anonymize/main.py --database ./testdata/db/qf.db --admin $(github_user)
 
 install:
 	@echo go install
