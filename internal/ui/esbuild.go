@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/evanw/esbuild/pkg/api"
@@ -75,7 +76,9 @@ var buildOptions = api.BuildOptions{
 						}, nil
 					}
 					// important to run tailwind after clearing the dist folder
-					if err := tailwindBuild(); err != nil {
+					cmd := exec.Command("npm", "run", "tailwind")
+					cmd.Dir = env.PublicDir()
+					if err := cmd.Run(); err != nil {
 						return api.OnStartResult{
 							Warnings: []api.Message{
 								{

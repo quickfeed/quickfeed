@@ -26,7 +26,7 @@
     "tailwind": "tailwindcss -i ./src/tailwind.css -o ./dist/tailwind.css --minify"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.4",
+    "@tailwindcss/cli": "^4.1.14",
     "@testing-library/react": "^16.2.0",
     "@types/jest": "^29.2.0",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
