@@ -10,8 +10,5 @@ func tailwindBuild() error {
 	cmd := exec.Command("npm", "run", "tailwind")
 	cmd.Stdout = os.Stdout
 	cmd.Dir = env.PublicDir()
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
+	return cmd.Run()
 }
