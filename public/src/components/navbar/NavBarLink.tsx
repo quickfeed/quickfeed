@@ -15,8 +15,8 @@ const NavBarLink = ({ link: { text, to, icons, jsx } }: { link: NavLink }) => {
     icons?.forEach((icon) => {
         if (icon) {
             iconElements.push(
-                <div key={icon.text} id="icon" className={`${icon.classname} ml-2`}>
-                    {icon.text}
+                <div key={icon.text} id="icon" style={{ border: "none", width: '24px', height: '22px' }} className={`${icon.classname} ml-2`}>
+                    <p style={{ paddingTop: '2px' }}>{icon.text}</p>
                 </div>
             )
         }
