@@ -92,6 +92,16 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
 }
 
+// GetUserIDs returns the user IDs associated with the submission
+// based on the grades of the submission.
+func (s *Submission) GetUserIDs() []uint64 {
+	userIDs := make([]uint64, len(s.GetGrades()))
+	for idx, grade := range s.GetGrades() {
+		userIDs[idx] = grade.GetUserID()
+	}
+	return userIDs
+}
+
 // Clean removes any score or reviews from the submission if it is not released.
 // This is to prevent users from seeing the score or reviews of a submission that has not been released.
 func (s *Submissions) Clean(userID uint64) {
