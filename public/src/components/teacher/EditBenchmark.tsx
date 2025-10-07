@@ -5,7 +5,7 @@ import { clone, create } from "@bufbuild/protobuf"
 
 
 const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }) => {
-    const actions = useActions()
+    const actions = useActions().global
 
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(benchmark ? false : true)

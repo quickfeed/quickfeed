@@ -1,17 +1,17 @@
+import { clone, create } from "@bufbuild/protobuf"
 import React, { useEffect, useState } from "react"
 import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
 import { Color, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
+import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import Search from "../Search"
-import { clone, create } from "@bufbuild/protobuf"
-import { useCourseID } from "../../hooks/useCourseID"
 
 
 const GroupForm = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     const [query, setQuery] = useState<string>("")
     const [enrollmentType, setEnrollmentType] = useState<Enrollment_UserStatus.STUDENT | Enrollment_UserStatus.TEACHER>(Enrollment_UserStatus.STUDENT)
@@ -26,7 +26,7 @@ const GroupForm = () => {
         return () => {
             actions.setActiveGroup(null)
         }
-    }, [])
+    }, [actions, courseID, state.enrollmentsByCourseID, state.self])
     if (!group) {
         return null
     }

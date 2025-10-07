@@ -2,25 +2,22 @@ import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
-import { useAppState, useActions } from '../overmind'
+import { useActions, useAppState } from '../overmind'
+import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
-import { CenteredMessage, KnownMessage } from './CenteredMessage'
+import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
 
-interface MatchProps {
-    id: string
-    lab: string
-}
 
 /** Lab displays a submission based on the /course/:id/lab/:lab route if the user is a student.
  *  If the user is a teacher, Lab displays the currently selected submission.
  */
 const Lab = () => {
     const state = useAppState()
-    const actions = useActions()
-    const { id, lab } = useParams<MatchProps>()
-    const courseID = id
+    const actions = useActions().global
+    const { id, lab } = useParams()
+    const courseID = id ?? ""
     const assignmentID = lab ? BigInt(lab) : BigInt(-1)
     const location = useLocation()
     const isGroupLab = location.pathname.includes("group-lab")
@@ -29,7 +26,7 @@ const Lab = () => {
         if (!state.isTeacher) {
             actions.setSelectedAssignmentID(Number(lab))
         }
-    }, [lab])
+    }, [actions, lab, state.isTeacher])
 
     const InternalLab = () => {
         let submission: Submission | null
@@ -43,11 +40,11 @@ const Lab = () => {
             // Retrieve the student's submission
             assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
             if (!assignment) {
-                return <CenteredMessage message={KnownMessage.NoAssignment} />
+                return <CenteredMessage message={KnownMessage.StudentNoAssignment} />
             }
             const submissions = state.submissions.ForAssignment(assignment)
             if (submissions.length === 0) {
-                return <CenteredMessage message={KnownMessage.NoSubmission} />
+                return <CenteredMessage message={KnownMessage.StudentNoSubmission} />
             }
 
             const query = (s: Submission) => isGroupLab
@@ -63,11 +60,17 @@ const Lab = () => {
             let buildLog: React.JSX.Element[] = []
             const buildLogRaw = submission.BuildInfo?.BuildLog
             if (buildLogRaw) {
-                buildLog = buildLogRaw.split("\n").map((logLine: string) => <span key={logLine}>{logLine}<br /></span>)
+                // using the index as the key is not ideal, but in this case it is acceptable
+                // because the log lines are not expected to change unless a new submission is made
+                // in which case the component will be re-rendered anyways
+                buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>) // skipcq: JS-0437
             }
 
             return (
                 <div key={submission.ID.toString()} className="mb-4">
+                    {!state.isTeacher && submission.score > assignment.scoreLimit && (
+                        <AssignmentFeedbackForm assignment={assignment} courseID={courseID} />
+                    )}
                     <LabResultTable submission={submission} assignment={assignment} />
 
                     {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}
@@ -78,7 +81,7 @@ const Lab = () => {
                 </div>
             )
         }
-        return <CenteredMessage message={KnownMessage.NoSubmission} />
+        return <CenteredMessage message={state.isTeacher ? KnownMessage.TeacherNoSubmission : KnownMessage.StudentNoSubmission} />
     }
 
     return (

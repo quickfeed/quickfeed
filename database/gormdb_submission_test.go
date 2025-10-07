@@ -29,7 +29,7 @@ func TestGetSubmissions(t *testing.T) {
 	submission := &qf.Submission{AssignmentID: 1, UserID: 1}
 	submission1 := &qf.Submission{AssignmentID: 1, UserID: 2}
 
-	wantSubmissions := []*qf.Submission{}
+	var wantSubmissions []*qf.Submission
 	tests := []struct {
 		name          string
 		query         *qf.Submission

@@ -1,9 +1,9 @@
-import React, { useEffect, useCallback } from "react"
-import { useActions, useAppState } from "../overmind"
-import FormInput from "./forms/FormInput"
-import DynamicButton from "./DynamicButton"
+import React, { useCallback, useEffect } from "react"
 import { Color } from "../Helpers"
+import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
+import DynamicButton from "./DynamicButton"
+import FormInput from "./forms/FormInput"
 
 const Release = () => {
     const state = useAppState()
@@ -12,7 +12,7 @@ const Release = () => {
 
     useEffect(() => {
         return () => actions.review.setMinimumScore(0)
-    }, [state.review.assignmentID])
+    }, [actions.review])
 
     const handleMinimumScore = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         event.preventDefault()

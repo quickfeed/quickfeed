@@ -39,6 +39,7 @@ consts
 containertimeout
 copytruncate
 covermode
+coverpkg
 coverprofile
 CSRF
 dateext
@@ -118,6 +119,7 @@ itest
 jinzhu
 Jostein
 jsonpb
+Justfile
 JWTs
 Kandidatnr
 keepalive
@@ -213,7 +215,7 @@ swiftui
 testcache
 testdata
 testdb
-Testersen
+testinfo
 testorg
 timestamppb
 tmpl

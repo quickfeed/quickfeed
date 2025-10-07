@@ -35,6 +35,14 @@ func TestRegisterRouter(t *testing.T) {
 		Body("hello, world!").
 		End()
 
+	apitest.New("Robots").
+		Handler(mux).
+		Get("/robots.txt").
+		Expect(t).
+		Status(http.StatusOK).
+		Body("User-agent: *\nDisallow: /").
+		End()
+
 	partialUrl := "/" + qfconnect.QuickFeedServiceName + "/"
 	qfType := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
 	for i := 0; i < qfType.NumMethod(); i++ {
@@ -75,15 +83,25 @@ func createTempPublicDir(t *testing.T) string {
 	if err := os.MkdirAll(publicDir+"/assets", 0o700); err != nil {
 		t.Fatal(err)
 	}
-	file, err := os.Create(publicDir + "/assets/index.html")
+	if err := createFile(t, publicDir+"/assets/index.html", "hello, world!"); err != nil {
+		t.Fatal(err)
+	}
+	if err := createFile(t, publicDir+"/assets/robots.txt", "User-agent: *\nDisallow: /"); err != nil {
+		t.Fatal(err)
+	}
+	return publicDir
+}
+
+func createFile(t *testing.T, path, content string) error {
+	file, err := os.Create(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := file.WriteString("hello, world!"); err != nil {
+	if _, err := file.WriteString(content); err != nil {
 		t.Fatal(err)
 	}
 	if err := file.Close(); err != nil {
 		t.Fatal(err)
 	}
-	return publicDir
+	return nil
 }

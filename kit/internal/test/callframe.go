@@ -44,7 +44,7 @@ func unwindCallFrames() []runtime.Frame {
 	for {
 		frame, more := frames.Next()
 		// Stop unwinding when we reach package testing.
-		if strings.Contains(frame.File, "testing/") {
+		if strings.Contains(frame.File, "src/testing/testing.go") {
 			break
 		}
 		foundFrames = append(foundFrames, frame)
