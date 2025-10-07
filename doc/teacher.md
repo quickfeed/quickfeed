@@ -11,7 +11,7 @@ The system has three **user** roles.
 
 - **Teachers** are associated with one or more courses.
   A course can have many teachers.
-  A teacher is anyone associated with the course that are not students, such as professors and teaching assistants.
+  A teacher is anyone associated with the course who is not a student, such as professors and teaching assistants.
 
   The administrator that creates a new course becomes teacher for that course.
   The teacher status of a **course creator** can never be revoked.
@@ -82,11 +82,14 @@ These will be created automatically when a course is created.
 The `assignments` folder has a separate folder for each assignment.
 See section [The Assignments Repository](#the-assignments-repository) for more details.
 
-The `username` is actually the github user name. This repository will initially be empty, and the student will need to set up a remote label called `assignments` pointing to the `assignments` repository, and pull from it to get any template code provided by the teaching staff.
+The `username` is the GitHub username.
+This repository will initially be empty, and the student will need to set up a remote named `assignments` pointing to the `assignments` repository, and pull from it to get any template code provided by the teaching staff.
+
+TODO(meling): the above sentence must be updated once we have implemented forking of the assignments repository.
 
 The `tests` folder is used by QuickFeed to run the tests for each of the assignments.
 The folder structure inside `tests` must correspond to the structure in the `assignments` repository.
-Each `assignment` folder in the tests repository contains one or more test file and an `assignment.json` configuration file that will be picked up by QuickFeed test runner.
+Each `assignment` folder in the `tests` repository contains one or more test files and an `assignment.json` configuration file that will be picked up by QuickFeed's test runner.
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
 
@@ -101,7 +104,7 @@ This approach prevents accidentally revealing commit history from old course ins
 ### To Give Your Teaching Assistants Access To Your Course You Have To
 
 - Accept their enrollments into your course
-- Promote them to your course's teacher on course members page
+- Promote them to teacher role on the course members page
 
 Assistants will automatically be given organization `owner` role to be able to accept student enrollments, approve student groups and access all course repositories.
 
@@ -149,6 +152,7 @@ This is the purpose of the `tests` repository.
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
 The `assignment.json` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
+If the assignment has tests that should be run by QuickFeed, the the tests should be listed in the `tests.json` file.
 
 The `scripts` folder may contain a course-specific [test runner](#test-runners), named `run.sh`, for running the tests.
 If an assignment requires a different test runner, you can supply a custom `run.sh` script for that assignment.
@@ -170,11 +174,14 @@ Henceforth, if a particular ordering is desired, the teacher may prefix the titl
 tests┐
      ├── lab1
      │   ├── assignment.json
+     │   ├── tests.json
      │   └── run.sh
      ├── lab2
      │   └── assignment.json
+     │   ├── tests.json
      ├── lab3
      │   ├── assignment.json
+     │   ├── tests.json
      │   ├── task-go-questions.md
      │   ├── task-learn-go.md
      │   └── task-tour-of-go.md
@@ -218,6 +225,21 @@ The `title` and `effort` are used by other tooling to create a README.md file fo
 | `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                            |
 | `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 1.    |
 | `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes. |
+
+### Tests Information
+
+The `tests.json` file lists the tests that should be run for an assignment.
+The information in the `tests.json` file is used by QuickFeed to ensure that all tests for an assignment are accounted for and not lost to a panic or other unexpected event.
+An example is shown below.
+A `tests.json` file can be generated using the `cm` tool.
+
+```json
+[
+  {"TestName":"TestGitQuestionsAG","MaxScore":10,"Weight":1},
+  {"TestName":"TestMissingSemesterQuestionsAG","MaxScore":9,"Weight":1},
+  {"TestName":"TestShellQuestionsAG","MaxScore":20,"Weight":1}
+]
+```
 
 ### Test Runners
 
@@ -274,23 +296,17 @@ Note that QuickFeed performs a lightweight sanity check of the cloned student re
 ```shell
 #image/qf101
 
+# The script may use the following environment variables:
+#
+#   TESTS       - to access the tests (cloned from the course's tests repository)
+#   ASSIGNMENTS - to access the assignments (cloned from the course's assignments repository)
+#   SUBMITTED   - to access the student's or group's submitted code (cloned from the student/group repository)
+#   CURRENT     - name of the current assignment folder
+#
+# Note that the above folders are copied into the container for each test run.
+# Thus, the script is free to modify them as needed.
+
 start=$SECONDS
-printf "*** Initializing Tests for %s ***\n" "$CURRENT"
-
-# Move to folder with assignment handout code for the current assignment to test.
-cd "$ASSIGNMENTS/$CURRENT"
-# Remove assignment handout tests to avoid interference
-find . -name '*_test.go' -exec rm -rf {} \;
-
-# Copy tests into the base assignments folder for initializing test scores
-cp -r "$TESTS"/* "$ASSIGNMENTS"/
-
-# $TESTS does not contain go.mod and go.sum: make sure to get the kit/score package
-go get -t github.com/quickfeed/quickfeed/kit/score
-go mod tidy
-# Initialize test scores
-SCORE_INIT=1 go test -v ./... 2>&1 | grep TestName
-
 printf "*** Preparing Test Execution for %s ***\n" "$CURRENT"
 
 # Move to folder with submitted code for the current assignment to test.
@@ -308,7 +324,7 @@ go mod tidy
 printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"
-go test -v -timeout 30s ./... 2>&1
+go test -v -timeout 240s ./... 2>&1
 printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"
 ```
 
@@ -350,17 +366,28 @@ Note: We don't support creating issues on student repositories since we don't ha
 
 ## Reviewing student submissions
 
-Assignment can be reviewed manually if the number of reviewers in the assignment's yaml file is above zero. Grading criteria can be added in groups for a selected assignment on the course's main page. Criteria descriptions and group headers can be edited at any time by simply clicking on the criterion one wishes to edit.
+An assignment can be reviewed manually if the number of reviewers in the assignment's JSON file is above zero.
+Grading criteria can be added in groups for a selected assignment on the course's main page.
+Criteria descriptions and group headers can be edited at any time by clicking on the criterion one wishes to edit.
 
-**Review** page gives access to creation of a manual review and feedback to a student solutions submitted for the course assignments. Only teaching staff can create reviews, and only one review per teaching staff member can be added for the same student submission for the same assignment.
+TODO(meling): the paragraph above must be updated when we remove the ability to edit criteria in the frontend; we only want to load criteria from the criteria.json file.
 
-Initially, a new review has *in progress* status. *Ready* status can be only set after all the grading criteria checkpoints are marked as either passed or failed. Reviews will not be shown on the **Release** page unless it is *ready*.
+The **Review** page provides access to creating a manual review and feedback for student solutions submitted for the course assignments.
+Only teaching staff can create reviews, and only one review per teaching staff member can be added for the same student submission for the same assignment.
 
-Comments can be left to every criterion checkpoint or to the whole group of grading criteria. A feedback to the whole submission can be added as well. Both comments and feedbacks can be edited by the reviewer.
+Initially, a new review has the status *in progress*.
+The *Ready* status can only be set after all the grading criteria checkpoints are marked as either passed or failed.
+Reviews will not be shown on the **Release** page unless they are *ready*.
 
-**Release** page gives access to the overview of the results of manual reviews for all course students and assignments. There the user can see submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Approved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
+Comments can be left on every criterion checkpoint or on the whole group of grading criteria.
+Feedback on the whole submission can be added as well.
+Both comments and feedback can be edited by the reviewer.
 
-It is also possible to mass approve submissions or mass release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
+The **Release** page provides an overview of the results of manual reviews for all course students and assignments.
+There the user can see the submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Approved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
+
+It is also possible to mass-approve submissions or mass-release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly.
+Every submission with a score equal to or above the set minimal score will be approved, or reviews to such submissions will be released.
 
 Grading criteria will be loaded from a `criteria.json` file if it is added to the corresponding assignment folder inside the `tests` repository.
 
@@ -401,4 +428,6 @@ JSON format:
 ]
 ```
 
-`points` field is optional. If set, the total score for the assignment will be equal to the sum of all points for all criteria. Otherwise, each criterion counts equally towards the total score of 100%.
+The `points` field is optional.
+If set, the total score for the assignment will be equal to the sum of all points for all criteria.
+Otherwise, each criterion counts equally towards the total score of 100%.
