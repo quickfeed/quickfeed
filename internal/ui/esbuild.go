@@ -57,17 +57,31 @@ var buildOptions = api.BuildOptions{
 	},
 	Plugins: []api.Plugin{
 		{
-			Name: "Reset Plugin",
+			Name: "Reset dist & Generate Tailwind CSS",
 			Setup: func(setup api.PluginBuild) {
 				setup.OnStart(func() (api.OnStartResult, error) {
 					if err := resetDistFolder(); err != nil {
 						return api.OnStartResult{
 							Warnings: []api.Message{
 								{
-									PluginName: "Reset",
+									PluginName: "Reset dist",
 									Text:       "Failed to clear the dist folder",
 									Notes: []api.Note{
 										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", distDir)},
+										{Text: fmt.Sprintf("Error: %v", err)},
+									},
+								},
+							},
+						}, nil
+					}
+					// important to run tailwind after clearing the dist folder
+					if err := tailwindBuild(); err != nil {
+						return api.OnStartResult{
+							Warnings: []api.Message{
+								{
+									PluginName: "Tailwind",
+									Text:       "Failed to generate tailwind CSS",
+									Notes: []api.Note{
 										{Text: fmt.Sprintf("Error: %v", err)},
 									},
 								},
@@ -165,17 +179,11 @@ func Build(outputDir string, dev bool) error {
 	if len(result.Errors) > 0 {
 		return fmt.Errorf("failed to build UI: %v", result.Errors)
 	}
-	// important to run tailwind after esbuild
-	// as the Reset plugin empties the dist folder
-	if err := tailwindBuild(); err != nil {
-		return fmt.Errorf("failed to build tailwind CSS: %w", err)
-	}
 	return nil
 }
 
 // Watch starts a watch process for both tailwind and esbuild, rebuilding on changes
 func Watch() error {
-	go tailwindWatch()
 	ctx, err := api.Context(getOptions("", true))
 	if err != nil {
 		return fmt.Errorf("failed to create build context: %w", err)
