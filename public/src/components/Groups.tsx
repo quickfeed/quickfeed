@@ -7,6 +7,7 @@ import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 import { useCourseID } from "../hooks/useCourseID"
+import Badge from "./Badge"
 
 
 /* Lists all groups for a given course. */
@@ -98,7 +99,7 @@ const Groups = () => {
             <tr hidden={groupSearch(group)}>
                 <td key={group.ID.toString()}>
                     {group.name}
-                    <span className="badge badge-warning ml-2">{isPendingGroup(group) ? "Pending" : null}</span>
+                    {isPendingGroup(group) ? <Badge className="ml-2" text="Pending" color="yellow" /> : null}
                 </td>
                 <GroupMembers group={group} />
                 <GroupButtons group={group} />

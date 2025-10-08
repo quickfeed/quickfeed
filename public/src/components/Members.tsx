@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getFormattedTime, isPending, sortEnrollments } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isPending, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
@@ -7,6 +7,7 @@ import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
 import { useCourseID } from "../hooks/useCourseID"
+import Badge from "./Badge"
 
 const Members = () => {
     const state = useAppState()
@@ -100,9 +101,7 @@ const Members = () => {
             </div>
         )
         const enrollmentBadgeIcon = (
-            <i className={EnrollmentStatusBadge[enrollment.status]}>
-                {EnrollmentStatus[enrollment.status]}
-            </i>
+            <Badge className="mt-1" color={enrollment.status} text={EnrollmentStatus[enrollment.status]} />
         )
         // rolebuttons can either be accept/reject, promote/demote or just the badge icon (student/teacher)
         const roleButtons = isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon

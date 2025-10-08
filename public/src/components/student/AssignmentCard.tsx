@@ -4,6 +4,7 @@ import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getFormattedTime, isValidSubmissionForAssignment } from "../../Helpers"
 import { DefaultProgressBar } from '../ProgressBar'
 import SubmissionRow from './SubmissionRow'
+import Badge from '../Badge'
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -39,7 +40,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
           <div className="d-flex align-items-center">
             <h5 className="card-title mb-0">{assignment.name}</h5>
             {assignment.isGroupLab && (
-              <span className="badge badge-secondary ml-2 p-2">Group</span>
+              <Badge className="ml-2 p-2" color="gray" text="Group" />
             )}
           </div>
           <div>
