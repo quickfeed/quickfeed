@@ -2,13 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"html/template"
-	"os"
-	"os/exec"
-	"path/filepath"
-
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"path/filepath"
 )
 
 var (
@@ -21,24 +17,8 @@ var (
 // buildOptions defines the build options for esbuild
 // The api has write access and writes the output to public/dist
 var buildOptions = api.BuildOptions{
-	Outdir: distDir,
-	EntryPoints: []string{
-		public("src/index.tsx"),
-		public("src/App.tsx"),
-
-		// pages
-		public("src/pages/TeacherPage.tsx"),
-
-		// components
-		public("src/components/manual-grading/Comment.tsx"),
-		public("src/components/Card.tsx"),
-
-		// overmind
-		public("src/overmind/index.ts"),
-		public("src/overmind/namespaces/global/effects.ts"),
-		public("src/overmind/state.ts"),
-		public("src/overmind/namespaces/global/internalActions.ts"),
-	},
+	Outdir:            distDir,
+	EntryPoints:       entryPoints,
 	Bundle:            true,
 	Write:             true,
 	TreeShaking:       api.TreeShakingTrue, // Remove unused code
@@ -56,103 +36,25 @@ var buildOptions = api.BuildOptions{
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},
-	Plugins: []api.Plugin{
-		{
-			Name: "Reset dist & Generate Tailwind CSS",
-			Setup: func(setup api.PluginBuild) {
-				setup.OnStart(func() (api.OnStartResult, error) {
-					if err := resetDistFolder(); err != nil {
-						return api.OnStartResult{
-							Warnings: []api.Message{
-								{
-									PluginName: "Reset dist",
-									Text:       "Failed to clear the dist folder",
-									Notes: []api.Note{
-										{Text: fmt.Sprintf("The dist directory may now contain multiple builds\nLocation: %s", distDir)},
-										{Text: fmt.Sprintf("Error: %v", err)},
-									},
-								},
-							},
-						}, nil
-					}
-					// important to run tailwind after clearing the dist folder
-					cmd := exec.Command("npm", "run", "tailwind")
-					cmd.Dir = env.PublicDir()
-					if err := cmd.Run(); err != nil {
-						return api.OnStartResult{
-							Warnings: []api.Message{
-								{
-									PluginName: "Tailwind",
-									Text:       "Failed to generate tailwind CSS",
-									Notes: []api.Note{
-										{Text: fmt.Sprintf("Error: %v", err)},
-									},
-								},
-							},
-						}, nil
-					}
-					return api.OnStartResult{}, nil
-				})
-			},
-		},
-		{
-			Name: "HTML Plugin",
-			Setup: func(setup api.PluginBuild) {
-				setup.OnEnd(func(result *api.BuildResult) (api.OnEndResult, error) {
-					if err := createHtml(result.OutputFiles); err != nil {
-						return api.OnEndResult{
-							Errors: []api.Message{
-								{
-									PluginName: "HTML",
-									Text:       "Failed to create index.html",
-									Notes:      []api.Note{{Text: err.Error()}},
-								},
-							},
-						}, nil
-					}
-					return api.OnEndResult{}, nil
-				})
-			},
-		},
-	},
+	Plugins: plugins,
 }
 
-// resetDistFolder removes the dist folder and creates a new one
-func resetDistFolder() error {
-	entries, err := os.ReadDir(distDir)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		err = os.Remove(filepath.Join(distDir, entry.Name()))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+var entryPoints = []string{
+	public("src/index.tsx"),
+	public("src/App.tsx"),
 
-// createHtml creates the index.html file from the index.tmpl.html template
-// Injects file links into the index template
-func createHtml(outputFiles []api.OutputFile) error {
-	file, err := os.Create(public("assets/index.html"))
-	if err != nil {
-		return err
-	}
-	funcMap := template.FuncMap{
-		"ext":  filepath.Ext,
-		"base": filepath.Base,
-	}
-	tmplName := "index.tmpl.html"
-	tmpl, err := os.ReadFile(public(tmplName))
-	if err != nil {
-		return err
-	}
-	t, err := template.New(tmplName).Funcs(funcMap).Parse(string(tmpl))
-	if err != nil {
-		return err
-	}
-	return t.Execute(file, outputFiles)
+	// pages
+	public("src/pages/TeacherPage.tsx"),
+
+	// components
+	public("src/components/manual-grading/Comment.tsx"),
+	public("src/components/Card.tsx"),
+
+	// overmind
+	public("src/overmind/index.ts"),
+	public("src/overmind/namespaces/global/effects.ts"),
+	public("src/overmind/state.ts"),
+	public("src/overmind/namespaces/global/internalActions.ts"),
 }
 
 // getOptions returns the build options for esbuild
