@@ -10,7 +10,7 @@ const LoginPage = () => {
     }
   }, [])
   return (
-    <div className="loginContainer">
+    <div className="loginContainer h-full mb-10">
       <h1 className="loginWelcomeHeader">Welcome to QuickFeed</h1>
       <p className="lead mt-5 mb-5" style={{ textAlign: "center", marginBottom: "50px" }}>
         To get started with QuickFeed, please sign in with your GitHub account.
