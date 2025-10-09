@@ -108,7 +108,7 @@ func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 }
 
 func WatchHandler(ctx context.Context, handler http.Handler) http.Handler {
-	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "dist"))
+	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "assets"), "index.html")
 	if err != nil {
 		log.Printf("Failed to create watcher: %v", err)
 		return handler
