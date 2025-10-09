@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -16,13 +17,16 @@ type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 	clients   map[chan string]bool
 	mu        sync.Mutex
+	// List of files to watch for changes.
+	// Only changes to these files will be broadcast to clients.
+	watchlist []string
 }
 
 // NewWatcher creates a new watcher for the given path.
-// The watcher listens for file changes and broadcasts them to all connected clients.
+// The watcher listens for file changes for the specified watchlist and broadcasts them to all connected clients.
 // While a single client is the most common use case, multiple clients can connect to
 // the same watcher, e.g., for live-reloading the web page in different browsers.
-func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
+func NewWatcher(ctx context.Context, path string, watchlist ...string) (*Watcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -33,15 +37,14 @@ func NewWatcher(ctx context.Context, path string) (*Watcher, error) {
 	watcher := &Watcher{
 		fsWatcher: fsWatcher,
 		clients:   make(map[chan string]bool),
+		watchlist: watchlist,
 	}
 	go watcher.start(ctx) // Start watching for file changes
-	// Only start the ui watcher if the folder is "dist"
-	// Prevents the watcher from running in the test
-	if filepath.Base(path) == "dist" {
-		if err := ui.Watch(); err != nil {
-			return nil, fmt.Errorf("failed to start watch process: %w", err)
-		}
+
+	if err := ui.Watch(); err != nil {
+		return nil, fmt.Errorf("failed to start watch process: %w", err)
 	}
+
 	return watcher, nil
 }
 
@@ -56,6 +59,10 @@ func (w *Watcher) start(ctx context.Context) {
 			}
 			// We only care about writes and creates.
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+				// Compare only the base filename since event.Name is a path.
+				if !slices.Contains(w.watchlist, filepath.Base(event.Name)) {
+					continue // Ignore non-watched files and keep watching
+				}
 				// Broadcast event to all clients.
 				w.broadcastMessage(event.Name)
 			}
