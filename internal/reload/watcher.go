@@ -19,14 +19,17 @@ type Watcher struct {
 	mu        sync.Mutex
 	// List of files to watch for changes.
 	// Only changes to these files will be broadcast to clients.
-	watchlist []string
+	watchList []string
 }
 
 // NewWatcher creates a new watcher for the given path.
 // The watcher listens for file changes for the specified watchlist and broadcasts them to all connected clients.
 // While a single client is the most common use case, multiple clients can connect to
 // the same watcher, e.g., for live-reloading the web page in different browsers.
-func NewWatcher(ctx context.Context, path string, watchlist ...string) (*Watcher, error) {
+func NewWatcher(ctx context.Context, path string, watchList ...string) (*Watcher, error) {
+	if len(watchList) == 0 {
+		return nil, fmt.Errorf("nothing to watch")
+	}
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -37,7 +40,7 @@ func NewWatcher(ctx context.Context, path string, watchlist ...string) (*Watcher
 	watcher := &Watcher{
 		fsWatcher: fsWatcher,
 		clients:   make(map[chan string]bool),
-		watchlist: watchlist,
+		watchList: watchList,
 	}
 	go watcher.start(ctx) // Start watching for file changes
 
@@ -65,7 +68,7 @@ func (w *Watcher) start(ctx context.Context) {
 			// We only care about writes and creates.
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 				// Compare only the base filename since event.Name is a path.
-				if !slices.Contains(w.watchlist, filepath.Base(event.Name)) {
+				if !slices.Contains(w.watchList, filepath.Base(event.Name)) {
 					continue // Ignore non-watched files and keep watching
 				}
 				// Broadcast event to all clients.
