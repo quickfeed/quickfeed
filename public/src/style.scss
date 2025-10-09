@@ -692,7 +692,6 @@ body.login-page {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
     background-color: #0d1117;
     color: #c9d1d9;
 }
@@ -731,14 +730,6 @@ body.login-page {
     color: #c9d1d9;
     border-bottom: 1px solid #30363d;
     width: 100%;
-}
-
-.backToTop {
-    color: #6c757d;
-    :hover {
-        color: #c9d1d9;
-        transform: scale(1.05);
-    }
 }
 
 .signIn {
