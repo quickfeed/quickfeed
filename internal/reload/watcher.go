@@ -41,6 +41,11 @@ func NewWatcher(ctx context.Context, path string, watchlist ...string) (*Watcher
 	}
 	go watcher.start(ctx) // Start watching for file changes
 
+	// Only start the ui watcher if the folder is "assets"
+	// Prevents the esbuild watcher from running in the test
+	if filepath.Base(path) != "assets" {
+		return watcher, nil
+	}
 	if err := ui.Watch(); err != nil {
 		return nil, fmt.Errorf("failed to start watch process: %w", err)
 	}
