@@ -55,7 +55,7 @@ const SubmissionsTable = () => {
                     <td>
                         {assignment.name}
                         {assignment.isGroupLab ?
-                            <span className="badge ml-2 float-right"><i className={Icon.GROUP} title="Group Assignment" /></span> : null}
+                            <span className="badge ml-auto"><i className={Icon.GROUP} title="Group Assignment" /></span> : null}
                     </td>
                     <td><ProgressBar courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
                     <td>{deadlineInfo.time}</td>

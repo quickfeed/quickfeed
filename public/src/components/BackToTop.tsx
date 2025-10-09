@@ -7,7 +7,7 @@ const ScrollToTop = () => {
 const BackToTop: React.FC = () => {
     return (
         <footer className="text-center mt-5">
-            <button onClick={ScrollToTop} className="btn align-items-center backToTop">
+            <button onClick={ScrollToTop} className="hover:scale-105 hover:text-gray-500">
                 <i className="fa fa-arrow-up" />
                 <p>Back to top</p>
             </button>

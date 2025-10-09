@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
      <meta charset="utf-8" />
@@ -12,6 +12,8 @@
      <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
      <link rel="manifest" href="/assets/site.webmanifest">
      <title>QuickFeed</title>
+     <!-- Tailwind -->
+     <link rel="stylesheet" href="/static/tailwind.css">
      <!-- Bootstrap Latest compiled and minified CSS -->
      <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
      <!-- Font Awesome  -->
@@ -26,7 +28,7 @@
      {{- with (eq $ext ".js") }}
      <script type="module" src="/static/{{ $name }}" defer></script>
      {{- end }}
-     {{- end -}}
+     {{- end }}
      <!------------------------------------------->
 </head>
 

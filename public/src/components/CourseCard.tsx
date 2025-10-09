@@ -4,6 +4,7 @@ import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { Course, Enrollment } from '../../proto/qf/types_pb'
 import CourseFavoriteButton from './CourseFavoriteButton'
+import Badge from './Badge'
 
 
 interface CardProps {
@@ -64,7 +65,7 @@ const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
         <div className="card course-card mb-4 shadow-sm">
             <div className={`card-header bg-${color} text-white d-flex justify-content-between align-items-center`}>
                 <span>{course.code}</span>
-                {unavailable && <span className="badge bg-warning text-dark">Unavailable</span>}
+                {unavailable && <Badge color="yellow" text="Unavailable" />}
                 <CourseEnrollmentStatus />
             </div>
 
