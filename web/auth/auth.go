@@ -255,9 +255,10 @@ func SanitizeNext(next string) string {
 	}
 
 	// clean removes .., duplicate slashes, etc.
-	cleaned := path.Clean(next)
+	cleaned := path.Clean(u.Path)
 	if cleaned == "." { // path.Clean("/") == "/"; path.Clean("") == "."
 		return "/"
 	}
-	return cleaned
+	u.Path = cleaned
+	return u.String()
 }
