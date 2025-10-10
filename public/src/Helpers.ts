@@ -96,7 +96,7 @@ export enum TableColor {
 
 const getDaysHoursAndMinutes = (deadline: Timestamp) => {
     const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
-    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
+    const days = Math.round(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
     return { days, hours, minutes, timeToDeadline }
@@ -349,8 +349,7 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
 // nextURL returns the current URL path and query parameters.
 // This is used to redirect the user back to the page they were on after logging in.
 export const nextURL = (): string => {
-    const next = encodeURIComponent(window.location.pathname + window.location.search)
-    return next
+    return encodeURIComponent(window.location.pathname + window.location.search)
 }
 
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
@@ -404,11 +403,23 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     return { valid: true, message: "" }
 }
 
+/** convertToBigInt converts a value to bigint.
+ If the value is undefined or cannot be converted, it returns 0n.
+ Useful when converting values from URL parameters as these may be undefined or otherwise invalid. */
+export const convertToBigInt = (value: number | string | bigint | undefined): bigint => {
+    const val = value ?? 0
+    try {
+        return BigInt(val)
+    } catch (e) {
+        return BigInt(0)
+    }
+}
+
 // newID returns a new auto-incrementing ID
 // Can be used to generate IDs for client-only objects
 // such as the Alert object
 export const newID = (() => {
-    let id: number = 0
+    let id = 0
     return () => {
         return id++
     }

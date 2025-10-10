@@ -168,27 +168,31 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 	}
 }
 
-func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
+func TestReadTestsRepositoryContentBadContent(t *testing.T) {
+	// Check that ReadTestsRepositoryContent handles bad content gracefully without panicking.
 	tests := []struct {
-		name   string
-		folder string
+		name         string
+		folder       string
+		chkUnmarshal bool
 	}{
-		{name: "invalidTypes", folder: "testdata/invalidJsonTests/invalidTypes"},
-		{name: "negativeInteger", folder: "testdata/invalidJsonTests/negativeInteger"},
+		{name: "InvalidTypes", folder: "testdata/invalid-tests/invalid-types", chkUnmarshal: true},
+		{name: "NegativeInteger", folder: "testdata/invalid-tests/negative-integer", chkUnmarshal: true},
+		{name: "MissingAssignment1", folder: "testdata/invalid-tests/missing-assignment-json1", chkUnmarshal: false},
+		{name: "MissingAssignment2", folder: "testdata/invalid-tests/missing-assignment-json2", chkUnmarshal: false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			checkLabWithInvalidCriteriaFile(t, tc.folder)
+			checkLabWithInvalidCriteriaFile(t, tc.folder, tc.chkUnmarshal)
 		})
 	}
 }
 
-func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
+func checkLabWithInvalidCriteriaFile(t *testing.T, folder string, chkUnmarshal bool) {
 	_, _, err := readTestsRepositoryContent(folder, 1)
 	if err == nil {
 		t.Errorf("expected error")
 	}
-	if !isUnmarshalError(err) {
+	if chkUnmarshal && !isUnmarshalError(err) {
 		t.Errorf("expected unmarshal error, got: %v", err)
 	}
 }

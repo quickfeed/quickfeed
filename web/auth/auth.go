@@ -62,12 +62,12 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		// This is used to redirect the user back to the page they were on after logging in.
 		// The next URL is sanitized to ensure it is a valid path.
 		rawNext := r.URL.Query().Get("next")
-		next := SanitizeNext(rawNext)
+		nextURL := SanitizeNext(rawNext)
 
 		// Store the next URL in a (short-lived) cookie so we can redirect the user back to it in the callback handler.
 		http.SetCookie(w, &http.Cookie{
 			Name:     nextCookieName,
-			Value:    url.QueryEscape(next),
+			Value:    url.QueryEscape(nextURL),
 			Domain:   env.Domain(),
 			Path:     "/",
 			MaxAge:   300,
@@ -78,7 +78,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		})
 
 		redirectURL := authConfig.AuthCodeURL(secret)
-		logger.Debugf("Redirecting to AuthURL: %v (next=%q)", redirectURL, next)
+		logger.Debugf("Redirecting to AuthURL: %v (nextURL=%q)", redirectURL, nextURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
@@ -117,11 +117,12 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			return
 		}
 		http.SetCookie(w, cookie)
-		// pull desired redirect
-		dest := "/"
+
+		// pull the redirect URL from the cookie (if any) and delete it
+		redirectURL := "/"
 		if c, err := r.Cookie(nextCookieName); err == nil {
 			if v, e := url.QueryUnescape(c.Value); e == nil {
-				dest = SanitizeNext(v)
+				redirectURL = SanitizeNext(v)
 			}
 			// delete cookie
 			http.SetCookie(w, &http.Cookie{
@@ -136,8 +137,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 				SameSite: http.SameSiteLaxMode,
 			})
 		}
-
-		http.Redirect(w, r, dest, http.StatusFound)
+		http.Redirect(w, r, redirectURL, http.StatusFound)
 	}
 }
 
@@ -162,8 +162,8 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
-	req, err := http.NewRequest("GET", githubUserAPI, nil)
+func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
+	req, err := http.NewRequest("GET", githubUserAPI, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
 	}
@@ -196,7 +196,7 @@ func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
 }
 
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
-func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *externalUser) (*qf.User, error) {
+func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
 	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
 	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
 	switch {

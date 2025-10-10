@@ -21,7 +21,7 @@ export const Enroll = ({ courseID }: { courseID: bigint }) => {
         return (
             <div className="box centered">
                 <h3>You have already requested to enroll in {course.name}.</h3>
-                <p>Please wait for the course administrator to approve your enrollment.</p>
+                <p>Please wait for the teaching staff to approve your enrollment.</p>
                 <CourseCard course={course} enrollment={enrollment} />
             </div>
         )

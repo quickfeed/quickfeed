@@ -64,6 +64,11 @@ service QuickFeedService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
 
+    // assignment feedback //
+
+    rpc CreateAssignmentFeedback(AssignmentFeedback) returns (Void) {}
+    rpc GetAssignmentFeedback(CourseRequest) returns (AssignmentFeedbacks) {}
+
     // misc //
 
     rpc GetRepositories(CourseRequest) returns (Repositories) {}

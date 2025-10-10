@@ -98,7 +98,7 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 		logger.Errorf("Test execution failed with output: %v\n%v", err, out)
 	}
 
-	results, err := score.ExtractResults(out, randomSecret, time.Since(start))
+	results, err := score.ExtractResults(out, randomSecret, time.Since(start), r.Assignment.ZeroScoreTests())
 	if err != nil {
 		// Log the errors from the extraction process
 		testsFailedExtractResultsCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
