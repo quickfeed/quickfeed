@@ -86,14 +86,13 @@ const TableSort = ({ review }: { review: boolean }) => {
 
 interface DivButtonProps {
     text: string | React.JSX.Element
-    key?: string
     className?: string
     onclick: () => void
 }
 
-const DivButton = ({ text, key, className, onclick }: DivButtonProps) => {
+const DivButton = ({ text, className, onclick }: DivButtonProps) => {
     return (
-        <div key={key} className={`${className ?? ""} p-2`} role="button" aria-hidden="true" onClick={onclick}>
+        <div className={`${className ?? ""} p-2`} role="button" aria-hidden="true" onClick={onclick}>
             {text}
         </div>
     )
