@@ -225,7 +225,6 @@ To view the full usage details:
 | `http.public`   | Path to content to serve                             |             |
 | `dev`           | Run development server with self-signed certificates |             |
 | `new`           | Create a new QuickFeed App                           |             |
-| `watch`         | Watch for changes and reload frontend                |             |
 | `secret`        | Create new secret for JWT signing                    |             |
 
 ### Running Server on a Privileged Port
