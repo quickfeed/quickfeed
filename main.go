@@ -47,7 +47,6 @@ func main() {
 		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
 		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
-		watch  = flag.Bool("watch", false, "watch for changes and reload")
 		newApp = flag.Bool("new", false, "create new GitHub app")
 		secret = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
@@ -138,7 +137,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if *dev && *watch {
+	if *dev {
 		// Wrap handler with file watcher
 		// for live-reloading in development mode.
 		handler = web.WatchHandler(ctx, handler)
