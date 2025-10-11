@@ -146,7 +146,7 @@ const Results = ({ review }: { review: boolean }) => {
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(members, generator, state)
 
-    const divWidth = state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"
+    const divWidth = state.review.assignmentID >= 0 ? "col-md-4" : "col-md-5"
     const displayMode = state.groupView ? "Group" : "Student"
     const buttonColor = state.groupView ? Color.BLUE : Color.GREEN
     return (
