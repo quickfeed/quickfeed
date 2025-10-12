@@ -104,7 +104,7 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
     }
 
     return (
-        <div className="table-overflow" ref={container} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} role="button" aria-hidden="true">
+        <div className="table-overflow" ref={container} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} role="scrollbar" aria-hidden="true">
             <table className="table table-striped table-grp">
                 <thead className="thead-dark">
                     <tr>
