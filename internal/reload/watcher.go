@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/quickfeed/quickfeed/internal/ui"
 )
 
 type Watcher struct {
@@ -43,16 +42,6 @@ func NewWatcher(ctx context.Context, path string, watchList ...string) (*Watcher
 		watchList: watchList,
 	}
 	go watcher.start(ctx) // Start watching for file changes
-
-	// Only start the ui watcher if the folder is "assets"
-	// Prevents the esbuild watcher from running in the test
-	if filepath.Base(path) != "assets" {
-		return watcher, nil
-	}
-	if err := ui.Watch(); err != nil {
-		return nil, fmt.Errorf("failed to start watch process: %w", err)
-	}
-
 	return watcher, nil
 }
 

@@ -18,12 +18,12 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
                     Feedback #{feedback.ID.toString()}
                     {feedback.TimeSpent > 0 && (
                         <span className="badge badge-pill badge-light ml-2">
-                            <p className="pt-[3px]">{(() => {
+                            {(() => {
                                 const [hours, minutes] = convertToHoursAndMinutes(feedback.TimeSpent)
                                 if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`
                                 if (hours > 0) return `${hours}h`
                                 return `${minutes}m`
-                            })()}</p>
+                            })()}
                         </span>
                     )}
                 </h5>

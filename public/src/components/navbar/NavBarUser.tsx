@@ -16,10 +16,10 @@ const NavBarUser = () => {
     }
 
     return (
-        <div className="flex items-center">
+        <div className="flex-user">
 
             <StreamStatus />
-            <ul className="nav-item dropdown flex items-center">
+            <ul className="nav-item dropdown">
                 <i className="fa fa-chevron-down text-white mr-1 chevron-icon" />
                 <img className="rounded-circle" src={self.AvatarURL} id="avatar" />
                 <ul className="dropdown-menu dropdown-menu-center bg-dark">
