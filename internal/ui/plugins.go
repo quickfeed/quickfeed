@@ -13,6 +13,19 @@ import (
 
 var plugins = []api.Plugin{
 	{
+		Name: "Check Node Modules",
+		Setup: func(api.PluginBuild) {
+			if _, err := os.Stat(filepath.Join(env.PublicDir(), "node_modules")); os.IsNotExist(err) {
+				fmt.Println("node_modules not found, installing...")
+				cmd := exec.Command("npm", "ci")
+				cmd.Dir = env.PublicDir()
+				if err := cmd.Run(); err != nil {
+					fmt.Printf("failed to install node modules: %v\n", err)
+				}
+			}
+		},
+	},
+	{
 		Name: "Reset dist folder",
 		Setup: func(setup api.PluginBuild) {
 			setup.OnStart(func() (api.OnStartResult, error) {
