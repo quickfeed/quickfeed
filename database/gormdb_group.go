@@ -106,6 +106,12 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		return ErrUpdateGroup
 	}
 
+	// Synchronize grades for all group submissions to match current group membership.
+	if err := db.syncGroupGrades(tx, group.GetID(), userids); err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	tx.Commit()
 	return nil
 }
@@ -182,4 +188,56 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 		return nil, err
 	}
 	return groups, nil
+}
+
+// syncGroupGrades synchronizes grade records for all group submissions to match current group membership.
+// Creates new grades for newly added members and removes grades for users no longer in the group.
+// Existing grades are preserved with their current status (e.g., APPROVED).
+func (db *GormDB) syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
+	// Get all submissions for this group
+	var submissions []*qf.Submission
+	if err := tx.Model(&qf.Submission{}).
+		Preload("Grades").
+		Where(&qf.Submission{GroupID: groupID}).
+		Find(&submissions).Error; err != nil {
+		return err
+	}
+
+	for _, submission := range submissions {
+		// Find which users already have grades
+		existingGrades := make(map[uint64]*qf.Grade)
+		for _, grade := range submission.GetGrades() {
+			existingGrades[grade.GetUserID()] = grade
+		}
+
+		// Create grades for all current users, preserving existing ones
+		// This will also remove grades for users no longer in the group
+		submission.Grades = make([]*qf.Grade, len(userIDs))
+		for i, userID := range userIDs {
+			if existing, found := existingGrades[userID]; found {
+				submission.Grades[i] = existing // Preserve existing grade
+			} else {
+				submission.Grades[i] = &qf.Grade{UserID: userID, SubmissionID: submission.GetID()} // New grade
+			}
+		}
+
+		// Get assignment to set grade status
+		var assignment qf.Assignment
+		if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+			return err
+		}
+		// Set grades based on submission score
+		submission.SetGradesIfApproved(&assignment, submission.GetScore())
+
+		if err := tx.Model(&qf.Submission{
+			ID: submission.GetID(),
+		}).Association("Grades").Clear(); err != nil {
+			return err
+		}
+		if err := tx.Model(submission).Association("Grades").Append(submission.Grades); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
