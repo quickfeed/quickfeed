@@ -107,7 +107,7 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 	}
 
 	// Synchronize grades for all group submissions to match current group membership.
-	if err := db.syncGroupGrades(tx, group.GetID(), userids); err != nil {
+	if err := syncGroupGrades(tx, group.GetID(), userids); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -193,7 +193,7 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 // syncGroupGrades synchronizes grade records for all group submissions to match current group membership.
 // Creates new grades for newly added members and removes grades for users no longer in the group.
 // Existing grades are preserved with their current status (e.g., APPROVED).
-func (db *GormDB) syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
+func syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
 	// Get all submissions for this group
 	var submissions []*qf.Submission
 	if err := tx.Model(&qf.Submission{}).
