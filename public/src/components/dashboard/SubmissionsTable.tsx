@@ -40,8 +40,10 @@ const SubmissionsTable = () => {
         if (state.enrollmentsByCourseID[courseID.toString()]?.status !== Enrollment_UserStatus.STUDENT) {
             return
         }
-        // Submissions are indexed by the assignment order - 1.
         const submission = submissions.find(sub => sub.AssignmentID === assignment.ID) ?? create(SubmissionSchema)
+        if (!assignment.isGroupLab && submission.groupID !== 0n) {
+            return // ignore group submissions for individual assignments
+        }
         const status = getStatusByUser(submission, state.self.ID)
         if (!isApproved(status)) {
             const deadlineInfo = deadlineFormatter(deadline, assignment.scoreLimit, submission.score)
