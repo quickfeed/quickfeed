@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
 import AboutPage from "./AboutPage"
+import { nextURL } from "../Helpers"
 
 const LoginPage = () => {
   // Add a class to the body element to style the login page
@@ -20,7 +21,7 @@ const LoginPage = () => {
           <i className="fa fa-5x fa-github align-middle ms-auto" id="github icon" />
           <h4>Sign in with GitHub</h4>
           <p className="text-secondary"> to continue to QuickFeed </p>
-          <a href="/auth/github" className="loginButton"> Sign in </a>
+          <a href={`/auth/github?next=${nextURL()}`} className="loginButton"> Sign in </a>
         </div>
       </section>
       <AboutPage />
