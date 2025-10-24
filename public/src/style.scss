@@ -497,6 +497,7 @@ nav.flexbox {
     width: 36px;
     min-width: 36px;
     height: 24px;
+    margin-top: 3px;
     margin-bottom: 0;
 
     input {
@@ -507,7 +508,7 @@ nav.flexbox {
         &:checked + .slider {
             background-color: #28a745;
 
-            & .toggle {
+            & .toggleCircle {
                 -webkit-transform: translateX(13px);
                 -ms-transform: translateX(13px);
                 transform: translateX(13px);
@@ -530,7 +531,7 @@ nav.flexbox {
         -webkit-transition: 0.4s;
         transition: 0.4s;
 
-        .toggle {
+        .toggleCircle {
             font-family: "FontAwesome";
             font-size: 12px;
             position: absolute;
@@ -553,7 +554,7 @@ nav.flexbox {
         -webkit-box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5) inset;
         -moz-box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5) inset;
 
-        & .toggle {
+        & .toggleCircle {
             border-radius: 50%;
         }
     }
@@ -691,7 +692,6 @@ body.login-page {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
     background-color: #0d1117;
     color: #c9d1d9;
 }
@@ -730,14 +730,6 @@ body.login-page {
     color: #c9d1d9;
     border-bottom: 1px solid #30363d;
     width: 100%;
-}
-
-.backToTop {
-    color: #6c757d;
-    :hover {
-        color: #c9d1d9;
-        transform: scale(1.05);
-    }
 }
 
 .signIn {

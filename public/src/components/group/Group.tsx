@@ -2,6 +2,7 @@ import React from "react"
 import { isPendingGroup } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { useCourseID } from "../../hooks/useCourseID"
+import Badge from "../Badge"
 
 
 const GroupComponent = () => {
@@ -10,7 +11,7 @@ const GroupComponent = () => {
 
     const group = state.userGroup[courseID.toString()]
 
-    const pendingIcon = isPendingGroup(group) ? <span className="badge badge-warning ml-2">Pending</span> : null
+    const pendingIcon = isPendingGroup(group) ? <Badge className="ml-2" text="Pending" color="yellow" /> : null
     const members = group.users.map(user =>
         <li key={user.ID.toString()} className="list-group-item">
             <img src={user.AvatarURL} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} alt="" />
