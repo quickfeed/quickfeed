@@ -48,19 +48,20 @@ func NewService[K ID, V any]() *Service[K, V] {
 func (s *Service[K, V]) SendTo(data *V, ids ...K) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if len(ids) == 0 {
-		// Broadcast to all clients.
-		for _, stream := range s.streams {
-			stream.Send(data)
-		}
-		return
-	}
-
 	for _, id := range ids {
 		stream, ok := s.streams[id]
 		if !ok {
 			continue
 		}
+		stream.Send(data)
+	}
+}
+
+// Broadcast sends data to all connected clients.
+func (s *Service[K, V]) Broadcast(data *V) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, stream := range s.streams {
 		stream.Send(data)
 	}
 }
