@@ -3,6 +3,7 @@ package web_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -32,6 +33,139 @@ func TestSubmissionStream(t *testing.T) {
 	_, err := client.SubmissionStream(ctx, qtest.RequestWithCookie(&qf.Void{}, client.Cookie(t, user)))
 	if err != nil && errors.Is(err, context.Canceled) {
 		t.Fatal(err)
+	}
+}
+
+func TestUpdateSubmissionStream(t *testing.T) {
+	// This test verifies that when a submission is updated (e.g., approved or rejected),
+	// the changes are reflected in the submission stream for the relevant users.
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
+	teacher, course, assignment, user1 := qtest.SetupCourseAssignmentTeacherStudent(t, db)
+
+	// Create group assignment
+	groupAssignment := &qf.Assignment{
+		CourseID:   course.GetID(),
+		Name:       "Lab 2",
+		Order:      2,
+		IsGroupLab: true,
+	}
+	if err := db.CreateAssignment(groupAssignment); err != nil {
+		t.Fatal(err)
+	}
+
+	user2 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, user2, course)
+
+	// Create group with two users
+	group := &qf.Group{
+		Name:     "Test Group",
+		CourseID: course.GetID(),
+		Users:    []*qf.User{user1, user2},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name       string
+		submission *qf.Submission
+		users      []*qf.User
+	}{
+		{
+			name: "Group Submission",
+			submission: &qf.Submission{
+				AssignmentID: groupAssignment.GetID(),
+				GroupID:      group.GetID(),
+				Score:        90,
+			},
+			users: []*qf.User{user1, user2},
+		},
+		{
+			name: "Individual Submission",
+			submission: &qf.Submission{
+				AssignmentID: assignment.GetID(),
+				UserID:       user1.GetID(),
+				Score:        75,
+			},
+			users: []*qf.User{user1},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := db.CreateSubmission(tt.submission); err != nil {
+				t.Fatal(err)
+			}
+
+			ctx := context.Background()
+			teacherCookie := client.Cookie(t, teacher)
+
+			// Timeout context to avoid hanging tests in the unlikely event of a failure
+			streamCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+			defer cancel()
+
+			// mutex to protect submission map in goroutines
+			// for test with multiple users
+			var mu sync.Mutex
+			submissionsMap := make(map[uint64][]*qf.Submission)
+			wg := sync.WaitGroup{}
+
+			for _, user := range tt.users {
+				submissionsMap[user.GetID()] = make([]*qf.Submission, 0)
+				wg.Go(func() {
+					userCookie := client.Cookie(t, user)
+					stream, err := client.SubmissionStream(streamCtx, qtest.RequestWithCookie(&qf.Void{}, userCookie))
+					if err != nil {
+						t.Errorf("failed to create stream for user %d: %v", user.GetID(), err)
+						return
+					}
+
+					for stream.Receive() {
+						sub := stream.Msg()
+						mu.Lock()
+						submissionsMap[user.GetID()] = append(submissionsMap[user.GetID()], sub)
+						mu.Unlock()
+						return // Exit after receiving the first submission update
+					}
+					if err := stream.Err(); err != nil && !errors.Is(err, context.Canceled) {
+						t.Errorf("stream error for user %d: %v", user.GetID(), err)
+					}
+				})
+			}
+
+			// Teacher approves both users in the group
+			tt.submission.SetGradeAll(qf.Submission_APPROVED)
+			updateReq := &qf.UpdateSubmissionRequest{
+				SubmissionID: tt.submission.GetID(),
+				CourseID:     course.GetID(),
+				Grades:       tt.submission.GetGrades(),
+			}
+			_, err := client.UpdateSubmission(ctx, qtest.RequestWithCookie(updateReq, teacherCookie))
+			if err != nil {
+				t.Fatalf("failed to update submission: %v", err)
+			}
+
+			// Wait for goroutines to finish by either receiving updates or timing out
+			wg.Wait()
+
+			// Verify both users received the update
+			for _, user := range tt.users {
+				submissions := submissionsMap[user.GetID()]
+				if len(submissions) != 1 {
+					t.Errorf("user %d: expected 1 submission, got %d", user.GetID(), len(submissions))
+				}
+				received := submissions[0]
+				if received.GetID() != tt.submission.GetID() {
+					t.Errorf("user %d: expected submission ID %d, got %d", user.GetID(), tt.submission.GetID(), received.GetID())
+				}
+				if received.GetStatusByUser(user.GetID()) != qf.Submission_APPROVED {
+					t.Errorf("user %d received: expected status APPROVED, got %v", user.GetID(), received.GetStatusByUser(user.GetID()))
+				}
+			}
+		})
 	}
 }
 

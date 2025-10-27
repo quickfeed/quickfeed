@@ -404,6 +404,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
 	}
+	s.streams.Submission.SendTo(submission, submission.GetUserIDs()...)
 	return &connect.Response[qf.Void]{}, nil
 }
 
