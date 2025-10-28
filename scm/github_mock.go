@@ -589,6 +589,22 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, config)
 		}),
 	)
+	getUsersByIDHandler := WithRequestMatchHandler(
+		getUsersByID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			id := mustParse[int64](r.PathValue("id"))
+			logger.Debug(replaceArgs(getUsersByID, id))
+
+			for _, member := range s.members {
+				if member.GetUser().GetID() == id {
+					mustWrite(w, member.GetUser())
+					return
+				}
+			}
+			// user not found, but return status OK with empty body to avoid 404 errors in some tests
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
 	// Mock query handler for fetching the issue ID based on issue number
 	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
 		owner := vars["repositoryOwner"].(string)
@@ -696,6 +712,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
 		postAppManifestsByCodeConversionsHandler,
+		getUsersByIDHandler,
 		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{

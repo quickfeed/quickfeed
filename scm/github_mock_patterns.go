@@ -24,4 +24,5 @@ const (
 	patchReposIssuesCommentsByOwnerByRepoByCommentID          = "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"           // UpdateIssueComment
 	postReposPullsRequestedReviewersByOwnerByRepoByPullNumber = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers" // RequestReviewers
 	postAppManifestsByCodeConversions                         = "POST /app-manifests/{code}/conversions"                             // CreateCourse
+	getUsersByID                                              = "GET /user/{id}"                                                     // updateGitHubInfo
 )

@@ -60,6 +60,9 @@ type SCM interface {
 	UpdateIssueComment(context.Context, *IssueCommentOptions) error
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(context.Context, *RequestReviewersOptions) error
+
+	// GetUserByID fetches a user by their SCM user ID.
+	GetUserByID(context.Context, uint64) (*qf.User, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

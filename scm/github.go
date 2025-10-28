@@ -320,6 +320,19 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	return nil
 }
 
+func (s *GithubSCM) GetUserByID(ctx context.Context, id uint64) (*qf.User, error) {
+	const op Op = "GetUserByID"
+	user, _, err := s.client.Users.GetByID(ctx, int64(id))
+	if err != nil {
+		return nil, E(op, M("failed to get user with ID %d", id), err)
+	}
+
+	return &qf.User{
+		Login:     user.GetLogin(),
+		AvatarURL: user.GetAvatarURL(),
+	}, nil
+}
+
 // DeleteGroup deletes a group's repository.
 func (s *GithubSCM) DeleteGroup(ctx context.Context, id uint64) error {
 	const op Op = "DeleteGroup"
