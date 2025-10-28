@@ -1,6 +1,11 @@
 package web
 
-import "github.com/quickfeed/quickfeed/qf"
+import (
+	"context"
+
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
+)
 
 // editUserProfile updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
@@ -34,4 +39,23 @@ func (s *QuickFeedService) editUserProfile(curUser, request *qf.User) error {
 		updateUser.IsAdmin = request.GetIsAdmin()
 	}
 	return s.db.UpdateUser(updateUser)
+}
+
+// updateGitHubInfo fetches the latest user info from the SCM and updates
+// the local user record in the database.
+// This can be used ahead of operations that require valid SCM user info,
+// such as adding users to organizations or teams.
+func (s *QuickFeedService) updateGitHubInfo(ctx context.Context, sc scm.SCM, user *qf.User) error {
+	ghUser, err := sc.GetUserByID(ctx, user.GetScmRemoteID())
+	if err != nil {
+		return err
+	}
+	if ghUser.GetLogin() != "" && ghUser.GetLogin() != user.GetLogin() {
+		s.logger.Infof("Updating login for user ID %d from %q to %q", user.GetID(), user.GetLogin(), ghUser.GetLogin())
+		user.Login = ghUser.GetLogin()
+	}
+	if ghUser.GetAvatarURL() != "" && ghUser.GetAvatarURL() != user.GetAvatarURL() {
+		user.AvatarURL = ghUser.GetAvatarURL()
+	}
+	return s.db.UpdateUser(user)
 }
