@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-/// Assignments ///
+var ErrInvalidCourseRelation = errors.New("entity belongs to a different course")
 
 // CreateAssignment creates a new assignment record.
 func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
@@ -51,6 +51,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 	var assignment qf.Assignment
 	if err := db.conn.Where(query).
+		Preload("ExpectedTests").
 		Preload("GradingBenchmarks").
 		Preload("GradingBenchmarks.Criteria").
 		First(&assignment).Error; err != nil {
@@ -62,7 +63,10 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
 func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
-	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
+	if err := db.conn.
+		Preload("Assignments").
+		Preload("Assignments.ExpectedTests").
+		First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
 	for _, a := range course.GetAssignments() {
@@ -99,6 +103,9 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			if err := db.updateGradingCriteria(tx, v); err != nil {
 				return err // will rollback transaction
 			}
+			if err := db.updateExpectedTests(tx, v); err != nil {
+				return err // will rollback transaction
+			}
 
 			if err := tx.Model(v).Where(&qf.Assignment{
 				ID: assignment.GetID(),
@@ -116,6 +123,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				// Submissions:       v.GetSubmissions(),
 				Tasks:             v.GetTasks(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),
+				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {
 				return err
 			}
@@ -141,6 +149,31 @@ func check(tx *gorm.DB, assignment *qf.Assignment) error {
 	}
 	if course != 1 {
 		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (db *GormDB) updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
+	if len(assignment.GetExpectedTests()) > 0 {
+		var expectedTests []*qf.TestInfo
+		err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
+			AssignmentID: assignment.GetID(),
+		}).Find(&expectedTests).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// a new assignment, no actions required
+				return nil
+			}
+			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
+		}
+		if len(expectedTests) > 0 {
+			// expected tests changed for this assignment, remove old tests
+			for _, test := range expectedTests {
+				if err := tx.Delete(test).Error; err != nil {
+					return fmt.Errorf("failed to delete expected test %d: %w", test.GetID(), err)
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -186,38 +219,23 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 	return nil
 }
 
-// GetCourseSubmissions returns the latest course submissions of the requested submission type.
-func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error) {
-	var assignmentIDs []uint64
-	a := db.conn.Model(&qf.Assignment{}).Where(&qf.Assignment{CourseID: courseID})
-	switch submissionType {
-	case qf.SubmissionRequest_USER:
-		// Must use string-based query since GORM does not support boolean false in type-based Where clauses
-		a.Where("is_group_lab = ?", false)
-	case qf.SubmissionRequest_GROUP:
-		a.Where(&qf.Assignment{IsGroupLab: true})
-	default: // all
-	}
-	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := a.Order("'order'").Pluck("id", &assignmentIDs).Error; err != nil {
-		return nil, err
-	}
-	var submissions []*qf.Submission
-	m := db.conn.Model(&qf.Submission{}).Preload("Grades").
-		Preload("Reviews").
-		Preload("Reviews.GradingBenchmarks").
-		Preload("Reviews.GradingBenchmarks.Criteria").
-		Preload("Scores")
-	if err := m.Where("assignment_id IN ?", assignmentIDs).
-		Find(&submissions).Error; err != nil {
-		return nil, err
-	}
-	return submissions, nil
-}
-
 // CreateBenchmark creates a new grading benchmark
 func (db *GormDB) CreateBenchmark(query *qf.GradingBenchmark) error {
+	if _, err := db.GetAssignment(&qf.Assignment{
+		ID: query.GetAssignmentID(),
+	}); err != nil {
+		return err
+	}
 	return db.conn.Create(query).Error
+}
+
+// getBenchmark fetches a benchmark by its ID
+func (db *GormDB) getBenchmark(benchmarkID uint64) (*qf.GradingBenchmark, error) {
+	var benchmark qf.GradingBenchmark
+	if err := db.conn.First(&benchmark, benchmarkID).Error; err != nil {
+		return nil, err
+	}
+	return &benchmark, nil
 }
 
 // UpdateBenchmark updates the given benchmark
@@ -238,6 +256,15 @@ func (db *GormDB) DeleteBenchmark(query *qf.GradingBenchmark) error {
 
 // CreateCriterion creates a new grading criterion
 func (db *GormDB) CreateCriterion(query *qf.GradingCriterion) error {
+	// check that the given criterion's benchmark exists
+	benchmark, err := db.getBenchmark(query.GetBenchmarkID())
+	if err != nil {
+		return err
+	}
+	// check that the given criterion's course belongs to the corresponding benchmark
+	if benchmark.GetCourseID() != query.GetCourseID() {
+		return ErrInvalidCourseRelation
+	}
 	return db.conn.Create(query).Error
 }
 

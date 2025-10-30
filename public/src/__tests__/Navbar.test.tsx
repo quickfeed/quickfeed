@@ -3,16 +3,13 @@ import React from "react"
 import { UserSchema } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { createMemoryHistory } from "history"
-import { Router } from "react-router-dom"
+import { MemoryRouter } from "react-router-dom"
 import { Provider } from "overmind-react"
 import { render, screen } from "@testing-library/react"
 import { create } from "@bufbuild/protobuf"
 
 
 describe("Visibility when logged in", () => {
-
-    const history = createMemoryHistory()
     const mockedOvermind = createOvermindMock(config, (state) => {
         state.self = create(UserSchema, {
             ID: BigInt(1),
@@ -27,9 +24,9 @@ describe("Visibility when logged in", () => {
     beforeEach(() => {
         render(
             <Provider value={mockedOvermind}>
-                <Router history={history}>
+                <MemoryRouter>
                     <NavBar />
-                </Router>
+                </MemoryRouter>
             </Provider>
         )
     })

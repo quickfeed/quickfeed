@@ -21,9 +21,9 @@ func TestThirdPartyAppAuth(t *testing.T) {
 	defer cleanup()
 	user := fillDatabase(t, db, token)
 
-	client, _ := web.MockClientWithOption(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithClientOptions(connect.WithInterceptors(
 		interceptor.NewTokenAuthClientInterceptor(token),
-	))
+	)))
 	ctx := context.Background()
 
 	userInfo, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))

@@ -4,7 +4,7 @@ import { useGrpc } from "../../overmind"
 import { EnrollmentStatus, EnrollmentStatusBadge } from "../../Helpers"
 
 const User = ({ user }: { user: pbUser; hidden: boolean }) => {
-    const { api } = useGrpc()
+    const { api } = useGrpc().global
     const [enrollments, setEnrollments] = React.useState<Enrollment[]>([])
     const [showEnrollments, setShowEnrollments] = React.useState<boolean>(false)
 
