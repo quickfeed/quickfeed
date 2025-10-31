@@ -73,6 +73,11 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 	}
 
 	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Update group fields, except associations
+		if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
+			return err
+		}
+
 		// Update Users association
 		if err := tx.Model(group).Association("Users").Replace(group.GetUsers()); err != nil {
 			return err
@@ -88,15 +93,15 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 			userIDs = append(userIDs, u.GetID())
 		}
 		// Set group_id for current group members
-		query := tx.Model(&qf.Enrollment{}).
+		tx = tx.Model(&qf.Enrollment{}).
 			Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
 			Where("user_id IN (?)", userIDs).
 			Updates(&qf.Enrollment{GroupID: group.GetID()})
-		if query.Error != nil {
-			return query.Error
+		if tx.Error != nil {
+			return tx.Error
 		}
 
-		if query.RowsAffected != int64(len(userIDs)) {
+		if tx.RowsAffected != int64(len(userIDs)) {
 			return ErrUpdateGroup
 		}
 		return nil
