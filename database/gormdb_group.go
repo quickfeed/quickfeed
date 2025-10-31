@@ -72,42 +72,35 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	tx := db.conn.Begin()
-	if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
-		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateGroup
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Update Users association
+		if err := tx.Model(group).Association("Users").Replace(group.GetUsers()); err != nil {
+			return err
 		}
-		return err
-	}
-	// Set group ID to zero to remove all enrollments from the given group to safely add all members of the incoming group request.
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.GetID()).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
 
-	var userids []uint64
-	for _, u := range group.GetUsers() {
-		userids = append(userids, u.GetID())
-	}
-	query := tx.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
-		Where("user_id IN (?)", userids).
-		Where("status IN (?)", []qf.Enrollment_UserStatus{
-			qf.Enrollment_STUDENT,
-			qf.Enrollment_TEACHER,
-		}).Updates(&qf.Enrollment{GroupID: group.GetID()})
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return ErrUpdateGroup
-	}
+		// Clear group_id for previous group members
+		if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
+			return err
+		}
 
-	tx.Commit()
-	return nil
+		var userIDs []uint64
+		for _, u := range group.GetUsers() {
+			userIDs = append(userIDs, u.GetID())
+		}
+		// Set group_id for current group members
+		query := tx.Model(&qf.Enrollment{}).
+			Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
+			Where("user_id IN (?)", userIDs).
+			Updates(&qf.Enrollment{GroupID: group.GetID()})
+		if query.Error != nil {
+			return query.Error
+		}
+
+		if query.RowsAffected != int64(len(userIDs)) {
+			return ErrUpdateGroup
+		}
+		return nil
+	})
 }
 
 // UpdateGroupStatus updates status field of a group.
@@ -122,17 +115,19 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 		return err
 	}
 
-	tx := db.conn.Begin()
-	if err := tx.Delete(group).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, groupID).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Clear all associations before deleting the group
+		if err := tx.Model(group).Association("Users").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
+			return err
+		}
+
+		// Delete the group
+		return tx.Delete(group).Error
+	})
 }
 
 // GetGroup returns the group with the specified group id.
