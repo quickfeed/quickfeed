@@ -109,7 +109,7 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 	}
 
 	// Verify that token has correct prefixes before continuing
-	if !(strings.HasPrefix(token, "ghp_") || strings.HasPrefix(token, "github_pat_")) {
+	if !(strings.HasPrefix(token, "ghp_") || strings.HasPrefix(token, "github_pat_") || strings.HasPrefix(token, "gho_")) {
 		// could also pass through for next interceptor to determine if the request
 		// has a valid cookie
 		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("invalid token"))
