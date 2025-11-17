@@ -1,95 +1,36 @@
 import { createOvermindMock } from "overmind"
-import { Browser, Builder, IRectangle, ThenableWebDriver } from "selenium-webdriver"
 import { config } from "../overmind"
 import { State } from "../overmind/state"
 import { SubType } from "overmind/lib/internalTypes"
 import { ReviewState } from "../overmind/namespaces/review/state"
-import { ApiClient } from "../overmind/effects"
-
-export const isOverlapping = (rect: IRectangle, rect2: IRectangle) => {
-    return (rect.x < rect2.x + rect2.width &&
-        rect.x + rect.width > rect2.x &&
-        rect.y < rect2.y + rect2.height &&
-        rect.height + rect.y > rect2.y)
-}
-
-// getBuilders returns an array of builders for all the browsers that are supported.
-// Supported browsers must be defined in the config.json file.
-// These builders require you to have web driver executables in your PATH.
-const getBuilders = (): Builder[] => {
-    const config = require("./config.json")
-    const builders: Builder[] = []
-    Object.entries(Browser).forEach(([key, value]) => {
-        if (key in config.BROWSERS && config.BROWSERS[key]) {
-            const builder = createBuilder(value)
-            builders.push(builder)
-        }
-    })
-    if (builders.length === 0) {
-        throw new Error("No supported browsers found. Please check the config.json file.")
-    }
-    return builders
-}
-
-const createBuilder = (browser: string) => {
-    return new Builder().forBrowser(browser)
-}
-
-// getBaseUrl returns the base url to be used for the tests.
-export const getBaseUrl = (): string => {
-    const config = require("./config.json")
-    let url = config.BASE_URL as string
-    if (url.endsWith("/")) {
-        url = url.slice(0, -1)
-    }
-    return url
-}
-
-/**
- *  setupDrivers returns an array of drivers for all the browsers that are supported.
- *  @path (optional) the path to load in the browser.
- *  @example: setupDrivers("/path/to/page")
- */
-export const setupDrivers = (path?: string): ThenableWebDriver[] => {
-    const baseUrl = getBaseUrl()
-    const builders = getBuilders()
-    const drivers = builders.map(driver => driver.build())
-
-    beforeAll(async () => {
-        // Open the page to be tested in all browsers, before running tests
-        await Promise.all(drivers.map(driver => driver.get(baseUrl + (path ? path : ""))))
-    })
-
-    afterAll(async () => {
-        // Close all drivers after the tests are done
-        await Promise.all(drivers.map(driver => driver.quit()))
-    })
-
-    return drivers
-}
+import { ApiClient } from "../overmind/namespaces/global/effects"
+import { create } from "@bufbuild/protobuf"
+import { TimestampSchema } from "@bufbuild/protobuf/wkt"
 
 /** initializeOvermind creates a mock Overmind instance with the given state, reviewState, and mockedEffects.
  * @param state the state to initialize the mock with
  * @param mockedEffects the mocked effects to initialize the mock with
  * NOTE: Directly setting derived values in the state is not supported.
 */
-export const initializeOvermind = (state: Partial<State & SubType<{ review: Partial<ReviewState>; }, object>>, mockedApi?: ApiClient) => {
+export const initializeOvermind = (state: Partial<State & SubType<{ review: Partial<ReviewState> }, object>>, mockedApi?: ApiClient) => {
     const overmind = createOvermindMock(config, {
-        api: mockedApi
+        global: {
+            api: mockedApi
+        }
     }, initialState => {
         Object.assign(initialState, state)
-    });
-    Object.assign(overmind.effects.api, mockedApi)
+    })
+    Object.assign(overmind.effects.global.api, mockedApi)
     return overmind
 }
 
 /** UnaryApiClient is a type that represents the ApiClient without streaming methods. */
 interface UnaryApiClient {
-    client: Omit<ApiClient["client"], "submissionStream">;
+    client: Omit<ApiClient["client"], "submissionStream">
 }
 
 /** Methods is a type that represents the methods of the UnaryApiClient */
-type Methods = UnaryApiClient["client"];
+type Methods = UnaryApiClient["client"]
 
 /** mock is a helper function that takes a method and a mocked function to run in place of the method.
  *  It returns a function that can be used to replace the method in the ApiClient.
@@ -99,9 +40,47 @@ type Methods = UnaryApiClient["client"];
 */
 export function mock<T extends keyof Methods>(
     _method: T,
-    mockFn: (req: Parameters<Methods[T]>[0]) => ReturnType<Methods[T]>
+    mockFn: (...req: Parameters<Methods[T]>) => ReturnType<Methods[T]>
 ): Methods[T] {
-    return async function (args: Parameters<Methods[T]>[0]): Promise<any> {
-        return mockFn(args);
-    };
+    return async function (...args: Parameters<Methods[T]>): Promise<ReturnType<Methods[T]>> { // skipcq: JS-0116
+        return mockFn(...args) as ReturnType<Methods[T]>
+    } as Methods[T]
+}
+
+const toTimestamp = (date: Date) => {
+    const seconds = BigInt(Math.floor(date.getTime() / 1000))
+    const nanos = (date.getTime() % 1000) * 1e6
+    return create(TimestampSchema, { seconds, nanos })
+}
+
+const dateSet = () => {
+    const date = new Date()
+    return {
+        date,
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        dayOfTheMonth: date.getDate(),
+        dayOfTheWeek: date.getDay(),
+        hours: date.getHours(),
+        minutes: date.getMinutes(),
+        seconds: date.getSeconds(),
+        milliseconds: date.getMilliseconds(),
+    }
+}
+
+/*
+* timeStamp returns a TimeStamp object with input: years, months, days, and hours.
+* Relative to the current date. No input gives the current date.
+*/
+export const timeStamp = ({ years, months, days, hours }: { years?: number, months?: number, days?: number, hours?: number } = {}) => {
+    const set = dateSet()
+    const add = (value: number, mentor?: number) => {
+        return value + (mentor ?? 0)
+    }
+    const year = add(set.year, years)
+    const month = add(set.month, months)
+    const day = add(set.dayOfTheMonth, days)
+    const hour = add(set.hours, hours)
+
+    return toTimestamp(new Date(year, month, day, hour))
 }

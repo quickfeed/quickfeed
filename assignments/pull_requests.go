@@ -36,6 +36,9 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 	if err != nil {
 		return err
 	}
+	if teacherReviewer == nil || studentReviewer == nil {
+		return fmt.Errorf("failed to get reviewers for pull request %d", pullRequest.GetNumber())
+	}
 
 	opt := &scm.RequestReviewersOptions{
 		Organization: course.GetScmOrganizationName(),
@@ -58,16 +61,16 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 // based on whoever in total has been assigned to the least amount of pull requests.
 // It is simple, and does not account for how many current review requests any user has.
 func getNextReviewer(users []*qf.User, reviewCounter map[uint64]int) *qf.User {
-	userWithLowestCount := users[0]
-	lowestCount := reviewCounter[userWithLowestCount.GetID()]
-	for _, user := range users {
+	var userWithLowestCount *qf.User
+	var lowestCount int
+	for i, user := range users {
 		count, ok := reviewCounter[user.GetID()]
 		if !ok {
 			// Found user with no prior reviews; assign as the next reviewer.
 			reviewCounter[user.GetID()] = 1
 			return user
 		}
-		if count < lowestCount {
+		if count < lowestCount || i == 0 {
 			userWithLowestCount = user
 			lowestCount = count
 		}

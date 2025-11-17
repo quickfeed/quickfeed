@@ -16,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -45,32 +44,21 @@ func init() {
 
 func main() {
 	var (
-		dbFile   = flag.String("database.file", env.DatabasePath(), "database file")
-		public   = flag.String("http.public", env.PublicDir(), "path to content to serve")
-		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
-		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
-		newApp   = flag.Bool("new", false, "create new GitHub app")
-		secret   = flag.Bool("secret", false, "create new secret for JWT signing")
+		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
+		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
+		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
+		watch  = flag.Bool("watch", false, "watch for changes and reload")
+		newApp = flag.Bool("new", false, "create new GitHub app")
+		secret = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
-	const envFile = ".env"
-	if *secret {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.Save(env.RootEnv(envFile), map[string]string{
-			"QUICKFEED_AUTH_SECRET": rand.String(),
-		}); err != nil {
-			log.Fatal(err)
-		}
-	}
+
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
+	const envFile = ".env"
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.AuthSecret() == "" {
-		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
-	}
-
 	if env.Domain() == "localhost" {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
 	}
@@ -81,15 +69,30 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
+	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
 	if *newApp {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, *httpAddr, envFile); err != nil {
+		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile, *dev); err != nil {
 			log.Fatal(err)
 		}
+	}
+	if *secret {
+		log.Println("Generating new random secret for signing JWT tokens...")
+		if err := env.NewAuthSecret(envFile); err != nil {
+			log.Fatalf("Failed to save secret: %v", err)
+		}
+	}
+	if *secret || *newApp {
+		// Refresh environment variables
+		if err := env.Load(env.RootEnv(envFile)); err != nil {
+			log.Fatal(err)
+		}
+	}
+	if env.AuthSecret() == "" {
+		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
 	logger, err := qlog.Zap()
@@ -118,7 +121,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	authConfig := auth.NewGitHubConfig(env.Domain(), scmConfig)
+	authConfig := auth.NewGitHubConfig(scmConfig)
 	log.Print("Callback: ", authConfig.RedirectURL)
 	scmManager := scm.NewSCMManager(scmConfig)
 
@@ -133,13 +136,19 @@ func main() {
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
 
-	srv, err := srvFn(*httpAddr, handler)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if *dev && *watch {
+		// Wrap handler with file watcher
+		// for live-reloading in development mode.
+		handler = web.WatchHandler(ctx, handler)
+	}
+
+	srv, err := srvFn(handler)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	go func() {
 		<-ctx.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

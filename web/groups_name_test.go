@@ -23,10 +23,10 @@ func TestBadGroupNames(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	groupNames := []struct {
 		name      string
-		wantError *connect.Error
+		wantError error
 	}{
 		{"abcdefghijklmnopqrstuvwxyz", web.ErrGroupNameTooLong},
 		{"groupNameStillTooLong", web.ErrGroupNameTooLong},
@@ -50,6 +50,7 @@ func TestBadGroupNames(t *testing.T) {
 		{"DuplicateGroupName", web.ErrGroupNameDuplicate},
 		{"duplicateGroupName", web.ErrGroupNameDuplicate},
 		{"duplicateGroupname", web.ErrGroupNameDuplicate},
+		{"", web.ErrGroupNameEmpty},
 	}
 	for _, tt := range groupNames {
 		t.Run(tt.name, func(t *testing.T) {
@@ -59,7 +60,7 @@ func TestBadGroupNames(t *testing.T) {
 			qtest.EnrollStudent(t, db, user2, course)
 
 			group := &qf.Group{
-				CourseID: course.ID,
+				CourseID: course.GetID(),
 				Name:     tt.name,
 				Users:    []*qf.User{user1, user2},
 			}
@@ -74,11 +75,12 @@ func TestBadGroupNames(t *testing.T) {
 				t.Errorf("got no error, want %v", tt.wantError)
 			}
 			if connErr, ok := err.(*connect.Error); ok {
-				if connErr.Code() != tt.wantError.Code() {
-					t.Errorf("got error code %v, want %v", connErr.Code(), tt.wantError.Code())
+				if connErr.Code() != connect.CodeInvalidArgument {
+					t.Errorf("got error code %v, want %v", connErr.Code(), connect.CodeInvalidArgument)
 				}
-				if connErr.Error() != tt.wantError.Error() {
-					t.Errorf("got error %v, want %v", connErr, tt.wantError)
+				wantConnErr := connect.NewError(connect.CodeInvalidArgument, tt.wantError)
+				if connErr.Error() != wantConnErr.Error() {
+					t.Errorf("got error %v, want %v", connErr, wantConnErr)
 				}
 			}
 		})

@@ -7,7 +7,7 @@ func (*Void) IsValid() bool {
 
 // IsValid checks required fields of a group request
 func (grp *Group) IsValid() bool {
-	return grp.GetName() != "" && grp.GetCourseID() > 0
+	return grp.GetName() != "" && grp.GetCourseID() > 0 && len(grp.GetUsers()) > 0
 }
 
 // IsValid checks required fields of a course request
@@ -103,31 +103,37 @@ func (org *Organization) IsValid() bool {
 
 // IsValid ensures that a review always has a reviewer and a submission IDs.
 func (r *Review) IsValid() bool {
-	return r.ReviewerID > 0 && r.SubmissionID > 0
+	return r.GetReviewerID() > 0 && r.GetSubmissionID() > 0
 }
 
 // IsValid ensures that course ID is provided and the review is valid.
 func (r *ReviewRequest) IsValid() bool {
-	return r.CourseID > 0 && r.Review.IsValid()
+	return r.GetCourseID() > 0 && r.GetReview().IsValid()
 }
 
 // IsValid ensures that a grading benchmark always belongs to an assignment
 // and is not empty.
 func (bm *GradingBenchmark) IsValid() bool {
-	return bm.AssignmentID > 0 && bm.Heading != ""
+	return bm.GetAssignmentID() > 0 && bm.GetHeading() != ""
 }
 
 // IsValid ensures that a criterion always belongs to a grading benchmark
 // and is not empty.
 func (c *GradingCriterion) IsValid() bool {
-	return c.BenchmarkID > 0 && c.Description != ""
+	return c.GetBenchmarkID() > 0 && c.GetDescription() != ""
+}
+
+// IsValid ensures that feedback always belongs to an assignment
+// and has meaningful content.
+func (f *AssignmentFeedback) IsValid() bool {
+	return f.GetCourseID() > 0 && f.GetAssignmentID() > 0 && f.GetLikedContent() != "" && f.GetImprovementSuggestions() != "" && f.GetTimeSpent() > 0
 }
 
 func (m *Enrollments) IsValid() bool {
-	if len(m.Enrollments) == 0 {
+	if len(m.GetEnrollments()) == 0 {
 		return false
 	}
-	for _, e := range m.Enrollments {
+	for _, e := range m.GetEnrollments() {
 		if !e.IsValid() {
 			return false
 		}

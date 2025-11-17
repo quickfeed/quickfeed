@@ -17,7 +17,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 	}
 
 	if !courseCreator.GetIsAdmin() {
-		wh.logger.Errorf("User %s is not an admin", courseCreator.Login)
+		wh.logger.Errorf("User %s is not an admin", courseCreator.GetLogin())
 		return
 	}
 
@@ -30,7 +30,7 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		Name:                orgName,
 		Code:                orgName,
 		Tag:                 defaultTag(now),
-		CourseCreatorID:     courseCreator.ID,
+		CourseCreatorID:     courseCreator.GetID(),
 		Year:                defaultYear(now),
 	}
 
@@ -48,8 +48,8 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 	}
 	wh.logger.Infof("Successfully created course %v", c)
 
-	if err := wh.tm.Add(courseCreator.ID); err != nil {
-		wh.logger.Errorf("Could not add user %s for token refresh: %v", courseCreator.Login, err)
+	if err := wh.tm.Add(courseCreator.GetID()); err != nil {
+		wh.logger.Errorf("Could not add user %s for token refresh: %v", courseCreator.GetLogin(), err)
 	}
 }
 

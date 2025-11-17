@@ -10,36 +10,25 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestUserVerifier(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t)
 
-	tm, err := auth.NewTokenManager(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
-		interceptor.NewUserInterceptor(logger, tm),
-	))
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+		web.WithInterceptors(
+			web.UserInterceptorFunc,
+		),
+	)
 	ctx := context.Background()
 
 	adminUser := qtest.CreateFakeUser(t, db)
 	student := qtest.CreateFakeUser(t, db)
 
-	adminCookie, err := tm.NewAuthCookie(adminUser.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	studentCookie, err := tm.NewAuthCookie(student.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	adminCookie := client.Cookie(t, adminUser)
+	studentCookie := client.Cookie(t, student)
 
 	userTest := []struct {
 		code     connect.Code
@@ -48,8 +37,8 @@ func TestUserVerifier(t *testing.T) {
 	}{
 		{code: connect.CodeUnauthenticated, cookie: "", wantUser: nil},
 		{code: connect.CodeUnauthenticated, cookie: "should fail", wantUser: nil},
-		{code: 0, cookie: adminCookie.String(), wantUser: adminUser},
-		{code: 0, cookie: studentCookie.String(), wantUser: student},
+		{code: 0, cookie: adminCookie, wantUser: adminUser},
+		{code: 0, cookie: studentCookie, wantUser: student},
 	}
 
 	for _, user := range userTest {

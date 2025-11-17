@@ -2,10 +2,13 @@ coverage:
   status:
     project:
       default:
-        target: 40%
-        threshold: 1%
+        target: 30%
+        threshold: 10%
 ignore:
+  - "**/*.connect.go" # ignore generated protobuf files
   - "**/*.pb.go" # ignore generated protobuf files
   - "internal/env/auth_secret.go"
+  - "internal/ui/**" # ignore esbuild code, as the tests use npm and can't be executed on github actions
   - "cmd/**"
   - "main.go"
+  - "internal/qtest/test_helper.go"

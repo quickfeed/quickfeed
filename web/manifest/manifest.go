@@ -14,12 +14,14 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 const (
 	appID         = "QUICKFEED_APP_ID"
+	appUrl        = "QUICKFEED_APP_URL"
 	clientID      = "QUICKFEED_CLIENT_ID"
 	clientSecret  = "QUICKFEED_CLIENT_SECRET"  // skipcq: SCT-A000
 	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
@@ -48,9 +50,9 @@ func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
 	return nil
 }
 
-func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error {
-	m := New(env.Domain(), envFile)
-	server, err := srvFn(httpAddr, m.Handler())
+func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
+	m := New(envFile, dev)
+	server, err := srvFn(m.Handler())
 	if err != nil {
 		return err
 	}
@@ -58,21 +60,19 @@ func CreateNewQuickFeedApp(srvFn web.ServerType, httpAddr, envFile string) error
 }
 
 type Manifest struct {
-	domain     string
-	envFile    string
-	handler    http.Handler
-	done       chan error
-	client     *github.Client // optional, for testing
-	runWebpack bool           // run webpack only for production
+	envFile string
+	handler http.Handler
+	done    chan error
+	client  *github.Client // optional, for testing
+	build   func() error
 }
 
-func New(domain, envFile string) *Manifest {
+func New(envFile string, dev bool) *Manifest {
 	m := &Manifest{
-		domain:     domain,
-		envFile:    envFile,
-		client:     github.NewClient(nil),
-		done:       make(chan error),
-		runWebpack: true,
+		envFile: envFile,
+		client:  github.NewClient(nil),
+		done:    make(chan error),
+		build:   func() error { return ui.Build("", dev) },
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -89,7 +89,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	go func() {
 		if err := server.Serve(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %v", err)
+				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %w", err)
 				return
 			}
 			// server was closed prematurely, e.g., ctrl-C
@@ -97,15 +97,11 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 		}
 	}()
 	log.Println("Important: The GitHub user that installs the QuickFeed App will become the server's admin user.")
-	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.Domain())
+	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.DomainWithPort())
 	if err := <-m.done; err != nil {
 		return err
 	}
-	if err := server.Shutdown(context.Background()); err != nil {
-		return err
-	}
-	// Refresh environment variables
-	return env.Load(env.RootEnv(m.envFile))
+	return server.Shutdown(context.Background())
 }
 
 func (m *Manifest) conversion() http.HandlerFunc {
@@ -157,6 +153,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
 			appID:         strconv.FormatInt(config.GetID(), 10),
+			appUrl:        config.GetHTMLURL(),
 			clientID:      config.GetClientID(),
 			clientSecret:  config.GetClientSecret(),
 			webhookSecret: config.GetWebhookSecret(),
@@ -174,6 +171,16 @@ func (m *Manifest) conversion() http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
+			return
+		}
+
+		// Build the UI if needed
+		if err := m.buildUI(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
+		} else {
+			log.Printf("UI built successfully")
 		}
 	}
 }
@@ -181,7 +188,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 func (m *Manifest) createApp() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if err := form(w, m.domain); err != nil {
+		if err := form(w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			// only signal done on error
@@ -217,9 +224,10 @@ body {
 <body>
   <div class="container">
     <div class="center">
-      <h2>{{.Name}} GitHub App created</h2>
-	  <h3>Running webpack in the background</h3>
-	  <h3>Please wait for <b>Done webpack</b> in server logs before logging in...</h3>
+      <h2>{{.}} GitHub App created</h2>
+	  <h3>Running esbuild in the background</h3>
+	  <h3>Building the UI, please wait for "UI built successfully" in server logs before logging in<h3>
+	  <h4>Reloading soon...</h4>
     </div>
   </div>
 </body>
@@ -228,53 +236,34 @@ body {
 <script>
 	setTimeout(function() {
 		window.location.href = "/";
-	}, 10000);
+	}, 500);
 </script>
 `
-
 	log.Printf("Successfully created the %s GitHub App.", config.GetName())
-
-	data := struct {
-		Name string
-	}{
-		Name: config.GetName(),
-	}
 	t := template.Must(template.New("success").Parse(tpl))
-	if err := t.Execute(w, data); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
-	}
-	publicEnvFile := env.PublicEnv(m.envFile)
-	if err := env.Save(publicEnvFile, map[string]string{
-		"QUICKFEED_APP_URL": config.GetHTMLURL(),
-	}); err != nil {
-		return err
-	}
-	log.Printf("App URL saved in %s: %s", publicEnvFile, config.GetHTMLURL())
-	if m.runWebpack {
-		go runWebpack()
-	}
-	return nil
+	return t.Execute(w, config.GetName())
 }
 
-func runWebpack() {
-	log.Println("Running webpack...")
-	c := exec.Command("webpack")
-	c.Dir = "public"
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
-		log.Print("Failed to run webpack; trying npm ci")
+// buildUI builds the UI. If it fails, it runs npm ci and tries again.
+// This is useful when the UI may not be built yet.
+// The build function can be overridden for testing purposes.
+func (m *Manifest) buildUI() error {
+	if err := m.build(); err != nil {
 		if ok := runNpmCi(); !ok {
-			return
+			return fmt.Errorf("failed to run npm ci: %w", err)
+		}
+		// Attempt to build again
+		if err := m.build(); err != nil {
+			return fmt.Errorf("failed to rebuild the UI: %w", err)
 		}
 	}
-	log.Print("Done webpack")
+	return nil
 }
 
 func runNpmCi() bool {
 	log.Println("Running npm ci...")
 	c := exec.Command("npm", "ci")
-	c.Dir = "public"
+	c.Dir = env.PublicDir()
 	if err := c.Run(); err != nil {
 		log.Print(c.Output())
 		log.Print(err)
@@ -285,7 +274,7 @@ func runNpmCi() bool {
 	return true
 }
 
-func form(w http.ResponseWriter, domain string) error {
+func form(w http.ResponseWriter) error {
 	const tpl = `
 	<html>
 		<form id="create" action="https://github.com/settings/apps/new" method="post">
@@ -337,14 +326,14 @@ func form(w http.ResponseWriter, domain string) error {
 		WebhookURL    string
 		WebhookActive bool
 	}{
-		URL:           auth.GetBaseURL(domain),
+		URL:           auth.GetBaseURL(),
 		Name:          env.AppName(),
-		CallbackURL:   auth.GetCallbackURL(domain),
-		WebhookURL:    auth.GetEventsURL(domain),
+		CallbackURL:   auth.GetCallbackURL(),
+		WebhookURL:    auth.GetEventsURL(),
 		WebhookActive: true,
 	}
 
-	if env.IsLocal(domain) {
+	if env.IsDomainLocal() {
 		// Disable webhook for localhost, or any other non-public domain
 		data.WebhookActive = false
 	}

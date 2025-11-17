@@ -10,18 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
-/// Assignments ///
+var ErrInvalidCourseRelation = errors.New("entity belongs to a different course")
 
 // CreateAssignment creates a new assignment record.
 func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 	// Course id and assignment order must be given.
-	if assignment.CourseID < 1 || assignment.Order < 1 {
+	if assignment.GetCourseID() < 1 || assignment.GetOrder() < 1 {
 		return gorm.ErrRecordNotFound
 	}
 
 	var course int64
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
-		ID: assignment.CourseID,
+		ID: assignment.GetCourseID(),
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -31,19 +31,19 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 	}
 	return db.conn.
 		Where(qf.Assignment{
-			CourseID: assignment.CourseID,
-			Order:    assignment.Order,
+			CourseID: assignment.GetCourseID(),
+			Order:    assignment.GetOrder(),
 		}).
 		Assign(map[string]interface{}{
-			"name":              assignment.Name,
-			"order":             assignment.Order,
-			"deadline":          assignment.Deadline.AsTime(),
-			"auto_approve":      assignment.AutoApprove,
-			"score_limit":       assignment.ScoreLimit,
-			"is_group_lab":      assignment.IsGroupLab,
-			"reviewers":         assignment.Reviewers,
-			"container_timeout": assignment.ContainerTimeout,
-			"tasks":             assignment.Tasks,
+			"name":              assignment.GetName(),
+			"order":             assignment.GetOrder(),
+			"deadline":          assignment.GetDeadline().AsTime(),
+			"auto_approve":      assignment.GetAutoApprove(),
+			"score_limit":       assignment.GetScoreLimit(),
+			"is_group_lab":      assignment.GetIsGroupLab(),
+			"reviewers":         assignment.GetReviewers(),
+			"container_timeout": assignment.GetContainerTimeout(),
+			"tasks":             assignment.GetTasks(),
 		}).Omit("Tasks").FirstOrCreate(assignment).Error
 }
 
@@ -51,6 +51,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 	var assignment qf.Assignment
 	if err := db.conn.Where(query).
+		Preload("ExpectedTests").
 		Preload("GradingBenchmarks").
 		Preload("GradingBenchmarks.Criteria").
 		First(&assignment).Error; err != nil {
@@ -62,16 +63,19 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
 func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
-	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
+	if err := db.conn.
+		Preload("Assignments").
+		Preload("Assignments.ExpectedTests").
+		First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
-	for _, a := range course.Assignments {
-		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.ID})
+	for _, a := range course.GetAssignments() {
+		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.GetID()})
 		if err != nil {
 			return nil, err
 		}
 	}
-	return course.Assignments, nil
+	return course.GetAssignments(), nil
 }
 
 // UpdateAssignments updates assignment information.
@@ -86,8 +90,8 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			var assignment qf.Assignment
 			if tx.Model(&qf.Assignment{}).FirstOrInit(&assignment,
 				&qf.Assignment{
-					CourseID: v.CourseID,
-					Order:    v.Order,
+					CourseID: v.GetCourseID(),
+					Order:    v.GetOrder(),
 				},
 			).RowsAffected == 0 {
 				// Zero rows affected indicates that the assignment does not exist
@@ -95,27 +99,31 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			}
 
 			// Assign the existing assignment ID to the incoming assignment
-			v.ID = assignment.ID
+			v.ID = assignment.GetID()
 			if err := db.updateGradingCriteria(tx, v); err != nil {
+				return err // will rollback transaction
+			}
+			if err := db.updateExpectedTests(tx, v); err != nil {
 				return err // will rollback transaction
 			}
 
 			if err := tx.Model(v).Where(&qf.Assignment{
-				ID: assignment.ID,
+				ID: assignment.GetID(),
 			}).Select("*").Updates(&qf.Assignment{
-				ID:               v.ID,
-				CourseID:         v.CourseID,
-				Name:             v.Name,
-				Deadline:         v.Deadline,
-				AutoApprove:      v.AutoApprove,
-				Order:            v.Order,
-				IsGroupLab:       v.IsGroupLab,
-				ScoreLimit:       v.ScoreLimit,
-				Reviewers:        v.Reviewers,
-				ContainerTimeout: v.ContainerTimeout,
-				// Submissions:       v.Submissions,
-				Tasks:             v.Tasks,
-				GradingBenchmarks: v.GradingBenchmarks,
+				ID:               v.GetID(),
+				CourseID:         v.GetCourseID(),
+				Name:             v.GetName(),
+				Deadline:         v.GetDeadline(),
+				AutoApprove:      v.GetAutoApprove(),
+				Order:            v.GetOrder(),
+				IsGroupLab:       v.GetIsGroupLab(),
+				ScoreLimit:       v.GetScoreLimit(),
+				Reviewers:        v.GetReviewers(),
+				ContainerTimeout: v.GetContainerTimeout(),
+				// Submissions:       v.GetSubmissions(),
+				Tasks:             v.GetTasks(),
+				GradingBenchmarks: v.GetGradingBenchmarks(),
+				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {
 				return err
 			}
@@ -130,12 +138,12 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 
 func check(tx *gorm.DB, assignment *qf.Assignment) error {
 	// Course id and assignment order must be given.
-	if assignment.CourseID < 1 || assignment.Order < 1 {
+	if assignment.GetCourseID() < 1 || assignment.GetOrder() < 1 {
 		return gorm.ErrRecordNotFound
 	}
 	var course int64
 	if err := tx.Model(&qf.Course{}).Where(&qf.Course{
-		ID: assignment.CourseID,
+		ID: assignment.GetCourseID(),
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -145,21 +153,46 @@ func check(tx *gorm.DB, assignment *qf.Assignment) error {
 	return nil
 }
 
+func (db *GormDB) updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
+	if len(assignment.GetExpectedTests()) > 0 {
+		var expectedTests []*qf.TestInfo
+		err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
+			AssignmentID: assignment.GetID(),
+		}).Find(&expectedTests).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// a new assignment, no actions required
+				return nil
+			}
+			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
+		}
+		if len(expectedTests) > 0 {
+			// expected tests changed for this assignment, remove old tests
+			for _, test := range expectedTests {
+				if err := tx.Delete(test).Error; err != nil {
+					return fmt.Errorf("failed to delete expected test %d: %w", test.GetID(), err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated.
 func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) error {
 	if len(assignment.GetGradingBenchmarks()) > 0 {
 		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
-			ID: assignment.ID,
+			ID: assignment.GetID(),
 		})
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// a new assignment, no actions required
 				return nil
 			}
-			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.Name, err)
+			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
 		}
 		if len(gradingBenchmarks) > 0 {
-			if cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
+			if cmp.Equal(assignment.GetGradingBenchmarks(), gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
@@ -171,7 +204,7 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 			} else {
 				// grading criteria changed for this assignment, remove old criteria and reviews
 				for _, bm := range gradingBenchmarks {
-					for _, c := range bm.Criteria {
+					for _, c := range bm.GetCriteria() {
 						if err := tx.Delete(c).Error; err != nil {
 							return fmt.Errorf("failed to delete criterion %d: %w", c.GetID(), err)
 						}
@@ -186,47 +219,32 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 	return nil
 }
 
-// GetCourseSubmissions returns the latest course submissions of the requested submission type.
-func (db *GormDB) GetCourseSubmissions(courseID uint64, submissionType qf.SubmissionRequest_SubmissionType) ([]*qf.Submission, error) {
-	var assignmentIDs []uint64
-	a := db.conn.Model(&qf.Assignment{}).Where(&qf.Assignment{CourseID: courseID})
-	switch submissionType {
-	case qf.SubmissionRequest_USER:
-		// Must use string-based query since GORM does not support boolean false in type-based Where clauses
-		a.Where("is_group_lab = ?", false)
-	case qf.SubmissionRequest_GROUP:
-		a.Where(&qf.Assignment{IsGroupLab: true})
-	default: // all
-	}
-	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := a.Order("'order'").Pluck("id", &assignmentIDs).Error; err != nil {
-		return nil, err
-	}
-	var submissions []*qf.Submission
-	m := db.conn.Model(&qf.Submission{}).Preload("Grades").
-		Preload("Reviews").
-		Preload("Reviews.GradingBenchmarks").
-		Preload("Reviews.GradingBenchmarks.Criteria").
-		Preload("Scores")
-	if err := m.Where("assignment_id IN ?", assignmentIDs).
-		Find(&submissions).Error; err != nil {
-		return nil, err
-	}
-	return submissions, nil
-}
-
 // CreateBenchmark creates a new grading benchmark
 func (db *GormDB) CreateBenchmark(query *qf.GradingBenchmark) error {
+	if _, err := db.GetAssignment(&qf.Assignment{
+		ID: query.GetAssignmentID(),
+	}); err != nil {
+		return err
+	}
 	return db.conn.Create(query).Error
+}
+
+// getBenchmark fetches a benchmark by its ID
+func (db *GormDB) getBenchmark(benchmarkID uint64) (*qf.GradingBenchmark, error) {
+	var benchmark qf.GradingBenchmark
+	if err := db.conn.First(&benchmark, benchmarkID).Error; err != nil {
+		return nil, err
+	}
+	return &benchmark, nil
 }
 
 // UpdateBenchmark updates the given benchmark
 func (db *GormDB) UpdateBenchmark(query *qf.GradingBenchmark) error {
 	return db.conn.Select("*").
 		Where(&qf.GradingBenchmark{
-			ID:           query.ID,
-			AssignmentID: query.AssignmentID,
-			ReviewID:     query.ReviewID,
+			ID:           query.GetID(),
+			AssignmentID: query.GetAssignmentID(),
+			ReviewID:     query.GetReviewID(),
 		}).Updates(query).Error
 }
 
@@ -238,6 +256,15 @@ func (db *GormDB) DeleteBenchmark(query *qf.GradingBenchmark) error {
 
 // CreateCriterion creates a new grading criterion
 func (db *GormDB) CreateCriterion(query *qf.GradingCriterion) error {
+	// check that the given criterion's benchmark exists
+	benchmark, err := db.getBenchmark(query.GetBenchmarkID())
+	if err != nil {
+		return err
+	}
+	// check that the given criterion's course belongs to the corresponding benchmark
+	if benchmark.GetCourseID() != query.GetCourseID() {
+		return ErrInvalidCourseRelation
+	}
 	return db.conn.Create(query).Error
 }
 
@@ -245,8 +272,8 @@ func (db *GormDB) CreateCriterion(query *qf.GradingCriterion) error {
 func (db *GormDB) UpdateCriterion(query *qf.GradingCriterion) error {
 	return db.conn.Select("*").
 		Where(&qf.GradingCriterion{
-			ID:          query.ID,
-			BenchmarkID: query.BenchmarkID,
+			ID:          query.GetID(),
+			BenchmarkID: query.GetBenchmarkID(),
 		}).
 		Updates(query).Error
 }
@@ -266,7 +293,7 @@ func (db *GormDB) GetBenchmarks(query *qf.Assignment) ([]*qf.GradingBenchmark, e
 		return nil, err
 	}
 	if err := db.conn.
-		Where("assignment_id = ?", assignment.ID).
+		Where("assignment_id = ?", assignment.GetID()).
 		Where("review_id = ?", 0).
 		Find(&benchmarks).Error; err != nil {
 		return nil, err
@@ -274,7 +301,7 @@ func (db *GormDB) GetBenchmarks(query *qf.Assignment) ([]*qf.GradingBenchmark, e
 
 	for _, b := range benchmarks {
 		var criteria []*qf.GradingCriterion
-		if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
+		if err := db.conn.Where("benchmark_id = ?", b.GetID()).Find(&criteria).Error; err != nil {
 			return nil, err
 		}
 		b.Criteria = criteria

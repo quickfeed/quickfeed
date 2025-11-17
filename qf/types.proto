@@ -25,7 +25,7 @@ import "patch/go.proto";
 // To define a field that must be stored in the database as a specific type, use:
 // [(go.field) = {tags: 'gorm:"type:<type>"'}]
 
-// USERS AND USERGROUPS //
+// USERS AND USER GROUPS //
 
 message User {
     uint64 ID        = 1;
@@ -40,7 +40,8 @@ message User {
     uint64 ScmRemoteID  = 9;   // Filter; The user's ID on the remote provider.
     string RefreshToken = 10;  // Filter; The user's refresh token that may be exchanged for an access token.
 
-    repeated Enrollment Enrollments = 11;
+    repeated Enrollment Enrollments           = 11;
+    repeated FeedbackReceipt FeedbackReceipts = 12 [(go.field) = { tags: 'gorm:"foreignKey:UserID"' }];
 }
 
 message Users {
@@ -150,19 +151,29 @@ message Enrollments {
 //   LABS    //
 
 message Assignment {
-    uint64 ID                          = 1;
-    uint64 CourseID                    = 2;  // foreign key
-    string name                        = 3;
-    google.protobuf.Timestamp deadline = 4 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
-    bool autoApprove                   = 5;
-    uint32 order                       = 6;
-    bool isGroupLab                    = 7;
-    uint32 scoreLimit                  = 8;   // minimal score limit for auto approval
-    uint32 reviewers                   = 9;   // number of reviewers that will review submissions for this assignment
-    uint32 containerTimeout            = 10;  // container timeout for this assignment
-    repeated Submission submissions    = 11;  // submissions produced for this assignment
-    repeated Task tasks                = 12;  // tasks associated with this assignment
+    uint64 ID                                   = 1;
+    uint64 CourseID                             = 2;  // foreign key
+    string name                                 = 3;
+    google.protobuf.Timestamp deadline          = 4 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    bool autoApprove                            = 5;
+    uint32 order                                = 6;
+    bool isGroupLab                             = 7;
+    uint32 scoreLimit                           = 8;   // minimal score limit for auto approval
+    uint32 reviewers                            = 9;   // number of reviewers that will review submissions for this assignment
+    uint32 containerTimeout                     = 10;  // container timeout for this assignment
+    repeated Submission submissions             = 11;  // submissions produced for this assignment
+    repeated Task tasks                         = 12;  // tasks associated with this assignment
     repeated GradingBenchmark gradingBenchmarks = 13;  // grading benchmarks for this assignment
+    repeated TestInfo ExpectedTests             = 14;  // list of expected tests for this assignment
+}
+
+message TestInfo {
+    uint64 ID           = 1;
+    uint64 AssignmentID = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:testinfo"' }];  // foreign key
+    string TestName     = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:testinfo"' }];  // name of the test
+    int32 MaxScore      = 4;                                                         // max score possible to get on this test
+    int32 Weight        = 5;                                                         // the weight of this test; used to compute final grade
+    string Details      = 6;                                                         // if populated, the frontend may display these details
 }
 
 message Task {
@@ -230,8 +241,8 @@ message Submissions {
 }
 
 message Grade {
-    uint64 SubmissionID = 1 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
-    uint64 UserID       = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
+    uint64 SubmissionID         = 1 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
+    uint64 UserID               = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:grade"' }];
     qf.Submission.Status Status = 3;
 }
 
@@ -275,4 +286,23 @@ message Review {
     uint32 score                                = 6;
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
     google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+}
+
+message AssignmentFeedback {
+    uint64 ID                           = 1;
+    uint64 CourseID                     = 2;  // Required: foreign key
+    uint64 AssignmentID                 = 3;  // Required: foreign key
+    string LikedContent                 = 4;  // Required: What did you like about this assignment?
+    string ImprovementSuggestions       = 5;  // Required: What would make it better?
+    uint32 TimeSpent                    = 6;  // Required: Time used to complete the assignment
+    google.protobuf.Timestamp CreatedAt = 7 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+}
+
+message FeedbackReceipt {
+    uint64 AssignmentID = 1 [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
+    uint64 UserID       = 2 [(go.field) = { tags: 'gorm:"primaryKey;autoIncrement:false"' }];
+}
+
+message AssignmentFeedbacks {
+    repeated AssignmentFeedback feedbacks = 1;
 }

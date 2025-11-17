@@ -4,6 +4,7 @@ import (
 	context "context"
 	"time"
 
+	"github.com/quickfeed/quickfeed/kit/score"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -29,16 +30,6 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 	return context.WithTimeout(context.Background(), timeout)
 }
 
-// SubmissionStatus returns the existing grade submission status, or an approved submission status
-// if the score of the latest submission is sufficient to autoapprove the assignment.
-func (a *Assignment) SubmissionStatus(latest *Submission, score uint32) []*Grade {
-	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
-		latest.SetGradeAll(Submission_APPROVED)
-	}
-	// keep existing status if already approved/revision/rejected
-	return latest.GetGrades()
-}
-
 // CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 	clone := proto.Clone(a).(*Assignment)
@@ -49,4 +40,23 @@ func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 // GradedManually returns true if the assignment will be graded manually.
 func (a *Assignment) GradedManually() bool {
 	return a.GetReviewers() > 0
+}
+
+// ZeroScoreTests returns a slice of score.Score objects with zero scores
+// for all expected tests in this assignment.
+func (a *Assignment) ZeroScoreTests() []*score.Score {
+	expectedTests := a.GetExpectedTests()
+	if len(expectedTests) == 0 {
+		return nil
+	}
+
+	scores := make([]*score.Score, len(expectedTests))
+	for i, testInfo := range expectedTests {
+		scores[i] = &score.Score{
+			TestName: testInfo.GetTestName(),
+			MaxScore: testInfo.GetMaxScore(),
+			Weight:   testInfo.GetWeight(),
+		}
+	}
+	return scores
 }

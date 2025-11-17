@@ -64,11 +64,13 @@ service QuickFeedService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
 
+    // assignment feedback //
+
+    rpc CreateAssignmentFeedback(AssignmentFeedback) returns (Void) {}
+    rpc GetAssignmentFeedback(CourseRequest) returns (AssignmentFeedbacks) {}
+
     // misc //
 
-    // GetOrganization returns the organization with the given organization name.
-    // Note that organization ID is not used in the request, but it is populated in the response.
-    rpc GetOrganization(Organization) returns (Organization) {}
     rpc GetRepositories(CourseRequest) returns (Repositories) {}
     rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
     rpc SubmissionStream(Void) returns (stream Submission) {}
