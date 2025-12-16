@@ -74,7 +74,7 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 
 	return db.conn.Transaction(func(tx *gorm.DB) error {
 		// Update group fields, except associations
-		if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
+		if err := tx.Model(group).Omit("Users", "Enrollments").Updates(group).Error; err != nil {
 			return err
 		}
 
