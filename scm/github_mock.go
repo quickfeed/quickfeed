@@ -50,7 +50,10 @@ func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
-func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM {
+// This is intentionally breaking the cyclomatic complexity rule (GO-R1005) to keep the
+// initialization of all the mock handlers in one place. It is not production code; it is
+// only used for testing.
+func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM { // skipcq: GO-R1005
 	mockOpts := newMockOptions()
 	for _, o := range opts {
 		o(mockOpts)
