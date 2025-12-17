@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -391,6 +392,13 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 			// A forked repository retains the visibility of the parent repository.
 			// Since the assignments repository is private, the fork will also be private.
 		})
+		if err != nil {
+			return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), err)
+		}
+		// GitHub creates forks asynchronously; wait for the fork to be ready
+		if err := s.waitForRepository(ctx, opt.Owner, opt.Repo); err != nil {
+			return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
+		}
 	}
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)
@@ -450,6 +458,37 @@ func (s *GithubSCM) addUser(ctx context.Context, org, repo, user string, access 
 		return fmt.Errorf("failed to add with %q access: %w", access.Permission, err)
 	}
 	return nil
+}
+
+const (
+	// waitForRepoMaxAttempts is the maximum number of attempts to wait for a repository to be ready.
+	waitForRepoMaxAttempts = 10
+	// waitForRepoInitialDelay is the initial delay between attempts.
+	waitForRepoInitialDelay = 1 * time.Second
+	// waitForRepoMaxDelay is the maximum delay between attempts.
+	waitForRepoMaxDelay = 5 * time.Second
+)
+
+// waitForRepository polls until the repository is accessible or max attempts is reached.
+// This is necessary because GitHub creates forks asynchronously.
+func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) error {
+	delay := waitForRepoInitialDelay
+	for attempt := 1; attempt <= waitForRepoMaxAttempts; attempt++ {
+		_, resp, err := s.client.Repositories.Get(ctx, owner, repo)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			s.logger.Debugf("waitForRepository: %s/%s ready after %d attempts", owner, repo, attempt)
+			return nil
+		}
+		s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d), waiting %v", owner, repo, attempt, waitForRepoMaxAttempts, delay)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(delay):
+		}
+		// Exponential backoff with max delay
+		delay = min(delay*2, waitForRepoMaxDelay)
+	}
+	return fmt.Errorf("repository %s/%s not ready after %d attempts", owner, repo, waitForRepoMaxAttempts)
 }
 
 // Client returns GitHub client.
