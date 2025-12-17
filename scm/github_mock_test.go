@@ -606,3 +606,28 @@ func TestMockDeleteGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestMockSyncFork(t *testing.T) {
+	tests := []struct {
+		name    string
+		opt     *SyncForkOptions
+		wantErr bool
+	}{
+		{name: "IncompleteRequest", opt: &SyncForkOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "CompleteRequest", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: false},
+		{name: "CompleteRequest", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main"}, wantErr: false},
+		{name: "CompleteRequest", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master"}, wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Branch"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Branch)
+		t.Run(name, func(t *testing.T) {
+			if err := s.SyncFork(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("SyncFork() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

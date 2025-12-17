@@ -619,6 +619,22 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, config)
 		}),
 	)
+	postReposMergeUpstreamByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposMergeUpstreamByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(postReposMergeUpstreamByOwnerByRepo, owner, repo))
+			// Always return success for merge-upstream
+			result := github.RepoMergeUpstreamResult{
+				Message:    github.String("Successfully fetched and fast-forwarded from upstream"),
+				MergeType:  github.String("fast-forward"),
+				BaseBranch: github.String("main"),
+			}
+			w.WriteHeader(http.StatusOK)
+			mustWrite(w, result)
+		}),
+	)
 	// Mock query handler for fetching the issue ID based on issue number
 	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
 		owner := vars["repositoryOwner"].(string)
@@ -726,6 +742,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler,
 		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
+		postReposMergeUpstreamByOwnerByRepoHandler,
 		postAppManifestsByCodeConversionsHandler,
 		graphQLHandler,
 	)

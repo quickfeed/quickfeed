@@ -457,6 +457,29 @@ func (s *GithubSCM) Client() *github.Client {
 	return s.client
 }
 
+// SyncFork syncs a forked repository's branch with its upstream repository.
+func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) error {
+	const op Op = "SyncFork"
+	m := M("failed to sync fork")
+	if !opt.valid() {
+		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
+	}
+
+	_, resp, err := s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
+		Branch: github.String(opt.Branch),
+	})
+	if err != nil {
+		// 409 Conflict indicates a merge conflict - log but don't fail
+		if resp != nil && resp.StatusCode == 409 {
+			s.logger.Warnf("SyncFork: merge conflict for %s/%s on branch %s", opt.Organization, opt.Repository, opt.Branch)
+			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
+		}
+		return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
+	}
+	s.logger.Debugf("SyncFork: successfully synced %s/%s on branch %s", opt.Organization, opt.Repository, opt.Branch)
+	return nil
+}
+
 func toRepository(repo *github.Repository) *Repository {
 	return &Repository{
 		ID:      uint64(repo.GetID()),

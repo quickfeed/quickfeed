@@ -60,6 +60,8 @@ type SCM interface {
 	UpdateIssueComment(context.Context, *IssueCommentOptions) error
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(context.Context, *RequestReviewersOptions) error
+	// SyncFork syncs a forked repository's branch with its upstream repository.
+	SyncFork(context.Context, *SyncForkOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
