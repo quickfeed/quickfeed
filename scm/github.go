@@ -385,20 +385,25 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 		})
 	} else {
 		// forking a student or group repository from the assignments repository
-		s.logger.Debugf("CreateRepository: creating student/group repository %s from template", opt.Repo)
-		repo, _, err = s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
+		s.logger.Debugf("CreateRepository: forking student/group repository %s from %s", opt.Repo, qf.AssignmentsRepo)
+		_, resp, forkErr := s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
 			Organization: opt.Owner,
 			Name:         opt.Repo,
 			// A forked repository retains the visibility of the parent repository.
 			// Since the assignments repository is private, the fork will also be private.
 		})
-		if err != nil {
-			return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), err)
+		// GitHub returns 202 Accepted for fork creation, which go-github treats as an error.
+		// We ignore this specific error since fork creation is asynchronous.
+		if forkErr != nil && (resp == nil || resp.StatusCode != http.StatusAccepted) {
+			return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), forkErr)
 		}
 		// GitHub creates forks asynchronously; wait for the fork to be ready
-		if err := s.waitForRepository(ctx, opt.Owner, opt.Repo); err != nil {
+		repo, err := s.waitForRepository(ctx, opt.Owner, opt.Repo)
+		if err != nil {
 			return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
 		}
+		s.logger.Debugf("CreateRepository: successfully created fork %s/%s", opt.Owner, opt.Repo)
+		return toRepository(repo), nil
 	}
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)
@@ -471,24 +476,32 @@ const (
 
 // waitForRepository polls until the repository is accessible or max attempts is reached.
 // This is necessary because GitHub creates forks asynchronously.
-func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) error {
+// Returns the repository once it's ready.
+func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (*github.Repository, error) {
 	delay := waitForRepoInitialDelay
 	for attempt := 1; attempt <= waitForRepoMaxAttempts; attempt++ {
-		_, resp, err := s.client.Repositories.Get(ctx, owner, repo)
-		if err == nil && resp.StatusCode == http.StatusOK {
+		gotRepo, resp, err := s.client.Repositories.Get(ctx, owner, repo)
+		// Repository is ready when we get a 200 OK response and the repo is not nil
+		if err == nil && resp.StatusCode == http.StatusOK && gotRepo != nil {
 			s.logger.Debugf("waitForRepository: %s/%s ready after %d attempts", owner, repo, attempt)
-			return nil
+			return gotRepo, nil
 		}
-		s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d), waiting %v", owner, repo, attempt, waitForRepoMaxAttempts, delay)
+		// 202 Accepted means fork is still being created - continue waiting
+		// 404 Not Found also means fork is not ready yet
+		if resp != nil && resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusNotFound {
+			s.logger.Warnf("waitForRepository: %s/%s unexpected status %d: %v", owner, repo, resp.StatusCode, err)
+		}
+		s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d, status=%d), waiting %v",
+			owner, repo, attempt, waitForRepoMaxAttempts, resp.StatusCode, delay)
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil, ctx.Err()
 		case <-time.After(delay):
 		}
 		// Exponential backoff with max delay
 		delay = min(delay*2, waitForRepoMaxDelay)
 	}
-	return fmt.Errorf("repository %s/%s not ready after %d attempts", owner, repo, waitForRepoMaxAttempts)
+	return nil, fmt.Errorf("repository %s/%s not ready after %d attempts", owner, repo, waitForRepoMaxAttempts)
 }
 
 // Client returns GitHub client.
