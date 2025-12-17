@@ -66,6 +66,8 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			return
 		}
 		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+		// Sync all student repositories (forks) with the updated assignments repo
+		wh.syncStudentRepos(ctx, scmClient, course, payload.GetRepo().GetDefaultBranch())
 
 	case repo.IsStudentRepo():
 		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
