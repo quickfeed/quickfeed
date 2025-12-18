@@ -70,6 +70,10 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.syncStudentRepos(ctx, scmClient, course, payload.GetRepo().GetDefaultBranch())
 
 	case repo.IsStudentRepo():
+		if payload.GetSender().GetType() == "Bot" {
+			wh.logger.Debugf("Ignoring push event from bot user %s", payload.GetSender().GetLogin())
+			return
+		}
 		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
