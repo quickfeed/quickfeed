@@ -74,7 +74,6 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 	}
 
 	wg.Wait()
-	close(sem)
 
 	duration := time.Since(start)
 	if errCnt > 0 {
