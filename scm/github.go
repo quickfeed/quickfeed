@@ -155,6 +155,8 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	if _, _, err = s.client.Organizations.Edit(ctx, org.GetScmOrganizationName(), &github.Organization{
 		DefaultRepoPermission: github.String("none"),
 		MembersCanCreateRepos: github.Bool(false),
+		// required to allow forking the assignments repository
+		MembersCanForkPrivateRepos: github.Bool(true),
 	}); err != nil {
 		return nil, E(op, m, fmt.Errorf("failed to update permissions for %s: %w", org.GetScmOrganizationName(), err))
 	}
