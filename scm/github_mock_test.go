@@ -613,12 +613,12 @@ func TestMockSyncFork(t *testing.T) {
 		opt     *SyncForkOptions
 		wantErr bool
 	}{
-		{name: "IncompleteRequest", opt: &SyncForkOptions{}, wantErr: true},
-		{name: "IncompleteRequest", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
-		{name: "IncompleteRequest", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
-		{name: "CompleteRequest", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: false},
-		{name: "CompleteRequest", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main"}, wantErr: false},
-		{name: "CompleteRequest", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master"}, wantErr: false},
+		{name: "IncompleteRequest/MissingAllFields", opt: &SyncForkOptions{}, wantErr: true},
+		{name: "IncompleteRequest/MissingRepositoryAndBranch", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest/MissingBranch", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "CompleteRequest/ForkMelingLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: false},
+		{name: "CompleteRequest/ForkJosieLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main"}, wantErr: false},
+		{name: "CompleteRequest/ForkGroupY", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master"}, wantErr: false},
 	}
 
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
