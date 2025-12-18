@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/google/go-github/v62/github"
@@ -14,10 +12,6 @@ import (
 )
 
 const (
-	// maxConcurrentSyncForks is the maximum number of concurrent fork sync operations.
-	maxConcurrentSyncForks = 10
-	// syncForkDelay is the delay between starting each sync operation to avoid GitHub abuse detection.
-	syncForkDelay = 100 * time.Millisecond
 	// maxSyncRetries is the maximum number of retries for rate-limited requests.
 	maxSyncRetries = 3
 	// initialRetryDelay is the initial delay before retrying a rate-limited request.
@@ -49,31 +43,15 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 	wh.logger.Infof("Syncing %d student repositories for course %s", len(studentRepos), course.GetName())
 	start := time.Now()
 
-	// counting semaphore: limit concurrent sync operations to avoid rate limiting
-	sem := make(chan struct{}, maxConcurrentSyncForks)
-	errCnt := int32(0)
-	var wg sync.WaitGroup
-	wg.Add(len(studentRepos))
+	errCnt := 0
 
-	for i, repo := range studentRepos {
-		// Stagger the start of goroutines to avoid burst requests
-		if i > 0 {
-			time.Sleep(syncForkDelay)
+	for _, repo := range studentRepos {
+		err := wh.syncForkWithRetry(ctx, scmClient, course.GetScmOrganizationName(), repo.Name(), branch)
+		if err != nil {
+			errCnt++
+			wh.logger.Warnf("Failed to sync repository %s: %v", repo.Name(), err)
 		}
-		go func(r *qf.Repository) {
-			defer wg.Done()
-			sem <- struct{}{}        // acquire semaphore
-			defer func() { <-sem }() // release semaphore
-
-			err := wh.syncForkWithRetry(ctx, scmClient, course.GetScmOrganizationName(), r.Name(), branch)
-			if err != nil {
-				atomic.AddInt32(&errCnt, 1)
-				wh.logger.Warnf("Failed to sync repository %s: %v", r.Name(), err)
-			}
-		}(repo)
 	}
-
-	wg.Wait()
 
 	duration := time.Since(start)
 	if errCnt > 0 {
@@ -84,8 +62,7 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 }
 
 // syncForkWithRetry attempts to sync a fork with exponential backoff retry on rate limit errors.
-func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM, org, repo, branch string) error {
-	var lastErr error
+func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM, org, repo, branch string) (err error) {
 	retryDelay := initialRetryDelay
 
 	for attempt := 0; attempt <= maxSyncRetries; attempt++ {
@@ -99,7 +76,7 @@ func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM
 			retryDelay *= 2 // exponential backoff
 		}
 
-		err := scmClient.SyncFork(ctx, &scm.SyncForkOptions{
+		err = scmClient.SyncFork(ctx, &scm.SyncForkOptions{
 			Organization: org,
 			Repository:   repo,
 			Branch:       branch,
@@ -108,11 +85,8 @@ func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM
 			return nil
 		}
 
-		lastErr = err
-
 		// Check if this is a rate limit error that we should retry
 		var rateLimitErr *github.RateLimitError
-		var abuseErr *github.AbuseRateLimitError
 		if errors.As(err, &rateLimitErr) {
 			// Use the reset time from the rate limit error if available
 			if rateLimitErr.Rate.Reset.After(time.Now()) {
@@ -121,6 +95,7 @@ func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM
 			wh.logger.Warnf("Rate limited while syncing %s, will retry in %v", repo, retryDelay)
 			continue
 		}
+		var abuseErr *github.AbuseRateLimitError
 		if errors.As(err, &abuseErr) {
 			// Use the retry-after duration if provided
 			if abuseErr.RetryAfter != nil {
@@ -134,5 +109,5 @@ func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM
 		return err
 	}
 
-	return fmt.Errorf("max retries exceeded: %w", lastErr)
+	return fmt.Errorf("max retries exceeded: %w", err)
 }
