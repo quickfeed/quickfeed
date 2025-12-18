@@ -525,12 +525,10 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) error {
 	if err != nil {
 		// 409 Conflict indicates a merge conflict
 		if resp != nil && resp.StatusCode == 409 {
-			s.logger.Warnf("SyncFork: merge conflict for %s/%s on branch %s", opt.Organization, opt.Repository, opt.Branch)
 			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
 		}
 		return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
 	}
-	s.logger.Debugf("SyncFork: successfully synced %s/%s on branch %s", opt.Organization, opt.Repository, opt.Branch)
 	return nil
 }
 
