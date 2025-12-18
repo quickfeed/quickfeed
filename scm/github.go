@@ -400,7 +400,7 @@ func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryO
 			return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), forkErr)
 		}
 		// GitHub creates forks asynchronously; wait for the fork to be ready
-		repo, err := s.waitForRepository(ctx, opt.Owner, opt.Repo)
+		repo, err = s.waitForRepository(ctx, opt.Owner, opt.Repo)
 		if err != nil {
 			return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
 		}
