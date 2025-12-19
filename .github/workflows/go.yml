@@ -13,29 +13,15 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: ["1.25.5"]
         platform: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - name: Cache
-        uses: actions/cache@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          path: |
-            ~/.cache/go-build          # ubuntu-latest
-            ~/Library/Caches/go-build  # macos-latest
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
+          go-version-file: "go.mod"
+          cache: true
 
       - name: Run Go tests
         run: DOCKER_TESTS=1 go test -v github.com/quickfeed/quickfeed/...
