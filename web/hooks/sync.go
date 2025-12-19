@@ -59,23 +59,19 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM, org, repo, branch string) (err error) {
 	retryDelay := initialRetryDelay
 
-	for attempt := 0; attempt <= maxSyncRetries; attempt++ {
-		if attempt > 0 {
-			wh.logger.Debugf("Retrying sync for %s (attempt %d/%d) after %v", repo, attempt, maxSyncRetries, retryDelay)
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(retryDelay):
-			}
-			retryDelay *= 2 // exponential backoff
+	for attempt := range maxSyncRetries {
+		wh.logger.Debugf("Retrying sync for %s (attempt %d/%d) after %v", repo, attempt, maxSyncRetries, retryDelay)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(retryDelay):
 		}
 
-		err = scmClient.SyncFork(ctx, &scm.SyncForkOptions{
+		if err = scmClient.SyncFork(ctx, &scm.SyncForkOptions{
 			Organization: org,
 			Repository:   repo,
 			Branch:       branch,
-		})
-		if err == nil {
+		}); err == nil {
 			return nil
 		}
 
