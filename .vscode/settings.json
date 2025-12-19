@@ -56,8 +56,7 @@
         "editor.defaultFormatter": "vscode.typescript-language-features"
     },
     "[scss]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "prettier.tabWidth": 4,
+        "editor.defaultFormatter": "vscode.typescript-language-features"
     },
     "[proto3]": {
         "editor.defaultFormatter": "zxh404.vscode-proto3"
@@ -97,4 +96,9 @@
         "editor.tabSize": 2,
         "editor.formatOnSave": true,
     },
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "text": "Use conventional commit message format."
+        }
+    ]
 }

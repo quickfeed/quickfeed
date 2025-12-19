@@ -123,6 +123,12 @@ func (c *GradingCriterion) IsValid() bool {
 	return c.GetBenchmarkID() > 0 && c.GetDescription() != ""
 }
 
+// IsValid ensures that feedback always belongs to an assignment
+// and has meaningful content.
+func (f *AssignmentFeedback) IsValid() bool {
+	return f.GetCourseID() > 0 && f.GetAssignmentID() > 0 && f.GetLikedContent() != "" && f.GetImprovementSuggestions() != "" && f.GetTimeSpent() > 0
+}
+
 func (m *Enrollments) IsValid() bool {
 	if len(m.GetEnrollments()) == 0 {
 		return false

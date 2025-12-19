@@ -346,6 +346,12 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
+// nextURL returns the current URL path and query parameters.
+// This is used to redirect the user back to the page they were on after logging in.
+export const nextURL = (): string => {
+    return encodeURIComponent(window.location.pathname + window.location.search)
+}
+
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
@@ -397,11 +403,23 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     return { valid: true, message: "" }
 }
 
+/** convertToBigInt converts a value to bigint.
+ If the value is undefined or cannot be converted, it returns 0n.
+ Useful when converting values from URL parameters as these may be undefined or otherwise invalid. */
+export const convertToBigInt = (value: number | string | bigint | undefined): bigint => {
+    const val = value ?? 0
+    try {
+        return BigInt(val)
+    } catch (e) {
+        return BigInt(0)
+    }
+}
+
 // newID returns a new auto-incrementing ID
 // Can be used to generate IDs for client-only objects
 // such as the Alert object
 export const newID = (() => {
-    let id: number = 0
+    let id = 0
     return () => {
         return id++
     }
