@@ -532,6 +532,10 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	}
 	groups["bar"]["groupY"] = []github.User{leslie}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
+	// Ignore the ID field in comparisons since the mock now assigns unique IDs
+	ignoreUserID := cmp.FilterPath(func(p cmp.Path) bool {
+		return p.Last().String() == ".ID"
+	}, cmp.Ignore())
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
@@ -542,7 +546,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 				return
 			}
 			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName], ignoreUserID); diff != "" {
 				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -564,7 +568,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		},
 	}
 	// verify the state of the groups after the sequence of UpdateGroupMembers
-	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
+	if diff := cmp.Diff(wantGroups, s.groups, ignoreUserID); diff != "" {
 		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 	}
 }
