@@ -2,11 +2,8 @@ package hooks
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
-	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -14,8 +11,6 @@ import (
 const (
 	// maxSyncRetries is the maximum number of retries for rate-limited requests.
 	maxSyncRetries = 3
-	// initialRetryDelay is the initial delay before retrying a rate-limited request.
-	initialRetryDelay = time.Second
 )
 
 // syncStudentRepos syncs all student repositories (forks of assignments repo) with the upstream
@@ -43,7 +38,12 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 	start := time.Now()
 	errCnt := 0
 	for _, repo := range studentRepos {
-		err := wh.syncForkWithRetry(ctx, scmClient, course.GetScmOrganizationName(), repo.Name(), branch)
+		err := scmClient.SyncFork(ctx, &scm.SyncForkOptions{
+			Organization: course.GetScmOrganizationName(),
+			Repository:   repo.Name(),
+			Branch:       branch,
+			MaxRetries:   maxSyncRetries,
+		})
 		if err != nil {
 			errCnt++
 			wh.logger.Warnf("Failed to sync repository %s: %v", repo.Name(), err)
@@ -53,51 +53,4 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 	duration := time.Since(start)
 	wh.logger.Infof("Synchronized %d student repositories for course %s in %v (%d errors)",
 		len(studentRepos)-errCnt, course.GetName(), duration, errCnt)
-}
-
-// syncForkWithRetry attempts to sync a fork with exponential backoff retry on rate limit errors.
-func (wh GitHubWebHook) syncForkWithRetry(ctx context.Context, scmClient scm.SCM, org, repo, branch string) (err error) {
-	retryDelay := initialRetryDelay
-
-	for attempt := range maxSyncRetries {
-		wh.logger.Debugf("Retrying sync for %s (attempt %d/%d) after %v", repo, attempt, maxSyncRetries, retryDelay)
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(retryDelay):
-		}
-
-		if err = scmClient.SyncFork(ctx, &scm.SyncForkOptions{
-			Organization: org,
-			Repository:   repo,
-			Branch:       branch,
-		}); err == nil {
-			return nil
-		}
-
-		// Check if this is a rate limit error that we should retry
-		var rateLimitErr *github.RateLimitError
-		if errors.As(err, &rateLimitErr) {
-			// Use the reset time from the rate limit error if available
-			if rateLimitErr.Rate.Reset.After(time.Now()) {
-				retryDelay = time.Until(rateLimitErr.Rate.Reset.Time) + time.Second
-			}
-			wh.logger.Warnf("Rate limited while syncing %s, will retry in %v", repo, retryDelay)
-			continue
-		}
-		var abuseErr *github.AbuseRateLimitError
-		if errors.As(err, &abuseErr) {
-			// Use the retry-after duration if provided
-			if abuseErr.RetryAfter != nil {
-				retryDelay = *abuseErr.RetryAfter
-			}
-			wh.logger.Warnf("Abuse rate limit hit while syncing %s, will retry in %v", repo, retryDelay)
-			continue
-		}
-
-		// Non-rate-limit error, don't retry
-		return err
-	}
-
-	return fmt.Errorf("max retries exceeded: %w", err)
 }

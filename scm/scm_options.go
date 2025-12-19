@@ -127,6 +127,7 @@ type SyncForkOptions struct {
 	Organization string
 	Repository   string
 	Branch       string
+	MaxRetries   int
 }
 
 func (opt SyncForkOptions) valid() bool {

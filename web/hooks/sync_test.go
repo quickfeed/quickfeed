@@ -3,13 +3,10 @@ package hooks
 import (
 	"context"
 	"errors"
-	"net/http"
 	"sync"
 	"testing"
 	"testing/synctest"
-	"time"
 
-	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -139,116 +136,5 @@ func TestSyncStudentReposWithErrors(t *testing.T) {
 		if len(scmClient.syncCalls) != 2 {
 			t.Errorf("expected 2 sync calls, got %d", len(scmClient.syncCalls))
 		}
-	})
-}
-
-func TestSyncForkWithRetry(t *testing.T) {
-	wh := GitHubWebHook{
-		logger: qtest.Logger(t),
-	}
-
-	t.Run("Success", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			scmClient := &mockSCM{}
-			err := wh.syncForkWithRetry(t.Context(), scmClient, "org", "repo", "master")
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if scmClient.syncCalls["repo"] != 1 {
-				t.Errorf("expected 1 sync call, got %d", scmClient.syncCalls["repo"])
-			}
-		})
-	})
-
-	t.Run("RateLimitRetrySuccess", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			scmClient := &mockSCM{
-				errs: []error{
-					&github.RateLimitError{
-						Rate: github.Rate{
-							Reset: github.Timestamp{Time: time.Now().Add(100 * time.Millisecond)},
-						},
-						Response: &http.Response{},
-					},
-				},
-			}
-			start := time.Now()
-			err := wh.syncForkWithRetry(t.Context(), scmClient, "org", "repo", "master")
-			duration := time.Since(start)
-
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if scmClient.syncCalls["repo"] != 2 {
-				t.Errorf("expected 2 sync calls, got %d", scmClient.syncCalls["repo"])
-			}
-			if duration < time.Second {
-				t.Errorf("expected retry delay of at least 1s, got %v", duration)
-			}
-		})
-	})
-
-	t.Run("AbuseRateLimitRetrySuccess", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			retryAfter := 500 * time.Millisecond
-			scmClient := &mockSCM{
-				errs: []error{
-					&github.AbuseRateLimitError{
-						RetryAfter: &retryAfter,
-						Response:   &http.Response{},
-					},
-				},
-			}
-			start := time.Now()
-			err := wh.syncForkWithRetry(t.Context(), scmClient, "org", "repo", "master")
-			duration := time.Since(start)
-
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if scmClient.syncCalls["repo"] != 2 {
-				t.Errorf("expected 2 sync calls, got %d", scmClient.syncCalls["repo"])
-			}
-			if duration < retryAfter {
-				t.Errorf("expected retry delay of at least %v, got %v", retryAfter, duration)
-			}
-		})
-	})
-
-	t.Run("NonRetryableError", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			expectedErr := errors.New("permanent error")
-			scmClient := &mockSCM{
-				errs: []error{expectedErr},
-			}
-			err := wh.syncForkWithRetry(t.Context(), scmClient, "org", "repo", "master")
-			if !errors.Is(err, expectedErr) {
-				t.Fatalf("expected error %v, got %v", expectedErr, err)
-			}
-			if scmClient.syncCalls["repo"] != 1 {
-				t.Errorf("expected 1 sync call, got %d", scmClient.syncCalls["repo"])
-			}
-		})
-	})
-
-	t.Run("MaxRetriesExceeded", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			scmClient := &mockSCM{
-				errs: []error{
-					&github.RateLimitError{Response: &http.Response{}},
-					&github.RateLimitError{Response: &http.Response{}},
-					&github.RateLimitError{Response: &http.Response{}},
-					&github.RateLimitError{Response: &http.Response{}},
-					&github.RateLimitError{Response: &http.Response{}},
-				},
-			}
-			err := wh.syncForkWithRetry(t.Context(), scmClient, "org", "repo", "master")
-			if err == nil {
-				t.Fatal("expected error, got nil")
-			}
-			if scmClient.syncCalls["repo"] != maxSyncRetries {
-				t.Errorf("expected %d sync calls, got %d", maxSyncRetries, scmClient.syncCalls["repo"])
-			}
-		})
 	})
 }

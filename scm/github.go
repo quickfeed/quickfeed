@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -340,24 +341,60 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, id uint64) error {
 }
 
 // SyncFork syncs a forked repository's branch with its upstream repository.
-func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) error {
+func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err error) {
 	const op Op = "SyncFork"
 	m := M("failed to sync fork")
 	if !opt.valid() {
 		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
-	_, resp, err := s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
-		Branch: github.String(opt.Branch),
-	})
-	if err != nil {
-		// 409 Conflict indicates a merge conflict
+	// Use a context timeout if not already set, to avoid hanging indefinitely
+	if _, ok := ctx.Deadline(); !ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+	}
+
+	for attempt := range opt.MaxRetries {
+		var resp *github.Response
+		_, resp, err = s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
+			Branch: github.String(opt.Branch),
+		})
+		if err == nil {
+			return nil
+		}
 		if hasStatus(resp, http.StatusConflict) {
 			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
 		}
-		return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
+
+		// Check if this is a rate limit error that we should retry
+		retryDelay, err := rateLimitDelay(err)
+		if err != nil {
+			// Non-rate-limit error, don't retry
+			return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
+		}
+
+		s.logger.Debugf("Retrying sync for %s/%s (attempt %d/%d) after %v", opt.Organization, opt.Repository, attempt+1, opt.MaxRetries, retryDelay)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(retryDelay):
+		}
 	}
-	return nil
+
+	return E(op, M("failed to sync fork %s/%s after %d retries", opt.Organization, opt.Repository, opt.MaxRetries), err)
+}
+
+func rateLimitDelay(err error) (time.Duration, error) {
+	var rateLimitErr *github.RateLimitError
+	if errors.As(err, &rateLimitErr) {
+		return max(time.Second, time.Until(*rateLimitErr.Rate.Reset.GetTime())+time.Second), nil
+	}
+	var abuseErr *github.AbuseRateLimitError
+	if errors.As(err, &abuseErr) {
+		return max(time.Second, abuseErr.GetRetryAfter()), nil
+	}
+	return 0, err
 }
 
 // getRepository fetches a repository by ID or name.
