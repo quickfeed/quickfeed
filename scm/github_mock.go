@@ -361,13 +361,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				return
 			}
 
+			userID := s.getUserID(username)
 			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
-			ghUser := github.User{Login: github.String(username), Permissions: permissions}
+			ghUser := github.User{ID: github.Int64(userID), Login: github.String(username), Permissions: permissions}
 			// this simulates that the user accepts the invitation (mocking the invite response is not supported yet)
 			s.groups[owner][repo] = append(collaborators, ghUser)
 			s.members = append(s.members, github.Membership{
 				Organization: &github.Organization{Login: github.String(owner)},
-				User:         &github.User{Login: github.String(username)},
+				User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
 				Role:         github.String(repoCollaboratorOptions.Permission),
 			})
 			invite := github.CollaboratorInvitation{

@@ -18,6 +18,7 @@ type mockOptions struct {
 	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
 	appConfigs map[string]github.AppConfig                           // map: code -> app config
+	userID     int64                                                 // counter for generating unique user IDs
 }
 
 // DumpState returns a string representation of the mock state.
@@ -112,7 +113,24 @@ func newMockOptions() *mockOptions {
 		issues:    map[string]map[string][]github.Issue{},
 		comments:  map[string]map[string]map[int64][]github.IssueComment{},
 		reviewers: map[string]map[string]map[int]github.ReviewersRequest{},
+		userID:    0,
 	}
+}
+
+// nextUserID returns the next unique user ID and increments the counter.
+func (s *mockOptions) nextUserID() int64 {
+	s.userID++
+	return s.userID
+}
+
+// getUserID returns the user ID for the given login, or assigns a new one if not found.
+func (s *mockOptions) getUserID(login string) int64 {
+	for _, member := range s.members {
+		if member.GetUser().GetLogin() == login {
+			return member.GetUser().GetID()
+		}
+	}
+	return s.nextUserID()
 }
 
 type MockOption func(*mockOptions)
@@ -172,10 +190,11 @@ func WithMockOrgs(members ...string) MockOption {
 			ghOrg := toOrg(course)
 			opts.orgs = append(opts.orgs, ghOrg)
 			for i, member := range members {
+				userID := opts.getUserID(member)
 				if i == 0 {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{ID: github.Int64(userID), Login: github.String(member)}})
 				} else {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{ID: github.Int64(userID), Login: github.String(member)}})
 				}
 			}
 		}
