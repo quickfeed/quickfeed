@@ -369,13 +369,13 @@ func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryO
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
-	repo, err := s.getRepo(ctx, opt.Owner, opt.Repo)
-	if err != nil {
-		return nil, E(op, m, err)
-	}
-	if repo != nil {
+	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
+	if err == nil {
 		s.logger.Debugf("createCourseRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
 		return toRepository(repo), nil
+	}
+	if resp == nil || resp.StatusCode != http.StatusNotFound {
+		return nil, E(op, m, err)
 	}
 
 	s.logger.Debugf("createCourseRepo: creating %s", opt.Repo)
@@ -398,13 +398,13 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
-	repo, err := s.getRepo(ctx, opt.Owner, opt.Repo)
-	if err != nil {
-		return nil, E(op, m, err)
-	}
-	if repo != nil {
+	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
+	if err == nil {
 		s.logger.Debugf("createForkedRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
 		return toRepository(repo), nil
+	}
+	if resp == nil || resp.StatusCode != http.StatusNotFound {
+		return nil, E(op, m, err)
 	}
 
 	s.logger.Debugf("createForkedRepo: forking student/group repository %s from %s", opt.Repo, qf.AssignmentsRepo)
@@ -422,20 +422,6 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 	}
 	s.logger.Debugf("createForkedRepo: successfully created fork %s/%s", opt.Owner, opt.Repo)
 	return toRepository(repo), nil
-}
-
-// getRepo fetches a repository by name.
-// Returns nil if the repository does not exist (404 Not Found).
-func (s *GithubSCM) getRepo(ctx context.Context, owner, repoName string) (*github.Repository, error) {
-	repo, resp, err := s.client.Repositories.Get(ctx, owner, repoName)
-	if err == nil {
-		return repo, nil
-	}
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		return nil, nil
-	}
-	s.logger.Errorf("getRepo: get repository %s/%s returned unexpected status %d: %v", owner, repoName, resp.StatusCode, err)
-	return nil, err
 }
 
 // deleteRepository deletes repository by name or ID.
@@ -508,7 +494,7 @@ func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (
 	for attempt := 1; attempt <= waitForRepoMaxAttempts; attempt++ {
 		gotRepo, resp, err := s.client.Repositories.Get(ctx, owner, repo)
 		// Repository is ready when we get a 200 OK response and the repo is not nil
-		if err == nil && resp.StatusCode == http.StatusOK && gotRepo != nil {
+		if err == nil && gotRepo != nil {
 			s.logger.Debugf("waitForRepository: %s/%s ready after %d attempts", owner, repo, attempt)
 			return gotRepo, nil
 		}
