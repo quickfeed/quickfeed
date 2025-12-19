@@ -337,6 +337,27 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, id uint64) error {
 	return nil
 }
 
+// SyncFork syncs a forked repository's branch with its upstream repository.
+func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) error {
+	const op Op = "SyncFork"
+	m := M("failed to sync fork")
+	if !opt.valid() {
+		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
+	}
+
+	_, resp, err := s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
+		Branch: github.String(opt.Branch),
+	})
+	if err != nil {
+		// 409 Conflict indicates a merge conflict
+		if hasStatus(resp, http.StatusConflict) {
+			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
+		}
+		return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
+	}
+	return nil
+}
+
 // getRepository fetches a repository by ID or name.
 func (s *GithubSCM) getRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
 	const op Op = "getRepository"
@@ -519,27 +540,6 @@ func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (
 // Client returns GitHub client.
 func (s *GithubSCM) Client() *github.Client {
 	return s.client
-}
-
-// SyncFork syncs a forked repository's branch with its upstream repository.
-func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) error {
-	const op Op = "SyncFork"
-	m := M("failed to sync fork")
-	if !opt.valid() {
-		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
-	}
-
-	_, resp, err := s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
-		Branch: github.String(opt.Branch),
-	})
-	if err != nil {
-		// 409 Conflict indicates a merge conflict
-		if hasStatus(resp, http.StatusConflict) {
-			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
-		}
-		return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
-	}
-	return nil
 }
 
 func toRepository(repo *github.Repository) *Repository {
