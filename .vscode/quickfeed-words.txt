@@ -181,6 +181,7 @@ quickfeed
 Radagast
 Repos
 repotoken
+Retryable
 run
 Sauron
 scms
