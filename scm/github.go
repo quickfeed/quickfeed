@@ -164,12 +164,11 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	// Create course repositories
 	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
-		repoOptions := &CreateRepositoryOptions{
+		repo, err := s.createCourseRepo(ctx, &CreateRepositoryOptions{
 			Repo:    path,
 			Owner:   org.GetScmOrganizationName(),
 			Private: private,
-		}
-		repo, err := s.createRepository(ctx, repoOptions)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -277,7 +276,11 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 		// repository must not exist
 		return nil, E(op, M("%s: repository %s %w", opt.Organization, opt.GroupName, ErrAlreadyExists))
 	}
-	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Owner: opt.Organization, Repo: opt.GroupName, Private: true})
+	repo, err := s.createForkedRepo(ctx, &CreateRepositoryOptions{
+		Owner:   opt.Organization,
+		Repo:    opt.GroupName,
+		Private: true,
+	})
 	if err != nil {
 		return nil, E(op, m, err)
 	}
@@ -358,60 +361,81 @@ func (s *GithubSCM) getRepository(ctx context.Context, opt *RepositoryOptions) (
 	return toRepository(repo), nil
 }
 
-// createRepository creates a new repository or returns an existing repository with the given name.
-func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	const op Op = "createRepository"
-	m := M("failed to create repository")
+// createCourseRepo creates a new course repository.
+func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	const op Op = "createCourseRepo"
+	m := M("failed to create course repository")
 	if !opt.valid() {
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
-	// check that repo does not already exist for this user or group
-	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
-	if repo != nil {
-		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
-		return toRepository(repo), nil
+	repo, err := s.getRepo(ctx, opt.Owner, opt.Repo)
+	if err != nil {
+		return nil, E(op, m, err)
 	}
-	// error expected with response status code to be 404 Not Found
-	if resp != nil && resp.StatusCode != http.StatusNotFound {
-		s.logger.Errorf("CreateRepository: get repository %s returned unexpected status %d: %v", opt.Repo, resp.StatusCode, err)
+	if repo != nil {
+		s.logger.Debugf("createCourseRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
+		return toRepository(repo), nil
 	}
 
-	// repo does not exist, create it
-	if _, ok := RepoPaths[opt.Repo]; ok {
-		// creating a default course repository
-		s.logger.Debugf("CreateRepository: creating %s", opt.Repo)
-		repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
-			Name:    github.String(opt.Repo),
-			Private: github.Bool(opt.Private),
-		})
-	} else {
-		// forking a student or group repository from the assignments repository
-		s.logger.Debugf("CreateRepository: forking student/group repository %s from %s", opt.Repo, qf.AssignmentsRepo)
-		_, resp, forkErr := s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
-			Organization: opt.Owner,
-			Name:         opt.Repo,
-			// A forked repository retains the visibility of the parent repository.
-			// Since the assignments repository is private, the fork will also be private.
-		})
-		// GitHub returns 202 Accepted for fork creation, which go-github treats as an error.
-		// We ignore this specific error since fork creation is asynchronous.
-		if forkErr != nil && (resp == nil || resp.StatusCode != http.StatusAccepted) {
-			return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), forkErr)
-		}
-		// GitHub creates forks asynchronously; wait for the fork to be ready
-		repo, err = s.waitForRepository(ctx, opt.Owner, opt.Repo)
-		if err != nil {
-			return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
-		}
-		s.logger.Debugf("CreateRepository: successfully created fork %s/%s", opt.Owner, opt.Repo)
-		return toRepository(repo), nil
-	}
+	s.logger.Debugf("createCourseRepo: creating %s", opt.Repo)
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
+		Name:    github.String(opt.Repo),
+		Private: github.Bool(opt.Private),
+	})
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)
 	}
-	s.logger.Debugf("CreateRepository: successfully created %s/%s", opt.Owner, opt.Repo)
+	s.logger.Debugf("createCourseRepo: successfully created %s/%s", opt.Owner, opt.Repo)
 	return toRepository(repo), nil
+}
+
+// createForkedRepo creates a forked repository from the assignments repository.
+func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	const op Op = "createForkedRepo"
+	m := M("failed to create forked repository")
+	if !opt.valid() {
+		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
+	}
+
+	repo, err := s.getRepo(ctx, opt.Owner, opt.Repo)
+	if err != nil {
+		return nil, E(op, m, err)
+	}
+	if repo != nil {
+		s.logger.Debugf("createForkedRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
+		return toRepository(repo), nil
+	}
+
+	s.logger.Debugf("createForkedRepo: forking student/group repository %s from %s", opt.Repo, qf.AssignmentsRepo)
+	_, resp, forkErr := s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
+		Organization: opt.Owner,
+		Name:         opt.Repo,
+	})
+	if forkErr != nil && (resp == nil || resp.StatusCode != http.StatusAccepted) {
+		return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), forkErr)
+	}
+
+	repo, err = s.waitForRepository(ctx, opt.Owner, opt.Repo)
+	if err != nil {
+		return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
+	}
+	s.logger.Debugf("createForkedRepo: successfully created fork %s/%s", opt.Owner, opt.Repo)
+	return toRepository(repo), nil
+}
+
+// getRepo fetches a repository by name.
+// Returns nil if the repository does not exist (404 Not Found).
+func (s *GithubSCM) getRepo(ctx context.Context, owner, repoName string) (*github.Repository, error) {
+	repo, resp, err := s.client.Repositories.Get(ctx, owner, repoName)
+	if err == nil {
+		return repo, nil
+	}
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	s.logger.Errorf("getRepo: get repository %s/%s returned unexpected status %d: %v", owner, repoName, resp.StatusCode, err)
+	return nil, err
 }
 
 // deleteRepository deletes repository by name or ID.
@@ -438,7 +462,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
-	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{
+	repo, err := s.createForkedRepo(ctx, &CreateRepositoryOptions{
 		Owner:   organization,
 		Repo:    qf.StudentRepoName(user),
 		Private: true,

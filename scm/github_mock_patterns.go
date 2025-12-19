@@ -5,12 +5,12 @@ const (
 	getOrgsByOrg                                              = "GET /orgs/{org}"                                                    // GetOrganization
 	patchOrgsByOrg                                            = "PATCH /orgs/{org}"                                                  // CreateCourse
 	getOrgsReposByOrg                                         = "GET /orgs/{org}/repos"                                              // GetRepositories
-	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"                                             // CreateCourse, createRepository
-	postReposForksByOwnerByRepo                               = "POST /repos/{owner}/{repo}/forks"                                   // createRepository
+	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"                                             // CreateCourse, createCourseRepo
+	postReposForksByOwnerByRepo                               = "POST /repos/{owner}/{repo}/forks"                                   // createForkedRepo
 	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"                             // GetOrganization
 	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"                             // UpdateEnrollment, DemoteTeacherToStudent
 	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"                              // RejectEnrollment
-	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createRepository
+	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, getRepo
 	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository
 	getRepositoriesByID                                       = "GET /repositories/{repository_id}"                                  // getRepository, deleteRepository
 	getReposContentsByOwnerByRepoByPath                       = "GET /repos/{owner}/{repo}/contents/{path...}"                       // RepositoryIsEmpty
