@@ -129,7 +129,9 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Repo, "", &github.RepositoryContentGetOptions{})
 	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
 	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
-	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == %d) || (err == nil && %d == 0) == %t", statusCode(resp), http.StatusNotFound, len(contents), (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0))
+	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == %d) || (err == nil && %d == 0) == %t",
+		statusCode(resp), http.StatusNotFound, len(contents),
+		(err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0))
 
 	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
 	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
