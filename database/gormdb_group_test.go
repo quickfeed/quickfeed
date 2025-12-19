@@ -352,3 +352,168 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Errorf("Expected one pending and one approved group, got %d pending, %d approved", len(pendingGroups), len(approvedGroups))
 	}
 }
+
+func TestDeleteGroupAssociations(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// Setup
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	if err := db.CreateCourse(admin.GetID(), course); err != nil {
+		t.Fatal(err)
+	}
+
+	student1 := qtest.CreateFakeUser(t, db)
+	student2 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+
+	// Create group
+	group := &qf.Group{
+		Name:     "Test Group",
+		CourseID: course.GetID(),
+		Users:    []*qf.User{student1, student2},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	groupID := group.GetID()
+
+	// Verify group exists with associations
+	gotGroup, err := db.GetGroup(groupID)
+	if err != nil {
+		t.Fatalf("GetGroup failed: %v", err)
+	}
+	if len(gotGroup.GetUsers()) != 2 {
+		t.Fatalf("expected 2 users before delete, got %d", len(gotGroup.GetUsers()))
+	}
+	if len(gotGroup.GetEnrollments()) != 2 {
+		t.Fatalf("expected 2 enrollments before delete, got %d", len(gotGroup.GetEnrollments()))
+	}
+
+	// Delete group
+	if err := db.DeleteGroup(groupID); err != nil {
+		t.Fatalf("DeleteGroup failed: %v", err)
+	}
+
+	// Verify group is deleted
+	_, err = db.GetGroup(groupID)
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Error("expected error when getting deleted group, got nil")
+	}
+
+	// Verify Enrollments cleared (GroupID should be 0)
+	for _, student := range []*qf.User{student1, student2} {
+		enrollments, err := db.GetEnrollmentsByUser(student.GetID())
+		if err != nil {
+			t.Fatalf("GetEnrollmentByCourseAndUser failed: %v", err)
+		}
+		for _, enrollment := range enrollments {
+			if enrollment.GetGroupID() != 0 {
+				t.Errorf("expected enrollment.GroupID to be %d before delete, got %d",
+					groupID, enrollment.GetGroupID())
+			}
+			if enrollment.GetGroup() != nil {
+				t.Errorf("expected enrollment.Group to be nil before delete, got %+v",
+					enrollment.GetGroup())
+			}
+		}
+	}
+}
+
+func TestUpdateGroupMembers(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// Setup
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	if err := db.CreateCourse(admin.GetID(), course); err != nil {
+		t.Fatal(err)
+	}
+
+	student1 := qtest.CreateFakeUser(t, db)
+	student2 := qtest.CreateFakeUser(t, db)
+	student3 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
+
+	// Create group with student1 and student2
+	group := &qf.Group{
+		Name:     "Test Group",
+		CourseID: course.ID,
+		Users:    []*qf.User{student1, student2},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// Update group to have student2 and student3
+	group.Users = []*qf.User{student2, student3}
+	if err := db.UpdateGroup(group); err != nil {
+		t.Fatalf("UpdateGroup failed: %v", err)
+	}
+
+	// Verify group members
+	updatedGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatalf("GetGroup failed: %v", err)
+	}
+	if len(updatedGroup.GetUsers()) != 2 {
+		t.Fatalf("expected 2 users after update, got %d: %+v", len(updatedGroup.GetUsers()), updatedGroup.GetUsers())
+	}
+	userIDs := make(map[uint64]bool)
+	for _, user := range updatedGroup.GetUsers() {
+		userIDs[user.GetID()] = true
+	}
+	if !userIDs[student2.GetID()] || !userIDs[student3.GetID()] {
+		t.Log(student2.GetID(), student3.GetID())
+		t.Errorf("expected group members to be student2 and student3, got %+v, %+v", updatedGroup.GetUsers(), userIDs)
+	}
+
+	// Group should no longer contain student1
+	if userIDs[student1.GetID()] {
+		t.Errorf("did not expect student1 to be in group members, but found %+v", updatedGroup.GetUsers())
+	}
+
+	// Verify enrollments
+	for _, student := range []*qf.User{student2, student3} {
+		enrollments, err := db.GetEnrollmentsByUser(student.GetID())
+		if err != nil {
+			t.Fatalf("GetEnrollmentByCourseAndUser failed: %v", err)
+		}
+		for _, enrollment := range enrollments {
+			if enrollment.GetGroupID() != group.GetID() {
+				t.Errorf("expected enrollment.GroupID to be %d after update, got %d for student %d", group.GetID(), enrollment.GetGroupID(), student.GetID())
+			}
+
+			// Check that the preloaded group users are correct
+			for _, gUser := range enrollment.GetGroup().GetUsers() {
+				if gUser.GetID() != student2.GetID() && gUser.GetID() != student3.GetID() {
+					t.Errorf("expected group users to be student2 and student3, got %+v", enrollment.GetGroup().GetUsers())
+				}
+			}
+		}
+	}
+
+	// Verify that student1's enrollment GroupID is cleared
+	enrollments, err := db.GetEnrollmentsByUser(student1.GetID())
+	if err != nil {
+		t.Fatalf("GetEnrollmentsByUser failed: %v", err)
+	}
+	if len(enrollments) == 0 {
+		t.Errorf("expected enrollment for student1, got none")
+	}
+	for _, enrollment := range enrollments {
+		if enrollment.GetGroupID() != 0 {
+			t.Errorf("expected enrollment.GroupID to be 0 after update, got %d", enrollment.GetGroupID())
+		}
+
+		if enrollment.GetGroup() != nil {
+			t.Errorf("expected enrollment.Group to be nil after update, got %+v", enrollment.GetGroup())
+		}
+	}
+}
