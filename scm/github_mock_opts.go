@@ -23,7 +23,7 @@ type mockOptions struct {
 
 // DumpState returns a string representation of the mock state.
 // This is used for debugging and testing purposes.
-func (s mockOptions) DumpState() string {
+func (s *mockOptions) DumpState() string {
 	b := new(strings.Builder)
 	fmt.Fprintln(b, "Mock state:")
 	for i, org := range s.orgs {
@@ -67,7 +67,7 @@ func (s mockOptions) DumpState() string {
 }
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
-func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
+func (s *mockOptions) hasOrgRepo(orgName, repoName string) bool {
 	for i := range s.repos {
 		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
@@ -78,7 +78,7 @@ func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
 }
 
 // matchOrgFunc calls f with the organization that matches orgName and returns true if found.
-func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) bool {
+func (s *mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) bool {
 	for _, org := range s.orgs {
 		if org.GetLogin() == orgName {
 			f(org)
@@ -90,7 +90,7 @@ func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) b
 
 // GetComment returns the comment for the given organization, repository, and matching comment ID.
 // This is used to inspect the comments created/updated during testing; not part of the SCM interface.
-func (s mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
+func (s *mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
 	if s.comments[orgName] == nil || s.comments[orgName][repoName] == nil {
 		return nil
 	}
