@@ -129,12 +129,12 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Repo, "", &github.RepositoryContentGetOptions{})
 	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
 	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
-	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == 404) || (err == nil && %d == 0) == %t", resp.StatusCode, len(contents), (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0))
+	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == %d) || (err == nil && %d == 0) == %t", statusCode(resp), http.StatusNotFound, len(contents), (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0))
 
 	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
 	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
 	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
-	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
+	return (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0)
 }
 
 // CreateCourse creates repositories for a new course.
@@ -374,7 +374,7 @@ func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryO
 		s.logger.Debugf("createCourseRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
 		return toRepository(repo), nil
 	}
-	if resp == nil || resp.StatusCode != http.StatusNotFound {
+	if !hasStatus(resp, http.StatusNotFound) {
 		return nil, E(op, m, err)
 	}
 
@@ -403,7 +403,7 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 		s.logger.Debugf("createForkedRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
 		return toRepository(repo), nil
 	}
-	if resp == nil || resp.StatusCode != http.StatusNotFound {
+	if !hasStatus(resp, http.StatusNotFound) {
 		return nil, E(op, m, err)
 	}
 
@@ -412,7 +412,7 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 		Organization: opt.Owner,
 		Name:         opt.Repo,
 	})
-	if forkErr != nil && (resp == nil || resp.StatusCode != http.StatusAccepted) {
+	if forkErr != nil && !hasStatus(resp, http.StatusAccepted) {
 		return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), forkErr)
 	}
 
@@ -500,11 +500,11 @@ func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (
 		}
 		// 202 Accepted means fork is still being created - continue waiting
 		// 404 Not Found also means fork is not ready yet
-		if resp != nil && resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusNotFound {
-			s.logger.Warnf("waitForRepository: %s/%s unexpected status %d: %v", owner, repo, resp.StatusCode, err)
+		if !hasStatus(resp, http.StatusAccepted) && !hasStatus(resp, http.StatusNotFound) {
+			s.logger.Warnf("waitForRepository: %s/%s unexpected status %d: %v", owner, repo, statusCode(resp), err)
 		}
 		s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d, status=%d), waiting %v",
-			owner, repo, attempt, waitForRepoMaxAttempts, resp.StatusCode, delay)
+			owner, repo, attempt, waitForRepoMaxAttempts, statusCode(resp), delay)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -534,7 +534,7 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) error {
 	})
 	if err != nil {
 		// 409 Conflict indicates a merge conflict
-		if resp != nil && resp.StatusCode == 409 {
+		if hasStatus(resp, http.StatusConflict) {
 			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
 		}
 		return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
@@ -549,4 +549,20 @@ func toRepository(repo *github.Repository) *Repository {
 		Owner:   repo.Owner.GetLogin(),
 		HTMLURL: repo.GetHTMLURL(),
 	}
+}
+
+// statusCode returns the HTTP status code from the response.
+func statusCode(resp *github.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
+}
+
+// hasStatus returns true if the response has the specified status code.
+func hasStatus(resp *github.Response, code int) bool {
+	if resp == nil {
+		return false
+	}
+	return resp.StatusCode == code
 }
