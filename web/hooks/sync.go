@@ -34,17 +34,14 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 			studentRepos = append(studentRepos, repo)
 		}
 	}
-
 	if len(studentRepos) == 0 {
 		wh.logger.Debugf("No student repositories to sync for course %s", course.GetName())
 		return
 	}
 
-	wh.logger.Infof("Syncing %d student repositories for course %s", len(studentRepos), course.GetName())
+	wh.logger.Infof("Synchronizing %d student repositories for course %s", len(studentRepos), course.GetName())
 	start := time.Now()
-
 	errCnt := 0
-
 	for _, repo := range studentRepos {
 		err := wh.syncForkWithRetry(ctx, scmClient, course.GetScmOrganizationName(), repo.Name(), branch)
 		if err != nil {
@@ -54,11 +51,8 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 	}
 
 	duration := time.Since(start)
-	if errCnt > 0 {
-		wh.logger.Warnf("Synced student repositories for course %s in %v with %d errors", course.GetName(), duration, errCnt)
-	} else {
-		wh.logger.Infof("Successfully synced %d student repositories for course %s in %v", len(studentRepos), course.GetName(), duration)
-	}
+	wh.logger.Infof("Synchronized %d student repositories for course %s in %v (%d errors)",
+		len(studentRepos)-errCnt, course.GetName(), duration, errCnt)
 }
 
 // syncForkWithRetry attempts to sync a fork with exponential backoff retry on rate limit errors.
