@@ -514,20 +514,25 @@ const (
 // Returns the repository once it's ready.
 func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (*github.Repository, error) {
 	delay := waitForRepoInitialDelay
-	for attempt := 1; attempt <= waitForRepoMaxAttempts; attempt++ {
+	for attempt := range waitForRepoMaxAttempts {
 		gotRepo, resp, err := s.client.Repositories.Get(ctx, owner, repo)
 		// Repository is ready when we get a 200 OK response and the repo is not nil
 		if err == nil && gotRepo != nil {
-			s.logger.Debugf("waitForRepository: %s/%s ready after %d attempts", owner, repo, attempt)
+			s.logger.Debugf("waitForRepository: %s/%s ready after %d attempts", owner, repo, attempt+1)
 			return gotRepo, nil
 		}
 		// 202 Accepted means fork is still being created - continue waiting
 		// 404 Not Found also means fork is not ready yet
-		if !hasStatus(resp, http.StatusAccepted) && !hasStatus(resp, http.StatusNotFound) {
-			s.logger.Warnf("waitForRepository: %s/%s unexpected status %d: %v", owner, repo, statusCode(resp), err)
+		if hasStatus(resp, http.StatusAccepted) || hasStatus(resp, http.StatusNotFound) {
+			s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d, status=%d), waiting %v",
+				owner, repo, attempt+1, waitForRepoMaxAttempts, statusCode(resp), delay)
+		} else {
+			// For any other status, treat this as a real error and stop retrying.
+			if err != nil {
+				return nil, fmt.Errorf("waitForRepository: %s/%s unexpected status %d: %w", owner, repo, statusCode(resp), err)
+			}
+			return nil, fmt.Errorf("waitForRepository: %s/%s unexpected status %d", owner, repo, statusCode(resp))
 		}
-		s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d, status=%d), waiting %v",
-			owner, repo, attempt, waitForRepoMaxAttempts, statusCode(resp), delay)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
