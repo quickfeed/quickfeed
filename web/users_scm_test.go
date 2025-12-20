@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-github/v62/github"
@@ -49,7 +48,6 @@ func TestUpdateEnrollmentsAfterUpdateUserLogin(t *testing.T) {
 		},
 	})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scmOpt, memberOpt), web.WithInterceptors())
-	ctx := context.Background()
 	adminCookie := client.Cookie(t, admin)
 
 	// Admin approves the enrollment
@@ -62,7 +60,7 @@ func TestUpdateEnrollmentsAfterUpdateUserLogin(t *testing.T) {
 	req := &qf.Enrollments{
 		Enrollments: []*qf.Enrollment{enrollment},
 	}
-	_, err = client.UpdateEnrollments(ctx, qtest.RequestWithCookie(req, adminCookie))
+	_, err = client.UpdateEnrollments(t.Context(), qtest.RequestWithCookie(req, adminCookie))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,9 +96,14 @@ func TestUpdateGroupAfterUpdateUserLogin(t *testing.T) {
 
 	// Enroll and approve student
 	qtest.EnrollStudent(t, db, student, course)
-	e, _ := db.GetEnrollmentByCourseAndUser(course.GetID(), student.GetID())
+	e, err := db.GetEnrollmentByCourseAndUser(course.GetID(), student.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
 	e.Status = qf.Enrollment_STUDENT
-	db.UpdateEnrollment(e)
+	if err := db.UpdateEnrollment(e); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create a group
 	group := &qf.Group{
@@ -123,12 +126,11 @@ func TestUpdateGroupAfterUpdateUserLogin(t *testing.T) {
 		},
 	})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scmOpt, memberOpt), web.WithInterceptors())
-	ctx := context.Background()
 	adminCookie := client.Cookie(t, admin)
 
 	// Admin updates the group (e.g., approving it)
 	group.Status = qf.Group_APPROVED
-	_, err := client.UpdateGroup(ctx, qtest.RequestWithCookie(group, adminCookie))
+	_, err = client.UpdateGroup(t.Context(), qtest.RequestWithCookie(group, adminCookie))
 	if err != nil {
 		t.Fatal(err)
 	}
