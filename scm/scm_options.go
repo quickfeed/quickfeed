@@ -131,5 +131,5 @@ type SyncForkOptions struct {
 }
 
 func (opt SyncForkOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" && opt.Branch != ""
+	return opt.Organization != "" && opt.Repository != "" && opt.Branch != "" && opt.MaxRetries > 0
 }
