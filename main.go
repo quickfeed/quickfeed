@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"mime"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,6 +22,7 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/manifest"
+	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -94,40 +97,13 @@ func main() {
 		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
 	}
 
-	logger, err := qlog.Zap()
-	if err != nil {
-		log.Fatalf("Can't initialize logger: %v", err)
-	}
-	defer func() { _ = logger.Sync() }()
-
-	db, err := database.NewGormDB(*dbFile, logger)
-	if err != nil {
-		log.Fatalf("Can't connect to database: %v", err)
-	}
-
-	scmConfig, err := scm.NewSCMConfig()
+	handler, cleanup, err := initWebServer(*dbFile, *public)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer cleanup()
 
-	tokenManager, err := auth.NewTokenManager(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	authConfig := auth.NewGitHubConfig(scmConfig)
-	log.Print("Callback: ", authConfig.RedirectURL)
-	scmManager := scm.NewSCMManager(scmConfig)
-
-	runner, err := ci.NewDockerCI(logger.Sugar())
-	if err != nil {
-		log.Fatalf("Failed to set up docker client: %v", err)
-	}
-	defer runner.Close()
-
-	qfService := web.NewQuickFeedService(logger, db, scmManager, runner)
-	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(tokenManager, authConfig, os.Getenv("QUICKFEED_WEBHOOK_SECRET"), *public)
-	handler := h2c.NewHandler(router, &http2.Server{})
+	log.Print("Callback: ", auth.GetCallbackURL())
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -138,22 +114,78 @@ func main() {
 
 	srv, err := srvFn(handler)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to start server: %v", err)
+		return
 	}
 
-	go func() {
-		<-ctx.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(ctx); err != nil {
-			log.Fatalf("Graceful shutdown failed: %v", err)
-		}
-	}()
+	go gracefulShutdown(ctx, srv)
 
 	if err := srv.Serve(); err != nil {
-		log.Fatalf("Failed to start QuickFeed server: %v", err)
+		log.Printf("Failed to start QuickFeed server: %v", err)
+		return
 	}
 	log.Println("QuickFeed shut down gracefully")
+}
+
+// gracefulShutdown blocks waiting for the context to be done (SIGINT or SIGTERM)
+// and then attempts to gracefully shut down the server.
+func gracefulShutdown(ctx context.Context, srv *web.Server) {
+	<-ctx.Done()
+	log.Print("Shutting down server...")
+	shutDownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutDownCtx); err != nil {
+		log.Printf("Graceful shutdown failed: %v", err)
+	}
+}
+
+// initWebServer initializes the QuickFeed web server components.
+func initWebServer(dbFile, public string) (http.Handler, func(), error) {
+	q := &quickfeed{}
+	var err error
+
+	q.logger, err = qlog.Zap()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to initialize logger: %v", err)
+	}
+
+	q.db, err = database.NewGormDB(dbFile, q.logger)
+	if err != nil {
+		return nil, q.cleanup, fmt.Errorf("failed to connect to database: %v", err)
+	}
+
+	q.runner, err = ci.NewDockerCI(q.logger.Sugar())
+	if err != nil {
+		return nil, q.cleanup, fmt.Errorf("failed to set up docker client: %v", err)
+	}
+
+	tm, err := auth.NewTokenManager(q.db)
+	if err != nil {
+		return nil, q.cleanup, err
+	}
+
+	scmMgr, err := scm.NewSCMManager()
+	if err != nil {
+		return nil, q.cleanup, err
+	}
+
+	qfService := web.NewQuickFeedService(q.logger, q.db, scmMgr, q.runner, tm)
+	// Register HTTP endpoints and webhooks
+	router := qfService.RegisterRouter(os.Getenv("QUICKFEED_WEBHOOK_SECRET"), public)
+
+	return h2c.NewHandler(router, &http2.Server{}), q.cleanup, nil
+}
+
+type quickfeed struct {
+	logger *zap.Logger
+	db     *database.GormDB
+	runner *ci.Docker
+}
+
+func (q *quickfeed) cleanup() {
+	if err := errors.Join(q.runner.Close(), q.db.Close(), q.logger.Sync()); err != nil {
+		log.Printf("Cleanup error: %v", err)
+	}
 }
 
 func checkDomain() error {

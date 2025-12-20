@@ -13,6 +13,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -25,17 +26,19 @@ type QuickFeedService struct {
 	db     database.Database
 	scmMgr *scm.Manager
 	runner ci.Runner
+	tm     *auth.TokenManager
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, tm *auth.TokenManager) *QuickFeedService {
 	return &QuickFeedService{
 		logger:  logger.Sugar(),
 		db:      db,
 		scmMgr:  mgr,
 		runner:  runner,
+		tm:      tm,
 		streams: stream.NewStreamServices(),
 	}
 }
