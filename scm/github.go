@@ -341,6 +341,16 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, id uint64) error {
 }
 
 // SyncFork syncs a forked repository's branch with its upstream repository.
+// If the upstream changes cannot be applied cleanly (for example, due to merge
+// conflicts), SyncFork returns a non-nil error and does not push conflicting
+// changes to the fork.
+//
+// Implementations are expected to handle transient SCM errors, including
+// provider rate limiting, by retrying the sync operation internally until the
+// operation succeeds or the provided context is canceled or times out.
+//
+// The call is blocking: it waits for the synchronization to complete, fail,
+// or be aborted by the context before returning.
 func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err error) {
 	const op Op = "SyncFork"
 	m := M("failed to sync fork")
