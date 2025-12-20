@@ -86,6 +86,13 @@ func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, 
 		return err
 	}
 
+	for _, user := range users {
+		// check and update user SCM info before updating group
+		if err := s.updateUserFromSCM(ctx, sc, user); err != nil {
+			return fmt.Errorf("failed to update SCM info for user %d: %w", user.GetID(), err)
+		}
+	}
+
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
 	newGroup, err := s.newGroup(group, request, users)

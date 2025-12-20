@@ -11,6 +11,9 @@ import (
 
 // SCM is the source code management interface for managing courses and users.
 type SCM interface {
+	// GetUserByID fetches a user by their SCM user ID.
+	GetUserByID(context.Context, uint64) (*qf.User, error)
+
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
