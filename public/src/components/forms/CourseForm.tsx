@@ -38,6 +38,12 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
             case "slipDays":
                 course.slipDays = Number(value)
                 break
+            case "slackChannelLink":
+                course.SlackChannelLink = value
+                break
+            case "slackChannelName":
+                course.SlackChannelName = value
+                break
         }
         setCourse(course)
     }, [course])
@@ -92,6 +98,22 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
                         defaultValue={course.year.toString()}
                         onChange={handleChange}
                         type="number"
+                    />
+                </div>
+                <div className="row">
+                    <FormInput
+                        prepend="Invite link"
+                        name="slackChannelLink"
+                        placeholder={"(ex. https://discord.gg/xyz)"}
+                        defaultValue={course.SlackChannelLink}
+                        onChange={handleChange}
+                    />
+                    <FormInput
+                        prepend="Link description"
+                        name="slackChannelName"
+                        placeholder={"(ex. Join our Discord server)"}
+                        defaultValue={course.SlackChannelName}
+                        onChange={handleChange}
                     />
                 </div>
                 <input className="btn btn-primary" type="submit" value={"Save"} />

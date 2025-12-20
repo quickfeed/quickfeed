@@ -32,6 +32,31 @@ func TestUpdateCourse(t *testing.T) {
 	qtest.Diff(t, "UpdateCourse() mismatch", gotCourse, wantCourse, protocmp.Transform())
 }
 
+func TestUpdateCourseWithInviteLink(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
+	user := qtest.CreateFakeUser(t, db)
+	dat520 := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, user, dat520)
+	cookie := client.Cookie(t, user)
+
+	// Update the course with invite link and description
+	wantCourse := proto.Clone(dat520).(*qf.Course)
+	wantCourse.SlackChannelLink = "https://discord.gg/test123"
+	wantCourse.SlackChannelName = "Join our Discord server"
+	if _, err := client.UpdateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie)); err != nil {
+		t.Error(err)
+	}
+	gotCourse := qtest.GetCourse(t, db, dat520.GetID())
+	if gotCourse.GetSlackChannelLink() != wantCourse.GetSlackChannelLink() {
+		t.Errorf("SlackChannelLink mismatch: got %q, want %q", gotCourse.GetSlackChannelLink(), wantCourse.GetSlackChannelLink())
+	}
+	if gotCourse.GetSlackChannelName() != wantCourse.GetSlackChannelName() {
+		t.Errorf("SlackChannelName mismatch: got %q, want %q", gotCourse.GetSlackChannelName(), wantCourse.GetSlackChannelName())
+	}
+}
+
 func TestGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

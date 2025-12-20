@@ -17,6 +17,7 @@ const CourseLinks = () => {
     const courseID = useCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
     const repo = state.repositories[courseID.toString()]
+    const course = state.courses.find(c => c.ID === courseID)
     const hasGroup = state.hasGroup(courseID.toString())
     const groupName = enrollment.group ? `(${enrollment.group?.name})` : ""
 
@@ -53,6 +54,17 @@ const CourseLinks = () => {
                 </div>
 
                 {links.map(link => { return <LinkElement key={link.type} link={link} /> })}
+
+                {course?.SlackChannelLink && (
+                    <a
+                        href={course.SlackChannelLink}
+                        target={"_blank"}
+                        rel="noopener noreferrer"
+                        className="list-group-item list-group-item-action"
+                    >
+                        {course.SlackChannelName || "Join Communication Channel"}
+                    </a>
+                )}
 
                 <Link
                     to={`/course/${courseID}/group`}
