@@ -183,7 +183,17 @@ type quickfeed struct {
 }
 
 func (q *quickfeed) cleanup() {
-	if err := errors.Join(q.runner.Close(), q.db.Close(), q.logger.Sync()); err != nil {
+	var err error
+	if q.runner != nil {
+		err = q.runner.Close()
+	}
+	if q.db != nil {
+		err = errors.Join(err, q.db.Close())
+	}
+	if q.logger != nil {
+		err = errors.Join(err, q.logger.Sync())
+	}
+	if err != nil {
 		log.Printf("Cleanup error: %v", err)
 	}
 }
