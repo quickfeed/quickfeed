@@ -87,8 +87,8 @@ func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, 
 	}
 
 	for _, user := range users {
-		// ensure that user SCM info is up to date
-		if err := s.updateGitHubInfo(ctx, sc, user); err != nil {
+		// check and update user SCM info before updating group
+		if err := s.updateUserFromSCM(ctx, sc, user); err != nil {
 			return fmt.Errorf("failed to update SCM info for user %d: %w", user.GetID(), err)
 		}
 	}

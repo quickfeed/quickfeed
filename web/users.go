@@ -41,21 +41,22 @@ func (s *QuickFeedService) editUserProfile(curUser, request *qf.User) error {
 	return s.db.UpdateUser(updateUser)
 }
 
-// updateGitHubInfo fetches the latest user info from the SCM and updates
-// the local user record in the database.
-// This can be used ahead of operations that require valid SCM user info,
-// such as adding users to organizations or teams.
-func (s *QuickFeedService) updateGitHubInfo(ctx context.Context, sc scm.SCM, user *qf.User) error {
+// updateUserFromSCM fetches the latest user info from the SCM and updates the local user
+// record in the database. This should be used ahead of operations that require valid SCM
+// user info, such as adding users to organizations or teams.
+func (s *QuickFeedService) updateUserFromSCM(ctx context.Context, sc scm.SCM, user *qf.User) error {
 	ghUser, err := sc.GetUserByID(ctx, user.GetScmRemoteID())
 	if err != nil {
 		return err
 	}
-	if ghUser.GetLogin() != "" && ghUser.GetLogin() != user.GetLogin() {
-		s.logger.Infof("Updating login for user ID %d from %q to %q", user.GetID(), user.GetLogin(), ghUser.GetLogin())
-		user.Login = ghUser.GetLogin()
+	ghLogin := ghUser.GetLogin()
+	if ghLogin != "" && ghLogin != user.GetLogin() {
+		s.logger.Infof("Updating SCM login for user ID %d from %q to %q", user.GetID(), user.GetLogin(), ghLogin)
+		user.Login = ghLogin
 	}
-	if ghUser.GetAvatarURL() != "" && ghUser.GetAvatarURL() != user.GetAvatarURL() {
-		user.AvatarURL = ghUser.GetAvatarURL()
+	ghAvatar := ghUser.GetAvatarURL()
+	if ghAvatar != "" && ghAvatar != user.GetAvatarURL() {
+		user.AvatarURL = ghAvatar
 	}
 	return s.db.UpdateUser(user)
 }

@@ -21,8 +21,8 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.GetUserID(), enrollment.GetStatus(), request.GetStatus())
 	}
 
-	// check that the user login is valid
-	if err := s.updateGitHubInfo(ctx, sc, enrollment.GetUser()); err != nil {
+	// check and update user SCM info before updating enrollment status
+	if err := s.updateUserFromSCM(ctx, sc, enrollment.GetUser()); err != nil {
 		return fmt.Errorf("failed to update SCM info for user %d: %w", enrollment.GetUserID(), err)
 	}
 	switch {
