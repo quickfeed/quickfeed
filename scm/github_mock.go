@@ -636,8 +636,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					return
 				}
 			}
-			// user not found, but return status OK with empty body to avoid 404 errors in some tests
-			w.WriteHeader(http.StatusOK)
+			// user not found
+			w.WriteHeader(http.StatusNotFound)
 		}),
 	)
 	postReposMergeUpstreamByOwnerByRepoHandler := WithRequestMatchHandler(

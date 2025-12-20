@@ -221,6 +221,15 @@ func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
 	}
 }
 
+// WithMockOptions combines multiple mock options into one.
+func WithMockOptions(mockOpts ...MockOption) MockOption {
+	return func(opts *mockOptions) {
+		for _, mockOpt := range mockOpts {
+			mockOpt(opts)
+		}
+	}
+}
+
 var toOrg = func(course *qf.Course) github.Organization {
 	return github.Organization{
 		ID:    github.Int64(int64(course.GetScmOrganizationID())),
