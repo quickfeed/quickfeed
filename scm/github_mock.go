@@ -624,14 +624,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, config)
 		}),
 	)
-	getUsersByIDHandler := WithRequestMatchHandler(
-		getUsersByID,
+	getUserByIDHandler := WithRequestMatchHandler(
+		getUserByID,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			id := mustParse[int64](r.PathValue("id"))
-			logger.Debug(replaceArgs(getUsersByID, id))
+			userID := mustParse[int64](r.PathValue("user_id"))
+			logger.Debug(replaceArgs(getUserByID, userID))
 
 			for _, member := range s.members {
-				if member.GetUser().GetID() == id {
+				if member.GetUser().GetID() == userID {
 					mustWrite(w, member.GetUser())
 					return
 				}
@@ -765,7 +765,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
 		postReposMergeUpstreamByOwnerByRepoHandler,
 		postAppManifestsByCodeConversionsHandler,
-		getUsersByIDHandler,
+		getUserByIDHandler,
 		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{
