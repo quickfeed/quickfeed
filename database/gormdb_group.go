@@ -88,13 +88,12 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
 			return err
 		}
-		if err := syncGroupGrades(tx, group.GetID(), group.UserIDs()); err != nil {
+
+		userIDs := group.UserIDs()
+		if err := syncGroupGrades(tx, group.GetID(), userIDs); err != nil {
 			return err
 		}
-		var userIDs []uint64
-		for _, u := range group.GetUsers() {
-			userIDs = append(userIDs, u.GetID())
-		}
+
 		// Set group_id for current group members
 		tx = tx.Model(&qf.Enrollment{}).
 			Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
