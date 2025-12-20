@@ -32,6 +32,8 @@ type SCM interface {
 	UpdateGroupMembers(context.Context, *GroupOptions) error
 	// DeleteGroup deletes group's repository.
 	DeleteGroup(context.Context, uint64) error
+	// SyncFork syncs a forked repository's branch with its upstream repository.
+	SyncFork(context.Context, *SyncForkOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the

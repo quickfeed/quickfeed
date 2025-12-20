@@ -610,3 +610,29 @@ func TestMockDeleteGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestMockSyncFork(t *testing.T) {
+	tests := []struct {
+		name    string
+		opt     *SyncForkOptions
+		wantErr bool
+	}{
+		{name: "IncompleteRequest/MissingAllFields", opt: &SyncForkOptions{}, wantErr: true},
+		{name: "IncompleteRequest/MissingRepositoryAndBranch", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest/MissingBranch", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest/MissingMaxRetries", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: true},
+		{name: "CompleteRequest/ForkMelingLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkJosieLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkGroupY", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master", MaxRetries: 1}, wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Branch"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Branch)
+		t.Run(name, func(t *testing.T) {
+			if err := s.SyncFork(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("SyncFork() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
