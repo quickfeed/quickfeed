@@ -42,6 +42,21 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	}
 }
 
+// GetUserByID fetches a user by their SCM remote ID.
+func (s *GithubSCM) GetUserByID(ctx context.Context, id uint64) (*qf.User, error) {
+	const op Op = "GetUserByID"
+	ghUser, _, err := s.client.Users.GetByID(ctx, int64(id))
+	if err != nil {
+		return nil, E(op, M("failed to get user with ID %d", id), err)
+	}
+
+	return &qf.User{
+		Login:       ghUser.GetLogin(),
+		AvatarURL:   ghUser.GetAvatarURL(),
+		ScmRemoteID: uint64(ghUser.GetID()),
+	}, nil
+}
+
 // GetOrganization returns the organization specified by the options; if ID is provided,
 // the ID is used to fetch the organization, otherwise the name is used.
 // If NewCourse is true, the organization is checked for existing course repositories.
@@ -327,19 +342,6 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		}
 	}
 	return nil
-}
-
-func (s *GithubSCM) GetUserByID(ctx context.Context, id uint64) (*qf.User, error) {
-	const op Op = "GetUserByID"
-	user, _, err := s.client.Users.GetByID(ctx, int64(id))
-	if err != nil {
-		return nil, E(op, M("failed to get user with ID %d", id), err)
-	}
-
-	return &qf.User{
-		Login:     user.GetLogin(),
-		AvatarURL: user.GetAvatarURL(),
-	}, nil
 }
 
 // DeleteGroup deletes a group's repository.
