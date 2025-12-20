@@ -226,6 +226,8 @@ func TestUpdateUserFailures(t *testing.T) {
 				IsAdmin:      true,
 				Login:        admin.GetLogin(),
 				Name:         "super user",
+				Email:        admin.GetEmail(),
+				StudentID:    admin.GetStudentID(),
 				RefreshToken: admin.GetRefreshToken(),
 				ScmRemoteID:  admin.GetScmRemoteID(),
 			},

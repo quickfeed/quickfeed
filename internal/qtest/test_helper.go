@@ -111,7 +111,11 @@ func PrepareGitRepo(t *testing.T, src, dst, repo string) {
 // CreateFakeUser is a test helper to create a user in the database.
 func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 	t.Helper()
-	user := &qf.User{}
+	user := &qf.User{
+		Name:      "Test User",
+		Email:     "test@example.com",
+		StudentID: "12345",
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
@@ -120,6 +124,16 @@ func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 
 func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf.User {
 	t.Helper()
+	// Ensure user has required fields for enrollment
+	if user.Name == "" {
+		user.Name = "Test User"
+	}
+	if user.Email == "" {
+		user.Email = "test@example.com"
+	}
+	if user.StudentID == "" {
+		user.StudentID = "12345"
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
