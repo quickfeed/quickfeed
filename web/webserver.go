@@ -10,7 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -18,20 +17,20 @@ const (
 	streamTimeout = 15 * time.Minute
 )
 
-func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, http.Handler) {
+func (s *QuickFeedService) NewQuickFeedHandler() (string, http.Handler) {
 	interceptors := connect.WithInterceptors(
 		interceptor.NewMetricsInterceptor(),
 		interceptor.NewValidationInterceptor(s.logger),
-		interceptor.NewTokenAuthInterceptor(s.logger, tm, s.db),
-		interceptor.NewUserInterceptor(s.logger, tm),
-		interceptor.NewAccessControlInterceptor(tm),
-		interceptor.NewTokenInterceptor(tm),
+		interceptor.NewTokenAuthInterceptor(s.logger, s.tm, s.db),
+		interceptor.NewUserInterceptor(s.logger, s.tm),
+		interceptor.NewAccessControlInterceptor(s.tm),
+		interceptor.NewTokenInterceptor(s.tm),
 	)
 	return qfconnect.NewQuickFeedServiceHandler(s, interceptors)
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(webHookSecret, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets")) // skipcq: GO-S1034
@@ -43,19 +42,21 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, public+"/assets/index.html")
 	}))
-	paths, handler := s.NewQuickFeedHandler(tm)
+	paths, handler := s.NewQuickFeedHandler()
 	router.Handle(paths, controller(handler, streamTimeout))
 
 	router.Handle(auth.Assets, http.StripPrefix(auth.Assets, assets))
 	router.Handle(auth.Static, http.StripPrefix(auth.Static, dist))
+
 	// Register auth endpoints.
 	callbackSecret := rand.String()
+	authConfig := auth.NewGitHubConfig(s.scmMgr.Config)
 	router.HandleFunc(auth.Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
-	router.HandleFunc(auth.Callback, auth.OAuth2Callback(s.logger, s.db, tm, authConfig, callbackSecret))
+	router.HandleFunc(auth.Callback, auth.OAuth2Callback(s.logger, s.db, s.tm, authConfig, callbackSecret))
 	router.HandleFunc(auth.Logout, auth.OAuth2Logout())
 
 	// Register hooks.
-	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.scmMgr, s.runner, s.bh.Secret, s.streams, tm)
+	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.scmMgr, s.runner, webHookSecret, s.streams, s.tm)
 	router.HandleFunc(auth.Hook, ghHook.Handle())
 
 	return router

@@ -77,11 +77,11 @@ func GetSCMManager(t *testing.T) *Manager {
 		if !env.HasAppID() {
 			t.Fatalf(appCreateInstructions, appName, envFile, appName)
 		}
-		scmConfig, err := NewSCMConfig()
+		var err error
+		mgr, err = NewSCMManager()
 		if err != nil {
 			t.Fatal(err)
 		}
-		mgr = NewSCMManager(scmConfig)
 	})
 	return mgr
 }
