@@ -38,6 +38,10 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
+// These tests simulate the behavior of our test flow, i.e., code is tested in
+// Docker containers, where the output is captured and parsed. We expect that
+// our helper methods (sc.Errorf, sc.Fatalf) will correctly add the test details
+// to the score object, and that parsing the test details will be correct.
 func TestScoreDetails(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -77,36 +81,33 @@ func TestScoreDetails(t *testing.T) {
 		},
 	}
 
-	originalStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-	defer w.Close()
-	wg := &sync.WaitGroup{}
+	r, cleanup := redirectStdout(t)
+	defer cleanup()
 
-	// These tests simulate the behaviour in our test flow.
-	// i.e., code tested in Docker containers, where the output is captured and parsed.
-	// We expect that our helper (Errorf, Fatalf) methods will correctly add the test details to the score object.
-	// And that the parsing of the test details will be correct.
+	var wg sync.WaitGroup
 	for _, test := range tests {
 		sc := &score.Score{}
-		wg.Add(1)
-		// run the test in a goroutine to avoid Fatalf
-		// from exiting the test via t.FailNow (runtime.Goexit)
-		subT := &testing.T{}
-		go func() {
-			defer wg.Done()
+
+		wg.Go(func() {
+			// run using the subT mock in a goroutine to avoid Fatalf
+			// from exiting the test via t.FailNow (runtime.Goexit)
+			subT := &testing.T{}
 			for i, m := range test.messages {
 				if test.fatal == i {
-					sc.Fatalf(subT, m)
+					sc.Fatalf(subT, "%s", m)
 				} else {
-					sc.Errorf(subT, m)
+					sc.Errorf(subT, "%s", m)
 				}
 			}
-		}()
+		})
 		wg.Wait()
+
 		sc.Print(t)
 		out := make([]byte, 1024)
-		n, _ := r.Read(out)
+		n, err := r.Read(out)
+		if err != nil {
+			t.Fatalf("Failed to read from pipe: %v", err)
+		}
 
 		parsedScore := &score.Score{}
 		if err := json.Unmarshal(out[:n], parsedScore); err != nil {
@@ -118,7 +119,26 @@ func TestScoreDetails(t *testing.T) {
 			t.Errorf("TestDetails mismatch (-want +got):\n%s", diff)
 		}
 	}
-	os.Stdout = originalStdout
+}
+
+// redirectStdout redirects os.Stdout to a pipe and returns
+// the read end of the pipe for capturing output, and
+// a cleanup function to restore os.Stdout and close the pipe.
+func redirectStdout(t *testing.T) (*os.File, func()) {
+	t.Helper()
+	originalStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// redirect os.Stdout to the pipe's write end
+	os.Stdout = w
+	return r, func() {
+		os.Stdout = originalStdout
+		if err := w.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 // parseTestDetails splits the details string into individual lines and removes the prefix
@@ -131,8 +151,8 @@ func parseTestDetails(details string) []string {
 
 	// Remove test details prefix, e.g. "dir/file.go:123: "
 	for i, line := range lines {
-		if idx := strings.Index(line, ": "); idx != -1 {
-			lines[i] = line[idx+2:]
+		if _, after, ok := strings.Cut(line, ": "); ok {
+			lines[i] = after
 		}
 	}
 	return lines
