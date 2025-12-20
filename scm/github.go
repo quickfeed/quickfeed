@@ -370,7 +370,7 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err err
 		// Check if this is a rate limit error that we should retry
 		retryDelay, err := rateLimitDelay(err)
 		if err != nil {
-			// Non-rate-limit error, don't retry
+			// Non-rate-limit error, don't retry; return the original error passed through rateLimitDelay
 			return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
 		}
 
@@ -385,6 +385,8 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err err
 	return E(op, M("failed to sync fork %s/%s after %d retries", opt.Organization, opt.Repository, opt.MaxRetries), err)
 }
 
+// rateLimitDelay returns the duration to wait before retrying if the error is
+// a rate limit or abuse limit error. Otherwise, it returns the original error.
 func rateLimitDelay(err error) (time.Duration, error) {
 	var rateLimitErr *github.RateLimitError
 	if errors.As(err, &rateLimitErr) {
