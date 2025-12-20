@@ -54,6 +54,10 @@ ui-update: version-check
 	@cd public; npm i
 	@go run cmd/esbuild/main.go
 
+dev-db:
+	@echo "Creating dummy database"
+	@go run cmd/dummyDB/main.go -admin $(admin)
+
 overmind:
 	@echo "Running Overmind Devtools"
 	@cd public; npm run overmind
