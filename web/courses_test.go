@@ -23,7 +23,7 @@ func TestUpdateCourse(t *testing.T) {
 	cookie := client.Cookie(t, user)
 
 	// Update the course name
-	wantCourse := proto.Clone(dat520).(*qf.Course)
+	wantCourse := proto.CloneOf(dat520)
 	wantCourse.Name = "Updated Course Name"
 	if _, err := client.UpdateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie)); err != nil {
 		t.Error(err)
