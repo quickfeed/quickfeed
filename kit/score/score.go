@@ -130,30 +130,40 @@ func (s *Score) json() string {
 	return string(b)
 }
 
-// Errorf prints an error message and sets the TestDetails field.
+// Error prints an error message and sets the TestDetails field.
 // Calling this method will fail the test.
-func (s *Score) Errorf(t *testing.T, format string, args ...interface{}) {
-	t.Helper()
-	s.addDetails(t, format, args...)
-	t.Errorf(format, args...)
-}
-
-// Fatalf prints an error message and sets the TestDetails field.
-// Calling this method will fail the test and stop the execution of the test.
-func (s *Score) Fatalf(t *testing.T, format string, args ...interface{}) {
-	t.Helper()
-	s.addDetails(t, format, args...)
-	t.Fatalf(format, args...)
-}
-
-func (s *Score) Error(t *testing.T, args ...interface{}) {
+func (s *Score) Error(t *testing.T, args ...any) {
 	t.Helper()
 	s.addDetails(t, "%v", args...)
 	t.Error(args...)
 }
 
+// Errorf prints an error message and sets the TestDetails field.
+// Calling this method will fail the test.
+func (s *Score) Errorf(t *testing.T, format string, args ...any) {
+	t.Helper()
+	s.addDetails(t, format, args...)
+	t.Errorf(format, args...)
+}
+
+// Fatal prints an error message and sets the TestDetails field.
+// Calling this method will fail the test and stop the execution of the test.
+func (s *Score) Fatal(t *testing.T, args ...any) {
+	t.Helper()
+	s.addDetails(t, "%v", args...)
+	t.Fatal(args...)
+}
+
+// Fatalf prints an error message and sets the TestDetails field.
+// Calling this method will fail the test and stop the execution of the test.
+func (s *Score) Fatalf(t *testing.T, format string, args ...any) {
+	t.Helper()
+	s.addDetails(t, format, args...)
+	t.Fatalf(format, args...)
+}
+
 // addDetails updates the TestDetails field with the provided error message.
-func (s *Score) addDetails(t *testing.T, format string, args ...interface{}) {
+func (s *Score) addDetails(t *testing.T, format string, args ...any) {
 	t.Helper()
 	// this function is called from Errorf and Error, which are called from tests
 	// we want to get the file and line number of the test function that called Errorf or Error
