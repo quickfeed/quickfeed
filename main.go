@@ -138,8 +138,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if *dev {
-		// Wrap handler with file watcher
-		// for live-reloading in development mode.
+		// Wrap handler with file watcher for live-reloading in development mode.
 		handler = web.WatchHandler(ctx, handler)
 	}
 

@@ -219,13 +219,13 @@ To view the full usage details:
 
 ### Flags
 
-| **Flag**        | **Description**                                      | **Example** |
-| --------------- | ---------------------------------------------------- | ----------- |
-| `database.file` | Path to QuickFeed database                           | `qf.db`     |
-| `http.public`   | Path to content to serve                             |             |
-| `dev`           | Run development server with self-signed certificates |             |
-| `new`           | Create a new QuickFeed App                           |             |
-| `secret`        | Create new secret for JWT signing                    |             |
+| **Flag**        | **Description**                                                           | **Example** |
+| --------------- | ------------------------------------------------------------------------- | ----------- |
+| `database.file` | Path to QuickFeed database                                                | `qf.db`     |
+| `http.public`   | Path to content to serve                                                  |             |
+| `dev`           | Run local development server with self-signed certificates and watch mode |             |
+| `new`           | Create a new QuickFeed App                                                |             |
+| `secret`        | Create new secret for JWT signing                                         |             |
 
 ### Running Server on a Privileged Port
 
