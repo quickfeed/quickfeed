@@ -212,14 +212,17 @@ func syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
 			existingGrades[grade.GetUserID()] = grade
 		}
 
-		// Create grades for all current users, preserving existing ones
-		// This will also remove grades for users no longer in the group
+		// Create grades for all current users, preserving existing ones.
+		// This will also remove grades for users no longer in the group because
+		// we rebuild the Grades slice from scratch based on current group membership,
+		// ignoring any previous grades for users not in userIDs.
 		submission.Grades = make([]*qf.Grade, len(userIDs))
 		for i, userID := range userIDs {
 			if existing, found := existingGrades[userID]; found {
-				submission.Grades[i] = existing // Preserve existing grade
+				submission.Grades[i] = existing // Preserve grade for existing member
 			} else {
-				submission.Grades[i] = &qf.Grade{UserID: userID, SubmissionID: submission.GetID()} // New grade
+				// New group member without a grade yet (Status: qf.Submission_NONE)
+				submission.Grades[i] = &qf.Grade{UserID: userID, SubmissionID: submission.GetID()}
 			}
 		}
 
