@@ -73,7 +73,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 						return githubResponse(http.StatusForbidden, `{"message": "rate limit exceeded"}`, map[string]string{
 							"X-RateLimit-Limit":     "60",
 							"X-RateLimit-Remaining": "0",
-							"X-RateLimit-Reset":     fmt.Sprint(time.Now().Add(100 * time.Millisecond).Unix()),
+							"X-RateLimit-Reset":     fmt.Sprint(time.Now().Add(3 * time.Second).Unix()),
 						}), nil
 					}
 					return githubResponse(http.StatusOK, "", nil), nil
@@ -95,8 +95,8 @@ func TestSyncForkWithRetry(t *testing.T) {
 			if calls != 2 {
 				t.Errorf("expected 2 calls, got %d", calls)
 			}
-			if duration < time.Second {
-				t.Errorf("expected retry delay of at least 1s, got %v", duration)
+			if duration < 3*time.Second {
+				t.Errorf("expected retry delay of at least 3s, got %v", duration)
 			}
 		})
 	})
