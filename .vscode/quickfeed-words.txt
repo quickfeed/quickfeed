@@ -198,6 +198,7 @@ Radagast
 rankdir
 Repos
 repotoken
+Retryable
 reviewee's
 rootfolder
 run
@@ -235,6 +236,7 @@ subfolders
 subtest
 subtests
 swiftui
+synctest
 testcache
 testdata
 testdb
