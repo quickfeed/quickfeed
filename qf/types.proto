@@ -80,6 +80,8 @@ message Course {
     uint32 slipDays                = 10;
     string DockerfileDigest        = 11;  // Digest of the dockerfile used to build the course's docker image.
     Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];
+    string SlackChannelLink        = 16;  // Invite link to communication platform (e.g., Discord, Slack)
+    string SlackChannelName        = 17;  // Description of the invite link (e.g., "Join our Discord server")
 
     repeated Enrollment enrollments = 13;
     repeated Assignment assignments = 14;

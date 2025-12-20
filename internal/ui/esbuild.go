@@ -2,9 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"path/filepath"
 )
 
 var (
