@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAppState } from './overmind'
 import NavBar from "./components/NavBar"
-import { Switch, Route } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import Profile from "./components/profile/Profile"
 import CoursePage from "./pages/CoursePage"
 import Courses from "./components/Courses"
@@ -9,8 +9,10 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
+import LoginPage from './pages/LoginPage'
+import CourseCodeRedirect from "./components/CourseCodeRedirect"
 
-const App = (): JSX.Element => {
+const App = () => {
     const state = useAppState()
 
     const Main = () => {
@@ -20,29 +22,31 @@ const App = (): JSX.Element => {
         } else if (!state.isValid && state.isLoggedIn) {
             // user logged in without profile information: redirect to Profile page
             return (
-                <Switch>
-                    <Route path="/" component={Profile} />
-                    <Route path="/profile" component={Profile} />
-                </Switch>
+                <Routes>
+                    <Route path="*" element={<Profile />} />
+                </Routes>
             )
         } else if (state.isLoggedIn) {
             // user logged in: show Dashboard page
             return (
-                <Switch>
-                    <Route path="/" exact component={Dashboard} />
-                    <Route path="/about" component={AboutPage} />
-                    <Route path="/profile" component={Profile} />
-                    <Route path="/course/:id" component={CoursePage} />
-                    <Route path="/courses" exact component={Courses} />
-                    <Route path="/admin" component={AdminPage} />
-                </Switch>
+                <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/course/:id/*" element={<CoursePage />} />
+                    <Route path="/courses" element={<Courses home={false} />} />
+                    <Route path="/admin/*" element={<AdminPage />} />
+                    { /* Redirect course codes to the course page, if no course found fall through to next route */}
+                    <Route path="/:code" element={<CourseCodeRedirect />} />
+                    <Route path="*" element={<Dashboard />} />
+                </Routes>
             )
         } else {
             //  user not logged in: show About page
             return (
-                <Switch>
-                    <Route path="/" component={AboutPage} />
-                </Switch>
+                <Routes>
+                    <Route path="*" element={<LoginPage />} />
+                </Routes>
             )
         }
     }

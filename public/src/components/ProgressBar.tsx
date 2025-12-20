@@ -2,6 +2,7 @@ import React from "react"
 import { useAppState } from "../overmind"
 import { Submission, Submission_Status } from "../../proto/qf/types_pb"
 import { getStatusByUser } from "../Helpers"
+import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
 export enum Progress {
     NAV,
@@ -11,23 +12,18 @@ export enum Progress {
 
 type ProgressBarProps = {
     courseID: string,
-    assignmentIndex: number,
-    submission?: Submission,
+    submission: Submission,
     type: Progress
 }
 
-const ProgressBar = ({ courseID, assignmentIndex, submission, type }: ProgressBarProps): JSX.Element => {
+const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
     const state = useAppState()
 
-    const sub = submission
-        ? submission
-        : state.submissions[courseID][assignmentIndex]
+    const assignment = state.assignments[courseID]?.find(assignment => assignment.ID === submission.AssignmentID)
 
-    const assignment = state.assignments[courseID][assignmentIndex]
-
-    const score = sub?.score ?? 0
+    const score = submission.score ?? 0
     const scorelimit = assignment?.scoreLimit ?? 0
-    const status = getStatusByUser(sub, state.self.ID)
+    const status = getStatusByUser(submission, state.self.ID)
     const secondaryProgress = scorelimit - score
     // Returns a thin line to be used for labs in the NavBar
     if (type === Progress.NAV) {
@@ -73,28 +69,59 @@ const ProgressBar = ({ courseID, assignmentIndex, submission, type }: ProgressBa
 
     return (
         <div className="progress">
-            <div
-                className={`progress-bar ${color}`}
-                role="progressbar"
-                style={{ width: `${score}%`, transitionDelay: "0.5s" }}
-                aria-valuenow={score}
-                aria-valuemin={0}
-                aria-valuemax={100}
-            >
-                {text}
-            </div>
+            <PrimaryProgressBar color={color} score={score} text={text} />
             {secondaryProgress > 0 &&
-                <div
-                    className={"progress-bar progressbar-secondary bg-secondary"}
-                    role="progressbar"
-                    style={{ width: `${secondaryProgress}%` }}
-                    aria-valuemax={100}
-                >
-                    {secondaryText}
-                </div>
+                <SecondaryProgressBar progress={secondaryProgress} text={secondaryText} />
             }
         </div>
     )
 }
 
 export default ProgressBar
+
+// DefaultProgressBar is a function that returns a progress bar for a lab/assignment with no submissions
+export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: number, isGroupLab: boolean }) => {
+    return (
+        <div className="row mb-1 py-2 align-items-center text-left">
+            <div className="col-8">
+                <div className="progress">
+                    <PrimaryProgressBar score={0} text={"0 %"} />
+                    <SecondaryProgressBar progress={scoreLimit} text={`${scoreLimit} %`} />
+                </div>
+            </div>
+            <SubmissionTypeIcon solo={!isGroupLab} />
+            <div className="col-3">
+                No submission
+            </div>
+        </div>
+    )
+}
+
+
+const PrimaryProgressBar = ({ color, score, text }: { color?: string, score: number, text: string }) => {
+    return (
+        <div
+            className={`progress-bar ${color}`}
+            role="progressbar"
+            style={{ width: `${score}%`, transitionDelay: "0.5s" }}
+            aria-valuenow={score}
+            aria-valuemin={0}
+            aria-valuemax={100}
+        >
+            {text}
+        </div>
+    )
+}
+
+const SecondaryProgressBar = ({ progress, text }: { progress: number, text: string }) => {
+    return (
+        <div
+            className={"progress-bar progressbar-secondary bg-secondary"}
+            role="progressbar"
+            style={{ width: `${progress}%` }}
+            aria-valuemax={100}
+        >
+            {text}
+        </div>
+    )
+}

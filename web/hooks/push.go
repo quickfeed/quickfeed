@@ -30,7 +30,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		return
 	}
 
-	course, err := wh.db.GetCourseByOrganizationID(repo.ScmOrganizationID)
+	course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID())
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
@@ -66,8 +66,16 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			return
 		}
 		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+		if isDefaultBranch(payload) {
+			// Sync all student repositories (forks) with the updated assignments repo
+			wh.syncStudentRepos(ctx, scmClient, course, payload.GetRepo().GetDefaultBranch())
+		}
 
 	case repo.IsStudentRepo():
+		if payload.GetSender().GetType() == "Bot" {
+			wh.logger.Debugf("Ignoring push event from bot user %s", payload.GetSender().GetLogin())
+			return
+		}
 		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
@@ -137,7 +145,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	if assignment.GradedManually() {
-		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
+		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.GetName(), course.GetName())
 		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
 			wh.logger.Error(err)
 		}
@@ -172,18 +180,18 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
 func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
-	userID := repo.UserID
+	userID := repo.GetUserID()
 	if userID < 1 && repo.IsGroupRepo() {
 		user, err := wh.db.GetUserByCourse(course, login)
 		if err != nil {
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 			return
 		}
-		userID = user.ID
+		userID = user.GetID()
 	}
 	// We want to fetch the original enrollment to ensure all Enrollment fields are set to correct values
 	// to ensure gorm Select.Updates behave correctly.
-	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.ID, userID)
+	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.GetID(), userID)
 	if err != nil {
 		wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
 		return

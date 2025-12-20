@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"gorm.io/gorm"
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
@@ -14,16 +15,16 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 	if err != nil {
 		return err
 	}
-	if !courseCreator.IsAdmin {
+	if !courseCreator.GetIsAdmin() {
 		return ErrInsufficientAccess
 	}
 
 	var courses int64
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
-		ScmOrganizationID: course.ScmOrganizationID,
+		ScmOrganizationID: course.GetScmOrganizationID(),
 	}).Or(&qf.Course{
-		Code: course.Code,
-		Year: course.Year,
+		Code: course.GetCode(),
+		Year: course.GetYear(),
 	}).Count(&courses).Error; err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 	// enroll course creator as teacher for course and mark as visible
 	if err := tx.Create(&qf.Enrollment{
 		UserID:   courseCreatorID,
-		CourseID: course.ID,
+		CourseID: course.GetID(),
 		Status:   qf.Enrollment_TEACHER,
 		State:    qf.Enrollment_VISIBLE,
 	}).Error; err != nil {
@@ -53,44 +54,53 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 	return tx.Commit().Error
 }
 
-// GetCourse fetches course by ID. If withInfo is true, preloads course
-// assignments, active enrollments and groups.
-func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, error) {
+// GetCourse fetches course by ID.
+func (db *GormDB) GetCourse(courseID uint64) (*qf.Course, error) {
+	var course qf.Course
+	if err := db.conn.First(&course, courseID).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
+
+// GetCourseByStatus fetches course by ID. Depending on the enrollment status,
+// it preloads course assignments, active enrollments, users, and groups.
+func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserStatus) (*qf.Course, error) {
 	m := db.conn
 	var course qf.Course
-
-	if withEnrollments {
-		// we only want submission from users enrolled in the course
+	switch status {
+	case qf.Enrollment_NONE, qf.Enrollment_PENDING:
+		// no preloaded data
+	case qf.Enrollment_STUDENT:
 		userStates := []qf.Enrollment_UserStatus{
 			qf.Enrollment_STUDENT,
 			qf.Enrollment_TEACHER,
 		}
-		// and only group submissions from approved groups
-		modelGroup := &qf.Group{Status: qf.Group_APPROVED, CourseID: courseID}
-		if err := m.Preload("Assignments").
-			Preload("Enrollments", "status in (?)", userStates).
+		m = m.Preload("Assignments").
+			Preload("Enrollments", "status in (?)", userStates, func(db *gorm.DB) *gorm.DB {
+				return db.Omit("UsedSlipDays", "LastActivityDate")
+			}).
+			Preload("Enrollments.User", func(db *gorm.DB) *gorm.DB {
+				return db.Omit("Login", "UpdateToken", "Email")
+			})
+	case qf.Enrollment_TEACHER:
+		// Preload all data
+		modelGroup := &qf.Group{CourseID: courseID}
+		m = m.Preload("Assignments").
+			Preload("Enrollments").
 			Preload("Enrollments.User").
 			Preload("Enrollments.Group").
 			Preload("Enrollments.UsedSlipDays").
 			Preload("Groups", modelGroup).
-			First(&course, courseID).Error; err != nil {
-			return nil, err
-		}
-
-		// Set number of remaining slip days for each course enrollment
-		for _, e := range course.Enrollments {
-			e.SetSlipDays(&course)
-		}
-		for _, g := range course.Groups {
-			// Set number of remaining slip days for each group enrollment
-			for _, e := range g.Enrollments {
-				e.SetSlipDays(&course)
-			}
-		}
-	} else {
-		if err := m.First(&course, courseID).Error; err != nil {
-			return nil, err
-		}
+			Preload("Groups.Users")
+	default:
+		return nil, errors.New("invalid enrollment status")
+	}
+	if err := m.First(&course, courseID).Error; err != nil {
+		return nil, err
+	}
+	if status == qf.Enrollment_TEACHER {
+		course.PopulateSlipDays()
 	}
 	return &course, nil
 }
@@ -131,8 +141,8 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...qf.Enrollment_User
 	var courseIDs []uint64
 	m := make(map[uint64]*qf.Enrollment)
 	for _, enrollment := range enrollments {
-		m[enrollment.CourseID] = enrollment
-		courseIDs = append(courseIDs, enrollment.CourseID)
+		m[enrollment.GetCourseID()] = enrollment
+		courseIDs = append(courseIDs, enrollment.GetCourseID())
 	}
 
 	if len(statuses) == 0 {
@@ -148,8 +158,8 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...qf.Enrollment_User
 
 	for _, course := range courses {
 		course.Enrolled = qf.Enrollment_NONE
-		if enrollment, ok := m[course.ID]; ok {
-			course.Enrolled = enrollment.Status
+		if enrollment, ok := m[course.GetID()]; ok {
+			course.Enrolled = enrollment.GetStatus()
 		}
 	}
 	return courses, nil

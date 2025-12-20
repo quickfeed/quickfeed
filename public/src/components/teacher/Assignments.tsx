@@ -1,21 +1,22 @@
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/qf/types_pb"
-import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
+import { isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import EditBenchmark from "./EditBenchmark"
 import EditCriterion from "./EditCriterion"
+import { useCourseID } from "../../hooks/useCourseID"
 
 
 /** This component displays all assignments for the active course and:
  *  for assignments that are not manually graded, allows teachers to rebuild all submissions.
  *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
-const Assignments = (): JSX.Element => {
-    const courseID = getCourseID()
-    const actions = useActions()
+const Assignments = () => {
+    const courseID = useCourseID()
+    const actions = useActions().global
     const state = useAppState()
 
-    const assignmentElement = (assignment: Assignment): JSX.Element => {
+    const AssignmentElement = ({ assignment }: { assignment: Assignment }) => {
         const [hidden, setHidden] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
@@ -55,26 +56,29 @@ const Assignments = (): JSX.Element => {
 
         return (
             <ul key={assignment.ID.toString()} className="list-group">
-                <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)}>
-                    {assignment.name}
-                </li>
+                <div onClick={() => setHidden(!hidden)} role="button" aria-hidden="true">
+                    <li key="assignment" className="list-group-item">
+                        {assignment.name}
+                    </li>
+                </div>
                 {hidden && (
-                    <li key={"form"} className="list-group-item">
+                    <li key="form" className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
-                        {isManuallyGraded(assignment)
+                        {isManuallyGraded(assignment.reviewers)
                             ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
                             : <Button text={buttonText} color={Color.BLUE} type={ButtonType.BUTTON} onClick={rebuild} />
                         }
                     </li>
                 )}
-            </ul >
+            </ul>
         )
     }
 
-    const list = state.assignments[courseID.toString()]?.map(assignment => assignmentElement(assignment))
     return (
         <div className="column">
-            {list}
+            {state.assignments[courseID.toString()]?.map(assignment =>
+                <AssignmentElement key={assignment.ID} assignment={assignment} />
+            )}
         </div>
     )
 }

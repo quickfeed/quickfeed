@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/multierr"
+	"github.com/quickfeed/quickfeed/internal/reload"
 	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -27,9 +28,9 @@ type Server struct {
 	certFile       string
 }
 
-type ServerType func(addr string, handler http.Handler) (*Server, error)
+type ServerType func(handler http.Handler) (*Server, error)
 
-func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
+func NewProductionServer(handler http.Handler) (*Server, error) {
 	whitelist, err := env.Whitelist()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get whitelist: %w", err)
@@ -44,7 +45,7 @@ func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
 
 	httpServer := &http.Server{
 		Handler:           handler,
-		Addr:              addr,
+		Addr:              env.HttpAddr(),
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 		WriteTimeout:      2 * time.Minute,
 		ReadTimeout:       2 * time.Minute,
@@ -64,7 +65,7 @@ func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
 	}, nil
 }
 
-func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
+func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
 	if err != nil {
 		// Couldn't load credentials; generate self-signed certificates.
@@ -87,7 +88,7 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 
 	httpServer := &http.Server{
 		Handler:           handler,
-		Addr:              addr,
+		Addr:              env.HttpAddr(),
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 		WriteTimeout:      2 * time.Minute,
 		ReadTimeout:       2 * time.Minute,
@@ -104,6 +105,18 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 		keyFile:       env.KeyFile(),
 		certFile:      env.CertFile(),
 	}, nil
+}
+
+func WatchHandler(ctx context.Context, handler http.Handler) http.Handler {
+	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "dist"))
+	if err != nil {
+		log.Printf("Failed to create watcher: %v", err)
+		return handler
+	}
+	mux := http.NewServeMux()
+	mux.Handle("/", handler)
+	mux.HandleFunc("/watch", watcher.Handler)
+	return mux
 }
 
 func metricsServer() *http.Server {
@@ -158,5 +171,5 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 		metricsShutdownErr = srv.metricsServer.Shutdown(ctx)
 	}
 	srvShutdownErr := srv.httpServer.Shutdown(ctx)
-	return multierr.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
+	return errors.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
 }

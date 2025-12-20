@@ -11,6 +11,9 @@ import (
 
 // SCM is the source code management interface for managing courses and users.
 type SCM interface {
+	// GetUserByID fetches a user by their SCM user ID.
+	GetUserByID(context.Context, uint64) (*qf.User, error)
+
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
@@ -31,7 +34,9 @@ type SCM interface {
 	// UpdateGroupMembers adds or removes members of an existing group.
 	UpdateGroupMembers(context.Context, *GroupOptions) error
 	// DeleteGroup deletes group's repository.
-	DeleteGroup(context.Context, *RepositoryOptions) error
+	DeleteGroup(context.Context, uint64) error
+	// SyncFork syncs a forked repository's branch with its upstream repository.
+	SyncFork(context.Context, *SyncForkOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the

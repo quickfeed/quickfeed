@@ -1,7 +1,5 @@
 package qf
 
-import "reflect"
-
 // UserNames returns the SCM user names of the group.
 func (g *Group) UserNames() []string {
 	var gitUserNames []string
@@ -14,7 +12,7 @@ func (g *Group) UserNames() []string {
 // Contains returns true if the given user is in the group.
 func (g *Group) Contains(user *User) bool {
 	for _, u := range g.GetUsers() {
-		if user.ID == u.ID {
+		if user.GetID() == u.GetID() {
 			return true
 		}
 	}
@@ -23,13 +21,21 @@ func (g *Group) Contains(user *User) bool {
 
 // ContainsAll compares group members
 func (g *Group) ContainsAll(group *Group) bool {
-	return reflect.DeepEqual(g.Users, group.Users)
+	if len(g.GetUsers()) != len(group.GetUsers()) {
+		return false
+	}
+	for _, u := range group.GetUsers() {
+		if !g.Contains(u) {
+			return false
+		}
+	}
+	return true
 }
 
 // GetUsersExcept returns a list of all users in a group, except the one with the given userID.
 func (g *Group) GetUsersExcept(userID uint64) []*User {
-	subset := []*User{}
-	for _, user := range g.Users {
+	var subset []*User
+	for _, user := range g.GetUsers() {
 		if user.GetID() == userID {
 			continue
 		}
@@ -40,9 +46,10 @@ func (g *Group) GetUsersExcept(userID uint64) []*User {
 
 // UserIDs returns the user IDs of this group.
 func (g *Group) UserIDs() []uint64 {
-	userIDs := make([]uint64, 0, len(g.Users))
-	for _, user := range g.Users {
-		userIDs = append(userIDs, user.GetID())
+	users := g.GetUsers()
+	userIDs := make([]uint64, len(users))
+	for i, user := range users {
+		userIDs[i] = user.GetID()
 	}
 	return userIDs
 }

@@ -166,16 +166,16 @@ func TestMockGetOrganization(t *testing.T) {
 
 	s = NewMockedGithubSCMClient(qtest.Logger(t), WithMockOrgs())
 	for _, course := range qtest.MockCourses {
-		name := qtest.Name(course.Name, []string{"ScmOrgID", "ScmOrgName"}, course.ScmOrganizationID, course.ScmOrganizationName)
+		name := qtest.Name(course.Name, []string{"ScmOrgID", "ScmOrgName"}, course.GetScmOrganizationID(), course.GetScmOrganizationName())
 		t.Run(name, func(t *testing.T) {
-			gotOrg, err := s.GetOrganization(context.Background(), &OrganizationOptions{Name: course.ScmOrganizationName})
+			gotOrg, err := s.GetOrganization(context.Background(), &OrganizationOptions{Name: course.GetScmOrganizationName()})
 			if err != nil {
 				t.Errorf("GetOrganization() error = %v, want <nil>", err)
 			}
 			if gotOrg == nil {
 				t.Errorf("GetOrganization() = <nil>, want non-nil organization")
 			}
-			gotOrg, err = s.GetOrganization(context.Background(), &OrganizationOptions{ID: course.ScmOrganizationID})
+			gotOrg, err = s.GetOrganization(context.Background(), &OrganizationOptions{ID: course.GetScmOrganizationID()})
 			if err != nil {
 				t.Errorf("GetOrganization() error = %v, want <nil>", err)
 			}
@@ -532,6 +532,10 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	}
 	groups["bar"]["groupY"] = []github.User{leslie}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
+	// Ignore the ID field in comparisons since the mock now assigns unique IDs
+	ignoreUserID := cmp.FilterPath(func(p cmp.Path) bool {
+		return p.Last().String() == ".ID"
+	}, cmp.Ignore())
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
@@ -542,7 +546,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 				return
 			}
 			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName], ignoreUserID); diff != "" {
 				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -564,7 +568,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		},
 	}
 	// verify the state of the groups after the sequence of UpdateGroupMembers
-	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
+	if diff := cmp.Diff(wantGroups, s.groups, ignoreUserID); diff != "" {
 		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -583,10 +587,10 @@ func TestMockDeleteGroup(t *testing.T) {
 		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "foo"}, wantErr: true},
 		{name: "CompleteRequest/NotFound", opt: &RepositoryOptions{ID: 432}, wantErr: true}, // Repo ID 432 does not exist
 
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "foo", Repo: "groupX"}, wantErr: false}, // ID 6
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                        // ID 5 is josie-labs
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{Owner: "bar", Repo: "groupY"}, wantErr: false}, // ID 7
-		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                        // ID 8 is groupZ
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 6, Owner: "foo", Repo: "groupX"}, wantErr: false}, // ID 6
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 5}, wantErr: false},                               // ID 5 is josie-labs
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 7, Owner: "bar", Repo: "groupY"}, wantErr: false}, // ID 7
+		{name: "CompleteRequest/GroupDeleted", opt: &RepositoryOptions{ID: 8}, wantErr: false},                               // ID 8 is groupZ
 
 		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 6}, wantErr: true},                        // ID 6 already deleted
 		{name: "CompleteRequest/AlreadyDeleted", opt: &RepositoryOptions{ID: 7}, wantErr: true},                        // ID 7 already deleted
@@ -596,12 +600,38 @@ func TestMockDeleteGroup(t *testing.T) {
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if err := s.DeleteGroup(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+			if err := s.DeleteGroup(context.Background(), tt.opt.ID); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteGroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			// verify the state of the groups after the test
 			if _, ok := s.groups[tt.opt.Owner][tt.opt.Repo]; ok {
 				t.Errorf("DeleteGroup() group not deleted")
+			}
+		})
+	}
+}
+
+func TestMockSyncFork(t *testing.T) {
+	tests := []struct {
+		name    string
+		opt     *SyncForkOptions
+		wantErr bool
+	}{
+		{name: "IncompleteRequest/MissingAllFields", opt: &SyncForkOptions{}, wantErr: true},
+		{name: "IncompleteRequest/MissingRepositoryAndBranch", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest/MissingBranch", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest/MissingMaxRetries", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: true},
+		{name: "CompleteRequest/ForkMelingLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkJosieLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkGroupY", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master", MaxRetries: 1}, wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Branch"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Branch)
+		t.Run(name, func(t *testing.T) {
+			if err := s.SyncFork(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("SyncFork() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

@@ -10,7 +10,7 @@ type FormProps = {
     children?: React.ReactNode,
 }
 
-const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, children }: FormProps): JSX.Element => {
+const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, children }: FormProps) => {
     return (
         <div className={"input-group mb-3"}>
             <div className="input-group-prepend">
@@ -18,7 +18,7 @@ const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, c
             </div>
             <input className="form-control"
                 name={name}
-                type={type ? type : "text"}
+                type={type ?? "text"}
                 placeholder={placeholder}
                 defaultValue={defaultValue}
                 onChange={onChange}

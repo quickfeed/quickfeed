@@ -1,23 +1,27 @@
-import React, { useEffect } from "react"
-import { useActions, useAppState } from "../overmind"
-import FormInput from "./forms/FormInput"
-import DynamicButton from "./DynamicButton"
+import React, { useCallback, useEffect } from "react"
 import { Color } from "../Helpers"
+import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
+import DynamicButton from "./DynamicButton"
+import FormInput from "./forms/FormInput"
 
-const Release = (): JSX.Element | null => {
+const Release = () => {
     const state = useAppState()
     const actions = useActions()
     const canRelease = state.review.assignmentID > -1
 
     useEffect(() => {
         return () => actions.review.setMinimumScore(0)
-    }, [state.review.assignmentID])
+    }, [actions.review])
 
-    const handleMinimumScore = (event: React.FormEvent<HTMLInputElement>) => {
+    const handleMinimumScore = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         event.preventDefault()
         actions.review.setMinimumScore(parseInt(event.currentTarget.value))
-    }
+    }, [actions.review])
+
+    const handleRelease = useCallback((approve: boolean, release: boolean) => () => {
+        return actions.review.releaseAll({ approve, release })
+    }, [actions.review])
 
     if (!canRelease) {
         return null
@@ -31,7 +35,7 @@ const Release = (): JSX.Element | null => {
                         text="Approve all"
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        onClick={() => actions.review.releaseAll({ approve: true, release: false })}
+                        onClick={handleRelease(true, false)}
                     />
                 </div>
                 <div className="input-group-append">
@@ -39,7 +43,7 @@ const Release = (): JSX.Element | null => {
                         text="Release all"
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        onClick={() => actions.review.releaseAll({ approve: false, release: true })}
+                        onClick={handleRelease(false, true)}
                     />
                 </div>
             </FormInput>

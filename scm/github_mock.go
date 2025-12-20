@@ -50,7 +50,10 @@ func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
-func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM {
+// This is intentionally breaking the cyclomatic complexity rule (GO-R1005) to keep the
+// initialization of all the mock handlers in one place. It is not production code; it is
+// only used for testing.
+func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM { // skipcq: GO-R1005
 	mockOpts := newMockOptions()
 	for _, o := range opts {
 		o(mockOpts)
@@ -63,7 +66,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		// initial empty issues map: owner -> repo -> issues
 		s.issues = make(map[string]map[string][]github.Issue)
 	}
-	for _, repo := range s.repos {
+	for i := range s.repos {
+		repo := &s.repos[i]
 		org := repo.GetOrganization().GetLogin()
 		if s.issues[org] == nil {
 			s.issues[org] = make(map[string][]github.Issue)
@@ -143,9 +147,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				foundRepos := make([]github.Repository, 0)
-				for _, repo := range s.repos {
+				for i := range s.repos {
+					repo := &s.repos[i]
 					if repo.GetOrganization().GetLogin() == o.GetLogin() {
-						foundRepos = append(foundRepos, repo)
+						foundRepos = append(foundRepos, *repo)
 					}
 				}
 				mustWrite(w, foundRepos)
@@ -176,6 +181,37 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound) // org not found
+			}
+		}),
+	)
+	// repos/%v/%v/forks
+	postReposForksByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposForksByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srcOwner := r.PathValue("owner")
+			srcRepo := r.PathValue("repo")
+			logger.Debug(replaceArgs(postReposForksByOwnerByRepo, srcOwner, srcRepo))
+			opts := mustRead[github.RepositoryCreateForkOptions](r.Body)
+			dstOrg := opts.Organization
+
+			found := s.matchOrgFunc(dstOrg, func(o github.Organization) {
+				s.repoID++
+				fork := github.Repository{
+					ID:           &s.repoID,
+					Organization: &o,
+					Name:         github.String(opts.Name),
+					Owner:        &github.User{Login: github.String(dstOrg)},
+					Fork:         github.Bool(true),
+				}
+				s.repos = append(s.repos, fork)
+				if s.groups[dstOrg] == nil {
+					s.groups[dstOrg] = make(map[string][]github.User)
+				}
+				s.groups[dstOrg][fork.GetName()] = make([]github.User, 0)
+				mustWrite(w, fork)
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound) // repo not found
 			}
 		}),
 	)
@@ -252,7 +288,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			logger.Debug(replaceArgs(getReposByOwnerByRepo, owner, repo))
 
-			for _, re := range s.repos {
+			for i := range s.repos {
+				re := s.repos[i]
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 					re.Owner = &github.User{Login: github.String(owner)}
 					mustWrite(w, re)
@@ -269,7 +306,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			repo := r.PathValue("repo")
 			logger.Debug(replaceArgs(deleteReposByOwnerByRepo, owner, repo))
 
-			for i, re := range s.repos {
+			for i := range s.repos {
+				re := s.repos[i]
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
 					s.repos = slices.Delete(s.repos, i, i+1)
 					delete(s.groups[owner], repo)
@@ -286,7 +324,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			id := mustParse[int64](r.PathValue("repository_id"))
 			logger.Debug(replaceArgs(getRepositoriesByID, id))
 
-			for _, repo := range s.repos {
+			for i := range s.repos {
+				repo := &s.repos[i]
 				if repo.GetID() == id {
 					repo.Owner = &github.User{Login: github.String(repo.GetOrganization().GetLogin())}
 					mustWrite(w, repo)
@@ -356,13 +395,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				return
 			}
 
+			userID := s.getUserID(username)
 			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
-			ghUser := github.User{Login: github.String(username), Permissions: permissions}
+			ghUser := github.User{ID: github.Int64(userID), Login: github.String(username), Permissions: permissions}
 			// this simulates that the user accepts the invitation (mocking the invite response is not supported yet)
 			s.groups[owner][repo] = append(collaborators, ghUser)
 			s.members = append(s.members, github.Membership{
 				Organization: &github.Organization{Login: github.String(owner)},
-				User:         &github.User{Login: github.String(username)},
+				User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
 				Role:         github.String(repoCollaboratorOptions.Permission),
 			})
 			invite := github.CollaboratorInvitation{
@@ -570,6 +610,52 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, pr)
 		}),
 	)
+	postAppManifestsByCodeConversionsHandler := WithRequestMatchHandler(
+		postAppManifestsByCodeConversions,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			code := r.PathValue("code")
+			logger.Debug(replaceArgs(postAppManifestsByCodeConversions, code))
+			config, ok := s.appConfigs[code]
+			if !ok {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+			mustWrite(w, config)
+		}),
+	)
+	getUserByIDHandler := WithRequestMatchHandler(
+		getUserByID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID := mustParse[int64](r.PathValue("user_id"))
+			logger.Debug(replaceArgs(getUserByID, userID))
+
+			for _, member := range s.members {
+				if member.GetUser().GetID() == userID {
+					mustWrite(w, member.GetUser())
+					return
+				}
+			}
+			// user not found
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
+	postReposMergeUpstreamByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposMergeUpstreamByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(postReposMergeUpstreamByOwnerByRepo, owner, repo))
+			// Always return success for merge-upstream
+			result := github.RepoMergeUpstreamResult{
+				Message:    github.String("Successfully fetched and fast-forwarded from upstream"),
+				MergeType:  github.String("fast-forward"),
+				BaseBranch: github.String("main"),
+			}
+			w.WriteHeader(http.StatusOK)
+			mustWrite(w, result)
+		}),
+	)
 	// Mock query handler for fetching the issue ID based on issue number
 	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
 		owner := vars["repositoryOwner"].(string)
@@ -659,6 +745,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		patchOrgsByOrgHandler,
 		getOrgsReposByOrgHandler,
 		postOrgsReposByOrgHandler,
+		postReposForksByOwnerByRepoHandler,
 		getOrgsMembershipsByOrgByUsernameHandler,
 		putOrgsMembershipsByOrgByUsernameHandler,
 		deleteOrgsMembersByOrgByUsernameHandler,
@@ -676,6 +763,9 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler,
 		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
+		postReposMergeUpstreamByOwnerByRepoHandler,
+		postAppManifestsByCodeConversionsHandler,
+		getUserByIDHandler,
 		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{

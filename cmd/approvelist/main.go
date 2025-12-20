@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"slices"
 	"strings"
 	"text/tabwriter"
@@ -14,7 +15,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -76,8 +76,8 @@ func main() {
 		}
 		quickfeedStudents[studID] = student
 
-		submissions := courseSubmissions.For(enroll.ID)
-		numApproved := numApproved(enroll.UserID, submissions)
+		enroll.UpdateTotalApproved(courseSubmissions.For(enroll.GetID()))
+		numApproved := int(enroll.GetTotalApproved())
 		approvedValue := fail
 		if approved(numApproved, *passLimit) {
 			approvedValue = pass
@@ -173,22 +173,6 @@ func (o *output) Print(showAll bool) {
 	fmt.Printf("FS: %d, QF: %d, Both: %d\n", len(o.fs), len(o.qf), len(o.both))
 }
 
-func numApproved(userID uint64, submissions []*qf.Submission) int {
-	numApproved := 0
-	duplicateAssignments := make(map[uint64]struct{})
-	for _, s := range submissions {
-		// ignore duplicate approved assignments
-		if _, ok := duplicateAssignments[s.AssignmentID]; ok {
-			continue
-		}
-		if s.IsApproved(userID) {
-			duplicateAssignments[s.AssignmentID] = struct{}{}
-			numApproved++
-		}
-	}
-	return numApproved
-}
-
 func approved(numApproved, passLimit int) bool {
 	return numApproved >= passLimit
 }
@@ -221,7 +205,7 @@ func Keys[K comparable, V any](m map[K]V) []K {
 }
 
 func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmissions, []*qf.Enrollment, error) {
-	token, err := env.GetAccessToken()
+	token, err := getAccessToken()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -264,7 +248,7 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get enrollments for course %s: %w", courseCode, err)
 	}
-	return submissions.Msg, enrollments.Msg.Enrollments, err
+	return submissions.Msg, enrollments.Msg.GetEnrollments(), err
 }
 
 func partialMatch(name string, studentMap map[string]int) (int, error) {
@@ -426,4 +410,26 @@ func saveApproveSheet(courseCode, sheetName string, approveMap map[string]string
 		f.SetCellValue(sheetName, cell, approved)
 	}
 	return f.SaveAs(fileName(courseCode, dstSuffix))
+}
+
+// getAccessToken retrieves the GitHub access token using the GitHub CLI.
+func getAccessToken() (string, error) {
+	cmd := exec.Command("gh", "auth", "token")
+	output, err := cmd.Output()
+	if err != nil {
+		// Check if gh CLI is not installed or not in PATH
+		if _, pathErr := exec.LookPath("gh"); pathErr != nil {
+			return "", fmt.Errorf("GitHub CLI (gh) not found. Install it from https://cli.github.com/\nAfter installation, login with: gh auth login")
+		}
+
+		// gh CLI is installed but user is not authenticated
+		return "", fmt.Errorf("not authenticated with GitHub CLI.\nTo login, run: gh auth login\nOriginal error: %w", err)
+	}
+
+	token := strings.TrimSpace(string(output))
+	if token == "" {
+		return "", fmt.Errorf("GitHub CLI returned an empty token.\nTry logging out and back in:\n  gh auth logout\n  gh auth login")
+	}
+
+	return token, nil
 }

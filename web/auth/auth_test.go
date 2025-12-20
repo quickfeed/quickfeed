@@ -21,7 +21,7 @@ const (
 
 func TestOAuth2Login(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	// Incorrect request method.
 	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
 		Post(auth.Auth).
@@ -45,7 +45,7 @@ func TestOAuth2Login(t *testing.T) {
 
 func TestOAuth2LoginRedirect(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 
 	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
 		Get(authGithub).
@@ -69,7 +69,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 func TestOAuth2Callback(t *testing.T) {
 	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -104,14 +104,14 @@ func TestOAuth2Callback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if user.Login != "test" {
-		t.Fatalf("incorrect user login: expected 'test', got %s", user.Name)
+	if user.GetLogin() != "test" {
+		t.Fatalf("incorrect user login: expected 'test', got %s", user.GetName())
 	}
 }
 
 func TestOAuth2CallbackUserExchange(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -176,7 +176,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 
 func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -221,7 +221,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 
 func TestOAuth2CallbackBadRequest(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db)
@@ -275,6 +275,48 @@ func TestOAuth2Logout(t *testing.T) {
 				MaxAge(-1),
 		).
 		End()
+}
+
+func TestSanitizeNext(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty string", "", "/"},
+		{"whitespace only", "   ", "/"},
+		{"root path", "/", "/"},
+		{"simple path", "/dashboard", "/dashboard"},
+		{"path with trailing slash", "/dashboard/", "/dashboard"},
+		{"path with dot", "/./dashboard", "/dashboard"},
+		{"path with double slash", "//dashboard", "/"},
+		{"path with backslash", `/dash\board`, "/"},
+		{"absolute URL http", "http://example.com", "/"},
+		{"absolute URL https", "https://example.com/path", "/"},
+		{"absolute URL with path", "https://example.com/dashboard", "/"},
+		{"relative path", "dashboard", "/"},
+		{"path with ..", "/foo/../bar", "/bar"},
+		{"path with multiple ..", "/foo/../../bar", "/bar"},
+		{"path with spaces", "   /foo/bar   ", "/foo/bar"},
+		{"path with query", "/foo/bar?baz=1", "/foo/bar?baz=1"},
+		{"path with fragment", "/foo/bar#section", "/foo/bar#section"},
+		{"dot only", ".", "/"},
+		{"slash dot", "/.", "/"},
+		{"empty after clean", "", "/"},
+		{"path with encoded slash", "/foo%2Fbar", "/foo%2Fbar"},
+		{"path with backslash", "/foo\\bar", "/"},
+		{"protocol relative URL", "//example.com", "/"},
+		{"protocol backslash URL", "\\example.com", "/"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := auth.SanitizeNext(tt.in)
+			if got != tt.want {
+				t.Errorf("SanitizeNext(%q) = %q; want %q", tt.in, got, tt.want)
+			}
+		})
+	}
 }
 
 func checkNoUsersInDB(db database.Database, t *testing.T) {

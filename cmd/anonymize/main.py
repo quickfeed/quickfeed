@@ -1,5 +1,6 @@
 import argparse
 import sqlite3
+import requests
 from functools import partial
 from typing import List
 from faker import Faker
@@ -45,13 +46,13 @@ class DatabaseAnonymizer:
         # List of tuples (select statement, update statement, functions to generate fake data)
         return [
             Statement(
-                "SELECT DISTINCT organization_id FROM repositories",
-                "UPDATE repositories SET organization_id=? WHERE organization_id=?",
+                "SELECT DISTINCT scm_organization_id FROM repositories",
+                "UPDATE repositories SET scm_organization_id=? WHERE scm_organization_id=?",
                 (self.fake.random_number,),
             ),
             Statement(
                 "SELECT * FROM repositories",
-                "UPDATE repositories SET html_url=?, repository_id=? WHERE id=?",
+                "UPDATE repositories SET html_url=?, scm_repository_id=? WHERE id=?",
                 (
                     self.fake.url,
                     partial(self.fake.random_number, digits=8),
@@ -59,28 +60,26 @@ class DatabaseAnonymizer:
             ),
             Statement(
                 f"SELECT * FROM users WHERE id != {self.excludeUser}",
-                "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=? WHERE id=?",
+                "UPDATE users SET name=?, email=?, login=?, student_id=?, avatar_url=?, refresh_token=? WHERE id=?",
                 (
                     self.fake.name,
                     self.fake.email,
                     self.fake.user_name,
                     partial(self.fake.random_number, digits=6),
                     self.fake.url,
-                ),
-            ),
-            Statement(
-                f"SELECT * FROM remote_identities WHERE user_id != {self.excludeUser}",
-                "UPDATE remote_identities SET access_token=?, remote_id=? WHERE id=?",
-                (
-                    partial(self.fake.password, length=20),
-                    partial(self.fake.random_number, digits=6),
+                    self.fake.password,
                 ),
             ),
             Statement(
                 "SELECT * FROM groups",
-                "UPDATE groups SET name=? WHERE id=?",
-                (self.fake.slug,),
+                "UPDATE groups SET name=?, scm_team_id=? WHERE id=?",
+                (self.fake.slug, partial(self.fake.random_number, digits=8)),
             ),
+            Statement(
+                "SELECT * FROM submissions",
+                "UPDATE submissions SET commit_hash=? WHERE id=?",
+                (partial(self.fake.random_number, digits=5),),
+            )
         ]
 
     def fetch(self, statement: str) -> list:
@@ -103,14 +102,25 @@ class DatabaseAnonymizer:
                 self.conn.commit()
 
     def set_as_admin(self, login: str):
-        self.updateCur.execute("UPDATE users SET is_admin=1 WHERE login=?", (login,))
-        self.conn.commit()
+        # Fetch the GitHub user for the given login
+        response = requests.get(f"https://api.github.com/users/{login}")
+        if response.status_code != 200:
+            print(f"Failed to fetch user {login} from GitHub")
+            return
+        user = response.json()
 
-    def set_remote_identity(self, user_id: int, remote_id: int):
-        self.updateCur.execute(
-            "UPDATE remote_identities SET remote_id=? WHERE user_id=?",
-            (remote_id, user_id),
-        )
+        # Check if the user already exists in the database based on the login and remote_id
+        self.cur.execute("SELECT id FROM users WHERE login=? AND scm_remote_id=?", (login, user["id"]))
+        db_user = self.cur.fetchone()
+        if db_user is not None:
+            if db_user[0] == 1:
+                print(f"User {login} is already an admin")
+                return
+            print(f"User {login} already exists in the database")
+            return
+
+        # Set the user with id 1 as admin and update the login and remote_id
+        self.updateCur.execute("UPDATE users SET is_admin=1, login=?, scm_remote_id=? WHERE id=1", (login, user["id"]))
         self.conn.commit()
 
     def exclude_user(self, login: str) -> bool:
@@ -195,9 +205,6 @@ def main():
 
     if args.admin is not None:
         db.set_as_admin(args.admin)
-
-    if args.remote is not None:
-        db.set_remote_identity(args.remote[0], args.remote[1])
 
     db.close()
 

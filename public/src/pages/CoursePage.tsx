@@ -1,25 +1,28 @@
-import React, { useEffect } from "react"
-import { Redirect } from "react-router"
-import { getCourseID, isEnrolled, isTeacher } from "../Helpers"
+import React, { useLayoutEffect } from "react"
+import { isEnrolled, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
+import { useCourseID } from "../hooks/useCourseID"
+import { Enroll } from "../components/Enroll"
 
 
 /** The CoursePage component renders a Student or Teacher view
  *  depending on the active course and the user's enrollment status. */
-const CoursePage = (): JSX.Element => {
+const CoursePage = () => {
     const state = useAppState()
-    const actions = useActions()
-    const courseID = getCourseID()
+    const actions = useActions().global
+    const courseID = useCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID.toString()]
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!state.showFavorites) {
             actions.toggleFavorites()
         }
         actions.setActiveCourse(courseID)
-    }, [courseID])
+        actions.getCourseData({ courseID })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [actions, courseID]) // Having state.showFavorites in the dependency array locks the sidebar as open.
 
     if (state.enrollmentsByCourseID[courseID.toString()] && isEnrolled(enrollment)) {
         if (isTeacher(enrollment)) {
@@ -27,7 +30,7 @@ const CoursePage = (): JSX.Element => {
         }
         return <StudentPage />
     } else {
-        return <Redirect to={"/"} />
+        return <Enroll courseID={courseID} />
     }
 }
 

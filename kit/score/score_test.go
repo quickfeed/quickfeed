@@ -33,8 +33,8 @@ func TestNormalize(t *testing.T) {
 	newMaxScore := 50
 	sc.Normalize(newMaxScore)
 	expectedScore := int32(17)
-	if sc.Score != expectedScore {
-		t.Errorf("Normalize(%d) = %d, expected %d", newMaxScore, sc.Score, expectedScore)
+	if sc.GetScore() != expectedScore {
+		t.Errorf("Normalize(%d) = %d, expected %d", newMaxScore, sc.GetScore(), expectedScore)
 	}
 }
 
