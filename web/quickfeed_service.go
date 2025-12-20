@@ -24,19 +24,17 @@ type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	scmMgr *scm.Manager
-	bh     BaseHookOptions
 	runner ci.Runner
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
 		logger:  logger.Sugar(),
 		db:      db,
 		scmMgr:  mgr,
-		bh:      bh,
 		runner:  runner,
 		streams: stream.NewStreamServices(),
 	}

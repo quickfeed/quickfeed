@@ -21,11 +21,12 @@ func TestRegisterRouter(t *testing.T) {
 	defer stop()
 
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
-	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
+	qf := web.NewQuickFeedService(logger, db, mgr, nil)
 
 	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	public := createTempPublicDir(t)
-	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, public)
+	webHookSecret := ""
+	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, webHookSecret, public)
 
 	apitest.New("Index").
 		Handler(mux).

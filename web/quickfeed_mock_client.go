@@ -132,7 +132,7 @@ func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, op
 
 	mgr := scm.MockManager(t, scmOpt)
 	logger := qtest.Logger(t)
-	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, BaseHookOptions{}, &ci.Local{})
+	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, &ci.Local{})
 
 	// Create token manager when needed
 	var tm *auth.TokenManager

@@ -105,12 +105,6 @@ func main() {
 		log.Fatalf("Can't connect to database: %v", err)
 	}
 
-	// Holds references for activated providers for current user token
-	bh := web.BaseHookOptions{
-		BaseURL: env.Domain(),
-		Secret:  os.Getenv("QUICKFEED_WEBHOOK_SECRET"),
-	}
-
 	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -130,9 +124,9 @@ func main() {
 	}
 	defer runner.Close()
 
-	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
+	qfService := web.NewQuickFeedService(logger, db, scmManager, runner)
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, os.Getenv("QUICKFEED_WEBHOOK_SECRET"), *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

@@ -31,7 +31,7 @@ func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, h
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, webHookSecret, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets")) // skipcq: GO-S1034
@@ -55,7 +55,7 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	router.HandleFunc(auth.Logout, auth.OAuth2Logout())
 
 	// Register hooks.
-	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.scmMgr, s.runner, s.bh.Secret, s.streams, tm)
+	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.scmMgr, s.runner, webHookSecret, s.streams, tm)
 	router.HandleFunc(auth.Hook, ghHook.Handle())
 
 	return router
