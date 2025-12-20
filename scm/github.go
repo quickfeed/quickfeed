@@ -53,7 +53,7 @@ func (s *GithubSCM) GetUserByID(ctx context.Context, id uint64) (*qf.User, error
 	return &qf.User{
 		Login:       ghUser.GetLogin(),
 		AvatarURL:   ghUser.GetAvatarURL(),
-		ScmRemoteID: uint64(ghUser.GetID()),
+		ScmRemoteID: id,
 	}, nil
 }
 
