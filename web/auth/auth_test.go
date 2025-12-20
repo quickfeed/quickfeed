@@ -277,6 +277,48 @@ func TestOAuth2Logout(t *testing.T) {
 		End()
 }
 
+func TestSanitizeNext(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty string", "", "/"},
+		{"whitespace only", "   ", "/"},
+		{"root path", "/", "/"},
+		{"simple path", "/dashboard", "/dashboard"},
+		{"path with trailing slash", "/dashboard/", "/dashboard"},
+		{"path with dot", "/./dashboard", "/dashboard"},
+		{"path with double slash", "//dashboard", "/"},
+		{"path with backslash", `/dash\board`, "/"},
+		{"absolute URL http", "http://example.com", "/"},
+		{"absolute URL https", "https://example.com/path", "/"},
+		{"absolute URL with path", "https://example.com/dashboard", "/"},
+		{"relative path", "dashboard", "/"},
+		{"path with ..", "/foo/../bar", "/bar"},
+		{"path with multiple ..", "/foo/../../bar", "/bar"},
+		{"path with spaces", "   /foo/bar   ", "/foo/bar"},
+		{"path with query", "/foo/bar?baz=1", "/foo/bar?baz=1"},
+		{"path with fragment", "/foo/bar#section", "/foo/bar#section"},
+		{"dot only", ".", "/"},
+		{"slash dot", "/.", "/"},
+		{"empty after clean", "", "/"},
+		{"path with encoded slash", "/foo%2Fbar", "/foo%2Fbar"},
+		{"path with backslash", "/foo\\bar", "/"},
+		{"protocol relative URL", "//example.com", "/"},
+		{"protocol backslash URL", "\\example.com", "/"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := auth.SanitizeNext(tt.in)
+			if got != tt.want {
+				t.Errorf("SanitizeNext(%q) = %q; want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
 func checkNoUsersInDB(db database.Database, t *testing.T) {
 	users, err := db.GetUsers()
 	if err != nil {

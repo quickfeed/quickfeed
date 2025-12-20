@@ -10,7 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestUserVerifier(t *testing.T) {
@@ -55,7 +54,7 @@ func TestUserVerifier(t *testing.T) {
 				t.Errorf("GetUser(): %v, want: %v", gotUser, wantUser)
 			}
 		} else {
-			if diff := cmp.Diff(wantUser, gotUser.Msg, protocmp.Transform()); diff != "" {
+			if diff := cmp.Diff(wantUser, gotUser.Msg, qtest.UserDiffOptions()); diff != "" {
 				t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 			}
 		}

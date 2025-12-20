@@ -37,7 +37,7 @@ fi
 
 # fail if there are some local changes
 if ! git diff-index --quiet HEAD --; then
-	echo "There are uncommited changes, make sure they are in the main codebase or in a PR before removing."
+	echo "There are uncommitted changes, make sure they are in the main codebase or in a PR before removing."
 	exit 1
 fi
 

@@ -19,7 +19,7 @@ else
 fi
 
 MERGE="merged"
-# Buildfile
+# Build file
 BF="build.gradle"
 AD="$NAME"assignments
 echo $PWD
@@ -48,7 +48,7 @@ repositories {
     mavenCentral()
 }
 
-test { 
+test {
     testLogging.showStandardStreams = true
 }
 
@@ -56,7 +56,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 sourceSets{
-    main{ 
+    main{
         java {
             srcDir 'src'
         }
@@ -71,9 +71,9 @@ sourceSets{
 dependencies {
     testCompile 'junit:junit:4.12'
 }
- 
+
 jar {
-    baseName = 'ovigner' 
+    baseName = 'ovigner'
     version =  '0.1.0'
 }" > $curPath/$BF
         fi
