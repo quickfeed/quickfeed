@@ -255,6 +255,20 @@ export type Course = Message<"qf.Course"> & {
   enrolled: Enrollment_UserStatus;
 
   /**
+   * URL for invite link to remote communication platform (e.g., Discord, Slack).
+   *
+   * @generated from field: string communityLink = 16;
+   */
+  communityLink: string;
+
+  /**
+   * Short description of the link (e.g., "Join our Discord server").
+   *
+   * @generated from field: string communityLinkDescription = 17;
+   */
+  communityLinkDescription: string;
+
+  /**
    * @generated from field: repeated qf.Enrollment enrollments = 13;
    */
   enrollments: Enrollment[];
