@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -22,6 +21,10 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.GetUserID(), enrollment.GetStatus(), request.GetStatus())
 	}
 
+	// check and update user SCM info before updating enrollment status
+	if err := s.updateUserFromSCM(ctx, sc, enrollment.GetUser()); err != nil {
+		return fmt.Errorf("failed to update SCM info for user %d: %w", enrollment.GetUserID(), err)
+	}
 	switch {
 	case (enrollment.IsPending() || enrollment.IsStudent()) && request.IsNone(): // pending or student -> none
 		return s.rejectEnrollment(ctx, sc, enrollment)
@@ -148,162 +151,9 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	return s.db.UpdateEnrollment(query)
 }
 
-// getSubmissions returns all the latests submissions for a user of the given course.
-func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Submissions, error) {
-	// only one of user ID and group ID will be set; enforced by IsValid on qf.SubmissionRequest
-	query := &qf.Submission{
-		UserID:  request.GetUserID(),
-		GroupID: request.GetGroupID(),
-	}
-	submissions, err := s.db.GetLastSubmissions(request.GetCourseID(), query)
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Submissions{Submissions: submissions}, nil
-}
-
-// getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
-func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionRequest) (*qf.CourseSubmissions, error) {
-	submissions, err := s.db.GetCourseSubmissions(request.GetCourseID(), request.GetType())
-	if err != nil {
-		return nil, err
-	}
-	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourseByStatus(request.GetCourseID(), qf.Enrollment_TEACHER)
-	if err != nil {
-		return nil, err
-	}
-
-	var submissionsMap map[uint64]*qf.Submissions
-	switch request.GetType() {
-	case qf.SubmissionRequest_GROUP:
-		submissionsMap = makeGroupResults(course, submissions)
-	case qf.SubmissionRequest_USER:
-		submissionsMap = makeUserResults(course, submissions)
-	case qf.SubmissionRequest_ALL:
-		submissionsMap = makeAllResults(course, submissions)
-	}
-	return &qf.CourseSubmissions{Submissions: submissionsMap}, nil
-}
-
-// makeGroupResults returns a map of group ID to Submissions
-// for all course groups and all group assignments.
-func makeGroupResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
-	submissionsMap := make(map[uint64]*qf.Submissions)
-	skipGroup := map[uint64]bool{0: true} // skip group ID 0 (no group)
-	om := newOrderMap(course.GetAssignments())
-	for _, enrollment := range course.GetEnrollments() {
-		if skipGroup[enrollment.GetGroupID()] {
-			continue // include group enrollment only once
-		}
-		skipGroup[enrollment.GetGroupID()] = true
-		// Note: we (intentionally) use enrollment.GroupID as the key to the map here.
-		// This is primarily a convenience for the frontend, which can then use
-		// the group ID as the key to the map.
-		submissionsMap[enrollment.GetGroupID()] = &qf.Submissions{
-			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
-				// include group submissions for this enrollment
-				return submission.ByGroup(enrollment.GetGroupID())
-			}),
-		}
-	}
-	return submissionsMap
-}
-
-// makeUserResults returns a map of enrollment ID to Submissions
-// for all course enrollments (students) and all individual assignments.
-func makeUserResults(course *qf.Course, submission []*qf.Submission) map[uint64]*qf.Submissions {
-	submissionsMap := make(map[uint64]*qf.Submissions)
-	om := newOrderMap(course.GetAssignments())
-	for _, enrollment := range course.GetEnrollments() {
-		submissionsMap[enrollment.GetID()] = &qf.Submissions{
-			Submissions: choose(submission, om, func(submission *qf.Submission) bool {
-				// include individual submissions for this enrollment
-				return submission.ByUser(enrollment.GetUserID())
-			}),
-		}
-	}
-	return submissionsMap
-}
-
-// makeAllResults returns a map of enrollment ID to Submissions
-// for all course enrollments (students and groups) and all individual and group assignments.
-func makeAllResults(course *qf.Course, submissions []*qf.Submission) map[uint64]*qf.Submissions {
-	submissionsMap := make(map[uint64]*qf.Submissions)
-	om := newOrderMap(course.GetAssignments())
-	for _, enrollment := range course.GetEnrollments() {
-		submissionsMap[enrollment.GetID()] = &qf.Submissions{
-			Submissions: choose(submissions, om, func(submission *qf.Submission) bool {
-				// include individual and group submissions for this enrollment
-				return submission.ByUser(enrollment.GetUserID()) || submission.ByGroup(enrollment.GetGroupID())
-			}),
-		}
-	}
-	return submissionsMap
-}
-
-func choose(submissions []*qf.Submission, order *orderMap, include func(*qf.Submission) bool) []*qf.Submission {
-	var subs []*qf.Submission
-	for _, submission := range submissions {
-		if include(submission) {
-			subs = append(subs, submission)
-		}
-	}
-	// sort submissions by assignment order
-	sort.Slice(subs, func(i, j int) bool {
-		return order.Less(subs[i].GetAssignmentID(), subs[j].GetAssignmentID())
-	})
-	return subs
-}
-
-// updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(submissionID uint64, grades []*qf.Grade, released bool, score uint32) error {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
-	if err != nil {
-		return err
-	}
-
-	for _, grade := range grades {
-		submission.SetGrade(grade.GetUserID(), grade.GetStatus())
-	}
-	submission.Released = released
-	if score > 0 {
-		submission.Score = score
-	}
-	return s.db.UpdateSubmission(submission)
-}
-
-// updateSubmissions updates status and release state of multiple submissions for the
-// given course and assignment ID for all submissions with score equal or above the provided score
-func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsRequest) error {
-	query := &qf.Submission{
-		AssignmentID: request.GetAssignmentID(),
-		Score:        request.GetScoreLimit(),
-		Released:     request.GetRelease(),
-	}
-
-	return s.db.UpdateSubmissions(query, true)
-}
-
-// updateCourse updates an existing course.
-func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
-	// ensure the course exists
-	_, err := s.db.GetCourse(request.GetID())
-	if err != nil {
-		return err
-	}
-	// ensure the organization exists
-	org, err := sc.GetOrganization(ctx, &scm.OrganizationOptions{ID: request.GetScmOrganizationID()})
-	if err != nil {
-		return err
-	}
-	request.ScmOrganizationName = org.GetScmOrganizationName()
-	return s.db.UpdateCourse(request)
-}
-
 // returns all enrollments for the course ID with last activity date and number of approved assignments
 func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
-	submissions, err := s.getAllCourseSubmissions(
+	submissions, err := s.db.GetCourseSubmissions(
 		&qf.SubmissionRequest{
 			CourseID: courseID,
 			FetchMode: &qf.SubmissionRequest_Type{
@@ -341,22 +191,4 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 	// Save the user's new refresh token in the database.
 	user.RefreshToken = newRefreshToken
 	return s.db.UpdateUser(user)
-}
-
-type orderMap map[uint64]uint32
-
-// newOrderMap creates a new orderMap from a list of assignments.
-// The ID of each assignment is mapped to its order.
-// Useful for sorting submissions by assignment order
-// as the order is not stored in the submission themselves.
-func newOrderMap(assignments []*qf.Assignment) *orderMap {
-	om := make(orderMap)
-	for _, assignment := range assignments {
-		om[assignment.GetID()] = assignment.GetOrder()
-	}
-	return &om
-}
-
-func (om orderMap) Less(i, j uint64) bool {
-	return om[i] < om[j]
 }

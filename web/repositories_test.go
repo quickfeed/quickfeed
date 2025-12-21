@@ -16,7 +16,7 @@ func TestGetRepositories(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	teacher := qtest.CreateFakeUser(t, db)
 	course := qtest.MockCourses[0]
@@ -109,10 +109,10 @@ func TestGetRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teacherCookie := Cookie(t, tm, teacher)
-	studentCookie := Cookie(t, tm, student)
-	groupStudentCookie := Cookie(t, tm, groupStudent)
-	missingEnrollmentCookie := Cookie(t, tm, notEnrolledUser)
+	teacherCookie := client.Cookie(t, teacher)
+	studentCookie := client.Cookie(t, student)
+	groupStudentCookie := client.Cookie(t, groupStudent)
+	missingEnrollmentCookie := client.Cookie(t, notEnrolledUser)
 
 	ctx := context.Background()
 
@@ -197,17 +197,21 @@ func TestGetRepositories(t *testing.T) {
 func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
 
-	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user"})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user", ScmRemoteID: 1})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 2})
+	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "groupStudent", ScmRemoteID: 3})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("user", "student", "groupStudent"),
+	))
+
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, user, course)
 
-	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student"})
 	qtest.EnrollStudent(t, db, student, course)
 
 	// student in a group
-	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "groupStudent"})
 	qtest.EnrollStudent(t, db, groupStudent, course)
 
 	// create repositories for users and group
@@ -243,7 +247,7 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 		{name: "UserNotFound", request: &qf.RepositoryRequest{CourseID: course.GetID(), UserID: 123}, wantErr: false},   // lookup invalid user should have no repositories (no error)
 		{name: "GroupNotFound", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 123}, wantErr: false}, // lookup invalid group should have no repositories (no error)
 
-		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.GetID()}, wantErr: false},                    // lookup valid user with no repositories should return no repositories (no error)
+		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.GetID()}, wantErr: false},                         // lookup valid user with no repositories should return no repositories (no error)
 		{name: "GroupHasNoRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, wantErr: false},            // lookup valid group with no repositories should return no repositories (no error)
 		{name: "GroupHasRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, create: true, wantErr: true}, // lookup for group with repositories -> error
 	}

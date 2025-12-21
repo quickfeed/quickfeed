@@ -76,6 +76,7 @@ func TestUpdateCriteria(t *testing.T) {
 	// Assignment that will be updated
 	assignment := &qf.Assignment{
 		CourseID:    course.GetID(),
+		Reviewers:   1,
 		Name:        "Assignment 1",
 		Deadline:    qtest.Timestamp(t, "2021-12-12T19:00:00"),
 		AutoApprove: false,
@@ -85,6 +86,7 @@ func TestUpdateCriteria(t *testing.T) {
 
 	assignment2 := &qf.Assignment{
 		CourseID:    course.GetID(),
+		Reviewers:   1,
 		Name:        "Assignment 2",
 		Deadline:    qtest.Timestamp(t, "2022-01-12T19:00:00"),
 		AutoApprove: false,

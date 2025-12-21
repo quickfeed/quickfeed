@@ -91,7 +91,7 @@ func (wh GitHubWebHook) getPullRequest(payload *github.PushEvent) (*qf.PullReque
 			// If this happens, QF should not do anything
 			return nil, fmt.Errorf("no pull request found for ref: %s", payload.GetRef())
 		}
-		return nil, fmt.Errorf("failed to get pull request from database: %v", err)
+		return nil, fmt.Errorf("failed to get pull request from database: %w", err)
 	}
 	return pullRequest, nil
 }

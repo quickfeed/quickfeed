@@ -8,11 +8,12 @@ import NavBarActiveCourse from "./navbar/NavBarActiveCourse"
 
 const NavBar = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     let hamburger = null
     if (state.isLoggedIn) {
-        const classname = `clickable hamburger ${state.showFavorites ? "open" : "closed"}`
+        const hamburgerColor = state.showFavorites ? "open" : "closed" // Green / White
+        const classname = `clickable hamburger ${hamburgerColor}`
         hamburger = <span onClick={() => actions.toggleFavorites()} className={classname}>☰</span>
     }
 

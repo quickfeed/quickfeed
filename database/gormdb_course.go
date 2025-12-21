@@ -85,7 +85,7 @@ func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserSt
 			})
 	case qf.Enrollment_TEACHER:
 		// Preload all data
-		modelGroup := &qf.Group{Status: qf.Group_APPROVED, CourseID: courseID}
+		modelGroup := &qf.Group{CourseID: courseID}
 		m = m.Preload("Assignments").
 			Preload("Enrollments").
 			Preload("Enrollments.User").

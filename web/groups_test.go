@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -17,7 +16,7 @@ func TestNewGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -30,16 +29,16 @@ func TestNewGroup(t *testing.T) {
 
 	ctx := context.Background()
 	// current user must be in the group being created
-	createGroupRequest := qtest.RequestWithCookie(&qf.Group{Name: "Heins-Group", CourseID: course.GetID(), Users: []*qf.User{{ID: user.GetID()}}}, Cookie(t, tm, user))
+	createGroupRequest := qtest.RequestWithCookie(&qf.Group{Name: "Heins-Group", CourseID: course.GetID(), Users: []*qf.User{{ID: user.GetID()}}}, client.Cookie(t, user))
 	wantGroup, err := client.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Error(err)
 	}
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{CourseID: course.GetID(), GroupID: wantGroup.Msg.GetID()}, Cookie(t, tm, user)))
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{CourseID: course.GetID(), GroupID: wantGroup.Msg.GetID()}, client.Cookie(t, user)))
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -48,7 +47,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -63,17 +62,17 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	ctx := context.Background()
 
 	// current user must be in the group being created
-	group_wo_course_id := qtest.RequestWithCookie(&qf.Group{Name: "Hein's Group", Users: users}, Cookie(t, tm, user))
+	group_wo_course_id := qtest.RequestWithCookie(&qf.Group{Name: "Hein's Group", Users: users}, client.Cookie(t, user))
 	_, err := client.CreateGroup(ctx, group_wo_course_id)
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without a course ID")
 	}
-	group_wo_name := qtest.RequestWithCookie(&qf.Group{CourseID: course.GetID(), Users: users}, Cookie(t, tm, user))
+	group_wo_name := qtest.RequestWithCookie(&qf.Group{CourseID: course.GetID(), Users: users}, client.Cookie(t, user))
 	if group_wo_name.Msg.IsValid() {
 		// emulate CreateGroup check without name
 		t.Fatal("expected CreateGroup to fail without group name")
 	}
-	group_wo_users := qtest.RequestWithCookie(&qf.Group{Name: "Hein's Group", CourseID: course.GetID()}, Cookie(t, tm, user))
+	group_wo_users := qtest.RequestWithCookie(&qf.Group{Name: "Hein's Group", CourseID: course.GetID()}, client.Cookie(t, user))
 	_, err = client.CreateGroup(ctx, group_wo_users)
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without users")
@@ -84,7 +83,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -102,28 +101,28 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	ctx := context.Background()
 
 	// current user must be in the group being created
-	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{Name: "HeinsGroup", CourseID: course.GetID(), Users: users}, Cookie(t, tm, user)))
+	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{Name: "HeinsGroup", CourseID: course.GetID(), Users: users}, client.Cookie(t, user)))
 	if err != nil {
 		t.Error(err)
 	}
 	// check that group member (user) can access group
 	groupReq := &qf.GroupRequest{CourseID: course.GetID(), GroupID: wantGroup.Msg.GetID()}
-	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, user)))
+	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, client.Cookie(t, user)))
 	if err != nil {
 		t.Error(err)
 	}
 	// check that teacher can access group
-	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, teacher)))
+	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, client.Cookie(t, teacher)))
 	if err != nil {
 		t.Error(err)
 	}
 	// check that admin can access group
-	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, Cookie(t, tm, admin)))
+	_, err = client.GetGroup(ctx, qtest.RequestWithCookie(groupReq, client.Cookie(t, admin)))
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -132,7 +131,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	admin := qtest.CreateFakeUser(t, db)
 	var course qf.Course
@@ -151,7 +150,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		Name:     "HeinsGroup",
 		CourseID: course.GetID(),
 		Users:    []*qf.User{{ID: user.GetID()}, {ID: teacher.GetID()}},
-	}, Cookie(t, tm, user))
+	}, client.Cookie(t, user))
 	_, err := client.CreateGroup(context.Background(), group_req)
 	if err != nil {
 		t.Error(err)
@@ -164,19 +163,19 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin", "teacher", "user1", "user2", "user3"), web.WithInterceptors())
 
-	admin := qtest.CreateFakeUser(t, db)
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
 	course := qf.Course{ScmOrganizationID: 1, ScmOrganizationName: qtest.MockOrg}
 	qtest.CreateCourse(t, db, admin, &course)
 
-	teacher := qtest.CreateFakeUser(t, db)
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "teacher", ScmRemoteID: 2})
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
 	// create named users; needed for group creation
-	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
-	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
-	user3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user3"})
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1", ScmRemoteID: 3})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2", ScmRemoteID: 4})
+	user3 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user3", ScmRemoteID: 5})
 	qtest.EnrollStudent(t, db, user1, &course)
 	qtest.EnrollStudent(t, db, user2, &course)
 	qtest.EnrollStudent(t, db, user3, &course)
@@ -187,7 +186,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		Name:     "HeinsTwoMemberGroup",
 		CourseID: course.GetID(),
 		Users:    []*qf.User{user1, user2},
-	}, Cookie(t, tm, user1))
+	}, client.Cookie(t, user1))
 
 	ctx := context.Background()
 	wantGroup, err := client.CreateGroup(ctx, createGroupRequest)
@@ -198,12 +197,12 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		CourseID: course.GetID(),
 		GroupID:  wantGroup.Msg.GetID(),
-	}, Cookie(t, tm, user1)))
+	}, client.Cookie(t, user1)))
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 
@@ -216,7 +215,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		Name:     "Heins3MemberGroup",
 		CourseID: course.GetID(),
 		Users:    []*qf.User{user1, user2, user3},
-	}, Cookie(t, tm, teacher))
+	}, client.Cookie(t, teacher))
 	gotUpdatedGroup, err := client.UpdateGroup(ctx, updateGroupRequest)
 	if err != nil {
 		t.Error(err)
@@ -242,7 +241,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	gotUpdatedGroup.Msg.Enrollments = nil
 	wantGroup.Msg.Enrollments = nil
 
-	if diff := cmp.Diff(wantGroup.Msg, gotUpdatedGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotUpdatedGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("UpdateGroup() mismatch (-wantGroup +gotUpdatedGroup):\n%s", diff)
 	}
 
@@ -255,7 +254,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		Name:     "Hein's single member Group",
 		CourseID: course.GetID(),
 		Users:    []*qf.User{user1},
-	}, Cookie(t, tm, teacher))
+	}, client.Cookie(t, teacher))
 	gotUpdatedGroup, err = client.UpdateGroup(ctx, updateGroupRequest1)
 	if err != nil {
 		t.Error(err)
@@ -280,7 +279,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	gotUpdatedGroup.Msg.Enrollments = nil
 	wantGroup.Msg.Enrollments = nil
 
-	if diff := cmp.Diff(wantGroup.Msg, gotUpdatedGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotUpdatedGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("UpdateGroup() mismatch (-wantGroup +gotUpdatedGroup):\n%s", diff)
 	}
 }
@@ -289,19 +288,24 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockCourses())
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin", ScmRemoteID: 1})
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher", ScmRemoteID: 2})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student", ScmRemoteID: 3})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockCourses(),
+		scm.WithMockOrgs("admin", "teacher", "student"),
+	), web.WithInterceptors())
 
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, admin, course)
 
 	// create user and enroll as pending (teacher)
-	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   teacher.GetID(),
 		CourseID: course.GetID(),
-	}, Cookie(t, tm, teacher))); err != nil {
+	}, client.Cookie(t, teacher))); err != nil {
 		t.Error(err)
 	}
 
@@ -314,7 +318,7 @@ func TestDeleteGroup(t *testing.T) {
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
-	}, Cookie(t, tm, admin))); err != nil {
+	}, client.Cookie(t, admin))); err != nil {
 		t.Error(err)
 	}
 
@@ -327,16 +331,15 @@ func TestDeleteGroup(t *testing.T) {
 				Status:   qf.Enrollment_TEACHER,
 			},
 		},
-	}, Cookie(t, tm, admin))); err != nil {
+	}, client.Cookie(t, admin))); err != nil {
 		t.Error(err)
 	}
 
 	// create user and enroll as pending (student)
-	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(&qf.Enrollment{
 		UserID:   user.GetID(),
 		CourseID: course.GetID(),
-	}, Cookie(t, tm, user))); err != nil {
+	}, client.Cookie(t, user))); err != nil {
 		t.Error(err)
 	}
 
@@ -349,13 +352,13 @@ func TestDeleteGroup(t *testing.T) {
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
-	}, Cookie(t, tm, teacher))); err != nil {
+	}, client.Cookie(t, teacher))); err != nil {
 		t.Error(err)
 	}
 
 	// create group as student user
 	group := &qf.Group{Name: "TestDeleteGroup", CourseID: course.GetID(), Users: []*qf.User{user}}
-	respGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
+	respGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, client.Cookie(t, user)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -364,7 +367,7 @@ func TestDeleteGroup(t *testing.T) {
 	_, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		GroupID:  respGroup.Msg.GetID(),
 		CourseID: course.GetID(),
-	}, Cookie(t, tm, teacher)))
+	}, client.Cookie(t, teacher)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -374,7 +377,7 @@ func TestGetGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	course := qf.Course{
 		Name:              "Distributed Systems",
@@ -393,7 +396,7 @@ func TestGetGroup(t *testing.T) {
 	ctx := context.Background()
 
 	group := &qf.Group{Name: "TestGroup", CourseID: course.GetID(), Users: []*qf.User{user}}
-	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user)))
+	wantGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, client.Cookie(t, user)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -401,20 +404,27 @@ func TestGetGroup(t *testing.T) {
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		CourseID: course.GetID(),
 		GroupID:  wantGroup.Msg.GetID(),
-	}, Cookie(t, tm, user)))
+	}, client.Cookie(t, user)))
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
 
-func TestPatchGroupStatus(t *testing.T) {
+func TestUpdateGroupStatus(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "teacher", ScmRemoteID: 2})
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1", ScmRemoteID: 3})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2", ScmRemoteID: 4})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("admin", "teacher", "user1", "user2"),
+	), web.WithInterceptors())
 
 	course := qf.Course{
 		Name:                "Distributed Systems",
@@ -426,10 +436,8 @@ func TestPatchGroupStatus(t *testing.T) {
 		ID:                  1,
 	}
 
-	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, &course)
 
-	teacher := qtest.CreateFakeUser(t, db)
 	qtest.EnrollTeacher(t, db, teacher, &course)
 
 	if err := db.UpdateUser(&qf.User{ID: teacher.GetID(), IsAdmin: true}); err != nil {
@@ -437,9 +445,6 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	ctx := context.Background()
-
-	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
-	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, &course)
@@ -462,12 +467,12 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	wantGroup.Status = qf.Group_APPROVED
-	gotGroup, err := client.UpdateGroup(ctx, qtest.RequestWithCookie(wantGroup, Cookie(t, tm, teacher)))
+	gotGroup, err := client.UpdateGroup(ctx, qtest.RequestWithCookie(wantGroup, client.Cookie(t, teacher)))
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantGroup, gotGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup, gotGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("UpdateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -476,7 +481,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	course := qf.Course{
 		Name:              "Distributed Systems",
@@ -511,18 +516,18 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	wantGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		CourseID: course.GetID(),
 		UserID:   user1.GetID(),
-	}, Cookie(t, tm, admin)))
+	}, client.Cookie(t, admin)))
 	if err != nil {
 		t.Error(err)
 	}
 	gotGroup, err := client.GetGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		CourseID: course.GetID(),
 		GroupID:  group.GetID(),
-	}, Cookie(t, tm, admin)))
+	}, client.Cookie(t, admin)))
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("GetGroupByUserAndCourse() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -531,14 +536,16 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1", ScmRemoteID: 2})
+	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2", ScmRemoteID: 3})
 
-	admin := qtest.CreateFakeUser(t, db)
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("admin", "user1", "user2"),
+	), web.WithInterceptors())
+
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, admin, course)
-
-	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1"})
-	user2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user2"})
 
 	// enroll users in course and group
 	qtest.EnrollStudent(t, db, user1, course)
@@ -552,7 +559,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 	// current user1 must be in the group being created
 	ctx := context.Background()
-	createdGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, Cookie(t, tm, user1)))
+	createdGroup, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, client.Cookie(t, user1)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -560,7 +567,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	// first approve the group
 	createdGroup.Msg.Status = qf.Group_APPROVED
 	// current user must be teacher for the course
-	if _, err = client.UpdateGroup(ctx, qtest.RequestWithCookie(createdGroup.Msg, Cookie(t, tm, admin))); err != nil {
+	if _, err = client.UpdateGroup(ctx, qtest.RequestWithCookie(createdGroup.Msg, client.Cookie(t, admin))); err != nil {
 		t.Error(err)
 	}
 
@@ -578,7 +585,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	if _, err = client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
 		CourseID: course.GetID(),
 		GroupID:  createdGroup.Msg.GetID(),
-	}, Cookie(t, tm, admin))); err != nil {
+	}, client.Cookie(t, admin))); err != nil {
 		t.Error(err)
 	}
 
@@ -597,10 +604,10 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	wantEnrollment2.GroupID = 0
 
 	// then check that new enrollments have group IDs nullified automatically
-	if diff := cmp.Diff(wantEnrollment1, gotEnrollment1, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantEnrollment1, gotEnrollment1, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("DeleteGroup() mismatch (-wantEnrollment1 +gotEnrollment1):\n%s", diff)
 	}
-	if diff := cmp.Diff(wantEnrollment2, gotEnrollment2, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantEnrollment2, gotEnrollment2, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("DeleteGroup() mismatch (-wantEnrollment2 +gotEnrollment2):\n%s", diff)
 	}
 }
@@ -609,7 +616,7 @@ func TestGetGroups(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	var users []*qf.User
 	for i := 0; i < 10; i++ {
@@ -633,7 +640,7 @@ func TestGetGroups(t *testing.T) {
 		Name:     "Group1",
 		CourseID: course.GetID(),
 		Users:    []*qf.User{users[1], users[2]},
-	}, Cookie(t, tm, users[2])))
+	}, client.Cookie(t, users[2])))
 	if err != nil {
 		t.Error(err)
 	}
@@ -641,7 +648,7 @@ func TestGetGroups(t *testing.T) {
 		Name:     "Group2",
 		CourseID: course.GetID(),
 		Users:    []*qf.User{users[4], users[5]},
-	}, Cookie(t, tm, users[5])))
+	}, client.Cookie(t, users[5])))
 	if err != nil {
 		t.Error(err)
 	}
@@ -655,13 +662,13 @@ func TestGetGroups(t *testing.T) {
 	// get groups from the database; current user is admin, which is also teacher
 	gotGroups, err := client.GetGroupsByCourse(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
 		CourseID: course.GetID(),
-	}, Cookie(t, tm, admin)))
+	}, client.Cookie(t, admin)))
 	if err != nil {
 		t.Error(err)
 	}
 
 	// check that the method returns expected groups
-	if diff := cmp.Diff(wantGroups, gotGroups.Msg, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroups, gotGroups.Msg, qtest.UserDiffOptions()); diff != "" {
 		t.Errorf("GetGroupsByCourse() mismatch (-wantGroups +gotGroups):\n%s", diff)
 	}
 }

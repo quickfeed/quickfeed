@@ -5,11 +5,13 @@
 -include .env
 
 OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
+github_user	:= $(shell gh auth status 2>/dev/null | awk '/Logged in to/ {print $$(NF-1)}')
+dev_db		:= ./testdata/db/qf.db
 protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check install ui proto test qcm cm
+.PHONY: download brew version-check dev-db install ui proto test qcm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -25,6 +27,15 @@ endif
 version-check:
 	@go run cmd/vercheck/main.go
 
+dev-db:
+	@if [ ! -f $(dev_db) ]; then \
+		echo "Error: Database file not found at $(dev_db)"; \
+		echo "Please download the database file from the QuickFeed organization."; \
+		exit 1; \
+	fi
+	@echo "Updating development database with GitHub user: $(github_user) as QuickFeed admin"
+	@python3 cmd/anonymize/main.py --database $(dev_db) --admin $(github_user)
+
 install:
 	@echo go install
 	@go install
@@ -34,12 +45,18 @@ ifeq ($(OS),linux)
 endif
 
 ui: version-check
-	@echo "Running npm ci and webpack"
-	@cd public; npm ci; webpack
+	@echo "Running npm ci and esbuild"
+	@cd public; npm ci
+	@go run cmd/esbuild/main.go
 
 ui-update: version-check
-	@echo "Running npm install and webpack"
-	@cd public; npm i; webpack
+	@echo "Running npm install and esbuild"
+	@cd public; npm i
+	@go run cmd/esbuild/main.go
+
+overmind:
+	@echo "Running Overmind Devtools"
+	@cd public; npm run overmind
 
 proto:
 	buf dep update
@@ -51,16 +68,7 @@ proto-swift:
 test:
 	@go clean -testcache
 	@go test ./...
-
-webpack-dev-server:
-	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
-
-# TODO Should check that webpack-dev-server is running.
-selenium:
-	@cd public && npm run test:selenium
+	@cd public && npm run test
 
 qcm:
 	@cd cmd/qcm; go install
-
-cm:
-	@go install github.com/quickfeed/quickfeed/cmd/cm

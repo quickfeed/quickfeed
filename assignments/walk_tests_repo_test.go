@@ -14,19 +14,21 @@ import (
 const testsFolder = "testdata/tests"
 
 func TestWalkTestsRepository(t *testing.T) {
+	// map of expected files in the testdata/tests folder
+	// Note: run.sh is ignored by walkTestsRepository so they are not included here.
 	wantFiles := map[string]struct{}{
 		"testdata/tests/lab3/task-go-questions.md": {},
 		"testdata/tests/lab3/task-learn-go.md":     {},
 		"testdata/tests/lab3/task-tour-of-go.md":   {},
 		"testdata/tests/scripts/Dockerfile":        {},
-		"testdata/tests/scripts/run.sh":            {},
-		"testdata/tests/lab1/assignment.yml":       {},
-		"testdata/tests/lab1/run.sh":               {},
-		"testdata/tests/lab2/assignment.yml":       {},
-		"testdata/tests/lab3/assignment.yml":       {},
-		"testdata/tests/lab4/assignment.yml":       {},
+		"testdata/tests/lab1/assignment.json":      {},
+		"testdata/tests/lab1/tests.json":           {},
+		"testdata/tests/lab2/assignment.json":      {},
+		"testdata/tests/lab2/tests.json":           {},
+		"testdata/tests/lab3/assignment.json":      {},
+		"testdata/tests/lab4/assignment.json":      {},
 		"testdata/tests/lab4/criteria.json":        {},
-		"testdata/tests/lab5/assignment.yml":       {},
+		"testdata/tests/lab5/assignment.json":      {},
 		"testdata/tests/lab5/criteria.json":        {},
 	}
 	files, err := walkTestsRepository(testsFolder)
@@ -37,6 +39,14 @@ func TestWalkTestsRepository(t *testing.T) {
 		if _, ok := wantFiles[filename]; !ok {
 			t.Errorf("unexpected file %q in %s", filename, testsFolder)
 		}
+	}
+	for wantFilename := range wantFiles {
+		if _, ok := files[wantFilename]; !ok {
+			t.Errorf("missing file %q in %s", wantFilename, testsFolder)
+		}
+	}
+	if len(files) != len(wantFiles) {
+		t.Errorf("expected %d files, got %d", len(wantFiles), len(files))
 	}
 }
 
@@ -49,6 +59,11 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 			Order:      1,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-01-24T14:00:00"),
+			ExpectedTests: []*qf.TestInfo{
+				{TestName: "TestGitQuestionsAG", MaxScore: 10, Weight: 1},
+				{TestName: "TestMissingSemesterQuestionsAG", MaxScore: 9, Weight: 1},
+				{TestName: "TestShellQuestionsAG", MaxScore: 20, Weight: 1},
+			},
 		},
 		{
 			Name:       "lab2",
@@ -56,6 +71,22 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 			Order:      2,
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-01-31T16:00:00"),
+			ExpectedTests: []*qf.TestInfo{
+				{TestName: "Test0Formatting", MaxScore: 1, Weight: 5},
+				{TestName: "Test0Lint", MaxScore: 1, Weight: 5},
+				{TestName: "Test0TODOItems", MaxScore: 1, Weight: 5},
+				{TestName: "Test0VetCheck", MaxScore: 1, Weight: 5},
+				{TestName: "TestGrpc_ProtoGeneration", MaxScore: 2, Weight: 20},
+				{TestName: "TestGrpc_RequestSequence", MaxScore: 14, Weight: 50},
+				{TestName: "TestGrpc_ServerRaceCondition", MaxScore: 1, Weight: 50},
+				{TestName: "TestNetworkQuestions", MaxScore: 5, Weight: 1},
+				{TestName: "TestWeb_Counter", MaxScore: 5, Weight: 10},
+				{TestName: "TestWeb_FizzBuzz", MaxScore: 18, Weight: 30},
+				{TestName: "TestWeb_NonExisting", MaxScore: 6, Weight: 10},
+				{TestName: "TestWeb_Redirect", MaxScore: 4, Weight: 20},
+				{TestName: "TestWeb_Root", MaxScore: 1, Weight: 10},
+				{TestName: "TestWeb_ServerFull", MaxScore: 39, Weight: 20},
+			},
 		},
 		{
 			Name:       "lab3",
@@ -138,27 +169,31 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 	}
 }
 
-func TestReadTestsRepositoryContentForInvalidCriteriaFiles(t *testing.T) {
+func TestReadTestsRepositoryContentBadContent(t *testing.T) {
+	// Check that ReadTestsRepositoryContent handles bad content gracefully without panicking.
 	tests := []struct {
-		name   string
-		folder string
+		name         string
+		folder       string
+		chkUnmarshal bool
 	}{
-		{name: "invalidTypes", folder: "testdata/invalidJsonTests/invalidTypes"},
-		{name: "negativeInteger", folder: "testdata/invalidJsonTests/negativeInteger"},
+		{name: "InvalidTypes", folder: "testdata/invalid-tests/invalid-types", chkUnmarshal: true},
+		{name: "NegativeInteger", folder: "testdata/invalid-tests/negative-integer", chkUnmarshal: true},
+		{name: "MissingAssignment1", folder: "testdata/invalid-tests/missing-assignment-json1", chkUnmarshal: false},
+		{name: "MissingAssignment2", folder: "testdata/invalid-tests/missing-assignment-json2", chkUnmarshal: false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			checkLabWithInvalidCriteriaFile(t, tc.folder)
+			checkLabWithInvalidCriteriaFile(t, tc.folder, tc.chkUnmarshal)
 		})
 	}
 }
 
-func checkLabWithInvalidCriteriaFile(t *testing.T, folder string) {
+func checkLabWithInvalidCriteriaFile(t *testing.T, folder string, chkUnmarshal bool) {
 	_, _, err := readTestsRepositoryContent(folder, 1)
 	if err == nil {
 		t.Errorf("expected error")
 	}
-	if !isUnmarshalError(err) {
+	if chkUnmarshal && !isUnmarshalError(err) {
 		t.Errorf("expected unmarshal error, got: %v", err)
 	}
 }

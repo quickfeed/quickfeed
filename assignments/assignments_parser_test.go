@@ -21,38 +21,44 @@ func TestParseWithInvalidDir(t *testing.T) {
 }
 
 const (
-	y1 = `order: 1
-name: "For loops"
-deadline: "27-08-2017 12:00"
-autoapprove: false
-`
-	y2 = `order: 2
-name: "Nested loops"
-deadline: "27-08-2018 12:00"
-autoapprove: false
-`
-	y3 = `order: 3
-name: "Nested loops"
-deadline: "27-08-2018 12:00"
-autoapprove: false
-`
-	yOldAssignmentIDField = `assignmentid: 3
-name: "Big salary"
-deadline: "27-08-2019 12:00"
-autoapprove: false
-`
-	yUnknownFields = `order: 1
-subject: "Go Programming for Fun and Profit"
-name: "For loops"
-deadline: "27-08-2017 12:00"
-grading: "Pass/Fail"
-expected_effort: "10 hours"
-autoapprove: false
-`
+	j1 = `{
+"order": 1,
+"name": "For loops",
+"deadline": "27-08-2017 12:00",
+"autoapprove": false
+}`
+	j2 = `{
+"order": 2,
+"name": "Nested loops",
+"deadline": "27-08-2018 12:00",
+"autoapprove": false
+}`
+	j3 = `{
+"order": 3,
+"name": "Nested loops",
+"deadline": "27-08-2018 12:00",
+"autoapprove": false
+}`
+	jOldAssignmentIDField = `{
+"assignmentid": 3,
+"name": "Big salary",
+"deadline": "27-08-2019 12:00",
+"autoapprove": false
+}`
+	jUnknownFields = `{
+"order": 1,
+"subject": "Go Programming for Fun and Profit",
+"name": "For loops",
+"deadline": "27-08-2017 12:00",
+"grading": "Pass/Fail",
+"expected_effort": "10 hours",
+"autoapprove": false
+}`
 
 	script   = `Default script`
 	script1  = `Script for Lab1`
 	df       = `A dockerfile in training`
+	testJson = `[{"TestName":"TestGitQuestionsAG","MaxScore":10,"Weight":1},{"TestName":"TestMissingSemesterQuestionsAG","MaxScore":9,"Weight":1},{"TestName":"TestShellQuestionsAG","MaxScore":20,"Weight":1}]`
 	criteria = `
 	[
 		{
@@ -97,8 +103,8 @@ func TestParse(t *testing.T) {
 	for _, c := range []struct {
 		path, filename, content string
 	}{
-		{"lab1", "assignment.yaml", y1},
-		{"lab2", "assignment.yaml", y2},
+		{"lab1", "assignment.json", j1},
+		{"lab2", "assignment.json", j2},
 		{"scripts", "run.sh", script},
 		{"lab1", "run.sh", script1},
 		{"scripts", "Dockerfile", df},
@@ -179,7 +185,7 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 	for _, c := range []struct {
 		path, filename, content string
 	}{
-		{"lab3", "assignment.yaml", yOldAssignmentIDField},
+		{"lab3", "assignment.json", jOldAssignmentIDField},
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
@@ -197,9 +203,9 @@ func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
 	for _, c := range []struct {
 		path, filename, content string
 	}{
-		{"lab1", "assignment.yml", y1},
-		{"lab2", "assignment.yml", y2},
-		{"lab3", "assignment.yml", yOldAssignmentIDField},
+		{"lab1", "assignment.json", j1},
+		{"lab2", "assignment.json", j2},
+		{"lab3", "assignment.json", jOldAssignmentIDField},
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
@@ -217,7 +223,7 @@ func TestParseUnknownFields(t *testing.T) {
 	for _, c := range []struct {
 		path, filename, content string
 	}{
-		{"lab1", "assignment.yaml", yUnknownFields},
+		{"lab1", "assignment.json", jUnknownFields},
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
@@ -250,8 +256,9 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	for _, c := range []struct {
 		path, filename, content string
 	}{
-		{"lab1", "assignment.yml", y1},
-		{"lab2", "assignment.yml", y2},
+		{"lab1", "assignment.json", j1},
+		{"lab1", "tests.json", testJson},
+		{"lab2", "assignment.json", j2},
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
@@ -290,7 +297,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	}
 
 	// Add a new assignment to the list of assignments we expect to get from the database
-	writeFile(t, testsDir, "lab3", "assignment.yml", y3)
+	writeFile(t, testsDir, "lab3", "assignment.json", j3)
 
 	// Parse the new assignment
 	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.GetID())

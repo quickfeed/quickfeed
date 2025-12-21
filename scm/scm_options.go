@@ -121,3 +121,15 @@ type RequestReviewersOptions struct {
 func (opt RequestReviewersOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Number > 0 && len(opt.Reviewers) != 0
 }
+
+// SyncForkOptions contains information for syncing a forked repository with its upstream.
+type SyncForkOptions struct {
+	Organization string
+	Repository   string
+	Branch       string
+	MaxRetries   int
+}
+
+func (opt SyncForkOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" && opt.Branch != "" && opt.MaxRetries > 0
+}

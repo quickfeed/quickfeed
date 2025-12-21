@@ -1,4 +1,3 @@
-import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { CourseGroup, SubmissionOwner } from "./overmind/state"
@@ -29,22 +28,28 @@ export enum ConnStatus {
     RECONNECTING,
 }
 
+export enum Icon {
+    DASH = "fa fa-minus grey",
+    USER = "fa fa-user",
+    GROUP = "fa fa-users",
+}
+
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 /** Returns a string with a prettier format for a timestamp
- * 
+ *
  *  The offset parameter is used to remove the timezone offset from the timestamp.
  *  For example, deadlines are defined in our `assignment.yaml` files in UTC time (ex. 2023-12-31 23:59:00).
  *  If we don't remove the timezone offset, the date will be off by the timezone offset (from above: 2024-01-01 00:59:00).
  *  We want to display the date as it is defined in the assignment file, so we remove the timezone offset.
  *  - offset: true
  *      - 2023-12-31T23:59:00Z will be displayed as "31 December 2023 23:59"
- * 
+ *
  *  In other cases such as the build date for submissions, we want to display the date in the user's local timezone.
  *  In this case, we *don't* remove the timezone offset. Otherwise the date will be off by the timezone offset.
  *  - offset: false
  *      - 2023-12-31T23:59:00Z will be displayed as "1 January 2024 00:59"
- * 
+ *
  *  Note that in UTC+1 the offset is -60 minutes, adding the offset will effectively subtract 60 minutes from the date.
  */
 export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: boolean): string => {
@@ -52,9 +57,9 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
         return "N/A"
     }
     const date = timestampDate(timestamp)
-    
+
     // dates are stored in UTC, so we might need to adjust for the local timezone
-    // otherwise the date will be off by the timezone offset, e.g. 
+    // otherwise the date will be off by the timezone offset, e.g.
     // 2024-02-08T23:59:00Z will be displayed to users in UTC+1 as "9 February 2024 00:59"
     // not "8 February 2024 23:59" as expected
     const tzOffset = offset ? date.getTimezoneOffset() * 60000 : 0
@@ -64,10 +69,37 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
+
+// isExpired returns true if the assignment's deadline has expired.
+// An assignment is considered expired if its deadline expired more than one month ago.
+export const isExpired = (deadline: Timestamp): boolean => {
+    const date = timestampDate(deadline)
+    const now = new Date()
+    return (
+        date.getFullYear() !== now.getFullYear() ||
+        date.getMonth() > now.getMonth() + 1
+    )
+}
+
 export interface Deadline {
     className: string,
     message: string,
-    daysUntil: number,
+    time: string,
+}
+
+export enum TableColor {
+    BLUE = "table-primary",
+    GREEN = "table-success",
+    ORANGE = "table-warning",
+    RED = "table-danger",
+}
+
+const getDaysHoursAndMinutes = (deadline: Timestamp) => {
+    const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
+    const days = Math.round(timeToDeadline / (1000 * 3600 * 24))
+    const hours = Math.floor(timeToDeadline / (1000 * 3600))
+    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+    return { days, hours, minutes, timeToDeadline }
 }
 
 /**
@@ -76,32 +108,37 @@ export interface Deadline {
  *
  * layoutTime = "2021-03-20T23:59:00"
  */
-export const timeFormatter = (deadline: Timestamp): Deadline => {
-    const timeToDeadline = timestampDate(deadline).getTime()
-    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
-    const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+export const deadlineFormatter = (deadline: Timestamp, scoreLimit: number, submissionScore: number): Deadline => {
+    const { days, hours, minutes, timeToDeadline } = getDaysHoursAndMinutes(deadline)
+    const daysText = Math.abs(days) === 1 ? "day" : "days"
+
+    let className = TableColor.BLUE
+    let message = `${days} ${daysText} to deadline`
 
     if (timeToDeadline < 0) {
-        const daysSince = -days
-        const hoursSince = -hours
-        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
+        className = TableColor.RED
+        message = days < 0
+            ? `Expired ${-days} ${daysText} ago`
+            : `Expired ${-hours} hours ago`
+    } else if (days === 0) {
+        className = TableColor.RED
+        message = `${hours === 0 ? "" : `${hours} hours and `}${minutes} minutes to deadline!`
+    } else if (days < 3) {
+        className = TableColor.ORANGE
+        message = `${days} ${daysText} to deadline!`
     }
 
-    if (days === 0) {
-        return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
+    if (submissionScore >= scoreLimit) {
+        className = TableColor.GREEN
     }
 
-    if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
+    return {
+        className,
+        message,
+        time: getFormattedTime(deadline, true),
     }
-
-    if (days < 14) {
-        return { className: "table-primary", message: `${days} days`, daysUntil: days }
-    }
-
-    return { className: "", message: "", daysUntil: days }
 }
+
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
@@ -159,7 +196,7 @@ export const isAuthor = (user: User, review: Review): boolean => { return user.I
 /** isValidSubmissionForAssignment returns true if the submission is valid for the assignment
  *  A submission is considered valid if the assignment is a group lab, or the submission is not part of a group.
  *  This is used to filter out submissions that are not to be displayed in the UI.
- * 
+ *
  *  - If the assignment is a group lab, all submissions (solo and group) are valid.
  *  - If the assignment is not a group lab, only submissions that are not part of a group are valid.
  */
@@ -169,8 +206,8 @@ export const isValidSubmissionForAssignment = (submission: Submission, assignmen
 
 export const isGroupSubmission = (submission: Submission): boolean => { return submission.groupID > 0n }
 
-export const isManuallyGraded = (assignment: Assignment): boolean => {
-    return assignment.reviewers > 0
+export const isManuallyGraded = (reviewers: number): boolean => {
+    return reviewers > 0
 }
 
 export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
@@ -195,10 +232,7 @@ export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return be
 export const hasEnrollments = (obj: Group): boolean => { return obj.enrollments.length > 0 }
 export const hasUsers = (obj: Group): boolean => { return obj.users.length > 0 }
 
-export const getStatusByUser = (submission: Submission | null, userID: bigint): Submission_Status => {
-    if (!submission) {
-        return Submission_Status.NONE
-    }
+export const getStatusByUser = (submission: Submission, userID: bigint): Submission_Status => {
     const grade = submission.Grades.find(grade => grade.UserID === userID)
     if (!grade) {
         return Submission_Status.NONE
@@ -221,12 +255,6 @@ export const setStatusAll = (submission: Submission, status: Submission_Status):
         return create(GradeSchema, { ...grade, Status: status })
     })
     return create(SubmissionSchema, { ...submission, Grades: grades })
-}
-
-/** getCourseID returns the course ID determined by the current route */
-export const getCourseID = (): bigint => {
-    const route = useParams<{ id?: string }>()
-    return route.id ? BigInt(route.id) : BigInt(0)
 }
 
 export const isHidden = (value: string, query: string): boolean => {
@@ -290,8 +318,14 @@ export const defaultTag = (date: Date): string => {
     return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
 }
 
+// Returns the current year, unless the date falls in November (10) or December (11),
+// in which case it returns the following year. This is used to prefill the default year
+// of the create course form when creating a new course. The rationale is that it is
+// unlikely a new course will be created in November or later for the current year.
 export const defaultYear = (date: Date): number => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
+    return date.getMonth() >= 10
+        ? date.getFullYear() + 1
+        : date.getFullYear()
 }
 
 export const userLink = (user: User): string => {
@@ -310,6 +344,12 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
         return ""
     }
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
+}
+
+// nextURL returns the current URL path and query parameters.
+// This is used to redirect the user back to the page they were on after logging in.
+export const nextURL = (): string => {
+    return encodeURIComponent(window.location.pathname + window.location.search)
 }
 
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
@@ -363,11 +403,23 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     return { valid: true, message: "" }
 }
 
+/** convertToBigInt converts a value to bigint.
+ If the value is undefined or cannot be converted, it returns 0n.
+ Useful when converting values from URL parameters as these may be undefined or otherwise invalid. */
+export const convertToBigInt = (value: number | string | bigint | undefined): bigint => {
+    const val = value ?? 0
+    try {
+        return BigInt(val)
+    } catch (e) {
+        return BigInt(0)
+    }
+}
+
 // newID returns a new auto-incrementing ID
 // Can be used to generate IDs for client-only objects
 // such as the Alert object
 export const newID = (() => {
-    let id: number = 0
+    let id = 0
     return () => {
         return id++
     }

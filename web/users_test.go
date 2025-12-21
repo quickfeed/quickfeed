@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -11,14 +12,21 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 )
+
+func TestGetUserExpectUnknownUser(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
+	_, err := client.GetUser(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	qtest.CheckError(t, err, connect.NewError(connect.CodeNotFound, errors.New("unknown user")))
+}
 
 func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	ctx := context.Background()
 
 	unexpectedUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
@@ -45,7 +53,7 @@ func TestGetUsers(t *testing.T) {
 func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.MockClient(t, db, scm.WithMockOrgs(), nil)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 	ctx := context.Background()
 
 	var users []*qf.User
@@ -99,28 +107,18 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t)
 
-	tm, err := auth.NewTokenManager(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
-		interceptor.NewUserInterceptor(logger, tm),
-	))
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 	ctx := context.Background()
 
 	firstAdminUser := qtest.CreateFakeUser(t, db)
 	nonAdminUser := qtest.CreateFakeUser(t, db)
 
-	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.GetID())
-	if err != nil {
-		t.Fatal(err)
-	}
+	firstAdminCookie := client.Cookie(t, firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
-	err = db.UpdateUser(nonAdminUser)
+	err := db.UpdateUser(nonAdminUser)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +141,7 @@ func TestUpdateUser(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	})
 
-	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie.String())
+	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie)
 	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
@@ -170,7 +168,7 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client, tm := web.MockClientWithOption(t, db, scm.WithMockOrgs())
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 	ctx := context.Background()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
@@ -181,8 +179,8 @@ func TestUpdateUserFailures(t *testing.T) {
 	if user.GetIsAdmin() {
 		t.Fatalf("expected user %v to be non-admin", user)
 	}
-	userCookie := Cookie(t, tm, user)
-	adminCookie := Cookie(t, tm, admin)
+	userCookie := client.Cookie(t, user)
+	adminCookie := client.Cookie(t, admin)
 	tests := []struct {
 		name     string
 		cookie   string
