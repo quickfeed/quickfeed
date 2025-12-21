@@ -289,6 +289,61 @@ WORKDIR /quickfeed`
 	}
 }
 
+func TestDockerBuildWithModuleCache(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		// List module files and verify go.mod content, then check that go mod download works
+		script = `cat go.mod && go mod download && echo "modules downloaded successfully"`
+		image  = "testmod:latest"
+		goMod  = `module github.com/quickfeed/build-context
+
+go 1.24
+
+require github.com/relab/container v0.0.0-20251028224705-baa7b7c5c895 // indirect
+`
+		goSum = `github.com/relab/container v0.0.0-20251028224705-baa7b7c5c895 h1:IiS1KzQwmZsL5fnrvSpdMypSKqu7wcqSO7DGjWTr6bs=
+github.com/relab/container v0.0.0-20251028224705-baa7b7c5c895/go.mod h1:oLZXG1NirJWzF2fMEeMUC6OLiMn6RtCChzUz1jtF/qs=
+`
+		dockerfile = `FROM golang:latest
+WORKDIR /quickfeed
+COPY go.mod go.sum ./
+RUN go mod download
+`
+	)
+	deleteDockerImages(t, image)
+
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:  t.Name() + "-" + qtest.RandomString(t),
+		Image: image,
+		BuildContext: map[string]string{
+			ci.Dockerfile: dockerfile,
+			"go.mod":      goMod,
+			"go.sum":      goSum,
+		},
+		Commands: []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify that go.mod content is present in output
+	if !strings.Contains(out, "github.com/quickfeed/build-context") {
+		t.Errorf("expected go.mod content in output, got: %s", out)
+	}
+	// Verify that modules were downloaded successfully
+	if !strings.Contains(out, "modules downloaded successfully") {
+		t.Errorf("expected successful module download message in output, got: %s", out)
+	}
+
+	deleteDockerImages(t, image)
+}
+
 func TestDockerRunAsNonRoot(t *testing.T) {
 	if !docker {
 		t.SkipNow()
