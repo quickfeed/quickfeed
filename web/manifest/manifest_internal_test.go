@@ -78,7 +78,7 @@ func TestForm(t *testing.T) {
 
 func TestConversion(t *testing.T) {
 	pemPath := env.Root("testdata", "private-key.pem")
-	t.Setenv(appKey, pemPath)
+	t.Setenv("QUICKFEED_APP_KEY", pemPath)
 	tmpEnvFile := qtest.CreateTempFile(t, env.Root())
 	t.Cleanup(func() {
 		// Remove also the backup file if it exists
