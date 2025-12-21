@@ -23,14 +23,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// DefaultContainerTimeout is the default timeout for running a container.
+var DefaultContainerTimeout = time.Duration(10 * time.Minute)
+
 const (
-	Dockerfile              = "Dockerfile"
-	DefaultContainerTimeout = time.Duration(10 * time.Minute)
-	QuickFeedPath           = "/quickfeed"
-	GoModCache              = "/quickfeed-go-mod-cache"
-	maxToScan               = 1_000_000 // bytes
-	maxLogSize              = 30_000    // bytes
-	lastSegmentSize         = 1_000     // bytes
+	Dockerfile      = "Dockerfile"
+	QuickFeedPath   = "/quickfeed"
+	GoModCache      = "/quickfeed-go-mod-cache"
+	maxToScan       = 1_000_000 // bytes
+	maxLogSize      = 30_000    // bytes
+	lastSegmentSize = 1_000     // bytes
 )
 
 // Docker is an implementation of the CI interface using Docker.
@@ -118,8 +120,8 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
 	}
-	dockerFileContest := job.BuildContext[Dockerfile]
-	if dockerFileContest != "" {
+	dockerFileContent := job.BuildContext[Dockerfile]
+	if dockerFileContent != "" {
 		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
 		resp, err := d.client.ImageRemove(ctx, job.Image, image.RemoveOptions{Force: true})
 		if err != nil {
@@ -132,7 +134,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 		d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
 		// Log first line of Dockerfile
-		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, dockerFileContest[:strings.Index(dockerFileContest, "\n")+1])
+		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, dockerFileContent[:strings.Index(dockerFileContent, "\n")+1])
 		if err := d.buildImage(ctx, job); err != nil {
 			return nil, err
 		}
