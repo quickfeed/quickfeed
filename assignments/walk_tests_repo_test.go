@@ -21,6 +21,8 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab3/task-learn-go.md":     {},
 		"testdata/tests/lab3/task-tour-of-go.md":   {},
 		"testdata/tests/scripts/Dockerfile":        {},
+		"testdata/tests/scripts/go.mod":            {},
+		"testdata/tests/scripts/go.sum":            {},
 		"testdata/tests/lab1/assignment.json":      {},
 		"testdata/tests/lab1/tests.json":           {},
 		"testdata/tests/lab2/assignment.json":      {},
