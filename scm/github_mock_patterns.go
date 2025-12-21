@@ -26,4 +26,5 @@ const (
 	postReposPullsRequestedReviewersByOwnerByRepoByPullNumber = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers" // RequestReviewers
 	postReposMergeUpstreamByOwnerByRepo                       = "POST /repos/{owner}/{repo}/merge-upstream"                          // SyncFork
 	postAppManifestsByCodeConversions                         = "POST /app-manifests/{code}/conversions"                             // CreateCourse
+	getUserByID                                               = "GET /user/{user_id}"                                                // GetUserByID, updateUserFromSCM
 )

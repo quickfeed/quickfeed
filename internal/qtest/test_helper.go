@@ -16,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 // TestDB returns a test database and close function.
@@ -420,6 +421,16 @@ func Ptr[T any](t T) *T {
 func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	if diff := cmp.Diff(got, want, opts...); diff != "" {
 		t.Errorf("%s: (-got +want)\n%s", msg, diff)
+	}
+}
+
+// UserDiffOptions returns the cmp options for comparing users.
+// It ignores the ScmRemoteID field, which is intentionally cleared
+// by the QuickFeed service before returning data to the client.
+func UserDiffOptions() cmp.Option {
+	return cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.User{}, "ScmRemoteID"),
 	}
 }
 

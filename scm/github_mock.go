@@ -395,13 +395,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				return
 			}
 
+			userID := s.getUserID(username)
 			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
-			ghUser := github.User{Login: github.String(username), Permissions: permissions}
+			ghUser := github.User{ID: github.Int64(userID), Login: github.String(username), Permissions: permissions}
 			// this simulates that the user accepts the invitation (mocking the invite response is not supported yet)
 			s.groups[owner][repo] = append(collaborators, ghUser)
 			s.members = append(s.members, github.Membership{
 				Organization: &github.Organization{Login: github.String(owner)},
-				User:         &github.User{Login: github.String(username)},
+				User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
 				Role:         github.String(repoCollaboratorOptions.Permission),
 			})
 			invite := github.CollaboratorInvitation{
@@ -623,6 +624,22 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, config)
 		}),
 	)
+	getUserByIDHandler := WithRequestMatchHandler(
+		getUserByID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID := mustParse[int64](r.PathValue("user_id"))
+			logger.Debug(replaceArgs(getUserByID, userID))
+
+			for _, member := range s.members {
+				if member.GetUser().GetID() == userID {
+					mustWrite(w, member.GetUser())
+					return
+				}
+			}
+			// user not found
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
 	postReposMergeUpstreamByOwnerByRepoHandler := WithRequestMatchHandler(
 		postReposMergeUpstreamByOwnerByRepo,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -748,6 +765,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
 		postReposMergeUpstreamByOwnerByRepoHandler,
 		postAppManifestsByCodeConversionsHandler,
+		getUserByIDHandler,
 		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{
