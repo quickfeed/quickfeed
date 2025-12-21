@@ -55,7 +55,7 @@ func TestFetchAssignments(t *testing.T) {
 	course.UpdateDockerfile(gotBuildContext[ci.Dockerfile])
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
-	if err := buildDockerImage(context.Background(), qtest.Logger(t), docker, course); err != nil {
+	if err := buildDockerImage(context.Background(), qtest.Logger(t), docker, course, gotBuildContext); err != nil {
 		t.Fatal(err)
 	}
 }

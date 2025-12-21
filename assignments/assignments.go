@@ -46,15 +46,15 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 	logger.Debugf("Successfully cloned tests repository to: %s", clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, gotBuildContext, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
+	assignments, buildContext, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
 		logger.Errorf("Failed to parse assignments from '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
 
-	if course.UpdateDockerfile(gotBuildContext[ci.Dockerfile]) {
+	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
-		if err = buildDockerImage(ctx, logger, runner, course); err != nil {
+		if err = buildDockerImage(ctx, logger, runner, course, buildContext); err != nil {
 			logger.Error(err)
 			return
 		}
@@ -82,15 +82,13 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 }
 
 // buildDockerImage builds the Docker image for the given course.
-func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.Runner, course *qf.Course) error {
+func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.Runner, course *qf.Course, buildContext map[string]string) error {
 	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
 	out, err := runner.Run(ctx, &ci.Job{
-		Name:  course.JobName(),
-		Image: course.DockerImage(),
-		BuildContext: map[string]string{
-			ci.Dockerfile: course.GetDockerfile(),
-		},
-		Commands: []string{`echo -n "Hello from Dockerfile"`},
+		Name:         course.JobName(),
+		Image:        course.DockerImage(),
+		BuildContext: buildContext,
+		Commands:     []string{`echo -n "Hello from Dockerfile"`},
 	})
 	logger.Debugf("Build completed: %s", out)
 	if err != nil {
