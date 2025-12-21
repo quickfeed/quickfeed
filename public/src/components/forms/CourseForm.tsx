@@ -38,6 +38,12 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
             case "slipDays":
                 course.slipDays = Number(value)
                 break
+            case "communityLink":
+                course.communityLink = value
+                break
+            case "communityLinkDescription":
+                course.communityLinkDescription = value
+                break
         }
         setCourse(course)
     }, [course])
@@ -92,6 +98,22 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
                         defaultValue={course.year.toString()}
                         onChange={handleChange}
                         type="number"
+                    />
+                </div>
+                <div className="row">
+                    <FormInput
+                        prepend="Community Link"
+                        name="communityLink"
+                        placeholder={"(ex. https://discord.gg/invite)"}
+                        defaultValue={course.communityLink}
+                        onChange={handleChange}
+                    />
+                    <FormInput
+                        prepend="Link Description"
+                        name="communityLinkDescription"
+                        placeholder={"(ex. Join our Discord server)"}
+                        defaultValue={course.communityLinkDescription}
+                        onChange={handleChange}
                     />
                 </div>
                 <input className="btn btn-primary" type="submit" value={"Save"} />

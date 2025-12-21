@@ -77,9 +77,11 @@ message Course {
     string tag                     = 6;
     uint64 ScmOrganizationID       = 8;
     string ScmOrganizationName     = 9;  // The organization's SCM name, e.g., dat520-2020.
-    uint32 slipDays                = 10;
-    string DockerfileDigest        = 11;  // Digest of the dockerfile used to build the course's docker image.
-    Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];
+    uint32 slipDays                      = 10;
+    string DockerfileDigest              = 11;  // Digest of the dockerfile used to build the course's docker image.
+    Enrollment.UserStatus enrolled       = 12 [(go.field) = { tags: 'gorm:"-"' }];
+    string communityLink                 = 16;  // URL for invite link to remote communication platform (e.g., Discord, Slack).
+    string communityLinkDescription      = 17;  // Short description of the link (e.g., "Join our Discord server").
 
     repeated Enrollment enrollments = 13;
     repeated Assignment assignments = 14;

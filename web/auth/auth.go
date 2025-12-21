@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"path"
 	"strings"
@@ -195,6 +196,31 @@ func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
 	return
 }
 
+// CheckExternalUser validates that the external user has required fields populated.
+// It checks that Login, Name (with at least first and last name), and Email are not empty.
+// The Email field must also be a valid email address.
+func CheckExternalUser(externalUser *ExternalUser) error {
+	if externalUser.Login == "" {
+		return errors.New("missing login")
+	}
+	if externalUser.Name == "" {
+		return errors.New("missing name")
+	}
+	// Check that name has at least two components (first and last name)
+	nameParts := strings.Fields(externalUser.Name)
+	if len(nameParts) < 2 {
+		return errors.New("name must contain at least first and last name")
+	}
+	if externalUser.Email == "" {
+		return errors.New("missing email")
+	}
+	// Validate that email is a proper email address
+	if _, err := mail.ParseAddress(externalUser.Email); err != nil {
+		return fmt.Errorf("invalid email address: %w", err)
+	}
+	return nil
+}
+
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
 func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
 	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
@@ -209,6 +235,10 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 		logger.Debugf("Refresh token updated: %v", token.RefreshToken)
 
 	case err == gorm.ErrRecordNotFound:
+		// Validate external user information before creating account
+		if err := CheckExternalUser(externalUser); err != nil {
+			return nil, fmt.Errorf("cannot create account for user %q: %w", externalUser.Login, err)
+		}
 		logger.Debugf("User %q not found in database; creating new user", externalUser.Login)
 		user = &qf.User{
 			Name:         externalUser.Name,
