@@ -53,7 +53,7 @@ func TestWalkTestsRepository(t *testing.T) {
 }
 
 func TestReadTestsRepositoryContent(t *testing.T) {
-	wantDockerfile := "FROM golang:1.24-alpine\nRUN apk update && apk add --no-cache git bash build-base\nWORKDIR /quickfeed\nCOPY go.mod go.sum ./\nRUN go mod download\n"
+	wantDockerfile := "FROM golang:1.25-alpine\nRUN apk update && apk add --no-cache git bash build-base\nWORKDIR /quickfeed\nCOPY go.mod go.sum ./\nRUN go mod download\n"
 	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
