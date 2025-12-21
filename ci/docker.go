@@ -15,12 +15,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types"
+	"github.com/containerd/errdefs"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"go.uber.org/zap"
 )
@@ -258,7 +258,7 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	}
 
 	reader := bytes.NewReader(buf.Bytes())
-	opts := types.ImageBuildOptions{
+	opts := build.ImageBuildOptions{
 		Context:    reader,
 		Dockerfile: Dockerfile,
 		Tags:       []string{job.Image},
