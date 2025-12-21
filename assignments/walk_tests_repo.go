@@ -111,8 +111,8 @@ func processTaskFile(filename string, contents []byte, assignment *qf.Assignment
 	return nil
 }
 
-// readTestsRepositoryContent reads dir and returns a list of assignments and
-// a map with the course's docker build context if there exists a 'tests/scripts/Dockerfile'.
+// readTestsRepositoryContent reads dir and returns a sorted list of assignments and
+// a map with the docker build context as defined by the filesForBuildContext variable.
 // Assignments are extracted from 'assignment.json' files, one for each assignment.
 func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, map[string]string, error) {
 	files, err := walkTestsRepository(dir)
