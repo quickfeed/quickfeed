@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -236,8 +238,9 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	var buf bytes.Buffer
 	tarWriter := tar.NewWriter(&buf)
 
-	for name, content := range job.BuildContext {
-		fileContents := []byte(content)
+	// Ensure consistent order of files in the tar archive
+	for _, name := range slices.Sorted(maps.Keys(job.BuildContext)) {
+		fileContents := []byte(job.BuildContext[name])
 		if err := tarWriter.WriteHeader(&tar.Header{
 			Name:     name,
 			Mode:     0o777,
