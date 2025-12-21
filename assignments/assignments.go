@@ -88,7 +88,7 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.
 		Name:  course.JobName(),
 		Image: course.DockerImage(),
 		BuildContext: map[string]string{
-			dockerfile: course.GetDockerfile(),
+			ci.Dockerfile: course.GetDockerfile(),
 		},
 		Commands: []string{`echo -n "Hello from Dockerfile"`},
 	})

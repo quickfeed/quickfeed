@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -15,23 +16,22 @@ const (
 	assignmentFile  = "assignment.json"
 	criteriaFile    = "criteria.json"
 	testsFile       = "tests.json"
-	dockerfile      = "Dockerfile"
 	taskFilePattern = "task-*.md"
 )
 
 // filesForBuildContext specifies files for the Docker build context.
 // Add more files to support more dependencies for different courses.
 var filesForBuildContext = map[string]bool{
-	dockerfile: true,
-	"go.mod":   true,
-	"go.sum":   true,
+	ci.Dockerfile: true,
+	"go.mod":      true,
+	"go.sum":      true,
 }
 
 var patterns = []string{
 	assignmentFile,
 	criteriaFile,
 	testsFile,
-	dockerfile,
+	ci.Dockerfile,
 	taskFilePattern,
 }
 

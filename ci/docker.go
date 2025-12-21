@@ -24,10 +24,7 @@ import (
 )
 
 const (
-	Dockerfile = "Dockerfile"
-)
-
-var (
+	Dockerfile              = "Dockerfile"
 	DefaultContainerTimeout = time.Duration(10 * time.Minute)
 	QuickFeedPath           = "/quickfeed"
 	GoModCache              = "/quickfeed-go-mod-cache"
@@ -121,8 +118,8 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
 	}
-	dockerFile := job.BuildContext[Dockerfile]
-	if dockerFile != "" {
+	dockerFileContest := job.BuildContext[Dockerfile]
+	if dockerFileContest != "" {
 		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
 		resp, err := d.client.ImageRemove(ctx, job.Image, image.RemoveOptions{Force: true})
 		if err != nil {
@@ -135,7 +132,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 		d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
 		// Log first line of Dockerfile
-		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, dockerFile[:strings.Index(dockerFile, "\n")+1])
+		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, dockerFileContest[:strings.Index(dockerFileContest, "\n")+1])
 		if err := d.buildImage(ctx, job); err != nil {
 			return nil, err
 		}
@@ -258,7 +255,7 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	reader := bytes.NewReader(buf.Bytes())
 	opts := types.ImageBuildOptions{
 		Context:    reader,
-		Dockerfile: "Dockerfile",
+		Dockerfile: Dockerfile,
 		Tags:       []string{job.Image},
 	}
 	res, err := d.client.ImageBuild(ctx, reader, opts)
