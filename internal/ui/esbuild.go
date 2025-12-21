@@ -33,10 +33,10 @@ var buildOptions = api.BuildOptions{
 		public("src/components/Card.tsx"),
 
 		// overmind
-		public("src/overmind/index.tsx"),
-		public("src/overmind/effects.tsx"),
-		public("src/overmind/state.tsx"),
-		public("src/overmind/internalActions.tsx"),
+		public("src/overmind/index.ts"),
+		public("src/overmind/namespaces/global/effects.ts"),
+		public("src/overmind/state.ts"),
+		public("src/overmind/namespaces/global/internalActions.ts"),
 	},
 	Bundle:            true,
 	Write:             true,
@@ -48,7 +48,10 @@ var buildOptions = api.BuildOptions{
 	MinifyIdentifiers: true,
 	MinifySyntax:      true,
 	LogLevel:          api.LogLevelError,
-	Sourcemap:         api.SourceMapLinked,
+	LogOverride: map[string]api.LogLevel{
+		"unsupported-dynamic-import": api.LogLevelSilent,
+	},
+	Sourcemap: api.SourceMapLinked,
 	Loader: map[string]api.Loader{
 		".scss": api.LoaderCSS, // Treat SCSS files as CSS
 	},

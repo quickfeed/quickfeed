@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/mail"
+	"net/url"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -54,8 +58,28 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
 		}
+
+		// If no next URL is provided, next will be the root path ("/").
+		// This is used to redirect the user back to the page they were on after logging in.
+		// The next URL is sanitized to ensure it is a valid path.
+		rawNext := r.URL.Query().Get("next")
+		nextURL := SanitizeNext(rawNext)
+
+		// Store the next URL in a (short-lived) cookie so we can redirect the user back to it in the callback handler.
+		http.SetCookie(w, &http.Cookie{
+			Name:     nextCookieName,
+			Value:    url.QueryEscape(nextURL),
+			Domain:   env.Domain(),
+			Path:     "/",
+			MaxAge:   300,
+			Expires:  time.Now().Add(5 * time.Minute),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		redirectURL := authConfig.AuthCodeURL(secret)
-		logger.Debugf("Redirecting to AuthURL: %v", redirectURL)
+		logger.Debugf("Redirecting to AuthURL: %v (nextURL=%q)", redirectURL, nextURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
@@ -94,7 +118,27 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			return
 		}
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusFound)
+
+		// pull the redirect URL from the cookie (if any) and delete it
+		redirectURL := "/"
+		if c, err := r.Cookie(nextCookieName); err == nil {
+			if v, e := url.QueryUnescape(c.Value); e == nil {
+				redirectURL = SanitizeNext(v)
+			}
+			// delete cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     nextCookieName,
+				Value:    "",
+				Domain:   env.Domain(),
+				Path:     "/",
+				MaxAge:   -1,
+				Expires:  time.Unix(0, 0),
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+			})
+		}
+		http.Redirect(w, r, redirectURL, http.StatusFound)
 	}
 }
 
@@ -119,8 +163,8 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
-	req, err := http.NewRequest("GET", githubUserAPI, nil)
+func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
+	req, err := http.NewRequest("GET", githubUserAPI, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
 	}
@@ -152,8 +196,33 @@ func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
 	return
 }
 
+// CheckExternalUser validates that the external user has required fields populated.
+// It checks that Login, Name (with at least first and last name), and Email are not empty.
+// The Email field must also be a valid email address.
+func CheckExternalUser(externalUser *ExternalUser) error {
+	if externalUser.Login == "" {
+		return errors.New("missing login")
+	}
+	if externalUser.Name == "" {
+		return errors.New("missing name")
+	}
+	// Check that name has at least two components (first and last name)
+	nameParts := strings.Fields(externalUser.Name)
+	if len(nameParts) < 2 {
+		return errors.New("name must contain at least first and last name")
+	}
+	if externalUser.Email == "" {
+		return errors.New("missing email")
+	}
+	// Validate that email is a proper email address
+	if _, err := mail.ParseAddress(externalUser.Email); err != nil {
+		return fmt.Errorf("invalid email address: %w", err)
+	}
+	return nil
+}
+
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
-func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *externalUser) (*qf.User, error) {
+func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
 	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
 	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
 	switch {
@@ -166,6 +235,10 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 		logger.Debugf("Refresh token updated: %v", token.RefreshToken)
 
 	case err == gorm.ErrRecordNotFound:
+		// Validate external user information before creating account
+		if err := CheckExternalUser(externalUser); err != nil {
+			return nil, fmt.Errorf("cannot create account for user %q: %w", externalUser.Login, err)
+		}
 		logger.Debugf("User %q not found in database; creating new user", externalUser.Login)
 		user = &qf.User{
 			Name:         externalUser.Name,
@@ -185,4 +258,37 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 	}
 	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
 	return db.GetUserByRemoteIdentity(externalUser.ID)
+}
+
+// SanitizeNext sanitizes the next URL to ensure it is a valid path.
+// It removes leading/trailing whitespace, checks for absolute URLs, and cleans the path.
+// If the next URL is invalid or otherwise unsafe, it returns the root path "/".
+func SanitizeNext(next string) string {
+	next = strings.TrimSpace(next)
+	if next == "" {
+		return "/"
+	}
+
+	u, err := url.Parse(next)
+	if err != nil {
+		return "/"
+	}
+	// Check if the URL is absolute and has a scheme (e.g., http, https)
+	// If it starts with // or contains a backslash, treat it as invalid.
+	if u.IsAbs() || strings.HasPrefix(next, "//") || strings.Contains(next, `\`) {
+		return "/"
+	}
+
+	// If the path is empty or does not start with a slash, return the root path.
+	if u.Path == "" || !strings.HasPrefix(u.Path, "/") {
+		return "/"
+	}
+
+	// clean removes .., duplicate slashes, etc.
+	cleaned := path.Clean(u.Path)
+	if cleaned == "." { // path.Clean("/") == "/"; path.Clean("") == "."
+		return "/"
+	}
+	u.Path = cleaned
+	return u.String()
 }

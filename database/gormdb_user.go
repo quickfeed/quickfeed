@@ -71,6 +71,7 @@ func (db *GormDB) GetUserWithEnrollments(userID uint64) (*qf.User, error) {
 		Preload("Enrollments").
 		Preload("Enrollments.Course").
 		Preload("Enrollments.UsedSlipDays").
+		Preload("FeedbackReceipts").
 		First(&user, userID).Error; err != nil {
 		return nil, err
 	}

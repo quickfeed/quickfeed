@@ -1,33 +1,33 @@
 package assignments
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gopkg.in/yaml.v2"
 )
 
 const defaultAutoApproveScoreLimit = 80
 
 // assignmentData holds information about a single assignment.
-// This is only used for parsing the 'assignment.yml' file.
+// This is only used for parsing the 'assignment.json' file.
 // Note that the struct can be private, but the fields must be
 // public to allow parsing.
 type assignmentData struct {
-	Order            uint32 `yaml:"order"`
-	Deadline         string `yaml:"deadline"`
-	IsGroupLab       bool   `yaml:"isgrouplab"`
-	AutoApprove      bool   `yaml:"autoapprove"`
-	ScoreLimit       uint32 `yaml:"scorelimit"`
-	Reviewers        uint32 `yaml:"reviewers"`
-	ContainerTimeout uint32 `yaml:"containertimeout"`
+	Order            uint32 `json:"order"`
+	Deadline         string `json:"deadline"`
+	IsGroupLab       bool   `json:"isgrouplab"`
+	AutoApprove      bool   `json:"autoapprove"`
+	ScoreLimit       uint32 `json:"scorelimit"`
+	Reviewers        uint32 `json:"reviewers"`
+	ContainerTimeout uint32 `json:"containertimeout"`
 }
 
 func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, error) {
 	var newAssignment assignmentData
-	err := yaml.Unmarshal(contents, &newAssignment)
+	err := json.Unmarshal(contents, &newAssignment)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
 	}
@@ -42,7 +42,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	if err != nil {
 		return nil, fmt.Errorf("error parsing deadline: %w", err)
 	}
-	// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
+	// AssignmentID field from the parsed json is used to set Order, not assignment ID,
 	// or it will cause a database constraint violation (IDs must be unique)
 	// The Name field below is the folder name of the assignment.
 	assignment := &qf.Assignment{

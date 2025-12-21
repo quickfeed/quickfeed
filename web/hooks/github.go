@@ -63,7 +63,9 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		wh.logger.Debug(qlog.IndentJson(event))
+
+		wh.logger.Debug(qlog.IndentJson(summarizeEvent(event)))
+
 		switch e := event.(type) {
 		case *github.PushEvent:
 			commitID := e.GetHeadCommit().GetID()

@@ -10,8 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 )
 
 type accessTest struct {
@@ -26,16 +24,13 @@ type accessTest struct {
 func TestAccessControl(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t)
 
-	tm, err := auth.NewTokenManager(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client := web.MockClient(t, db, scm.WithMockOrgs(), connect.WithInterceptors(
-		interceptor.NewUserInterceptor(logger, tm),
-		interceptor.NewAccessControlInterceptor(tm),
-	))
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+		web.WithInterceptors(
+			web.UserInterceptorFunc,
+			web.AccessControlInterceptorFunc,
+		),
+	)
 	ctx := context.Background()
 
 	courseAdmin := qtest.CreateFakeUser(t, db)
@@ -49,9 +44,9 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	course := &qf.Course{
-		Code:                "test101",
-		Year:                2022,
-		CourseCreatorID:     courseAdmin.GetID(),
+		Code:            "test101",
+		Year:            2022,
+		CourseCreatorID: courseAdmin.GetID(),
 	}
 	qtest.CreateCourse(t, db, courseAdmin, course)
 	qtest.EnrollStudent(t, db, groupStudent, course)
@@ -80,18 +75,11 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	f := func(t *testing.T, id uint64) string {
-		cookie, err := tm.NewAuthCookie(id)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return cookie.String()
-	}
-	courseAdminCookie := f(t, courseAdmin.GetID())
-	groupStudentCookie := f(t, groupStudent.GetID())
-	studentCookie := f(t, student.GetID())
-	userCookie := f(t, user.GetID())
-	adminCookie := f(t, admin.GetID())
+	courseAdminCookie := client.Cookie(t, courseAdmin)
+	groupStudentCookie := client.Cookie(t, groupStudent)
+	studentCookie := client.Cookie(t, student)
+	userCookie := client.Cookie(t, user)
+	adminCookie := client.Cookie(t, admin)
 
 	freeAccessTest := map[string]accessTest{
 		"admin":             {cookie: courseAdminCookie, courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
@@ -264,7 +252,7 @@ func TestAccessControl(t *testing.T) {
 	}
 	for name, tt := range courseAdminTests {
 		t.Run("CourseAdminAccess/"+name, func(t *testing.T) {
-			_, err = client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+			_, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
 				CourseID: tt.courseID,
 			}, tt.cookie))
 			checkAccess(t, "GetSubmissionsByCourse", err, tt.wantCode, tt.wantAccess)

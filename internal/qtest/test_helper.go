@@ -16,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 // TestDB returns a test database and close function.
@@ -64,6 +65,21 @@ func SetupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 	return user, course, assignment
 }
 
+// SetupCourseAssignmentTeacherStudent returns the admin (teacher) user, course, an assignment, and a student user.
+func SetupCourseAssignmentTeacherStudent(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment, *qf.User) {
+	admin := CreateFakeUser(t, db)
+	course := &qf.Course{}
+	CreateCourse(t, db, admin, course)
+	assignment := &qf.Assignment{
+		CourseID: course.GetID(),
+		Order:    1,
+	}
+	CreateAssignment(t, db, assignment)
+	user := CreateFakeUser(t, db)
+	EnrollStudent(t, db, user, course)
+	return admin, course, assignment, user
+}
+
 // PrepareGitRepo creates copies src/repo folder to dst and initializes
 // dst/repo as a git repository and adds a single file lab1/lab1.go.
 func PrepareGitRepo(t *testing.T, src, dst, repo string) {
@@ -96,7 +112,11 @@ func PrepareGitRepo(t *testing.T, src, dst, repo string) {
 // CreateFakeUser is a test helper to create a user in the database.
 func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 	t.Helper()
-	user := &qf.User{}
+	user := &qf.User{
+		Name:      "Test User",
+		Email:     "test@example.com",
+		StudentID: "12345",
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
@@ -105,6 +125,16 @@ func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 
 func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf.User {
 	t.Helper()
+	// Ensure user has required fields for enrollment
+	if user.Name == "" {
+		user.Name = "Test User"
+	}
+	if user.Email == "" {
+		user.Email = "test@example.com"
+	}
+	if user.StudentID == "" {
+		user.StudentID = "12345"
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +261,7 @@ func GetBenchmarks(t *testing.T, db database.Database, assignmentID uint64) []*q
 	return benchmarks
 }
 
-func GetBenchmark(t *testing.T, db database.Database, assignmentID uint64, benchmarkID uint64) *qf.GradingBenchmark {
+func GetBenchmark(t *testing.T, db database.Database, assignmentID, benchmarkID uint64) *qf.GradingBenchmark {
 	t.Helper()
 	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignmentID})
 	if err != nil {
@@ -394,6 +424,16 @@ func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	}
 }
 
+// UserDiffOptions returns the cmp options for comparing users.
+// It ignores the ScmRemoteID field, which is intentionally cleared
+// by the QuickFeed service before returning data to the client.
+func UserDiffOptions() cmp.Option {
+	return cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.User{}, "ScmRemoteID"),
+	}
+}
+
 // CheckError checks if the got error matches the want error and fails the test if not.
 func CheckError(t *testing.T, got, want error) {
 	if got != nil {
@@ -406,4 +446,23 @@ func CheckError(t *testing.T, got, want error) {
 	} else if want != nil {
 		t.Fatalf("Expected error: %v, got: nil", want)
 	}
+}
+
+// CheckCode checks if the got error matches the want error, and its code, and fails the test if not.
+// It returns true if got is an error, which indicates that the test should stop.
+func CheckCode(t *testing.T, got, want error) bool {
+	if got != nil {
+		if want == nil {
+			t.Fatalf("Expected no error, got: %v", got)
+		}
+		if got.Error() != want.Error() {
+			t.Errorf("Expected error: %v, got: %v", want, got)
+		}
+	} else if want != nil {
+		t.Errorf("Expected error: %v, got: nil", want)
+	}
+	if connect.CodeOf(got) != connect.CodeOf(want) {
+		t.Errorf("Expected error code: %v, got: %v", connect.CodeOf(want), connect.CodeOf(got))
+	}
+	return got != nil
 }

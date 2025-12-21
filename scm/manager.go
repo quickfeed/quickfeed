@@ -59,11 +59,15 @@ func NewSCMConfig() (*Config, error) {
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *Config) *Manager {
+func NewSCMManager() (*Manager, error) {
+	c, err := NewSCMConfig()
+	if err != nil {
+		return nil, err
+	}
 	return &Manager{
 		scms:   make(map[string]SCM),
 		Config: c,
-	}
+	}, nil
 }
 
 // GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
@@ -20,11 +20,11 @@ type requestID interface {
 
 // Claims contain the bearer information.
 type Claims struct {
-	jwt.StandardClaims
 	UserID  uint64                              `json:"user_id"`
 	Admin   bool                                `json:"admin"`
 	Courses map[uint64]qf.Enrollment_UserStatus `json:"courses"`
 	Groups  []uint64                            `json:"groups"`
+	jwt.RegisteredClaims
 }
 
 // TokenManager creates and updates JWTs.
@@ -32,6 +32,7 @@ type TokenManager struct {
 	tokensToUpdate []uint64 // User IDs for user who need a token update.
 	db             database.Database
 	secret         string
+	parser         *jwt.Parser
 }
 
 // NewTokenManager starts a new token manager. Will create a list with all tokens that need update.
@@ -39,6 +40,7 @@ func NewTokenManager(db database.Database) (*TokenManager, error) {
 	manager := &TokenManager{
 		db:     db,
 		secret: env.AuthSecret(),
+		parser: jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})),
 	}
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err
@@ -75,16 +77,11 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 		return nil, err
 	}
 	claims := &Claims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
-		//  (ref https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
-		if t.Header["alg"] != alg {
-			return nil, fmt.Errorf("incorrect signing algorithm, expected %s, got %s", alg, t.Header["alg"])
-		}
+	token, err := tm.parser.ParseWithClaims(tokenString, claims, func(*jwt.Token) (any, error) {
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
-		if tokenExpired(err) {
+		if errors.Is(err, jwt.ErrTokenExpired) {
 			// token has expired; if signature is valid, update it.
 			if err = tm.validateSignature(token); err == nil {
 				return claims, nil
@@ -119,9 +116,9 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	}
 
 	return &Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tokenExpirationTime).Unix(),
-			IssuedAt:  time.Now().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExpirationTime)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "QuickFeed",
 		},
 		UserID:  userID,
@@ -129,15 +126,6 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 		Courses: userCourses,
 		Groups:  userGroups,
 	}, nil
-}
-
-// tokenExpired returns true if the given JWT validation error is due to an expired token.
-func tokenExpired(err error) bool {
-	v, ok := err.(*jwt.ValidationError)
-	if ok {
-		return v.Errors == jwt.ValidationErrorExpired
-	}
-	return ok
 }
 
 // validateSignature checks the validity of the signature.
@@ -153,8 +141,7 @@ func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 
 // extractToken returns a JWT authentication token extracted from the request header's cookie.
 func extractToken(cookieString string) (string, error) {
-	cookies := strings.Split(cookieString, ";")
-	for _, cookie := range cookies {
+	for cookie := range strings.SplitSeq(cookieString, ";") {
 		_, cookieValue, ok := strings.Cut(cookie, CookieName+"=")
 		if ok {
 			return strings.TrimSpace(cookieValue), nil

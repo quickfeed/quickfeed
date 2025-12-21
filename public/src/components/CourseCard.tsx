@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
-import { useHistory } from 'react-router'
+import { useNavigate } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
-import { useActions } from '../overmind'
+import { useActions, useAppState } from '../overmind'
 import { Course, Enrollment } from '../../proto/qf/types_pb'
 import CourseFavoriteButton from './CourseFavoriteButton'
 
@@ -9,6 +9,7 @@ import CourseFavoriteButton from './CourseFavoriteButton'
 interface CardProps {
     course: Course,
     enrollment: Enrollment
+    unavailable?: boolean
 }
 
 const CardColor = [
@@ -18,19 +19,32 @@ const CardColor = [
     "success"
 ]
 
-const CourseCard = ({ course, enrollment }: CardProps) => {
-    const actions = useActions()
-    const history = useHistory()
+const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
+    const actions = useActions().global
+    const navigate = useNavigate()
     const status = enrollment.status
+    const state = useAppState()
 
     const handleEnroll = useCallback(() => actions.enroll(course.ID), [actions, course.ID])
     const CourseEnrollmentButton = () => {
+        // Always show 'Go to Course' if enrolled or pending, even if unavailable
         if (hasNone(status)) {
-            return <button className="btn btn-primary course-button" onClick={handleEnroll}>Enroll</button>
+            // Show enroll if not unavailable, or if user is admin
+            if (!unavailable || (state.self.IsAdmin)) {
+                return <button className="btn btn-primary course-button" onClick={handleEnroll}>Enroll</button>
+            }
+            // Otherwise, hide button
+            return null
         } else if (hasPending(status)) {
-            return <button className="btn btn-secondary course-button disabled">Pending</button>
+            // Show pending if not unavailable, or if user is admin
+            if (!unavailable || (state.self.IsAdmin)) {
+                return <button className="btn btn-secondary course-button disabled">Pending</button>
+            }
+            // Otherwise, hide button
+            return null
         }
-        return <button className="btn btn-primary course-button" onClick={() => history.push(`/course/${enrollment.courseID}`)}>Go to Course</button>
+        // Always show Go to Course, even if unavailable
+        return <button className="btn btn-primary course-button" onClick={() => navigate(`/course/${enrollment.courseID}`)}>Go to Course</button>
     }
 
     const CourseEnrollmentStatus = () => {
@@ -45,10 +59,12 @@ const CourseCard = ({ course, enrollment }: CardProps) => {
         )
     }
 
+    const color = unavailable ? "secondary" : CardColor[status]
     return (
         <div className="card course-card mb-4 shadow-sm">
-            <div className={`card-header bg-${CardColor[status]} text-white d-flex justify-content-between align-items-center`}>
+            <div className={`card-header bg-${color} text-white d-flex justify-content-between align-items-center`}>
                 <span>{course.code}</span>
+                {unavailable && <span className="badge bg-warning text-dark">Unavailable</span>}
                 <CourseEnrollmentStatus />
             </div>
 

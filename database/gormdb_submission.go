@@ -320,38 +320,18 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 
 	query.Edited = timestamppb.Now()
 	query.ComputeScore()
-
-	// By default, Gorm will not update zero value fields; such as the Ready bool field.
-	// Therefore we use Select before the Updates call. For additional context, see
-	// https://github.com/quickfeed/quickfeed/issues/569#issuecomment-1013729572
-	if err := db.conn.Model(&query).Select("*").Updates(&qf.Review{
-		ID:           query.GetID(),
-		SubmissionID: query.GetSubmissionID(),
-		Feedback:     query.GetFeedback(),
-		Ready:        query.GetReady(),
-		Score:        query.GetScore(),
-		ReviewerID:   query.GetReviewerID(),
-		Edited:       query.GetEdited(),
-	}).Error; err != nil {
-		return fmt.Errorf("failed to update review: %w", err)
-	}
-
-	for _, bm := range query.GetGradingBenchmarks() {
-		if err := db.UpdateBenchmark(bm); err != nil {
-			return err
-		}
-		for _, c := range bm.GetCriteria() {
-			if err := db.UpdateCriterion(c); err != nil {
-				return err
-			}
+	for id, review := range submission.GetReviews() {
+		if review.GetID() == query.GetID() {
+			// replace the old review with the updated one
+			submission.Reviews[id] = query
+			break
 		}
 	}
-	// Update the submission's score if the review score has changed.
-	if submission.GetScore() != query.GetScore() {
-		submission.Score = query.GetScore()
-		if err := db.UpdateSubmission(submission); err != nil {
-			return err
-		}
+
+	submission.Score = query.GetScore()
+	// The review and its benchmarks and criteria are saved through the submission.
+	if err := db.UpdateSubmission(submission); err != nil {
+		return err
 	}
 	return nil
 }

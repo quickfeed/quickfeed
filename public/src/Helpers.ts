@@ -69,10 +69,36 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${zero}${minutes}`
 }
 
+
+// isExpired returns true if the assignment's deadline has expired.
+// An assignment is considered expired if its deadline expired more than one month ago.
+export const isExpired = (deadline: Timestamp): boolean => {
+    const date = timestampDate(deadline)
+    const now = new Date()
+    const oneMonthAgo = new Date(now)
+    oneMonthAgo.setMonth(now.getMonth() - 1)
+    return date < oneMonthAgo
+}
+
 export interface Deadline {
     className: string,
     message: string,
-    daysUntil: number,
+    time: string,
+}
+
+export enum TableColor {
+    BLUE = "table-primary",
+    GREEN = "table-success",
+    ORANGE = "table-warning",
+    RED = "table-danger",
+}
+
+const getDaysHoursAndMinutes = (deadline: Timestamp) => {
+    const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
+    const days = Math.round(timeToDeadline / (1000 * 3600 * 24))
+    const hours = Math.floor(timeToDeadline / (1000 * 3600))
+    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+    return { days, hours, minutes, timeToDeadline }
 }
 
 /**
@@ -81,32 +107,37 @@ export interface Deadline {
  *
  * layoutTime = "2021-03-20T23:59:00"
  */
-export const timeFormatter = (deadline: Timestamp): Deadline => {
-    const timeToDeadline = timestampDate(deadline).getTime()
-    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
-    const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
+export const deadlineFormatter = (deadline: Timestamp, scoreLimit: number, submissionScore: number): Deadline => {
+    const { days, hours, minutes, timeToDeadline } = getDaysHoursAndMinutes(deadline)
+    const daysText = Math.abs(days) === 1 ? "day" : "days"
+
+    let className = TableColor.BLUE
+    let message = `${days} ${daysText} to deadline`
 
     if (timeToDeadline < 0) {
-        const daysSince = -days
-        const hoursSince = -hours
-        return { className: "table-danger", message: `Expired ${daysSince > 0 ? `${daysSince} days ago` : `${hoursSince} hours ago`}`, daysUntil: 0 }
+        className = TableColor.RED
+        message = days < 0
+            ? `Expired ${-days} ${daysText} ago`
+            : `Expired ${-hours} hours ago`
+    } else if (days === 0) {
+        className = TableColor.RED
+        message = `${hours === 0 ? "" : `${hours} hours and `}${minutes} minutes to deadline!`
+    } else if (days < 3) {
+        className = TableColor.ORANGE
+        message = `${days} ${daysText} to deadline!`
     }
 
-    if (days === 0) {
-        return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
+    if (submissionScore >= scoreLimit) {
+        className = TableColor.GREEN
     }
 
-    if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days === 1 ? " " : "s"} to deadline`, daysUntil: days }
+    return {
+        className,
+        message,
+        time: getFormattedTime(deadline, true),
     }
-
-    if (days < 14) {
-        return { className: "table-primary", message: `${days} days`, daysUntil: days }
-    }
-
-    return { className: "", message: "", daysUntil: days }
 }
+
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
@@ -314,6 +345,12 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
+// nextURL returns the current URL path and query parameters.
+// This is used to redirect the user back to the page they were on after logging in.
+export const nextURL = (): string => {
+    return encodeURIComponent(window.location.pathname + window.location.search)
+}
+
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
@@ -365,11 +402,23 @@ export const validateGroup = (group: CourseGroup): { valid: boolean, message: st
     return { valid: true, message: "" }
 }
 
+/** convertToBigInt converts a value to bigint.
+ If the value is undefined or cannot be converted, it returns 0n.
+ Useful when converting values from URL parameters as these may be undefined or otherwise invalid. */
+export const convertToBigInt = (value: number | string | bigint | undefined): bigint => {
+    const val = value ?? 0
+    try {
+        return BigInt(val)
+    } catch (e) {
+        return BigInt(0)
+    }
+}
+
 // newID returns a new auto-incrementing ID
 // Can be used to generate IDs for client-only objects
 // such as the Alert object
 export const newID = (() => {
-    let id: number = 0
+    let id = 0
     return () => {
         return id++
     }

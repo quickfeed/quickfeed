@@ -7,7 +7,7 @@ import { useActions, useAppState } from "../../overmind"
 // RoleSwitch is a component that displays a button to switch between teacher and student roles.
 const RoleSwitch = ({ enrollment }: { enrollment: Enrollment }) => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
 
     if (hasTeacher(state.status[enrollment.courseID.toString()])) {
         return (

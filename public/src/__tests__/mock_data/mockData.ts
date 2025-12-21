@@ -41,8 +41,8 @@ export class MockData {
         userList.push(
             create(UserSchema, {
                 ID: BigInt(1),
-                Name: "Test Testersen",
-                Email: "test@testersen.no",
+                Name: "Test User",
+                Email: "test@example.com",
                 Login: "Test User",
                 StudentID: "9999",
                 IsAdmin: true,

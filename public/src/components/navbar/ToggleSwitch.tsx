@@ -2,12 +2,12 @@ import React, { useEffect } from "react"
 import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 import { hasTeacher } from "../../Helpers"
-import { useHistory } from "react-router"
+import { useNavigate } from "react-router"
 
 const ToggleSwitch = () => {
     const { activeCourse, enrollmentsByCourseID, status } = useAppState()
-    const actions = useActions()
-    const navigate = useHistory()
+    const actions = useActions().global
+    const navigate = useNavigate()
     const [enrollmentStatus, setEnrollmentStatus] =
         React.useState<boolean>(false)
     const [text, setText] = React.useState<string>("")
@@ -33,7 +33,7 @@ const ToggleSwitch = () => {
     const switchView = () => {
         actions.changeView().then(() => {
             updateStatus(isTeacher())
-            navigate.push("/course/" + activeCourse)
+            navigate(`/course/${activeCourse}`)
         })
     }
 

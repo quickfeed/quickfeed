@@ -13,6 +13,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -24,20 +25,20 @@ type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	scmMgr *scm.Manager
-	bh     BaseHookOptions
 	runner ci.Runner
+	tm     *auth.TokenManager
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, tm *auth.TokenManager) *QuickFeedService {
 	return &QuickFeedService{
 		logger:  logger.Sugar(),
 		db:      db,
 		scmMgr:  mgr,
-		bh:      bh,
 		runner:  runner,
+		tm:      tm,
 		streams: stream.NewStreamServices(),
 	}
 }
@@ -501,6 +502,29 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
 	}
 	return connect.NewResponse(review), nil
+}
+
+// CreateAssignmentFeedback creates a new assignment feedback.
+func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.Void], error) {
+	feedback := in.Msg
+	if err := s.db.CreateAssignmentFeedback(feedback, userID(ctx)); err != nil {
+		s.logger.Errorf("CreateAssignmentFeedback failed for feedback %+v: %v", in, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create assignment feedback"))
+	}
+	return connect.NewResponse(&qf.Void{}), nil
+}
+
+// GetAssignmentFeedback returns assignment feedback for the given request.
+func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
+	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
+	if err != nil {
+		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
+	}
+	if len(feedback.GetFeedbacks()) == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
+	}
+	return connect.NewResponse(feedback), nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment

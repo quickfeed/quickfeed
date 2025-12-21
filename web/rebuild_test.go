@@ -75,7 +75,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t).Desugar()
-	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
+	q := web.NewQuickFeedService(logger, db, mgr, &ci.Local{}, nil)
 	teacher := qtest.CreateFakeUser(t, db)
 	qtest.UpdateUser(t, db, &qf.User{ID: teacher.GetID(), IsAdmin: true})
 

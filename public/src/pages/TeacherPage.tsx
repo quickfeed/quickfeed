@@ -1,5 +1,5 @@
 import React, { useCallback } from "react"
-import { Route, Switch, useHistory } from "react-router"
+import { Route, Routes, useLocation } from "react-router"
 import { Color, isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Card from "../components/Card"
@@ -10,6 +10,7 @@ import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
 import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
+import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -17,9 +18,9 @@ const RegularResults = () => <Results review={false} />
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
 const TeacherPage = () => {
     const state = useAppState()
-    const actions = useActions()
+    const actions = useActions().global
     const courseID = useCourseID()
-    const history = useHistory()
+    const location = useLocation()
     const root = `/course/${courseID}`
     const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
 
@@ -45,26 +46,30 @@ const TeacherPage = () => {
         onclick: handleUpdateAssignments
     }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
+    const feedback = { title: "View Assignment Feedback", text: "View feedback provided by students on assignments.", buttonText: "Feedback", to: `${root}/feedback` }
 
     return (
         <div className="box">
             <RedirectButton to={root} />
             <Alerts />
-            <div className="row" hidden={history.location.pathname != root}>
+            <div className="row" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
                 <Card {...groups} />
                 <Card {...members} />
                 <Card {...assignments} />
                 <Card {...updateAssignments} />
+                <Card {...feedback} />
             </div>
-            <Switch>
-                <Route path={`/course/:id/groups`} exact component={GroupPage} />
-                <Route path={"/course/:id/members"} component={Members} />
-                <Route path={"/course/:id/review"} component={ReviewResults} />
-                <Route path={"/course/:id/results"} component={RegularResults} />
-                <Route path={"/course/:id/assignments"} component={Assignments} />
-            </Switch>
+            <Routes>
+                <Route path={"/groups"} element={<GroupPage />} />
+                <Route path={"/members"} element={<Members />} />
+                <Route path={"/review"} element={<ReviewResults />} />
+                <Route path={"/results"} element={<RegularResults />} />
+                <Route path={"/assignments"} element={<Assignments />} />
+                <Route path={"/feedback"} element={<AssignmentFeedbackView />} />
+                <Route path={"/feedback/:assignmentID"} element={<AssignmentFeedbackView />} />
+            </Routes>
         </div>
     )
 }
