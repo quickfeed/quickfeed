@@ -75,10 +75,9 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
 export const isExpired = (deadline: Timestamp): boolean => {
     const date = timestampDate(deadline)
     const now = new Date()
-    return (
-        date.getFullYear() !== now.getFullYear() ||
-        date.getMonth() > now.getMonth() + 1
-    )
+    const oneMonthAgo = new Date(now)
+    oneMonthAgo.setMonth(now.getMonth() - 1)
+    return date < oneMonthAgo
 }
 
 export interface Deadline {
