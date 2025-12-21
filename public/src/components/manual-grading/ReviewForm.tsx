@@ -1,5 +1,5 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import { Review, GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
@@ -7,6 +7,18 @@ import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
 
+
+/** Check if all criteria in the review are graded */
+const isFullyGraded = (review: Review): boolean => {
+    for (const bm of review.gradingBenchmarks) {
+        for (const c of bm.criteria) {
+            if (c.grade === GradingCriterion_Grade.NONE) {
+                return false
+            }
+        }
+    }
+    return true
+}
 
 const ReviewForm = () => {
     const state = useAppState()
@@ -22,16 +34,13 @@ const ReviewForm = () => {
         return <CenteredMessage message={KnownMessage.TeacherNoAssignment} />
     }
 
-    const isAuthor = (review: Review) => {
-        return review?.ReviewerID === state.self.ID
-    }
-
     const reviews = state.review.reviews.get(selectedSubmission.ID) ?? []
     const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
-        const buttonText = review.ready ? "Ready" : "In Progress"
-        const buttonColor = review.ready ? Color.GREEN : Color.YELLOW
+        const fullyGraded = isFullyGraded(review)
+        const buttonText = fullyGraded ? "Graded" : "In Progress"
+        const buttonColor = fullyGraded ? Color.GREEN : Color.YELLOW
         const className = state.review.selectedReview === index ? "active border border-dark" : ""
         selectReviewButton.push(
             <Button key={review.ID.toString()}
@@ -43,20 +52,6 @@ const ReviewForm = () => {
             />
         )
     })
-
-    if ((reviews.length === 0 || reviews.some(review => !isAuthor(review))) && (selectedAssignment.reviewers - reviews.length) > 0) {
-        // Display a button to create a new review if:
-        // there are no reviews or the current user is not the author of the review, and there are still available review slots
-        selectReviewButton.push(
-            <Button key="add"
-                text="Add Review"
-                color={Color.BLUE}
-                type={ButtonType.BUTTON}
-                className="mr-1"
-                onClick={() => { actions.review.createReview() }}
-            />
-        )
-    }
 
     if (!isManuallyGraded(selectedAssignment.reviewers)) {
         return <div>This assignment is not for manual grading.</div>

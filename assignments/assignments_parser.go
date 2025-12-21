@@ -23,6 +23,7 @@ type assignmentData struct {
 	ScoreLimit       uint32 `json:"scorelimit"`
 	Reviewers        uint32 `json:"reviewers"`
 	ContainerTimeout uint32 `json:"containertimeout"`
+	ManualRelease    bool   `json:"manualrelease"`
 }
 
 func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, error) {
@@ -55,6 +56,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 		ScoreLimit:       newAssignment.ScoreLimit,
 		Reviewers:        newAssignment.Reviewers,
 		ContainerTimeout: newAssignment.ContainerTimeout,
+		ManualRelease:    newAssignment.ManualRelease,
 	}
 	return assignment, nil
 }

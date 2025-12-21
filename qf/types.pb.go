@@ -1249,6 +1249,7 @@ type Assignment struct {
 	Tasks             []*Task                `protobuf:"bytes,12,rep,name=tasks,proto3" json:"tasks,omitempty"`                         // tasks associated with this assignment
 	GradingBenchmarks []*GradingBenchmark    `protobuf:"bytes,13,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty"` // grading benchmarks for this assignment
 	ExpectedTests     []*TestInfo            `protobuf:"bytes,14,rep,name=ExpectedTests,proto3" json:"ExpectedTests,omitempty"`         // list of expected tests for this assignment
+	ManualRelease     bool                   `protobuf:"varint,15,opt,name=manualRelease,proto3" json:"manualRelease,omitempty"`        // if true, reviews must be manually released; otherwise, reviews are auto-released
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1379,6 +1380,13 @@ func (x *Assignment) GetExpectedTests() []*TestInfo {
 		return x.ExpectedTests
 	}
 	return nil
+}
+
+func (x *Assignment) GetManualRelease() bool {
+	if x != nil {
+		return x.ManualRelease
+	}
+	return false
 }
 
 type TestInfo struct {

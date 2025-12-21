@@ -6,7 +6,6 @@ import { useActions, useAppState } from "../../overmind"
 import { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
-import MarkReadyButton from "./MarkReadyButton"
 
 interface ReviewInfoProps {
     courseID: string
@@ -20,9 +19,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
     const state = useAppState()
     const actions = useActions()
     const handleRelease = useCallback(() => actions.review.release({ submission, owner: state.submissionOwner }), [actions, submission, state.submissionOwner])
-    const ready = review.ready
-
-    const markReadyButton = <MarkReadyButton review={review} />
+    const allCriteriaGraded = state.review.graded === state.review.criteriaTotal && state.review.criteriaTotal > 0
 
     const user = state.selectedEnrollment?.user
     let status = Submission_Status.NONE
@@ -38,9 +35,6 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
         )
     }
 
-    const setReadyOrGradeButton = ready
-        ? <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
-        : markReadyButton
     const buttonText = submission.released ? "Released" : "Release"
     const buttonColor = submission.released ? Color.WHITE : Color.YELLOW
     const releaseButton = (
@@ -53,7 +47,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
         />
     )
     const submissionStatus = submission ? SubmissionStatus[status] : NoSubmission
-    const reviewStatus = ready ? "Ready" : "In progress"
+    const reviewStatus = allCriteriaGraded ? "Graded" : "In progress"
     return (
         <ul className="list-group">
             <li className="list-group-item active">
@@ -65,7 +59,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             {userLi}
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
-                {state.review.reviewer?.Name}
+                {state.review.reviewer?.Name ?? "Not assigned"}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
@@ -74,7 +68,6 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>
                 <span>{reviewStatus}</span>
-                {ready && markReadyButton}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Score: </span>
@@ -89,7 +82,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
                 {state.review.graded}/{state.review.criteriaTotal}
             </li>
             <li className="list-group-item">
-                {setReadyOrGradeButton}
+                {allCriteriaGraded && <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />}
             </li>
         </ul>
     )

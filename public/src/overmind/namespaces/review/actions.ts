@@ -54,13 +54,6 @@ export const updateReview = async ({ state, effects }: Context): Promise<boolean
     return true
 }
 
-export const updateReady = async ({ state, actions }: Context, ready: boolean): Promise<void> => {
-    if (state.review.currentReview) {
-        state.review.currentReview.ready = ready
-        await actions.review.updateReview()
-    }
-}
-
 export const updateComment = async ({ actions }: Context, { grade, comment }: { grade: GradingBenchmark | GradingCriterion, comment: string }): Promise<void> => {
     const oldComment = grade.comment
     grade.comment = comment

@@ -74,6 +74,12 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(submission).Error; err != nil {
 			return err // will rollback transaction
 		}
+
+		// Auto-create reviews for assignments that require manual grading
+		if err := db.autoCreateReviews(tx, submission); err != nil {
+			return err // will rollback transaction
+		}
+
 		return nil // will commit transaction
 	})
 }
@@ -108,6 +114,91 @@ func setGrades(tx *gorm.DB, submission *qf.Submission) error {
 		return err
 	}
 	submission.SetGradesIfApproved(&assignment, submission.GetScore())
+	return nil
+}
+
+// autoCreateReviews creates reviews for a submission if the assignment requires manual grading.
+// Reviews are created with ReviewerID set to 0, indicating they are not yet assigned to a reviewer.
+// When a TA grades a criterion, the ReviewerID should be updated to the TA's ID.
+// If the assignment's ManualRelease is false, the submission is automatically released.
+func (db *GormDB) autoCreateReviews(tx *gorm.DB, submission *qf.Submission) error {
+	// Find the assignment to check if it requires manual grading
+	var assignment qf.Assignment
+	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+		return err
+	}
+
+	// Check if the assignment requires manual grading
+	if assignment.GetReviewers() == 0 {
+		return nil // No manual grading required
+	}
+
+	// Check how many reviews already exist for this submission
+	var existingReviewCount int64
+	if err := tx.Model(&qf.Review{}).Where("submission_id = ?", submission.GetID()).Count(&existingReviewCount).Error; err != nil {
+		return err
+	}
+
+	// Get template benchmarks (those with review_id = 0)
+	var benchmarks []*qf.GradingBenchmark
+	if err := tx.
+		Where("assignment_id = ?", assignment.GetID()).
+		Where("review_id = ?", 0).
+		Find(&benchmarks).Error; err != nil {
+		return err
+	}
+	// Load criteria for each benchmark
+	for _, b := range benchmarks {
+		if err := tx.Where("benchmark_id = ?", b.GetID()).Find(&b.Criteria).Error; err != nil {
+			return err
+		}
+	}
+
+	// Create reviews up to the number of reviewers required
+	reviewsToCreate := int(assignment.GetReviewers()) - int(existingReviewCount)
+	for i := 0; i < reviewsToCreate; i++ {
+		review := &qf.Review{
+			SubmissionID: submission.GetID(),
+			ReviewerID:   0, // Not assigned to a reviewer yet
+			Edited:       timestamppb.Now(),
+		}
+		review.ComputeScore()
+
+		// Copy benchmarks and criteria for the review
+		for _, bm := range benchmarks {
+			newBm := &qf.GradingBenchmark{
+				CourseID:     bm.GetCourseID(),
+				AssignmentID: bm.GetAssignmentID(),
+				Heading:      bm.GetHeading(),
+				Comment:      "",
+			}
+			for _, c := range bm.GetCriteria() {
+				newC := &qf.GradingCriterion{
+					CourseID:    c.GetCourseID(),
+					Points:      c.GetPoints(),
+					Description: c.GetDescription(),
+					Grade:       qf.GradingCriterion_NONE,
+					Comment:     "",
+				}
+				newBm.Criteria = append(newBm.Criteria, newC)
+			}
+			review.GradingBenchmarks = append(review.GradingBenchmarks, newBm)
+		}
+
+		if err := tx.Create(review).Error; err != nil {
+			return err
+		}
+		submission.Reviews = append(submission.Reviews, review)
+	}
+
+	// Auto-release if ManualRelease is not set
+	if !assignment.GetManualRelease() {
+		submission.Released = true
+		if err := tx.Model(submission).Update("released", true).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

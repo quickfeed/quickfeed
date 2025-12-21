@@ -668,6 +668,13 @@ export type Assignment = Message<"qf.Assignment"> & {
    * @generated from field: repeated qf.TestInfo ExpectedTests = 14;
    */
   ExpectedTests: TestInfo[];
+
+  /**
+   * if true, reviews must be manually released; otherwise, reviews are auto-released
+   *
+   * @generated from field: bool manualRelease = 15;
+   */
+  manualRelease: boolean;
 };
 
 /**

@@ -203,12 +203,13 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		Order:      1,
-		CourseID:   course.GetID(),
-		Name:       "assignment-1",
-		Deadline:   qtest.Timestamp(t, "2022-11-11T13:00:00"),
-		IsGroupLab: false,
-		Reviewers:  1,
+		Order:         1,
+		CourseID:      course.GetID(),
+		Name:          "assignment-1",
+		Deadline:      qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		IsGroupLab:    false,
+		Reviewers:     1,
+		ManualRelease: true, // Require manual release for this test
 	}
 	qtest.CreateAssignment(t, db, assignment)
 
@@ -245,9 +246,10 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	qtest.Diff(t, "Incorrect submission fields in the database", updatedSubmission, submission, protocmp.Transform())
+	// Reviews field is ignored as reviews are now auto-created when submissions are created
+	qtest.Diff(t, "Incorrect submission fields in the database", updatedSubmission, submission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "reviews"))
 	// submission must stay approved, released, with score = 80
-	qtest.Diff(t, "Incorrect submission after update", initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "BuildInfo", "Scores"))
+	qtest.Diff(t, "Incorrect submission after update", initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "BuildInfo", "Scores", "reviews"))
 }
 
 func TestStreamRecordResults(t *testing.T) {

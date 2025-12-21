@@ -209,22 +209,24 @@ An example is shown below.
   "autoapprove": true,
   "scorelimit": 90,
   "reviewers": 2,
-  "containertimeout": 10
+  "containertimeout": 10,
+  "manualrelease": false
 }
 ```
 
 QuickFeed only use the fields in the table below.
 The `title` and `effort` are used by other tooling to create a README.md file for an assignment.
 
-| Field              | Description                                                                                    |
-|--------------------|------------------------------------------------------------------------------------------------|
-| `order`            | Assignment's sequence number; used to order the assignments in the frontend.                   |
-| `deadline`         | Submission deadline for the assignment.                                                        |
-| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment. |
-| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                            |
-| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                            |
-| `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 1.    |
-| `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes. |
+| Field              | Description                                                                                     |
+|--------------------|-------------------------------------------------------------------------------------------------|
+| `order`            | Assignment's sequence number; used to order the assignments in the frontend.                    |
+| `deadline`         | Submission deadline for the assignment.                                                         |
+| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment.  |
+| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                             |
+| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                             |
+| `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 0.     |
+| `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes.  |
+| `manualrelease`    | If true, reviews must be manually released; otherwise, reviews are auto-released. Default is false. |
 
 ### Tests Information
 
@@ -364,7 +366,7 @@ Once the pull request is approved, the students of the group can then merge the 
 
 Note: We don't support creating issues on student repositories since we don't have a good way to prevent cheating if we were to give access between student repositories.
 
-## Reviewing student submissions
+## Reviewing Student Submissions
 
 An assignment can be reviewed manually if the number of reviewers in the assignment's JSON file is above zero.
 Grading criteria can be added in groups for a selected assignment on the course's main page.
@@ -372,19 +374,83 @@ Criteria descriptions and group headers can be edited at any time by clicking on
 
 TODO(meling): the paragraph above must be updated when we remove the ability to edit criteria in the frontend; we only want to load criteria from the criteria.json file.
 
-The **Review** page provides access to creating a manual review and feedback for student solutions submitted for the course assignments.
-Only teaching staff can create reviews, and only one review per teaching staff member can be added for the same student submission for the same assignment.
+### Manual Review Flow
 
-Initially, a new review has the status *in progress*.
-The *Ready* status can only be set after all the grading criteria checkpoints are marked as either passed or failed.
-Reviews will not be shown on the **Release** page unless they are *ready*.
+The following diagram illustrates the simplified manual review flow for teaching assistants:
+
+```mermaid
+flowchart TD
+    A[Student submits code] --> B[Submission created]
+    B --> C{Assignment requires manual review?}
+    C -->|No| D[Auto-graded based on tests]
+    C -->|Yes| E[Review auto-created with empty reviewer]
+    E --> F{manualRelease set in assignment.json?}
+    F -->|No| G[Submission auto-released to student]
+    F -->|Yes| H[Submission not released yet]
+    G --> I[TA selects submission to review]
+    H --> I
+    I --> J[TA grades criteria]
+    J --> K{All criteria graded?}
+    K -->|No| J
+    K -->|Yes| L[Approve / Revise / Reject buttons enabled]
+    L --> M[TA sets submission status]
+    M --> N{manualRelease set?}
+    N -->|No| O[Done - student sees feedback]
+    N -->|Yes| P[TA releases review manually]
+    P --> O
+```
+
+### Review Process Steps
+
+1. **Student submits code**: A submission is automatically created when a student pushes code to their repository.
+
+2. **Review is auto-created**: When a submission is created for an assignment that requires manual grading (reviewers > 0), reviews are automatically created.
+   The reviewer is initially unassigned (ReviewerID = 0).
+
+3. **Auto-release behavior**: If `manualrelease` is not set or is `false` in the `assignment.json`, the submission is automatically released to the student.
+   If `manualrelease` is `true`, the TA must manually release the review.
+
+4. **TA selects submission**: The TA navigates to the Review page and selects a submission to review.
+   The TA is automatically assigned as the reviewer when they start grading.
+
+5. **TA grades criteria**: The TA marks each criterion as passed or failed.
+   Comments can be left on individual criteria or on the submission as a whole.
+
+6. **Approve/Revise/Reject**: Once all criteria are graded, the TA can set the final submission status:
+   - **Approve**: The submission meets all requirements.
+   - **Revision**: The student should revise and resubmit.
+   - **Reject**: The submission does not meet requirements.
+
+7. **Release (if required)**: If `manualrelease` is `true`, the TA must click the "Release" button to make the review visible to the student.
+
+### Assignment Configuration for Manual Reviews
+
+To enable manual reviews for an assignment, add the following fields to your `assignment.json`:
+
+```json
+{
+  "order": 1,
+  "title": "Lab Assignment",
+  "deadline": "2024-12-31T23:59:00",
+  "reviewers": 1,
+  "manualrelease": true
+}
+```
+
+| Field           | Description                                                                                    |
+|-----------------|------------------------------------------------------------------------------------------------|
+| `reviewers`     | Number of teachers that must review a student submission. Set to 0 for auto-grading only.     |
+| `manualrelease` | If `true`, reviews must be manually released. If `false` or not set, reviews are auto-released.|
+
+The **Review** page provides access to viewing and grading manual reviews for student solutions submitted for the course assignments.
+Only teaching staff can grade reviews.
 
 Comments can be left on every criterion checkpoint or on the whole group of grading criteria.
 Feedback on the whole submission can be added as well.
 Both comments and feedback can be edited by the reviewer.
 
 The **Release** page provides an overview of the results of manual reviews for all course students and assignments.
-There the user can see the submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Approved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
+There the user can see the submission score for each review, the mean score for all reviews, set a final grade/status for a student submission (**Approved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
 
 It is also possible to mass-approve submissions or mass-release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly.
 Every submission with a score equal to or above the set minimal score will be approved, or reviews to such submissions will be released.

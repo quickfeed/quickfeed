@@ -495,8 +495,12 @@ func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[q
 }
 
 // UpdateReview updates a submission review.
-func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
+func (s *QuickFeedService) UpdateReview(ctx context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	review := in.Msg.GetReview()
+	// If the review has no reviewer assigned yet, assign the current user as the reviewer
+	if review.GetReviewerID() == 0 {
+		review.ReviewerID = userID(ctx)
+	}
 	if err := s.db.UpdateReview(review); err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
