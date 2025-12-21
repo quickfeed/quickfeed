@@ -121,7 +121,13 @@ func setGrades(tx *gorm.DB, submission *qf.Submission) error {
 // Reviews are created with ReviewerID set to 0, indicating they are not yet assigned to a reviewer.
 // When a TA grades a criterion, the ReviewerID should be updated to the TA's ID.
 // If the assignment's ManualRelease is false, the submission is automatically released.
+// Note: This function should only be called after the submission has been saved to the database.
 func (db *GormDB) autoCreateReviews(tx *gorm.DB, submission *qf.Submission) error {
+	// Ensure the submission has a valid ID (assigned after Save)
+	if submission.GetID() == 0 {
+		return nil // Submission not saved yet, skip review creation
+	}
+
 	// Find the assignment to check if it requires manual grading
 	var assignment qf.Assignment
 	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {

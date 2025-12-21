@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useState } from "react"
 import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
@@ -13,6 +13,49 @@ interface ReviewInfoProps {
     reviewers: number
     submission: Submission
     review: Review
+}
+
+const ReviewHelpText = () => {
+    const [showHelp, setShowHelp] = useState(false)
+
+    return (
+        <span className="ml-2" style={{ position: "relative" }}>
+            <i
+                className="fa fa-question-circle text-info"
+                style={{ cursor: "pointer" }}
+                onClick={() => setShowHelp(!showHelp)}
+                title="Click for help"
+            />
+            {showHelp && (
+                <div
+                    className="alert alert-info p-2"
+                    style={{
+                        position: "absolute",
+                        zIndex: 1000,
+                        width: "350px",
+                        fontSize: "0.85rem",
+                        left: "20px",
+                        top: "-10px"
+                    }}
+                >
+                    <strong>Manual Review Steps:</strong>
+                    <ol className="mb-0 pl-3 mt-1">
+                        <li>Select a submission to review</li>
+                        <li>Grade all criteria (Pass/Fail)</li>
+                        <li>Once all criteria are graded, Approve/Revise/Reject buttons appear</li>
+                        <li>Set the submission status</li>
+                        <li>Release the review to make it visible to the student (if required)</li>
+                    </ol>
+                    <button
+                        className="btn btn-sm btn-outline-secondary mt-2"
+                        onClick={() => setShowHelp(false)}
+                    >
+                        Close
+                    </button>
+                </div>
+            )}
+        </span>
+    )
 }
 
 const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
@@ -52,7 +95,10 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
         <ul className="list-group">
             <li className="list-group-item active">
                 <span className="align-middle">
-                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignmentName}</span>
+                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">
+                        {assignmentName}
+                        <ReviewHelpText />
+                    </span>
                     {releaseButton}
                 </span>
             </li>
