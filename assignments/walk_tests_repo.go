@@ -19,7 +19,7 @@ const (
 	taskFilePattern = "task-*.md"
 )
 
-// filesForBuildContext specify files for the Docker build context.
+// filesForBuildContext specifies files for the Docker build context.
 // Add more files to support more dependencies for different courses.
 var filesForBuildContext = map[string]bool{
 	dockerfile: true,
@@ -35,14 +35,15 @@ var patterns = []string{
 	taskFilePattern,
 }
 
-// matchAny returns true if filename matches one of the target patterns.
+// matchAny returns true if filename matches one of the target patterns
+// or one of the files for build context.
 func matchAny(filename string) bool {
 	for _, pattern := range patterns {
 		if ok, _ := filepath.Match(pattern, filename); ok {
 			return true
 		}
 	}
-	return false
+	return filesForBuildContext[filename]
 }
 
 // match returns true if filename matches the given pattern.
@@ -53,7 +54,7 @@ func match(filename, pattern string) bool {
 	return false
 }
 
-// lookupProcessor returns the file processor for the given filename, if exists.
+// lookupFileProcessor returns the file processor for the given filename, if exists.
 func lookupFileProcessor(filename string) (fileProcessor, bool) {
 	for pattern, processor := range processors {
 		if match(filename, pattern) {
