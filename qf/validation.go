@@ -63,14 +63,12 @@ func (req *SubmissionRequest) IsValid() bool {
 	}
 }
 
-// IsValid ensures that both CourseID and SubmissionID are set.
+// IsValid ensures that CourseID is set and either SubmissionID or AssignmentID is set, but not both.
+// SubmissionID is for updating an existing submission.
+// AssignmentID is for updating all submissions for a given assignment.
 func (req *UpdateSubmissionRequest) IsValid() bool {
-	return req.GetCourseID() > 0 && req.GetSubmissionID() > 0
-}
-
-// IsValid ensures that both CourseID and AssignmentID are set.
-func (req *UpdateSubmissionsRequest) IsValid() bool {
-	return req.GetCourseID() > 0 && req.GetAssignmentID() > 0
+	sid, aid := req.GetSubmissionID(), req.GetAssignmentID()
+	return req.GetCourseID() > 0 && ((sid > 0) != (aid > 0))
 }
 
 // IsValid ensures that CourseID is set and either UserID or GroupID is set, but not both.
