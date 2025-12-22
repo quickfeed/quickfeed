@@ -46,7 +46,7 @@ func TestNewManager(t *testing.T) {
 	}
 
 	// But must require update if claims are about to expire.
-	user1claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-10 * time.Second))
+	user1claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-10 * time.Second))
 	cookie, err = manager.UpdateCookie(&user1claims)
 	if err != nil {
 		t.Error(err)
@@ -85,7 +85,7 @@ func TestNewCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !(cookie.Secure && cookie.HttpOnly) {
+	if !cookie.Secure || !cookie.HttpOnly {
 		t.Error("Cookie not secure")
 	}
 	if cookie.Name != auth.CookieName {
@@ -278,8 +278,8 @@ func TestExpiredTokenAndErrorCodePaths(t *testing.T) {
 	}
 	// TODO(meling): I'm a bit confused about GetClaims and how it handles expired tokens.
 	// The GetClaims returns a valid claims object even if the token is expired.
-	t.Logf("ExpiresAt: %s", newClaims.RegisteredClaims.ExpiresAt.Time)
-	if !newClaims.RegisteredClaims.ExpiresAt.Time.Before(time.Now()) {
+	t.Logf("ExpiresAt: %s", newClaims.ExpiresAt)
+	if !newClaims.ExpiresAt.Before(time.Now()) {
 		t.Error("Expected token to be expired, but it is not")
 	}
 
