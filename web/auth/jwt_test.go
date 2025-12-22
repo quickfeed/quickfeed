@@ -85,7 +85,7 @@ func TestNewCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !(cookie.Secure && cookie.HttpOnly) {
+	if !cookie.Secure || !cookie.HttpOnly {
 		t.Error("Cookie not secure")
 	}
 	if cookie.Name != auth.CookieName {

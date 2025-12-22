@@ -49,7 +49,7 @@ func TestCreateIssue(t *testing.T) {
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
 
-	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
+	if issue.Title != "Test Issue" || issue.Body != "Test Body" {
 		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
 	}
 }

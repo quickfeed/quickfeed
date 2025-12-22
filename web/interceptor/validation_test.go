@@ -71,7 +71,7 @@ func TestImplementsValidation(t *testing.T) {
 
 		// GlobalTypes includes all registered messages.
 		// We only want to test messages from the qf and score packages.
-		if !(qfMessage || scoreMessage) {
+		if !qfMessage && !scoreMessage {
 			return true
 		}
 		test, ok := tests[name]
