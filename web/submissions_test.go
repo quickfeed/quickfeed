@@ -940,7 +940,11 @@ func TestReleaseApproveAll(t *testing.T) {
 		}
 
 		// Submissions for assignment 2 should be released, have score, and have reviews
-		if submission.GetID() == lab2 && !(submission.GetReleased() || submission.GetScore() > 0 || submission.GetReviews() != nil || submission.GetStatusByUser(student1.GetID()) != qf.Submission_NONE) {
+		if submission.GetID() == lab2 &&
+			!submission.GetReleased() &&
+			submission.GetScore() <= 0 &&
+			submission.GetReviews() == nil &&
+			submission.GetStatusByUser(student1.GetID()) == qf.Submission_NONE {
 			t.Error("Expected submission to be released, have score, and have reviews", submission.GetScore(), submission.GetReviews(), submission.GetReleased())
 		}
 	}
