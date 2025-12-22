@@ -1,7 +1,7 @@
 import { clone, isMessage } from "@bufbuild/protobuf"
 import React, { useCallback, useEffect, useMemo, useRef } from "react"
 import { useSearchParams } from 'react-router-dom'
-import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
+import { Enrollment, EnrollmentSchema, GradingCriterion_Grade, Group, Review, Submission } from "../../proto/qf/types_pb"
 import { Color, getSubmissionCellColor, Icon } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
@@ -13,6 +13,18 @@ import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Release from "./Release"
 import Search from "./Search"
+
+/** Check if all criteria in the review are graded */
+const isFullyGraded = (review: Review): boolean => {
+    for (const bm of review.gradingBenchmarks) {
+        for (const c of bm.criteria) {
+            if (c.grade === GradingCriterion_Grade.NONE) {
+                return false
+            }
+        }
+    }
+    return true
+}
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
@@ -111,8 +123,8 @@ const Results = ({ review }: { review: boolean }) => {
         }
         const reviews = state.review.reviews.get(submission.ID) ?? []
         // Check if the current user has any pending reviews for this submission
-        // Used to give cell a box shadow to indicate that the user has a pending review
-        const pending = reviews.some((r) => !r.ready && r.ReviewerID === state.self.ID) ? "pending-review" : ""
+        // A review is pending if not all criteria are graded and the reviewer is the current user
+        const pending = reviews.some((r) => !isFullyGraded(r) && r.ReviewerID === state.self.ID) ? "pending-review" : ""
         // Check if the this submission is the currently selected submission
         // Used to highlight the cell
         const isSelected = state.selectedSubmission?.ID === submission.ID ? "selected" : ""

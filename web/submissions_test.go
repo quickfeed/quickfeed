@@ -753,18 +753,20 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	assignments := []*qf.Assignment{
 		{
-			CourseID:  course.GetID(),
-			Name:      "lab 1",
-			Deadline:  qtest.Timestamp(t, "2020-02-23T18:00:00"),
-			Order:     1,
-			Reviewers: 1,
+			CourseID:      course.GetID(),
+			Name:          "lab 1",
+			Deadline:      qtest.Timestamp(t, "2020-02-23T18:00:00"),
+			Order:         1,
+			Reviewers:     1,
+			ManualRelease: true, // Require manual release for this test
 		},
 		{
-			CourseID:  course.GetID(),
-			Name:      "lab 2",
-			Deadline:  qtest.Timestamp(t, "2020-03-23T18:00:00"),
-			Order:     2,
-			Reviewers: 1,
+			CourseID:      course.GetID(),
+			Name:          "lab 2",
+			Deadline:      qtest.Timestamp(t, "2020-03-23T18:00:00"),
+			Order:         2,
+			Reviewers:     1,
+			ManualRelease: true, // Require manual release for this test
 		},
 	}
 
@@ -843,22 +845,24 @@ func TestReleaseApproveAll(t *testing.T) {
 	ctx := context.Background()
 	cookie := client.Cookie(t, admin)
 
-	var reviews []*qf.Review
+	// Create submissions - reviews are now auto-created
 	for _, s := range submissions {
 		if err := db.CreateSubmission(s); err != nil {
 			t.Fatal(err)
 		}
-		review, err := client.CreateReview(ctx, qtest.RequestWithCookie(&qf.ReviewRequest{
-			CourseID: course.GetID(),
-			Review: &qf.Review{
-				SubmissionID: s.GetID(),
-				ReviewerID:   admin.GetID(),
-			},
-		}, cookie))
+	}
+
+	// Get the auto-created reviews and update them
+	var reviews []*qf.Review
+	for _, s := range submissions {
+		sub, err := db.GetSubmission(&qf.Submission{ID: s.GetID()})
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
-		reviews = append(reviews, review.Msg)
+		if len(sub.GetReviews()) != 1 {
+			t.Fatalf("expected 1 auto-created review, got %d", len(sub.GetReviews()))
+		}
+		reviews = append(reviews, sub.GetReviews()[0])
 	}
 
 	for _, r := range reviews {

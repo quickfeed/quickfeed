@@ -101,9 +101,10 @@ func (org *Organization) IsValid() bool {
 	return org.GetScmOrganizationName() != ""
 }
 
-// IsValid ensures that a review always has a reviewer and a submission IDs.
+// IsValid ensures that a review always has a submission ID.
+// ReviewerID can be 0 for auto-created reviews before a TA starts grading.
 func (r *Review) IsValid() bool {
-	return r.GetReviewerID() > 0 && r.GetSubmissionID() > 0
+	return r.GetSubmissionID() > 0
 }
 
 // IsValid ensures that course ID is provided and the review is valid.

@@ -173,54 +173,48 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 
-	// Review for assignment that will be updated
-	review := &qf.Review{
-		ReviewerID:   admin.GetID(),
-		SubmissionID: submission.GetID(),
-		GradingBenchmarks: []*qf.GradingBenchmark{
-			{
-				AssignmentID: assignment.GetID(),
-				Heading:      "Test benchmark 2",
-				Comment:      "This is a comment",
-				Criteria: []*qf.GradingCriterion{
-					{
-						Description: "Criterion 3",
-						Comment:     "This is a comment",
-						Grade:       qf.GradingCriterion_PASSED,
-						BenchmarkID: 2,
-						Points:      1,
-					},
-				},
-			},
-		},
+	// Get the auto-created reviews and verify they exist
+	sub1, err := db.GetSubmission(&qf.Submission{ID: submission.GetID()})
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	// Review for assignment that will *not* be updated
-	review2 := &qf.Review{
-		ReviewerID:   user.GetID(),
-		SubmissionID: submission2.GetID(),
-		GradingBenchmarks: []*qf.GradingBenchmark{
-			{
-				AssignmentID: assignment2.GetID(),
-				Heading:      "Test benchmark 2",
-				Comment:      "This is another comment",
-				Criteria: []*qf.GradingCriterion{
-					{
-						Description: "Criterion 3",
-						Comment:     "This is another comment",
-						Grade:       qf.GradingCriterion_PASSED,
-						BenchmarkID: 3,
-						Points:      1,
-					},
-				},
-			},
-		},
+	if len(sub1.GetReviews()) != 1 {
+		t.Fatalf("expected 1 auto-created review for submission 1, got %d", len(sub1.GetReviews()))
 	}
+	review := sub1.GetReviews()[0]
 
-	for _, r := range []*qf.Review{review, review2} {
-		if err := db.CreateReview(r); err != nil {
-			t.Fatal(err)
+	sub2, err := db.GetSubmission(&qf.Submission{ID: submission2.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sub2.GetReviews()) != 1 {
+		t.Fatalf("expected 1 auto-created review for submission 2, got %d", len(sub2.GetReviews()))
+	}
+	review2 := sub2.GetReviews()[0]
+
+	// Update the reviews with reviewers and grades
+	review.ReviewerID = admin.GetID()
+	for _, bm := range review.GetGradingBenchmarks() {
+		bm.Comment = "This is a comment"
+		for _, c := range bm.GetCriteria() {
+			c.Comment = "This is a comment"
+			c.Grade = qf.GradingCriterion_PASSED
 		}
+	}
+	if err := db.UpdateReview(review); err != nil {
+		t.Fatal(err)
+	}
+
+	review2.ReviewerID = user.GetID()
+	for _, bm := range review2.GetGradingBenchmarks() {
+		bm.Comment = "This is another comment"
+		for _, c := range bm.GetCriteria() {
+			c.Comment = "This is another comment"
+			c.Grade = qf.GradingCriterion_PASSED
+		}
+	}
+	if err := db.UpdateReview(review2); err != nil {
+		t.Fatal(err)
 	}
 
 	if diff := cmp.Diff(benchmarks, assignment.GetGradingBenchmarks(), protocmp.Transform()); diff != "" {

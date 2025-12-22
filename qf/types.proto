@@ -165,6 +165,7 @@ message Assignment {
     repeated Task tasks                         = 12;  // tasks associated with this assignment
     repeated GradingBenchmark gradingBenchmarks = 13;  // grading benchmarks for this assignment
     repeated TestInfo ExpectedTests             = 14;  // list of expected tests for this assignment
+    bool manualRelease                          = 15;  // if true, reviews must be manually released; otherwise, reviews are auto-released
 }
 
 message TestInfo {

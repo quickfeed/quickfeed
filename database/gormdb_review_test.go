@@ -3,12 +3,9 @@ package database_test
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/protobuf/testing/protocmp"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -20,15 +17,19 @@ func TestCreateReview(t *testing.T) {
 	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}
 	qtest.CreateSubmission(t, db, submission)
 
+	// Create assignment with reviewers, but WITHOUT benchmarks first
+	// (benchmarks must be added before submission to auto-create reviews with benchmarks)
 	assignmentWithReviewers := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 1}
 	qtest.CreateAssignment(t, db, assignmentWithReviewers)
-	submissionWithReviewers := &qf.Submission{AssignmentID: assignmentWithReviewers.GetID(), UserID: user.GetID()}
-	qtest.CreateSubmission(t, db, submissionWithReviewers)
 
+	// Add benchmark/criteria to the assignment
 	criteria := []*qf.GradingCriterion{{Points: 30, Description: "my description", Grade: qf.GradingCriterion_PASSED, Comment: "another comment"}}
 	benchmark := &qf.GradingBenchmark{AssignmentID: assignmentWithReviewers.GetID(), Heading: "Major league baseball", Comment: "wonders of the world", Criteria: criteria}
 	qtest.CreateBenchmark(t, db, benchmark)
-	newBenchmark := &qf.GradingBenchmark{ID: 2, AssignmentID: assignmentWithReviewers.GetID(), ReviewID: 1, Heading: "Major league baseball", Comment: "wonders of the world", Criteria: []*qf.GradingCriterion{{ID: 2, BenchmarkID: 2, Points: 30, Description: "my description", Grade: qf.GradingCriterion_PASSED, Comment: "another comment"}}}
+
+	// Now create submission - this will auto-create the review
+	submissionWithReviewers := &qf.Submission{AssignmentID: assignmentWithReviewers.GetID(), UserID: user.GetID()}
+	qtest.CreateSubmission(t, db, submissionWithReviewers)
 
 	tests := []struct {
 		name       string
@@ -36,7 +37,6 @@ func TestCreateReview(t *testing.T) {
 		assignment *qf.Assignment
 		review     *qf.Review
 		wantErr    error
-		wantReview *qf.Review
 	}{
 		{
 			name:    "No submission",
@@ -51,25 +51,17 @@ func TestCreateReview(t *testing.T) {
 			wantErr:    database.ErrAllReviewsCreated(submission.GetID(), assignment.GetName(), assignment.GetReviewers()),
 		},
 		{
-			name:       "Create review, calculate score and copy benchmark",
+			name:       "All reviews already created (auto-created on submission)",
 			submission: submissionWithReviewers,
 			assignment: assignmentWithReviewers,
 			review:     &qf.Review{SubmissionID: submissionWithReviewers.GetID(), ReviewerID: 1, Feedback: "my very good feedback", Ready: false, Score: 95, GradingBenchmarks: []*qf.GradingBenchmark{benchmark}},
-			wantReview: &qf.Review{ID: 1, Edited: timestamppb.Now(), SubmissionID: submissionWithReviewers.GetID(), ReviewerID: 1, Feedback: "my very good feedback", Ready: false, Score: 30, GradingBenchmarks: []*qf.GradingBenchmark{newBenchmark}},
+			wantErr:    database.ErrAllReviewsCreated(submissionWithReviewers.GetID(), assignmentWithReviewers.GetName(), assignmentWithReviewers.GetReviewers()),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			qtest.CheckError(t, db.CreateReview(test.review), test.wantErr)
-
-			// Skip comparing the reviews if we expect an error or the wanted review is nil
-			if test.wantErr != nil || test.wantReview == nil {
-				return
-			}
-
-			gotReview := qtest.GetReview(t, db, test.review.GetID())
-			qtest.Diff(t, "Expected same review, but got", gotReview, test.wantReview, protocmp.Transform(), protocmp.IgnoreFields(test.wantReview, "edited"))
 		})
 	}
 }
@@ -81,16 +73,24 @@ func TestUpdateReview(t *testing.T) {
 	user, course, _ := qtest.SetupCourseAssignment(t, db)
 	assignment := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 1}
 	qtest.CreateAssignment(t, db, assignment)
-	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}
-	qtest.CreateSubmission(t, db, submission)
-	qtest.CreateReview(t, db, &qf.Review{SubmissionID: submission.GetID(), Score: 95})
 
-	criteria := []*qf.GradingCriterion{{Points: 40, Description: "my description", Grade: qf.GradingCriterion_PASSED, Comment: "another comment"}}
-	benchmark := &qf.GradingBenchmark{ID: 1, AssignmentID: assignment.GetID(), Heading: "Major league baseball", Comment: "wonders of the world", Criteria: criteria}
+	// Create benchmark before creating submission so it gets copied to auto-created review
+	criteria := []*qf.GradingCriterion{{Points: 40, Description: "my description", Grade: qf.GradingCriterion_NONE, Comment: ""}}
+	benchmark := &qf.GradingBenchmark{AssignmentID: assignment.GetID(), Heading: "Major league baseball", Comment: "", Criteria: criteria}
 	qtest.CreateBenchmark(t, db, benchmark)
 
-	newCriteria := []*qf.GradingCriterion{{Points: 88, Description: "my description 2", Grade: qf.GradingCriterion_NONE, Comment: "another comment 2"}}
-	newBenchmark := &qf.GradingBenchmark{ID: 2, AssignmentID: assignment.GetID(), Heading: "Major league baseball", Comment: "wonders of the world", Criteria: newCriteria}
+	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}
+	qtest.CreateSubmission(t, db, submission)
+
+	// Get the auto-created review
+	sub, err := db.GetSubmission(&qf.Submission{ID: submission.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sub.GetReviews()) != 1 {
+		t.Fatalf("expected 1 auto-created review, got %d", len(sub.GetReviews()))
+	}
+	autoCreatedReview := sub.GetReviews()[0]
 
 	tests := []struct {
 		name       string
@@ -109,34 +109,29 @@ func TestUpdateReview(t *testing.T) {
 			wantErr: gorm.ErrRecordNotFound,
 		},
 		{
-			name:       "Add existing benchmark",
-			review:     &qf.Review{ID: 1, SubmissionID: submission.GetID(), Score: 95, GradingBenchmarks: []*qf.GradingBenchmark{benchmark}},
-			wantPoints: 40,
+			name:       "Update auto-created review - set criterion grade to PASSED",
+			review:     &qf.Review{ID: autoCreatedReview.GetID(), SubmissionID: submission.GetID(), GradingBenchmarks: autoCreatedReview.GetGradingBenchmarks()},
+			wantPoints: 40, // Score is 40 because the criterion has 40 points and is graded as PASSED
 		},
-		{
-			name:       "Add new benchmark, expecting different score",
-			review:     &qf.Review{ID: 1, SubmissionID: submission.GetID(), Score: 45, GradingBenchmarks: []*qf.GradingBenchmark{benchmark, newBenchmark}},
-			wantPoints: 40,
-		},
+	}
+
+	// Set the grade of the criterion to PASSED for the last test
+	if len(autoCreatedReview.GetGradingBenchmarks()) > 0 && len(autoCreatedReview.GetGradingBenchmarks()[0].GetCriteria()) > 0 {
+		autoCreatedReview.GetGradingBenchmarks()[0].GetCriteria()[0].Grade = qf.GradingCriterion_PASSED
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			qtest.CheckError(t, db.UpdateReview(test.review), test.wantErr)
-			gotReview := qtest.GetReview(t, db, test.review.GetID())
 			if test.wantErr != nil {
 				return
 			}
-			test.review.Score = test.wantPoints
+			gotReview := qtest.GetReview(t, db, test.review.GetID())
 
 			// Expect the score for a submission to be updated if the review score is different
-			if gotReview.GetScore() != test.review.GetScore() {
-				submission := qtest.GetSubmission(t, db, &qf.Submission{ID: gotReview.GetSubmissionID()})
-				if submission.GetScore() != test.review.GetScore() {
-					t.Errorf("Expected score %d, but got %d", gotReview.GetScore(), submission.GetScore())
-				}
+			if gotReview.GetScore() != test.wantPoints {
+				t.Errorf("Expected score %d, but got %d", test.wantPoints, gotReview.GetScore())
 			}
-			qtest.Diff(t, "Expected same review", gotReview, test.review, protocmp.Transform(), protocmp.IgnoreFields(test.review, "edited", "score"))
 		})
 	}
 }
@@ -170,42 +165,34 @@ func TestCreateUpdateReview(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	review := &qf.Review{
-		SubmissionID: 1,
-		ReviewerID:   1,
-	}
-
-	// Create a new review for submission ID 1.
-	// This should copy the assignment benchmarks and criteria to the review.
-	if err := db.CreateReview(review); err != nil {
-		t.Errorf("failed to create review: %v", err)
-	}
+	// The review should be auto-created when the submission is created
 	sub, err := db.GetSubmission(&qf.Submission{ID: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(sub.GetReviews()) != 1 {
-		t.Fatalf("have %d reviews want %d", len(sub.GetReviews()), 1)
+		t.Fatalf("have %d reviews want %d (should be auto-created)", len(sub.GetReviews()), 1)
 	}
 	var gotReview *qf.Review
 	for _, r := range sub.GetReviews() {
 		gotReview = r
 	}
 
-	if diff := cmp.Diff(gotReview, review, cmp.Options{protocmp.Transform(), protocmp.IgnoreFields(&qf.Review{}, "edited")}); diff != "" {
-		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
+	// Verify that the auto-created review has ReviewerID = 0
+	if gotReview.GetReviewerID() != 0 {
+		t.Errorf("Expected auto-created review to have ReviewerID = 0, got %d", gotReview.GetReviewerID())
 	}
 
 	if len(gotReview.GetGradingBenchmarks()) != 1 {
-		t.Fatalf("have %d benchmarks want %d: %+v", len(gotReview.GetGradingBenchmarks()), 1, review)
+		t.Fatalf("have %d benchmarks want %d: %+v", len(gotReview.GetGradingBenchmarks()), 1, gotReview)
 	}
 	if len(gotReview.GetGradingBenchmarks()[0].GetCriteria()) != 1 {
 		t.Fatalf("have %d criteria want %d", len(gotReview.GetGradingBenchmarks()[0].GetCriteria()), 1)
 	}
 
 	// Set the grade of the first criterion to PASSED and update the review.
-	review.GetGradingBenchmarks()[0].GetCriteria()[0].Grade = qf.GradingCriterion_PASSED
-	if err := db.UpdateReview(review); err != nil {
+	gotReview.GetGradingBenchmarks()[0].GetCriteria()[0].Grade = qf.GradingCriterion_PASSED
+	if err := db.UpdateReview(gotReview); err != nil {
 		t.Errorf("failed to update review: %v", err)
 	}
 	sub, err = db.GetSubmission(&qf.Submission{ID: 1})
@@ -219,8 +206,8 @@ func TestCreateUpdateReview(t *testing.T) {
 		gotReview = r
 	}
 
-	// Verify that the updated review matches the expected review.
-	if diff := cmp.Diff(gotReview, review, cmp.Options{protocmp.Transform(), protocmp.IgnoreFields(&qf.Review{}, "edited")}); diff != "" {
-		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
+	// Verify that the updated review has the expected score (100 since all criteria are passed)
+	if gotReview.GetScore() != 100 {
+		t.Errorf("Expected score 100 after grading all criteria as PASSED, got %d", gotReview.GetScore())
 	}
 }
