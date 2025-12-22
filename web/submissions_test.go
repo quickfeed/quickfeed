@@ -752,61 +752,23 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student3, course)
 
 	assignments := []*qf.Assignment{
-		{
-			CourseID:  course.GetID(),
-			Name:      "lab 1",
-			Deadline:  qtest.Timestamp(t, "2020-02-23T18:00:00"),
-			Order:     1,
-			Reviewers: 1,
-		},
-		{
-			CourseID:  course.GetID(),
-			Name:      "lab 2",
-			Deadline:  qtest.Timestamp(t, "2020-03-23T18:00:00"),
-			Order:     2,
-			Reviewers: 1,
-		},
+		{CourseID: course.GetID(), Name: "lab 1", Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"), Order: 1, Reviewers: 1},
+		{CourseID: course.GetID(), Name: "lab 2", Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"), Order: 2, Reviewers: 1},
 	}
-
 	for _, assignment := range assignments {
 		if err := db.CreateAssignment(assignment); err != nil {
 			t.Fatal(err)
 		}
 	}
 
+	lab1 := assignments[0].GetID()
+	lab2 := assignments[1].GetID()
+	lab1Criteria := []*qf.GradingCriterion{{BenchmarkID: 1, Description: "Test 1", Points: 10}, {BenchmarkID: 2, Description: "Test 2", Points: 10}}
+	lab2Criteria := []*qf.GradingCriterion{{BenchmarkID: 3, Description: "Test 3"}, {BenchmarkID: 4, Description: "Test 4"}}
 	benchmarks := []*qf.GradingBenchmark{
-		{
-			AssignmentID: assignments[0].GetID(),
-			Heading:      "lab 1",
-			Criteria: []*qf.GradingCriterion{
-				{
-					BenchmarkID: 1,
-					Description: "Test 1",
-					Points:      10,
-				},
-				{
-					BenchmarkID: 2,
-					Description: "Test 2",
-					Points:      10,
-				},
-			},
-		},
-		{
-			AssignmentID: assignments[1].GetID(),
-			Heading:      "lab 2",
-			Criteria: []*qf.GradingCriterion{
-				{
-					BenchmarkID: 3,
-					Description: "Test 3",
-				},
-				{
-					BenchmarkID: 4,
-					Description: "Test 4",
-				},
-			},
-		},
+		{AssignmentID: lab1, Heading: "lab 1", Criteria: lab1Criteria},
+		{AssignmentID: lab2, Heading: "lab 2", Criteria: lab2Criteria},
 	}
-
 	for _, benchmark := range benchmarks {
 		if err := db.CreateBenchmark(benchmark); err != nil {
 			t.Fatal(err)
@@ -814,30 +776,12 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	submissions := []*qf.Submission{
-		{
-			UserID:       student1.GetID(),
-			AssignmentID: assignments[0].GetID(),
-		},
-		{
-			UserID:       student1.GetID(),
-			AssignmentID: assignments[1].GetID(),
-		},
-		{
-			UserID:       student2.GetID(),
-			AssignmentID: assignments[0].GetID(),
-		},
-		{
-			UserID:       student2.GetID(),
-			AssignmentID: assignments[1].GetID(),
-		},
-		{
-			UserID:       student3.GetID(),
-			AssignmentID: assignments[0].GetID(),
-		},
-		{
-			UserID:       student3.GetID(),
-			AssignmentID: assignments[1].GetID(),
-		},
+		{UserID: student1.GetID(), AssignmentID: lab1},
+		{UserID: student1.GetID(), AssignmentID: lab2},
+		{UserID: student2.GetID(), AssignmentID: lab1},
+		{UserID: student2.GetID(), AssignmentID: lab2},
+		{UserID: student3.GetID(), AssignmentID: lab1},
+		{UserID: student3.GetID(), AssignmentID: lab2},
 	}
 
 	ctx := context.Background()
@@ -850,10 +794,7 @@ func TestReleaseApproveAll(t *testing.T) {
 		}
 		review, err := client.CreateReview(ctx, qtest.RequestWithCookie(&qf.ReviewRequest{
 			CourseID: course.GetID(),
-			Review: &qf.Review{
-				SubmissionID: s.GetID(),
-				ReviewerID:   admin.GetID(),
-			},
+			Review:   &qf.Review{SubmissionID: s.GetID(), ReviewerID: admin.GetID()},
 		}, cookie))
 		if err != nil {
 			t.Error(err)
@@ -878,13 +819,10 @@ func TestReleaseApproveAll(t *testing.T) {
 		}
 	}
 
-	gotSubmissions1, err := db.GetSubmissions(&qf.Submission{
-		AssignmentID: assignments[0].GetID(),
-	})
+	gotSubmissions1, err := db.GetSubmissions(&qf.Submission{AssignmentID: lab1})
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	for _, submission := range gotSubmissions1 {
 		// All submissions should have a score of 20
 		if submission.GetScore() != 20 {
@@ -892,13 +830,10 @@ func TestReleaseApproveAll(t *testing.T) {
 		}
 	}
 
-	gotSubmissions2, err := db.GetSubmissions(&qf.Submission{
-		AssignmentID: assignments[1].GetID(),
-	})
+	gotSubmissions2, err := db.GetSubmissions(&qf.Submission{AssignmentID: lab2})
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	for _, submission := range gotSubmissions2 {
 		// All submissions should have a score of 100
 		if submission.GetScore() != 100 {
@@ -909,16 +844,14 @@ func TestReleaseApproveAll(t *testing.T) {
 	// Attempt to release all submissions with score >= 80
 	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
-		AssignmentID: assignments[0].GetID(),
+		AssignmentID: lab1,
 		Release:      true,
 		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
 
-	gotSubmissions3, err := db.GetSubmissions(&qf.Submission{
-		AssignmentID: assignments[0].GetID(),
-	})
+	gotSubmissions3, err := db.GetSubmissions(&qf.Submission{AssignmentID: lab1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -935,10 +868,8 @@ func TestReleaseApproveAll(t *testing.T) {
 	studentCookie := client.Cookie(t, student1)
 
 	gotStudentSubmissions, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
-		CourseID: course.GetID(),
-		FetchMode: &qf.SubmissionRequest_UserID{
-			UserID: student1.GetID(),
-		},
+		CourseID:  course.GetID(),
+		FetchMode: &qf.SubmissionRequest_UserID{UserID: student1.GetID()},
 	}, studentCookie))
 	if err != nil {
 		t.Error(err)
@@ -955,7 +886,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	// Attempt to release all submissions with score >= 80
 	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
-		AssignmentID: assignments[1].GetID(),
+		AssignmentID: lab2,
 		Release:      true,
 		Score:        80,
 	}, cookie)); err != nil {
@@ -963,13 +894,10 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// All submissions for assignment 2 should have score == 100, and be released
-	gotSubmissions4, err := db.GetSubmissions(&qf.Submission{
-		AssignmentID: assignments[1].GetID(),
-	})
+	gotSubmissions4, err := db.GetSubmissions(&qf.Submission{AssignmentID: lab2})
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	for _, submission := range gotSubmissions4 {
 		if !submission.GetReleased() {
 			t.Errorf("Expected submission to be released")
@@ -979,20 +907,17 @@ func TestReleaseApproveAll(t *testing.T) {
 	// Approve all submissions for assignment 1 with score >= 80
 	if _, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
 		CourseID:     course.GetID(),
-		AssignmentID: assignments[1].GetID(),
+		AssignmentID: lab2,
 		Status:       qf.Submission_APPROVED,
 		Score:        80,
 	}, cookie)); err != nil {
 		t.Error(err)
 	}
 
-	gotSubmissions5, err := db.GetSubmissions(&qf.Submission{
-		AssignmentID: assignments[1].GetID(),
-	})
+	gotSubmissions5, err := db.GetSubmissions(&qf.Submission{AssignmentID: lab2})
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	for _, submission := range gotSubmissions5 {
 		// Check that all submissions for assignment 1 have been approved
 		if !submission.IsAllApproved() {
@@ -1001,10 +926,8 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	gotStudentSubmissions, err = client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
-		CourseID: course.GetID(),
-		FetchMode: &qf.SubmissionRequest_UserID{
-			UserID: student1.GetID(),
-		},
+		CourseID:  course.GetID(),
+		FetchMode: &qf.SubmissionRequest_UserID{UserID: student1.GetID()},
 	}, studentCookie))
 	if err != nil {
 		t.Error(err)
@@ -1012,12 +935,16 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	for _, submission := range gotStudentSubmissions.Msg.GetSubmissions() {
 		// Submissions for assignment 1 should not be released, have score, or reviews.
-		if submission.GetID() == assignments[0].GetID() && (submission.GetReleased() || submission.GetScore() > 0 || submission.GetReviews() != nil) {
+		if submission.GetID() == lab1 && (submission.GetReleased() || submission.GetScore() > 0 || submission.GetReviews() != nil) {
 			t.Errorf("Expected submission to not be released, have score, and have no reviews")
 		}
 
 		// Submissions for assignment 2 should be released, have score, and have reviews
-		if submission.GetID() == assignments[1].GetID() && !(submission.GetReleased() || submission.GetScore() > 0 || submission.GetReviews() != nil || submission.GetStatusByUser(student1.GetID()) != qf.Submission_NONE) {
+		if submission.GetID() == lab2 &&
+			!submission.GetReleased() &&
+			submission.GetScore() <= 0 &&
+			submission.GetReviews() == nil &&
+			submission.GetStatusByUser(student1.GetID()) == qf.Submission_NONE {
 			t.Error("Expected submission to be released, have score, and have reviews", submission.GetScore(), submission.GetReviews(), submission.GetReleased())
 		}
 	}

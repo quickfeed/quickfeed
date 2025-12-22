@@ -211,7 +211,7 @@ To receive webhook events, you must run QuickFeed on a public domain or use a tu
 		fmt.Print("Do you want to continue? (Y/n) ")
 		var answer string
 		fmt.Scanln(&answer)
-		if !(answer == "Y" || answer == "y") {
+		if answer != "Y" && answer != "y" {
 			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 		}
 	}
