@@ -24,7 +24,7 @@ func (u *User) IsValid() bool {
 	return u.GetID() > 0
 }
 
-// IsValid ensure that CourseID and UserID are set, and that the enrollment status is valid.
+// IsValid ensures that CourseID and UserID are set, and that the enrollment status is valid.
 func (req *Enrollment) IsValid() bool {
 	status := req.GetStatus()
 	return req.GetCourseID() > 0 &&
