@@ -225,8 +225,8 @@ func CheckExternalUser(externalUser *ExternalUser) error {
 func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
 	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
 	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
-	switch {
-	case err == nil:
+	switch err {
+	case nil:
 		logger.Debugf("Found user: %v in database", user)
 		user.RefreshToken = token.RefreshToken
 		if err = db.UpdateUser(user); err != nil {
@@ -234,7 +234,7 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 		}
 		logger.Debugf("Refresh token updated: %v", token.RefreshToken)
 
-	case err == gorm.ErrRecordNotFound:
+	case gorm.ErrRecordNotFound:
 		// Validate external user information before creating account
 		if err := CheckExternalUser(externalUser); err != nil {
 			return nil, fmt.Errorf("cannot create account for user %q: %w", externalUser.Login, err)
