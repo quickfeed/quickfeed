@@ -7,14 +7,15 @@
 package qf
 
 import (
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
+
 	_ "github.com/alta/protopatch/patch/gopb"
 	score "github.com/quickfeed/quickfeed/kit/score"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
 )
 
 const (
@@ -690,23 +691,25 @@ func (x *Groups) GetGroups() []*Group {
 }
 
 type Course struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	ID                  uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	CourseCreatorID     uint64                 `protobuf:"varint,2,opt,name=courseCreatorID,proto3" json:"courseCreatorID,omitempty"`
-	Name                string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Code                string                 `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty" gorm:"uniqueIndex:course"`
-	Year                uint32                 `protobuf:"varint,5,opt,name=year,proto3" json:"year,omitempty" gorm:"uniqueIndex:course"`
-	Tag                 string                 `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
-	ScmOrganizationID   uint64                 `protobuf:"varint,8,opt,name=ScmOrganizationID,proto3" json:"ScmOrganizationID,omitempty"`
-	ScmOrganizationName string                 `protobuf:"bytes,9,opt,name=ScmOrganizationName,proto3" json:"ScmOrganizationName,omitempty"` // The organization's SCM name, e.g., dat520-2020.
-	SlipDays            uint32                 `protobuf:"varint,10,opt,name=slipDays,proto3" json:"slipDays,omitempty"`
-	DockerfileDigest    string                 `protobuf:"bytes,11,opt,name=DockerfileDigest,proto3" json:"DockerfileDigest,omitempty"` // Digest of the dockerfile used to build the course's docker image.
-	Enrolled            Enrollment_UserStatus  `protobuf:"varint,12,opt,name=enrolled,proto3,enum=qf.Enrollment_UserStatus" json:"enrolled,omitempty" gorm:"-"`
-	Enrollments         []*Enrollment          `protobuf:"bytes,13,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	Assignments         []*Assignment          `protobuf:"bytes,14,rep,name=assignments,proto3" json:"assignments,omitempty"`
-	Groups              []*Group               `protobuf:"bytes,15,rep,name=groups,proto3" json:"groups,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state                    protoimpl.MessageState `protogen:"open.v1"`
+	ID                       uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	CourseCreatorID          uint64                 `protobuf:"varint,2,opt,name=courseCreatorID,proto3" json:"courseCreatorID,omitempty"`
+	Name                     string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Code                     string                 `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty" gorm:"uniqueIndex:course"`
+	Year                     uint32                 `protobuf:"varint,5,opt,name=year,proto3" json:"year,omitempty" gorm:"uniqueIndex:course"`
+	Tag                      string                 `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
+	ScmOrganizationID        uint64                 `protobuf:"varint,8,opt,name=ScmOrganizationID,proto3" json:"ScmOrganizationID,omitempty"`
+	ScmOrganizationName      string                 `protobuf:"bytes,9,opt,name=ScmOrganizationName,proto3" json:"ScmOrganizationName,omitempty"` // The organization's SCM name, e.g., dat520-2020.
+	SlipDays                 uint32                 `protobuf:"varint,10,opt,name=slipDays,proto3" json:"slipDays,omitempty"`
+	DockerfileDigest         string                 `protobuf:"bytes,11,opt,name=DockerfileDigest,proto3" json:"DockerfileDigest,omitempty"` // Digest of the dockerfile used to build the course's docker image.
+	Enrolled                 Enrollment_UserStatus  `protobuf:"varint,12,opt,name=enrolled,proto3,enum=qf.Enrollment_UserStatus" json:"enrolled,omitempty" gorm:"-"`
+	CommunityLink            string                 `protobuf:"bytes,16,opt,name=communityLink,proto3" json:"communityLink,omitempty"`                       // URL for invite link to remote communication platform (e.g., Discord, Slack).
+	CommunityLinkDescription string                 `protobuf:"bytes,17,opt,name=communityLinkDescription,proto3" json:"communityLinkDescription,omitempty"` // Short description of the link (e.g., "Join our Discord server").
+	Enrollments              []*Enrollment          `protobuf:"bytes,13,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
+	Assignments              []*Assignment          `protobuf:"bytes,14,rep,name=assignments,proto3" json:"assignments,omitempty"`
+	Groups                   []*Group               `protobuf:"bytes,15,rep,name=groups,proto3" json:"groups,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
 }
 
 func (x *Course) Reset() {
@@ -814,6 +817,20 @@ func (x *Course) GetEnrolled() Enrollment_UserStatus {
 		return x.Enrolled
 	}
 	return Enrollment_NONE
+}
+
+func (x *Course) GetCommunityLink() string {
+	if x != nil {
+		return x.CommunityLink
+	}
+	return ""
+}
+
+func (x *Course) GetCommunityLinkDescription() string {
+	if x != nil {
+		return x.CommunityLinkDescription
+	}
+	return ""
 }
 
 func (x *Course) GetEnrollments() []*Enrollment {
@@ -2786,46 +2803,48 @@ func file_qf_types_proto_rawDescGZIP() []byte {
 	return file_qf_types_proto_rawDescData
 }
 
-var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
-var file_qf_types_proto_goTypes = []any{
-	(Group_GroupStatus)(0),        // 0: qf.Group.GroupStatus
-	(Repository_Type)(0),          // 1: qf.Repository.Type
-	(Enrollment_UserStatus)(0),    // 2: qf.Enrollment.UserStatus
-	(Enrollment_DisplayState)(0),  // 3: qf.Enrollment.DisplayState
-	(PullRequest_Stage)(0),        // 4: qf.PullRequest.Stage
-	(Submission_Status)(0),        // 5: qf.Submission.Status
-	(GradingCriterion_Grade)(0),   // 6: qf.GradingCriterion.Grade
-	(*User)(nil),                  // 7: qf.User
-	(*Users)(nil),                 // 8: qf.Users
-	(*Group)(nil),                 // 9: qf.Group
-	(*Groups)(nil),                // 10: qf.Groups
-	(*Course)(nil),                // 11: qf.Course
-	(*Courses)(nil),               // 12: qf.Courses
-	(*Repository)(nil),            // 13: qf.Repository
-	(*Enrollment)(nil),            // 14: qf.Enrollment
-	(*UsedSlipDays)(nil),          // 15: qf.UsedSlipDays
-	(*Enrollments)(nil),           // 16: qf.Enrollments
-	(*Assignment)(nil),            // 17: qf.Assignment
-	(*TestInfo)(nil),              // 18: qf.TestInfo
-	(*Task)(nil),                  // 19: qf.Task
-	(*Issue)(nil),                 // 20: qf.Issue
-	(*PullRequest)(nil),           // 21: qf.PullRequest
-	(*Assignments)(nil),           // 22: qf.Assignments
-	(*Submission)(nil),            // 23: qf.Submission
-	(*Submissions)(nil),           // 24: qf.Submissions
-	(*Grade)(nil),                 // 25: qf.Grade
-	(*GradingBenchmark)(nil),      // 26: qf.GradingBenchmark
-	(*Benchmarks)(nil),            // 27: qf.Benchmarks
-	(*GradingCriterion)(nil),      // 28: qf.GradingCriterion
-	(*Review)(nil),                // 29: qf.Review
-	(*AssignmentFeedback)(nil),    // 30: qf.AssignmentFeedback
-	(*FeedbackReceipt)(nil),       // 31: qf.FeedbackReceipt
-	(*AssignmentFeedbacks)(nil),   // 32: qf.AssignmentFeedbacks
-	(*timestamppb.Timestamp)(nil), // 33: google.protobuf.Timestamp
-	(*score.BuildInfo)(nil),       // 34: score.BuildInfo
-	(*score.Score)(nil),           // 35: score.Score
-}
+var (
+	file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+	file_qf_types_proto_msgTypes  = make([]protoimpl.MessageInfo, 26)
+	file_qf_types_proto_goTypes   = []any{
+		(Group_GroupStatus)(0),        // 0: qf.Group.GroupStatus
+		(Repository_Type)(0),          // 1: qf.Repository.Type
+		(Enrollment_UserStatus)(0),    // 2: qf.Enrollment.UserStatus
+		(Enrollment_DisplayState)(0),  // 3: qf.Enrollment.DisplayState
+		(PullRequest_Stage)(0),        // 4: qf.PullRequest.Stage
+		(Submission_Status)(0),        // 5: qf.Submission.Status
+		(GradingCriterion_Grade)(0),   // 6: qf.GradingCriterion.Grade
+		(*User)(nil),                  // 7: qf.User
+		(*Users)(nil),                 // 8: qf.Users
+		(*Group)(nil),                 // 9: qf.Group
+		(*Groups)(nil),                // 10: qf.Groups
+		(*Course)(nil),                // 11: qf.Course
+		(*Courses)(nil),               // 12: qf.Courses
+		(*Repository)(nil),            // 13: qf.Repository
+		(*Enrollment)(nil),            // 14: qf.Enrollment
+		(*UsedSlipDays)(nil),          // 15: qf.UsedSlipDays
+		(*Enrollments)(nil),           // 16: qf.Enrollments
+		(*Assignment)(nil),            // 17: qf.Assignment
+		(*TestInfo)(nil),              // 18: qf.TestInfo
+		(*Task)(nil),                  // 19: qf.Task
+		(*Issue)(nil),                 // 20: qf.Issue
+		(*PullRequest)(nil),           // 21: qf.PullRequest
+		(*Assignments)(nil),           // 22: qf.Assignments
+		(*Submission)(nil),            // 23: qf.Submission
+		(*Submissions)(nil),           // 24: qf.Submissions
+		(*Grade)(nil),                 // 25: qf.Grade
+		(*GradingBenchmark)(nil),      // 26: qf.GradingBenchmark
+		(*Benchmarks)(nil),            // 27: qf.Benchmarks
+		(*GradingCriterion)(nil),      // 28: qf.GradingCriterion
+		(*Review)(nil),                // 29: qf.Review
+		(*AssignmentFeedback)(nil),    // 30: qf.AssignmentFeedback
+		(*FeedbackReceipt)(nil),       // 31: qf.FeedbackReceipt
+		(*AssignmentFeedbacks)(nil),   // 32: qf.AssignmentFeedbacks
+		(*timestamppb.Timestamp)(nil), // 33: google.protobuf.Timestamp
+		(*score.BuildInfo)(nil),       // 34: score.BuildInfo
+		(*score.Score)(nil),           // 35: score.Score
+	}
+)
 var file_qf_types_proto_depIdxs = []int32{
 	14, // 0: qf.User.Enrollments:type_name -> qf.Enrollment
 	31, // 1: qf.User.FeedbackReceipts:type_name -> qf.FeedbackReceipt

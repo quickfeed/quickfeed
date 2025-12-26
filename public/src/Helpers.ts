@@ -280,13 +280,6 @@ export const getNumApproved = (submissions: Submission[]): number => {
     return num
 }
 
-export const EnrollmentStatusBadge = {
-    0: "",
-    1: "badge badge-info",
-    2: "badge badge-primary",
-    3: "badge badge-danger",
-}
-
 /** SubmissionStatus returns a string with the status of the submission, given the status number, ex. Submission.Status.APPROVED -> "Approved" */
 export const SubmissionStatus = {
     0: "None",

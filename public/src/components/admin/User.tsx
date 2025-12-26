@@ -1,7 +1,8 @@
 import React from "react"
 import { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
 import { useGrpc } from "../../overmind"
-import { EnrollmentStatus, EnrollmentStatusBadge } from "../../Helpers"
+import { EnrollmentStatus } from "../../Helpers"
+import Badge from "../Badge"
 
 const User = ({ user }: { user: pbUser; hidden: boolean }) => {
     const { api } = useGrpc().global
@@ -26,31 +27,27 @@ const User = ({ user }: { user: pbUser; hidden: boolean }) => {
     }
 
     const enrollmentsList = enrollments.length ? (
-        <div>
-            {enrollments.map((enrollment) => (
-                <div key={enrollment.ID.toString()}>
-                    <span className="badge badge-secondary">
-                        {enrollment.course?.name}
-                    </span>{" "}
-                    <span className={EnrollmentStatusBadge[enrollment.status]}>
-                        {EnrollmentStatus[enrollment.status]}
-                    </span>
-                </div>
-            ))}
-        </div>
+        enrollments.map((enrollment) => (
+            <div key={enrollment.ID.toString()} className="mt-1">
+                <Badge color="gray" text={enrollment.course?.name ?? ""} />
+                <Badge className="ml-2" color={enrollment.status} text={EnrollmentStatus[enrollment.status]} />
+            </div>
+        ))
     ) : (
-        <div>
-            <span className="badge badge-secondary">No enrollments</span>
-        </div>
+        <Badge color="gray" text="No enrollments" />
     )
 
     return (
         <div role="button" aria-hidden="true" className="clickable" onClick={toggleEnrollments}>
             {user.Name}
             {user.IsAdmin ? (
-                <span className={"badge badge-primary ml-2"}>Admin</span>
+                <Badge color="blue" text="Admin" />
             ) : null}
-            {showEnrollments ? enrollmentsList : null}
+            {showEnrollments ? (
+                <div className="mt-1">
+                    {enrollmentsList}
+                </div>
+            ) : null}
         </div>
     )
 }

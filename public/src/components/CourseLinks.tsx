@@ -19,6 +19,7 @@ const CourseLinks = () => {
     const repo = state.repositories[courseID.toString()]
     const hasGroup = state.hasGroup(courseID.toString())
     const groupName = enrollment.group ? `(${enrollment.group?.name})` : ""
+    const course = enrollment.course
 
     const links: link[] = [
         { type: Repository_Type.USER, text: "User Repository" },
@@ -53,6 +54,17 @@ const CourseLinks = () => {
                 </div>
 
                 {links.map(link => { return <LinkElement key={link.type} link={link} /> })}
+
+                {course?.communityLink && (
+                    <a
+                        href={course.communityLink}
+                        target={"_blank"}
+                        rel="noopener noreferrer"
+                        className="list-group-item list-group-item-action"
+                    >
+                        {course.communityLinkDescription || "Community Link"}
+                    </a>
+                )}
 
                 <Link
                     to={`/course/${courseID}/group`}

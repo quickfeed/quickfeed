@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
-import AboutPage from "./AboutPage"
 import { nextURL } from "../Helpers"
+import AboutPage from "./AboutPage"
 
 const LoginPage = () => {
   // Add a class to the body element to style the login page

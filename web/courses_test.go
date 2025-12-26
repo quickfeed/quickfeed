@@ -32,6 +32,26 @@ func TestUpdateCourse(t *testing.T) {
 	qtest.Diff(t, "UpdateCourse() mismatch", gotCourse, wantCourse, protocmp.Transform())
 }
 
+func TestUpdateCourseCommunityLink(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
+	user := qtest.CreateFakeUser(t, db)
+	dat520 := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, user, dat520)
+	cookie := client.Cookie(t, user)
+
+	// Update the course with community link
+	wantCourse := proto.CloneOf(dat520)
+	wantCourse.CommunityLink = "https://discord.gg/example"
+	wantCourse.CommunityLinkDescription = "Join our Discord server"
+	if _, err := client.UpdateCourse(context.Background(), qtest.RequestWithCookie(wantCourse, cookie)); err != nil {
+		t.Error(err)
+	}
+	gotCourse := qtest.GetCourse(t, db, dat520.GetID())
+	qtest.Diff(t, "UpdateCourse() community link mismatch", gotCourse, wantCourse, protocmp.Transform())
+}
+
 func TestGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

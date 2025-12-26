@@ -1,0 +1,14 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+/* Preflight affects the NavbarUser styling */
+/* @import "tailwindcss/preflight.css" layer(base); */
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Not including conflicting DaisyUI Components */
+@source not inline("btn");
+@source not inline("badge");
+@source not inline("card card-{body,title,text}");
+
+@plugin 'daisyui' {
+  themes: light --default, dark --prefersdark;
+}
