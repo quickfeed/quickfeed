@@ -80,6 +80,7 @@ GOCACHE
 Godkjenning
 Godkjent
 godox
+gofmt
 gofumports
 gofumpt
 goimports
@@ -241,9 +242,9 @@ testcache
 testdata
 testdb
 Testersen
+testinfo
 testjava
 testjavafile
-testinfo
 testorg
 testpackage
 timestamppb

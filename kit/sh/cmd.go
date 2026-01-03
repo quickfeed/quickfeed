@@ -88,8 +88,11 @@ func RunCountTest(tst func(*testing.T), count, tags string) (s string, fail bool
 // It returns the test output and false if there weren't any data races.
 // Otherwise, it returns the stack trace and true if there was a data race.
 //
-// The test to be run with the race detector should be in a separate file with
-// the race build tag. See the race_test.go file in this package for an example.
+// Tests to be run with the race detector should be skipped when the race
+// detector is not enabled. That is, the test function should first check
+// the value of the RaceEnabled variable in this package, and skip the test
+// if it is false. For an example, see the TestWithDataRace in this package
+// in the cmd_race_test.go file.
 //
 // If the tags argument is non-zero, it is passed to the go test command.
 func RunRaceTest(tst func(*testing.T), tags string) (s string, race bool) {
