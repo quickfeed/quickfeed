@@ -1,8 +1,7 @@
-//go:build race
-
 package sh
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -57,5 +56,44 @@ func TestRunRaceTest(t *testing.T) {
 				t.Log(output)
 			}
 		})
+	}
+}
+
+// The following tests are not meant to test the kit package for data races.
+// They are meant to test the RunRaceTest function, triggered by the TestRunRaceTest above.
+
+// TestWithDataRace is intended to fail with a data race if the data race detector is enabled.
+func TestWithDataRace(t *testing.T) {
+	if !RaceEnabled {
+		t.Skip(SkipMessage)
+	}
+	c := make(chan bool)
+	m := make(map[string]string)
+	go func() {
+		m["1"] = "a" // First conflicting access.
+		c <- true
+	}()
+	m["2"] = "b" // Second conflicting access.
+	<-c
+	for k, v := range m {
+		fmt.Println(k, v)
+	}
+}
+
+// TestWithoutDataRace should not have a data race.
+func TestWithoutDataRace(t *testing.T) {
+	if !RaceEnabled {
+		t.Skip(SkipMessage)
+	}
+	c := make(chan bool)
+	m := make(map[string]string)
+	go func() {
+		m["1"] = "a" // First access.
+		c <- true
+	}()
+	<-c          // Wait for goroutine to finish.
+	m["2"] = "b" // Second access.
+	for k, v := range m {
+		fmt.Println(k, v)
 	}
 }
