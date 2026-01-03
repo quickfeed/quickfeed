@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/quickfeed/quickfeed/kit/internal/test"
+	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 // registry keeps a map of score objects and a slice of test names,
@@ -49,6 +50,11 @@ func (s *registry) Validate() error {
 //
 // Will panic if called from a non-test function.
 func (s *registry) PrintTestInfo(sorted ...bool) {
+	if sh.RaceEnabled {
+		// Skip printing test info when running with the race detector,
+		// since we may not be able to filter the score output in this case.
+		return
+	}
 	test.CallFrame()
 	if len(sorted) == 1 && sorted[0] {
 		sort.Strings(s.testNames)
