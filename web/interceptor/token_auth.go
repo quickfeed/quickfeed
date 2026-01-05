@@ -99,6 +99,15 @@ func (t *TokenAuthInterceptor) update(token, cookie string) {
 	t.mu.Unlock()
 }
 
+func validTokenPrefixes(token string) bool {
+	for _, prefix := range []string{"ghp_", "github_pat_", "gho_"} {
+		if strings.HasPrefix(token, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // lookupToken checks if a given token exists in the tokenMap. If it does
 // not, it will attempt to query GitHub for user information associated
 // with the token. If a user exists for the token, we verify that the user
@@ -109,9 +118,8 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 	}
 
 	// Verify that token has correct prefixes before continuing
-	if !(strings.HasPrefix(token, "ghp_") || strings.HasPrefix(token, "github_pat_")) {
-		// could also pass through for next interceptor to determine if the request
-		// has a valid cookie
+	if !validTokenPrefixes(token) {
+		// could also pass through for next interceptor to determine if the request has a valid cookie
 		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("invalid token"))
 	}
 

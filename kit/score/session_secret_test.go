@@ -6,8 +6,8 @@ import (
 )
 
 // To run this test, use this command:
-//   QUICKFEED_SESSION_SECRET=hei go test -v -run TestSessionSecret
 //
+//	QUICKFEED_SESSION_SECRET=hei go test -v -run TestSessionSecret
 func TestSessionSecret(t *testing.T) {
 	sessionSecret := os.Getenv(secretEnvName)
 	if sessionSecret != "" {

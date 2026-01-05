@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -20,6 +21,8 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/lab3/task-learn-go.md":     {},
 		"testdata/tests/lab3/task-tour-of-go.md":   {},
 		"testdata/tests/scripts/Dockerfile":        {},
+		"testdata/tests/scripts/go.mod":            {},
+		"testdata/tests/scripts/go.sum":            {},
 		"testdata/tests/lab1/assignment.json":      {},
 		"testdata/tests/lab1/tests.json":           {},
 		"testdata/tests/lab2/assignment.json":      {},
@@ -50,7 +53,7 @@ func TestWalkTestsRepository(t *testing.T) {
 }
 
 func TestReadTestsRepositoryContent(t *testing.T) {
-	wantDockerfile := "FROM golang:1.24-alpine\nRUN apk update && apk add --no-cache git=~2.47 bash=~5.2.37 build-base=~0.5\nWORKDIR /quickfeed\n"
+	wantDockerfile := "FROM golang:1.25-alpine\nRUN apk update && apk add --no-cache git bash build-base\nWORKDIR /quickfeed\nCOPY go.mod go.sum ./\nRUN go mod download\n"
 	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
@@ -156,15 +159,49 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 		},
 	}
 
-	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotBuildContext, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotDockerfile != wantDockerfile {
-		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
+	if gotBuildContext[ci.Dockerfile] != wantDockerfile {
+		t.Errorf("got Dockerfile %q, want %q", gotBuildContext[ci.Dockerfile], wantDockerfile)
 	}
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
+	}
+}
+
+func TestBuildContextContainsModuleFiles(t *testing.T) {
+	_, gotBuildContext, err := readTestsRepositoryContent(testsFolder, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify that build context contains go.mod and go.sum files
+	wantFiles := []string{ci.Dockerfile, "go.mod", "go.sum"}
+	for _, filename := range wantFiles {
+		if _, ok := gotBuildContext[filename]; !ok {
+			t.Errorf("build context missing expected file %q", filename)
+		}
+	}
+
+	// Verify go.mod content
+	if !strings.Contains(gotBuildContext["go.mod"], "github.com/quickfeed/build-context") {
+		t.Errorf("go.mod does not contain expected module name, got: %s", gotBuildContext["go.mod"])
+	}
+
+	// Verify go.sum content
+	if !strings.Contains(gotBuildContext["go.sum"], "github.com/relab/container") {
+		t.Errorf("go.sum does not contain expected dependency, got: %s", gotBuildContext["go.sum"])
+	}
+
+	// Verify Dockerfile contains COPY and go mod download instructions
+	dockerfile := gotBuildContext[ci.Dockerfile]
+	if !strings.Contains(dockerfile, "COPY go.mod go.sum ./") {
+		t.Errorf("Dockerfile does not contain COPY instruction for module files")
+	}
+	if !strings.Contains(dockerfile, "go mod download") {
+		t.Errorf("Dockerfile does not contain go mod download instruction")
 	}
 }
 

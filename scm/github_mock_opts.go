@@ -18,11 +18,12 @@ type mockOptions struct {
 	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
 	appConfigs map[string]github.AppConfig                           // map: code -> app config
+	userID     int64                                                 // counter for generating unique user IDs
 }
 
 // DumpState returns a string representation of the mock state.
 // This is used for debugging and testing purposes.
-func (s mockOptions) DumpState() string {
+func (s *mockOptions) DumpState() string {
 	b := new(strings.Builder)
 	fmt.Fprintln(b, "Mock state:")
 	for i, org := range s.orgs {
@@ -66,7 +67,7 @@ func (s mockOptions) DumpState() string {
 }
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
-func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
+func (s *mockOptions) hasOrgRepo(orgName, repoName string) bool {
 	for i := range s.repos {
 		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
@@ -77,7 +78,7 @@ func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
 }
 
 // matchOrgFunc calls f with the organization that matches orgName and returns true if found.
-func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) bool {
+func (s *mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) bool {
 	for _, org := range s.orgs {
 		if org.GetLogin() == orgName {
 			f(org)
@@ -89,7 +90,7 @@ func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) b
 
 // GetComment returns the comment for the given organization, repository, and matching comment ID.
 // This is used to inspect the comments created/updated during testing; not part of the SCM interface.
-func (s mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
+func (s *mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
 	if s.comments[orgName] == nil || s.comments[orgName][repoName] == nil {
 		return nil
 	}
@@ -112,7 +113,24 @@ func newMockOptions() *mockOptions {
 		issues:    map[string]map[string][]github.Issue{},
 		comments:  map[string]map[string]map[int64][]github.IssueComment{},
 		reviewers: map[string]map[string]map[int]github.ReviewersRequest{},
+		userID:    0,
 	}
+}
+
+// nextUserID returns the next unique user ID and increments the counter.
+func (s *mockOptions) nextUserID() int64 {
+	s.userID++
+	return s.userID
+}
+
+// getUserID returns the user ID for the given login, or assigns a new one if not found.
+func (s *mockOptions) getUserID(login string) int64 {
+	for _, member := range s.members {
+		if member.GetUser().GetLogin() == login {
+			return member.GetUser().GetID()
+		}
+	}
+	return s.nextUserID()
 }
 
 type MockOption func(*mockOptions)
@@ -172,10 +190,11 @@ func WithMockOrgs(members ...string) MockOption {
 			ghOrg := toOrg(course)
 			opts.orgs = append(opts.orgs, ghOrg)
 			for i, member := range members {
+				userID := opts.getUserID(member)
 				if i == 0 {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{ID: github.Int64(userID), Login: github.String(member)}})
 				} else {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{ID: github.Int64(userID), Login: github.String(member)}})
 				}
 			}
 		}
@@ -199,6 +218,15 @@ func WithMockCourses() MockOption {
 func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
 	return func(opts *mockOptions) {
 		opts.appConfigs = configs
+	}
+}
+
+// WithMockOptions combines multiple mock options into one.
+func WithMockOptions(mockOpts ...MockOption) MockOption {
+	return func(opts *mockOptions) {
+		for _, mockOpt := range mockOpts {
+			mockOpt(opts)
+		}
 	}
 }
 

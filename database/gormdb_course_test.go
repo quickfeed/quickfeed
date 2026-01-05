@@ -348,12 +348,19 @@ func TestGetCourseTeachers(t *testing.T) {
 		wantTeachers, students []*qf.User
 	}{
 		"Basic": {
-			wantTeachers: []*qf.User{{Login: "teacher1"}, {Login: "teacher2"}},
-			students:     []*qf.User{{Login: "student1"}},
+			wantTeachers: []*qf.User{
+				{Login: "teacher1", Name: "Teacher One", Email: "teacher1@example.com", StudentID: "T001"},
+				{Login: "teacher2", Name: "Teacher Two", Email: "teacher2@example.com", StudentID: "T002"},
+			},
+			students: []*qf.User{
+				{Login: "student1", Name: "Student One", Email: "student1@example.com", StudentID: "S001"},
+			},
 		},
 		"No teachers": {
 			wantTeachers: []*qf.User{},
-			students:     []*qf.User{{Login: "student1"}},
+			students: []*qf.User{
+				{Login: "student1", Name: "Student One", Email: "student1@example.com", StudentID: "S001"},
+			},
 		},
 	}
 	for name, tt := range tests {

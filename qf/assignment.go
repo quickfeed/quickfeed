@@ -32,7 +32,7 @@ func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, contex
 
 // CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
-	clone := proto.Clone(a).(*Assignment)
+	clone := proto.CloneOf(a)
 	clone.Submissions = nil
 	return clone
 }
