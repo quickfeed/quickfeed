@@ -75,7 +75,7 @@ func OutputErrA(cmd string, args ...string) (string, string, error) {
 // RunCountTest runs the given test count times.
 // It returns the test output and false if the test passed.
 func RunCountTest(tst func(*testing.T), count, tags string) (s string, fail bool) {
-	testName := test.Name(tst)
+	testName := "^" + test.Name(tst) + "$"
 	if tags != "" {
 		s, _ = OutputA("go", "test", "-run", testName, "-count", count, "-tags", tags)
 	} else {
@@ -96,7 +96,7 @@ func RunCountTest(tst func(*testing.T), count, tags string) (s string, fail bool
 //
 // If the tags argument is non-zero, it is passed to the go test command.
 func RunRaceTest(tst func(*testing.T), tags string) (s string, race bool) {
-	testName := test.Name(tst)
+	testName := "^" + test.Name(tst) + "$"
 	if tags != "" {
 		s, _ = OutputA("go", "test", "-v", "-race", "-run", testName, "-tags", tags)
 	} else {
