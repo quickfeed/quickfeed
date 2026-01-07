@@ -34,9 +34,9 @@ func TestAccessControl(t *testing.T) {
 	ctx := context.Background()
 
 	courseAdmin := qtest.CreateFakeUser(t, db)
-	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "group student", Login: "group student"})
-	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student"})
-	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user"})
+	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Group Student", Login: "group student"})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Test Student", Login: "student"})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Test User", Login: "user"})
 	admin := qtest.CreateFakeUser(t, db)
 	admin.IsAdmin = true
 	if err := db.UpdateUser(admin); err != nil {

@@ -288,9 +288,9 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin", ScmRemoteID: 1})
-	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher", ScmRemoteID: 2})
-	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student", Login: "student", ScmRemoteID: 3})
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin", ScmRemoteID: 1})
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Teacher User", Login: "teacher", ScmRemoteID: 2})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Student User", Login: "student", ScmRemoteID: 3})
 
 	client := web.NewMockClient(t, db, scm.WithMockOptions(
 		scm.WithMockCourses(),
