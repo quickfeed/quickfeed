@@ -25,8 +25,8 @@ func TestRefreshTokens(t *testing.T) {
 	tm := client.TokenManager()
 	ctx := t.Context()
 
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin", ScmRemoteID: 1})
-	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "user", Login: "user", ScmRemoteID: 2})
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin", ScmRemoteID: 1})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Test User", Login: "user", ScmRemoteID: 2})
 	adminCookie, adminClaims := createUserAuth(t, tm, admin.GetID(), true)
 	userCookie, userClaims := createUserAuth(t, tm, user.GetID(), false)
 

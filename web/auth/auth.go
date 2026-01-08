@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/mail"
 	"net/url"
 	"path"
 	"strings"
@@ -196,27 +195,13 @@ func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
 	return
 }
 
-// CheckExternalUser validates that the external user has required fields populated.
-// It checks that Login, Name (with at least first and last name), and Email are not empty.
-// The Email field must also be a valid email address.
+// CheckExternalUser validates that the external user has the login field populated.
+// The login (GitHub username) is the only required field from GitHub, as it's always
+// available. Name and email may be private on GitHub, so we allow sign-in without them
+// and require users to complete their profile in QuickFeed before enrolling in courses.
 func CheckExternalUser(externalUser *ExternalUser) error {
 	if externalUser.Login == "" {
 		return errors.New("missing login")
-	}
-	if externalUser.Name == "" {
-		return errors.New("missing name")
-	}
-	// Check that name has at least two components (first and last name)
-	nameParts := strings.Fields(externalUser.Name)
-	if len(nameParts) < 2 {
-		return errors.New("name must contain at least first and last name")
-	}
-	if externalUser.Email == "" {
-		return errors.New("missing email")
-	}
-	// Validate that email is a proper email address
-	if _, err := mail.ParseAddress(externalUser.Email); err != nil {
-		return fmt.Errorf("invalid email address: %w", err)
 	}
 	return nil
 }

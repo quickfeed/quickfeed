@@ -62,7 +62,7 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 
 	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
 
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin"})
 	cookie := client.Cookie(t, admin)
 
 	course := qtest.MockCourses[0]
@@ -112,7 +112,7 @@ func TestGetCourses(t *testing.T) {
 
 	client := web.NewMockClient(t, db, scm.WithMockOrgs("admin"), web.WithInterceptors())
 
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin"})
 	cookie := client.Cookie(t, admin)
 
 	for _, wantCourse := range qtest.MockCourses {
@@ -134,14 +134,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin", ScmRemoteID: 1})
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin", ScmRemoteID: 1})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scm.WithMockCourses(), scm.WithMockOrgs("admin", "student1", "student2")), web.WithInterceptors())
 
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, admin, course)
 
-	stud1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student1", Login: "student1", ScmRemoteID: 2})
+	stud1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Student One", Login: "student1", ScmRemoteID: 2})
 	enrollStud1 := &qf.Enrollment{CourseID: course.GetID(), UserID: stud1.GetID()}
 	if _, err := client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud1, client.Cookie(t, stud1))); err != nil {
 		t.Error(err)
@@ -238,7 +238,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// create another user and enroll as student
 
-	stud2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student2", Login: "student2", ScmRemoteID: 3})
+	stud2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Student Two", Login: "student2", ScmRemoteID: 3})
 	enrollStud2 := &qf.Enrollment{CourseID: course.GetID(), UserID: stud2.GetID()}
 	if _, err = client.CreateEnrollment(ctx, qtest.RequestWithCookie(enrollStud2, client.Cookie(t, stud2))); err != nil {
 		t.Error(err)
@@ -447,10 +447,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scm.WithMockCourses(), scm.WithMockOrgs("teacher", "student1", "student2", "TA")), web.WithInterceptors())
 
-	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "teacher", Login: "teacher", ScmRemoteID: 1})
-	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student1", Login: "student1", ScmRemoteID: 2})
-	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "student2", Login: "student2", ScmRemoteID: 3})
-	ta := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "TA", Login: "TA", ScmRemoteID: 4})
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Teacher User", Login: "teacher", ScmRemoteID: 1})
+	student1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Student One", Login: "student1", ScmRemoteID: 2})
+	student2 := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Student Two", Login: "student2", ScmRemoteID: 3})
+	ta := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Teaching Assistant", Login: "TA", ScmRemoteID: 4})
 
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)

@@ -126,26 +126,6 @@ func TestOAuth2CallbackWithIncompleteUser(t *testing.T) {
 		description string
 	}{
 		{
-			name:        "missing name",
-			userJSON:    `{"id": 1, "email": "test@example.com", "name": "", "login": "testuser"}`,
-			description: "user with empty name should be rejected",
-		},
-		{
-			name:        "single name part",
-			userJSON:    `{"id": 2, "email": "test@example.com", "name": "SingleName", "login": "testuser"}`,
-			description: "user with single name part should be rejected",
-		},
-		{
-			name:        "missing email",
-			userJSON:    `{"id": 3, "email": "", "name": "Test User", "login": "testuser"}`,
-			description: "user with empty email should be rejected",
-		},
-		{
-			name:        "invalid email",
-			userJSON:    `{"id": 4, "email": "not-an-email", "name": "Test User", "login": "testuser"}`,
-			description: "user with invalid email should be rejected",
-		},
-		{
 			name:        "missing login",
 			userJSON:    `{"id": 5, "email": "test@example.com", "name": "Test User", "login": ""}`,
 			description: "user with empty login should be rejected",
@@ -420,16 +400,6 @@ func TestCheckExternalUser(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid user with multiple name parts",
-			user: &auth.ExternalUser{
-				ID:    2,
-				Login: "johndoe",
-				Name:  "John Middle Doe",
-				Email: "john@example.com",
-			},
-			wantErr: false,
-		},
-		{
 			name: "missing login",
 			user: &auth.ExternalUser{
 				ID:    3,
@@ -439,61 +409,6 @@ func TestCheckExternalUser(t *testing.T) {
 			},
 			wantErr:     true,
 			errContains: "missing login",
-		},
-		{
-			name: "missing name",
-			user: &auth.ExternalUser{
-				ID:    4,
-				Login: "testuser",
-				Name:  "",
-				Email: "test@example.com",
-			},
-			wantErr:     true,
-			errContains: "missing name",
-		},
-		{
-			name: "name with only one part",
-			user: &auth.ExternalUser{
-				ID:    5,
-				Login: "testuser",
-				Name:  "SingleName",
-				Email: "test@example.com",
-			},
-			wantErr:     true,
-			errContains: "name must contain at least first and last name",
-		},
-		{
-			name: "missing email",
-			user: &auth.ExternalUser{
-				ID:    6,
-				Login: "testuser",
-				Name:  "Test User",
-				Email: "",
-			},
-			wantErr:     true,
-			errContains: "missing email",
-		},
-		{
-			name: "invalid email format",
-			user: &auth.ExternalUser{
-				ID:    7,
-				Login: "testuser",
-				Name:  "Test User",
-				Email: "not-an-email",
-			},
-			wantErr:     true,
-			errContains: "invalid email address",
-		},
-		{
-			name: "invalid email format with @",
-			user: &auth.ExternalUser{
-				ID:    8,
-				Login: "testuser",
-				Name:  "Test User",
-				Email: "@example.com",
-			},
-			wantErr:     true,
-			errContains: "invalid email address",
 		},
 	}
 

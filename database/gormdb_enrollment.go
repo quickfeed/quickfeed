@@ -15,8 +15,8 @@ func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 		return err
 	}
 	// Validate that user has complete profile information before allowing enrollment
-	if user.Name == "" || user.Email == "" || user.StudentID == "" {
-		return fmt.Errorf("user must have name, email, and student ID set before enrolling: %w", gorm.ErrRecordNotFound)
+	if err := user.ValidateProfile(); err != nil {
+		return fmt.Errorf("user must have name, email, and student ID set before enrolling: %w", err)
 	}
 
 	var courseCount int64
