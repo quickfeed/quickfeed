@@ -17,6 +17,7 @@ type UpdateEnrollmentOptions struct {
 	Organization string
 	User         string
 	Status       qf.Enrollment_UserStatus
+	RefreshToken string // User's refresh token for accepting invitations
 }
 
 func (opt UpdateEnrollmentOptions) valid() bool {

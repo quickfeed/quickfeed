@@ -183,9 +183,9 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
 		repo, err := s.createCourseRepo(ctx, &CreateRepositoryOptions{
-			Repo:    path,
-			Owner:   org.GetScmOrganizationName(),
-			Private: private,
+			Repo:     path,
+			Owner:    org.GetScmOrganizationName(),
+			Private:  private,
 			AutoInit: path == qf.AssignmentsRepo, // only assignments repo is auto-initialized
 		})
 		if err != nil {
@@ -217,9 +217,29 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
 		m = M("failed to enroll %s as student in %s", opt.User, org.GetScmOrganizationName())
+		// Step 1: Add user to assignments repo (creates invitation)
 		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, E(op, m, err)
 		}
+
+		// Step 2: Accept the assignments invitation before creating the student repo
+		// This is required for private forked repos - the user must have access to the upstream repo
+		if opt.RefreshToken != "" {
+			newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
+				Login:        opt.User,
+				Owner:        org.GetScmOrganizationName(),
+				RefreshToken: opt.RefreshToken,
+			}, qf.AssignmentsRepo)
+			if err != nil {
+				s.logger.Warnf("Failed to accept assignments invitation for %s: %v (continuing)", opt.User, err)
+				// Continue with enrollment; invitation can be accepted manually later
+			} else {
+				// Update the refresh token for subsequent operations
+				opt.RefreshToken = newRefreshToken
+			}
+		}
+
+		// Step 3: Create student repo (fork) and add user as collaborator
 		repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.User)
 		if err != nil {
 			return nil, E(op, m, err)

@@ -90,10 +90,13 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return s.db.UpdateEnrollment(query)
 	}
 	// create user scmRepo and add user to course organization as a member
+	// Pass the refresh token so that UpdateEnrollment can accept the assignments invitation
+	// before creating the forked student repo (required for private forks)
 	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
 		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
+		RefreshToken: user.GetRefreshToken(),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)

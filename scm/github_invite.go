@@ -19,8 +19,9 @@ func newGithubInviteClient(token string) *github.Client {
 	return github.NewClient(httpClient)
 }
 
-// AcceptInvitations accepts course invites.
-func (s *GithubSCM) AcceptInvitations(ctx context.Context, opt *InvitationOptions) (string, error) {
+// acceptRepositoryInvitation accepts a repository invitation for a specific repository.
+// Returns the new refresh token if successful.
+func (s *GithubSCM) acceptRepositoryInvitation(ctx context.Context, opt *InvitationOptions, repo string) (string, error) {
 	if !opt.valid() {
 		return "", fmt.Errorf("invalid options: %+v", opt)
 	}
@@ -30,25 +31,56 @@ func (s *GithubSCM) AcceptInvitations(ctx context.Context, opt *InvitationOption
 	}
 
 	userSCM := newGithubInviteClient(exchangeToken.AccessToken)
-	for _, repo := range []string{qf.InfoRepo, qf.AssignmentsRepo, qf.StudentRepoName(opt.Login)} {
-		// Important: Get repository invitations using the GitHub App client.
-		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
-		if err != nil {
-			return "", fmt.Errorf("failed to fetch invitations for repository %s: %w", repo, err)
-		}
-
-		for _, invite := range repoInvites {
-			if invite.Invitee.GetLogin() != opt.Login {
-				// Ignore unrelated invites
-				continue
-			}
-			// Important: Accept repository invitations using the user-specific GitHub client.
-			if _, err := userSCM.Users.AcceptInvitation(ctx, invite.GetID()); err != nil {
-				return "", fmt.Errorf("failed to accept invitation for repository %s: %w", invite.Repo.GetName(), err)
-			}
-		}
+	// Important: Get repository invitations using the GitHub App client.
+	repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch invitations for repository %s: %w", repo, err)
 	}
 
+	for _, invite := range repoInvites {
+		if invite.Invitee.GetLogin() != opt.Login {
+			// Ignore unrelated invites
+			continue
+		}
+		// Important: Accept repository invitations using the user-specific GitHub client.
+		if _, err := userSCM.Users.AcceptInvitation(ctx, invite.GetID()); err != nil {
+			return "", fmt.Errorf("failed to accept invitation for repository %s: %w", invite.Repo.GetName(), err)
+		}
+	}
+	// Return the new refresh token.
+	return exchangeToken.RefreshToken, nil
+}
+
+// AcceptInvitations accepts course invites.
+// With the fork-based approach, invitations must be accepted sequentially:
+// 1. Accept assignments repo invitation first
+// 2. Then accept student-labs repo invitation (which requires assignments access for private forks)
+func (s *GithubSCM) AcceptInvitations(ctx context.Context, opt *InvitationOptions) (string, error) {
+	if !opt.valid() {
+		return "", fmt.Errorf("invalid options: %+v", opt)
+	}
+
+	// Accept invitations sequentially to handle dependencies between forked repos
+	repos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.StudentRepoName(opt.Login)}
+	refreshToken := opt.RefreshToken
+	for _, repo := range repos {
+		newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
+			Login:        opt.Login,
+			Owner:        opt.Owner,
+			RefreshToken: refreshToken,
+		}, repo)
+		if err != nil {
+			return "", err
+		}
+		refreshToken = newRefreshToken
+	}
+
+	// Accept organization membership invitation
+	exchangeToken, err := s.config.ExchangeToken(refreshToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange refresh token for %s: %w", opt.Login, err)
+	}
+	userSCM := newGithubInviteClient(exchangeToken.AccessToken)
 	state := "active"
 	if _, _, err := userSCM.Organizations.EditOrgMembership(ctx, "", opt.Owner, &github.Membership{State: &state}); err != nil {
 		return "", fmt.Errorf("failed to accept invitation to organization %s: %w", opt.Owner, err)
