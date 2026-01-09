@@ -275,7 +275,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE}",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE RefreshToken:}",
 			wantUserErr: wantUserErr,
 		},
 		{
@@ -439,7 +439,7 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE}",
+			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE RefreshToken:}",
 			wantUserErr: "failed to demote teacher to student",
 		},
 
