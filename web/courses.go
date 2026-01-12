@@ -92,12 +92,13 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	// create user scmRepo and add user to course organization as a member
 	// Pass the refresh token so that UpdateEnrollment can accept the assignments invitation
 	// before creating the forked student repo (required for private forks)
-	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
+	opt := &scm.UpdateEnrollmentOptions{
 		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 		RefreshToken: user.GetRefreshToken(),
-	})
+	}
+	scmRepo, err := sc.UpdateEnrollment(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
@@ -115,6 +116,10 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
+	// update user's refresh token if it has changed
+	if opt.RefreshToken != "" && opt.RefreshToken != user.GetRefreshToken() {
+		user.RefreshToken = opt.RefreshToken
+	}
 	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
 		// log error, but continue with enrollment; we can manually accept invitations later
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.GetCode(), user.GetLogin(), err)
