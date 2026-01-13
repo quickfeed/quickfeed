@@ -116,6 +116,10 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
+	// The refresh token may have been rotated during UpdateEnrollment when accepting
+	// the assignments invitation. OAuth refresh tokens are single-use, so we must
+	// update the user object before calling acceptRepositoryInvites, which needs
+	// a valid token to accept the student repo invitation.
 	user.UpdateRefreshToken(opt.RefreshToken)
 
 	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {

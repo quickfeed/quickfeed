@@ -204,6 +204,9 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 }
 
 // UpdateEnrollment updates organization membership and creates user repositories.
+// For student enrollments, this method may rotate the OAuth refresh token when
+// accepting repository invitations. Callers should check opt.RefreshToken after
+// this method returns and persist any changes to avoid token invalidation.
 func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
 	const op Op = "UpdateEnrollment"
 	m := M("failed to update enrollment")
@@ -234,7 +237,10 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 				s.logger.Warnf("Failed to accept assignments invitation for %s: %v (continuing)", opt.User, err)
 				// Continue with enrollment; invitation can be accepted manually later
 			} else {
-				// Update the refresh token for subsequent operations
+				// OAuth refresh tokens are typically single-use: once exchanged for a new
+				// access token, GitHub issues a new refresh token and invalidates the old one.
+				// We must update opt.RefreshToken so that subsequent operations in this flow
+				// (e.g., accepting the student repo invitation) can authenticate successfully.
 				opt.RefreshToken = newRefreshToken
 			}
 		}
