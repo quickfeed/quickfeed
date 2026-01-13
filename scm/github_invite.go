@@ -21,9 +21,12 @@ func newGithubInviteClient(token string) *github.Client {
 
 // acceptRepositoryInvitation accepts a repository invitation for a specific repository.
 // Returns the new refresh token if successful.
-func (s *GithubSCM) acceptRepositoryInvitation(ctx context.Context, opt *InvitationOptions, repo string) (string, error) {
+func (s *GithubSCM) acceptRepositoryInvitation(ctx context.Context, opt *InvitationOptions) (string, error) {
 	if !opt.valid() {
 		return "", fmt.Errorf("invalid options: %+v", opt)
+	}
+	if opt.Repository == "" {
+		return "", fmt.Errorf("repository name is required")
 	}
 	exchangeToken, err := s.config.ExchangeToken(opt.RefreshToken)
 	if err != nil {
@@ -32,9 +35,9 @@ func (s *GithubSCM) acceptRepositoryInvitation(ctx context.Context, opt *Invitat
 
 	userSCM := newGithubInviteClient(exchangeToken.AccessToken)
 	// Important: Get repository invitations using the GitHub App client.
-	repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
+	repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, opt.Repository, &github.ListOptions{})
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch invitations for repository %s: %w", repo, err)
+		return "", fmt.Errorf("failed to fetch invitations for repository %s: %w", opt.Repository, err)
 	}
 
 	for _, invite := range repoInvites {
@@ -51,7 +54,7 @@ func (s *GithubSCM) acceptRepositoryInvitation(ctx context.Context, opt *Invitat
 	return exchangeToken.RefreshToken, nil
 }
 
-// AcceptInvitations accepts course invitations for info and assignments repositories.
+// AcceptInvitations accepts assignments repository invitation and organization membership invitation.
 // Note: Student repository invitations are accepted directly in createStudentRepo during enrollment.
 // With the fork-based approach, the assignments repo invitation must be accepted before
 // creating the student fork (which requires assignments access for private forks).
@@ -60,28 +63,19 @@ func (s *GithubSCM) AcceptInvitations(ctx context.Context, opt *InvitationOption
 		return "", fmt.Errorf("invalid options: %+v", opt)
 	}
 
-	// Accept invitations for info and assignments repos
-	// Info repo is optional, so we continue on error
-	repos := []string{qf.InfoRepo, qf.AssignmentsRepo}
-	refreshToken := opt.RefreshToken
-	for _, repo := range repos {
-		newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
-			Login:        opt.Login,
-			Owner:        opt.Owner,
-			RefreshToken: refreshToken,
-		}, repo)
-		if err != nil {
-			if repo == qf.InfoRepo {
-				s.logger.Warnf("Failed to accept %s invitation for %s: %v (continuing)", repo, opt.Login, err)
-				continue // Info repo is optional
-			}
-			return "", err
-		}
-		refreshToken = newRefreshToken
+	// Accept assignments repo invitation (info repo is public, so no invitation needed)
+	newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
+		Login:        opt.Login,
+		Owner:        opt.Owner,
+		Repository:   qf.AssignmentsRepo,
+		RefreshToken: opt.RefreshToken,
+	})
+	if err != nil {
+		return "", err
 	}
 
 	// Accept organization membership invitation
-	exchangeToken, err := s.config.ExchangeToken(refreshToken)
+	exchangeToken, err := s.config.ExchangeToken(newRefreshToken)
 	if err != nil {
 		return "", fmt.Errorf("failed to exchange refresh token for %s: %w", opt.Login, err)
 	}

@@ -4,6 +4,7 @@ package scm
 type InvitationOptions struct {
 	Login        string // GitHub username.
 	Owner        string // Name of the organization.
+	Repository   string // Repository name (optional - if empty, accepts all pending invitations).
 	RefreshToken string // Refresh token for the user.
 }
 

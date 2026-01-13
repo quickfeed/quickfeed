@@ -222,39 +222,22 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	case qf.Enrollment_STUDENT:
 		m = M("failed to enroll %s as student in %s", opt.User, org.GetScmOrganizationName())
 
-		// Step 1: Add user to info and assignments repos (creates invitations)
-		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.InfoRepo, opt.User, pullAccess); err != nil {
-			s.logger.Warnf("Failed to add user to info repo: %v (continuing)", err)
-			// Continue; info repo is optional
-		}
+		// Step 1: Add user to assignments repo (creates invitation)
+		// Note: Info repo is public, so no invitation is needed
 		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, E(op, m, err)
 		}
 
-		// Step 2: Accept the info and assignments invitations before creating the student repo.
+		// Step 2: Accept the assignments invitation and organization membership before creating the student repo.
 		// This is required for private forked repos - the user must have access to the upstream repo.
 		if opt.RefreshToken != "" {
-			// Accept info repo invitation
-			newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
+			newRefreshToken, err := s.AcceptInvitations(ctx, &InvitationOptions{
 				Login:        opt.User,
 				Owner:        org.GetScmOrganizationName(),
 				RefreshToken: opt.RefreshToken,
-			}, qf.InfoRepo)
+			})
 			if err != nil {
-				s.logger.Warnf("Failed to accept info repo invitation for %s: %v (continuing)", opt.User, err)
-				// Continue; info repo is optional
-			} else {
-				opt.RefreshToken = newRefreshToken
-			}
-
-			// Accept assignments repo invitation
-			newRefreshToken, err = s.acceptRepositoryInvitation(ctx, &InvitationOptions{
-				Login:        opt.User,
-				Owner:        org.GetScmOrganizationName(),
-				RefreshToken: opt.RefreshToken,
-			}, qf.AssignmentsRepo)
-			if err != nil {
-				s.logger.Warnf("Failed to accept assignments invitation for %s: %v (continuing)", opt.User, err)
+				s.logger.Warnf("Failed to accept invitations for %s: %v (continuing)", opt.User, err)
 				// Continue with enrollment; invitation can be accepted manually later
 			} else {
 				// OAuth refresh tokens are typically single-use: once exchanged for a new
@@ -272,7 +255,7 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		}
 		opt.RefreshToken = newRefreshToken
 
-		// Promote user to organization member
+		// Promote user to organization member (already done in AcceptInvitations, but this ensures consistency)
 		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
 			return nil, E(op, m, err)
 		}
@@ -604,8 +587,9 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user, r
 		newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
 			Login:        user,
 			Owner:        organization,
+			Repository:   repo.Repo,
 			RefreshToken: refreshToken,
-		}, repo.Repo)
+		})
 		if err != nil {
 			s.logger.Warnf("Failed to accept student repo invitation for %s: %v (continuing)", user, err)
 			// Continue without updating the token; invitation can be accepted manually later

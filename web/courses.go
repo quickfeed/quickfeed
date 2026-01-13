@@ -182,22 +182,3 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	}
 	return course.GetEnrollments(), nil
 }
-
-// acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp scm.SCM, user *qf.User, organizationName string) error {
-	user, err := s.db.GetUser(user.GetID())
-	if err != nil {
-		return fmt.Errorf("failed to get user %d: %w", user.GetID(), err)
-	}
-	newRefreshToken, err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
-		Login:        user.GetLogin(),
-		Owner:        organizationName,
-		RefreshToken: user.GetRefreshToken(),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to accept invites for %s: %w", user.GetLogin(), err)
-	}
-	// Save the user's new refresh token in the database.
-	user.RefreshToken = newRefreshToken
-	return s.db.UpdateUser(user)
-}
