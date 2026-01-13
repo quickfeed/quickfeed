@@ -116,10 +116,8 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
-	// update user's refresh token if it has changed
-	if opt.RefreshToken != "" && opt.RefreshToken != user.GetRefreshToken() {
-		user.RefreshToken = opt.RefreshToken
-	}
+	user.UpdateRefreshToken(opt.RefreshToken)
+
 	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
 		// log error, but continue with enrollment; we can manually accept invitations later
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.GetCode(), user.GetLogin(), err)

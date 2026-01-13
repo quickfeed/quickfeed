@@ -41,3 +41,8 @@ func (u *User) ValidateProfile() error {
 	}
 	return nil
 }
+func (u *User) UpdateRefreshToken(newToken string) {
+	if newToken != "" && newToken != u.GetRefreshToken() {
+		u.RefreshToken = newToken
+	}
+}
