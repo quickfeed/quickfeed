@@ -11,6 +11,7 @@ import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
 import LoginPage from './pages/LoginPage'
 import CourseCodeRedirect from "./components/CourseCodeRedirect"
+import Alerts from './components/alerts/Alerts'
 
 const App = () => {
     const state = useAppState()
@@ -54,6 +55,7 @@ const App = () => {
     return (
         <div>
             <NavBar />
+            <Alerts />
             <div className="app wrapper">
                 <div id={state.showFavorites ? "content" : "content-full"}>
                     {Main()}

@@ -5,7 +5,6 @@ import CourseLinks from "../components/CourseLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
-import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
 
 
@@ -17,7 +16,6 @@ const StudentPage = () => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alerts />
             <div className="row" hidden={location.pathname !== root}>
                 <div className="col-md-9" >
                     <CourseLabs />
