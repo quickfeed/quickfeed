@@ -2,7 +2,6 @@ import React from "react"
 import { Navigate } from "react-router"
 import { hasEnrollment } from "../Helpers"
 import { useAppState } from "../overmind"
-import Alerts from "./alerts/Alerts"
 import Courses from "./Courses"
 import SubmissionsTable from "./dashboard/SubmissionsTable"
 
@@ -18,7 +17,6 @@ const Dashboard = () => {
 
     return (
         <div className="mt-5">
-            <Alerts />
             <Courses home />
             <SubmissionsTable />
         </div>

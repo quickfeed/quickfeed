@@ -1,5 +1,4 @@
 import React, { JSX } from "react"
-import Alerts from "../components/alerts/Alerts"
 import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 import BackToTop from "../components/BackToTop"
 
@@ -7,7 +6,6 @@ import BackToTop from "../components/BackToTop"
 const AboutPage = () => {
     return (
         <div>
-            <Alerts />
             <div className="container">
                 <h2 className="featurette-heading mt-5">About QuickFeed</h2>
                 <p className="lead">

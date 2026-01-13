@@ -351,8 +351,36 @@ input {
     }
 }
 
-.alert {
-    z-index: 999;
+/* Toast-style alerts container - fixed at top-right, below navbar */
+.alerts-container {
+    position: fixed;
+    top: calc(var(--navbar-height) + 20px);
+    right: 20px;
+    z-index: 1050;
+    max-width: min(400px, calc(100vw - 40px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+
+    .alert {
+        pointer-events: auto;
+        margin: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
+        animation: slideIn 0.3s ease-out;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .bg-secondary {
