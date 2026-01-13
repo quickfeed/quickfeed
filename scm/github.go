@@ -195,7 +195,8 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	}
 
 	// Create student repository for the course creator
-	repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.CourseCreator)
+	// Course creator is a teacher, so we don't need to accept invitations automatically
+	repo, _, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.CourseCreator, "")
 	if err != nil {
 		return nil, err
 	}
@@ -220,15 +221,34 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
 		m = M("failed to enroll %s as student in %s", opt.User, org.GetScmOrganizationName())
-		// Step 1: Add user to assignments repo (creates invitation)
+
+		// Step 1: Add user to info and assignments repos (creates invitations)
+		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.InfoRepo, opt.User, pullAccess); err != nil {
+			s.logger.Warnf("Failed to add user to info repo: %v (continuing)", err)
+			// Continue; info repo is optional
+		}
 		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, E(op, m, err)
 		}
 
-		// Step 2: Accept the assignments invitation before creating the student repo
-		// This is required for private forked repos - the user must have access to the upstream repo
+		// Step 2: Accept the info and assignments invitations before creating the student repo.
+		// This is required for private forked repos - the user must have access to the upstream repo.
 		if opt.RefreshToken != "" {
+			// Accept info repo invitation
 			newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
+				Login:        opt.User,
+				Owner:        org.GetScmOrganizationName(),
+				RefreshToken: opt.RefreshToken,
+			}, qf.InfoRepo)
+			if err != nil {
+				s.logger.Warnf("Failed to accept info repo invitation for %s: %v (continuing)", opt.User, err)
+				// Continue; info repo is optional
+			} else {
+				opt.RefreshToken = newRefreshToken
+			}
+
+			// Accept assignments repo invitation
+			newRefreshToken, err = s.acceptRepositoryInvitation(ctx, &InvitationOptions{
 				Login:        opt.User,
 				Owner:        org.GetScmOrganizationName(),
 				RefreshToken: opt.RefreshToken,
@@ -245,11 +265,13 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 			}
 		}
 
-		// Step 3: Create student repo (fork) and add user as collaborator
-		repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.User)
+		// Step 3: Create student repo (fork), add user as collaborator, and accept invitation
+		repo, newRefreshToken, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.User, opt.RefreshToken)
 		if err != nil {
 			return nil, E(op, m, err)
 		}
+		opt.RefreshToken = newRefreshToken
+
 		// Promote user to organization member
 		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
 			return nil, E(op, m, err)
@@ -560,7 +582,9 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 }
 
 // createStudentRepo creates {username}-labs repository and provides pull/push access to it for the given student.
-func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user string) (*Repository, error) {
+// If refreshToken is provided, this method will accept the repository invitation on behalf of the user
+// and return the updated refresh token. OAuth refresh tokens are single-use and rotate on each exchange.
+func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user, refreshToken string) (*Repository, string, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := s.createForkedRepo(ctx, &CreateRepositoryOptions{
@@ -569,12 +593,28 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user st
 		Private: true,
 	})
 	if err != nil {
-		return nil, err
+		return nil, refreshToken, err
 	}
 	if err := s.addUser(ctx, repo.Owner, repo.Repo, user, pushAccess); err != nil {
-		return nil, err
+		return nil, refreshToken, err
 	}
-	return repo, nil
+
+	// Accept the student repo invitation if refresh token is provided
+	if refreshToken != "" {
+		newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
+			Login:        user,
+			Owner:        organization,
+			RefreshToken: refreshToken,
+		}, repo.Repo)
+		if err != nil {
+			s.logger.Warnf("Failed to accept student repo invitation for %s: %v (continuing)", user, err)
+			// Continue without updating the token; invitation can be accepted manually later
+		} else {
+			refreshToken = newRefreshToken
+		}
+	}
+
+	return repo, refreshToken, nil
 }
 
 func (s *GithubSCM) updatePermission(ctx context.Context, user, org string, role *github.Membership) error {

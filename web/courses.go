@@ -117,15 +117,14 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	}
 
 	// The refresh token may have been rotated during UpdateEnrollment when accepting
-	// the assignments invitation. OAuth refresh tokens are single-use, so we must
-	// update the user object before calling acceptRepositoryInvites, which needs
-	// a valid token to accept the student repo invitation.
+	// repository invitations. OAuth refresh tokens are single-use, so we must save
+	// the updated token to the database.
 	user.UpdateRefreshToken(opt.RefreshToken)
-
-	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
-		// log error, but continue with enrollment; we can manually accept invitations later
-		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.GetCode(), user.GetLogin(), err)
+	if err := s.db.UpdateUser(user); err != nil {
+		s.logger.Errorf("Failed to update refresh token for %q: %v", user.GetLogin(), err)
+		// Continue with enrollment; token can be manually refreshed later
 	}
+
 	return s.db.UpdateEnrollment(query)
 }
 

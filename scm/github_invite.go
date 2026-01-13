@@ -51,17 +51,18 @@ func (s *GithubSCM) acceptRepositoryInvitation(ctx context.Context, opt *Invitat
 	return exchangeToken.RefreshToken, nil
 }
 
-// AcceptInvitations accepts course invites.
-// With the fork-based approach, invitations must be accepted sequentially:
-// 1. Accept assignments repo invitation first
-// 2. Then accept student-labs repo invitation (which requires assignments access for private forks)
+// AcceptInvitations accepts course invitations for info and assignments repositories.
+// Note: Student repository invitations are accepted directly in createStudentRepo during enrollment.
+// With the fork-based approach, the assignments repo invitation must be accepted before
+// creating the student fork (which requires assignments access for private forks).
 func (s *GithubSCM) AcceptInvitations(ctx context.Context, opt *InvitationOptions) (string, error) {
 	if !opt.valid() {
 		return "", fmt.Errorf("invalid options: %+v", opt)
 	}
 
-	// Accept invitations sequentially to handle dependencies between forked repos
-	repos := []string{qf.InfoRepo, qf.AssignmentsRepo, qf.StudentRepoName(opt.Login)}
+	// Accept invitations for info and assignments repos
+	// Info repo is optional, so we continue on error
+	repos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 	refreshToken := opt.RefreshToken
 	for _, repo := range repos {
 		newRefreshToken, err := s.acceptRepositoryInvitation(ctx, &InvitationOptions{
@@ -70,6 +71,10 @@ func (s *GithubSCM) AcceptInvitations(ctx context.Context, opt *InvitationOption
 			RefreshToken: refreshToken,
 		}, repo)
 		if err != nil {
+			if repo == qf.InfoRepo {
+				s.logger.Warnf("Failed to accept %s invitation for %s: %v (continuing)", repo, opt.Login, err)
+				continue // Info repo is optional
+			}
 			return "", err
 		}
 		refreshToken = newRefreshToken
