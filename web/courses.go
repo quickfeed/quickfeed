@@ -89,6 +89,16 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
 	}
+	exchangeToken, err := s.scmMgr.ExchangeToken(user.GetRefreshToken())
+	if err != nil {
+		return fmt.Errorf("failed to exchange refresh token for %s: %w", user.GetLogin(), err)
+	}
+	// Ensure that the user's refresh token is updated after enrollment.
+	user.UpdateRefreshToken(exchangeToken.RefreshToken)
+	if err := s.db.UpdateUser(user); err != nil {
+		// Continue with enrollment; token can be manually refreshed later
+		s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
+	}
 	// create user scmRepo and add user to course organization as a member
 	// Pass the refresh token so that UpdateEnrollment can accept the org invitation,
 	// which grants immediate access to repos the user is added to as a collaborator.
@@ -96,20 +106,9 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
-		RefreshToken: user.GetRefreshToken(),
+		AccessToken:  exchangeToken.AccessToken,
 	}
 
-	// Ensure that the user's refresh token is updated after enrollment.
-	defer func() {
-		// The refresh token may have been rotated during UpdateEnrollment when accepting
-		// the organization invite. OAuth refresh tokens are single-use, so we must save
-		// the updated token to the database.
-		user.UpdateRefreshToken(opt.RefreshToken)
-		if err := s.db.UpdateUser(user); err != nil {
-			// Continue with enrollment; token can be manually refreshed later
-			s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
-		}
-	}()
 	scmRepo, err := sc.UpdateEnrollment(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)

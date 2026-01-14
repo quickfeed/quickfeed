@@ -204,9 +204,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 }
 
 // UpdateEnrollment updates organization membership and creates user repositories.
-// For student enrollments, this method may rotate the OAuth refresh token when
-// accepting the organization invitation. Callers should check opt.RefreshToken
-// after this method returns and persist any changes to avoid token invalidation.
+// For student enrollments.
 func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
 	const op Op = "UpdateEnrollment"
 	m := M("failed to update enrollment")
@@ -229,20 +227,15 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		// Step 2: Accept the org invitation so user becomes an org member.
 		// Once they are an org member, adding them as collaborator to org-owned
 		// repos grants access immediately without requiring further invitations.
-		if opt.RefreshToken != "" {
-			newRefreshToken, err := s.acceptOrgInvitation(ctx, &InvitationOptions{
-				Login:        opt.User,
-				Owner:        org.GetScmOrganizationName(),
-				RefreshToken: opt.RefreshToken,
+		if opt.AccessToken != "" {
+			err := s.acceptOrgInvitation(ctx, &InvitationOptions{
+				Login:       opt.User,
+				Owner:       org.GetScmOrganizationName(),
+				AccessToken: opt.AccessToken,
 			})
 			if err != nil {
 				s.logger.Warnf("Failed to accept org invitation for %s: %v (continuing)", opt.User, err)
 				// Continue with enrollment; invitation can be accepted manually later
-			} else {
-				// OAuth refresh tokens are typically single-use: once exchanged for a new
-				// access token, GitHub issues a new refresh token and invalidates the old one.
-				// We must update opt.RefreshToken so that callers can persist the new token.
-				opt.RefreshToken = newRefreshToken
 			}
 		}
 
