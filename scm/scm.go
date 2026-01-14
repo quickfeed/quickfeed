@@ -43,10 +43,6 @@ type SCM interface {
 	// repository type, e.g., "assignments" or "tests".
 	Clone(context.Context, *CloneOptions) (string, error)
 
-	// AcceptInvitations accepts course invites on behalf of the user.
-	// A new refresh token for the user is returned, which may be used in subsequent requests.
-	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
-
 	// CreateIssue creates an issue.
 	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
 	// UpdateIssue edits an existing issue.
