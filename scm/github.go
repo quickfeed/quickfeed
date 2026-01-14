@@ -25,8 +25,9 @@ type GithubSCM struct {
 	token       string
 	providerURL string
 	tokenURL    string
-
-	createInviteClientFn func(token string) *github.Client // for testing
+	// createInviteClientFn creates a GitHub client using the provided access token.
+	// This client is used to accept organization invitations on behalf of a user.
+	createInviteClientFn func(token string) *github.Client
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
