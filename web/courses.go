@@ -101,9 +101,12 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 
 	// Ensure that the user's refresh token is updated after enrollment.
 	defer func() {
-		// Update user's refresh token if it has changed.
+		// The refresh token may have been rotated during UpdateEnrollment when accepting
+		// the organization invite. OAuth refresh tokens are single-use, so we must save
+		// the updated token to the database.
 		user.UpdateRefreshToken(opt.RefreshToken)
 		if err := s.db.UpdateUser(user); err != nil {
+			// Continue with enrollment; token can be manually refreshed later
 			s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
 		}
 	}()
