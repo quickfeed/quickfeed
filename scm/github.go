@@ -25,6 +25,9 @@ type GithubSCM struct {
 	token       string
 	providerURL string
 	tokenURL    string
+	// createInviteClientFn creates a GitHub client using the provided access token.
+	// This client is used to accept organization invitations on behalf of a user.
+	createInviteClientFn func(token string) *github.Client
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -39,6 +42,13 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 		clientV4:    githubv4.NewClient(httpClient),
 		token:       token,
 		providerURL: "https://github.com",
+		createInviteClientFn: func(token string) *github.Client {
+			src := oauth2.StaticTokenSource(
+				&oauth2.Token{AccessToken: token},
+			)
+			httpClient := oauth2.NewClient(context.Background(), src)
+			return github.NewClient(httpClient)
+		},
 	}
 }
 
@@ -183,9 +193,9 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
 		repo, err := s.createCourseRepo(ctx, &CreateRepositoryOptions{
-			Repo:    path,
-			Owner:   org.GetScmOrganizationName(),
-			Private: private,
+			Repo:     path,
+			Owner:    org.GetScmOrganizationName(),
+			Private:  private,
 			AutoInit: path == qf.AssignmentsRepo, // only assignments repo is auto-initialized
 		})
 		if err != nil {
@@ -204,6 +214,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 }
 
 // UpdateEnrollment updates organization membership and creates user repositories.
+// For student enrollments.
 func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
 	const op Op = "UpdateEnrollment"
 	m := M("failed to update enrollment")
@@ -217,15 +228,33 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
 		m = M("failed to enroll %s as student in %s", opt.User, org.GetScmOrganizationName())
+
+		// Step 1: Add user to org as member (creates org invitation)
+		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
+			return nil, E(op, m, err)
+		}
+
+		// Step 2: Accept the org invitation so user becomes an org member.
+		// Once they are an org member, adding them as collaborator to org-owned
+		// repos grants access immediately without requiring further invitations.
+		if err := s.acceptOrgInvitation(ctx, &InvitationOptions{
+			Login:       opt.User,
+			Owner:       org.GetScmOrganizationName(),
+			AccessToken: opt.AccessToken,
+		}); err != nil {
+			return nil, E(op, m, err)
+		}
+
+		// Step 3: Add user to assignments repo with read access.
+		// Since user is now an org member, this grants access immediately.
 		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, E(op, m, err)
 		}
+
+		// Step 4: Create student repo (fork) and add user as collaborator with write access.
+		// Forking works because the user now has read access to the upstream assignments repo.
 		repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.User)
 		if err != nil {
-			return nil, E(op, m, err)
-		}
-		// Promote user to organization member
-		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
 			return nil, E(op, m, err)
 		}
 		return repo, nil

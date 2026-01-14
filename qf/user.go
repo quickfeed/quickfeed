@@ -41,3 +41,13 @@ func (u *User) ValidateProfile() error {
 	}
 	return nil
 }
+
+// UpdateRefreshToken updates the user's refresh token if the new token is valid.
+// We only update when the new token is non-empty and different from the current one.
+// An empty token typically indicates the token exchange failed or wasn't performed,
+// in which case we preserve the existing token to avoid invalidating the user's session.
+func (u *User) UpdateRefreshToken(newToken string) {
+	if newToken != "" && newToken != u.GetRefreshToken() {
+		u.RefreshToken = newToken
+	}
+}

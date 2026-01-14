@@ -427,10 +427,12 @@ func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 // UserDiffOptions returns the cmp options for comparing users.
 // It ignores the ScmRemoteID field, which is intentionally cleared
 // by the QuickFeed service before returning data to the client.
+// It also ignores the RefreshToken field, which may be updated
+// during operations like enrollment.
 func UserDiffOptions() cmp.Option {
 	return cmp.Options{
 		protocmp.Transform(),
-		protocmp.IgnoreFields(&qf.User{}, "ScmRemoteID"),
+		protocmp.IgnoreFields(&qf.User{}, "ScmRemoteID", "RefreshToken"),
 	}
 }
 

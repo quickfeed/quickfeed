@@ -245,14 +245,32 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			logger.Debug(replaceArgs(putOrgsMembershipsByOrgByUsername, org, username), " membership=", membership)
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
+				// Check if user already exists
 				for i, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
 						s.members[i].Role = membership.Role
-						mustWrite(w, membership)
+						mustWrite(w, s.members[i])
 						return
 					}
 				}
-				w.WriteHeader(http.StatusNotFound) // member not found
+				// If user not found, and role is admin -> return error
+				if strings.EqualFold(membership.GetRole(), "admin") {
+					fmt.Println("NOT FOUND", username, "AS ADMIN", membership)
+					w.WriteHeader(http.StatusNotFound)
+					return
+				} else {
+					fmt.Println("ADDING AS MEMBER", username, membership)
+				}
+				// User not found - create new membership (simulates sending invitation)
+				userID := s.getUserID(username)
+				newMembership := github.Membership{
+					Organization: &github.Organization{Login: github.String(org)},
+					User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
+					Role:         membership.Role,
+					State:        github.String("pending"), // Invitation pending until accepted
+				}
+				s.members = append(s.members, newMembership)
+				mustWrite(w, newMembership)
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound) // org not found
@@ -275,6 +293,31 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					}
 				}
 				w.WriteHeader(http.StatusNotFound) // member not found
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound) // org not found
+			}
+		}),
+	)
+	// Handler for user accepting their own org invitation (PATCH /user/memberships/orgs/{org})
+	patchUserMembershipsOrgsByOrgHandler := WithRequestMatchHandler(
+		patchUserMembershipsOrgsByOrg,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			org := r.PathValue("org")
+			membership := mustRead[github.Membership](r.Body)
+			logger.Debug(replaceArgs(patchUserMembershipsOrgsByOrg, org), " membership=", membership)
+
+			// Find the pending membership and activate it
+			found := s.matchOrgFunc(org, func(o github.Organization) {
+				for i, m := range s.members {
+					if m.GetOrganization().GetLogin() == o.GetLogin() {
+						// Set state to active (user accepted invitation)
+						s.members[i].State = github.String("active")
+						mustWrite(w, s.members[i])
+						return
+					}
+				}
+				w.WriteHeader(http.StatusNotFound) // membership not found
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound) // org not found
@@ -748,6 +791,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposForksByOwnerByRepoHandler,
 		getOrgsMembershipsByOrgByUsernameHandler,
 		putOrgsMembershipsByOrgByUsernameHandler,
+		patchUserMembershipsOrgsByOrgHandler,
 		deleteOrgsMembersByOrgByUsernameHandler,
 		getReposByOwnerByRepoHandler,
 		deleteReposByOwnerByRepoHandler,
@@ -773,6 +817,9 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
 		providerURL: "file://" + env.RepositoryPath(),
+		createInviteClientFn: func(token string) *github.Client {
+			return github.NewClient(httpClient)
+		},
 	}
 	return s
 }
