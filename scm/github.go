@@ -227,16 +227,12 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		// Step 2: Accept the org invitation so user becomes an org member.
 		// Once they are an org member, adding them as collaborator to org-owned
 		// repos grants access immediately without requiring further invitations.
-		if opt.AccessToken != "" {
-			err := s.acceptOrgInvitation(ctx, &InvitationOptions{
-				Login:       opt.User,
-				Owner:       org.GetScmOrganizationName(),
-				AccessToken: opt.AccessToken,
-			})
-			if err != nil {
-				s.logger.Warnf("Failed to accept org invitation for %s: %v (continuing)", opt.User, err)
-				// Continue with enrollment; invitation can be accepted manually later
-			}
+		if err := s.acceptOrgInvitation(ctx, &InvitationOptions{
+			Login:       opt.User,
+			Owner:       org.GetScmOrganizationName(),
+			AccessToken: opt.AccessToken,
+		}); err != nil {
+			return nil, E(op, m, err)
 		}
 
 		// Step 3: Add user to assignments repo with read access.
