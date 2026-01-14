@@ -18,6 +18,20 @@ type Manager struct {
 	scms map[string]SCM
 	mu   sync.Mutex
 	*Config
+	// exchangeTokenFn is an optional function for exchanging refresh tokens.
+	// If nil, the default Config.ExchangeToken method is used.
+	// This field exists to enable mocking in tests.
+	exchangeTokenFn func(refreshToken string) (*ExchangeToken, error)
+}
+
+// ExchangeToken exchanges a refresh token for an access token.
+// If a custom exchangeTokenFn is set (for testing), it uses that.
+// Otherwise, it delegates to the Config's ExchangeToken method.
+func (m *Manager) ExchangeToken(refreshToken string) (*ExchangeToken, error) {
+	if m.exchangeTokenFn != nil {
+		return m.exchangeTokenFn(refreshToken)
+	}
+	return m.Config.ExchangeToken(refreshToken)
 }
 
 // Config stores SCM variables.

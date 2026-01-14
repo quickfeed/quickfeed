@@ -9,6 +9,7 @@ const (
 	postReposForksByOwnerByRepo                               = "POST /repos/{owner}/{repo}/forks"                                   // createForkedRepo
 	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"                             // GetOrganization
 	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"                             // UpdateEnrollment, DemoteTeacherToStudent
+	patchUserMembershipsOrgsByOrg                             = "PATCH /user/memberships/orgs/{org}"                                 // acceptOrgInvitation
 	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"                              // RejectEnrollment
 	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createCourseRepo, createForkedRepo, waitForRepository
 	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository

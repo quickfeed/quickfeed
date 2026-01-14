@@ -25,6 +25,8 @@ type GithubSCM struct {
 	token       string
 	providerURL string
 	tokenURL    string
+
+	createInviteClientFn func(token string) *github.Client // for testing
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -39,6 +41,13 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 		clientV4:    githubv4.NewClient(httpClient),
 		token:       token,
 		providerURL: "https://github.com",
+		createInviteClientFn: func(token string) *github.Client {
+			src := oauth2.StaticTokenSource(
+				&oauth2.Token{AccessToken: token},
+			)
+			httpClient := oauth2.NewClient(context.Background(), src)
+			return github.NewClient(httpClient)
+		},
 	}
 }
 

@@ -275,12 +275,12 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE RefreshToken:}",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE AccessToken:}",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
-			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling", AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: scm.GetOrganization: failed to get organization fuzz: GET http://127.0.0.1/orgs/fuzz: 404  []",
 			wantUserErr: wantUserErr,
 		},
@@ -288,57 +288,58 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		// user frank does not exist, but is added to s.members in github_mock.go
 		{
 			name:        "CompleteRequest/IgnoredStatus",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: NONE",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/IgnoredStatus",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: PENDING",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/CreateStudRepo",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
 			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/frank: 404  []`,
 			wantUserErr: "failed to enroll frank as student in bar",
 		},
 		{
+			// This will work since frank is now a member of the bar organization after the previous test, even though the enrollment failed.
 			name:        "CompleteRequest/UpdateToTeacher",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER},
-			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as teacher in bar: failed to update to "admin": PUT http://127.0.0.1/orgs/bar/memberships/frank: 404  []`,
-			wantUserErr: "failed to enroll frank as teacher in bar",
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER, AccessToken: "string"},
+			wantErr:     "",
+			wantUserErr: "",
 		},
 
 		// user meling already exists in s.members in github_mock.go
 		{
 			name:        "CompleteRequest/None",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: NONE",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/Pending",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: PENDING",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/Student/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
 			wantErr:     "",
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/Teacher/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "string"},
 			wantErr:     "",
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/Student/Fail",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
 			wantErr:     `scm.UpdateEnrollment: failed to enroll meling as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/meling: 404  []`,
 			wantUserErr: "failed to enroll meling as student in bar",
 		},
@@ -347,7 +348,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		// On GitHub, only organization owners can update roles, but we do not enforce this in the mock.
 		{
 			name:        "CompleteRequest/Teacher/TODO",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_TEACHER},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "string"},
 			wantErr:     "",
 			wantUserErr: "",
 		},
@@ -439,37 +440,38 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE RefreshToken:}",
+			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE AccessToken:}",
 			wantUserErr: "failed to demote teacher to student",
 		},
 
 		{
 			name:        "CompleteRequest/OrgNotFound",
-			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling", AccessToken: "string"},
 			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher meling to student in fuzz: failed to update to "member": PUT http://127.0.0.1/orgs/fuzz/memberships/meling: 404  []`,
 			wantUserErr: "failed to demote teacher meling to student in fuzz",
 		},
+		// Note: User not found in org will create a new membership with member role (GitHub API behavior)
 		{
 			name:        "CompleteRequest/UserNotFound",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank"},
-			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher frank to student in bar: failed to update to "member": PUT http://127.0.0.1/orgs/bar/memberships/frank: 404  []`,
-			wantUserErr: "failed to demote teacher frank to student in bar",
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", AccessToken: "string"},
+			wantErr:     "",
+			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/FooStudent/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "jostein", AccessToken: "string"},
 			wantErr:     ``,
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/FooTeacher/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", AccessToken: "string"},
 			wantErr:     ``,
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/BarTeacher/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", AccessToken: "string"},
 			wantErr:     ``,
 			wantUserErr: "",
 		},

@@ -345,17 +345,17 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantRepo: nil, wantErr: true},
 
 		// user frank does not exist, but is added to s.members in github_mock.go
-		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                   // ignored
-		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                // ignored
-		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
-		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                                         // ignored
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                                      // ignored
+		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER, AccessToken: "dummy"}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
 
 		// user meling already exists in s.members in github_mock.go
-		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                // ignored
-		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},          // ignored
-		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
-		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
-		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE, AccessToken: "dummy"}, wantRepo: nil, wantErr: true},                // ignored
+		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING, AccessToken: "dummy"}, wantRepo: nil, wantErr: true},          // ignored
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
+		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "dummy"}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...), WithGroups(g))
 	for _, tt := range tests {
@@ -428,7 +428,8 @@ func TestMockDemoteTeacherToStudent(t *testing.T) {
 		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling"}, wantErr: true},
 
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: true},
+		// Note: User not found in org will create a new membership with member role (GitHub API behavior)
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: false},
 
 		{name: "CompleteRequest/FooStudent", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"}, wantErr: false}, // jostein is already a student
 		{name: "CompleteRequest/FooTeacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
