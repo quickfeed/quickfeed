@@ -90,14 +90,23 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return s.db.UpdateEnrollment(query)
 	}
 	// create user scmRepo and add user to course organization as a member
-	// Pass the refresh token so that UpdateEnrollment can accept the assignments invitation
-	// before creating the forked student repo (required for private forks)
+	// Pass the refresh token so that UpdateEnrollment can accept the org invitation,
+	// which grants immediate access to repos the user is added to as a collaborator.
 	opt := &scm.UpdateEnrollmentOptions{
 		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
 		RefreshToken: user.GetRefreshToken(),
 	}
+
+	// Ensure that the user's refresh token is updated after enrollment.
+	defer func() {
+		// Update user's refresh token if it has changed.
+		user.UpdateRefreshToken(opt.RefreshToken)
+		if err := s.db.UpdateUser(user); err != nil {
+			s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
+		}
+	}()
 	scmRepo, err := sc.UpdateEnrollment(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
@@ -116,16 +125,6 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
-	// The refresh token may have been rotated during UpdateEnrollment when accepting
-	// the assignments invitation. OAuth refresh tokens are single-use, so we must
-	// update the user object before calling acceptRepositoryInvites, which needs
-	// a valid token to accept the student repo invitation.
-	user.UpdateRefreshToken(opt.RefreshToken)
-
-	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
-		// log error, but continue with enrollment; we can manually accept invitations later
-		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.GetCode(), user.GetLogin(), err)
-	}
 	return s.db.UpdateEnrollment(query)
 }
 
@@ -182,23 +181,4 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		enrollment.UpdateTotalApproved(submissions.For(enrollment.GetID()))
 	}
 	return course.GetEnrollments(), nil
-}
-
-// acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp scm.SCM, user *qf.User, organizationName string) error {
-	user, err := s.db.GetUser(user.GetID())
-	if err != nil {
-		return fmt.Errorf("failed to get user %d: %w", user.GetID(), err)
-	}
-	newRefreshToken, err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
-		Login:        user.GetLogin(),
-		Owner:        organizationName,
-		RefreshToken: user.GetRefreshToken(),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to accept invites for %s: %w", user.GetLogin(), err)
-	}
-	// Save the user's new refresh token in the database.
-	user.RefreshToken = newRefreshToken
-	return s.db.UpdateUser(user)
 }
