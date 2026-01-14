@@ -100,7 +100,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
 	}
 	// create user scmRepo and add user to course organization as a member
-	// Pass the refresh token so that UpdateEnrollment can accept the org invitation,
+	// Pass the access token so that UpdateEnrollment can accept the org invitation,
 	// which grants immediate access to repos the user is added to as a collaborator.
 	opt := &scm.UpdateEnrollmentOptions{
 		Organization: course.GetScmOrganizationName(),

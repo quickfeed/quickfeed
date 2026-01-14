@@ -19,7 +19,6 @@ func newGithubInviteClient(token string) *github.Client {
 }
 
 // acceptOrgInvitation accepts an organization membership invitation.
-// Returns the new refresh token if successful.
 func (s *GithubSCM) acceptOrgInvitation(ctx context.Context, opt *InvitationOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid options: %+v", opt)
