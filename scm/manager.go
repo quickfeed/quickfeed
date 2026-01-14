@@ -8,6 +8,7 @@ import (
 	"github.com/beatlabs/github-auth/app"
 	"github.com/beatlabs/github-auth/key"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
@@ -18,20 +19,18 @@ type Manager struct {
 	scms map[string]SCM
 	mu   sync.Mutex
 	*Config
-	// exchangeTokenFn is an optional function for exchanging refresh tokens.
-	// If nil, the default Config.ExchangeToken method is used.
-	// This field exists to enable mocking in tests.
 	exchangeTokenFn func(refreshToken string) (*ExchangeToken, error)
 }
 
-// ExchangeToken exchanges a refresh token for an access token.
-// If a custom exchangeTokenFn is set (for testing), it uses that.
-// Otherwise, it delegates to the Config's ExchangeToken method.
-func (m *Manager) ExchangeToken(refreshToken string) (*ExchangeToken, error) {
-	if m.exchangeTokenFn != nil {
-		return m.exchangeTokenFn(refreshToken)
+// ExchangeAndUpdateToken returns a new access token for the given user.
+// It also updates the user's refresh token in the user object.
+func (m *Manager) ExchangeAndUpdateToken(user *qf.User) (string, error) {
+	exchangeToken, err := m.exchangeTokenFn(user.GetRefreshToken())
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token for user %s: %w", user.GetLogin(), err)
 	}
-	return m.Config.ExchangeToken(refreshToken)
+	user.UpdateRefreshToken(exchangeToken.RefreshToken)
+	return exchangeToken.AccessToken, nil
 }
 
 // Config stores SCM variables.
@@ -79,8 +78,9 @@ func NewSCMManager() (*Manager, error) {
 		return nil, err
 	}
 	return &Manager{
-		scms:   make(map[string]SCM),
-		Config: c,
+		scms:            make(map[string]SCM),
+		Config:          c,
+		exchangeTokenFn: c.ExchangeToken,
 	}, nil
 }
 

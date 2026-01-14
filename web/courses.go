@@ -89,16 +89,18 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
 	}
-	exchangeToken, err := s.scmMgr.ExchangeToken(user.GetRefreshToken())
+
+	// Exchange refresh token for access token and update the user's refresh token
+	accessToken, err := s.scmMgr.ExchangeAndUpdateToken(user)
 	if err != nil {
-		return fmt.Errorf("failed to exchange refresh token for %s: %w", user.GetLogin(), err)
+		return err
 	}
 	// Ensure that the user's refresh token is updated after enrollment.
-	user.UpdateRefreshToken(exchangeToken.RefreshToken)
 	if err := s.db.UpdateUser(user); err != nil {
 		// Continue with enrollment; token can be manually refreshed later
 		s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
 	}
+
 	// create user scmRepo and add user to course organization as a member
 	// Pass the access token so that UpdateEnrollment can accept the org invitation,
 	// which grants immediate access to repos the user is added to as a collaborator.
@@ -106,9 +108,8 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
-		AccessToken:  exchangeToken.AccessToken,
+		AccessToken:  accessToken,
 	}
-
 	scmRepo, err := sc.UpdateEnrollment(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
@@ -117,8 +118,8 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
-		ScmOrganizationID: course.GetScmOrganizationID(),
 		ScmRepositoryID:   scmRepo.ID,
+		ScmOrganizationID: course.GetScmOrganizationID(),
 		UserID:            user.GetID(),
 		HTMLURL:           scmRepo.HTMLURL,
 		RepoType:          qf.Repository_USER,
