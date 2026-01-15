@@ -30,8 +30,8 @@ type GithubSCM struct {
 	createUserClientFn func(token string) *github.Client
 }
 
-// NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
+// NewGithubUserClient returns a new Github client implementing the SCM interface.
+func NewGithubUserClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	client := newGithubUserClient(token)
 	return &GithubSCM{
 		logger:             logger,

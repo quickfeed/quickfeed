@@ -68,7 +68,7 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
-		return NewGithubSCMClient(logger, token), nil
+		return NewGithubUserClient(logger, token), nil
 	case "fake":
 		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
 	}

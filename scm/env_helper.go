@@ -22,7 +22,7 @@ func GetTestOrganization(t *testing.T) string {
 func GetTestSCM(t *testing.T) (*GithubSCM, string) {
 	t.Helper()
 	accessToken := GetAccessToken(t)
-	scmClient := NewGithubSCMClient(qtest.Logger(t), accessToken)
+	scmClient := NewGithubUserClient(qtest.Logger(t), accessToken)
 	user, _, err := scmClient.client.Users.Get(context.Background(), "")
 	if err != nil {
 		t.Fatal(err)
