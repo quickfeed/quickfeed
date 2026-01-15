@@ -817,7 +817,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
 		providerURL: "file://" + env.RepositoryPath(),
-		createInviteClientFn: func(token string) *github.Client {
+		createUserClientFn: func(token string) *github.Client {
 			return github.NewClient(httpClient)
 		},
 	}

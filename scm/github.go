@@ -24,21 +24,21 @@ type GithubSCM struct {
 	token       string
 	providerURL string
 	tokenURL    string
-	// createInviteClientFn creates a GitHub client using the provided access token.
+	// createUserClientFn creates a GitHub client using the provided access token.
 	// This client is used to accept organization invitations on behalf of a user.
-	createInviteClientFn func(token string) *github.Client
+	createUserClientFn func(token string) *github.Client
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
 func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	client := newUserGithubClient(token)
 	return &GithubSCM{
-		logger:               logger,
-		client:               client,
-		clientV4:             githubv4.NewClient(client.Client()),
-		token:                token,
-		providerURL:          "https://github.com",
-		createInviteClientFn: newUserGithubClient,
+		logger:             logger,
+		client:             client,
+		clientV4:           githubv4.NewClient(client.Client()),
+		token:              token,
+		providerURL:        "https://github.com",
+		createUserClientFn: newUserGithubClient,
 	}
 }
 
