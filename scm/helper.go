@@ -1,12 +1,10 @@
 package scm
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/qf"
-	"golang.org/x/oauth2"
 )
 
 // Organization roles
@@ -46,16 +44,6 @@ var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
 		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
 )
-
-// newUserGithubClient creates a GitHub client using the provided user access token.
-// This client is used to perform actions on behalf of the user, such as accepting invitations.
-func newUserGithubClient(token string) *github.Client {
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
-	return github.NewClient(httpClient)
-}
 
 // isDirty returns true if the list of provided repositories contains
 // any of the repositories that QuickFeed wants to create.

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/qf"
@@ -31,15 +32,25 @@ type GithubSCM struct {
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
 func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
-	client := newUserGithubClient(token)
+	client := newGithubUserClient(token)
 	return &GithubSCM{
 		logger:             logger,
 		client:             client,
 		clientV4:           githubv4.NewClient(client.Client()),
 		token:              token,
 		providerURL:        "https://github.com",
-		createUserClientFn: newUserGithubClient,
+		createUserClientFn: newGithubUserClient,
 	}
+}
+
+// newGithubUserClient creates a GitHub client using the provided user access token.
+// This client is used to perform actions on behalf of the user, such as accepting invitations.
+func newGithubUserClient(token string) *github.Client {
+	src := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	httpClient := oauth2.NewClient(context.Background(), src)
+	return github.NewClient(httpClient)
 }
 
 // GetUserByID fetches a user by their SCM remote ID.

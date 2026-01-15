@@ -31,7 +31,7 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 		config:             cfg,
 		providerURL:        "https://github.com",
 		tokenURL:           fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID()),
-		createUserClientFn: newUserGithubClient,
+		createUserClientFn: newGithubUserClient,
 	}, nil
 }
 
