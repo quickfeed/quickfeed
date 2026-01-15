@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/shurcooL/githubv4"
-	"golang.org/x/oauth2"
 )
 
 // GithubSCM implements the SCM interface.
@@ -25,31 +25,32 @@ type GithubSCM struct {
 	token       string
 	providerURL string
 	tokenURL    string
-	// createInviteClientFn creates a GitHub client using the provided access token.
+	// createUserClientFn creates a GitHub client using the provided access token.
 	// This client is used to accept organization invitations on behalf of a user.
-	createInviteClientFn func(token string) *github.Client
+	createUserClientFn func(token string) *github.Client
 }
 
-// NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
+// NewGithubUserClient returns a new Github client implementing the SCM interface.
+func NewGithubUserClient(logger *zap.SugaredLogger, token string) *GithubSCM {
+	client := newGithubUserClient(token)
+	return &GithubSCM{
+		logger:             logger,
+		client:             client,
+		clientV4:           githubv4.NewClient(client.Client()),
+		token:              token,
+		providerURL:        "https://github.com",
+		createUserClientFn: newGithubUserClient,
+	}
+}
+
+// newGithubUserClient creates a GitHub client using the provided user access token.
+// This client is used to perform actions on behalf of the user, such as accepting invitations.
+func newGithubUserClient(token string) *github.Client {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
-	return &GithubSCM{
-		logger:      logger,
-		client:      github.NewClient(httpClient),
-		clientV4:    githubv4.NewClient(httpClient),
-		token:       token,
-		providerURL: "https://github.com",
-		createInviteClientFn: func(token string) *github.Client {
-			src := oauth2.StaticTokenSource(
-				&oauth2.Token{AccessToken: token},
-			)
-			httpClient := oauth2.NewClient(context.Background(), src)
-			return github.NewClient(httpClient)
-		},
-	}
+	return github.NewClient(httpClient)
 }
 
 // GetUserByID fetches a user by their SCM remote ID.

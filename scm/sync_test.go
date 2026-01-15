@@ -39,7 +39,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			calls := 0
-			s := NewGithubSCMClient(qtest.Logger(t), "token")
+			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
 				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
 					calls++
@@ -65,7 +65,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 	t.Run("RateLimitRetrySuccess", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			calls := 0
-			s := NewGithubSCMClient(qtest.Logger(t), "token")
+			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
 				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
 					calls++
@@ -104,7 +104,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 	t.Run("AbuseRateLimitRetrySuccess", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			calls := 0
-			s := NewGithubSCMClient(qtest.Logger(t), "token")
+			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
 				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
 					calls++
@@ -142,7 +142,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 	t.Run("NonRetryableError", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			calls := 0
-			s := NewGithubSCMClient(qtest.Logger(t), "token")
+			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
 				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
 					calls++
@@ -168,7 +168,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 	t.Run("MaxRetriesExceeded", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			calls := 0
-			s := NewGithubSCMClient(qtest.Logger(t), "token")
+			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
 				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
 					calls++

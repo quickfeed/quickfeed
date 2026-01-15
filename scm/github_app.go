@@ -25,12 +25,13 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 	}
 	httpClient := installCfg.Client(ctx)
 	return &GithubSCM{
-		logger:      logger,
-		client:      github.NewClient(httpClient),
-		clientV4:    githubv4.NewClient(httpClient),
-		config:      cfg,
-		providerURL: "https://github.com",
-		tokenURL:    fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID()),
+		logger:             logger,
+		client:             github.NewClient(httpClient),
+		clientV4:           githubv4.NewClient(httpClient),
+		config:             cfg,
+		providerURL:        "https://github.com",
+		tokenURL:           fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID()),
+		createUserClientFn: newGithubUserClient,
 	}, nil
 }
 
