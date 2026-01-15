@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -53,29 +54,18 @@ func newAppTokenManager(cfg *Config, installationID int64) *appTokenManager {
 
 // Token returns a valid installation access token, refreshing it if necessary.
 func (m *appTokenManager) Token(ctx context.Context) (string, error) {
-	// Return valid token if not expired
-	if token := m.validToken(); token != "" {
-		return token, nil
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Return the current token if it is still valid.
+	if m.token != "" && time.Now().Before(m.expiresAt) {
+		return m.token, nil
 	}
 
-	if m.config == nil {
-		return "", errors.New("cannot refresh token without config")
-	}
-
-	resp, err := m.config.Client().Post(m.tokenURL, "application/vnd.github.v3+json", nil)
-	if err != nil {
-		// Note: If the installation was deleted on GitHub, the installation ID will be invalid.
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, err := m.requestNewToken(ctx)
 	if err != nil {
 		return "", err
 	}
-	if resp.StatusCode < 200 || resp.StatusCode > 300 {
-		return "", fmt.Errorf("failed to fetch installation access token (response status %s): %s", resp.Status, string(body))
-	}
-
 	var tokenResponse struct {
 		Token       string    `json:"token"`
 		ExpiresAt   time.Time `json:"expires_at"`
@@ -90,26 +80,41 @@ func (m *appTokenManager) Token(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	return m.updateToken(tokenResponse.Token, tokenResponse.ExpiresAt), nil
+	m.token = tokenResponse.Token
+	m.expiresAt = tokenResponse.ExpiresAt
+	return m.token, nil
 }
 
-// validToken returns the current token if it is still valid, or an empty string otherwise.
-func (m *appTokenManager) validToken() string {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.token != "" && time.Now().Before(m.expiresAt) {
-		return m.token
+func (m *appTokenManager) requestNewToken(ctx context.Context) ([]byte, error) {
+	if m.config == nil {
+		return nil, errors.New("cannot refresh token without config")
 	}
-	return ""
-}
 
-// updateToken updates the token and its expiration time, returning the new token.
-func (m *appTokenManager) updateToken(token string, expiresAt time.Time) string {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.token = token
-	m.expiresAt = expiresAt
-	return m.token
+	req, err := http.NewRequestWithContext(ctx, "POST", m.tokenURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/vnd.github.v3+json")
+	resp, err := m.config.Client().Do(req)
+	if err != nil {
+		// Note: If the installation was deleted on GitHub, the installation ID will be invalid.
+		return nil, err
+	}
+	defer func() {
+		closeErr := resp.Body.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("failed to fetch installation access token (response status %s): %s", resp.Status, string(body))
+	}
+	return body, nil
 }
 
 func (cfg *Config) fetchInstallation(organization string) (*github.Installation, error) {
