@@ -18,16 +18,24 @@ import (
 
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
-	logger      *zap.SugaredLogger
-	client      *github.Client
-	clientV4    *githubv4.Client
-	config      *Config
-	token       string
-	providerURL string
-	tokenURL    string
+	logger       *zap.SugaredLogger
+	client       *github.Client
+	clientV4     *githubv4.Client
+	tokenManager TokenManager
+	providerURL  string
 	// createUserClientFn creates a GitHub client using the provided access token.
 	// This client is used to accept organization invitations on behalf of a user.
 	createUserClientFn func(token string) *github.Client
+}
+
+// staticTokenManager implements TokenManager for a static token used by user-based GitHub clients.
+type staticTokenManager struct {
+	token string
+}
+
+// Token returns the static token used by user-based GitHub clients.
+func (s *staticTokenManager) Token(_ context.Context) (string, error) {
+	return s.token, nil
 }
 
 // NewGithubUserClient returns a new Github client implementing the SCM interface.
@@ -37,7 +45,7 @@ func NewGithubUserClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 		logger:             logger,
 		client:             client,
 		clientV4:           githubv4.NewClient(client.Client()),
-		token:              token,
+		tokenManager:       &staticTokenManager{token: token},
 		providerURL:        "https://github.com",
 		createUserClientFn: newGithubUserClient,
 	}

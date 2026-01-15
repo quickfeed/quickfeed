@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/google/go-github/v62/github"
@@ -28,11 +29,87 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 		logger:             logger,
 		client:             github.NewClient(httpClient),
 		clientV4:           githubv4.NewClient(httpClient),
-		config:             cfg,
+		tokenManager:       newAppTokenManager(cfg, inst.GetID()),
 		providerURL:        "https://github.com",
-		tokenURL:           fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID()),
 		createUserClientFn: newGithubUserClient,
 	}, nil
+}
+
+type appTokenManager struct {
+	config   *Config
+	tokenURL string
+
+	mu        sync.Mutex // protects token and expiresAt
+	token     string
+	expiresAt time.Time
+}
+
+func newAppTokenManager(cfg *Config, installationID int64) *appTokenManager {
+	return &appTokenManager{
+		config:   cfg,
+		tokenURL: fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", installationID),
+	}
+}
+
+// Token returns a valid installation access token, refreshing it if necessary.
+func (m *appTokenManager) Token(ctx context.Context) (string, error) {
+	// Return valid token if not expired
+	if token := m.validToken(); token != "" {
+		return token, nil
+	}
+
+	if m.config == nil {
+		return "", errors.New("cannot refresh token without config")
+	}
+
+	resp, err := m.config.Client().Post(m.tokenURL, "application/vnd.github.v3+json", nil)
+	if err != nil {
+		// Note: If the installation was deleted on GitHub, the installation ID will be invalid.
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 300 {
+		return "", fmt.Errorf("failed to fetch installation access token (response status %s): %s", resp.Status, string(body))
+	}
+
+	var tokenResponse struct {
+		Token       string    `json:"token"`
+		ExpiresAt   time.Time `json:"expires_at"`
+		Permissions struct {
+			Contents     string `json:"contents"`
+			Metadata     string `json:"metadata"`
+			PullRequests string `json:"pull_requests"`
+		} `json:"permissions"`
+		RepositorySelection string `json:"repository_selection"`
+	}
+	if err := json.Unmarshal(body, &tokenResponse); err != nil {
+		return "", err
+	}
+
+	return m.updateToken(tokenResponse.Token, tokenResponse.ExpiresAt), nil
+}
+
+// validToken returns the current token if it is still valid, or an empty string otherwise.
+func (m *appTokenManager) validToken() string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.token != "" && time.Now().Before(m.expiresAt) {
+		return m.token
+	}
+	return ""
+}
+
+// updateToken updates the token and its expiration time, returning the new token.
+func (m *appTokenManager) updateToken(token string, expiresAt time.Time) string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.token = token
+	m.expiresAt = expiresAt
+	return m.token
 }
 
 func (cfg *Config) fetchInstallation(organization string) (*github.Installation, error) {
@@ -90,38 +167,4 @@ func (cfg *Config) ExchangeToken(refreshToken string) (*ExchangeToken, error) {
 		return nil, fmt.Errorf("tokens are empty")
 	}
 	return &token, nil
-}
-
-func (s *GithubSCM) refreshToken(organization string) error {
-	if s.config == nil {
-		return errors.New("cannot refresh token without config")
-	}
-	resp, err := s.config.Client().Post(s.tokenURL, "application/vnd.github.v3+json", nil)
-	if err != nil {
-		// Note: If the installation was deleted on GitHub, the installation ID will be invalid.
-		return err
-	}
-	defer resp.Body.Close()
-	var tokenResponse struct {
-		Token       string    `json:"token"`
-		ExpiresAt   time.Time `json:"expires_at"`
-		Permissions struct {
-			Contents     string `json:"contents"`
-			Metadata     string `json:"metadata"`
-			PullRequests string `json:"pull_requests"`
-		} `json:"permissions"`
-		RepositorySelection string `json:"repository_selection"`
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode < 200 || resp.StatusCode > 300 {
-		return fmt.Errorf("failed to fetch installation access token for %s (response status %s): %s", organization, resp.Status, string(body))
-	}
-	if err := json.Unmarshal(body, &tokenResponse); err != nil {
-		return err
-	}
-	s.token = tokenResponse.Token
-	return nil
 }
