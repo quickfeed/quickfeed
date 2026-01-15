@@ -63,6 +63,11 @@ type SCM interface {
 	RequestReviewers(context.Context, *RequestReviewersOptions) error
 }
 
+// TokenManager manages the access token for the SCM.
+type TokenManager interface {
+	Token(context.Context) (string, error)
+}
+
 // NewSCMClient returns a new provider client implementing the SCM interface.
 func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	provider := env.ScmProvider()
