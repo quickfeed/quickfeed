@@ -96,9 +96,6 @@ const (
 	// QuickFeedServiceUpdateSubmissionProcedure is the fully-qualified name of the QuickFeedService's
 	// UpdateSubmission RPC.
 	QuickFeedServiceUpdateSubmissionProcedure = "/qf.QuickFeedService/UpdateSubmission"
-	// QuickFeedServiceUpdateSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
-	// UpdateSubmissions RPC.
-	QuickFeedServiceUpdateSubmissionsProcedure = "/qf.QuickFeedService/UpdateSubmissions"
 	// QuickFeedServiceRebuildSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
 	// RebuildSubmissions RPC.
 	QuickFeedServiceRebuildSubmissionsProcedure = "/qf.QuickFeedService/RebuildSubmissions"
@@ -168,8 +165,9 @@ type QuickFeedServiceClient interface {
 	GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error)
-	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
-	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
+	// UpdateSubmission updates the submission specified in the Grade message.
+	// If the Grade's UserID is zero, the grade is applied to all users associated with the submission.
+	UpdateSubmission(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error)
 	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
 	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
 	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
@@ -317,16 +315,10 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmissionsByCourse")),
 			connect.WithClientOptions(opts...),
 		),
-		updateSubmission: connect.NewClient[qf.UpdateSubmissionRequest, qf.Void](
+		updateSubmission: connect.NewClient[qf.Grade, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateSubmissionProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmission")),
-			connect.WithClientOptions(opts...),
-		),
-		updateSubmissions: connect.NewClient[qf.UpdateSubmissionsRequest, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceUpdateSubmissionsProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmissions")),
 			connect.WithClientOptions(opts...),
 		),
 		rebuildSubmissions: connect.NewClient[qf.RebuildRequest, qf.Void](
@@ -438,8 +430,7 @@ type quickFeedServiceClient struct {
 	getSubmission            *connect.Client[qf.SubmissionRequest, qf.Submission]
 	getSubmissions           *connect.Client[qf.SubmissionRequest, qf.Submissions]
 	getSubmissionsByCourse   *connect.Client[qf.SubmissionRequest, qf.CourseSubmissions]
-	updateSubmission         *connect.Client[qf.UpdateSubmissionRequest, qf.Void]
-	updateSubmissions        *connect.Client[qf.UpdateSubmissionsRequest, qf.Void]
+	updateSubmission         *connect.Client[qf.Grade, qf.Void]
 	rebuildSubmissions       *connect.Client[qf.RebuildRequest, qf.Void]
 	createBenchmark          *connect.Client[qf.GradingBenchmark, qf.GradingBenchmark]
 	updateBenchmark          *connect.Client[qf.GradingBenchmark, qf.Void]
@@ -557,13 +548,8 @@ func (c *quickFeedServiceClient) GetSubmissionsByCourse(ctx context.Context, req
 }
 
 // UpdateSubmission calls qf.QuickFeedService.UpdateSubmission.
-func (c *quickFeedServiceClient) UpdateSubmission(ctx context.Context, req *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateSubmission(ctx context.Context, req *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
 	return c.updateSubmission.CallUnary(ctx, req)
-}
-
-// UpdateSubmissions calls qf.QuickFeedService.UpdateSubmissions.
-func (c *quickFeedServiceClient) UpdateSubmissions(ctx context.Context, req *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
-	return c.updateSubmissions.CallUnary(ctx, req)
 }
 
 // RebuildSubmissions calls qf.QuickFeedService.RebuildSubmissions.
@@ -661,8 +647,9 @@ type QuickFeedServiceHandler interface {
 	GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error)
-	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
-	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
+	// UpdateSubmission updates the submission specified in the Grade message.
+	// If the Grade's UserID is zero, the grade is applied to all users associated with the submission.
+	UpdateSubmission(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error)
 	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
 	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
 	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
@@ -812,12 +799,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmission")),
 		connect.WithHandlerOptions(opts...),
 	)
-	quickFeedServiceUpdateSubmissionsHandler := connect.NewUnaryHandler(
-		QuickFeedServiceUpdateSubmissionsProcedure,
-		svc.UpdateSubmissions,
-		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmissions")),
-		connect.WithHandlerOptions(opts...),
-	)
 	quickFeedServiceRebuildSubmissionsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceRebuildSubmissionsProcedure,
 		svc.RebuildSubmissions,
@@ -946,8 +927,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceGetSubmissionsByCourseHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateSubmissionProcedure:
 			quickFeedServiceUpdateSubmissionHandler.ServeHTTP(w, r)
-		case QuickFeedServiceUpdateSubmissionsProcedure:
-			quickFeedServiceUpdateSubmissionsHandler.ServeHTTP(w, r)
 		case QuickFeedServiceRebuildSubmissionsProcedure:
 			quickFeedServiceRebuildSubmissionsHandler.ServeHTTP(w, r)
 		case QuickFeedServiceCreateBenchmarkProcedure:
@@ -1065,12 +1044,8 @@ func (UnimplementedQuickFeedServiceHandler) GetSubmissionsByCourse(context.Conte
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissionsByCourse is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
+func (UnimplementedQuickFeedServiceHandler) UpdateSubmission(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmission is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmissions is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
