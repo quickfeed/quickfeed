@@ -217,7 +217,6 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		UserID:       admin.GetID(),
 		Score:        80,
 		Grades:       []*qf.Grade{{UserID: admin.GetID(), Status: qf.Submission_APPROVED}},
-		Released:     true,
 	}
 	if err := db.CreateSubmission(initialSubmission); err != nil {
 		t.Fatal(err)

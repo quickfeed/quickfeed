@@ -98,19 +98,18 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 	}
 }
 
-func TestGormDBUpdateSubmissionReleaseToFalse(t *testing.T) {
+func TestGormDBUpdateSubmissionScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, _, assignment := qtest.SetupCourseAssignment(t, db)
 	submission := &qf.Submission{
 		AssignmentID: assignment.GetID(),
 		UserID:       user.GetID(),
-		Released:     true,
 	}
 	if err := db.CreateSubmission(submission); err != nil {
 		t.Fatal(err)
 	}
-	submission.Released = false
+	submission.Score = 100
 	if err := db.UpdateSubmission(submission); err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +117,7 @@ func TestGormDBUpdateSubmissionReleaseToFalse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	qtest.Diff(t, "Expected release to be false", gotSubmission, submission, protocmp.Transform())
+	qtest.Diff(t, "Expected score to be 100", gotSubmission, submission, protocmp.Transform())
 }
 
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
@@ -235,7 +234,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if submissions[0].GetStatusByUser(want.GetUserID()) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].SetGrade(user.GetID(), qf.Submission_APPROVED)
+	submissions[0].SetGradeByUser(user.GetID(), qf.Submission_APPROVED)
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
@@ -758,7 +757,7 @@ func TestSubmissionGradesAfterGroupUpdate(t *testing.T) {
 	}
 
 	// Teacher approves student1's grade via UpdateSubmission
-	fetchedSubmission.SetGrade(student1.ID, qf.Submission_APPROVED)
+	fetchedSubmission.SetGradeByUser(student1.ID, qf.Submission_APPROVED)
 	if err := db.UpdateSubmission(fetchedSubmission); err != nil {
 		t.Fatal(err)
 	}
