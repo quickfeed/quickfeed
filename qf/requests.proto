@@ -55,22 +55,6 @@ message SubmissionRequest {
     }
 }
 
-message UpdateSubmissionRequest {
-    uint64 submissionID      = 1;
-    uint64 courseID          = 2;
-    uint32 score             = 3;
-    bool released            = 4;
-    repeated qf.Grade grades = 5;
-}
-
-message UpdateSubmissionsRequest {
-    uint64 courseID     = 1;
-    uint64 assignmentID = 2;
-    uint32 scoreLimit   = 3;
-    bool release        = 4;
-    bool approve        = 5;
-}
-
 // used to check whether student/group submission repo is empty
 message RepositoryRequest {
     uint64 userID   = 1;
