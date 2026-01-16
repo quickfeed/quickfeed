@@ -30,13 +30,14 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 		logger:             logger,
 		client:             github.NewClient(httpClient),
 		clientV4:           githubv4.NewClient(httpClient),
-		tokenManager:       newAppTokenManager(cfg, inst.GetID()),
+		tokenManager:       newAppTokenManager(logger, cfg, inst.GetID()),
 		providerURL:        "https://github.com",
 		createUserClientFn: newGithubUserClient,
 	}, nil
 }
 
 type appTokenManager struct {
+	logger   *zap.SugaredLogger
 	config   *Config
 	tokenURL string
 
@@ -45,8 +46,9 @@ type appTokenManager struct {
 	expiresAt time.Time
 }
 
-func newAppTokenManager(cfg *Config, installationID int64) *appTokenManager {
+func newAppTokenManager(logger *zap.SugaredLogger, cfg *Config, installationID int64) *appTokenManager {
 	return &appTokenManager{
+		logger:   logger,
 		config:   cfg,
 		tokenURL: fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", installationID),
 	}
@@ -80,8 +82,10 @@ func (m *appTokenManager) Token(ctx context.Context) (string, error) {
 		return "", err
 	}
 
+	m.logger.Infof("Fetched new GitHub App access token; expires at: %s", tokenResponse.ExpiresAt)
+
 	m.token = tokenResponse.Token
-	m.expiresAt = tokenResponse.ExpiresAt
+	m.expiresAt = tokenResponse.ExpiresAt.Add(-time.Minute) // Refresh one minute before expiry
 	return m.token, nil
 }
 
