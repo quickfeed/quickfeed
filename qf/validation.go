@@ -63,14 +63,10 @@ func (req *SubmissionRequest) IsValid() bool {
 	}
 }
 
-// IsValid ensures that both CourseID and SubmissionID are set.
-func (req *UpdateSubmissionRequest) IsValid() bool {
-	return req.GetCourseID() > 0 && req.GetSubmissionID() > 0
-}
-
-// IsValid ensures that both CourseID and AssignmentID are set.
-func (req *UpdateSubmissionsRequest) IsValid() bool {
-	return req.GetCourseID() > 0 && req.GetAssignmentID() > 0
+// IsValid ensures that SubmissionID is set.
+// If UserID is 0, the grade is for a group submission.
+func (req *Grade) IsValid() bool {
+	return req.GetSubmissionID() > 0
 }
 
 // IsValid ensures that CourseID is set and either UserID or GroupID is set, but not both.
