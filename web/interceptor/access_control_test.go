@@ -242,10 +242,8 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateEnrollments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.UpdateAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "UpdateAssignments", err, tt.wantCode, tt.wantAccess)
-			_, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{SubmissionID: 1, CourseID: tt.courseID}, tt.cookie))
+			_, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.Grade{SubmissionID: 1, UserID: tt.userID}, tt.cookie))
 			checkAccess(t, "UpdateSubmission", err, tt.wantCode, tt.wantAccess)
-			_, err = client.UpdateSubmissions(ctx, qtest.RequestWithCookie(&qf.UpdateSubmissionsRequest{AssignmentID: 1, CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, "UpdateSubmissions", err, tt.wantCode, tt.wantAccess)
 			_, err = client.RebuildSubmissions(ctx, qtest.RequestWithCookie(&qf.RebuildRequest{
 				AssignmentID: 1,
 				CourseID:     tt.courseID,

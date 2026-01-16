@@ -170,7 +170,6 @@ var methodCheckers = map[string]accessChecker{
 	"UpdateEnrollments":        checkTeacher,
 	"UpdateAssignments":        checkTeacher,
 	"UpdateSubmission":         checkUpdateSubmission,
-	"UpdateSubmissions":        checkTeacher,
 	"RebuildSubmissions":       checkTeacher,
 	"CreateBenchmark":          checkTeacher,
 	"UpdateBenchmark":          checkTeacher,
