@@ -44,7 +44,7 @@ func (s *Submission) SetGradesAndRelease(request *UpdateSubmissionRequest) {
 	for _, grade := range request.GetGrades() {
 		s.SetGrade(grade.GetUserID(), grade.GetStatus())
 	}
-	s.Released = request.GetReleased()
+	s.Released = request.GetRelease()
 	if request.GetScore() > 0 {
 		s.Score = request.GetScore()
 	}
