@@ -154,7 +154,6 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		// Save the application configuration to the envFile
 		envToUpdate := map[string]string{
 			appID:         strconv.FormatInt(config.GetID(), 10),
-			appKey:        appKeyFile,
 			appUrl:        config.GetHTMLURL(),
 			clientID:      config.GetClientID(),
 			clientSecret:  config.GetClientSecret(),
