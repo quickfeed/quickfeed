@@ -231,45 +231,6 @@ func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
 	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Model(query).Select("*").Updates(query).Error
 }
 
-// UpdateSubmissions approves and/or releases all submissions that have score
-// equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
-	return db.conn.Transaction(func(tx *gorm.DB) error {
-		var submissionIDs []*uint64
-		if err := tx.Model(&qf.Submission{}).
-			Where("assignment_id = ? AND score >= ?", query.GetAssignmentID(), query.GetScore()).
-			Pluck("id", &submissionIDs).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(query).
-			// Update the released status of all submissions that have score equal or above the provided score
-			Where("id IN (?)", submissionIDs).
-			Updates(&qf.Submission{
-				Released: query.GetReleased(),
-			}).Error; err != nil {
-			return err
-		}
-
-		status := qf.Submission_APPROVED
-		if !approve {
-			status = qf.Submission_REJECTED
-		}
-
-		// Approve all Grades for the submissions
-		err := tx.Model(&qf.Grade{}).
-			Where("submission_id IN (?)", submissionIDs).
-			Updates(&qf.Grade{
-				Status: status,
-			}).Error
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
 // GetReview fetches a review
 func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 	var review qf.Review
