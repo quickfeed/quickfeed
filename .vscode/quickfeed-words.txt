@@ -51,6 +51,7 @@ deepsource
 dhparams
 distro
 dockerd
+dockerenv
 Docroot
 doesnotexist
 dropreplace
