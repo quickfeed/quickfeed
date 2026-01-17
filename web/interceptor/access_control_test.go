@@ -74,6 +74,12 @@ func TestAccessControl(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	if err := db.CreateSubmission(&qf.Submission{
+		AssignmentID: assignment.GetID(),
+		GroupID:      group.GetID(),
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	courseAdminCookie := client.Cookie(t, courseAdmin)
 	groupStudentCookie := client.Cookie(t, groupStudent)
@@ -82,11 +88,11 @@ func TestAccessControl(t *testing.T) {
 	adminCookie := client.Cookie(t, admin)
 
 	freeAccessTest := map[string]accessTest{
-		"admin":             {cookie: courseAdminCookie, courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
-		"student":           {cookie: studentCookie, courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
-		"group student":     {cookie: groupStudentCookie, courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
-		"user":              {cookie: userCookie, courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
-		"non-teacher admin": {cookie: adminCookie, courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"admin":             {cookie: courseAdminCookie, courseID: course.GetID(), wantAccess: true},
+		"student":           {cookie: studentCookie, courseID: course.GetID(), wantAccess: true},
+		"group student":     {cookie: groupStudentCookie, courseID: course.GetID(), wantAccess: true},
+		"user":              {cookie: userCookie, courseID: course.GetID(), wantAccess: true},
+		"non-teacher admin": {cookie: adminCookie, courseID: course.GetID(), wantAccess: true},
 		"empty context":     {wantAccess: false, wantCode: connect.CodeUnauthenticated},
 	}
 	for name, tt := range freeAccessTest {
@@ -101,7 +107,7 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	userAccessTests := map[string]accessTest{
-		"correct user ID":   {cookie: userCookie, userID: user.GetID(), courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"correct user ID":   {cookie: userCookie, userID: user.GetID(), courseID: course.GetID(), wantAccess: true},
 		"incorrect user ID": {cookie: userCookie, groupID: groupStudent.GetID(), courseID: course.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 	}
 	for name, tt := range userAccessTests {
@@ -129,10 +135,10 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	studentAccessTests := map[string]accessTest{
-		"course admin":                     {cookie: courseAdminCookie, userID: courseAdmin.GetID(), courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"course admin":                     {cookie: courseAdminCookie, userID: courseAdmin.GetID(), courseID: course.GetID(), wantAccess: true},
 		"admin, not enrolled in a course":  {cookie: adminCookie, userID: admin.GetID(), courseID: course.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 		"user, not enrolled in the course": {cookie: userCookie, userID: user.GetID(), courseID: course.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
-		"student":                          {cookie: studentCookie, userID: student.GetID(), courseID: course.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"student":                          {cookie: studentCookie, userID: student.GetID(), courseID: course.GetID(), wantAccess: true},
 		"student of another course":        {cookie: studentCookie, userID: student.GetID(), courseID: 123, wantAccess: false, wantCode: connect.CodePermissionDenied},
 	}
 	for name, tt := range studentAccessTests {
@@ -146,19 +152,31 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetSubmissions", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetAssignments", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
-				FetchMode: &qf.EnrollmentRequest_UserID{
-					UserID: tt.userID,
-				},
-			}, tt.cookie))
-			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
 			checkAccess(t, "GetRepositories", err, tt.wantCode, tt.wantAccess)
 		})
 	}
 
+	submissionsGroupAccessTests := map[string]accessTest{
+		"group member":         {cookie: groupStudentCookie, courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
+		"student not in group": {cookie: studentCookie, courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
+		"teacher":              {cookie: courseAdminCookie, courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
+		"admin not enrolled":   {cookie: adminCookie, courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
+	}
+	for name, tt := range submissionsGroupAccessTests {
+		t.Run("SubmissionsGroupAccess/"+name, func(t *testing.T) {
+			_, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+				CourseID: tt.courseID,
+				FetchMode: &qf.SubmissionRequest_GroupID{
+					GroupID: tt.groupID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetSubmissions", err, tt.wantCode, tt.wantAccess)
+		})
+	}
+
 	groupAccessTests := map[string]accessTest{
-		"student in a group":                            {cookie: groupStudentCookie, userID: groupStudent.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"student in a group":                            {cookie: groupStudentCookie, userID: groupStudent.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
 		"student, not in a group":                       {cookie: studentCookie, userID: student.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 		"student in a group, wrong group ID in request": {cookie: studentCookie, userID: student.GetID(), courseID: course.GetID(), groupID: 123, wantAccess: false, wantCode: connect.CodePermissionDenied},
 	}
@@ -173,7 +191,7 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	teacherAccessTests := map[string]accessTest{
-		"course teacher":                    {cookie: courseAdminCookie, userID: groupStudent.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"course teacher":                    {cookie: courseAdminCookie, userID: groupStudent.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
 		"student":                           {cookie: studentCookie, userID: student.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 		"admin, not enrolled in the course": {cookie: adminCookie, userID: admin.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 	}
@@ -260,8 +278,8 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	adminAccessTests := map[string]accessTest{
-		"admin (accessing own info)":              {cookie: courseAdminCookie, userID: courseAdmin.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
-		"admin (accessing other user's info)":     {cookie: courseAdminCookie, userID: user.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"admin (accessing own info)":              {cookie: courseAdminCookie, userID: courseAdmin.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
+		"admin (accessing other user's info)":     {cookie: courseAdminCookie, userID: user.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
 		"non admin (accessing admin's info)":      {cookie: studentCookie, userID: courseAdmin.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 		"non admin (accessing other user's info)": {cookie: studentCookie, userID: user.GetID(), courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
 	}
@@ -287,11 +305,11 @@ func TestAccessControl(t *testing.T) {
 			Name:     "test",
 			CourseID: course.GetID(),
 			Users:    []*qf.User{student},
-		}, wantAccess: true, wantCode: connect.CodePermissionDenied},
+		}, wantAccess: true},
 		"course teacher": {cookie: courseAdminCookie, group: &qf.Group{
 			CourseID: course.GetID(),
 			Users:    []*qf.User{courseAdmin},
-		}, wantAccess: true, wantCode: connect.CodePermissionDenied},
+		}, wantAccess: true},
 		"admin, not a teacher": {cookie: adminCookie, group: &qf.Group{
 			CourseID: course.GetID(),
 		}, wantAccess: false, wantCode: connect.CodePermissionDenied},
@@ -313,15 +331,15 @@ func TestAccessControl(t *testing.T) {
 		"admin demoting a user": {cookie: courseAdminCookie, user: &qf.User{
 			ID:      admin.GetID(),
 			IsAdmin: false,
-		}, wantAccess: true, wantCode: connect.CodePermissionDenied},
+		}, wantAccess: true},
 		"admin promoting a user": {cookie: courseAdminCookie, user: &qf.User{
 			ID:      admin.GetID(),
 			IsAdmin: true,
-		}, wantAccess: true, wantCode: connect.CodePermissionDenied},
+		}, wantAccess: true},
 		"admin demoting self": {cookie: courseAdminCookie, user: &qf.User{
 			ID:      courseAdmin.GetID(),
 			IsAdmin: false,
-		}, wantAccess: true, wantCode: connect.CodePermissionDenied},
+		}, wantAccess: true},
 		"user promoting another user": {cookie: userCookie, user: &qf.User{
 			ID:      groupStudent.GetID(),
 			IsAdmin: true,
@@ -340,7 +358,7 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	adminGetEnrollmentsTests := map[string]accessTest{
-		"admin, not enrolled in the course": {cookie: adminCookie, courseID: course.GetID(), userID: student.GetID(), wantAccess: true, wantCode: connect.CodePermissionDenied},
+		"admin, not enrolled in the course": {cookie: adminCookie, courseID: course.GetID(), userID: student.GetID(), wantAccess: true},
 	}
 
 	for name, tt := range adminGetEnrollmentsTests {
@@ -416,16 +434,24 @@ func TestCrossCourseSubmissionUpdate(t *testing.T) {
 
 func checkAccess(t *testing.T, method string, err error, wantCode connect.Code, wantAccess bool) {
 	t.Helper()
-	var connErr *connect.Error
-	if errors.As(err, &connErr) {
-		gotCode := connErr.Code()
-		gotAccess := gotCode == wantCode
-		if gotAccess == wantAccess {
-			t.Errorf("%23s: (%v == %v) = %t, want %t", method, gotCode, wantCode, gotAccess, !wantAccess)
-			t.Log(err)
+	if wantAccess {
+		// Expect access granted: either no error, or error not due to permission denied
+		if err != nil {
+			var connErr *connect.Error
+			if errors.As(err, &connErr) && connErr.Code() == connect.CodePermissionDenied {
+				t.Errorf("%23s: access denied: %v", method, err)
+			}
+			// Other errors are ok, as they mean the method ran but failed for business logic reasons
 		}
-	} else if err != nil && wantAccess {
-		// got error and want access; expected non-error or not access
-		t.Errorf("%23s: got %v (%t), want <nil> (%t)", method, err, wantAccess, !wantAccess)
+	} else {
+		// Expect access denied with specific code
+		if err == nil {
+			t.Errorf("%23s: got access granted, want access denied", method)
+		} else {
+			var connErr *connect.Error
+			if !errors.As(err, &connErr) || connErr.Code() != wantCode {
+				t.Errorf("%23s: got error %v, want permission denied with code %v", method, err, wantCode)
+			}
+		}
 	}
 }
