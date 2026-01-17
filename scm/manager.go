@@ -8,6 +8,7 @@ import (
 	"github.com/beatlabs/github-auth/app"
 	"github.com/beatlabs/github-auth/key"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
@@ -18,6 +19,18 @@ type Manager struct {
 	scms map[string]SCM
 	mu   sync.Mutex
 	*Config
+	exchangeTokenFn func(refreshToken string) (*ExchangeToken, error)
+}
+
+// ExchangeAndUpdateToken returns a new access token for the given user.
+// It also updates the user's refresh token in the user object.
+func (m *Manager) ExchangeAndUpdateToken(user *qf.User) (string, error) {
+	exchangeToken, err := m.exchangeTokenFn(user.GetRefreshToken())
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token for user %s: %w", user.GetLogin(), err)
+	}
+	user.UpdateRefreshToken(exchangeToken.RefreshToken)
+	return exchangeToken.AccessToken, nil
 }
 
 // Config stores SCM variables.
@@ -59,11 +72,16 @@ func NewSCMConfig() (*Config, error) {
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *Config) *Manager {
-	return &Manager{
-		scms:   make(map[string]SCM),
-		Config: c,
+func NewSCMManager() (*Manager, error) {
+	c, err := NewSCMConfig()
+	if err != nil {
+		return nil, err
 	}
+	return &Manager{
+		scms:            make(map[string]SCM),
+		Config:          c,
+		exchangeTokenFn: c.ExchangeToken,
+	}, nil
 }
 
 // GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.

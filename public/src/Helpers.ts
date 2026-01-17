@@ -75,10 +75,9 @@ export const getFormattedTime = (timestamp: Timestamp | undefined, offset?: bool
 export const isExpired = (deadline: Timestamp): boolean => {
     const date = timestampDate(deadline)
     const now = new Date()
-    return (
-        date.getFullYear() !== now.getFullYear() ||
-        date.getMonth() > now.getMonth() + 1
-    )
+    const oneMonthAgo = new Date(now)
+    oneMonthAgo.setMonth(now.getMonth() - 1)
+    return date < oneMonthAgo
 }
 
 export interface Deadline {
@@ -346,6 +345,12 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
+// nextURL returns the current URL path and query parameters.
+// This is used to redirect the user back to the page they were on after logging in.
+export const nextURL = (): string => {
+    return encodeURIComponent(window.location.pathname + window.location.search)
+}
+
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
@@ -413,7 +418,7 @@ export const convertToBigInt = (value: number | string | bigint | undefined): bi
 // Can be used to generate IDs for client-only objects
 // such as the Alert object
 export const newID = (() => {
-    let id: number = 0
+    let id = 0
     return () => {
         return id++
     }

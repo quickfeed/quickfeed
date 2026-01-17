@@ -5,7 +5,6 @@ import EditCourse from "../components/admin/EditCourse"
 import Users from "../components/admin/Users"
 import Card from "../components/Card"
 import RedirectButton from "../components/RedirectButton"
-import Alerts from "../components/alerts/Alerts"
 import CreateCourse from "../components/admin/CreateCourse"
 
 
@@ -30,7 +29,6 @@ const AdminPage = () => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alerts />
             <div className="row" hidden={location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />

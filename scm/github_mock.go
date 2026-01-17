@@ -50,7 +50,10 @@ func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
-func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM {
+// This is intentionally breaking the cyclomatic complexity rule (GO-R1005) to keep the
+// initialization of all the mock handlers in one place. It is not production code; it is
+// only used for testing.
+func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *MockedGithubSCM { // skipcq: GO-R1005
 	mockOpts := newMockOptions()
 	for _, o := range opts {
 		o(mockOpts)
@@ -181,6 +184,37 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			}
 		}),
 	)
+	// repos/%v/%v/forks
+	postReposForksByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposForksByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srcOwner := r.PathValue("owner")
+			srcRepo := r.PathValue("repo")
+			logger.Debug(replaceArgs(postReposForksByOwnerByRepo, srcOwner, srcRepo))
+			opts := mustRead[github.RepositoryCreateForkOptions](r.Body)
+			dstOrg := opts.Organization
+
+			found := s.matchOrgFunc(dstOrg, func(o github.Organization) {
+				s.repoID++
+				fork := github.Repository{
+					ID:           &s.repoID,
+					Organization: &o,
+					Name:         github.String(opts.Name),
+					Owner:        &github.User{Login: github.String(dstOrg)},
+					Fork:         github.Bool(true),
+				}
+				s.repos = append(s.repos, fork)
+				if s.groups[dstOrg] == nil {
+					s.groups[dstOrg] = make(map[string][]github.User)
+				}
+				s.groups[dstOrg][fork.GetName()] = make([]github.User, 0)
+				mustWrite(w, fork)
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound) // repo not found
+			}
+		}),
+	)
 	getOrgsMembershipsByOrgByUsernameHandler := WithRequestMatchHandler(
 		getOrgsMembershipsByOrgByUsername,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -211,14 +245,32 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			logger.Debug(replaceArgs(putOrgsMembershipsByOrgByUsername, org, username), " membership=", membership)
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
+				// Check if user already exists
 				for i, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() && m.GetUser().GetLogin() == username {
 						s.members[i].Role = membership.Role
-						mustWrite(w, membership)
+						mustWrite(w, s.members[i])
 						return
 					}
 				}
-				w.WriteHeader(http.StatusNotFound) // member not found
+				// If user not found, and role is admin -> return error
+				if strings.EqualFold(membership.GetRole(), "admin") {
+					fmt.Println("NOT FOUND", username, "AS ADMIN", membership)
+					w.WriteHeader(http.StatusNotFound)
+					return
+				} else {
+					fmt.Println("ADDING AS MEMBER", username, membership)
+				}
+				// User not found - create new membership (simulates sending invitation)
+				userID := s.getUserID(username)
+				newMembership := github.Membership{
+					Organization: &github.Organization{Login: github.String(org)},
+					User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
+					Role:         membership.Role,
+					State:        github.String("pending"), // Invitation pending until accepted
+				}
+				s.members = append(s.members, newMembership)
+				mustWrite(w, newMembership)
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound) // org not found
@@ -241,6 +293,31 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					}
 				}
 				w.WriteHeader(http.StatusNotFound) // member not found
+			})
+			if !found {
+				w.WriteHeader(http.StatusNotFound) // org not found
+			}
+		}),
+	)
+	// Handler for user accepting their own org invitation (PATCH /user/memberships/orgs/{org})
+	patchUserMembershipsOrgsByOrgHandler := WithRequestMatchHandler(
+		patchUserMembershipsOrgsByOrg,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			org := r.PathValue("org")
+			membership := mustRead[github.Membership](r.Body)
+			logger.Debug(replaceArgs(patchUserMembershipsOrgsByOrg, org), " membership=", membership)
+
+			// Find the pending membership and activate it
+			found := s.matchOrgFunc(org, func(o github.Organization) {
+				for i, m := range s.members {
+					if m.GetOrganization().GetLogin() == o.GetLogin() {
+						// Set state to active (user accepted invitation)
+						s.members[i].State = github.String("active")
+						mustWrite(w, s.members[i])
+						return
+					}
+				}
+				w.WriteHeader(http.StatusNotFound) // membership not found
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound) // org not found
@@ -361,13 +438,14 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				return
 			}
 
+			userID := s.getUserID(username)
 			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
-			ghUser := github.User{Login: github.String(username), Permissions: permissions}
+			ghUser := github.User{ID: github.Int64(userID), Login: github.String(username), Permissions: permissions}
 			// this simulates that the user accepts the invitation (mocking the invite response is not supported yet)
 			s.groups[owner][repo] = append(collaborators, ghUser)
 			s.members = append(s.members, github.Membership{
 				Organization: &github.Organization{Login: github.String(owner)},
-				User:         &github.User{Login: github.String(username)},
+				User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
 				Role:         github.String(repoCollaboratorOptions.Permission),
 			})
 			invite := github.CollaboratorInvitation{
@@ -589,6 +667,38 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, config)
 		}),
 	)
+	getUserByIDHandler := WithRequestMatchHandler(
+		getUserByID,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID := mustParse[int64](r.PathValue("user_id"))
+			logger.Debug(replaceArgs(getUserByID, userID))
+
+			for _, member := range s.members {
+				if member.GetUser().GetID() == userID {
+					mustWrite(w, member.GetUser())
+					return
+				}
+			}
+			// user not found
+			w.WriteHeader(http.StatusNotFound)
+		}),
+	)
+	postReposMergeUpstreamByOwnerByRepoHandler := WithRequestMatchHandler(
+		postReposMergeUpstreamByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			logger.Debug(replaceArgs(postReposMergeUpstreamByOwnerByRepo, owner, repo))
+			// Always return success for merge-upstream
+			result := github.RepoMergeUpstreamResult{
+				Message:    github.String("Successfully fetched and fast-forwarded from upstream"),
+				MergeType:  github.String("fast-forward"),
+				BaseBranch: github.String("main"),
+			}
+			w.WriteHeader(http.StatusOK)
+			mustWrite(w, result)
+		}),
+	)
 	// Mock query handler for fetching the issue ID based on issue number
 	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
 		owner := vars["repositoryOwner"].(string)
@@ -678,8 +788,10 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		patchOrgsByOrgHandler,
 		getOrgsReposByOrgHandler,
 		postOrgsReposByOrgHandler,
+		postReposForksByOwnerByRepoHandler,
 		getOrgsMembershipsByOrgByUsernameHandler,
 		putOrgsMembershipsByOrgByUsernameHandler,
+		patchUserMembershipsOrgsByOrgHandler,
 		deleteOrgsMembersByOrgByUsernameHandler,
 		getReposByOwnerByRepoHandler,
 		deleteReposByOwnerByRepoHandler,
@@ -695,14 +807,20 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler,
 		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
 		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
+		postReposMergeUpstreamByOwnerByRepoHandler,
 		postAppManifestsByCodeConversionsHandler,
+		getUserByIDHandler,
 		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{
-		logger:      logger,
-		client:      github.NewClient(httpClient),
-		clientV4:    githubv4.NewClient(httpClient),
-		providerURL: "file://" + env.RepositoryPath(),
+		logger:       logger,
+		client:       github.NewClient(httpClient),
+		clientV4:     githubv4.NewClient(httpClient),
+		tokenManager: &staticTokenManager{token: "mock-token"},
+		providerURL:  "file://" + env.RepositoryPath(),
+		createUserClientFn: func(token string) *github.Client {
+			return github.NewClient(httpClient)
+		},
 	}
 	return s
 }

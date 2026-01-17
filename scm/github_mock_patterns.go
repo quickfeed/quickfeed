@@ -5,11 +5,13 @@ const (
 	getOrgsByOrg                                              = "GET /orgs/{org}"                                                    // GetOrganization
 	patchOrgsByOrg                                            = "PATCH /orgs/{org}"                                                  // CreateCourse
 	getOrgsReposByOrg                                         = "GET /orgs/{org}/repos"                                              // GetRepositories
-	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"                                             // CreateCourse, createRepository
+	postOrgsReposByOrg                                        = "POST /orgs/{org}/repos"                                             // CreateCourse, createCourseRepo
+	postReposForksByOwnerByRepo                               = "POST /repos/{owner}/{repo}/forks"                                   // createForkedRepo
 	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"                             // GetOrganization
 	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"                             // UpdateEnrollment, DemoteTeacherToStudent
+	patchUserMembershipsOrgsByOrg                             = "PATCH /user/memberships/orgs/{org}"                                 // acceptOrgInvitation
 	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"                              // RejectEnrollment
-	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createRepository
+	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createCourseRepo, createForkedRepo, waitForRepository
 	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository
 	getRepositoriesByID                                       = "GET /repositories/{repository_id}"                                  // getRepository, deleteRepository
 	getReposContentsByOwnerByRepoByPath                       = "GET /repos/{owner}/{repo}/contents/{path...}"                       // RepositoryIsEmpty
@@ -23,5 +25,7 @@ const (
 	postReposIssuesCommentsByOwnerByRepoByIssueNumber         = "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"          // CreateIssueComment
 	patchReposIssuesCommentsByOwnerByRepoByCommentID          = "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"           // UpdateIssueComment
 	postReposPullsRequestedReviewersByOwnerByRepoByPullNumber = "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers" // RequestReviewers
+	postReposMergeUpstreamByOwnerByRepo                       = "POST /repos/{owner}/{repo}/merge-upstream"                          // SyncFork
 	postAppManifestsByCodeConversions                         = "POST /app-manifests/{code}/conversions"                             // CreateCourse
+	getUserByID                                               = "GET /user/{user_id}"                                                // GetUserByID, updateUserFromSCM
 )

@@ -21,6 +21,10 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.GetUserID(), enrollment.GetStatus(), request.GetStatus())
 	}
 
+	// check and update user SCM info before updating enrollment status
+	if err := s.updateUserFromSCM(ctx, sc, enrollment.GetUser()); err != nil {
+		return fmt.Errorf("failed to update SCM info for user %d: %w", enrollment.GetUserID(), err)
+	}
 	switch {
 	case (enrollment.IsPending() || enrollment.IsStudent()) && request.IsNone(): // pending or student -> none
 		return s.rejectEnrollment(ctx, sc, enrollment)
@@ -85,12 +89,28 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
 	}
+
+	// Exchange refresh token for access token and update the user's refresh token
+	accessToken, err := s.scmMgr.ExchangeAndUpdateToken(user)
+	if err != nil {
+		return err
+	}
+	// Ensure that the user's refresh token is updated after enrollment.
+	if err := s.db.UpdateUser(user); err != nil {
+		// Continue with enrollment; token can be manually refreshed later
+		s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
+	}
+
 	// create user scmRepo and add user to course organization as a member
-	scmRepo, err := sc.UpdateEnrollment(ctx, &scm.UpdateEnrollmentOptions{
+	// Pass the access token so that UpdateEnrollment can accept the org invitation,
+	// which grants immediate access to repos the user is added to as a collaborator.
+	opt := &scm.UpdateEnrollmentOptions{
 		Organization: course.GetScmOrganizationName(),
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_STUDENT,
-	})
+		AccessToken:  accessToken,
+	}
+	scmRepo, err := sc.UpdateEnrollment(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
@@ -98,8 +118,8 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
-		ScmOrganizationID: course.GetScmOrganizationID(),
 		ScmRepositoryID:   scmRepo.ID,
+		ScmOrganizationID: course.GetScmOrganizationID(),
 		UserID:            user.GetID(),
 		HTMLURL:           scmRepo.HTMLURL,
 		RepoType:          qf.Repository_USER,
@@ -108,10 +128,6 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
-	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetScmOrganizationName()); err != nil {
-		// log error, but continue with enrollment; we can manually accept invitations later
-		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.GetCode(), user.GetLogin(), err)
-	}
 	return s.db.UpdateEnrollment(query)
 }
 
@@ -168,23 +184,4 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		enrollment.UpdateTotalApproved(submissions.For(enrollment.GetID()))
 	}
 	return course.GetEnrollments(), nil
-}
-
-// acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp scm.SCM, user *qf.User, organizationName string) error {
-	user, err := s.db.GetUser(user.GetID())
-	if err != nil {
-		return fmt.Errorf("failed to get user %d: %w", user.GetID(), err)
-	}
-	newRefreshToken, err := scmApp.AcceptInvitations(ctx, &scm.InvitationOptions{
-		Login:        user.GetLogin(),
-		Owner:        organizationName,
-		RefreshToken: user.GetRefreshToken(),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to accept invites for %s: %w", user.GetLogin(), err)
-	}
-	// Save the user's new refresh token in the database.
-	user.RefreshToken = newRefreshToken
-	return s.db.UpdateUser(user)
 }

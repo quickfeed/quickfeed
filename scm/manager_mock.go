@@ -24,5 +24,12 @@ func MockManager(t *testing.T, opts ...MockOption) *Manager {
 	return &Manager{
 		scms:   scms,
 		Config: &Config{"qfClientID", "qfClientSecret", &app.Config{}},
+		// Mock token exchange that returns fake tokens
+		exchangeTokenFn: func(refreshToken string) (*ExchangeToken, error) {
+			return &ExchangeToken{
+				AccessToken:  "mock-access-token-" + refreshToken,
+				RefreshToken: "mock-refreshed-" + refreshToken,
+			}, nil
+		},
 	}
 }

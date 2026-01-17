@@ -9,27 +9,32 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types"
+	"github.com/containerd/errdefs"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"go.uber.org/zap"
 )
 
-var (
-	DefaultContainerTimeout = time.Duration(10 * time.Minute)
-	QuickFeedPath           = "/quickfeed"
-	GoModCache              = "/quickfeed-go-mod-cache"
-	maxToScan               = 1_000_000 // bytes
-	maxLogSize              = 30_000    // bytes
-	lastSegmentSize         = 1_000     // bytes
+// DefaultContainerTimeout is the default timeout for running a container.
+var DefaultContainerTimeout = time.Duration(10 * time.Minute)
+
+const (
+	Dockerfile      = "Dockerfile"
+	QuickFeedPath   = "/quickfeed"
+	GoModCache      = "/quickfeed-go-mod-cache"
+	maxToScan       = 1_000_000 // bytes
+	maxLogSize      = 30_000    // bytes
+	lastSegmentSize = 1_000     // bytes
 )
 
 // Docker is an implementation of the CI interface using Docker.
@@ -117,7 +122,8 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
 	}
-	if job.Dockerfile != "" {
+	dockerFileContent := job.BuildContext[Dockerfile]
+	if dockerFileContent != "" {
 		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
 		resp, err := d.client.ImageRemove(ctx, job.Image, image.RemoveOptions{Force: true})
 		if err != nil {
@@ -130,7 +136,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 		d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
 		// Log first line of Dockerfile
-		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, job.Dockerfile[:strings.Index(job.Dockerfile, "\n")+1])
+		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, dockerFileContent[:strings.Index(dockerFileContent, "\n")+1])
 		if err := d.buildImage(ctx, job); err != nil {
 			return nil, err
 		}
@@ -229,29 +235,32 @@ func (d *Docker) pullImage(ctx context.Context, imageName string) error {
 
 // buildImage builds and installs an image locally to be reused in a future run.
 func (d *Docker) buildImage(ctx context.Context, job *Job) error {
-	dockerFileContents := []byte(job.Dockerfile)
-	header := &tar.Header{
-		Name:     "Dockerfile",
-		Mode:     0o777,
-		Size:     int64(len(dockerFileContents)),
-		Typeflag: tar.TypeReg,
-	}
 	var buf bytes.Buffer
 	tarWriter := tar.NewWriter(&buf)
-	if err := tarWriter.WriteHeader(header); err != nil {
-		return err
-	}
-	if _, err := tarWriter.Write(dockerFileContents); err != nil {
-		return err
+
+	// Ensure consistent order of files in the tar archive
+	for _, name := range slices.Sorted(maps.Keys(job.BuildContext)) {
+		fileContents := []byte(job.BuildContext[name])
+		if err := tarWriter.WriteHeader(&tar.Header{
+			Name:     name,
+			Mode:     0o777,
+			Size:     int64(len(fileContents)),
+			Typeflag: tar.TypeReg,
+		}); err != nil {
+			return err
+		}
+		if _, err := tarWriter.Write(fileContents); err != nil {
+			return err
+		}
 	}
 	if err := tarWriter.Close(); err != nil {
 		return err
 	}
 
 	reader := bytes.NewReader(buf.Bytes())
-	opts := types.ImageBuildOptions{
+	opts := build.ImageBuildOptions{
 		Context:    reader,
-		Dockerfile: "Dockerfile",
+		Dockerfile: Dockerfile,
 		Tags:       []string{job.Image},
 	}
 	res, err := d.client.ImageBuild(ctx, reader, opts)

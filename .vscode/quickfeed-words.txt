@@ -81,6 +81,7 @@ GOCACHE
 Godkjenning
 Godkjent
 godox
+gofmt
 gofumports
 gofumpt
 goimports
@@ -199,6 +200,7 @@ Radagast
 rankdir
 Repos
 repotoken
+Retryable
 reviewee's
 rootfolder
 run
@@ -236,13 +238,14 @@ subfolders
 subtest
 subtests
 swiftui
+synctest
 testcache
 testdata
 testdb
 Testersen
+testinfo
 testjava
 testjavafile
-testinfo
 testorg
 testpackage
 timestamppb

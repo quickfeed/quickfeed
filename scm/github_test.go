@@ -11,6 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 const (
@@ -48,7 +49,7 @@ func TestCreateIssue(t *testing.T) {
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
 
-	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
+	if issue.Title != "Test Issue" || issue.Body != "Test Body" {
 		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
 	}
 }
@@ -269,6 +270,53 @@ func TestEmptyRepo(t *testing.T) {
 				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
 			}
 		})
+	}
+}
+
+func TestGetUserByID(t *testing.T) {
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t),
+		scm.WithMockOrgs("meling"), // user "meling" with ID 1
+		scm.WithMembers(github.Membership{
+			User: &github.User{
+				ID:        github.Int64(2),
+				Login:     github.String("avatar_user"),
+				AvatarURL: github.String("https://avatar.com"),
+			},
+		}),
+	)
+	ctx := t.Context()
+
+	// Test successfully fetching a user
+	gotUser, err := s.GetUserByID(ctx, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantUser := &qf.User{
+		Login:       "meling",
+		ScmRemoteID: 1,
+	}
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUserByID() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Test successfully fetching a user with AvatarURL
+	gotUser, err = s.GetUserByID(ctx, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantUser = &qf.User{
+		Login:       "avatar_user",
+		AvatarURL:   "https://avatar.com",
+		ScmRemoteID: 2,
+	}
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUserByID() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Test handling errors when the user doesn't exist
+	_, err = s.GetUserByID(ctx, 999)
+	if err == nil {
+		t.Error("expected error for non-existent user ID 999")
 	}
 }
 
