@@ -71,7 +71,10 @@ func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) s
 }
 
 func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) string {
-	if claims.IsInGroup(req) {
+	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created
+		return accessGranted
+	}
+	if claims.IsInGroup(req) { // GetGroup: request's group ID must be in the claims' groups to allow access
 		return accessGranted
 	}
 	if claims.IsCourseTeacher(getCourseID(req)) {
@@ -122,16 +125,8 @@ var methodCheckers = map[string]accessChecker{
 		}
 		return "not student, group member, or teacher"
 	},
-	"GetSubmission": checkTeacher,
-	"CreateGroup": func(db database.Database, req any, claims *auth.Claims) string { // roles: {group, teacher},
-		// group role
-		notMember := !claims.IsGroupMember(req)
-		notTeacher := !claims.IsCourseTeacher(getCourseID(req))
-		if notMember && notTeacher {
-			return fmt.Sprintf("user %d tried to create group while not teacher or group member", claims.UserID)
-		}
-		return accessGranted
-	},
+	"GetSubmission":     checkTeacher,
+	"CreateGroup":       checkGroupOrTeacher,
 	"GetGroup":          checkGroupOrTeacher,
 	"GetAssignments":    checkStudentOrTeacher,
 	"GetRepositories":   checkStudentOrTeacher,
