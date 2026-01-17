@@ -90,7 +90,7 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 }
 
 func has(method string) bool {
-	_, ok := accessRolesFor[method]
+	_, ok := methodCheckers[method]
 	return ok
 }
 
@@ -102,7 +102,7 @@ func checkAccessControlMethods(expectedMethodNames map[string]bool) error {
 			missingMethods = append(missingMethods, method)
 		}
 	}
-	for method := range accessRolesFor {
+	for method := range methodCheckers {
 		if !expectedMethodNames[method] {
 			superfluousMethods = append(superfluousMethods, method)
 		}

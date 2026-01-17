@@ -6,10 +6,18 @@ import (
 )
 
 type (
-	userIDProvider       interface{ GetUserID() uint64 }
 	courseIDProvider     interface{ GetCourseID() uint64 }
+	userIDProvider       interface{ GetUserID() uint64 }
+	groupIDProvider      interface{ GetGroupID() uint64 }
 	submissionIDProvider interface{ GetSubmissionID() uint64 }
 )
+
+func getCourseID(req any) uint64 {
+	if cid, ok := req.(courseIDProvider); ok {
+		return cid.GetCourseID()
+	}
+	return 0
+}
 
 func getUserID(req any) uint64 {
 	if uid, ok := req.(userIDProvider); ok {
@@ -18,11 +26,11 @@ func getUserID(req any) uint64 {
 	return 0
 }
 
-func getCourseID(req any) uint64 {
-	if cid, ok := req.(courseIDProvider); ok {
-		return cid.GetCourseID()
+func hasGroupID(req any) bool {
+	if gid, ok := req.(groupIDProvider); ok {
+		return gid.GetGroupID() > 0
 	}
-	return 0
+	return false
 }
 
 func getSubmissionID(req any) uint64 {
