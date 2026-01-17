@@ -114,8 +114,8 @@ func UserInterceptorFunc(logger *zap.SugaredLogger, tm *auth.TokenManager, _ dat
 	return interceptor.NewUserInterceptor(logger, tm)
 }
 
-func AccessControlInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
-	return interceptor.NewAccessControlInterceptor(tm)
+func AccessControlInterceptorFunc(_ *zap.SugaredLogger, _ *auth.TokenManager, db database.Database) connect.Interceptor {
+	return interceptor.NewAccessControlInterceptor(db)
 }
 
 func TokenInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {

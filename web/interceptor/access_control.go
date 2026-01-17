@@ -2,21 +2,18 @@ package interceptor
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"slices"
 	"strings"
 
 	"connectrpc.com/connect"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 type (
-	role      int
-	roles     []role
-	requestID interface {
-		IDFor(string) uint64
-	}
+	role  int
+	roles []role
 )
 
 //go:generate stringer -type=role
@@ -74,12 +71,84 @@ var accessRolesFor = map[string]roles{
 	"GetUsers":                 {admin},
 }
 
-type AccessControlInterceptor struct {
-	tokenManager *auth.TokenManager
+// accessChecker defines the function type used for checking access for a specific role.
+type accessChecker func(db database.Database, method string, req any, claims *auth.Claims) error
+
+var (
+	accessGranted         error = nil
+	errContinueToNextRole       = errors.New("continue to next role checker")
+)
+
+// roleCheckers maps each role to its corresponding access checker function.
+// Each checker returns nil if access is granted, errContinueToNextRole to try the next role,
+// or any other error indicates access is denied.
+var roleCheckers = map[role]accessChecker{
+	none: func(db database.Database, method string, req any, claims *auth.Claims) error {
+		return accessGranted
+	},
+	user: func(db database.Database, method string, req any, claims *auth.Claims) error {
+		if claims.SameUser(req) {
+			if method == "UpdateUser" && claims.UnauthorizedAdminChange(req) {
+				return accessDeniedError(method, "non-admin user %d attempted to grant admin privileges", claims.UserID)
+			}
+			return accessGranted
+		}
+		return errContinueToNextRole
+	},
+	student: func(db database.Database, method string, req any, claims *auth.Claims) error {
+		if method == "GetSubmissions" {
+			if claims.IsGroupRequest(req) {
+				return errContinueToNextRole // handled by group role
+			}
+			if !claims.SameUser(req) {
+				return accessDeniedError(method, "ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))
+			}
+		}
+		if claims.IsCourseStudent(getCourseID(req)) {
+			return accessGranted
+		}
+		return errContinueToNextRole
+	},
+	group: func(db database.Database, method string, req any, claims *auth.Claims) error {
+		if method == "CreateGroup" {
+			// Allow group creation if the user is either a teacher or a member of the group.
+			notMember := !claims.IsGroupMember(req)
+			notTeacher := !claims.IsCourseTeacher(getCourseID(req))
+			if notMember && notTeacher {
+				return accessDeniedError(method, "user %d tried to create group while not teacher or group member", claims.UserID)
+			}
+			return accessGranted
+		}
+		if claims.IsInGroup(req) {
+			return accessGranted
+		}
+		return errContinueToNextRole
+	},
+	teacher: func(db database.Database, method string, req any, claims *auth.Claims) error {
+		// Valid submission check is not needed for rebuilding all submissions (submissionID == 0).
+		shouldValidate := method == "UpdateSubmission" || (method == "RebuildSubmissions" && getSubmissionID(req) != 0)
+		if shouldValidate && !isValidSubmission(db, req) {
+			return accessDeniedError(method, "invalid submission")
+		}
+		if claims.IsCourseTeacher(getCourseID(req)) {
+			return accessGranted
+		}
+		return errContinueToNextRole
+	},
+	admin: func(db database.Database, method string, req any, claims *auth.Claims) error {
+		if claims.Admin {
+			return accessGranted
+		}
+		return errContinueToNextRole
+	},
 }
 
-func NewAccessControlInterceptor(tm *auth.TokenManager) *AccessControlInterceptor {
-	return &AccessControlInterceptor{tokenManager: tm}
+type AccessControlInterceptor struct {
+	db database.Database
+}
+
+func NewAccessControlInterceptor(db database.Database) *AccessControlInterceptor {
+	return &AccessControlInterceptor{db: db}
 }
 
 func (*AccessControlInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
@@ -99,75 +168,16 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure
 		method := procedure[strings.LastIndex(procedure, "/")+1:]
-		req, ok := request.Any().(requestID)
-		if !ok {
-			return nil, connect.NewError(connect.CodeUnimplemented,
-				fmt.Errorf("access denied for %s: message type %T does not implement 'requestID' interface", method, request))
-		}
+		req := request.Any()
 		claims, ok := auth.ClaimsFromContext(ctx)
 		if !ok {
 			return nil, accessDeniedError(method, "failed to get claims from request context")
 		}
 		for _, role := range accessRolesFor[method] {
-			switch role {
-			case none:
+			if err := roleCheckers[role](a.db, method, req, claims); err == nil {
 				return next(ctx, request)
-			case user:
-				if claims.SameUser(req) {
-					// Make sure the user is not updating own admin status.
-					if method == "UpdateUser" {
-						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
-							return nil, accessDeniedError(method, "user %d attempted to change admin status from %v to %v",
-								claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
-						}
-					}
-					return next(ctx, request)
-				}
-			case student:
-				// GetSubmissions is used to fetch individual and group submissions.
-				// For individual submissions needs an extra check for user ID in request.
-				if method == "GetSubmissions" {
-					if req.IDFor("group") != 0 {
-						// Group submissions are handled by the group role.
-						continue
-					}
-					if !claims.SameUser(req) {
-						return nil, accessDeniedError(method, "ID mismatch in claims (%d) and request (%d)",
-							claims.UserID, req.IDFor("user"))
-					}
-				}
-				if claims.HasCourseStatus(req, qf.Enrollment_STUDENT) {
-					return next(ctx, request)
-				}
-			case group:
-				// Request for CreateGroup will not have ID yet, need to check
-				// if the user is in the group (unless teacher).
-				if method == "CreateGroup" {
-					notMember := !req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})
-					notTeacher := !claims.HasCourseStatus(req, qf.Enrollment_TEACHER)
-					if notMember && notTeacher {
-						return nil, accessDeniedError(method, "user %d tried to create group while not teacher or group member", claims.UserID)
-					}
-					// Otherwise, create the group.
-					return next(ctx, request)
-				}
-				groupID := req.IDFor("group")
-				if slices.Contains(claims.Groups, groupID) {
-					return next(ctx, request)
-				}
-			case teacher:
-				if method == "RebuildSubmissions" || method == "UpdateSubmission" {
-					if !isValidSubmission(a.tokenManager.Database(), req) {
-						return nil, accessDeniedError(method, "invalid submission")
-					}
-				}
-				if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
-					return next(ctx, request)
-				}
-			case admin:
-				if claims.Admin {
-					return next(ctx, request)
-				}
+			} else if err != errContinueToNextRole {
+				return nil, err
 			}
 		}
 		return nil, accessDeniedError(method, "required roles %v not satisfied by claims: %s", accessRolesFor[method], claims)
