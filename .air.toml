@@ -3,8 +3,8 @@ testdata_dir = "testdata"
 tmp_dir = "tmp-air"
 
 [build]
-  args_bin = ["-dev", "-watch"]
-  bin = "./tmp-air/quickfeed"
+  args_bin = ["-dev"]
+  entrypoint = "./tmp-air/quickfeed"
   cmd = "bash air-build.sh"
   delay = 1000
   exclude_dir = ["assets", "tmp-air", "vendor", "testdata", "public", "doc", "node_modules"]
