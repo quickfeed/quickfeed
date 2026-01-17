@@ -40,13 +40,19 @@ func getSubmissionID(req any) uint64 {
 	return 0
 }
 
-// isValidSubmission returns true if the student or group submitting the original push event
-// has an active course enrollment in the given course.
+// isValidSubmission returns true if the submission belongs to the given course
+// and the student or group has an active course enrollment in that course.
 func isValidSubmission(db database.Database, req any) bool {
 	courseID := getCourseID(req)
 	submissionID := getSubmissionID(req)
 	sbm, err := db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
+		return false
+	}
+
+	// Check that the submission's assignment belongs to the course
+	assignment, err := db.GetAssignment(&qf.Assignment{ID: sbm.GetAssignmentID()})
+	if err != nil || assignment.GetCourseID() != courseID {
 		return false
 	}
 

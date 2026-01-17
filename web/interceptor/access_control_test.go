@@ -361,6 +361,59 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
+func TestCrossCourseSubmissionUpdate(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// Create admin user for course creation (first user is always admin)
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin", Login: "admin"})
+
+	// Create two courses with admin as creator
+	course1 := &qf.Course{Code: "course1", CourseCreatorID: admin.GetID()}
+	course2 := &qf.Course{Code: "course2", CourseCreatorID: admin.GetID()}
+	qtest.CreateCourse(t, db, admin, course1)
+	qtest.CreateCourse(t, db, admin, course2)
+
+	// Create user A (regular non-admin user)
+	userA := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "User A", Login: "userA"})
+	// Enroll user A as student in course1
+	qtest.EnrollStudent(t, db, userA, course1)
+	// Enroll user A as teacher in course2
+	qtest.EnrollTeacher(t, db, userA, course2)
+
+	assignment1 := &qf.Assignment{CourseID: course1.GetID(), Name: "Assignment 1", Order: 1}
+	qtest.CreateAssignment(t, db, assignment1)
+
+	// Create submission for user A in course1
+	submission := &qf.Submission{AssignmentID: assignment1.GetID(), UserID: userA.GetID()}
+	qtest.CreateSubmission(t, db, submission)
+
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+		web.WithInterceptors(
+			web.UserInterceptorFunc,
+			web.AccessControlInterceptorFunc,
+		),
+	)
+
+	// Attempt to update the submission from course1 while acting as teacher in course2
+	// This should fail because the submission belongs to course1, not course2.
+	_, err := client.UpdateSubmission(t.Context(), qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
+		SubmissionID: submission.GetID(),
+		CourseID:     course2.GetID(), // Wrong course ID
+		Score:        100,
+		Released:     true,
+	}, client.Cookie(t, userA)))
+
+	if err == nil {
+		t.Error("Expected access denied for cross-course submission update, but access was granted")
+	} else {
+		var connErr *connect.Error
+		if !errors.As(err, &connErr) || connErr.Code() != connect.CodePermissionDenied {
+			t.Errorf("Expected CodePermissionDenied, got %v", err)
+		}
+	}
+}
+
 func checkAccess(t *testing.T, method string, err error, wantCode connect.Code, wantAccess bool) {
 	t.Helper()
 	var connErr *connect.Error
