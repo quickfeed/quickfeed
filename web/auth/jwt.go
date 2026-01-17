@@ -189,18 +189,10 @@ func (c *Claims) IsGroupMember(req any) bool {
 	return false
 }
 
-// IsInGroup returns true if the claim's user is a member of the group specified in the request.
+// IsInGroup returns true if the group ID in the request is in the claims' groups.
 func (c *Claims) IsInGroup(req any) bool {
 	if gid, ok := req.(groupIDProvider); ok {
 		return slices.Contains(c.Groups, gid.GetGroupID())
-	}
-	return false
-}
-
-// IsGroupRequest returns true if the request is for a specific group (groupID != 0).
-func (c *Claims) IsGroupRequest(req any) bool {
-	if gid, ok := req.(groupIDProvider); ok {
-		return gid.GetGroupID() != 0
 	}
 	return false
 }

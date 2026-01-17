@@ -126,7 +126,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 				TimeSpent:              180000, // 50 hours
 			},
 			// This should fail with permission denied because course ID 999 does not exist
-			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: required roles [student teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: not student or teacher")),
 		},
 		{
 			name:   "Non-existing assignment ID",
@@ -219,7 +219,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			request: &qf.CourseRequest{
 				CourseID: course.GetID(),
 			},
-			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: required roles [teacher] not satisfied by claims: UserID: 2: Courses: map[1:STUDENT], Groups: []")),
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: not teacher")),
 		},
 		{
 			name:   "Teacher cannot get feedback for non-existent course",
@@ -227,7 +227,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 			request: &qf.CourseRequest{
 				CourseID: 99999,
 			},
-			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: required roles [teacher] not satisfied by claims: UserID: 1 (admin): Courses: map[1:TEACHER], Groups: []")),
+			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: not teacher")),
 		},
 	}
 

@@ -562,7 +562,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// ta attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
 	if _, err := client.UpdateEnrollments(ctx, qtest.RequestWithCookie(request, client.Cookie(t, ta))); err == nil {
-		t.Errorf("expected error 'permission_denied: access denied for UpdateEnrollments: required roles [4] not satisfied by claims', got: '%v'", err)
+		t.Errorf("expected error 'permission_denied: access denied for UpdateEnrollments: not teacher', got: '%v'", err)
 	}
 }
 
