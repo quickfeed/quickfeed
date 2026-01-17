@@ -23,7 +23,7 @@ func (s *QuickFeedService) NewQuickFeedHandler() (string, http.Handler) {
 		interceptor.NewValidationInterceptor(s.logger),
 		interceptor.NewTokenAuthInterceptor(s.logger, s.tm, s.db),
 		interceptor.NewUserInterceptor(s.logger, s.tm),
-		interceptor.NewAccessControlInterceptor(s.tm),
+		interceptor.NewAccessControlInterceptor(s.db),
 		interceptor.NewTokenInterceptor(s.tm),
 	)
 	return qfconnect.NewQuickFeedServiceHandler(s, interceptors)
