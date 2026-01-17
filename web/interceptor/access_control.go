@@ -111,9 +111,9 @@ var methodCheckers = map[string]accessChecker{
 			if !claims.SameUser(req) {
 				return fmt.Sprintf("ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))
 			}
-		}
-		if claims.IsCourseStudent(getCourseID(req)) {
-			return accessGranted
+			if claims.IsCourseStudent(getCourseID(req)) {
+				return accessGranted
+			}
 		}
 		// group role
 		if claims.IsInGroup(req) {
