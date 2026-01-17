@@ -150,16 +150,8 @@ var methodCheckers = map[string]accessChecker{
 		}
 		return "not teacher"
 	},
-	"UpdateSubmissions": checkTeacher,
-	"RebuildSubmissions": func(db database.Database, req any, claims *auth.Claims) string { // roles: {teacher},
-		if getSubmissionID(req) != 0 && !isValidSubmission(db, req) {
-			return "invalid submission"
-		}
-		if claims.IsCourseTeacher(getCourseID(req)) {
-			return accessGranted
-		}
-		return "not teacher"
-	},
+	"UpdateSubmissions":        checkTeacher,
+	"RebuildSubmissions":       checkTeacher,
 	"CreateBenchmark":          checkTeacher,
 	"UpdateBenchmark":          checkTeacher,
 	"DeleteBenchmark":          checkTeacher,
