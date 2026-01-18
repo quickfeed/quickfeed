@@ -3,6 +3,7 @@ package interceptor_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -428,6 +429,41 @@ func TestCrossCourseSubmissionUpdate(t *testing.T) {
 		var connErr *connect.Error
 		if !errors.As(err, &connErr) || connErr.Code() != connect.CodePermissionDenied {
 			t.Errorf("Expected CodePermissionDenied, got %v", err)
+		}
+	}
+}
+
+func TestAccessControlWithoutClaims(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// Create client WITHOUT UserInterceptor to simulate missing claims in context
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+		web.WithInterceptors(
+			web.AccessControlInterceptorFunc,
+		),
+	)
+
+	user := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{
+		Code:            "test101",
+		Year:            2022,
+		CourseCreatorID: user.GetID(),
+	}
+	qtest.CreateCourse(t, db, user, course)
+
+	// Attempt to call a method without claims in context
+	// This should fail with a permission denied error
+	_, err := client.GetUser(t.Context(), qtest.RequestWithCookie(&qf.Void{}, client.Cookie(t, user)))
+	if err == nil {
+		t.Error("Expected access denied when claims are missing from context, but access was granted")
+	} else {
+		var connErr *connect.Error
+		if !errors.As(err, &connErr) || connErr.Code() != connect.CodePermissionDenied {
+			t.Errorf("Expected CodePermissionDenied, got %v", err)
+		}
+		if !errors.As(err, &connErr) || !strings.Contains(connErr.Message(), "failed to get claims from request context") {
+			t.Errorf("Expected error message about missing claims, got: %v", err)
 		}
 	}
 }
