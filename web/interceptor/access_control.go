@@ -1,12 +1,14 @@
 package interceptor
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
@@ -136,15 +138,34 @@ func checkGetSubmissions(db database.Database, req any, claims *auth.Claims) str
 }
 
 // checkUpdateSubmission checks if the submission is valid and if the user is a teacher in the course specified in the request.
-// The [req] is expected to implement [courseIDProvider] and [submissionIDProvider].
+// The [req] is expected to implement [submissionIDProvider] and optionally [courseIDProvider].
+// If the request does not provide a CourseID, the course is determined from the submission's assignment.
 func checkUpdateSubmission(db database.Database, req any, claims *auth.Claims) string {
 	if !isValidSubmission(db, req) {
 		return "invalid submission"
 	}
-	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+	// Get course ID from request, or fetch it from the submission's assignment
+	courseID := cmp.Or(getCourseID(req), getCourseIDFromDB(req, db))
+	if claims.IsCourseTeacher(courseID) { // teacher role in course
 		return accessGranted
 	}
 	return "not teacher"
+}
+
+// getCourseIDFromDB retrieves the course ID associated with the submission in the request.
+// This is a HACK. It does not report error if db lookup failed.
+// This is only here temporarily since the UpdateSubmissionRequest has been replaced with Grade, which does not have CourseID.
+func getCourseIDFromDB(req any, db database.Database) uint64 {
+	submissionID := getSubmissionID(req)
+	sbm, err := db.GetSubmission(&qf.Submission{ID: submissionID})
+	if err != nil {
+		return 0
+	}
+	assignment, err := db.GetAssignment(&qf.Assignment{ID: sbm.GetAssignmentID()})
+	if err != nil {
+		return 0
+	}
+	return assignment.GetCourseID()
 }
 
 // methodCheckers maps each method to its corresponding access checker function.
