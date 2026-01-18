@@ -1,12 +1,9 @@
-import React, { useCallback } from "react"
+import React from "react"
 import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
-import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
-import { useActions, useAppState } from "../../overmind"
-import { ButtonType } from "../admin/Button"
-import DynamicButton from "../DynamicButton"
+import { getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
+import { useAppState } from "../../overmind"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
-import MarkReadyButton from "./MarkReadyButton"
 
 interface ReviewInfoProps {
     courseID: string
@@ -18,11 +15,6 @@ interface ReviewInfoProps {
 
 const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
-    const actions = useActions()
-    const handleRelease = useCallback(() => actions.review.release({ submission, owner: state.submissionOwner }), [actions, submission, state.submissionOwner])
-    const ready = review.ready
-
-    const markReadyButton = <MarkReadyButton review={review} />
 
     const user = state.selectedEnrollment?.user
     let status = Submission_Status.NONE
@@ -38,28 +30,12 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
         )
     }
 
-    const setReadyOrGradeButton = ready
-        ? <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
-        : markReadyButton
-    const buttonText = submission.released ? "Released" : "Release"
-    const buttonColor = submission.released ? Color.WHITE : Color.YELLOW
-    const releaseButton = (
-        <DynamicButton
-            text={buttonText}
-            color={buttonColor}
-            type={ButtonType.BUTTON}
-            className={`float-right ${!state.isCourseCreator && "disabled"} `}
-            onClick={handleRelease}
-        />
-    )
     const submissionStatus = submission ? SubmissionStatus[status] : NoSubmission
-    const reviewStatus = ready ? "Ready" : "In progress"
     return (
         <ul className="list-group">
             <li className="list-group-item active">
                 <span className="align-middle">
                     <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignmentName}</span>
-                    {releaseButton}
                 </span>
             </li>
             {userLi}
@@ -70,11 +46,6 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
                 {submissionStatus}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Review Status: </span>
-                <span>{reviewStatus}</span>
-                {ready && markReadyButton}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Score: </span>
@@ -89,7 +60,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
                 {state.review.graded}/{state.review.criteriaTotal}
             </li>
             <li className="list-group-item">
-                {setReadyOrGradeButton}
+                <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
             </li>
         </ul>
     )

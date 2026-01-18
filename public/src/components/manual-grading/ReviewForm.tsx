@@ -30,13 +30,12 @@ const ReviewForm = () => {
     const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
-        const buttonText = review.ready ? "Ready" : "In Progress"
-        const buttonColor = review.ready ? Color.GREEN : Color.YELLOW
-        const className = state.review.selectedReview === index ? "active border border-dark" : ""
+        const isSelected = state.review.selectedReview === index
+        const className = isSelected ? "active border border-dark" : ""
         selectReviewButton.push(
             <Button key={review.ID.toString()}
-                text={buttonText}
-                color={buttonColor}
+                text={`Review ${index + 1}`}
+                color={isSelected ? Color.BLUE : Color.GRAY}
                 type={ButtonType.BUTTON}
                 className={`mr-1 ${className}`}
                 onClick={() => { actions.review.setSelectedReview(index) }}

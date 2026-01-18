@@ -408,7 +408,6 @@ export class MockData {
                 AssignmentID: BigInt(3),
                 userID: BigInt(1),
                 score: 80,
-                released: true,
                 reviews: [
                     create(ReviewSchema, {
                         ID: BigInt(1),

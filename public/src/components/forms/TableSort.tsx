@@ -11,7 +11,7 @@ import { useActions, useAppState } from "../../overmind"
  *  sorting and filtering functions based on the modified values.
  *  TODO: We could modify the state to react to changes coming from this component.
  */
-const TableSort = ({ review }: { review: boolean }) => {
+const TableSort = () => {
     const state = useAppState()
     const actions = useActions().global
 
@@ -41,7 +41,6 @@ const TableSort = ({ review }: { review: boolean }) => {
     const submissionFilters = [
         { name: "teachers", text: "Teachers", show: true },
         { name: "approved", text: "Graded", show: true },
-        { name: "released", text: "Released", show: review }
     ]
 
     const filterElements = submissionFilters.map((filter) => {

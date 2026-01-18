@@ -194,16 +194,12 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
             clonedSubmission = setStatusAll(clonedSubmission, status)
             break
     }
-    /* Update the submission status */
-    const response = await effects.global.api.client.updateSubmission({
-        courseID: state.activeCourse,
-        submissionID: submission.ID,
-        grades: clonedSubmission.Grades,
-        released: submission.released,
-        score: submission.score,
-    })
-    if (response.error) {
-        return
+    /* Update the submission status by sending each grade to the server */
+    for (const grade of clonedSubmission.Grades) {
+        const response = await effects.global.api.client.updateSubmission(grade)
+        if (response.error) {
+            return
+        }
     }
     submission.Grades = clonedSubmission.Grades
     state.submissionsForCourse.update(owner, submission)
@@ -219,19 +215,13 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
     }
 
     const clonedSubmission = clone(SubmissionSchema, state.selectedSubmission)
-    clonedSubmission.Grades = clonedSubmission.Grades.map(g => {
-        if (g.UserID === grade.UserID) {
-            g.Status = status
-        }
-        return g
-    })
-    const response = await effects.global.api.client.updateSubmission({
-        courseID: state.activeCourse,
-        submissionID: state.selectedSubmission.ID,
-        grades: clonedSubmission.Grades,
-        released: state.selectedSubmission.released,
-        score: state.selectedSubmission.score,
-    })
+    const updatedGrade = clonedSubmission.Grades.find(g => g.UserID === grade.UserID)
+    if (!updatedGrade) {
+        return
+    }
+    updatedGrade.Status = status
+
+    const response = await effects.global.api.client.updateSubmission(updatedGrade)
     if (response.error) {
         return
     }

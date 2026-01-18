@@ -3,7 +3,6 @@ import { Review } from "../../proto/qf/types_pb"
 import { hasBenchmarks } from "../Helpers"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"
-import MarkReadyButton from "./manual-grading/MarkReadyButton"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 import { useAppState } from "../overmind"
 import GradeAllCriteria from "./manual-grading/GradeAllCriteria"
@@ -43,13 +42,6 @@ const ReviewResult = ({ review }: { review: Review }) => {
             </tbody>
             <tfoot>
                 <SummaryFeedback review={review} />
-                {!review.ready && state.isTeacher
-                    ?
-                    <tr>
-                        <MarkReadyButton review={review} />
-                    </tr>
-                    : null
-                }
             </tfoot>
         </table>
     )
