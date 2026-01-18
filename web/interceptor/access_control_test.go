@@ -449,11 +449,12 @@ func TestCrossCourseSubmissionUpdate(t *testing.T) {
 
 	// Attempt to update the submission from course1 while acting as teacher in course2
 	// This should fail because the submission belongs to course1, not course2.
-	_, err := client.UpdateSubmission(t.Context(), qtest.RequestWithCookie(&qf.UpdateSubmissionRequest{
+	_, err := client.UpdateSubmission(t.Context(), qtest.RequestWithCookie(&qf.Grade{
 		SubmissionID: submission.GetID(),
-		CourseID:     course2.GetID(), // Wrong course ID
-		Score:        100,
-		Released:     true,
+		// TODO(meling): UpdateSubmissionRequest had these fields, but Grade does not. Should we add CourseID to Grade?
+		// CourseID:     course2.GetID(), // Wrong course ID
+		// Score:        100,
+		// Released:     true,
 	}, client.Cookie(t, userA)))
 
 	if err == nil {
