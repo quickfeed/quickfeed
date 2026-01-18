@@ -26,11 +26,15 @@ func getUserID(req any) uint64 {
 	return 0
 }
 
-func hasGroupID(req any) bool {
+func getGroupID(req any) uint64 {
 	if gid, ok := req.(groupIDProvider); ok {
-		return gid.GetGroupID() > 0
+		return gid.GetGroupID()
 	}
-	return false
+	return 0
+}
+
+func hasGroupID(req any) bool {
+	return getGroupID(req) > 0
 }
 
 func getSubmissionID(req any) uint64 {
