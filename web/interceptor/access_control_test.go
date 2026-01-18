@@ -158,6 +158,24 @@ func TestAccessControl(t *testing.T) {
 		})
 	}
 
+	// Test GetSubmissions with user ID mismatch (student accessing another student's submissions)
+	t.Run("GetSubmissions/UserIDMismatch", func(t *testing.T) {
+		_, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+			CourseID: course.GetID(),
+			FetchMode: &qf.SubmissionRequest_UserID{
+				UserID: groupStudent.GetID(), // student trying to access groupStudent's submissions
+			},
+		}, studentCookie))
+		if err == nil {
+			t.Error("Expected access denied for student accessing another student's submissions")
+		} else {
+			var connErr *connect.Error
+			if !errors.As(err, &connErr) || connErr.Code() != connect.CodePermissionDenied {
+				t.Errorf("Expected CodePermissionDenied, got %v", err)
+			}
+		}
+	})
+
 	submissionsGroupAccessTests := map[string]accessTest{
 		"group member":         {cookie: groupStudentCookie, courseID: course.GetID(), groupID: group.GetID(), wantAccess: true},
 		"student not in group": {cookie: studentCookie, courseID: course.GetID(), groupID: group.GetID(), wantAccess: false, wantCode: connect.CodePermissionDenied},
