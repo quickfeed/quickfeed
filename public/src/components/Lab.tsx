@@ -73,7 +73,7 @@ const Lab = () => {
                     )}
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}
+                    {isManuallyGraded(assignment.reviewers) && review.length > 0 ? <ReviewResult review={review[0]} /> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}>{buildLog}</code>
