@@ -378,6 +378,23 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
 		})
 	}
+
+	// Test student role in GetEnrollments (when student queries course enrollments, not their own user)
+	studentGetEnrollmentsTests := map[string]accessTest{
+		"student querying course enrollments": {cookie: studentCookie, courseID: course.GetID(), wantAccess: true},
+		"student of another course":           {cookie: studentCookie, courseID: 999, wantAccess: false, wantCode: connect.CodePermissionDenied},
+	}
+
+	for name, tt := range studentGetEnrollmentsTests {
+		t.Run("StudentGetEnrollments/"+name, func(t *testing.T) {
+			_, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+				FetchMode: &qf.EnrollmentRequest_CourseID{
+					CourseID: tt.courseID,
+				},
+			}, tt.cookie))
+			checkAccess(t, "GetEnrollments", err, tt.wantCode, tt.wantAccess)
+		})
+	}
 }
 
 func TestCrossCourseSubmissionUpdate(t *testing.T) {
