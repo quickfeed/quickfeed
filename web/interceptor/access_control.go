@@ -17,7 +17,9 @@ type accessChecker func(db database.Database, req any, claims *auth.Claims) stri
 // accessGranted is the constant string returned when access is granted.
 const accessGranted = ""
 
-// Helper functions for common role checks
+// Below are access checker functions for common role checks.
+// The main roles include: none, user, student, group, teacher, admin, and combinations thereof.
+// These checker functions can be used for different RPC methods as needed.
 
 // checkNone allows access to any authenticated user.
 func checkNone(db database.Database, req any, claims *auth.Claims) string {
@@ -25,6 +27,7 @@ func checkNone(db database.Database, req any, claims *auth.Claims) string {
 }
 
 // checkUser checks if the user ID in the request matches the user ID in the claims.
+// The [req] is expected to implement [userIDProvider].
 func checkUser(db database.Database, req any, claims *auth.Claims) string {
 	if claims.SameUser(req) { // user role
 		return accessGranted
