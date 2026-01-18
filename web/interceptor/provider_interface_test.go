@@ -39,93 +39,95 @@ var (
 // RPC methods implement the required ID provider interfaces that the access control
 // checkers depend on. This test catches breaking changes to these types.
 func TestIDProviderInterfaces(t *testing.T) {
+	type idProvider func(any) error
+
 	tests := []struct {
 		name      string
 		value     any
-		providers []func(any) error // interface assertion functions
+		providers []idProvider // interface assertion functions
 	}{
 		// Core types used in RPC calls
 		{
 			name:      "User implements userIDProvider",
 			value:     &qf.User{},
-			providers: []func(any) error{assertUserIDProvider},
+			providers: []idProvider{assertUserIDProvider},
 		},
 		{
 			name:      "Group implements groupIDProvider and courseIDProvider",
 			value:     &qf.Group{},
-			providers: []func(any) error{assertGroupIDProvider, assertCourseIDProvider},
+			providers: []idProvider{assertGroupIDProvider, assertCourseIDProvider},
 		},
 		{
 			name:      "Course implements courseIDProvider",
 			value:     &qf.Course{},
-			providers: []func(any) error{assertCourseIDProvider},
+			providers: []idProvider{assertCourseIDProvider},
 		},
 		{
 			name:      "Enrollment implements userIDProvider and courseIDProvider and groupIDProvider",
 			value:     &qf.Enrollment{},
-			providers: []func(any) error{assertUserIDProvider, assertCourseIDProvider, assertGroupIDProvider},
+			providers: []idProvider{assertUserIDProvider, assertCourseIDProvider, assertGroupIDProvider},
 		},
 		{
 			name:      "Submission implements userIDProvider and groupIDProvider",
 			value:     &qf.Submission{},
-			providers: []func(any) error{assertUserIDProvider, assertGroupIDProvider},
+			providers: []idProvider{assertUserIDProvider, assertGroupIDProvider},
 		},
 
 		// Request types
 		{
 			name:      "CourseRequest implements courseIDProvider",
 			value:     &qf.CourseRequest{},
-			providers: []func(any) error{assertCourseIDProvider},
+			providers: []idProvider{assertCourseIDProvider},
 		},
 		{
 			name:      "GroupRequest implements courseIDProvider and userIDProvider and groupIDProvider",
 			value:     &qf.GroupRequest{},
-			providers: []func(any) error{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider},
+			providers: []idProvider{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider},
 		},
 		{
 			name:      "EnrollmentRequest implements courseIDProvider and userIDProvider",
 			value:     &qf.EnrollmentRequest{},
-			providers: []func(any) error{assertCourseIDProvider, assertUserIDProvider},
+			providers: []idProvider{assertCourseIDProvider, assertUserIDProvider},
 		},
 		{
 			name:      "SubmissionRequest implements courseIDProvider and userIDProvider and groupIDProvider and submissionIDProvider",
 			value:     &qf.SubmissionRequest{},
-			providers: []func(any) error{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider, assertSubmissionIDProvider},
+			providers: []idProvider{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider, assertSubmissionIDProvider},
 		},
 		{
 			name:      "UpdateSubmissionRequest implements courseIDProvider and submissionIDProvider",
 			value:     &qf.UpdateSubmissionRequest{},
-			providers: []func(any) error{assertCourseIDProvider, assertSubmissionIDProvider},
+			providers: []idProvider{assertCourseIDProvider, assertSubmissionIDProvider},
 		},
 		{
 			name:      "UpdateSubmissionsRequest implements courseIDProvider",
 			value:     &qf.UpdateSubmissionsRequest{},
-			providers: []func(any) error{assertCourseIDProvider},
+			providers: []idProvider{assertCourseIDProvider},
 		},
 		{
 			name:      "RepositoryRequest implements courseIDProvider and userIDProvider and groupIDProvider",
 			value:     &qf.RepositoryRequest{},
-			providers: []func(any) error{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider},
+			providers: []idProvider{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider},
 		},
 		{
 			name:      "RebuildRequest implements courseIDProvider and submissionIDProvider",
 			value:     &qf.RebuildRequest{},
-			providers: []func(any) error{assertCourseIDProvider, assertSubmissionIDProvider},
+			providers: []idProvider{assertCourseIDProvider, assertSubmissionIDProvider},
 		},
 		{
 			name:      "ReviewRequest implements courseIDProvider",
 			value:     &qf.ReviewRequest{},
-			providers: []func(any) error{assertCourseIDProvider},
+			providers: []idProvider{assertCourseIDProvider},
 		},
 		{
 			name:      "GradingBenchmark implements courseIDProvider",
 			value:     &qf.GradingBenchmark{},
-			providers: []func(any) error{assertCourseIDProvider},
+			providers: []idProvider{assertCourseIDProvider},
 		},
 		{
 			name:      "GradingCriterion implements courseIDProvider",
 			value:     &qf.GradingCriterion{},
-			providers: []func(any) error{assertCourseIDProvider},
+			providers: []idProvider{assertCourseIDProvider},
 		},
 	}
 
@@ -143,59 +145,61 @@ func TestIDProviderInterfaces(t *testing.T) {
 // TestAccessCheckerDependencies documents which request types are expected by each checker
 // and verifies that the documented requirements match the actual usage in the checker functions.
 func TestAccessCheckerDependencies(t *testing.T) {
+	type idGetter func(any) uint64
+
 	tests := []struct {
 		name              string
 		checker           accessChecker
 		request           any
-		requiredIDGetters []func(any) uint64 // ID getter functions that should work without panic
+		requiredIDGetters []idGetter // ID getter functions that should work without panic
 	}{
 		{
 			name:              "checkUser requires userIDProvider",
 			checker:           checkUser,
 			request:           &qf.User{ID: 1},
-			requiredIDGetters: []func(any) uint64{getUserID},
+			requiredIDGetters: []idGetter{getUserID},
 		},
 		{
 			name:              "checkTeacher requires courseIDProvider",
 			checker:           checkTeacher,
 			request:           &qf.CourseRequest{CourseID: 1},
-			requiredIDGetters: []func(any) uint64{getCourseID},
+			requiredIDGetters: []idGetter{getCourseID},
 		},
 		{
 			name:              "checkStudentOrTeacher requires courseIDProvider",
 			checker:           checkStudentOrTeacher,
 			request:           &qf.CourseRequest{CourseID: 1},
-			requiredIDGetters: []func(any) uint64{getCourseID},
+			requiredIDGetters: []idGetter{getCourseID},
 		},
 		{
 			name:              "checkGroupOrTeacher requires groupIDProvider and courseIDProvider",
 			checker:           checkGroupOrTeacher,
 			request:           &qf.GroupRequest{CourseID: 1, GroupID: 2},
-			requiredIDGetters: []func(any) uint64{getCourseID, getGroupID},
+			requiredIDGetters: []idGetter{getCourseID, getGroupID},
 		},
 		{
 			name:              "checkUserOrStudentOrTeacherOrAdmin requires userIDProvider and courseIDProvider",
 			checker:           checkUserOrStudentOrTeacherOrAdmin,
 			request:           &qf.EnrollmentRequest{},
-			requiredIDGetters: []func(any) uint64{getUserID, getCourseID},
+			requiredIDGetters: []idGetter{getUserID, getCourseID},
 		},
 		{
 			name:              "checkUpdateUser requires userIDProvider",
 			checker:           checkUpdateUser,
 			request:           &qf.User{ID: 1},
-			requiredIDGetters: []func(any) uint64{getUserID},
+			requiredIDGetters: []idGetter{getUserID},
 		},
 		{
 			name:              "checkGetSubmissions requires userIDProvider, groupIDProvider, and courseIDProvider",
 			checker:           checkGetSubmissions,
 			request:           &qf.SubmissionRequest{CourseID: 1},
-			requiredIDGetters: []func(any) uint64{getUserID, getGroupID, getCourseID},
+			requiredIDGetters: []idGetter{getUserID, getGroupID, getCourseID},
 		},
 		{
 			name:              "checkUpdateSubmission requires courseIDProvider and submissionIDProvider",
 			checker:           checkUpdateSubmission,
 			request:           &qf.UpdateSubmissionRequest{CourseID: 1, SubmissionID: 2},
-			requiredIDGetters: []func(any) uint64{getCourseID, getSubmissionID},
+			requiredIDGetters: []idGetter{getCourseID, getSubmissionID},
 		},
 	}
 
