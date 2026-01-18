@@ -19,132 +19,155 @@ const accessGranted = ""
 
 // Helper functions for common role checks
 
+// checkNone allows access to any authenticated user.
 func checkNone(db database.Database, req any, claims *auth.Claims) string {
 	return accessGranted
 }
 
+// checkUser checks if the user ID in the request matches the user ID in the claims.
 func checkUser(db database.Database, req any, claims *auth.Claims) string {
-	if claims.SameUser(req) {
+	if claims.SameUser(req) { // user role
 		return accessGranted
 	}
 	return "user ID mismatch"
 }
 
+// checkTeacher checks if the user is a teacher in the course specified in the request.
+// The [req] is expected to implement [courseIDProvider].
 func checkTeacher(db database.Database, req any, claims *auth.Claims) string {
-	if claims.IsCourseTeacher(getCourseID(req)) {
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
 		return accessGranted
 	}
 	return "not teacher"
 }
 
+// checkAdmin checks if the user has admin privileges.
 func checkAdmin(db database.Database, req any, claims *auth.Claims) string {
-	if claims.Admin {
+	if claims.Admin { // admin role
 		return accessGranted
 	}
 	return "not admin"
 }
 
+// checkUserOrStudentOrTeacherOrAdmin checks if the user is the same as in the request,
+// or is a student or teacher in the course specified in the request, or an admin.
+// The [req] is expected to implement [userIDProvider] or [courseIDProvider].
 func checkUserOrStudentOrTeacherOrAdmin(db database.Database, req any, claims *auth.Claims) string {
-	if claims.SameUser(req) {
+	if claims.SameUser(req) { // user role; will fall through to check course roles
 		return accessGranted
 	}
-	if claims.IsCourseStudent(getCourseID(req)) {
+	if claims.IsCourseStudent(getCourseID(req)) { // student role in course
 		return accessGranted
 	}
-	if claims.IsCourseTeacher(getCourseID(req)) {
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
 		return accessGranted
 	}
-	if claims.Admin {
+	if claims.Admin { // admin role
 		return accessGranted
 	}
 	return "not enrolled or not admin"
 }
 
+// checkStudentOrTeacher checks if the user is a student or teacher in the course specified in the request.
+// The [req] is expected to implement [courseIDProvider].
 func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) string {
-	if claims.IsCourseStudent(getCourseID(req)) {
+	if claims.IsCourseStudent(getCourseID(req)) { // student role in course; will fall through to check teacher role
 		return accessGranted
 	}
-	if claims.IsCourseTeacher(getCourseID(req)) {
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
 		return accessGranted
 	}
 	return "not student or teacher"
 }
 
+// checkGroupOrTeacher checks if the user is a member of the group specified in the request,
+// or is a teacher in the course specified in the request.
+// The [req] is expected to implement [groupIDProvider] or [courseIDProvider].
 func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) string {
-	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created
+	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created; will fall through to check other group/teacher roles
 		return accessGranted
 	}
-	if claims.IsInGroup(req) { // GetGroup: request's group ID must be in the claims' groups to allow access
+	if claims.IsInGroup(req) { // GetGroup: request's group ID must be in the claims' groups to allow access; will fall through to check teacher role
 		return accessGranted
 	}
-	if claims.IsCourseTeacher(getCourseID(req)) {
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
 		return accessGranted
 	}
 	return "not group member or teacher"
 }
 
+// checkUpdateUser checks if the user is updating their own information or if they are an admin.
+// The [req] is expected to implement [userIDProvider].
+func checkUpdateUser(db database.Database, req any, claims *auth.Claims) string {
+	if claims.SameUser(req) { // user role; will fall through to check admin role
+		if claims.UnauthorizedAdminChange(req) {
+			return fmt.Sprintf("non-admin user %d attempted to grant admin privileges", claims.UserID)
+		}
+		return accessGranted
+	}
+	if claims.Admin { // admin role
+		return accessGranted
+	}
+	return "user ID mismatch or not admin"
+}
+
+// checkGetSubmissions checks if the user is a student, group member, or teacher for accessing submissions.
+// The [req] is expected to implement [userIDProvider] or [groupIDProvider] or [courseIDProvider].
+func checkGetSubmissions(db database.Database, req any, claims *auth.Claims) string { // roles: student, group, teacher
+	// student role; will fall through to check group/teacher roles
+	if !hasGroupID(req) {
+		if !claims.SameUser(req) {
+			return fmt.Sprintf("ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))
+		}
+		if claims.IsCourseStudent(getCourseID(req)) {
+			return accessGranted
+		}
+	}
+	if claims.IsInGroup(req) { // group role; will fall through to check teacher role
+		return accessGranted
+	}
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	return "not student, group member, or teacher"
+}
+
+// checkUpdateSubmission checks if the submission is valid and if the user is a teacher in the course specified in the request.
+// The [req] is expected to implement [courseIDProvider] and [submissionIDProvider].
+func checkUpdateSubmission(db database.Database, req any, claims *auth.Claims) string {
+	if !isValidSubmission(db, req) {
+		return "invalid submission"
+	}
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	return "not teacher"
+}
+
 // methodCheckers maps each method to its corresponding access checker function.
 // Each checker returns an empty string if access is granted, or a reason string if denied.
 var methodCheckers = map[string]accessChecker{
-	"GetUser":                checkNone,
-	"GetCourse":              checkNone,
-	"GetCourses":             checkNone,
-	"SubmissionStream":       checkNone, // No role required as long as the user is authenticated, i.e. has a valid token.
-	"CreateEnrollment":       checkUser,
-	"UpdateCourseVisibility": checkUser,
-	"UpdateUser": func(db database.Database, req any, claims *auth.Claims) string { // roles: {user, admin},
-		if claims.SameUser(req) {
-			if claims.UnauthorizedAdminChange(req) {
-				return fmt.Sprintf("non-admin user %d attempted to grant admin privileges", claims.UserID)
-			}
-			return accessGranted
-		}
-		if claims.Admin {
-			return accessGranted
-		}
-		return "user ID mismatch or not admin"
-	},
-	"GetEnrollments": checkUserOrStudentOrTeacherOrAdmin,
-	"GetSubmissions": func(db database.Database, req any, claims *auth.Claims) string { // roles: {student, group, teacher},
-		// student role
-		if !hasGroupID(req) {
-			if !claims.SameUser(req) {
-				return fmt.Sprintf("ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))
-			}
-			if claims.IsCourseStudent(getCourseID(req)) {
-				return accessGranted
-			}
-		}
-		// group role
-		if claims.IsInGroup(req) {
-			return accessGranted
-		}
-		// teacher role
-		if claims.IsCourseTeacher(getCourseID(req)) {
-			return accessGranted
-		}
-		return "not student, group member, or teacher"
-	},
-	"GetSubmission":     checkTeacher,
-	"CreateGroup":       checkGroupOrTeacher,
-	"GetGroup":          checkGroupOrTeacher,
-	"GetAssignments":    checkStudentOrTeacher,
-	"GetRepositories":   checkStudentOrTeacher,
-	"UpdateGroup":       checkTeacher,
-	"DeleteGroup":       checkTeacher,
-	"GetGroupsByCourse": checkTeacher,
-	"UpdateCourse":      checkTeacher,
-	"UpdateEnrollments": checkTeacher,
-	"UpdateAssignments": checkTeacher,
-	"UpdateSubmission": func(db database.Database, req any, claims *auth.Claims) string { // roles: {teacher},
-		if !isValidSubmission(db, req) {
-			return "invalid submission"
-		}
-		if claims.IsCourseTeacher(getCourseID(req)) {
-			return accessGranted
-		}
-		return "not teacher"
-	},
+	"GetUser":                  checkNone,
+	"GetCourse":                checkNone,
+	"GetCourses":               checkNone,
+	"SubmissionStream":         checkNone, // No role required as long as the user is authenticated, i.e. has a valid token.
+	"CreateEnrollment":         checkUser,
+	"UpdateCourseVisibility":   checkUser,
+	"UpdateUser":               checkUpdateUser,
+	"GetEnrollments":           checkUserOrStudentOrTeacherOrAdmin,
+	"GetSubmissions":           checkGetSubmissions,
+	"GetSubmission":            checkTeacher,
+	"CreateGroup":              checkGroupOrTeacher,
+	"GetGroup":                 checkGroupOrTeacher,
+	"GetAssignments":           checkStudentOrTeacher,
+	"GetRepositories":          checkStudentOrTeacher,
+	"UpdateGroup":              checkTeacher,
+	"DeleteGroup":              checkTeacher,
+	"GetGroupsByCourse":        checkTeacher,
+	"UpdateCourse":             checkTeacher,
+	"UpdateEnrollments":        checkTeacher,
+	"UpdateAssignments":        checkTeacher,
+	"UpdateSubmission":         checkUpdateSubmission,
 	"UpdateSubmissions":        checkTeacher,
 	"RebuildSubmissions":       checkTeacher,
 	"CreateBenchmark":          checkTeacher,
