@@ -95,14 +95,12 @@ func TestIDProviderInterfaces(t *testing.T) {
 			providers: []idProvider{assertCourseIDProvider, assertUserIDProvider, assertGroupIDProvider, assertSubmissionIDProvider},
 		},
 		{
-			name:      "UpdateSubmissionRequest implements courseIDProvider and submissionIDProvider",
-			value:     &qf.UpdateSubmissionRequest{},
-			providers: []idProvider{assertCourseIDProvider, assertSubmissionIDProvider},
-		},
-		{
-			name:      "UpdateSubmissionsRequest implements courseIDProvider",
-			value:     &qf.UpdateSubmissionsRequest{},
-			providers: []idProvider{assertCourseIDProvider},
+			// TODO(meling): Should we re-add courseIDProvider here?
+			// name:      "Grade implements courseIDProvider and submissionIDProvider",
+			// providers: []idProvider{assertCourseIDProvider, assertSubmissionIDProvider},
+			name:      "Grade implements submissionIDProvider",
+			value:     &qf.Grade{},
+			providers: []idProvider{assertSubmissionIDProvider},
 		},
 		{
 			name:      "RepositoryRequest implements courseIDProvider and userIDProvider and groupIDProvider",
@@ -196,10 +194,14 @@ func TestAccessCheckerDependencies(t *testing.T) {
 			requiredIDGetters: []idGetter{getUserID, getGroupID, getCourseID},
 		},
 		{
-			name:              "checkUpdateSubmission requires courseIDProvider and submissionIDProvider",
+			// TODO(meling): Should we re-add courseIDProvider for Grade?
+			// name:              "checkUpdateSubmission requires courseIDProvider and submissionIDProvider",
+			// request:           &qf.Grade{CourseID: 1, SubmissionID: 2},
+			// requiredIDGetters: []idGetter{getCourseID, getSubmissionID},
+			name:              "checkUpdateSubmission requires submissionIDProvider",
 			checker:           checkUpdateSubmission,
-			request:           &qf.UpdateSubmissionRequest{CourseID: 1, SubmissionID: 2},
-			requiredIDGetters: []idGetter{getCourseID, getSubmissionID},
+			request:           &qf.Grade{SubmissionID: 2},
+			requiredIDGetters: []idGetter{getSubmissionID},
 		},
 	}
 
@@ -251,7 +253,6 @@ func TestMethodCheckerRequestTypes(t *testing.T) {
 		"UpdateCourse":           "qf.Course",
 		"UpdateEnrollments":      "qf.Enrollments",
 		"UpdateAssignments":      "qf.CourseRequest",
-		"UpdateSubmissions":      "qf.UpdateSubmissionsRequest",
 		"RebuildSubmissions":     "qf.RebuildRequest",
 		"CreateBenchmark":        "qf.GradingBenchmark",
 		"UpdateBenchmark":        "qf.GradingBenchmark",
@@ -275,7 +276,7 @@ func TestMethodCheckerRequestTypes(t *testing.T) {
 		"GetGroup":    "qf.GroupRequest",
 
 		// checkUpdateSubmission methods
-		"UpdateSubmission": "qf.UpdateSubmissionRequest",
+		"UpdateSubmission": "qf.Grade",
 
 		// checkAdmin methods
 		"GetUsers": "qf.Void",
