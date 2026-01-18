@@ -46,6 +46,7 @@ func getSubmissionID(req any) uint64 {
 
 // isValidSubmission returns true if the submission belongs to the given course
 // and the student or group has an active course enrollment in that course.
+// If the request does not provide a CourseID, the course is determined from the submission's assignment.
 func isValidSubmission(db database.Database, req any) bool {
 	courseID := getCourseID(req)
 	submissionID := getSubmissionID(req)
@@ -56,7 +57,15 @@ func isValidSubmission(db database.Database, req any) bool {
 
 	// Check that the submission's assignment belongs to the course
 	assignment, err := db.GetAssignment(&qf.Assignment{ID: sbm.GetAssignmentID()})
-	if err != nil || assignment.GetCourseID() != courseID {
+	if err != nil {
+		return false
+	}
+
+	// If no courseID was provided in the request, use the assignment's courseID
+	if courseID == 0 {
+		courseID = assignment.GetCourseID()
+	} else if assignment.GetCourseID() != courseID {
+		// If courseID was provided, verify it matches the assignment's course
 		return false
 	}
 
