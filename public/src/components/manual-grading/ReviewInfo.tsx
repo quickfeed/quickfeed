@@ -59,9 +59,11 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
                 <span className="w-25 mr-5 float-left">Graded: </span>
                 {state.review.graded}/{state.review.criteriaTotal}
             </li>
-            <li className="list-group-item">
-                <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
-            </li>
+            {state.review.graded === state.review.criteriaTotal && (
+                <li className="list-group-item">
+                    <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
+                </li>
+            )}
         </ul>
     )
 }
