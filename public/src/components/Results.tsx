@@ -136,12 +136,11 @@ const Results = ({ review }: { review: boolean }) => {
     const generator = review ? generateReviewCell : getSubmissionCell
     const rows = generateSubmissionRows(members, generator, state)
 
-    const divWidth = state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"
     const displayMode = state.groupView ? "Group" : "Student"
     const buttonColor = state.groupView ? Color.BLUE : Color.GREEN
     return (
         <div className="row">
-            <div className={`p-0 ${divWidth}`}>
+            <div className="p-0 col-md-6">
                 <Search placeholder={"Search by name ..."} className="mb-2" >
                     <Button
                         text={`View by ${displayMode}`}
@@ -154,7 +153,7 @@ const Results = ({ review }: { review: boolean }) => {
                 <TableSort />
                 <DynamicTable header={header} data={rows} />
             </div>
-            <div className="col">
+            <div className="col-md-6">
                 {review ? <ReviewForm /> : <LabResult />}
             </div>
         </div>
