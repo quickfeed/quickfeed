@@ -98,18 +98,21 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 func (s *Submissions) Clean(userID uint64) {
 	for _, submission := range s.GetSubmissions() {
 		// Group submissions may have multiple grades, so we need to filter the grades by the user.
-		submission.Grades = []*Grade{{
+		grade := &Grade{
 			UserID:       userID,
 			SubmissionID: submission.GetID(),
 			Status:       submission.GetStatusByUser(userID),
-		}}
-		// Approved submissions should not be cleaned (keep their score, grades, and reviews)
-		if submission.IsApproved(userID) {
+		}
+		submission.Grades = []*Grade{grade}
+		// Do not clean if the submission is not manually reviewed.
+		if len(submission.GetReviews()) == 0 {
 			continue
 		}
-		// Remove any score, grades, or reviews if the submission is not released.
-		submission.Score = 0
-		submission.Grades = nil
-		submission.Reviews = nil
+		// Remove any score, grades, or reviews if the submission has not been graded.
+		if grade.GetStatus() == Submission_NONE {
+			submission.Score = 0
+			submission.Grades = nil
+			submission.Reviews = nil
+		}
 	}
 }
