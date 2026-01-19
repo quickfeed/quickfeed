@@ -745,8 +745,6 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
 
-	t.Logf("CourseID: %d", course.GetID())
-
 	assignments := []*qf.Assignment{
 		{CourseID: course.GetID(), Name: "lab 1", Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"), Order: 1, Reviewers: 1},
 		{CourseID: course.GetID(), Name: "lab 2", Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"), Order: 2, Reviewers: 1},
