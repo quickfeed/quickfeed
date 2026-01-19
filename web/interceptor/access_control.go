@@ -56,7 +56,7 @@ func checkAdmin(db database.Database, req any, claims *auth.Claims) string {
 // or is a student or teacher in the course specified in the request, or an admin.
 // The [req] is expected to implement [userIDProvider] or [courseIDProvider].
 func checkUserOrStudentOrTeacherOrAdmin(db database.Database, req any, claims *auth.Claims) string {
-	if claims.SameUser(req) { // user role; will fall through to check course roles
+	if claims.SameUser(req) { // user role
 		return accessGranted
 	}
 	if claims.IsCourseStudent(getCourseID(req)) { // student role in course
@@ -74,7 +74,7 @@ func checkUserOrStudentOrTeacherOrAdmin(db database.Database, req any, claims *a
 // checkStudentOrTeacher checks if the user is a student or teacher in the course specified in the request.
 // The [req] is expected to implement [courseIDProvider].
 func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) string {
-	if claims.IsCourseStudent(getCourseID(req)) { // student role in course; will fall through to check teacher role
+	if claims.IsCourseStudent(getCourseID(req)) { // student role in course
 		return accessGranted
 	}
 	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
@@ -87,10 +87,10 @@ func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) s
 // or is a teacher in the course specified in the request.
 // The [req] is expected to implement [groupIDProvider] or [courseIDProvider].
 func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) string {
-	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created; will fall through to check other group/teacher roles
+	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created
 		return accessGranted
 	}
-	if claims.IsInGroup(req) { // GetGroup: request's group ID must be in the claims' groups to allow access; will fall through to check teacher role
+	if claims.IsInGroup(req) { // GetGroup: request's group ID must be in the claims' groups to allow access
 		return accessGranted
 	}
 	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
@@ -102,7 +102,7 @@ func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) str
 // checkUpdateUser checks if the user is updating their own information or if they are an admin.
 // The [req] is expected to implement [userIDProvider].
 func checkUpdateUser(db database.Database, req any, claims *auth.Claims) string {
-	if claims.SameUser(req) { // user role; will fall through to check admin role
+	if claims.SameUser(req) { // user role
 		if claims.UnauthorizedAdminChange(req) {
 			return fmt.Sprintf("non-admin user %d attempted to grant admin privileges", claims.UserID)
 		}
@@ -117,8 +117,7 @@ func checkUpdateUser(db database.Database, req any, claims *auth.Claims) string 
 // checkGetSubmissions checks if the user is a student, group member, or teacher for accessing submissions.
 // The [req] is expected to implement [userIDProvider] or [groupIDProvider] or [courseIDProvider].
 func checkGetSubmissions(db database.Database, req any, claims *auth.Claims) string { // roles: student, group, teacher
-	// student role; will fall through to check group/teacher roles
-	if !hasGroupID(req) {
+	if !hasGroupID(req) { // student role
 		if !claims.SameUser(req) {
 			return fmt.Sprintf("ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))
 		}
@@ -126,7 +125,7 @@ func checkGetSubmissions(db database.Database, req any, claims *auth.Claims) str
 			return accessGranted
 		}
 	}
-	if claims.IsInGroup(req) { // group role; will fall through to check teacher role
+	if claims.IsInGroup(req) { // group role
 		return accessGranted
 	}
 	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
