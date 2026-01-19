@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
@@ -86,7 +87,7 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	case "github":
 		return newGithubAppClient(ctx, logger, config, organization)
 	case "fake":
-		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
+		return NewMockedGithubSCMClient(logger, WithMockOrgs(qtest.Members...), WithRepos(qtest.MockRepos()...), WithGroups(qtest.MockGroups())), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }

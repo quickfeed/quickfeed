@@ -12,6 +12,7 @@ import (
 
 func TestScmProviderEnv(t *testing.T) {
 	want := "github"
+	env.InitProvider()
 	got := env.ScmProvider()
 	if got != want {
 		t.Errorf("ScmProvider() = %s, wanted %s", got, want)

@@ -6,7 +6,6 @@
 
 OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 github_user	:= $(shell gh auth status 2>/dev/null | awk '/Logged in to/ {print $$(NF-1)}')
-dev_db		:= ./testdata/db/qf.db
 protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
@@ -18,7 +17,7 @@ download:
 	@go mod download
 
 brew:
-ifeq (, $(shell which brew))
+ifeq (, $(shell which brew > /dev/null 2>&1))
 	$(error "No brew command in $(PATH)")
 endif
 	@echo "Installing homebrew packages needed for development and deployment"
@@ -28,13 +27,8 @@ version-check:
 	@go run cmd/vercheck/main.go
 
 dev-db:
-	@if [ ! -f $(dev_db) ]; then \
-		echo "Error: Database file not found at $(dev_db)"; \
-		echo "Please download the database file from the QuickFeed organization."; \
-		exit 1; \
-	fi
-	@echo "Updating development database with GitHub user: $(github_user) as QuickFeed admin"
-	@python3 cmd/anonymize/main.py --database $(dev_db) --admin $(github_user)
+	@echo "Creating dummy database"
+	@go run cmd/dummyDB/main.go -admin $(github_user)
 
 install:
 	@echo go install
