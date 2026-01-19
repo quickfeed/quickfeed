@@ -92,9 +92,8 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
 }
 
-// TODO(meling): We refactored this already, Jostein has it on his laptop.
-// Clean removes any score or reviews from the submission if it is not released.
-// This is to prevent users from seeing the score or reviews of a submission that has not been released.
+// Clean removes any score or reviews from the submission to prevent
+// a student from seeing them before the submission has been graded.
 func (s *Submissions) Clean(userID uint64) {
 	for _, submission := range s.GetSubmissions() {
 		// Group submissions may have multiple grades, so we need to filter the grades by the user.
