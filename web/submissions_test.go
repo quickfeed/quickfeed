@@ -911,6 +911,7 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 }
 
 func checkStudentSubmission(t *testing.T, submission *qf.Submission, wantApproved bool, userID uint64) {
+	t.Helper()
 	assignmentID := submission.GetAssignmentID()
 	if wantApproved {
 		if submission.GetScore() < 80 {
