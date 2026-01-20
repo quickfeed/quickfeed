@@ -305,16 +305,6 @@ export const state: State = {
                         return numApproved < numAssignments
                     })
                     break
-                case "released":
-                    filtered = filtered.filter(el => {
-                        if (assignmentID > 0) {
-                            const sub = submissions.get(el.ID)?.submissions?.find(s => s.AssignmentID === assignmentID)
-                            return sub !== undefined && !sub.released
-                        }
-                        const hasReleased = submissions.get(el.ID)?.submissions.some(sub => sub.released)
-                        return !hasReleased
-                    })
-                    break
                 default:
                     break
             }

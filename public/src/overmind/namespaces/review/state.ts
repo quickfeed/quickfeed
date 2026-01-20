@@ -26,12 +26,8 @@ export type ReviewState = {
     /* The amount of criteria that have been graded for the current review */
     graded: number
 
-    /* The ID of the assignment selected. Used to determine which assignment to release */
+    /* The ID of the assignment selected. Used for filtering */
     assignmentID: bigint
-
-    /* The minimum score submissions must have to be released or approved */
-    /* Sent as argument to updateSubmissions */
-    minimumScore: number
 }
 
 export const state: ReviewState = {
@@ -86,5 +82,4 @@ export const state: ReviewState = {
     }),
 
     assignmentID: BigInt(-1),
-    minimumScore: 0,
 }
