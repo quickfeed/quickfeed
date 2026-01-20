@@ -3,8 +3,6 @@
 package cert
 
 import (
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"log"
 	"os"
@@ -20,38 +18,13 @@ func AddTrustedCert(certFile string) error {
 	const certPath = "/usr/local/share/ca-certificates/"
 	const caCertFile = "quickfeed-ca.crt"
 
-	// Read the fullchain certificate file
-	fullchainBytes, err := os.ReadFile(certFile)
+	// Extract only the CA certificate from the fullchain
+	caCertPEM, err := extractCACert(certFile)
 	if err != nil {
-		return fmt.Errorf("failed to read certificate file: %w", err)
+		return err
 	}
 
-	// Parse all certificates from the fullchain
-	var certs []*x509.Certificate
-	for block, rest := pem.Decode(fullchainBytes); block != nil; block, rest = pem.Decode(rest) {
-		if block.Type == "CERTIFICATE" {
-			cert, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				return fmt.Errorf("failed to parse certificate: %w", err)
-			}
-			certs = append(certs, cert)
-		}
-	}
-
-	if len(certs) == 0 {
-		return fmt.Errorf("no certificates found in %s", certFile)
-	}
-
-	// The CA certificate is the last one in the chain
-	caCert := certs[len(certs)-1]
-
-	// Encode the CA certificate to PEM format
-	caCertPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caCert.Raw,
-	})
-
-	// Write the CA certificate to a temporary file first (in user's home directory)
+	// Write the CA certificate to a temporary file first
 	tmpFile := filepath.Join(os.TempDir(), caCertFile)
 	if err := os.WriteFile(tmpFile, caCertPEM, 0o644); err != nil {
 		return fmt.Errorf("failed to write temporary CA certificate: %w", err)
