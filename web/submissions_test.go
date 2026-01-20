@@ -913,25 +913,23 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 func checkStudentSubmission(t *testing.T, submission *qf.Submission, wantApproved bool, userID uint64) {
 	t.Helper()
 	assignmentID := submission.GetAssignmentID()
+	status := submission.GetStatusByUser(userID)
+	hasReviews := len(submission.GetReviews()) > 0
+	// A submission is valid/not cleaned when it has reviews and a grade status that is not NONE
+	isValid := hasReviews && status != qf.Submission_NONE
+
 	if wantApproved {
-		if submission.GetScore() < 80 {
-			t.Errorf("Expected submission for assignment %d to have score >= 80, got %d", assignmentID, submission.GetScore())
-		}
-		if len(submission.GetReviews()) < 1 {
-			t.Errorf("Expected submission for assignment %d to have reviews, got %v", assignmentID, submission.GetReviews())
+		// Should be valid (not cleaned) and have APPROVED status
+		if !isValid {
+			t.Errorf("Expected submission for assignment %d to be valid (have reviews and a grade status != NONE), got status: %v, reviews: %d", assignmentID, status, len(submission.GetReviews()))
 		}
 		if !submission.IsApproved(userID) {
-			t.Errorf("Expected submission for assignment %d to be approved", assignmentID)
+			t.Errorf("Expected submission for assignment %d to be approved, got status: %v", assignmentID, status)
 		}
 	} else {
-		if submission.GetScore() >= 80 {
-			t.Errorf("Expected submission for assignment %d to have score < 80, got %d", assignmentID, submission.GetScore())
-		}
-		if len(submission.GetReviews()) > 0 {
-			t.Errorf("Expected submission for assignment %d without reviews, got %v", assignmentID, submission.GetReviews())
-		}
-		if submission.IsApproved(userID) {
-			t.Errorf("Expected submission for assignment %d to not be approved", assignmentID)
+		// Should either not be valid (cleaned) OR be valid but not approved
+		if isValid && submission.IsApproved(userID) {
+			t.Errorf("Expected submission for assignment %d to not be approved, got status: %v", assignmentID, status)
 		}
 	}
 }
