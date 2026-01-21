@@ -37,7 +37,7 @@ const Assignments = () => {
                 setIsRebuilding(true)
                 const success = await actions.rebuildAllSubmissions({
                     assignmentID: assignment.ID,
-                    courseID: courseID,
+                    courseID,
                 })
                 setIsRebuilding(false)
                 if (success) {
@@ -58,7 +58,7 @@ const Assignments = () => {
             </div>
         ) : (
             <div className="alert alert-info mt-3" role="alert">
-                <i className="bi bi-info-circle mr-2"></i>
+                <i className="bi bi-info-circle mr-2" />
                 No grading benchmarks defined for this assignment.
             </div>
         )
@@ -66,9 +66,16 @@ const Assignments = () => {
         return (
             <div className="card mb-3 shadow-sm">
                 <div
-                    className="card-header bg-white cursor-pointer"
+                    className="card-header bg-white"
                     onClick={() => setExpanded(!expanded)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            setExpanded(!expanded)
+                        }
+                    }}
                     role="button"
+                    tabIndex={0}
                     style={{ cursor: "pointer" }}
                 >
                     <div className="d-flex justify-content-between align-items-center">
@@ -84,7 +91,7 @@ const Assignments = () => {
                             </span>
                         </div>
                         <div className="text-muted">
-                            <i className={`bi bi-chevron-${expanded ? "up" : "down"}`}></i>
+                            <i className={`bi bi-chevron-${expanded ? "up" : "down"}`} />
                         </div>
                     </div>
                     {assignment.deadline && (
