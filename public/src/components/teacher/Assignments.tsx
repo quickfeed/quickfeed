@@ -80,7 +80,7 @@ const Assignments = () => {
                                 className={`badge ml-3 ${isManual ? "badge-info" : "badge-secondary"
                                     }`}
                             >
-                                {isManual ? "Manual Grading" : "Auto Graded"}
+                                {isManual ? "Rubric Grading" : "Auto Graded"}
                             </span>
                         </div>
                         <div className="text-muted">
@@ -96,10 +96,7 @@ const Assignments = () => {
                 {expanded && (
                     <div className="card-body">
                         {isManual ? (
-                            <div>
-                                <h6 className="text-muted mb-3">Grading Rubric</h6>
-                                {rubric}
-                            </div>
+                            <div>{rubric}</div>
                         ) : (
                             <div className="text-center py-4">
                                 <p className="text-muted mb-3">
