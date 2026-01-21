@@ -54,14 +54,6 @@ service QuickFeedService {
 
     // manual grading //
 
-    rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
-    rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
-    rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
-
-    rpc CreateCriterion(GradingCriterion) returns (GradingCriterion) {}
-    rpc UpdateCriterion(GradingCriterion) returns (Void) {}
-    rpc DeleteCriterion(GradingCriterion) returns (Void) {}
-
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
 
