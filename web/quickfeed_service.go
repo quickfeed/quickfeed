@@ -428,62 +428,6 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// CreateBenchmark adds a new grading benchmark for an assignment.
-func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	benchmark := in.Msg
-	if err := s.db.CreateBenchmark(benchmark); err != nil {
-		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create benchmark"))
-	}
-	return connect.NewResponse(benchmark), nil
-}
-
-// UpdateBenchmark edits a grading benchmark for an assignment.
-func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateBenchmark(in.Msg); err != nil {
-		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update benchmark"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// DeleteBenchmark removes a grading benchmark.
-func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	if err := s.db.DeleteBenchmark(in.Msg); err != nil {
-		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete benchmark"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// CreateCriterion adds a new grading criterion for an assignment.
-func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	criterion := in.Msg
-	if err := s.db.CreateCriterion(criterion); err != nil {
-		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add criterion"))
-	}
-	return connect.NewResponse(criterion), nil
-}
-
-// UpdateCriterion edits a grading criterion for an assignment.
-func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateCriterion(in.Msg); err != nil {
-		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update criterion"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// DeleteCriterion removes a grading criterion for an assignment.
-func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	if err := s.db.DeleteCriterion(in.Msg); err != nil {
-		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete criterion"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
 // CreateReview adds a new submission review.
 func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	review := in.Msg.GetReview()
