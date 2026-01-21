@@ -61,9 +61,6 @@ func main() {
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
-	}
 
 	var srvFn web.ServerType
 	if *dev {
@@ -71,7 +68,7 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
+	log.Printf("Starting QuickFeed on https://%s", env.DomainWithPort())
 
 	if *newApp {
 		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
