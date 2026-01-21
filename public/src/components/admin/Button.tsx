@@ -9,17 +9,30 @@ export enum ButtonType {
 }
 
 export type ButtonProps = {
-    children?: React.ReactNode,
-    text: string,
-    color: Color,
-    type: ButtonType,
-    className?: string,
-    onClick: () => void | Promise<void>,
+    children?: React.ReactNode
+    text: string
+    color: Color
+    type: ButtonType
+    className?: string
+    onClick: () => void | Promise<void>
+    disabled?: boolean
 }
 
-const Button = ({ children, text, color, type, className, onClick }: ButtonProps) => {
+const Button = ({
+    children,
+    text,
+    color,
+    type,
+    className,
+    onClick,
+    disabled,
+}: ButtonProps) => {
     return (
-        <button className={`${type}-${color} ${className ?? ""}`} onClick={onClick}>
+        <button
+            className={`${type}-${color} ${className ?? ""}`}
+            onClick={onClick}
+            disabled={disabled}
+        >
             {children}
             {text}
         </button>

@@ -4,7 +4,7 @@
 
 import type { GenFile, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { AssignmentFeedbackSchema, AssignmentFeedbacksSchema, AssignmentsSchema, CourseSchema, CoursesSchema, EnrollmentSchema, EnrollmentsSchema, GradeSchema, GradingBenchmarkSchema, GradingCriterionSchema, GroupSchema, GroupsSchema, ReviewSchema, SubmissionSchema, SubmissionsSchema, UserSchema, UsersSchema } from "./types_pb";
+import type { AssignmentFeedbackSchema, AssignmentFeedbacksSchema, AssignmentsSchema, CourseSchema, CoursesSchema, EnrollmentSchema, EnrollmentsSchema, GradeSchema, GroupSchema, GroupsSchema, ReviewSchema, SubmissionSchema, SubmissionsSchema, UserSchema, UsersSchema } from "./types_pb";
 import { file_qf_types } from "./types_pb";
 import type { CourseRequestSchema, CourseSubmissionsSchema, EnrollmentRequestSchema, GroupRequestSchema, RebuildRequestSchema, RepositoriesSchema, RepositoryRequestSchema, ReviewRequestSchema, SubmissionRequestSchema, VoidSchema } from "./requests_pb";
 import { file_qf_requests } from "./requests_pb";
@@ -13,7 +13,7 @@ import { file_qf_requests } from "./requests_pb";
  * Describes the file qf/quickfeed.proto.
  */
 export const file_qf_quickfeed: GenFile = /*@__PURE__*/
-  fileDesc("ChJxZi9xdWlja2ZlZWQucHJvdG8SAnFmMssNChBRdWlja0ZlZWRTZXJ2aWNlEh0KB0dldFVzZXISCC5xZi5Wb2lkGggucWYuVXNlchIfCghHZXRVc2VycxIILnFmLlZvaWQaCS5xZi5Vc2VycxIgCgpVcGRhdGVVc2VyEggucWYuVXNlchoILnFmLlZvaWQSJwoIR2V0R3JvdXASEC5xZi5Hcm91cFJlcXVlc3QaCS5xZi5Hcm91cBIyChFHZXRHcm91cHNCeUNvdXJzZRIRLnFmLkNvdXJzZVJlcXVlc3QaCi5xZi5Hcm91cHMSIwoLQ3JlYXRlR3JvdXASCS5xZi5Hcm91cBoJLnFmLkdyb3VwEiMKC1VwZGF0ZUdyb3VwEgkucWYuR3JvdXAaCS5xZi5Hcm91cBIpCgtEZWxldGVHcm91cBIQLnFmLkdyb3VwUmVxdWVzdBoILnFmLlZvaWQSKgoJR2V0Q291cnNlEhEucWYuQ291cnNlUmVxdWVzdBoKLnFmLkNvdXJzZRIjCgpHZXRDb3Vyc2VzEggucWYuVm9pZBoLLnFmLkNvdXJzZXMSJAoMVXBkYXRlQ291cnNlEgoucWYuQ291cnNlGggucWYuVm9pZBIyChZVcGRhdGVDb3Vyc2VWaXNpYmlsaXR5Eg4ucWYuRW5yb2xsbWVudBoILnFmLlZvaWQSNAoOR2V0QXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0Gg8ucWYuQXNzaWdubWVudHMSMAoRVXBkYXRlQXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0GggucWYuVm9pZBI4Cg5HZXRFbnJvbGxtZW50cxIVLnFmLkVucm9sbG1lbnRSZXF1ZXN0Gg8ucWYuRW5yb2xsbWVudHMSLAoQQ3JlYXRlRW5yb2xsbWVudBIOLnFmLkVucm9sbG1lbnQaCC5xZi5Wb2lkEi4KEVVwZGF0ZUVucm9sbG1lbnRzEg8ucWYuRW5yb2xsbWVudHMaCC5xZi5Wb2lkEjYKDUdldFN1Ym1pc3Npb24SFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoOLnFmLlN1Ym1pc3Npb24SOAoOR2V0U3VibWlzc2lvbnMSFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoPLnFmLlN1Ym1pc3Npb25zEkYKFkdldFN1Ym1pc3Npb25zQnlDb3Vyc2USFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoVLnFmLkNvdXJzZVN1Ym1pc3Npb25zEicKEFVwZGF0ZVN1Ym1pc3Npb24SCS5xZi5HcmFkZRoILnFmLlZvaWQSMgoSUmVidWlsZFN1Ym1pc3Npb25zEhIucWYuUmVidWlsZFJlcXVlc3QaCC5xZi5Wb2lkEj0KD0NyZWF0ZUJlbmNobWFyaxIULnFmLkdyYWRpbmdCZW5jaG1hcmsaFC5xZi5HcmFkaW5nQmVuY2htYXJrEjEKD1VwZGF0ZUJlbmNobWFyaxIULnFmLkdyYWRpbmdCZW5jaG1hcmsaCC5xZi5Wb2lkEjEKD0RlbGV0ZUJlbmNobWFyaxIULnFmLkdyYWRpbmdCZW5jaG1hcmsaCC5xZi5Wb2lkEj0KD0NyZWF0ZUNyaXRlcmlvbhIULnFmLkdyYWRpbmdDcml0ZXJpb24aFC5xZi5HcmFkaW5nQ3JpdGVyaW9uEjEKD1VwZGF0ZUNyaXRlcmlvbhIULnFmLkdyYWRpbmdDcml0ZXJpb24aCC5xZi5Wb2lkEjEKD0RlbGV0ZUNyaXRlcmlvbhIULnFmLkdyYWRpbmdDcml0ZXJpb24aCC5xZi5Wb2lkEi0KDENyZWF0ZVJldmlldxIRLnFmLlJldmlld1JlcXVlc3QaCi5xZi5SZXZpZXcSLQoMVXBkYXRlUmV2aWV3EhEucWYuUmV2aWV3UmVxdWVzdBoKLnFmLlJldmlldxI8ChhDcmVhdGVBc3NpZ25tZW50RmVlZGJhY2sSFi5xZi5Bc3NpZ25tZW50RmVlZGJhY2saCC5xZi5Wb2lkEkMKFUdldEFzc2lnbm1lbnRGZWVkYmFjaxIRLnFmLkNvdXJzZVJlcXVlc3QaFy5xZi5Bc3NpZ25tZW50RmVlZGJhY2tzEjYKD0dldFJlcG9zaXRvcmllcxIRLnFmLkNvdXJzZVJlcXVlc3QaEC5xZi5SZXBvc2l0b3JpZXMSLgoLSXNFbXB0eVJlcG8SFS5xZi5SZXBvc2l0b3J5UmVxdWVzdBoILnFmLlZvaWQSLgoQU3VibWlzc2lvblN0cmVhbRIILnFmLlZvaWQaDi5xZi5TdWJtaXNzaW9uMAFCJlohZ2l0aHViLmNvbS9xdWlja2ZlZWQvcXVpY2tmZWVkL3FmugIAYgZwcm90bzM", [file_qf_types, file_qf_requests]);
+  fileDesc("ChJxZi9xdWlja2ZlZWQucHJvdG8SAnFmMrsLChBRdWlja0ZlZWRTZXJ2aWNlEh8KB0dldFVzZXISCC5xZi5Wb2lkGggucWYuVXNlciIAEiEKCEdldFVzZXJzEggucWYuVm9pZBoJLnFmLlVzZXJzIgASIgoKVXBkYXRlVXNlchIILnFmLlVzZXIaCC5xZi5Wb2lkIgASKQoIR2V0R3JvdXASEC5xZi5Hcm91cFJlcXVlc3QaCS5xZi5Hcm91cCIAEjQKEUdldEdyb3Vwc0J5Q291cnNlEhEucWYuQ291cnNlUmVxdWVzdBoKLnFmLkdyb3VwcyIAEiUKC0NyZWF0ZUdyb3VwEgkucWYuR3JvdXAaCS5xZi5Hcm91cCIAEiUKC1VwZGF0ZUdyb3VwEgkucWYuR3JvdXAaCS5xZi5Hcm91cCIAEisKC0RlbGV0ZUdyb3VwEhAucWYuR3JvdXBSZXF1ZXN0GggucWYuVm9pZCIAEiwKCUdldENvdXJzZRIRLnFmLkNvdXJzZVJlcXVlc3QaCi5xZi5Db3Vyc2UiABIlCgpHZXRDb3Vyc2VzEggucWYuVm9pZBoLLnFmLkNvdXJzZXMiABImCgxVcGRhdGVDb3Vyc2USCi5xZi5Db3Vyc2UaCC5xZi5Wb2lkIgASNAoWVXBkYXRlQ291cnNlVmlzaWJpbGl0eRIOLnFmLkVucm9sbG1lbnQaCC5xZi5Wb2lkIgASNgoOR2V0QXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0Gg8ucWYuQXNzaWdubWVudHMiABIyChFVcGRhdGVBc3NpZ25tZW50cxIRLnFmLkNvdXJzZVJlcXVlc3QaCC5xZi5Wb2lkIgASOgoOR2V0RW5yb2xsbWVudHMSFS5xZi5FbnJvbGxtZW50UmVxdWVzdBoPLnFmLkVucm9sbG1lbnRzIgASLgoQQ3JlYXRlRW5yb2xsbWVudBIOLnFmLkVucm9sbG1lbnQaCC5xZi5Wb2lkIgASMAoRVXBkYXRlRW5yb2xsbWVudHMSDy5xZi5FbnJvbGxtZW50cxoILnFmLlZvaWQiABI4Cg1HZXRTdWJtaXNzaW9uEhUucWYuU3VibWlzc2lvblJlcXVlc3QaDi5xZi5TdWJtaXNzaW9uIgASOgoOR2V0U3VibWlzc2lvbnMSFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoPLnFmLlN1Ym1pc3Npb25zIgASSAoWR2V0U3VibWlzc2lvbnNCeUNvdXJzZRIVLnFmLlN1Ym1pc3Npb25SZXF1ZXN0GhUucWYuQ291cnNlU3VibWlzc2lvbnMiABIpChBVcGRhdGVTdWJtaXNzaW9uEgkucWYuR3JhZGUaCC5xZi5Wb2lkIgASNAoSUmVidWlsZFN1Ym1pc3Npb25zEhIucWYuUmVidWlsZFJlcXVlc3QaCC5xZi5Wb2lkIgASLwoMQ3JlYXRlUmV2aWV3EhEucWYuUmV2aWV3UmVxdWVzdBoKLnFmLlJldmlldyIAEi8KDFVwZGF0ZVJldmlldxIRLnFmLlJldmlld1JlcXVlc3QaCi5xZi5SZXZpZXciABI+ChhDcmVhdGVBc3NpZ25tZW50RmVlZGJhY2sSFi5xZi5Bc3NpZ25tZW50RmVlZGJhY2saCC5xZi5Wb2lkIgASRQoVR2V0QXNzaWdubWVudEZlZWRiYWNrEhEucWYuQ291cnNlUmVxdWVzdBoXLnFmLkFzc2lnbm1lbnRGZWVkYmFja3MiABI4Cg9HZXRSZXBvc2l0b3JpZXMSES5xZi5Db3Vyc2VSZXF1ZXN0GhAucWYuUmVwb3NpdG9yaWVzIgASMAoLSXNFbXB0eVJlcG8SFS5xZi5SZXBvc2l0b3J5UmVxdWVzdBoILnFmLlZvaWQiABIwChBTdWJtaXNzaW9uU3RyZWFtEggucWYuVm9pZBoOLnFmLlN1Ym1pc3Npb24iADABQiZaIWdpdGh1Yi5jb20vcXVpY2tmZWVkL3F1aWNrZmVlZC9xZroCAGIGcHJvdG8z", [file_qf_types, file_qf_requests]);
 
 /**
  * users //
@@ -204,54 +204,6 @@ export const QuickFeedService: GenService<{
   rebuildSubmissions: {
     methodKind: "unary";
     input: typeof RebuildRequestSchema;
-    output: typeof VoidSchema;
-  },
-  /**
-   * @generated from rpc qf.QuickFeedService.CreateBenchmark
-   */
-  createBenchmark: {
-    methodKind: "unary";
-    input: typeof GradingBenchmarkSchema;
-    output: typeof GradingBenchmarkSchema;
-  },
-  /**
-   * @generated from rpc qf.QuickFeedService.UpdateBenchmark
-   */
-  updateBenchmark: {
-    methodKind: "unary";
-    input: typeof GradingBenchmarkSchema;
-    output: typeof VoidSchema;
-  },
-  /**
-   * @generated from rpc qf.QuickFeedService.DeleteBenchmark
-   */
-  deleteBenchmark: {
-    methodKind: "unary";
-    input: typeof GradingBenchmarkSchema;
-    output: typeof VoidSchema;
-  },
-  /**
-   * @generated from rpc qf.QuickFeedService.CreateCriterion
-   */
-  createCriterion: {
-    methodKind: "unary";
-    input: typeof GradingCriterionSchema;
-    output: typeof GradingCriterionSchema;
-  },
-  /**
-   * @generated from rpc qf.QuickFeedService.UpdateCriterion
-   */
-  updateCriterion: {
-    methodKind: "unary";
-    input: typeof GradingCriterionSchema;
-    output: typeof VoidSchema;
-  },
-  /**
-   * @generated from rpc qf.QuickFeedService.DeleteCriterion
-   */
-  deleteCriterion: {
-    methodKind: "unary";
-    input: typeof GradingCriterionSchema;
     output: typeof VoidSchema;
   },
   /**

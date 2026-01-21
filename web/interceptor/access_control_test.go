@@ -249,18 +249,6 @@ func TestAccessControl(t *testing.T) {
 				CourseID:     tt.courseID,
 			}, tt.cookie))
 			checkAccess(t, "RebuildSubmissions", err, tt.wantCode, tt.wantAccess)
-			_, err = client.CreateBenchmark(ctx, qtest.RequestWithCookie(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}, tt.cookie))
-			checkAccess(t, "CreateBenchmark", err, tt.wantCode, tt.wantAccess)
-			_, err = client.UpdateBenchmark(ctx, qtest.RequestWithCookie(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}, tt.cookie))
-			checkAccess(t, "UpdateBenchmark", err, tt.wantCode, tt.wantAccess)
-			_, err = client.DeleteBenchmark(ctx, qtest.RequestWithCookie(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}, tt.cookie))
-			checkAccess(t, "DeleteBenchmark", err, tt.wantCode, tt.wantAccess)
-			_, err = client.CreateCriterion(ctx, qtest.RequestWithCookie(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}, tt.cookie))
-			checkAccess(t, "CreateCriterion", err, tt.wantCode, tt.wantAccess)
-			_, err = client.UpdateCriterion(ctx, qtest.RequestWithCookie(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}, tt.cookie))
-			checkAccess(t, "UpdateCriterion", err, tt.wantCode, tt.wantAccess)
-			_, err = client.DeleteCriterion(ctx, qtest.RequestWithCookie(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}, tt.cookie))
-			checkAccess(t, "DeleteCriterion", err, tt.wantCode, tt.wantAccess)
 			_, err = client.CreateReview(ctx, qtest.RequestWithCookie(&qf.ReviewRequest{
 				CourseID: tt.courseID,
 				Review: &qf.Review{
