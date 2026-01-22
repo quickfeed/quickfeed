@@ -73,7 +73,6 @@ The following is an example production deployment on the `example.com` domain.
 ```shell
 # GitHub App IDs and secrets for deployment
 QUICKFEED_APP_ID=""
-QUICKFEED_APP_KEY=$QUICKFEED/internal/config/github/quickfeed.pem
 QUICKFEED_CLIENT_ID=""
 QUICKFEED_CLIENT_SECRET=""
 QUICKFEED_WEBHOOK_SECRET=""
@@ -153,7 +152,6 @@ In addition, your `.env` file should be populated with important secrets that sh
 % cat .env
 # GitHub App IDs and secrets for deployment
 QUICKFEED_APP_ID=<6 digit ID>
-QUICKFEED_APP_KEY=/Users/meling/work/quickfeed/internal/config/github/quickfeed.pem
 QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
 QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
 QUICKFEED_WEBHOOK_SECRET=<40 chars of secret data>
@@ -226,14 +224,14 @@ To view the full usage details:
 
 ### Flags
 
-| **Flag**        | **Description**                                                           | **Example** |
-| --------------- | ------------------------------------------------------------------------- | ----------- |
-| `database.file` | Path to QuickFeed database                                                | `qf.db`     |
-| `http.public`   | Path to content to serve                                                  |             |
-| `dev`           | Run local development server in watch mode                                |             |
-| `gencert`       | Generate self-signed certificates for development                         |             |
-| `new`           | Create a new QuickFeed App                                                |             |
-| `secret`        | Create new secret for JWT signing                                         |             |
+| **Flag**        | **Description**                                   | **Example** |
+| --------------- | ------------------------------------------------- | ----------- |
+| `database.file` | Path to QuickFeed database                        | `qf.db`     |
+| `http.public`   | Path to content to serve                          |             |
+| `dev`           | Run local development server in watch mode        |             |
+| `gencert`       | Generate self-signed certificates for development |             |
+| `new`           | Create a new QuickFeed App                        |             |
+| `secret`        | Create new secret for JWT signing                 |             |
 
 ### Running Server on a Privileged Port
 
