@@ -26,9 +26,8 @@ endif
 version-check:
 	@go run cmd/vercheck/main.go
 
-dev-db:
-	@echo "Creating dummy database"
-	@go run cmd/dummyDB/main.go -admin $(github_user)
+mockdata:
+	@go run cmd/mockgen/main.go -admin $(github_user)
 
 install:
 	@echo go install

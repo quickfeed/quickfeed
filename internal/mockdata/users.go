@@ -1,4 +1,4 @@
-package dummydata
+package mockdata
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-func (g generator) users() error {
-	log.Println("Generating users...")
-	// Create a new user for each name in the list
+func (g *generator) users() error {
 	for i := 1; i < students; i++ {
 		name := "User " + fmt.Sprintf("%02d", i)
 		if i < len(qtest.Members) {
@@ -23,7 +21,7 @@ func (g generator) users() error {
 			Email:     strings.Replace(name, " ", ".", 1) + "@example.com",
 			StudentID: fmt.Sprintf("%06d", i),
 		}
-		log.Printf("Creating user: %q\n", user.Name)
+		g.log("Creating user: %q\n", user.Name)
 		if err := g.db.CreateUser(user); err != nil {
 			return err
 		}
@@ -31,7 +29,6 @@ func (g generator) users() error {
 
 		if i < enrolledStudents+teachers {
 			for j := 1; j <= courses; j++ {
-				log.Printf("Enrolling user %q in course %q\n", user.Name, qtest.MockCourses[j-1].Name)
 				enrollment := &qf.Enrollment{
 					CourseID: uint64(j),
 					UserID:   user.GetID(),
@@ -43,7 +40,6 @@ func (g generator) users() error {
 				if i < teachers {
 					enrollment.Status = qf.Enrollment_TEACHER
 				}
-				log.Printf("Enrolling user %q in course %q as %s\n", user.Name, qtest.MockCourses[j-1].Name, enrollment.Status.String())
 				if err := g.db.UpdateEnrollment(enrollment); err != nil {
 					return err
 				}

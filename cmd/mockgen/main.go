@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/quickfeed/quickfeed/internal/dummydata"
+	"github.com/quickfeed/quickfeed/internal/mockdata"
 )
 
 func main() {
@@ -14,11 +14,11 @@ func main() {
 	if *admin == "" {
 		log.Fatal("provide a github username to create the database")
 	}
-	gen, err := dummydata.NewGenerator()
+	generator, err := mockdata.NewGenerator()
 	if err != nil {
 		log.Fatalf("failed to create generator: %v", err)
 	}
-	if err := gen.Data(*admin); err != nil {
-		log.Fatalf("failed to generate dummy data: %v", err)
+	if err := generator.Mock(*admin); err != nil {
+		log.Fatalf("failed to generate mock data: %v", err)
 	}
 }

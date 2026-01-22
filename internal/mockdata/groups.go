@@ -1,12 +1,11 @@
-package dummydata
+package mockdata
 
 import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-func (g generator) groups() error {
-	// Create a new user for each name in the list
+func (g *generator) groups() error {
 	for i := 1; i <= courses; i++ {
 		id := uint64(teachers + 1)
 		groupStatus := qf.Group_PENDING

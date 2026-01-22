@@ -5,6 +5,8 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
+// TODO(Joachim): move to json ? and use current mockdata in file as default
+
 const MockOrg = "qf102-2022"
 
 var (
