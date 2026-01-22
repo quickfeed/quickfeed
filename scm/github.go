@@ -190,7 +190,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 func (s *GithubSCM) hasNoStudentChanges(ctx context.Context, opt *RepositoryOptions) bool {
 	// Don't compare course repositories (assignments, tests, info) with themselves.
 	// Only compare student/group repositories with the assignments repository.
-	if opt.Repo == qf.AssignmentsRepo || opt.Repo == "tests" || opt.Repo == "info" {
+	if opt.Repo == qf.AssignmentsRepo || opt.Repo == qf.TestsRepo || opt.Repo == qf.InfoRepo {
 		s.logger.Debugf("hasNoStudentChanges: %s is a course repo, not a student repo - treating as non-empty", opt.Repo)
 		return false
 	}
