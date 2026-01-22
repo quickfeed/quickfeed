@@ -16,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/doc"
+	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
@@ -47,11 +48,12 @@ func init() {
 
 func main() {
 	var (
-		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
-		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
-		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
-		newApp = flag.Bool("new", false, "create new GitHub app")
-		secret = flag.Bool("secret", false, "create new secret for JWT signing")
+		dbFile  = flag.String("database.file", env.DatabasePath(), "database file")
+		public  = flag.String("http.public", env.PublicDir(), "path to content to serve")
+		dev     = flag.Bool("dev", false, "run development server with self-signed certificates")
+		gencert = flag.Bool("gencert", false, "generate self-signed certificates for development")
+		newApp  = flag.Bool("new", false, "create new GitHub app")
+		secret  = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
 	flag.Parse()
 
@@ -63,6 +65,14 @@ func main() {
 	}
 	if env.Domain() == "localhost" {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	}
+
+	// Handle certificate generation separately from server startup
+	if *gencert {
+		if err := generateCertificates(); err != nil {
+			log.Fatalf("Failed to generate certificates: %v", err)
+		}
+		return
 	}
 
 	var srvFn web.ServerType
@@ -215,5 +225,25 @@ To receive webhook events, you must run QuickFeed on a public domain or use a tu
 			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 		}
 	}
+	return nil
+}
+
+// generateCertificates generates self-signed certificates for development.
+// The certificates are stored in $HOME/.quickfeed/certs/ by default.
+func generateCertificates() error {
+	log.Printf("Generating self-signed certificates for domain: %s", env.Domain())
+	if err := cert.GenerateSelfSignedCert(cert.Options{
+		KeyFile:  env.KeyFile(),
+		CertFile: env.CertFile(),
+		Hosts:    env.Domain(),
+	}); err != nil {
+		return fmt.Errorf("failed to generate self-signed certificates: %w", err)
+	}
+	log.Printf("Certificates successfully generated at: %s", env.CertPath())
+	log.Print("Adding certificate to local trust store (may require sudo access)")
+	if err := cert.AddTrustedCert(env.CertFile()); err != nil {
+		return fmt.Errorf("failed to install self-signed certificate: %w", err)
+	}
+	log.Print("Certificate successfully added to trust store")
 	return nil
 }

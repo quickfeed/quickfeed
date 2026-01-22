@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/reload"
 	"github.com/quickfeed/quickfeed/metrics"
@@ -68,23 +67,11 @@ func NewProductionServer(handler http.Handler) (*Server, error) {
 func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
 	if err != nil {
-		// Couldn't load credentials; generate self-signed certificates.
-		log.Println("Generating self-signed certificates.")
-		if err := cert.GenerateSelfSignedCert(cert.Options{
-			KeyFile:  env.KeyFile(),
-			CertFile: env.CertFile(),
-			Hosts:    env.Domain(),
-		}); err != nil {
-			return nil, fmt.Errorf("failed to generate self-signed certificates: %w", err)
-		}
-		log.Printf("Certificates successfully generated at: %s", env.CertPath())
-		log.Print("Adding certificate to local keychain (requires sudo access)")
-		if err := cert.AddTrustedCert(env.CertFile()); err != nil {
-			return nil, fmt.Errorf("failed to install self-signed certificate: %w", err)
-		}
-	} else {
-		log.Println("Existing credentials successfully loaded.")
+		return nil, fmt.Errorf(`failed to load certificates from %q.
+To generate self-signed certificates, run: quickfeed -gencert
+Error: %w`, env.CertPath(), err)
 	}
+	log.Println("Existing credentials successfully loaded.")
 
 	httpServer := &http.Server{
 		Handler:           handler,

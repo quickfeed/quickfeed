@@ -15,6 +15,7 @@ const (
 	defaultPort     = "443"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
+	defaultCertDir  = ".quickfeed/certs"
 )
 
 // Domain returns the domain name where quickfeed will be served.
@@ -88,11 +89,16 @@ func KeyFile() string {
 }
 
 // CertPath returns the full path to the directory containing the certificates.
-// If QUICKFEED_CERT_PATH is not set, the default path $QUICKFEED/internal/config/certs is used.
+// If QUICKFEED_CERT_PATH is not set, the default path $HOME/.quickfeed/certs is used.
 func CertPath() string {
 	certPath := os.Getenv("QUICKFEED_CERT_PATH")
 	if certPath == "" {
-		certPath = filepath.Join(Root(), "internal", "config", "certs")
+		home, err := os.UserHomeDir()
+		if err != nil {
+			// Fallback to source tree if home directory is not available
+			return filepath.Join(Root(), "internal", "config", "certs")
+		}
+		certPath = filepath.Join(home, defaultCertDir)
 	}
 	return certPath
 }

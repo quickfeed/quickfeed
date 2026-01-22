@@ -153,8 +153,8 @@ func caCertificateTemplate(hostList string, notBefore time.Time, notAfter time.T
 	}
 	caSubject := &pkix.Name{
 		Country:      []string{"NO"},
-		Organization: []string{"QuickFeed Corp."},
-		CommonName:   "127.0.0.1",
+		Organization: []string{"QuickFeed"},
+		CommonName:   "QuickFeed",
 	}
 	template := &x509.Certificate{
 		SerialNumber:          serialNumber,
