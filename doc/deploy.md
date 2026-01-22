@@ -95,7 +95,7 @@ setting the environment variables in your `.env` file and saving the `quickfeed.
 
 ### Preparing the Environment for Testing
 
-For a localhost test deployment, you can use the default certificate path in `~/.quickfeed/certs/`.
+For a localhost test deployment, you can use the default certificate path in `~/.config/quickfeed/certs/`.
 Generate self-signed certificates using the `-gencert` flag before starting the server:
 
 ```shell
@@ -103,14 +103,13 @@ Generate self-signed certificates using the `-gencert` flag before starting the 
 ```
 
 This will generate self-signed certificates and add them to your system's trust store.
-The certificates are stored in `~/.quickfeed/certs/<domain>/` by default.
+The certificates are stored in `~/.config/quickfeed/certs/` by default.
 
 Alternatively, you can specify custom certificate file paths by setting the following environment variables in your `.env` file:
 
 ```shell
-# Optional: Custom certificate paths (defaults to ~/.quickfeed/certs/<domain>/)
-# QUICKFEED_KEY_FILE=$HOME/.quickfeed/certs/127.0.0.1/privkey.pem
-# QUICKFEED_CERT_FILE=$HOME/.quickfeed/certs/127.0.0.1/fullchain.pem
+QUICKFEED_KEY_FILE=$HOME/.config/quickfeed/certs/privkey.pem
+QUICKFEED_CERT_FILE=$HOME/.config/quickfeed/certs/fullchain.pem
 
 # QuickFeed server domain or ip
 DOMAIN="127.0.0.1"
@@ -231,7 +230,7 @@ To view the full usage details:
 | --------------- | ------------------------------------------------------------------------- | ----------- |
 | `database.file` | Path to QuickFeed database                                                | `qf.db`     |
 | `http.public`   | Path to content to serve                                                  |             |
-| `dev`           | Run local development server with self-signed certificates and watch mode |             |
+| `dev`           | Run local development server in watch mode                                |             |
 | `gencert`       | Generate self-signed certificates for development                         |             |
 | `new`           | Create a new QuickFeed App                                                |             |
 | `secret`        | Create new secret for JWT signing                                         |             |

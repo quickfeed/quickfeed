@@ -125,6 +125,9 @@ func main() {
 	srv, err := srvFn(handler)
 	if err != nil {
 		log.Printf("Failed to start server: %v", err)
+		if *dev {
+			log.Print("To generate self-signed certificates, run: quickfeed -gencert")
+		}
 		return
 	}
 
