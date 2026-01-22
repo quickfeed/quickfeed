@@ -17,6 +17,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
+// TODO(Joachim): attempt to make generation fault tolerant ?
 // TODO(Joachim): make it configurable via a file
 // TODO(Joachim): add verbose logging option
 /*
@@ -54,56 +55,39 @@ const (
 )
 
 type config struct {
-	teachers                        int
-	students                        int
-	enrolledStudents                int
-	assingnmentsPerCourse           int
-	groupAssignments                int
-	studentSubmissionsPerAssignment int
-	groupSubmissionsPerAssignment   int
-	verbose                         bool
+	Teachers                        int
+	Students                        int
+	EnrolledStudents                int
+	AssingnmentsPerCourse           int
+	GroupAssignments                int
+	StudentSubmissionsPerAssignment int
+	GroupSubmissionsPerAssignment   int
+	Verbose                         bool
 }
 
 var (
 	courses = len(qtest.MockCourses)
 )
 
-const (
-	teachers                        = 2  // teachers + students = enrolledStudents
-	students                        = 10 // > enrolledStudents
-	enrolledStudents                = 8  // < students
-	assingnmentsPerCourse           = 8  // > groupAssignments
-	groupAssignments                = 2  // < assingnmentsPerCourse
-	studentSubmissionsPerAssignment = 8
-	groupSubmissionsPerAssignment   = 3
-)
-
-// validate ensures the provides values are within the required range
-// sum of related variable can't be less then zero
-func validate() error {
-	switch {
-	case students < enrolledStudents:
-		return fmt.Errorf("number of students (%d) can't be less number of enrolled students (%d)", students, enrolledStudents)
-	case assingnmentsPerCourse < groupAssignments:
-		return fmt.Errorf("number of assingnmentsPerCourse (%d) can't be less than groupAssignments (%d)", assingnmentsPerCourse, groupAssignments)
-	}
-	return nil
-}
-
 func getConfig() (config, error) {
 	var conf config
-	bytes, err := os.ReadFile(env.Root(configName))
-	if err != nil && errors.Is(err, os.ErrNotExist) {
+	f := env.Root(configName)
+	bytes, err := os.ReadFile(f)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return conf, err
+		}
 		// Return default config if no config file is found
+		log.Printf("No config file found (%s), using default config\n", f)
 		return config{
-			teachers,
-			students,
-			enrolledStudents,
-			assingnmentsPerCourse,
-			groupAssignments,
-			studentSubmissionsPerAssignment,
-			groupSubmissionsPerAssignment,
-			false,
+			Teachers:                        2,  // teachers + students = enrolledStudents
+			Students:                        10, // > enrolledStudents
+			EnrolledStudents:                8,  // < students
+			AssingnmentsPerCourse:           8,  // > groupAssignments
+			GroupAssignments:                2,  // < assingnmentsPerCourse
+			StudentSubmissionsPerAssignment: 8,
+			GroupSubmissionsPerAssignment:   3,
+			Verbose:                         false,
 		}, nil
 	}
 	return conf, json.Unmarshal(bytes, &conf)
@@ -112,16 +96,18 @@ func getConfig() (config, error) {
 // NewGenerator creates a new generator instance.
 func NewGenerator() (*generator, error) {
 	log.Println("Initializing the generator")
-	if err := validate(); err != nil {
-		return nil, err
-	}
-	if err := env.Load(env.RootEnv(".env")); err != nil {
+	gen := &generator{}
+	err := env.Load(env.RootEnv(".env"))
+	if err != nil {
 		return nil, fmt.Errorf("failed to load environment variables: %v", err)
 	}
 	log.Println("Reading config")
-	conf, err := getConfig()
+	gen.conf, err = getConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %v", err)
+	}
+	if err := gen.validate(); err != nil {
+		return nil, err
 	}
 	log.Println("Setting up database")
 	dbFile := env.DatabasePath()
@@ -130,11 +116,24 @@ func NewGenerator() (*generator, error) {
 			return nil, fmt.Errorf("failed to remove existing database file: %v", err)
 		}
 	}
-	db, err := database.NewGormDB(dbFile, nil)
+	gen.db, err = database.NewGormDB(dbFile, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
-	return &generator{db, conf}, nil
+	return gen, nil
+}
+
+// validate ensures the provides values are within the required range
+// sum of related variable can't be less then zero
+func (g *generator) validate() error {
+	log.Println("Validating config")
+	switch {
+	case g.Students() < g.EnrolledStudents():
+		return fmt.Errorf("number of students (%d) can't be less number of enrolled students (%d)", g.Students(), g.EnrolledStudents())
+	case g.AssingnmentsPerCourse() < g.GroupAssignments():
+		return fmt.Errorf("number of assingnmentsPerCourse (%d) can't be less than groupAssignments (%d)", g.AssingnmentsPerCourse(), g.GroupAssignments())
+	}
+	return nil
 }
 
 func (g *generator) Mock(adminName string) error {
@@ -204,7 +203,24 @@ func (g *generator) log(format string, v ...any) {
 	if format == "" {
 		panic("log message cannot be empty")
 	}
-	if g.conf.verbose {
+	if g.Verbose() {
 		log.Println(v...)
 	}
 }
+
+// IsGroupLab returns the assignment number where group assignments start
+func (g *generator) IsGroupLab() int {
+	return g.AssingnmentsPerCourse() - g.GroupAssignments()
+}
+
+// Config field getters
+func (g *generator) Teachers() int              { return g.conf.Teachers }
+func (g *generator) Students() int              { return g.conf.Students }
+func (g *generator) EnrolledStudents() int      { return g.conf.EnrolledStudents }
+func (g *generator) AssingnmentsPerCourse() int { return g.conf.AssingnmentsPerCourse }
+func (g *generator) GroupAssignments() int      { return g.conf.GroupAssignments }
+func (g *generator) StudentSubmissionsPerAssignment() int {
+	return g.conf.StudentSubmissionsPerAssignment
+}
+func (g *generator) GroupSubmissionsPerAssignment() int { return g.conf.GroupSubmissionsPerAssignment }
+func (g *generator) Verbose() bool                      { return g.conf.Verbose }

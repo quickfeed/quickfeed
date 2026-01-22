@@ -7,12 +7,12 @@ import (
 
 func (g *generator) groups() error {
 	for i := 1; i <= courses; i++ {
-		id := uint64(teachers + 1)
+		id := uint64(g.Teachers() + 1)
 		groupStatus := qf.Group_PENDING
 		if i != 1 {
 			groupStatus = qf.Group_APPROVED
 		}
-		for j := range enrolledStudents / 2 {
+		for j := range g.EnrolledStudents() / 2 {
 			group := &qf.Group{
 				Name:     qtest.Groups[j],
 				CourseID: uint64(i),

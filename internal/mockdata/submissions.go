@@ -9,16 +9,20 @@ import (
 
 func (g *generator) submissions() error {
 	for i := range qtest.MockCourses {
-		var baseAssignmentID = i * assingnmentsPerCourse
-		g.studentSubs(baseAssignmentID)
-		g.groupSubs(baseAssignmentID)
+		var baseAssignmentID = i * g.AssingnmentsPerCourse()
+		if err := g.studentSubs(baseAssignmentID); err != nil {
+			return err
+		}
+		if err := g.groupSubs(baseAssignmentID); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (g *generator) studentSubs(baseAssignmentID int) error {
-	for k := 1; k <= studentSubmissionsPerAssignment; k++ {
-		for j := 1; j <= enrolledStudents; j++ {
+	for k := 1; k <= g.StudentSubmissionsPerAssignment(); k++ {
+		for j := 1; j <= g.EnrolledStudents(); j++ {
 			submission := &qf.Submission{
 				AssignmentID: uint64(k + baseAssignmentID),
 				UserID:       uint64(j),
@@ -33,7 +37,7 @@ func (g *generator) studentSubs(baseAssignmentID int) error {
 }
 
 func (g *generator) groupSubs(baseAssignmentID int) error {
-	for k := assingnmentsPerCourse; k <= groupSubmissionsPerAssignment; k++ {
+	for k := g.AssingnmentsPerCourse(); k <= g.GroupSubmissionsPerAssignment(); k++ {
 		for j := range qtest.Groups {
 			submission := &qf.Submission{
 				AssignmentID: uint64(k + baseAssignmentID),

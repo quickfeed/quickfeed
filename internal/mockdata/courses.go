@@ -17,9 +17,9 @@ func (g *generator) courses() error {
 		}
 		// orderID -> taskName -> task
 		tasks := make(map[uint32]map[string]*qf.Task)
-		for j := 1; j <= assingnmentsPerCourse; j++ {
+		for j := 1; j <= g.AssingnmentsPerCourse(); j++ {
 			assignment := &qf.Assignment{
-				ID:               uint64(i*assingnmentsPerCourse + j),
+				ID:               uint64(i*g.AssingnmentsPerCourse() + j),
 				Deadline:         timestamppb.New(time.Now().Add(time.Duration(i) * 24 * time.Hour)),
 				ScoreLimit:       uint32(rand.Intn(41) + 60),
 				AutoApprove:      rand.Intn(4) == 0,
@@ -27,14 +27,16 @@ func (g *generator) courses() error {
 				CourseID:         course.GetID(),
 				Name:             fmt.Sprintf("Lab %d", j),
 				ContainerTimeout: containerTimeout,
-				IsGroupLab:       j > assingnmentsPerCourse-groupAssignments,
+				IsGroupLab:       j > g.IsGroupLab(),
 			}
 			tasks[assignment.GetOrder()] = taskMap(assignment)
 			if err := g.db.CreateAssignment(assignment); err != nil {
 				return err
 			}
 		}
-		g.db.SynchronizeAssignmentTasks(course, tasks)
+		if _, _, err := g.db.SynchronizeAssignmentTasks(course, tasks); err != nil {
+			return err
+		}
 	}
 	return nil
 }

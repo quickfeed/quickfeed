@@ -10,7 +10,7 @@ import (
 )
 
 func (g *generator) users() error {
-	for i := 1; i < students; i++ {
+	for i := 1; i < g.Students(); i++ {
 		name := "User " + fmt.Sprintf("%02d", i)
 		if i < len(qtest.Members) {
 			name = qtest.Members[i]
@@ -27,7 +27,8 @@ func (g *generator) users() error {
 		}
 		/* Bypassing the Teacher/Admin acceptance of enrollments */
 
-		if i < enrolledStudents+teachers {
+		// TODO(Joachim): Move expression to a getter with a more descriptive name
+		if i < g.EnrolledStudents()+g.Teachers() {
 			for j := 1; j <= courses; j++ {
 				enrollment := &qf.Enrollment{
 					CourseID: uint64(j),
@@ -37,7 +38,7 @@ func (g *generator) users() error {
 					return err
 				}
 				enrollment.Status = qf.Enrollment_STUDENT
-				if i < teachers {
+				if i < g.Teachers() {
 					enrollment.Status = qf.Enrollment_TEACHER
 				}
 				if err := g.db.UpdateEnrollment(enrollment); err != nil {
