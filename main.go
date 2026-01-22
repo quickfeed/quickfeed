@@ -240,7 +240,7 @@ func generateCertificates() error {
 		return fmt.Errorf("failed to generate self-signed certificates: %w", err)
 	}
 	log.Printf("Certificates successfully generated at: %s", env.CertPath())
-	log.Print("Adding certificate to local trust store (may require sudo access)")
+	log.Print("Adding certificate to local trust store (may require elevated privileges on some systems)")
 	if err := cert.AddTrustedCert(env.CertFile()); err != nil {
 		return fmt.Errorf("failed to install self-signed certificate: %w", err)
 	}

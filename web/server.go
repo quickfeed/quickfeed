@@ -67,9 +67,7 @@ func NewProductionServer(handler http.Handler) (*Server, error) {
 func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
 	if err != nil {
-		return nil, fmt.Errorf(`failed to load certificates from %q.
-To generate self-signed certificates, run: quickfeed -gencert
-Error: %w`, env.CertPath(), err)
+		return nil, fmt.Errorf("failed to load certificates from %q: %w\nTo generate self-signed certificates, run: quickfeed -gencert", env.CertPath(), err)
 	}
 	log.Println("Existing credentials successfully loaded.")
 
