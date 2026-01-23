@@ -63,9 +63,6 @@ func main() {
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
-	}
 
 	// Handle certificate generation separately from server startup
 	if *gencert {
@@ -212,14 +209,14 @@ func (q *quickfeed) cleanup() {
 }
 
 func checkDomain() error {
-	if env.Domain() == "127.0.0.1" {
+	if env.IsDomainLocal() {
 		msg := `
-WARNING: You are creating a GitHub app on "127.0.0.1".
+WARNING: You are creating a GitHub app on a local or private domain: %q.
 This is only for development purposes.
 In this mode, QuickFeed will not be able to receive webhook events from GitHub.
 To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.
 `
-		fmt.Println(msg)
+		fmt.Printf(msg, env.Domain())
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
 		fmt.Print("Do you want to continue? (Y/n) ")
 		var answer string
