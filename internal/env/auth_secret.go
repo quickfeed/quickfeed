@@ -22,3 +22,20 @@ func NewAuthSecret(envFile string) error {
 		authSecret: rand.String(),
 	})
 }
+
+// EnsureAuthSecret generates and saves a new auth secret if one doesn't exist.
+// If force is true, it will regenerate even if one already exists.
+// Returns true if a new secret was generated, false otherwise.
+func EnsureAuthSecret(envFile string, force bool) (bool, error) {
+	if !force && AuthSecret() != "" {
+		return false, nil
+	}
+	if err := NewAuthSecret(envFile); err != nil {
+		return false, err
+	}
+	// Reload environment to pick up the new secret
+	if err := Load(RootEnv(envFile)); err != nil {
+		return false, err
+	}
+	return true, nil
+}

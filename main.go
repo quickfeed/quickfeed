@@ -16,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/doc"
-	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
@@ -48,12 +47,10 @@ func init() {
 
 func main() {
 	var (
-		dbFile  = flag.String("database.file", env.DatabasePath(), "database file")
-		public  = flag.String("http.public", env.PublicDir(), "path to content to serve")
-		dev     = flag.Bool("dev", false, "run development server with self-signed certificates")
-		genCert = flag.Bool("gen", false, "generate self-signed certificates for development")
-		newApp  = flag.Bool("new", false, "create new GitHub app")
-		secret  = flag.Bool("secret", false, "create new secret for JWT signing")
+		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
+		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
+		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
+		secret = flag.Bool("secret", false, "force regeneration of JWT signing secret (will log out all users)")
 	)
 	flag.Parse()
 
@@ -64,45 +61,36 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Handle certificate generation separately from server startup
-	if *genCert {
-		if err := generateCertificates(); err != nil {
-			log.Fatalf("Failed to generate certificates: %v", err)
-		}
-		return
-	}
-
+	// Determine server type based on mode
 	var srvFn web.ServerType
 	if *dev {
 		srvFn = web.NewDevelopmentServer
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
-	if *newApp {
-		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
+	// Ensure environment is ready: auth secret, domain validation, certificates (dev mode)
+	if err := env.EnsureReady(*dev, envFile, *secret); err != nil {
+		log.Fatal(err)
+	}
+
+	// If app data is missing, run the app creation flow
+	if env.NeedsAppCreation() {
+		if err := runAppCreation(envFile, *dev, srvFn); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile, *dev); err != nil {
-			log.Fatal(err)
-		}
-	}
-	if *secret {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.NewAuthSecret(envFile); err != nil {
-			log.Fatalf("Failed to save secret: %v", err)
-		}
-	}
-	if *secret || *newApp {
-		// Refresh environment variables
+		// Reload environment after app creation
 		if err := env.Load(env.RootEnv(envFile)); err != nil {
 			log.Fatal(err)
 		}
 	}
-	if env.AuthSecret() == "" {
-		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
+
+	// Final validation: ensure we have everything needed
+	if err := env.CheckAppData(); err != nil {
+		log.Fatalf("Missing app configuration:\n%v", err)
 	}
+
+	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
 	handler, cleanup, err := initWebServer(*dbFile, *public)
 	if err != nil {
@@ -122,9 +110,6 @@ func main() {
 	srv, err := srvFn(handler)
 	if err != nil {
 		log.Printf("Failed to start server: %v", err)
-		if *dev {
-			log.Print("To generate self-signed certificates, run: quickfeed -gencert")
-		}
 		return
 	}
 
@@ -135,6 +120,14 @@ func main() {
 		return
 	}
 	log.Println("QuickFeed shut down gracefully")
+}
+
+// runAppCreation runs the GitHub app creation flow after checking prerequisites.
+func runAppCreation(envFile string, dev bool, srvFn web.ServerType) error {
+	if err := checkDomain(); err != nil {
+		return err
+	}
+	return manifest.CreateNewQuickFeedApp(srvFn, envFile, dev)
 }
 
 // gracefulShutdown blocks waiting for the context to be done (SIGINT or SIGTERM)
@@ -231,26 +224,5 @@ To receive webhook events, you must run QuickFeed on a public domain or use a tu
 			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 		}
 	}
-	return nil
-}
-
-// generateCertificates generates self-signed certificates for development.
-// The certificates are stored in $HOME/.quickfeed/certs/ by default.
-func generateCertificates() error {
-	log.Printf("Generating self-signed certificates for domain: %s", env.Domain())
-	if err := cert.GenerateSelfSignedCert(cert.Options{
-		FullchainFile: env.FullchainFile(),
-		PrivKeyFile:   env.PrivKeyFile(),
-		CAFile:        env.CAFile(),
-		Hosts:         env.Domain(),
-	}); err != nil {
-		return fmt.Errorf("failed to generate self-signed certificates: %w", err)
-	}
-	log.Printf("Certificates successfully generated at: %s", env.CertPath())
-	log.Print("Adding certificate to local trust store (may require elevated privileges on some systems)")
-	if err := cert.AddTrustedCert(env.CAFile()); err != nil {
-		return fmt.Errorf("failed to install self-signed certificate: %w", err)
-	}
-	log.Print("Certificate successfully added to trust store")
 	return nil
 }

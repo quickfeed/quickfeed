@@ -28,29 +28,6 @@ const (
 	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
 )
 
-// ReadyForAppCreation returns nil if the environment configuration (envFile)
-// is ready for creating a new GitHub App. Otherwise, it returns an error,
-// e.g., if the envFile already contains App information or if the .env is
-// missing and there is a corresponding .env.bak file. The optional chkFn
-// functions are called to perform additional checks.
-func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
-	if env.HasAppID() {
-		return fmt.Errorf("%s already contains App information", envFile)
-	}
-	// Check for missing .env file and if .env.bak already exists
-	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
-		if err := env.Prepared(envFile); err != nil {
-			return err
-		}
-	}
-	for _, checker := range chkFns {
-		if err := checker(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
 	m := New(envFile, dev)
 	server, err := srvFn(m.Handler())
