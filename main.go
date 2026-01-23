@@ -195,16 +195,22 @@ type quickfeed struct {
 func (q *quickfeed) cleanup() {
 	var err error
 	if q.runner != nil {
-		err = q.runner.Close()
+		if e := q.runner.Close(); e != nil {
+			err = fmt.Errorf("failed to close runner: %w", e)
+		}
 	}
 	if q.db != nil {
-		err = errors.Join(err, q.db.Close())
+		if e := q.db.Close(); e != nil {
+			err = errors.Join(err, fmt.Errorf("failed to close database: %w", e))
+		}
 	}
 	if q.logger != nil {
-		err = errors.Join(err, q.logger.Sync())
+		if e := q.logger.Sync(); e != nil {
+			err = errors.Join(err, fmt.Errorf("failed to sync logger: %w", e))
+		}
 	}
 	if err != nil {
-		log.Printf("Cleanup error: %v", err)
+		log.Printf("Cleanup error:\n%v", err)
 	}
 }
 
