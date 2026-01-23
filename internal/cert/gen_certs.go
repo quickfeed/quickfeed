@@ -20,12 +20,13 @@ import (
 
 // Options for generating a self-signed certificate.
 type Options struct {
-	KeyFile   string        // path to the server private key file
-	CertFile  string        // path to the fullchain certificate file
-	Hosts     string        // comma-separated hostnames and IPs to generate a certificate for.
-	ValidFrom time.Time     // creation date (default duration is 1 year)
-	ValidFor  time.Duration // for how long the certificate is valid.
-	KeyType   string        // default ECDSA curve P256
+	FullchainFile string        // path to the fullchain certificate file
+	CAFile        string        // path to the CA certificate file
+	PrivKeyFile   string        // path to the server private key file
+	Hosts         string        // comma-separated hostnames and IPs to generate a certificate for.
+	ValidFrom     time.Time     // creation date (default duration is 1 year)
+	ValidFor      time.Duration // for how long the certificate is valid.
+	KeyType       string        // default ECDSA curve P256
 }
 
 // GenerateSelfSignedCert generates a self-signed X.509 certificate for testing purposes.
@@ -35,7 +36,7 @@ func GenerateSelfSignedCert(opts Options) error {
 	if opts.Hosts == "" {
 		return errors.New("at least one hostname must be specified")
 	}
-	path := filepath.Dir(opts.KeyFile)
+	path := filepath.Dir(opts.PrivKeyFile)
 	if err := os.MkdirAll(path, 0o700); err != nil {
 		return err
 	}
@@ -71,15 +72,22 @@ func GenerateSelfSignedCert(opts Options) error {
 		return fmt.Errorf("unable to marshal server private key: %w", err)
 	}
 
-	// save server private key
-	if err = savePEM(opts.KeyFile, []*pem.Block{
+	// save CA certificate (for trust store)
+	if err := savePEM(opts.CAFile, []*pem.Block{
+		{Type: "CERTIFICATE", Bytes: caCertBytes},
+	}); err != nil {
+		return err
+	}
+
+	// save server private key (for server use)
+	if err = savePEM(opts.PrivKeyFile, []*pem.Block{
 		{Type: "PRIVATE KEY", Bytes: serverKeyBytes},
 	}); err != nil {
 		return err
 	}
 
-	// save fullchain (server certificate and CA certificate)
-	return savePEM(opts.CertFile, []*pem.Block{
+	// save fullchain server certificate and CA certificate (for server use)
+	return savePEM(opts.FullchainFile, []*pem.Block{
 		{Type: "CERTIFICATE", Bytes: serverCertBytes},
 		{Type: "CERTIFICATE", Bytes: caCertBytes},
 	})
@@ -181,7 +189,7 @@ func serialNumber() (*big.Int, error) {
 }
 
 func setHosts(template *x509.Certificate, hostList string) {
-	for _, host := range strings.Split(hostList, ",") {
+	for host := range strings.SplitSeq(hostList, ",") {
 		if ip := net.ParseIP(host); ip != nil {
 			template.IPAddresses = append(template.IPAddresses, ip)
 		} else {

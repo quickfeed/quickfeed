@@ -51,7 +51,7 @@ func main() {
 		dbFile  = flag.String("database.file", env.DatabasePath(), "database file")
 		public  = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		dev     = flag.Bool("dev", false, "run development server with self-signed certificates")
-		gencert = flag.Bool("gencert", false, "generate self-signed certificates for development")
+		genCert = flag.Bool("gen", false, "generate self-signed certificates for development")
 		newApp  = flag.Bool("new", false, "create new GitHub app")
 		secret  = flag.Bool("secret", false, "create new secret for JWT signing")
 	)
@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// Handle certificate generation separately from server startup
-	if *gencert {
+	if *genCert {
 		if err := generateCertificates(); err != nil {
 			log.Fatalf("Failed to generate certificates: %v", err)
 		}
@@ -239,15 +239,16 @@ To receive webhook events, you must run QuickFeed on a public domain or use a tu
 func generateCertificates() error {
 	log.Printf("Generating self-signed certificates for domain: %s", env.Domain())
 	if err := cert.GenerateSelfSignedCert(cert.Options{
-		KeyFile:  env.KeyFile(),
-		CertFile: env.CertFile(),
-		Hosts:    env.Domain(),
+		FullchainFile: env.FullchainFile(),
+		PrivKeyFile:   env.PrivKeyFile(),
+		CAFile:        env.CAFile(),
+		Hosts:         env.Domain(),
 	}); err != nil {
 		return fmt.Errorf("failed to generate self-signed certificates: %w", err)
 	}
 	log.Printf("Certificates successfully generated at: %s", env.CertPath())
 	log.Print("Adding certificate to local trust store (may require elevated privileges on some systems)")
-	if err := cert.AddTrustedCert(env.CertFile()); err != nil {
+	if err := cert.AddTrustedCert(env.CAFile()); err != nil {
 		return fmt.Errorf("failed to install self-signed certificate: %w", err)
 	}
 	log.Print("Certificate successfully added to trust store")

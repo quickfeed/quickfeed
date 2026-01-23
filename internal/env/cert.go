@@ -11,12 +11,13 @@ import (
 )
 
 const (
-	defaultDomain    = "127.0.0.1"
-	defaultPort      = "443"
-	defaultCertFile  = "fullchain.pem"
-	defaultKeyFile   = "privkey.pem"
-	defaultConfigDir = ".config/quickfeed"
-	defaultCertDir   = "certs"
+	defaultDomain        = "localhost"
+	defaultPort          = "443"
+	defaultFullchainFile = "fullchain.pem"
+	defaultCAFile        = "cert.pem"
+	defaultPrivKeyFile   = "privkey.pem"
+	defaultConfigDir     = ".config/quickfeed"
+	defaultCertDir       = "certs"
 )
 
 // Domain returns the domain name where quickfeed will be served.
@@ -52,7 +53,7 @@ func Whitelist() ([]string, error) {
 	}
 	// Split domains by comma and remove whitespace and empty entries
 	domainList := make([]string, 0)
-	for _, domain := range strings.Split(strings.ReplaceAll(domains, " ", ""), ",") {
+	for domain := range strings.SplitSeq(strings.ReplaceAll(domains, " ", ""), ",") {
 		if domain == "" {
 			continue
 		}
@@ -67,26 +68,37 @@ func Whitelist() ([]string, error) {
 	return domainList, nil
 }
 
-// CertFile returns the full path to the certificate file.
-// To specify a different file, use the QUICKFEED_CERT_FILE environment variable.
-func CertFile() string {
-	certFile := os.Getenv("QUICKFEED_CERT_FILE")
+// FullchainFile returns the full path to the certificate file containing the full certificate chain.
+// To specify a different file, use the QUICKFEED_FULLCHAIN_FILE environment variable.
+func FullchainFile() string {
+	certFile := os.Getenv("QUICKFEED_FULLCHAIN_FILE")
 	if certFile == "" {
 		// If cert file is not specified, use the default cert file.
-		certFile = filepath.Join(CertPath(), defaultCertFile)
+		certFile = filepath.Join(CertPath(), defaultFullchainFile)
 	}
 	return certFile
 }
 
-// KeyFile returns the full path to the certificate key file.
-// To specify a different key, use the QUICKFEED_KEY_FILE environment variable.
-func KeyFile() string {
-	keyFile := os.Getenv("QUICKFEED_KEY_FILE")
-	if keyFile == "" {
-		// If cert key is not specified, use the default cert key.
-		keyFile = filepath.Join(CertPath(), defaultKeyFile)
+// CAFile returns the full path to the CA certificate file.
+// To specify a different file, use the QUICKFEED_CA_FILE environment variable.
+func CAFile() string {
+	caFile := os.Getenv("QUICKFEED_CA_FILE")
+	if caFile == "" {
+		// If CA file is not specified, use the default CA file.
+		caFile = filepath.Join(CertPath(), defaultCAFile)
 	}
-	return keyFile
+	return caFile
+}
+
+// PrivKeyFile returns the full path to the private key file.
+// To specify a different key, use the QUICKFEED_PRIVKEY_FILE environment variable.
+func PrivKeyFile() string {
+	privKeyFile := os.Getenv("QUICKFEED_PRIVKEY_FILE")
+	if privKeyFile == "" {
+		// If cert key is not specified, use the default cert key.
+		privKeyFile = filepath.Join(CertPath(), defaultPrivKeyFile)
+	}
+	return privKeyFile
 }
 
 // CertPath returns the full path to the directory containing the certificates.
@@ -97,7 +109,7 @@ func CertPath() string {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			// Fallback to source tree if home directory is not available
-			return filepath.Join(Root(), defaultConfigDir, defaultCertDir)
+			home = Root()
 		}
 		certPath = filepath.Join(home, defaultConfigDir, defaultCertDir)
 	}

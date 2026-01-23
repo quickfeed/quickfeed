@@ -11,8 +11,7 @@ import (
 const (
 	defaultProvider       = "github"
 	defaultAppName        = "QuickFeed"
-	defaultAppKeyFile     = "quickfeed.pem"
-	defaultGitHubDir      = "github"
+	defaultAppKeyFile     = "quickfeed-app-key.pem"
 	defaultRepositoryPath = "$HOME/courses"
 )
 
@@ -65,19 +64,19 @@ func AppID() (string, error) {
 	return appID, nil
 }
 
-// AppKey returns path to the file with .pem private key.
-// For GitHub apps a key must be generated on the App's
-// settings page and saved into a file.
-// If QUICKFEED_APP_KEY is not set, the default path $HOME/.config/quickfeed/github/quickfeed.pem is used.
+// TODO(meling): Rename to AppPrivKeyFile?
+// AppKey returns path to the quickfeed app private key file.
+// If QUICKFEED_APP_KEY is not set, the default path is used:
+// $HOME/.config/quickfeed/certs/quickfeed-app-key.pem.
 func AppKey() string {
 	appKey := os.Getenv("QUICKFEED_APP_KEY")
 	if appKey == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			// Fallback to source tree if home directory is not available
-			return filepath.Join(Root(), defaultConfigDir, defaultGitHubDir, defaultAppKeyFile)
+			home = Root()
 		}
-		appKey = filepath.Join(home, defaultConfigDir, defaultGitHubDir, defaultAppKeyFile)
+		appKey = filepath.Join(home, defaultConfigDir, defaultCertDir, defaultAppKeyFile)
 	}
 	return appKey
 }
