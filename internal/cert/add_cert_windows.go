@@ -9,8 +9,8 @@ import (
 )
 
 // AddTrustedCert adds given the certificate the user's keychain.
-func AddTrustedCert(certFile string) error {
-	out, err := sh.OutputA("certutil", "-addstore", "-f", "ROOT", certFile)
+func AddTrustedCert(caFile string) error {
+	out, err := sh.OutputA("certutil", "-addstore", "-f", "ROOT", caFile)
 	if out != "" {
 		log.Print(out)
 	}

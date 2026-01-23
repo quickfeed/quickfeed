@@ -9,9 +9,9 @@ import (
 )
 
 // AddTrustedCert adds given the certificate the user's keychain.
-func AddTrustedCert(certFile string) error {
+func AddTrustedCert(caFile string) error {
 	const certPath = "/usr/local/share/ca-certificates/"
-	out, err := sh.OutputA("sudo", "cp", certFile, certPath)
+	out, err := sh.OutputA("sudo", "cp", caFile, certPath)
 	if out != "" {
 		log.Print(out)
 	}
