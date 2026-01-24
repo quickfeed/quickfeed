@@ -73,11 +73,6 @@ test:
 qcm:
 	@cd cmd/qcm; go install
 
-clean-env:
-	# This is for debugging environment issues.
-	@echo "Removing .env.bak file"
-	@rm -f .env.bak
-
 clean-dev:
 	# This is useful for debugging development environment and configuration issues.
 	# WARNING: This will remove your .env file and configuration directory ~/.config/quickfeed
