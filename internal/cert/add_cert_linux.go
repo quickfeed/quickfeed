@@ -8,7 +8,7 @@ import (
 	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
-// AddTrustedCert adds given the certificate the user's keychain.
+// AddTrustedCert adds the CA certificate to the system trust store.
 func AddTrustedCert(caFile string) error {
 	const certPath = "/usr/local/share/ca-certificates/"
 	out, err := sh.OutputA("sudo", "cp", caFile, certPath)
