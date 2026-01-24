@@ -112,7 +112,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Create directories on path to PEM file, if not exists
-		appKeyFile := env.AppKey()
+		appKeyFile := env.AppPrivKeyFile()
 		if err := os.MkdirAll(filepath.Dir(appKeyFile), 0o700); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)

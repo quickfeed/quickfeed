@@ -101,7 +101,7 @@ func NeedsAppCreation() bool {
 	if GetAppURL() == "" {
 		return true
 	}
-	if !exists(AppKey()) {
+	if !exists(AppPrivKeyFile()) {
 		return true
 	}
 	return false
@@ -121,8 +121,8 @@ func CheckAppData() (errs error) {
 	if GetAppURL() == "" {
 		errs = errors.Join(errs, errors.New("QUICKFEED_APP_URL is not set"))
 	}
-	if !exists(AppKey()) {
-		errs = errors.Join(errs, fmt.Errorf("QuickFeed App private key file not found: %s", AppKey()))
+	if !exists(AppPrivKeyFile()) {
+		errs = errors.Join(errs, fmt.Errorf("QuickFeed App private key file not found: %s", AppPrivKeyFile()))
 	}
 	return
 }

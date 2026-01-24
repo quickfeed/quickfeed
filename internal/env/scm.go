@@ -64,11 +64,10 @@ func AppID() (string, error) {
 	return appID, nil
 }
 
-// TODO(meling): Rename to AppPrivKeyFile?
-// AppKey returns path to the quickfeed app private key file.
+// AppPrivKeyFile returns path to the quickfeed app private key file.
 // If QUICKFEED_APP_KEY is not set, the default path is used:
 // $HOME/.config/quickfeed/certs/quickfeed-app-key.pem.
-func AppKey() string {
+func AppPrivKeyFile() string {
 	appKey := os.Getenv("QUICKFEED_APP_KEY")
 	if appKey == "" {
 		home, err := os.UserHomeDir()
