@@ -14,7 +14,7 @@ const (
 	defaultDomain        = "localhost"
 	defaultPort          = "443"
 	defaultFullchainFile = "fullchain.pem"
-	defaultCAFile        = "cert.pem"
+	defaultCAFile        = "quickfeed-ca.crt"
 	defaultPrivKeyFile   = "privkey.pem"
 	defaultConfigDir     = ".config/quickfeed"
 	defaultCertDir       = "certs"
