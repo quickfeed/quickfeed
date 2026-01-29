@@ -127,7 +127,7 @@ In addition, your `.env` file should be populated:
 ```shell
 % cat .env
 # GitHub App IDs and secrets for deployment
-QUICKFEED_APP_ID=<6 digit ID>
+QUICKFEED_APP_ID=<7 digit ID>
 QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
 QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
 QUICKFEED_WEBHOOK_SECRET=<40 chars of secret data>
