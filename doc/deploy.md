@@ -258,11 +258,11 @@ QUICKFEED_CERT_PATH=/etc/letsencrypt/live/example.com/
 When running QuickFeed in development mode, self-signed certificates are automatically generated and stored in `QUICKFEED_CERT_PATH`.
 However, you can override the default certificate file paths by setting the following environment variables:
 
-| **Variable**               | **Description**             | **Default**                          |
-| -------------------------- | --------------------------- | ------------------------------------ |
-| `QUICKFEED_FULLCHAIN_FILE` | Full certificate chain file | `$QUICKFEED_CERT_PATH/fullchain.pem` |
-| `QUICKFEED_PRIVKEY_FILE`   | Private key file            | `$QUICKFEED_CERT_PATH/privkey.pem`   |
-| `QUICKFEED_CA_FILE`        | CA certificate file         | `$QUICKFEED_CERT_PATH/cert.pem`      |
+| **Variable**               | **Description**             | **Default**                             |
+| -------------------------- | --------------------------- | --------------------------------------- |
+| `QUICKFEED_FULLCHAIN_FILE` | Full certificate chain file | `$QUICKFEED_CERT_PATH/fullchain.pem`    |
+| `QUICKFEED_PRIVKEY_FILE`   | Private key file            | `$QUICKFEED_CERT_PATH/privkey.pem`      |
+| `QUICKFEED_CA_FILE`        | CA certificate file         | `$QUICKFEED_CERT_PATH/quickfeed-ca.crt` |
 
 ### Configuring Docker
 
