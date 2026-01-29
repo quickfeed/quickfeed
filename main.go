@@ -50,8 +50,7 @@ func main() {
 		dbFile = flag.String("database.file", env.DatabasePath(), "database file")
 		public = flag.String("http.public", env.PublicDir(), "path to content to serve")
 		dev    = flag.Bool("dev", false, "run development server with self-signed certificates")
-		newApp = flag.Bool("new", false, "create new GitHub app")
-		secret = flag.Bool("secret", false, "create new secret for JWT signing")
+		secret = flag.Bool("secret", false, "force regeneration of JWT signing secret (will log out all users)")
 	)
 	flag.Parse()
 
@@ -61,41 +60,37 @@ func main() {
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
-	if env.Domain() == "localhost" {
-		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
-	}
 
+	// Determine server type based on mode
 	var srvFn web.ServerType
 	if *dev {
 		srvFn = web.NewDevelopmentServer
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
-	if *newApp {
-		if err := manifest.ReadyForAppCreation(envFile, checkDomain); err != nil {
+	// Ensure environment is ready: auth secret, domain validation, certificates (dev mode)
+	if err := env.EnsureReady(*dev, envFile, *secret); err != nil {
+		log.Fatal(err)
+	}
+
+	// If app data is missing, run the app creation flow
+	if env.NeedsAppCreation() {
+		if err := runAppCreation(envFile, *dev, srvFn); err != nil {
 			log.Fatal(err)
 		}
-		if err := manifest.CreateNewQuickFeedApp(srvFn, envFile, *dev); err != nil {
-			log.Fatal(err)
-		}
-	}
-	if *secret {
-		log.Println("Generating new random secret for signing JWT tokens...")
-		if err := env.NewAuthSecret(envFile); err != nil {
-			log.Fatalf("Failed to save secret: %v", err)
-		}
-	}
-	if *secret || *newApp {
-		// Refresh environment variables
+		// Reload environment after app creation
 		if err := env.Load(env.RootEnv(envFile)); err != nil {
 			log.Fatal(err)
 		}
 	}
-	if env.AuthSecret() == "" {
-		log.Fatal("Required QUICKFEED_AUTH_SECRET is not set")
+
+	// Final validation: ensure we have everything needed
+	if err := env.CheckAppData(); err != nil {
+		log.Fatalf("Missing app configuration:\n%v", err)
 	}
+
+	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
 	handler, cleanup, err := initWebServer(*dbFile, *public)
 	if err != nil {
@@ -125,6 +120,14 @@ func main() {
 		return
 	}
 	log.Println("QuickFeed shut down gracefully")
+}
+
+// runAppCreation runs the GitHub app creation flow after checking prerequisites.
+func runAppCreation(envFile string, dev bool, srvFn web.ServerType) error {
+	if err := checkDomain(); err != nil {
+		return err
+	}
+	return manifest.CreateNewQuickFeedApp(srvFn, envFile, dev)
 }
 
 // gracefulShutdown blocks waiting for the context to be done (SIGINT or SIGTERM)
@@ -185,28 +188,34 @@ type quickfeed struct {
 func (q *quickfeed) cleanup() {
 	var err error
 	if q.runner != nil {
-		err = q.runner.Close()
+		if e := q.runner.Close(); e != nil {
+			err = fmt.Errorf("failed to close runner: %w", e)
+		}
 	}
 	if q.db != nil {
-		err = errors.Join(err, q.db.Close())
+		if e := q.db.Close(); e != nil {
+			err = errors.Join(err, fmt.Errorf("failed to close database: %w", e))
+		}
 	}
 	if q.logger != nil {
-		err = errors.Join(err, q.logger.Sync())
+		if e := q.logger.Sync(); e != nil {
+			err = errors.Join(err, fmt.Errorf("failed to sync logger: %w", e))
+		}
 	}
 	if err != nil {
-		log.Printf("Cleanup error: %v", err)
+		log.Printf("Cleanup error:\n%v", err)
 	}
 }
 
 func checkDomain() error {
-	if env.Domain() == "127.0.0.1" {
+	if env.IsDomainLocal() {
 		msg := `
-WARNING: You are creating a GitHub app on "127.0.0.1".
+WARNING: You are creating a GitHub app on a local or private domain: %q.
 This is only for development purposes.
 In this mode, QuickFeed will not be able to receive webhook events from GitHub.
 To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.
 `
-		fmt.Println(msg)
+		fmt.Printf(msg, env.Domain())
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
 		fmt.Print("Do you want to continue? (Y/n) ")
 		var answer string
