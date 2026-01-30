@@ -14,7 +14,7 @@ var (
 		GroupAssignments:                2,  // < assingnmentsPerCourse
 		StudentSubmissionsPerAssignment: 8,
 		GroupSubmissionsPerAssignment:   3,
-		containerTimeout:                30,
+		ContainerTimeout:                30,
 		Verbose:                         false,
 		Organizations:                   []string{organization},
 		Members:                         Members,

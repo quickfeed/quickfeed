@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -23,23 +24,28 @@ func (g *generator) loadConfig() error {
 		jsonExt = ".json"
 		envVar  = "QUICKFEED_MOCK_CONFIG" // TODO(Joachim): consider standardizing the mock config file, e.g. "Root"/mock_config.json
 	)
-	path := os.Getenv(envVar)
-	config := fmt.Sprintf("%s%s", path, jsonExt)
-	if config != jsonExt {
-		log.Println("Loading config")
-		if bytes, err := os.ReadFile(config); err == nil {
-			return json.Unmarshal(bytes, &g.config)
-		} else if errors.Is(err, os.ErrNotExist) {
-			log.Printf("Config file: %q does not exist", config)
-		} else {
-			return fmt.Errorf("failed to read config file: %v", err)
+
+	config := os.Getenv(envVar)
+	if config != "" {
+		if !strings.HasSuffix(config, jsonExt) {
+			config += jsonExt
 		}
+		log.Println("Loading config")
+		bytes, err := os.ReadFile(config)
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf("Config file: %q does not exist", config)
+		} else if err != nil {
+			return err
+		} else {
+			if err := json.Unmarshal(bytes, &g.config); err != nil {
+				return fmt.Errorf("failed to read config file: %w", err)
+			}
+		}
+	} else {
+		log.Printf("Set %q to override default configuration", envVar)
 	}
-	log.Printf("Using default configuration")
-	if path == "" {
-		log.Printf("  - Set %q to use custom config", envVar)
-	}
-	return nil
+
+	return g.validateConfig()
 }
 
 // NewGenerator creates a new generator instance.
@@ -50,32 +56,28 @@ func NewGenerator() (*generator, error) {
 	}
 	err := env.Load(env.RootEnv(".env"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to load environment variables: %v", err)
+		return nil, fmt.Errorf("failed to load environment variables: %w", err)
 	}
 	if err := gen.loadConfig(); err != nil {
-		return nil, err
-	}
-	if err := gen.config.validate(); err != nil {
 		return nil, err
 	}
 	log.Println("Setting up database")
 	dbFile := env.DatabasePath()
 	if _, err := os.Stat(dbFile); err == nil {
 		if err := os.Remove(dbFile); err != nil {
-			return nil, fmt.Errorf("failed to remove existing database file: %v", err)
+			return nil, fmt.Errorf("failed to remove existing database file: %w", err)
 		}
 	}
 	gen.db, err = database.NewGormDB(dbFile, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 	return gen, nil
 }
 
-// validate ensures the provides values are within the required range
+// validateConfig ensures the provides values are within the required range
 // sum of related variable can't be less then zero
-func (c *config) validate() error {
-	log.Println("Validating config")
+func (c *config) validateConfig() error {
 	switch {
 	case c.Students < c.EnrolledStudents:
 		return fmt.Errorf("number of students (%d) can't be less number of enrolled students (%d)", c.Students, c.EnrolledStudents)
@@ -91,7 +93,7 @@ func (g *generator) Mock(adminName string) error {
 	// need to figure out dependencies or table relations first
 	log.Printf("Creating admin user: %s\n", adminName)
 	if err := g.admin(adminName); err != nil {
-		return fmt.Errorf("failed to create admin user: %v", err)
+		return fmt.Errorf("failed to create admin user: %w", err)
 	}
 	log.Printf("Generating...")
 	for i, fn := range []func() error{

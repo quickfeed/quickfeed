@@ -33,7 +33,7 @@ func (g *generator) courses() error {
 				Order:            uint32(j),
 				CourseID:         course.GetID(),
 				Name:             fmt.Sprintf("Lab %d", j),
-				ContainerTimeout: uint32(g.config.containerTimeout),
+				ContainerTimeout: uint32(g.ContainerTimeout),
 				IsGroupLab:       j > g.AssingnmentsPerCourse-g.GroupAssignments,
 				Reviewers:        uint32(rand.Intn(2)),
 			}

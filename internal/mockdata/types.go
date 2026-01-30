@@ -37,7 +37,7 @@ type config struct {
 	GroupAssignments                int
 	StudentSubmissionsPerAssignment int
 	GroupSubmissionsPerAssignment   int
-	containerTimeout                int
+	ContainerTimeout                int
 	Verbose                         bool
 	Organizations                   []string
 	Members                         []string
