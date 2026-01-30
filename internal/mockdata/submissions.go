@@ -3,13 +3,12 @@ package mockdata
 import (
 	"math/rand"
 
-	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
 func (g *generator) submissions() error {
-	for i := range qtest.MockCourses {
-		var baseAssignmentID = i * g.AssingnmentsPerCourse()
+	for i := range g.Courses {
+		var baseAssignmentID = i * g.AssingnmentsPerCourse
 		if err := g.studentSubs(baseAssignmentID); err != nil {
 			return err
 		}
@@ -21,8 +20,8 @@ func (g *generator) submissions() error {
 }
 
 func (g *generator) studentSubs(baseAssignmentID int) error {
-	for k := 1; k <= g.StudentSubmissionsPerAssignment(); k++ {
-		for j := 1; j <= g.EnrolledStudents(); j++ {
+	for k := 1; k <= g.StudentSubmissionsPerAssignment; k++ {
+		for j := 1; j <= g.EnrolledStudents; j++ {
 			submission := &qf.Submission{
 				AssignmentID: uint64(k + baseAssignmentID),
 				UserID:       uint64(j),
@@ -37,8 +36,8 @@ func (g *generator) studentSubs(baseAssignmentID int) error {
 }
 
 func (g *generator) groupSubs(baseAssignmentID int) error {
-	for k := g.AssingnmentsPerCourse(); k <= g.GroupSubmissionsPerAssignment(); k++ {
-		for j := range qtest.Groups {
+	for k := g.AssingnmentsPerCourse; k <= g.GroupSubmissionsPerAssignment; k++ {
+		for j := range g.Groups {
 			submission := &qf.Submission{
 				AssignmentID: uint64(k + baseAssignmentID),
 				GroupID:      uint64(j),
