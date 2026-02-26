@@ -413,6 +413,12 @@ input {
         rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
 }
 
+.criteria-description {
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
 .dropdown-menu-center {
     right: auto;
     -webkit-transform: translate(-50%, 0);
