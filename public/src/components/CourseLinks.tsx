@@ -23,7 +23,6 @@ const CourseLinks = () => {
     const links: link[] = [
         { type: Repository_Type.USER, text: "User Repository" },
         { type: Repository_Type.GROUP, text: `Group Repository ${groupName}`, style: { textAlign: "left" }, className: "overflow-ellipses" },
-        { type: Repository_Type.ASSIGNMENTS, text: "Assignments" },
         { type: Repository_Type.INFO, text: "Course Info" }
     ]
 
