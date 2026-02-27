@@ -31,15 +31,20 @@ const Profile = () => {
     }, [state.isValid])
 
     return (
-        <div>
-            <div className="banner jumbotron">
-                <div className="centerblock container">
-                    <h1>Hi, {state.self.Name}</h1>
-                    <p>You can edit your user information here.</p>
-                    <p><span className='font-weight-bold'>Use your real name as it appears on Canvas</span> to ensure that approvals are correctly attributed.</p>
+        <div className="min-h-screen">
+            <div className="hero">
+                <div className="hero-content text-center">
+                    <div className="max-w-2xl">
+                        <h1 className="text-5xl font-bold mb-4">Hi, {state.self.Name}</h1>
+                        <p className="text-lg mb-2">You can edit your user information here.</p>
+                        <div className="alert alert-warning mt-4">
+                            <i className="fa fa-exclamation-triangle"></i>
+                            <span><strong>Use your real name as it appears on Canvas</strong> to ensure that approvals are correctly attributed.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div className="container">
+            <div className="container mx-auto px-4 py-12 flex justify-center">
                 <ProfileCard>
                     {editing ?
                         <ProfileForm setEditing={setEditing} >
