@@ -11,6 +11,9 @@ import (
 
 // SCM is the source code management interface for managing courses and users.
 type SCM interface {
+	// GetUserByID fetches a user by their SCM user ID.
+	GetUserByID(context.Context, uint64) (*qf.User, error)
+
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
@@ -32,15 +35,13 @@ type SCM interface {
 	UpdateGroupMembers(context.Context, *GroupOptions) error
 	// DeleteGroup deletes group's repository.
 	DeleteGroup(context.Context, uint64) error
+	// SyncFork syncs a forked repository's branch with its upstream repository.
+	SyncFork(context.Context, *SyncForkOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
 	// repository type, e.g., "assignments" or "tests".
 	Clone(context.Context, *CloneOptions) (string, error)
-
-	// AcceptInvitations accepts course invites on behalf of the user.
-	// A new refresh token for the user is returned, which may be used in subsequent requests.
-	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
 
 	// CreateIssue creates an issue.
 	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
@@ -62,12 +63,17 @@ type SCM interface {
 	RequestReviewers(context.Context, *RequestReviewersOptions) error
 }
 
+// TokenManager manages the access token for the SCM.
+type TokenManager interface {
+	Token(context.Context) (string, error)
+}
+
 // NewSCMClient returns a new provider client implementing the SCM interface.
 func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
-		return NewGithubSCMClient(logger, token), nil
+		return NewGithubUserClient(logger, token), nil
 	case "fake":
 		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
 	}

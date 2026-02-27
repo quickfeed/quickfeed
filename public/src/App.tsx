@@ -10,6 +10,8 @@ import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
 import LoginPage from './pages/LoginPage'
+import CourseCodeRedirect from "./components/CourseCodeRedirect"
+import Alerts from './components/alerts/Alerts'
 
 const App = () => {
     const state = useAppState()
@@ -35,6 +37,8 @@ const App = () => {
                     <Route path="/course/:id/*" element={<CoursePage />} />
                     <Route path="/courses" element={<Courses home={false} />} />
                     <Route path="/admin/*" element={<AdminPage />} />
+                    { /* Redirect course codes to the course page, if no course found fall through to next route */}
+                    <Route path="/:code" element={<CourseCodeRedirect />} />
                     <Route path="*" element={<Dashboard />} />
                 </Routes>
             )
@@ -51,6 +55,7 @@ const App = () => {
     return (
         <div>
             <NavBar />
+            <Alerts />
             <div className="app wrapper">
                 <div id={state.showFavorites ? "content" : "content-full"}>
                     {Main()}

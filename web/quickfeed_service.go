@@ -13,6 +13,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -24,20 +25,20 @@ type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	scmMgr *scm.Manager
-	bh     BaseHookOptions
 	runner ci.Runner
+	tm     *auth.TokenManager
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, tm *auth.TokenManager) *QuickFeedService {
 	return &QuickFeedService{
 		logger:  logger.Sugar(),
 		db:      db,
 		scmMgr:  mgr,
-		bh:      bh,
 		runner:  runner,
+		tm:      tm,
 		streams: stream.NewStreamServices(),
 	}
 }
@@ -392,13 +393,13 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 }
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
-func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed to get submission: %v", err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
-	submission.SetGradesAndRelease(in.Msg)
+	submission.SetGrade(in.Msg)
 	err = s.db.UpdateSubmission(submission)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
@@ -423,62 +424,6 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions"))
 		}
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// CreateBenchmark adds a new grading benchmark for an assignment.
-func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	benchmark := in.Msg
-	if err := s.db.CreateBenchmark(benchmark); err != nil {
-		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create benchmark"))
-	}
-	return connect.NewResponse(benchmark), nil
-}
-
-// UpdateBenchmark edits a grading benchmark for an assignment.
-func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateBenchmark(in.Msg); err != nil {
-		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update benchmark"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// DeleteBenchmark removes a grading benchmark.
-func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	if err := s.db.DeleteBenchmark(in.Msg); err != nil {
-		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete benchmark"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// CreateCriterion adds a new grading criterion for an assignment.
-func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	criterion := in.Msg
-	if err := s.db.CreateCriterion(criterion); err != nil {
-		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add criterion"))
-	}
-	return connect.NewResponse(criterion), nil
-}
-
-// UpdateCriterion edits a grading criterion for an assignment.
-func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateCriterion(in.Msg); err != nil {
-		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update criterion"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// DeleteCriterion removes a grading criterion for an assignment.
-func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	if err := s.db.DeleteCriterion(in.Msg); err != nil {
-		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete criterion"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -524,22 +469,6 @@ func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
 	}
 	return connect.NewResponse(feedback), nil
-}
-
-// UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
-// with the given score.
-func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
-	query := &qf.Submission{
-		AssignmentID: in.Msg.GetAssignmentID(),
-		Score:        in.Msg.GetScoreLimit(),
-		Released:     in.Msg.GetRelease(),
-	}
-	err := s.db.UpdateSubmissions(query, true)
-	if err != nil {
-		s.logger.Errorf("UpdateSubmissions failed for request %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
-	}
-	return &connect.Response[qf.Void]{}, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.

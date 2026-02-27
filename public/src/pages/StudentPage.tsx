@@ -4,7 +4,6 @@ import CourseLabs from "../components/student/CourseLabs"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
-import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
 import Card from "../components/Card"
 import { useAppState } from "../overmind"
@@ -31,7 +30,6 @@ const StudentPage = () => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alerts />
             <div hidden={location.pathname !== root}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <RepositoryCards repositories={repos} groupName={groupName} />

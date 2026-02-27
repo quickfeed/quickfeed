@@ -2,7 +2,6 @@ import React from "react"
 import AboutPage from "./AboutPage"
 
 const LoginPage = () => {
-
     return (
         <div className="min-h-screen flex flex-col items-center bg-base-100 text-base-content">
             <h1 className="text-5xl font-bold mt-16 mb-12 text-base-content">

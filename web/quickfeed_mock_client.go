@@ -114,8 +114,8 @@ func UserInterceptorFunc(logger *zap.SugaredLogger, tm *auth.TokenManager, _ dat
 	return interceptor.NewUserInterceptor(logger, tm)
 }
 
-func AccessControlInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
-	return interceptor.NewAccessControlInterceptor(tm)
+func AccessControlInterceptorFunc(_ *zap.SugaredLogger, _ *auth.TokenManager, db database.Database) connect.Interceptor {
+	return interceptor.NewAccessControlInterceptor(db)
 }
 
 func TokenInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
@@ -132,7 +132,6 @@ func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, op
 
 	mgr := scm.MockManager(t, scmOpt)
 	logger := qtest.Logger(t)
-	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, BaseHookOptions{}, &ci.Local{})
 
 	// Create token manager when needed
 	var tm *auth.TokenManager
@@ -148,6 +147,7 @@ func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, op
 			interceptors = append(interceptors, createInterceptor(logger, tm, db))
 		}
 	}
+	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, &ci.Local{}, tm)
 
 	router := http.NewServeMux()
 	router.Handle(qfconnect.NewQuickFeedServiceHandler(qfService, connect.WithInterceptors(interceptors...)))

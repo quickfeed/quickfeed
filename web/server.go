@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/reload"
 	"github.com/quickfeed/quickfeed/internal/ui"
@@ -25,8 +24,6 @@ type Server struct {
 	httpServer     *http.Server
 	redirectServer *http.Server
 	metricsServer  *http.Server
-	keyFile        string
-	certFile       string
 }
 
 type ServerType func(handler http.Handler) (*Server, error)
@@ -67,25 +64,11 @@ func NewProductionServer(handler http.Handler) (*Server, error) {
 }
 
 func NewDevelopmentServer(handler http.Handler) (*Server, error) {
-	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
+	certificate, err := tls.LoadX509KeyPair(env.FullchainFile(), env.PrivKeyFile())
 	if err != nil {
-		// Couldn't load credentials; generate self-signed certificates.
-		log.Println("Generating self-signed certificates.")
-		if err := cert.GenerateSelfSignedCert(cert.Options{
-			KeyFile:  env.KeyFile(),
-			CertFile: env.CertFile(),
-			Hosts:    env.Domain(),
-		}); err != nil {
-			return nil, fmt.Errorf("failed to generate self-signed certificates: %w", err)
-		}
-		log.Printf("Certificates successfully generated at: %s", env.CertPath())
-		log.Print("Adding certificate to local keychain (requires sudo access)")
-		if err := cert.AddTrustedCert(env.CertFile()); err != nil {
-			return nil, fmt.Errorf("failed to install self-signed certificate: %w", err)
-		}
-	} else {
-		log.Println("Existing credentials successfully loaded.")
+		return nil, fmt.Errorf("failed to load certificates from %q: %w", env.CertPath(), err)
 	}
+	log.Println("Existing credentials successfully loaded.")
 
 	httpServer := &http.Server{
 		Handler:           handler,
@@ -103,8 +86,6 @@ func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 	return &Server{
 		httpServer:    httpServer,
 		metricsServer: metricsServer(),
-		keyFile:       env.KeyFile(),
-		certFile:      env.CertFile(),
 	}, nil
 }
 
@@ -156,8 +137,10 @@ func (srv *Server) Serve() error {
 		}()
 	}
 	// Start the HTTPS server.
-	// For production, the certFile and keyFile are empty and managed by autocert.
-	if err := srv.httpServer.ListenAndServeTLS(srv.certFile, srv.keyFile); err != nil {
+	// The TLS configuration is set up in NewProductionServer or NewDevelopmentServer.
+	// For production, the certificate and key are managed by autocert.
+	// For development, the certificate and key are loaded from disk in NewDevelopmentServer.
+	if err := srv.httpServer.ListenAndServeTLS("", ""); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("server exited with unexpected error: %w", err)
 		}

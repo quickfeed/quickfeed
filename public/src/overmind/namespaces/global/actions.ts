@@ -1,16 +1,14 @@
+import { clone, create, isMessage } from "@bufbuild/protobuf"
 import { Code, ConnectError } from "@connectrpc/connect"
 import { Context } from "../.."
 import { RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../../../proto/qf/requests_pb"
 import {
-    Assignment,
     Course,
     Enrollment,
     Enrollment_DisplayState,
     Enrollment_UserStatus,
     EnrollmentSchema,
     Grade,
-    GradingBenchmark,
-    GradingCriterion,
     Group,
     Group_GroupStatus,
     GroupSchema,
@@ -21,9 +19,8 @@ import {
     UserSchema
 } from "../../../../proto/qf/types_pb"
 import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../../../Helpers"
-import { isEmptyRepo } from "./internalActions"
 import { Alert, CourseGroup, SubmissionOwner } from "../../state"
-import { clone, create, isMessage } from "@bufbuild/protobuf"
+import { isEmptyRepo } from "./internalActions"
 
 export const internal = { isEmptyRepo }
 
@@ -212,19 +209,17 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
             clonedSubmission = setStatusAll(clonedSubmission, status)
             break
     }
-    /* Update the submission status */
-    const response = await effects.global.api.client.updateSubmission({
-        courseID: state.activeCourse,
-        submissionID: submission.ID,
-        grades: clonedSubmission.Grades,
-        released: submission.released,
-        score: submission.score,
-    })
-    if (response.error) {
-        return
+    /* Update the submission status by sending each grade to the server */
+    for (let i = 0; i < clonedSubmission.Grades.length; i++) {
+        const grade = clonedSubmission.Grades[i]
+        const response = await effects.global.api.client.updateSubmission(grade)
+        if (response.error) {
+            return
+        }
+        /* Keep local state in sync with successfully updated grades */
+        submission.Grades[i] = grade
+        state.submissionsForCourse.update(owner, submission)
     }
-    submission.Grades = clonedSubmission.Grades
-    state.submissionsForCourse.update(owner, submission)
 }
 
 export const updateGrade = async ({ state, effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
@@ -237,19 +232,13 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
     }
 
     const clonedSubmission = clone(SubmissionSchema, state.selectedSubmission)
-    clonedSubmission.Grades = clonedSubmission.Grades.map(g => {
-        if (g.UserID === grade.UserID) {
-            g.Status = status
-        }
-        return g
-    })
-    const response = await effects.global.api.client.updateSubmission({
-        courseID: state.activeCourse,
-        submissionID: state.selectedSubmission.ID,
-        grades: clonedSubmission.Grades,
-        released: state.selectedSubmission.released,
-        score: state.selectedSubmission.score,
-    })
+    const updatedGrade = clonedSubmission.Grades.find(g => g.UserID === grade.UserID)
+    if (!updatedGrade) {
+        return
+    }
+    updatedGrade.Status = status
+
+    const response = await effects.global.api.client.updateSubmission(updatedGrade)
     if (response.error) {
         return
     }
@@ -632,108 +621,6 @@ export const updateGroup = async ({ state, actions, effects }: Context, group: G
     if (found && response.message) {
         Object.assign(found, response.message)
         actions.global.setActiveGroup(null)
-    }
-}
-
-export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<boolean> => {
-    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.BenchmarkID)
-    if (!benchmark) {
-        // If a benchmark is not found, the criterion is invalid.
-        return false
-    }
-
-    // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
-    if (criterion.ID) {
-        const response = await effects.global.api.client.updateCriterion(criterion)
-        if (response.error) {
-            return false
-        }
-        const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
-        if (index > -1) {
-            benchmark.criteria[index] = criterion
-        }
-    } else {
-        criterion.CourseID = assignment.CourseID // Needed for access control
-        const response = await effects.global.api.client.createCriterion(criterion)
-        if (response.error) {
-            return false
-        }
-        benchmark.criteria.push(response.message)
-    }
-    return true
-}
-
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<boolean> => {
-    if (benchmark.ID) {
-        const response = await effects.global.api.client.updateBenchmark(benchmark)
-        if (response.error) {
-            return false
-        }
-        const index = assignment.gradingBenchmarks.findIndex(b => b.ID === benchmark.ID)
-        if (index > -1) {
-            assignment.gradingBenchmarks[index] = benchmark
-        }
-    } else {
-        benchmark.CourseID = assignment.CourseID // Needed for access control
-        const response = await effects.global.api.client.createBenchmark(benchmark)
-        if (response.error) {
-            return false
-        }
-        assignment.gradingBenchmarks.push(response.message)
-    }
-    return true
-}
-
-export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    benchmark.AssignmentID = assignment.ID
-    const response = await effects.global.api.client.createBenchmark(benchmark)
-    if (response.error) {
-        return
-    }
-    assignment.gradingBenchmarks.push(benchmark)
-}
-
-export const deleteCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    if (!criterion) {
-        // Criterion is invalid
-        return
-    }
-
-    const benchmarks = assignment.gradingBenchmarks
-    const benchmark = benchmarks.find(bm => bm.ID === criterion?.BenchmarkID)
-    if (!benchmark) {
-        // Criterion has no parent benchmark
-        return
-    }
-
-    if (!confirm("Do you really want to delete this criterion?")) {
-        // Do nothing if user cancels
-        return
-    }
-
-    // Delete criterion
-    const response = await effects.global.api.client.deleteCriterion(criterion)
-    if (response.error) {
-        return
-    }
-
-    // Remove criterion from benchmark in state if request was successful
-    const index = benchmarks.indexOf(benchmark)
-    if (index > -1) {
-        benchmarks[index].criteria = benchmarks[index].criteria.filter(c => c.ID !== criterion.ID)
-    }
-}
-
-export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    if (benchmark && confirm("Do you really want to delete this benchmark?")) {
-        const response = await effects.global.api.client.deleteBenchmark(benchmark)
-        if (response.error) {
-            return
-        }
-        const index = assignment.gradingBenchmarks.indexOf(benchmark)
-        if (index > -1) {
-            assignment.gradingBenchmarks.splice(index, 1)
-        }
     }
 }
 

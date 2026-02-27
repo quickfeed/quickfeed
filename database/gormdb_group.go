@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -72,42 +73,42 @@ func (db *GormDB) UpdateGroup(group *qf.Group) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	tx := db.conn.Begin()
-	if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
-		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateGroup
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Update group fields, except associations
+		if err := tx.Model(group).Select("*").Updates(group).Error; err != nil {
+			return err
 		}
-		return err
-	}
-	// Set group ID to zero to remove all enrollments from the given group to safely add all members of the incoming group request.
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.GetID()).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
 
-	var userids []uint64
-	for _, u := range group.GetUsers() {
-		userids = append(userids, u.GetID())
-	}
-	query := tx.Model(&qf.Enrollment{}).
-		Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
-		Where("user_id IN (?)", userids).
-		Where("status IN (?)", []qf.Enrollment_UserStatus{
-			qf.Enrollment_STUDENT,
-			qf.Enrollment_TEACHER,
-		}).Updates(&qf.Enrollment{GroupID: group.GetID()})
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return ErrUpdateGroup
-	}
+		// Update Users association
+		if err := tx.Model(group).Association("Users").Replace(group.GetUsers()); err != nil {
+			return err
+		}
 
-	tx.Commit()
-	return nil
+		// Clear group_id for previous group members
+		if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
+			return err
+		}
+
+		userIDs := group.UserIDs()
+		if err := syncGroupGrades(tx, group.GetID(), userIDs); err != nil {
+			return err
+		}
+
+		// Set group_id for current group members
+		tx = tx.Model(&qf.Enrollment{}).
+			Where(&qf.Enrollment{CourseID: group.GetCourseID()}).
+			Where("user_id IN (?)", userIDs).
+			Updates(&qf.Enrollment{GroupID: group.GetID()})
+		if tx.Error != nil {
+			return tx.Error
+		}
+
+		if tx.RowsAffected != int64(len(userIDs)) {
+			return ErrUpdateGroup
+		}
+
+		return nil
+	})
 }
 
 // UpdateGroupStatus updates status field of a group.
@@ -122,17 +123,19 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 		return err
 	}
 
-	tx := db.conn.Begin()
-	if err := tx.Delete(group).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, groupID).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Clear all associations before deleting the group
+		if err := tx.Model(group).Association("Users").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
+			return err
+		}
+
+		// Delete the group
+		return tx.Delete(group).Error
+	})
 }
 
 // GetGroup returns the group with the specified group id.
@@ -182,4 +185,64 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 		return nil, err
 	}
 	return groups, nil
+}
+
+// syncGroupGrades synchronizes grade records for all group submissions to match current group membership.
+// Creates new grades for newly added members and removes grades for users no longer in the group.
+// Existing grades are preserved with their current status (e.g., APPROVED).
+func syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
+	// Get all submissions for this group
+	var submissions []*qf.Submission
+	err := tx.Model(&qf.Submission{}).
+		Preload("Grades").
+		Where(&qf.Submission{GroupID: groupID}).
+		Find(&submissions).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No submissions found for this group; nothing to sync
+			return nil
+		}
+		return err
+	}
+
+	for _, submission := range submissions {
+		// Find which users already have grades
+		existingGrades := make(map[uint64]*qf.Grade)
+		for _, grade := range submission.GetGrades() {
+			existingGrades[grade.GetUserID()] = grade
+		}
+
+		// Create grades for all current users, preserving existing ones.
+		// This will also remove grades for users no longer in the group because
+		// we rebuild the Grades slice from scratch based on current group membership,
+		// ignoring any previous grades for users not in userIDs.
+		submission.Grades = make([]*qf.Grade, len(userIDs))
+		for i, userID := range userIDs {
+			if existing, found := existingGrades[userID]; found {
+				submission.Grades[i] = existing // Preserve grade for existing member
+			} else {
+				// New group member without a grade yet (Status: qf.Submission_NONE)
+				submission.Grades[i] = &qf.Grade{UserID: userID, SubmissionID: submission.GetID()}
+			}
+		}
+
+		// Get assignment to set grade status
+		var assignment qf.Assignment
+		if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+			return err
+		}
+		// Set grades based on submission score
+		submission.SetGradesIfApproved(&assignment, submission.GetScore())
+
+		if err := tx.Model(&qf.Submission{
+			ID: submission.GetID(),
+		}).Association("Grades").Clear(); err != nil {
+			return err
+		}
+		if err := tx.Model(submission).Association("Grades").Append(submission.Grades); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

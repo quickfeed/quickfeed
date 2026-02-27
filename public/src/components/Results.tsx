@@ -9,7 +9,6 @@ import Button from "./admin/Button"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
-import Release from "./Release"
 import Search from "./Search"
 import { SubmissionsTable } from "./submissions-table"
 
@@ -96,7 +95,6 @@ const Results = ({ review }: { review: boolean }) => {
     return (
         <div className={`grid grid-cols-1 ${gridCols} gap-6`}>
             <div className="space-y-4">
-                {review && <Release />}
                 <Search placeholder="Search by name..." className="mb-2">
                     <Button
                         text={`View by ${displayMode}`}
@@ -105,15 +103,15 @@ const Results = ({ review }: { review: boolean }) => {
                         onClick={toggleGroupView}
                     />
                 </Search>
-                <TableSort review={review} />
+                <TableSort />
                 <div className="overflow-x-auto">
                     <SubmissionsTable onSubmissionClick={handleSubmissionClick} review={review} />
                 </div>
-            </div>
+            </div >
             <div className={state.review.assignmentID >= 0 ? "lg:col-span-2" : ""}>
                 {review ? <ReviewForm /> : <LabResult />}
             </div>
-        </div>
+        </div >
     )
 }
 

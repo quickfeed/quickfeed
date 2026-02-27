@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -15,26 +16,34 @@ const (
 	assignmentFile  = "assignment.json"
 	criteriaFile    = "criteria.json"
 	testsFile       = "tests.json"
-	dockerfile      = "Dockerfile"
 	taskFilePattern = "task-*.md"
 )
+
+// filesForBuildContext specifies files for the Docker build context.
+// Add more files to support more dependencies for different courses.
+var filesForBuildContext = map[string]bool{
+	ci.Dockerfile: true,
+	"go.mod":      true,
+	"go.sum":      true,
+}
 
 var patterns = []string{
 	assignmentFile,
 	criteriaFile,
 	testsFile,
-	dockerfile,
+	ci.Dockerfile,
 	taskFilePattern,
 }
 
-// matchAny returns true if filename matches one of the target patterns.
+// matchAny returns true if filename matches one of the target patterns
+// or one of the files for build context.
 func matchAny(filename string) bool {
 	for _, pattern := range patterns {
 		if ok, _ := filepath.Match(pattern, filename); ok {
 			return true
 		}
 	}
-	return false
+	return filesForBuildContext[filename]
 }
 
 // match returns true if filename matches the given pattern.
@@ -45,16 +54,27 @@ func match(filename, pattern string) bool {
 	return false
 }
 
+// lookupFileProcessor returns the file processor for the given filename, if exists.
+func lookupFileProcessor(filename string) (fileProcessor, bool) {
+	for pattern, processor := range processors {
+		if match(filename, pattern) {
+			return processor, true
+		}
+	}
+	return nil, false
+}
+
 var processors = map[string]fileProcessor{
-	criteriaFile: processCriteriaFile,
-	testsFile:    processTestsFile,
+	criteriaFile:    processCriteriaFile,
+	testsFile:       processTestsFile,
+	taskFilePattern: processTaskFile,
 }
 
 // fileProcessor processes specific file types and updates the assignment
-type fileProcessor func(contents []byte, assignment *qf.Assignment, courseID uint64) error
+type fileProcessor func(filename string, contents []byte, assignment *qf.Assignment, courseID uint64) error
 
 // processCriteriaFile handles criteria.json files
-func processCriteriaFile(contents []byte, assignment *qf.Assignment, courseID uint64) error {
+func processCriteriaFile(_ string, contents []byte, assignment *qf.Assignment, courseID uint64) error {
 	var benchmarks []*qf.GradingBenchmark
 	if err := json.Unmarshal(contents, &benchmarks); err != nil {
 		return fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
@@ -71,7 +91,7 @@ func processCriteriaFile(contents []byte, assignment *qf.Assignment, courseID ui
 }
 
 // processTestsFile handles tests.json files
-func processTestsFile(contents []byte, assignment *qf.Assignment, _ uint64) error {
+func processTestsFile(_ string, contents []byte, assignment *qf.Assignment, _ uint64) error {
 	var expectedTests []*qf.TestInfo
 	if err := json.Unmarshal(contents, &expectedTests); err != nil {
 		return fmt.Errorf("failed to unmarshal %q: %s", testsFile, err)
@@ -81,7 +101,7 @@ func processTestsFile(contents []byte, assignment *qf.Assignment, _ uint64) erro
 }
 
 // processTaskFile handles task-*.md files
-func processTaskFile(contents []byte, assignment *qf.Assignment, filename string) error {
+func processTaskFile(filename string, contents []byte, assignment *qf.Assignment, _ uint64) error {
 	taskName := taskName(filename)
 	task, err := newTask(contents, assignment.GetOrder(), taskName)
 	if err != nil {
@@ -91,54 +111,48 @@ func processTaskFile(contents []byte, assignment *qf.Assignment, filename string
 	return nil
 }
 
-// readTestsRepositoryContent reads dir and returns a list of assignments and
-// the course's Dockerfile content if there exists a 'tests/scripts/Dockerfile'.
+// readTestsRepositoryContent reads dir and returns a sorted list of assignments and
+// a map with the docker build context as defined by the filesForBuildContext variable.
 // Assignments are extracted from 'assignment.json' files, one for each assignment.
-func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
+func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, map[string]string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	// Process assignment files first
 	assignmentsMap, err := processAssignmentFiles(files, courseID)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
-	var courseDockerfile string
+	buildContext := make(map[string]string)
 
 	// Process other files in tests repository
 	for path, contents := range files {
 		filename := filepath.Base(path)
 
-		// Handle Dockerfile separately since it's not assignment-specific
-		if filename == dockerfile {
-			courseDockerfile = string(contents)
+		// Handle Dockerfile build context separately since it's not assignment-specific
+		if filesForBuildContext[filename] {
+			// Add the file to the build context
+			buildContext[filename] = string(contents)
 			continue
 		}
 
 		assignmentName := filepath.Base(filepath.Dir(path))
 		assignment, exists := assignmentsMap[assignmentName]
 		if !exists {
-			return nil, "", fmt.Errorf("missing %q for %q", filepath.Join(assignmentName, assignmentFile), path)
+			return nil, nil, fmt.Errorf("missing %q for %q", filepath.Join(assignmentName, assignmentFile), path)
 		}
 
 		// Process known file types registered in processors map
-		if processor, exists := processors[filename]; exists {
-			if err := processor(contents, assignment, courseID); err != nil {
-				return nil, "", err
-			}
-		}
-
-		// Process task files
-		if match(filename, taskFilePattern) {
-			if err := processTaskFile(contents, assignment, filename); err != nil {
-				return nil, "", err
+		if processor, exists := lookupFileProcessor(filename); exists {
+			if err := processor(filename, contents, assignment, courseID); err != nil {
+				return nil, nil, err
 			}
 		}
 	}
-	return sortAssignments(assignmentsMap), courseDockerfile, nil
+	return sortAssignments(assignmentsMap), buildContext, nil
 }
 
 // walkTestsRepository walks the tests repository and returns a map of file names and their contents.

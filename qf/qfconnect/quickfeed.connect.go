@@ -96,30 +96,9 @@ const (
 	// QuickFeedServiceUpdateSubmissionProcedure is the fully-qualified name of the QuickFeedService's
 	// UpdateSubmission RPC.
 	QuickFeedServiceUpdateSubmissionProcedure = "/qf.QuickFeedService/UpdateSubmission"
-	// QuickFeedServiceUpdateSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
-	// UpdateSubmissions RPC.
-	QuickFeedServiceUpdateSubmissionsProcedure = "/qf.QuickFeedService/UpdateSubmissions"
 	// QuickFeedServiceRebuildSubmissionsProcedure is the fully-qualified name of the QuickFeedService's
 	// RebuildSubmissions RPC.
 	QuickFeedServiceRebuildSubmissionsProcedure = "/qf.QuickFeedService/RebuildSubmissions"
-	// QuickFeedServiceCreateBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
-	// CreateBenchmark RPC.
-	QuickFeedServiceCreateBenchmarkProcedure = "/qf.QuickFeedService/CreateBenchmark"
-	// QuickFeedServiceUpdateBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
-	// UpdateBenchmark RPC.
-	QuickFeedServiceUpdateBenchmarkProcedure = "/qf.QuickFeedService/UpdateBenchmark"
-	// QuickFeedServiceDeleteBenchmarkProcedure is the fully-qualified name of the QuickFeedService's
-	// DeleteBenchmark RPC.
-	QuickFeedServiceDeleteBenchmarkProcedure = "/qf.QuickFeedService/DeleteBenchmark"
-	// QuickFeedServiceCreateCriterionProcedure is the fully-qualified name of the QuickFeedService's
-	// CreateCriterion RPC.
-	QuickFeedServiceCreateCriterionProcedure = "/qf.QuickFeedService/CreateCriterion"
-	// QuickFeedServiceUpdateCriterionProcedure is the fully-qualified name of the QuickFeedService's
-	// UpdateCriterion RPC.
-	QuickFeedServiceUpdateCriterionProcedure = "/qf.QuickFeedService/UpdateCriterion"
-	// QuickFeedServiceDeleteCriterionProcedure is the fully-qualified name of the QuickFeedService's
-	// DeleteCriterion RPC.
-	QuickFeedServiceDeleteCriterionProcedure = "/qf.QuickFeedService/DeleteCriterion"
 	// QuickFeedServiceCreateReviewProcedure is the fully-qualified name of the QuickFeedService's
 	// CreateReview RPC.
 	QuickFeedServiceCreateReviewProcedure = "/qf.QuickFeedService/CreateReview"
@@ -168,15 +147,10 @@ type QuickFeedServiceClient interface {
 	GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error)
-	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
-	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
+	// UpdateSubmission updates the submission specified in the Grade message.
+	// If the Grade's UserID is zero, the grade is applied to all users associated with the submission.
+	UpdateSubmission(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error)
 	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
-	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
-	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
-	DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
-	CreateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error)
-	UpdateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
-	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	CreateAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.Void], error)
@@ -317,58 +291,16 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("GetSubmissionsByCourse")),
 			connect.WithClientOptions(opts...),
 		),
-		updateSubmission: connect.NewClient[qf.UpdateSubmissionRequest, qf.Void](
+		updateSubmission: connect.NewClient[qf.Grade, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateSubmissionProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmission")),
-			connect.WithClientOptions(opts...),
-		),
-		updateSubmissions: connect.NewClient[qf.UpdateSubmissionsRequest, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceUpdateSubmissionsProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmissions")),
 			connect.WithClientOptions(opts...),
 		),
 		rebuildSubmissions: connect.NewClient[qf.RebuildRequest, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceRebuildSubmissionsProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("RebuildSubmissions")),
-			connect.WithClientOptions(opts...),
-		),
-		createBenchmark: connect.NewClient[qf.GradingBenchmark, qf.GradingBenchmark](
-			httpClient,
-			baseURL+QuickFeedServiceCreateBenchmarkProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("CreateBenchmark")),
-			connect.WithClientOptions(opts...),
-		),
-		updateBenchmark: connect.NewClient[qf.GradingBenchmark, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceUpdateBenchmarkProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateBenchmark")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteBenchmark: connect.NewClient[qf.GradingBenchmark, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceDeleteBenchmarkProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteBenchmark")),
-			connect.WithClientOptions(opts...),
-		),
-		createCriterion: connect.NewClient[qf.GradingCriterion, qf.GradingCriterion](
-			httpClient,
-			baseURL+QuickFeedServiceCreateCriterionProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("CreateCriterion")),
-			connect.WithClientOptions(opts...),
-		),
-		updateCriterion: connect.NewClient[qf.GradingCriterion, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceUpdateCriterionProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCriterion")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteCriterion: connect.NewClient[qf.GradingCriterion, qf.Void](
-			httpClient,
-			baseURL+QuickFeedServiceDeleteCriterionProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteCriterion")),
 			connect.WithClientOptions(opts...),
 		),
 		createReview: connect.NewClient[qf.ReviewRequest, qf.Review](
@@ -438,15 +370,8 @@ type quickFeedServiceClient struct {
 	getSubmission            *connect.Client[qf.SubmissionRequest, qf.Submission]
 	getSubmissions           *connect.Client[qf.SubmissionRequest, qf.Submissions]
 	getSubmissionsByCourse   *connect.Client[qf.SubmissionRequest, qf.CourseSubmissions]
-	updateSubmission         *connect.Client[qf.UpdateSubmissionRequest, qf.Void]
-	updateSubmissions        *connect.Client[qf.UpdateSubmissionsRequest, qf.Void]
+	updateSubmission         *connect.Client[qf.Grade, qf.Void]
 	rebuildSubmissions       *connect.Client[qf.RebuildRequest, qf.Void]
-	createBenchmark          *connect.Client[qf.GradingBenchmark, qf.GradingBenchmark]
-	updateBenchmark          *connect.Client[qf.GradingBenchmark, qf.Void]
-	deleteBenchmark          *connect.Client[qf.GradingBenchmark, qf.Void]
-	createCriterion          *connect.Client[qf.GradingCriterion, qf.GradingCriterion]
-	updateCriterion          *connect.Client[qf.GradingCriterion, qf.Void]
-	deleteCriterion          *connect.Client[qf.GradingCriterion, qf.Void]
 	createReview             *connect.Client[qf.ReviewRequest, qf.Review]
 	updateReview             *connect.Client[qf.ReviewRequest, qf.Review]
 	createAssignmentFeedback *connect.Client[qf.AssignmentFeedback, qf.Void]
@@ -557,48 +482,13 @@ func (c *quickFeedServiceClient) GetSubmissionsByCourse(ctx context.Context, req
 }
 
 // UpdateSubmission calls qf.QuickFeedService.UpdateSubmission.
-func (c *quickFeedServiceClient) UpdateSubmission(ctx context.Context, req *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
+func (c *quickFeedServiceClient) UpdateSubmission(ctx context.Context, req *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
 	return c.updateSubmission.CallUnary(ctx, req)
-}
-
-// UpdateSubmissions calls qf.QuickFeedService.UpdateSubmissions.
-func (c *quickFeedServiceClient) UpdateSubmissions(ctx context.Context, req *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
-	return c.updateSubmissions.CallUnary(ctx, req)
 }
 
 // RebuildSubmissions calls qf.QuickFeedService.RebuildSubmissions.
 func (c *quickFeedServiceClient) RebuildSubmissions(ctx context.Context, req *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	return c.rebuildSubmissions.CallUnary(ctx, req)
-}
-
-// CreateBenchmark calls qf.QuickFeedService.CreateBenchmark.
-func (c *quickFeedServiceClient) CreateBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	return c.createBenchmark.CallUnary(ctx, req)
-}
-
-// UpdateBenchmark calls qf.QuickFeedService.UpdateBenchmark.
-func (c *quickFeedServiceClient) UpdateBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	return c.updateBenchmark.CallUnary(ctx, req)
-}
-
-// DeleteBenchmark calls qf.QuickFeedService.DeleteBenchmark.
-func (c *quickFeedServiceClient) DeleteBenchmark(ctx context.Context, req *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	return c.deleteBenchmark.CallUnary(ctx, req)
-}
-
-// CreateCriterion calls qf.QuickFeedService.CreateCriterion.
-func (c *quickFeedServiceClient) CreateCriterion(ctx context.Context, req *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	return c.createCriterion.CallUnary(ctx, req)
-}
-
-// UpdateCriterion calls qf.QuickFeedService.UpdateCriterion.
-func (c *quickFeedServiceClient) UpdateCriterion(ctx context.Context, req *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	return c.updateCriterion.CallUnary(ctx, req)
-}
-
-// DeleteCriterion calls qf.QuickFeedService.DeleteCriterion.
-func (c *quickFeedServiceClient) DeleteCriterion(ctx context.Context, req *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	return c.deleteCriterion.CallUnary(ctx, req)
 }
 
 // CreateReview calls qf.QuickFeedService.CreateReview.
@@ -661,15 +551,10 @@ type QuickFeedServiceHandler interface {
 	GetSubmissions(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error)
-	UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error)
-	UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error)
+	// UpdateSubmission updates the submission specified in the Grade message.
+	// If the Grade's UserID is zero, the grade is applied to all users associated with the submission.
+	UpdateSubmission(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error)
 	RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error)
-	CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error)
-	UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
-	DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error)
-	CreateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error)
-	UpdateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
-	DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error)
 	CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	UpdateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error)
 	CreateAssignmentFeedback(context.Context, *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.Void], error)
@@ -812,52 +697,10 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmission")),
 		connect.WithHandlerOptions(opts...),
 	)
-	quickFeedServiceUpdateSubmissionsHandler := connect.NewUnaryHandler(
-		QuickFeedServiceUpdateSubmissionsProcedure,
-		svc.UpdateSubmissions,
-		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateSubmissions")),
-		connect.WithHandlerOptions(opts...),
-	)
 	quickFeedServiceRebuildSubmissionsHandler := connect.NewUnaryHandler(
 		QuickFeedServiceRebuildSubmissionsProcedure,
 		svc.RebuildSubmissions,
 		connect.WithSchema(quickFeedServiceMethods.ByName("RebuildSubmissions")),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceCreateBenchmarkHandler := connect.NewUnaryHandler(
-		QuickFeedServiceCreateBenchmarkProcedure,
-		svc.CreateBenchmark,
-		connect.WithSchema(quickFeedServiceMethods.ByName("CreateBenchmark")),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceUpdateBenchmarkHandler := connect.NewUnaryHandler(
-		QuickFeedServiceUpdateBenchmarkProcedure,
-		svc.UpdateBenchmark,
-		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateBenchmark")),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceDeleteBenchmarkHandler := connect.NewUnaryHandler(
-		QuickFeedServiceDeleteBenchmarkProcedure,
-		svc.DeleteBenchmark,
-		connect.WithSchema(quickFeedServiceMethods.ByName("DeleteBenchmark")),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceCreateCriterionHandler := connect.NewUnaryHandler(
-		QuickFeedServiceCreateCriterionProcedure,
-		svc.CreateCriterion,
-		connect.WithSchema(quickFeedServiceMethods.ByName("CreateCriterion")),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceUpdateCriterionHandler := connect.NewUnaryHandler(
-		QuickFeedServiceUpdateCriterionProcedure,
-		svc.UpdateCriterion,
-		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateCriterion")),
-		connect.WithHandlerOptions(opts...),
-	)
-	quickFeedServiceDeleteCriterionHandler := connect.NewUnaryHandler(
-		QuickFeedServiceDeleteCriterionProcedure,
-		svc.DeleteCriterion,
-		connect.WithSchema(quickFeedServiceMethods.ByName("DeleteCriterion")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceCreateReviewHandler := connect.NewUnaryHandler(
@@ -946,22 +789,8 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceGetSubmissionsByCourseHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateSubmissionProcedure:
 			quickFeedServiceUpdateSubmissionHandler.ServeHTTP(w, r)
-		case QuickFeedServiceUpdateSubmissionsProcedure:
-			quickFeedServiceUpdateSubmissionsHandler.ServeHTTP(w, r)
 		case QuickFeedServiceRebuildSubmissionsProcedure:
 			quickFeedServiceRebuildSubmissionsHandler.ServeHTTP(w, r)
-		case QuickFeedServiceCreateBenchmarkProcedure:
-			quickFeedServiceCreateBenchmarkHandler.ServeHTTP(w, r)
-		case QuickFeedServiceUpdateBenchmarkProcedure:
-			quickFeedServiceUpdateBenchmarkHandler.ServeHTTP(w, r)
-		case QuickFeedServiceDeleteBenchmarkProcedure:
-			quickFeedServiceDeleteBenchmarkHandler.ServeHTTP(w, r)
-		case QuickFeedServiceCreateCriterionProcedure:
-			quickFeedServiceCreateCriterionHandler.ServeHTTP(w, r)
-		case QuickFeedServiceUpdateCriterionProcedure:
-			quickFeedServiceUpdateCriterionHandler.ServeHTTP(w, r)
-		case QuickFeedServiceDeleteCriterionProcedure:
-			quickFeedServiceDeleteCriterionHandler.ServeHTTP(w, r)
 		case QuickFeedServiceCreateReviewProcedure:
 			quickFeedServiceCreateReviewHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateReviewProcedure:
@@ -1065,40 +894,12 @@ func (UnimplementedQuickFeedServiceHandler) GetSubmissionsByCourse(context.Conte
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissionsByCourse is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateSubmission(context.Context, *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
+func (UnimplementedQuickFeedServiceHandler) UpdateSubmission(context.Context, *connect.Request[qf.Grade]) (*connect.Response[qf.Void], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmission is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) UpdateSubmissions(context.Context, *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateSubmissions is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) RebuildSubmissions(context.Context, *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.RebuildSubmissions is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) CreateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateBenchmark is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) UpdateBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateBenchmark is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) DeleteBenchmark(context.Context, *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteBenchmark is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) CreateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateCriterion is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) UpdateCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateCriterion is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) DeleteCriterion(context.Context, *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteCriterion is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {

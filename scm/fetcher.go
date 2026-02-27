@@ -16,15 +16,12 @@ const authUserName = "quickfeed" // can be anything except an empty string
 // If the repository already exists, it is updated using git pull.
 // The returned path is the provided destination directory joined with the repository.
 func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
-	if s.config != nil {
-		// GitHubSCM is being used as a GitHub App, and since the go-git library requires
-		// token-based authentication, we first refresh the token since it may have expired.
-		if err := s.refreshToken(opt.Organization); err != nil {
-			return "", err
-		}
+	token, err := s.tokenManager.Token(ctx)
+	if err != nil {
+		return "", err
 	}
 
-	authInfo := &http.BasicAuth{Username: authUserName, Password: s.token}
+	authInfo := &http.BasicAuth{Username: authUserName, Password: token}
 
 	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	r, err := git.PlainOpen(cloneDir)

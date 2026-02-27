@@ -1,10 +1,11 @@
 // ...existing code...
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/qf/types_pb"
-import { isManuallyGraded, Color, getFormattedTime } from "../../Helpers"
+import { isManuallyGraded, Color, getFormattedTime, hasBenchmarks } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import { useCourseID } from "../../hooks/useCourseID"
+import RubricDisplay from "./RubricDisplay"
 
 const Assignments = () => {
     const courseID = useCourseID()
@@ -14,11 +15,30 @@ const Assignments = () => {
     const AssignmentElement = ({ assignment }: { assignment: Assignment }) => {
         const [open, setOpen] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
+        const [isRebuilding, setIsRebuilding] = useState<boolean>(false)
+
         const manually = isManuallyGraded(assignment.reviewers)
 
         const rebuild = async () => {
-            if (!confirm(`Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Continue?`)) {
-                return
+            if (
+                confirm(
+                    `Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`,
+                )
+            ) {
+                setButtonText("Rebuilding...")
+                setIsRebuilding(true)
+                const success = await actions.rebuildAllSubmissions({
+                    assignmentID: assignment.ID,
+                    courseID,
+                })
+                setIsRebuilding(false)
+                if (success) {
+                    setButtonText("Rebuild Successful ✓")
+                    setTimeout(() => setButtonText("Rebuild All Tests"), 3000)
+                } else {
+                    setButtonText("Rebuild Failed ✗")
+                    setTimeout(() => setButtonText("Rebuild All Tests"), 3000)
+                }
             }
             setButtonText("Rebuilding...")
             const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.ID, courseID })
@@ -69,6 +89,7 @@ const Assignments = () => {
                                         color={Color.BLUE}
                                         type={ButtonType.SOLID}
                                         onClick={rebuild}
+                                        disabled={isRebuilding}
                                     />
                                     <div className="text-sm text-base-content/70">
                                         Rebuilds all submissions for this assignment.
@@ -87,6 +108,13 @@ const Assignments = () => {
                         ) : (
                             <div className="text-sm text-base-content/70">
                                 This assignment is manually graded. Manage criteria and benchmarks in the assignment <code className="px-1 rounded bg-base-100 text-error">criteria.json</code> file.
+                                {hasBenchmarks(assignment) &&
+                                    <div className="mt-3">
+                                        {assignment.gradingBenchmarks.map((bm) => (
+                                            <RubricDisplay key={bm.ID.toString()} benchmark={bm} />
+                                        ))}
+                                    </div>
+                                }
                             </div>
                         )}
                     </div>

@@ -42,14 +42,7 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"UpdateEnrollments":        true,
 		"UpdateAssignments":        true,
 		"UpdateSubmission":         true,
-		"UpdateSubmissions":        true,
 		"RebuildSubmissions":       true,
-		"CreateBenchmark":          true,
-		"UpdateBenchmark":          true,
-		"DeleteBenchmark":          true,
-		"CreateCriterion":          true,
-		"UpdateCriterion":          true,
-		"DeleteCriterion":          true,
 		"CreateReview":             true,
 		"UpdateReview":             true,
 		"IsEmptyRepo":              true,
@@ -90,7 +83,7 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 }
 
 func has(method string) bool {
-	_, ok := accessRolesFor[method]
+	_, ok := methodCheckers[method]
 	return ok
 }
 
@@ -102,7 +95,7 @@ func checkAccessControlMethods(expectedMethodNames map[string]bool) error {
 			missingMethods = append(missingMethods, method)
 		}
 	}
-	for method := range accessRolesFor {
+	for method := range methodCheckers {
 		if !expectedMethodNames[method] {
 			superfluousMethods = append(superfluousMethods, method)
 		}

@@ -47,19 +47,12 @@ service QuickFeedService {
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     // Get lab submissions for every course user or every course group
     rpc GetSubmissionsByCourse(SubmissionRequest) returns (CourseSubmissions) {}
-    rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
-    rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
+    // UpdateSubmission updates the submission specified in the Grade message.
+    // If the Grade's UserID is zero, the grade is applied to all users associated with the submission.
+    rpc UpdateSubmission(Grade) returns (Void) {}
     rpc RebuildSubmissions(RebuildRequest) returns (Void) {}
 
     // manual grading //
-
-    rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
-    rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
-    rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
-
-    rpc CreateCriterion(GradingCriterion) returns (GradingCriterion) {}
-    rpc UpdateCriterion(GradingCriterion) returns (Void) {}
-    rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}

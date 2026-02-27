@@ -8,7 +8,6 @@ import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import Assignments from "../components/teacher/Assignments"
-import Alerts from "../components/alerts/Alerts"
 import { useCourseID } from "../hooks/useCourseID"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 
@@ -51,7 +50,6 @@ const TeacherPage = () => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <Alerts />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />

@@ -345,17 +345,17 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantRepo: nil, wantErr: true},
 
 		// user frank does not exist, but is added to s.members in github_mock.go
-		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                   // ignored
-		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                // ignored
-		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
-		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                                         // ignored
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                                      // ignored
+		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER, AccessToken: "dummy"}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
 
 		// user meling already exists in s.members in github_mock.go
-		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                // ignored
-		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},          // ignored
-		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
-		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
-		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE, AccessToken: "dummy"}, wantRepo: nil, wantErr: true},                // ignored
+		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING, AccessToken: "dummy"}, wantRepo: nil, wantErr: true},          // ignored
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
+		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "dummy"}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...), WithGroups(g))
 	for _, tt := range tests {
@@ -428,7 +428,8 @@ func TestMockDemoteTeacherToStudent(t *testing.T) {
 		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling"}, wantErr: true},
 
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: true},
+		// Note: User not found in org will create a new membership with member role (GitHub API behavior)
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: false},
 
 		{name: "CompleteRequest/FooStudent", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"}, wantErr: false}, // jostein is already a student
 		{name: "CompleteRequest/FooTeacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
@@ -532,6 +533,10 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	}
 	groups["bar"]["groupY"] = []github.User{leslie}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
+	// Ignore the ID field in comparisons since the mock now assigns unique IDs
+	ignoreUserID := cmp.FilterPath(func(p cmp.Path) bool {
+		return p.Last().String() == ".ID"
+	}, cmp.Ignore())
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
@@ -542,7 +547,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 				return
 			}
 			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName], ignoreUserID); diff != "" {
 				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -564,7 +569,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		},
 	}
 	// verify the state of the groups after the sequence of UpdateGroupMembers
-	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
+	if diff := cmp.Diff(wantGroups, s.groups, ignoreUserID); diff != "" {
 		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -602,6 +607,32 @@ func TestMockDeleteGroup(t *testing.T) {
 			// verify the state of the groups after the test
 			if _, ok := s.groups[tt.opt.Owner][tt.opt.Repo]; ok {
 				t.Errorf("DeleteGroup() group not deleted")
+			}
+		})
+	}
+}
+
+func TestMockSyncFork(t *testing.T) {
+	tests := []struct {
+		name    string
+		opt     *SyncForkOptions
+		wantErr bool
+	}{
+		{name: "IncompleteRequest/MissingAllFields", opt: &SyncForkOptions{}, wantErr: true},
+		{name: "IncompleteRequest/MissingRepositoryAndBranch", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest/MissingBranch", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest/MissingMaxRetries", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: true},
+		{name: "CompleteRequest/ForkMelingLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkJosieLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkGroupY", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master", MaxRetries: 1}, wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Branch"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Branch)
+		t.Run(name, func(t *testing.T) {
+			if err := s.SyncFork(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("SyncFork() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

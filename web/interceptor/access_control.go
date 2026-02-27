@@ -1,85 +1,212 @@
 package interceptor
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 
 	"connectrpc.com/connect"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
-type (
-	role      int
-	roles     []role
-	requestID interface {
-		IDFor(string) uint64
+// accessChecker defines the function type used for checking access for a specific method.
+// Returns an empty string if access is granted, or a reason string if denied.
+type accessChecker func(db database.Database, req any, claims *auth.Claims) string
+
+// accessGranted is the constant string returned when access is granted.
+const accessGranted = ""
+
+// Below are access checker functions for common role checks.
+// The main roles include: none, user, student, group, teacher, admin, and combinations thereof.
+// These checker functions can be used for different RPC methods as needed.
+
+// checkNone allows access to any authenticated user.
+func checkNone(db database.Database, req any, claims *auth.Claims) string {
+	return accessGranted
+}
+
+// checkUser checks if the user ID in the request matches the user ID in the claims.
+// The [req] is expected to implement [userIDProvider].
+func checkUser(db database.Database, req any, claims *auth.Claims) string {
+	if claims.SameUser(req) { // user role
+		return accessGranted
 	}
-)
+	return "user ID mismatch"
+}
 
-//go:generate stringer -type=role
-const (
-	none role = iota
-	// user role implies that user attempts to access information about himself.
-	user
-	// group role implies that the user is a course student + a member of the given group.
-	group
-	// student role implies that the user is enrolled in the course with any role.
-	student
-	// teacher: user enrolled in the course with teacher status.
-	teacher
-	// admin is the user with admin privileges.
-	admin
-)
+// checkTeacher checks if the user is a teacher in the course specified in the request.
+// The [req] is expected to implement [courseIDProvider].
+func checkTeacher(db database.Database, req any, claims *auth.Claims) string {
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	return "not teacher"
+}
 
-// If there are several roles that can call a method, a role with the least privilege must come first.
-var accessRolesFor = map[string]roles{
-	"GetUser":                  {none},
-	"GetCourse":                {none},
-	"GetCourses":               {none},
-	"SubmissionStream":         {none}, // No role required as long as the user is authenticated, i.e. has a valid token.
-	"CreateEnrollment":         {user},
-	"UpdateCourseVisibility":   {user},
-	"UpdateUser":               {user, admin},
-	"GetEnrollments":           {user, student, teacher, admin},
-	"GetSubmissions":           {student, group, teacher},
-	"GetSubmission":            {teacher},
-	"CreateGroup":              {group, teacher},
-	"GetGroup":                 {group, teacher},
-	"GetAssignments":           {student, teacher},
-	"GetRepositories":          {student, teacher},
-	"UpdateGroup":              {teacher},
-	"DeleteGroup":              {teacher},
-	"GetGroupsByCourse":        {teacher},
-	"UpdateCourse":             {teacher},
-	"UpdateEnrollments":        {teacher},
-	"UpdateAssignments":        {teacher},
-	"UpdateSubmission":         {teacher},
-	"UpdateSubmissions":        {teacher},
-	"RebuildSubmissions":       {teacher},
-	"CreateBenchmark":          {teacher},
-	"UpdateBenchmark":          {teacher},
-	"DeleteBenchmark":          {teacher},
-	"CreateCriterion":          {teacher},
-	"UpdateCriterion":          {teacher},
-	"DeleteCriterion":          {teacher},
-	"CreateReview":             {teacher},
-	"UpdateReview":             {teacher},
-	"CreateAssignmentFeedback": {student, teacher},
-	"GetAssignmentFeedback":    {teacher},
-	"IsEmptyRepo":              {teacher},
-	"GetSubmissionsByCourse":   {teacher},
-	"GetUsers":                 {admin},
+// checkAdmin checks if the user has admin privileges.
+func checkAdmin(db database.Database, req any, claims *auth.Claims) string {
+	if claims.Admin { // admin role
+		return accessGranted
+	}
+	return "not admin"
+}
+
+// checkUserOrStudentOrTeacherOrAdmin checks if the user is the same as in the request,
+// or is a student or teacher in the course specified in the request, or an admin.
+// The [req] is expected to implement [userIDProvider] or [courseIDProvider].
+func checkUserOrStudentOrTeacherOrAdmin(db database.Database, req any, claims *auth.Claims) string {
+	if claims.SameUser(req) { // user role
+		return accessGranted
+	}
+	if claims.IsCourseStudent(getCourseID(req)) { // student role in course
+		return accessGranted
+	}
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	if claims.Admin { // admin role
+		return accessGranted
+	}
+	return "not enrolled or not admin"
+}
+
+// checkStudentOrTeacher checks if the user is a student or teacher in the course specified in the request.
+// The [req] is expected to implement [courseIDProvider].
+func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) string {
+	if claims.IsCourseStudent(getCourseID(req)) { // student role in course
+		return accessGranted
+	}
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	return "not student or teacher"
+}
+
+// checkGroupOrTeacher checks if the user is a member of the group specified in the request,
+// or is a teacher in the course specified in the request.
+// The [req] is expected to implement [groupIDProvider] or [courseIDProvider].
+func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) string {
+	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created
+		return accessGranted
+	}
+	if claims.IsInGroup(req) { // GetGroup: request's group ID must be in the claims' groups to allow access
+		return accessGranted
+	}
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	return "not group member or teacher"
+}
+
+// checkUpdateUser checks if the user is updating their own information or if they are an admin.
+// The [req] is expected to implement [userIDProvider].
+func checkUpdateUser(db database.Database, req any, claims *auth.Claims) string {
+	if claims.SameUser(req) { // user role
+		if claims.UnauthorizedAdminChange(req) {
+			return fmt.Sprintf("non-admin user %d attempted to grant admin privileges", claims.UserID)
+		}
+		return accessGranted
+	}
+	if claims.Admin { // admin role
+		return accessGranted
+	}
+	return "user ID mismatch or not admin"
+}
+
+// checkGetSubmissions checks if the user is a student, group member, or teacher for accessing submissions.
+// The [req] is expected to implement [userIDProvider] or [groupIDProvider] or [courseIDProvider].
+func checkGetSubmissions(db database.Database, req any, claims *auth.Claims) string { // roles: student, group, teacher
+	if !hasGroupID(req) { // student role
+		if !claims.SameUser(req) {
+			return fmt.Sprintf("ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))
+		}
+		if claims.IsCourseStudent(getCourseID(req)) {
+			return accessGranted
+		}
+	}
+	if claims.IsInGroup(req) { // group role
+		return accessGranted
+	}
+	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
+		return accessGranted
+	}
+	return "not student, group member, or teacher"
+}
+
+// checkUpdateSubmission checks if the submission is valid and if the user is a teacher in the course specified in the request.
+// The [req] is expected to implement [submissionIDProvider] and optionally [courseIDProvider].
+// If the request does not provide a CourseID, the course is determined from the submission's assignment.
+func checkUpdateSubmission(db database.Database, req any, claims *auth.Claims) string {
+	if !isValidSubmission(db, req) {
+		return "invalid submission"
+	}
+	// Get course ID from request, or fetch it from the submission's assignment
+	courseID := cmp.Or(getCourseID(req), getCourseIDFromDB(req, db))
+	if claims.IsCourseTeacher(courseID) { // teacher role in course
+		return accessGranted
+	}
+	return "not teacher"
+}
+
+// getCourseIDFromDB retrieves the course ID associated with the submission in the request.
+// This is a HACK. It does not report error if db lookup failed.
+// This is only here temporarily since the UpdateSubmissionRequest has been replaced with Grade, which does not have CourseID.
+func getCourseIDFromDB(req any, db database.Database) uint64 {
+	submissionID := getSubmissionID(req)
+	sbm, err := db.GetSubmission(&qf.Submission{ID: submissionID})
+	if err != nil {
+		return 0
+	}
+	assignment, err := db.GetAssignment(&qf.Assignment{ID: sbm.GetAssignmentID()})
+	if err != nil {
+		return 0
+	}
+	return assignment.GetCourseID()
+}
+
+// methodCheckers maps each method to its corresponding access checker function.
+// Each checker returns an empty string if access is granted, or a reason string if denied.
+var methodCheckers = map[string]accessChecker{
+	"GetUser":                  checkNone,
+	"GetCourse":                checkNone,
+	"GetCourses":               checkNone,
+	"SubmissionStream":         checkNone, // No role required as long as the user is authenticated, i.e. has a valid token.
+	"CreateEnrollment":         checkUser,
+	"UpdateCourseVisibility":   checkUser,
+	"UpdateUser":               checkUpdateUser,
+	"GetEnrollments":           checkUserOrStudentOrTeacherOrAdmin,
+	"GetSubmissions":           checkGetSubmissions,
+	"GetSubmission":            checkTeacher,
+	"CreateGroup":              checkGroupOrTeacher,
+	"GetGroup":                 checkGroupOrTeacher,
+	"GetAssignments":           checkStudentOrTeacher,
+	"GetRepositories":          checkStudentOrTeacher,
+	"UpdateGroup":              checkTeacher,
+	"DeleteGroup":              checkTeacher,
+	"GetGroupsByCourse":        checkTeacher,
+	"UpdateCourse":             checkTeacher,
+	"UpdateEnrollments":        checkTeacher,
+	"UpdateAssignments":        checkTeacher,
+	"UpdateSubmission":         checkUpdateSubmission,
+	"RebuildSubmissions":       checkTeacher,
+	"CreateReview":             checkTeacher,
+	"UpdateReview":             checkTeacher,
+	"CreateAssignmentFeedback": checkStudentOrTeacher,
+	"GetAssignmentFeedback":    checkTeacher,
+	"IsEmptyRepo":              checkTeacher,
+	"GetSubmissionsByCourse":   checkTeacher,
+	"GetUsers":                 checkAdmin,
 }
 
 type AccessControlInterceptor struct {
-	tokenManager *auth.TokenManager
+	db database.Database
 }
 
-func NewAccessControlInterceptor(tm *auth.TokenManager) *AccessControlInterceptor {
-	return &AccessControlInterceptor{tokenManager: tm}
+func NewAccessControlInterceptor(db database.Database) *AccessControlInterceptor {
+	return &AccessControlInterceptor{db: db}
 }
 
 func (*AccessControlInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
@@ -94,88 +221,28 @@ func (*AccessControlInterceptor) WrapStreamingClient(next connect.StreamingClien
 	})
 }
 
-// WrapUnary checks user information stored in the JWT claims against the list of roles required to call the method.
+// WrapUnary checks user information stored in the JWT claims against the access checker for the method.
 func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure
 		method := procedure[strings.LastIndex(procedure, "/")+1:]
-		req, ok := request.Any().(requestID)
-		if !ok {
-			return nil, connect.NewError(connect.CodeUnimplemented,
-				fmt.Errorf("access denied for %s: message type %T does not implement 'requestID' interface", method, request))
-		}
+		req := request.Any()
 		claims, ok := auth.ClaimsFromContext(ctx)
 		if !ok {
 			return nil, accessDeniedError(method, "failed to get claims from request context")
 		}
-		for _, role := range accessRolesFor[method] {
-			switch role {
-			case none:
-				return next(ctx, request)
-			case user:
-				if claims.SameUser(req) {
-					// Make sure the user is not updating own admin status.
-					if method == "UpdateUser" {
-						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
-							return nil, accessDeniedError(method, "user %d attempted to change admin status from %v to %v",
-								claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
-						}
-					}
-					return next(ctx, request)
-				}
-			case student:
-				// GetSubmissions is used to fetch individual and group submissions.
-				// For individual submissions needs an extra check for user ID in request.
-				if method == "GetSubmissions" {
-					if req.IDFor("group") != 0 {
-						// Group submissions are handled by the group role.
-						continue
-					}
-					if !claims.SameUser(req) {
-						return nil, accessDeniedError(method, "ID mismatch in claims (%d) and request (%d)",
-							claims.UserID, req.IDFor("user"))
-					}
-				}
-				if claims.HasCourseStatus(req, qf.Enrollment_STUDENT) {
-					return next(ctx, request)
-				}
-			case group:
-				// Request for CreateGroup will not have ID yet, need to check
-				// if the user is in the group (unless teacher).
-				if method == "CreateGroup" {
-					notMember := !req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})
-					notTeacher := !claims.HasCourseStatus(req, qf.Enrollment_TEACHER)
-					if notMember && notTeacher {
-						return nil, accessDeniedError(method, "user %d tried to create group while not teacher or group member", claims.UserID)
-					}
-					// Otherwise, create the group.
-					return next(ctx, request)
-				}
-				groupID := req.IDFor("group")
-				if slices.Contains(claims.Groups, groupID) {
-					return next(ctx, request)
-				}
-			case teacher:
-				if method == "RebuildSubmissions" || method == "UpdateSubmission" {
-					if !isValidSubmission(a.tokenManager.Database(), req) {
-						return nil, accessDeniedError(method, "invalid submission")
-					}
-				}
-				if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
-					return next(ctx, request)
-				}
-			case admin:
-				if claims.Admin {
-					return next(ctx, request)
-				}
-			}
+		checker, ok := methodCheckers[method]
+		if !ok {
+			return nil, accessDeniedError(method, "unknown method")
 		}
-		return nil, accessDeniedError(method, "required roles %v not satisfied by claims: %s", accessRolesFor[method], claims)
+		if reason := checker(a.db, req, claims); reason != "" {
+			return nil, accessDeniedError(method, reason)
+		}
+		return next(ctx, request)
 	})
 }
 
 // accessDeniedError creates a standardized access denied error for the given method and reason.
-func accessDeniedError(method, reason string, args ...any) error {
-	message := fmt.Sprintf("access denied for %s: %s", method, fmt.Sprintf(reason, args...))
-	return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("%s", message))
+func accessDeniedError(method, reason string) error {
+	return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("access denied for %s: %s", method, reason))
 }

@@ -29,14 +29,12 @@ func TestGetCourseSubmissions(t *testing.T) {
 		AssignmentID: individualAssignment.GetID(),
 		UserID:       user.GetID(),
 		Score:        42,
-		Released:     false,
 		Grades:       []*qf.Grade{{SubmissionID: 1, UserID: user.GetID()}},
 	}
 	groupSubmission := &qf.Submission{
 		AssignmentID: groupAssignment.GetID(),
 		GroupID:      group.GetID(),
 		Score:        42,
-		Released:     false,
 		Grades:       []*qf.Grade{{SubmissionID: 1, UserID: user.GetID()}},
 	}
 	qtest.CreateSubmission(t, db, userSubmission)

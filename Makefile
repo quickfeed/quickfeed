@@ -5,11 +5,13 @@
 -include .env
 
 OS			:= $(shell echo $(shell uname -s) | tr A-Z a-z)
+github_user	:= $(shell gh auth status 2>/dev/null | awk '/Logged in to/ {print $$(NF-1)}')
+dev_db		:= ./testdata/db/qf.db
 protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check install ui proto test qcm
+.PHONY: download brew version-check dev-db install ui proto test qcm
 
 download:
 	@echo "Download go.mod dependencies"
@@ -24,6 +26,15 @@ endif
 
 version-check:
 	@go run cmd/vercheck/main.go
+
+dev-db:
+	@if [ ! -f $(dev_db) ]; then \
+		echo "Error: Database file not found at $(dev_db)"; \
+		echo "Please download the database file from the QuickFeed organization."; \
+		exit 1; \
+	fi
+	@echo "Updating development database with GitHub user: $(github_user) as QuickFeed admin"
+	@python3 cmd/anonymize/main.py --database $(dev_db) --admin $(github_user)
 
 install:
 	@echo go install
@@ -55,3 +66,13 @@ test:
 
 qcm:
 	@cd cmd/qcm; go install
+
+clean-dev:
+	# This is useful for debugging development environment and configuration issues.
+	# WARNING: This will remove your .env file and configuration directory ~/.config/quickfeed
+	@echo "Removing .env file and .env.bak file"
+	@rm -f .env .env.bak
+	@echo "Removing configuration directory ~/.config/quickfeed"
+	@rm -rf ~/.config/quickfeed
+	@echo "DOMAIN=localhost" > .env
+	@echo ".env file created with DOMAIN=localhost"

@@ -197,17 +197,21 @@ func TestGetRepositories(t *testing.T) {
 func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 
-	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user"})
+	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user", ScmRemoteID: 1})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 2})
+	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "groupStudent", ScmRemoteID: 3})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("user", "student", "groupStudent"),
+	))
+
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, user, course)
 
-	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student"})
 	qtest.EnrollStudent(t, db, student, course)
 
 	// student in a group
-	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "groupStudent"})
 	qtest.EnrollStudent(t, db, groupStudent, course)
 
 	// create repositories for users and group

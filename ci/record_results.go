@@ -70,11 +70,10 @@ func (r *RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submiss
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
 		Grades:       previous.GetGrades(),
-		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
 			SubmissionDate: timestamppb.Now(),
 			BuildDate:      timestamppb.Now(),
-			BuildLog:       "No automated tests for this assignment",
+			BuildLog:       "",
 			ExecTime:       1,
 		},
 	}

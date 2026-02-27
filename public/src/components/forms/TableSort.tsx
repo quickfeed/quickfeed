@@ -7,7 +7,7 @@ import { useActions, useAppState } from "../../overmind"
  * TableSort displays a widget for sorting and filtering the submissions table.
  * It modifies state values that are used by the table for sorting/filtering.
  */
-const TableSort = ({ review }: { review: boolean }) => {
+const TableSort = () => {
     const state = useAppState()
     const actions = useActions().global
 
@@ -69,13 +69,6 @@ const TableSort = ({ review }: { review: boolean }) => {
                         isActive={isFilterActive("approved")}
                         onClick={() => actions.setSubmissionFilter("approved")}
                     />
-                    {review && (
-                        <FilterToggle
-                            label="Released"
-                            isActive={isFilterActive("released")}
-                            onClick={() => actions.setSubmissionFilter("released")}
-                        />
-                    )}
                 </div>
             </div>
         </div>

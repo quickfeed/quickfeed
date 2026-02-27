@@ -39,18 +39,18 @@ func (s *Submission) GetStatusByUser(userID uint64) Submission_Status {
 	return Submission_NONE
 }
 
-// SetGradesAndRelease sets the submission's grade, score and released status.
-func (s *Submission) SetGradesAndRelease(request *UpdateSubmissionRequest) {
-	for _, grade := range request.GetGrades() {
-		s.SetGrade(grade.GetUserID(), grade.GetStatus())
+// SetGrade sets the submission's grade and score.
+// If UserID is 0, the grade is set for all users of a group submission.
+func (s *Submission) SetGrade(grade *Grade) {
+	if grade.GetUserID() == 0 {
+		// Set grade for all users if no specific user is provided.
+		s.SetGradeAll(grade.GetStatus())
+		return
 	}
-	s.Released = request.GetReleased()
-	if request.GetScore() > 0 {
-		s.Score = request.GetScore()
-	}
+	s.SetGradeByUser(grade.GetUserID(), grade.GetStatus())
 }
 
-func (s *Submission) SetGrade(userID uint64, status Submission_Status) {
+func (s *Submission) SetGradeByUser(userID uint64, status Submission_Status) {
 	for idx, grade := range s.GetGrades() {
 		if grade.GetUserID() == userID {
 			s.GetGrades()[idx].Status = status
@@ -92,23 +92,26 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
 }
 
-// Clean removes any score or reviews from the submission if it is not released.
-// This is to prevent users from seeing the score or reviews of a submission that has not been released.
+// Clean removes any score or reviews from the submission to prevent
+// a student from seeing them before the submission has been graded.
 func (s *Submissions) Clean(userID uint64) {
 	for _, submission := range s.GetSubmissions() {
 		// Group submissions may have multiple grades, so we need to filter the grades by the user.
-		submission.Grades = []*Grade{{
+		grade := &Grade{
 			UserID:       userID,
 			SubmissionID: submission.GetID(),
 			Status:       submission.GetStatusByUser(userID),
-		}}
-		// Released submissions, or submissions with no reviews need no cleaning.
-		if submission.GetReleased() || len(submission.GetReviews()) == 0 {
+		}
+		submission.Grades = []*Grade{grade}
+		// Do not clean if the submission is not manually reviewed.
+		if len(submission.GetReviews()) == 0 {
 			continue
 		}
-		// Remove any score, grades, or reviews if the submission is not released.
-		submission.Score = 0
-		submission.Grades = nil
-		submission.Reviews = nil
+		// Remove any score, grades, or reviews if the submission has not been graded.
+		if grade.GetStatus() == Submission_NONE {
+			submission.Score = 0
+			submission.Grades = nil
+			submission.Reviews = nil
+		}
 	}
 }

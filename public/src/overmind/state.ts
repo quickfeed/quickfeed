@@ -296,11 +296,7 @@ export const state: State = {
                         return filterByApproval(e, data, numAssignments)
                     })
                     break
-                case "released":
-                    filtered = filtered.filter(e => {
-                        const data = getSubmissionData(submissions, e.ID, assignmentID)
-                        return filterByReleased(e, data, numAssignments)
-                    })
+                default:
                     break
             }
         }

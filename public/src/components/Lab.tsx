@@ -72,7 +72,7 @@ const Lab = () => {
                     )}
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}
+                    {isManuallyGraded(assignment.reviewers) && review.length > 0 ? <ReviewResult review={review[0]} /> : null}
 
                     <div className="card bg-base-200 shadow-xl rounded-2xl overflow-hidden">
                         <div className="card-body p-0">

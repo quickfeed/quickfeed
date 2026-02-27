@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
@@ -9,18 +10,22 @@ import (
 
 // CreateEnrollment creates a new pending enrollment.
 func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
-	var user, course int64
-	if err := db.conn.Model(&qf.User{}).Where(&qf.User{
-		ID: enrollment.GetUserID(),
-	}).Count(&user).Error; err != nil {
+	var user qf.User
+	if err := db.conn.First(&user, enrollment.GetUserID()).Error; err != nil {
 		return err
 	}
+	// Validate that user has complete profile information before allowing enrollment
+	if err := user.ValidateProfile(); err != nil {
+		return fmt.Errorf("user must have name, email, and student ID set before enrolling: %w", err)
+	}
+
+	var courseCount int64
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
 		ID: enrollment.GetCourseID(),
-	}).Count(&course).Error; err != nil {
+	}).Count(&courseCount).Error; err != nil {
 		return err
 	}
-	if user+course != 2 {
+	if courseCount != 1 {
 		return gorm.ErrRecordNotFound
 	}
 

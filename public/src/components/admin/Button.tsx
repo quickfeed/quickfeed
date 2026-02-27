@@ -17,12 +17,14 @@ export type ButtonProps = {
     type?: ButtonType,
     className?: string,
     onClick: () => void | Promise<void>,
+    disabled?: boolean,
+
 }
 
-const Button = ({ children, text, color, type, className, onClick }: ButtonProps) => {
+const Button = ({ children, text, color, type, className, onClick, disabled }: ButtonProps) => {
     const colorClass = ButtonColorClasses[color]
     return (
-        <button className={`btn ${type ?? ""} ${colorClass} ${className ?? ""}`} onClick={onClick}>
+        <button className={`btn ${type ?? ""} ${colorClass} ${className ?? ""}`} onClick={onClick} disabled={disabled}>
             {children}
             {text}
         </button>

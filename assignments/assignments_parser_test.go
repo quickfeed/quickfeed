@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -156,15 +157,15 @@ func TestParse(t *testing.T) {
 		GradingBenchmarks: wantCriteria,
 	}
 
-	assignments, dockerfile, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, gotBuildContext, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(assignments) != 2 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
 	}
-	if dockerfile != df {
-		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, dockerfile)
+	if gotBuildContext[ci.Dockerfile] != df {
+		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, gotBuildContext[ci.Dockerfile])
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)

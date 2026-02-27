@@ -1,5 +1,4 @@
 import React, { JSX } from "react"
-import Alerts from "../components/alerts/Alerts"
 import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 import BackToTop from "../components/BackToTop"
 
@@ -7,7 +6,6 @@ import BackToTop from "../components/BackToTop"
 const AboutPage = () => {
     return (
         <div className="w-full">
-            <Alerts />
             <div className="container mx-auto px-4 max-w-7xl pb-12">
                 <h2 className="text-4xl font-bold mt-12 mb-6 text-base-content">About QuickFeed</h2>
                 <div className="text-lg leading-loose mb-8 text-base-content/80 space-y-4">
