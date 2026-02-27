@@ -27,7 +27,7 @@ import { clone, create, isMessage } from "@bufbuild/protobuf"
 
 export const internal = { isEmptyRepo }
 
-export const onInitializeOvermind = async ({ actions, effects }: Context) => {
+export const onInitializeOvermind = async ({ state, actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
     effects.global.api.init(actions.global.errorHandler)
     await actions.global.fetchUserData()
@@ -36,6 +36,24 @@ export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     if (alert) {
         actions.global.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
+    }
+
+    // If user has a stored theme preference, use that,
+    // otherwise check for system preference
+    const storedTheme = localStorage.getItem("theme")
+    if (storedTheme !== null) {
+        state.theme = storedTheme as typeof state.theme
+        document.documentElement.setAttribute("data-theme", storedTheme)
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // User prefers dark theme
+        state.theme = "dark"
+        // set the HTML attribute to dark
+        document.documentElement.setAttribute("data-theme", "dark")
+    } else {
+        // User prefers light theme (or no specific preference)
+        state.theme = "light"
+        // set the HTML attribute to light
+        document.documentElement.setAttribute("data-theme", "light")
     }
 }
 
@@ -938,4 +956,17 @@ export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group
 
 export const updateSubmissionOwner = ({ state }: Context, owner: SubmissionOwner) => {
     state.submissionOwner = owner
+}
+
+export const setTheme = ({ state }: Context, theme?: string) => {
+    if (theme) {
+        // Set to specific theme
+        state.theme = theme as typeof state.theme
+    } else {
+        // Toggle between light and dark
+        state.theme = state.theme === "dark" ? "light" : "dark"
+    }
+    document.documentElement.setAttribute("data-theme", state.theme)
+    // also store theme preference in localStorage
+    localStorage.setItem("theme", state.theme)
 }

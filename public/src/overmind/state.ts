@@ -68,6 +68,8 @@ export type State = {
     // Individual repository links are accessed by Repository.Type
     repositories: { [courseid: string]: { [repo: string]: string } },
 
+    theme: "light" | "dark" | "cupcake" | "synthwave" | "cyberpunk" | "forest" | "aqua"
+
     /***************************************************************************
     *                              Public data
     ***************************************************************************/
@@ -227,6 +229,7 @@ export const state: State = {
         }
         return userGroup
     }),
+    theme: "light",
     isTeacher: derived(({ enrollmentsByCourseID, activeCourse }: State) => {
         if (activeCourse > 0 && enrollmentsByCourseID[activeCourse.toString()]) {
             return isTeacher(enrollmentsByCourseID[activeCourse.toString()])

@@ -1,6 +1,7 @@
 import React from "react"
 import { useActions, useAppState } from "../../overmind"
 import StreamStatus from "./StreamStatus"
+import ThemeController from "./ThemeController"
 import NavMenuItem from "../navbar-buttons/NavMenuItem"
 
 const NavBarUser = () => {
@@ -18,7 +19,7 @@ const NavBarUser = () => {
 
     return (
         <div className="flex items-center gap-2">
-
+            <ThemeController />
             <StreamStatus />
 
             <div className="dropdown dropdown-end">
