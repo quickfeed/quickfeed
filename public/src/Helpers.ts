@@ -696,3 +696,68 @@ export class SubmissionsForUser {
         }
     }
 }
+
+/*******************************************************************************
+ *                    Course Member Filtering and Sorting
+ ******************************************************************************/
+
+/** SubmissionData holds submission information for a course member (enrollment or group) */
+export interface SubmissionData {
+    submissions: Submission[]
+    /** The submission for the selected assignment (if assignmentID > 0) */
+    selectedSubmission?: Submission
+}
+
+/** getSubmissionData extracts submission data for a member from the submissions map */
+export const getSubmissionData = (
+    submissions: Map<bigint, { submissions: Submission[] }>,
+    memberID: bigint,
+    assignmentID: bigint
+): SubmissionData => {
+    const subs = submissions.get(memberID)?.submissions ?? []
+    const selectedSubmission = assignmentID > 0
+        ? subs.find(s => s.AssignmentID === assignmentID)
+        : undefined
+    return { submissions: subs, selectedSubmission }
+}
+
+/** FilterFn is a predicate function for filtering course members */
+type FilterFn<T> = (member: T, data: SubmissionData, numAssignments: number) => boolean
+
+/** Filters members by approval status - keeps members that are NOT fully approved */
+export const filterByApproval: FilterFn<{ ID: bigint }> = (_member, data, numAssignments) => {
+    if (data.selectedSubmission) {
+        return !isAllApproved(data.selectedSubmission)
+    }
+    const numApproved = data.submissions.reduce(
+        (acc, sub) => acc + (isAllApproved(sub) ? 1 : 0), 0
+    )
+    return numApproved < numAssignments
+}
+
+/** Filters members by release status - keeps members that are NOT released */
+export const filterByReleased: FilterFn<{ ID: bigint }> = (_member, data) => {
+    if (data.selectedSubmission) {
+        return !data.selectedSubmission.released
+    }
+    return !data.submissions.some(sub => sub.released)
+}
+
+/** SortValue extracts a comparable value from submission data */
+type SortValueFn = (data: SubmissionData) => number
+
+/** Gets the score for sorting */
+export const getScoreSortValue: SortValueFn = (data) => {
+    if (data.selectedSubmission) {
+        return data.selectedSubmission.score
+    }
+    return getSubmissionsScore(data.submissions)
+}
+
+/** Gets the approval count for sorting */
+export const getApprovalSortValue: SortValueFn = (data) => {
+    if (data.selectedSubmission) {
+        return isAllApproved(data.selectedSubmission) ? 1 : 0
+    }
+    return getNumApproved(data.submissions)
+}

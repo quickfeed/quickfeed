@@ -1,8 +1,8 @@
-import { create, isMessage } from "@bufbuild/protobuf"
+import { create } from "@bufbuild/protobuf"
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, EnrollmentSchema, Group, GroupSchema, Submission, User, UserSchema } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, getNumApproved, getSubmissionsScore, isAllApproved, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
+import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, User, UserSchema } from "../../proto/qf/types_pb"
+import { Color, ConnStatus, filterByApproval, filterByReleased, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint
@@ -92,10 +92,18 @@ export type State = {
     /* Contains all submissions for a given course */
 
 
-    /** Contains all members of the current course.
-     *  Derived from either enrollments or groups based on groupView.
-     *  The members are filtered and sorted based on the current
+    /** Filtered and sorted enrollments for the current course (individual view).
+     *  The enrollments are filtered and sorted based on the current
      *  values of sortSubmissionsBy, sortAscending, and submissionFilters */
+    filteredEnrollments: Enrollment[],
+
+    /** Filtered and sorted groups for the current course (group view).
+     *  The groups are filtered and sorted based on the current
+     *  values of sortSubmissionsBy, sortAscending, and submissionFilters */
+    filteredGroups: Group[],
+
+    /** Contains all members of the current course.
+     *  Derived from either filteredEnrollments or filteredGroups based on groupView. */
     courseMembers: Enrollment[] | Group[],
 
     /* Course teachers, indexed by user ID */
@@ -257,136 +265,127 @@ export const state: State = {
         })
         return teachersMap
     }),
-    courseMembers: derived(({
-        activeCourse, groupView, submissionsForCourse, assignments, groups,
+    filteredEnrollments: derived(({
+        activeCourse, submissionsForCourse, assignments,
         courseEnrollments, submissionFilters, sortAscending, sortSubmissionsBy
     }: State, {
         review: { assignmentID }
     }: Context["state"]) => {
-        // Filter and sort course members based on the current state
         if (!activeCourse) {
             return []
         }
-        const submissions = groupView
-            ? submissionsForCourse.groupSubmissions
-            : submissionsForCourse.userSubmissions
-
+        const submissions = submissionsForCourse.userSubmissions
         if (submissions.size === 0) {
             return []
         }
 
-        // If a specific assignment is selected, filter by that assignment
-        let numAssignments = 0
-        if (assignmentID > 0) {
-            numAssignments = 1
-        } else if (groupView) {
-            numAssignments = assignments[activeCourse.toString()]?.filter(a => a.isGroupLab).length || 0
-        } else {
-            numAssignments = assignments[activeCourse.toString()]?.length ?? 0
-        }
+        const numAssignments = assignmentID > 0
+            ? 1
+            : assignments[activeCourse.toString()]?.length ?? 0
 
-        let filtered: (Group | Enrollment)[] = groupView ? groups[activeCourse.toString()] : courseEnrollments[activeCourse.toString()] ?? []
+        let filtered = courseEnrollments[activeCourse.toString()] ?? []
+
         for (const filter of submissionFilters) {
             switch (filter) {
                 case "teachers":
-                    filtered = filtered.filter(el => {
-                        return el.status !== Enrollment_UserStatus.TEACHER
-                    })
+                    filtered = filtered.filter(e => e.status !== Enrollment_UserStatus.TEACHER)
                     break
                 case "approved":
-                    // approved filters all entries where all assignments have been approved
-                    filtered = filtered.filter(el => {
-                        if (assignmentID > 0) {
-                            // If a specific assignment is selected, filter by that assignment
-                            const sub = submissions.get(el.ID)?.submissions?.find(s => s.AssignmentID === assignmentID)
-                            return sub !== undefined && !isAllApproved(sub)
-                        }
-                        const numApproved = submissions.get(el.ID)?.submissions?.reduce((acc, cur) => {
-                            return acc + ((cur &&
-                                isAllApproved(cur)) ? 1 : 0)
-                        }, 0) ?? 0
-                        return numApproved < numAssignments
+                    filtered = filtered.filter(e => {
+                        const data = getSubmissionData(submissions, e.ID, assignmentID)
+                        return filterByApproval(e, data, numAssignments)
                     })
                     break
                 case "released":
-                    filtered = filtered.filter(el => {
-                        if (assignmentID > 0) {
-                            const sub = submissions.get(el.ID)?.submissions?.find(s => s.AssignmentID === assignmentID)
-                            return sub !== undefined && !sub.released
-                        }
-                        const hasReleased = submissions.get(el.ID)?.submissions.some(sub => sub.released)
-                        return !hasReleased
+                    filtered = filtered.filter(e => {
+                        const data = getSubmissionData(submissions, e.ID, assignmentID)
+                        return filterByReleased(e, data, numAssignments)
                     })
-                    break
-                default:
                     break
             }
         }
 
         const sortOrder = sortAscending ? -1 : 1
-        const sortedSubmissions = Object.values(filtered).sort((a, b) => { // skipcq: JS-R1005
-            let subA: Submission | undefined
-            let subB: Submission | undefined
-            if (assignmentID > 0) {
-                // If a specific assignment is selected, sort by that assignment
-                subA = submissions.get(a.ID)?.submissions.find(sub => sub.AssignmentID === assignmentID)
-                subB = submissions.get(b.ID)?.submissions.find(sub => sub.AssignmentID === assignmentID)
-            }
-
-            const subsA = submissions.get(a.ID)?.submissions
-            const subsB = submissions.get(b.ID)?.submissions
+        return [...filtered].sort((a, b) => {
+            const dataA = getSubmissionData(submissions, a.ID, assignmentID)
+            const dataB = getSubmissionData(submissions, b.ID, assignmentID)
 
             switch (sortSubmissionsBy) {
-                case SubmissionSort.ID: {
-                    if (isMessage(a, EnrollmentSchema) && isMessage(b, EnrollmentSchema)) {
-                        return sortOrder * (Number(a.userID) - Number(b.userID))
-                    } else {
-                        return sortOrder * (Number(a.ID) - Number(b.ID))
-                    }
-                }
-                case SubmissionSort.Score: {
-                    if (assignmentID > 0) {
-                        const sA = subA?.score
-                        const sB = subB?.score
-                        if (sA !== undefined && sB !== undefined) {
-                            return sortOrder * (sB - sA)
-                        } else if (sA !== undefined) {
-                            return -sortOrder
-                        }
-                        return sortOrder
-                    }
-                    const aSubs = subsA ? getSubmissionsScore(subsA) : 0
-                    const bSubs = subsB ? getSubmissionsScore(subsB) : 0
-                    return sortOrder * (aSubs - bSubs)
-                }
-                case SubmissionSort.Approved: {
-                    if (assignmentID > 0) {
-                        const sA = subA && isAllApproved(subA) ? 1 : 0
-                        const sB = subB && isAllApproved(subB) ? 1 : 0
-                        return sortOrder * (sA - sB)
-                    }
-                    const aApproved = subsA ? getNumApproved(subsA) : 0
-                    const bApproved = subsB ? getNumApproved(subsB) : 0
-                    return sortOrder * (aApproved - bApproved)
-                }
-                case SubmissionSort.Name: {
-                    let nameA = ""
-                    let nameB = ""
-                    if (!groupView && isMessage(a, EnrollmentSchema) && isMessage(b, EnrollmentSchema)) {
-                        nameA = a.user?.Name ?? ""
-                        nameB = b.user?.Name ?? ""
-                    }
-                    else if (groupView && isMessage(a, GroupSchema) && isMessage(b, GroupSchema)) {
-                        nameA = a.name ?? ""
-                        nameB = b.name ?? ""
-                    }
-                    return sortOrder * (nameA.localeCompare(nameB))
-                }
+                case SubmissionSort.ID:
+                    return sortOrder * (Number(a.userID) - Number(b.userID))
+                case SubmissionSort.Score:
+                    return sortOrder * (getScoreSortValue(dataB) - getScoreSortValue(dataA))
+                case SubmissionSort.Approved:
+                    return sortOrder * (getApprovalSortValue(dataA) - getApprovalSortValue(dataB))
+                case SubmissionSort.Name:
+                    return sortOrder * ((a.user?.Name ?? "").localeCompare(b.user?.Name ?? ""))
                 default:
                     return 0
             }
         })
-        return sortedSubmissions as Group[] | Enrollment[]
+    }),
+
+    filteredGroups: derived(({
+        activeCourse, submissionsForCourse, assignments, groups,
+        submissionFilters, sortAscending, sortSubmissionsBy
+    }: State, {
+        review: { assignmentID }
+    }: Context["state"]) => {
+        if (!activeCourse) {
+            return []
+        }
+        const submissions = submissionsForCourse.groupSubmissions
+        if (submissions.size === 0) {
+            return []
+        }
+
+        const numAssignments = assignmentID > 0
+            ? 1
+            : assignments[activeCourse.toString()]?.filter(a => a.isGroupLab).length ?? 0
+
+        let filtered = groups[activeCourse.toString()] ?? []
+
+        for (const filter of submissionFilters) {
+            switch (filter) {
+                case "teachers":
+                    break
+                case "approved":
+                    filtered = filtered.filter(g => {
+                        const data = getSubmissionData(submissions, g.ID, assignmentID)
+                        return filterByApproval(g, data, numAssignments)
+                    })
+                    break
+                case "released":
+                    filtered = filtered.filter(g => {
+                        const data = getSubmissionData(submissions, g.ID, assignmentID)
+                        return filterByReleased(g, data, numAssignments)
+                    })
+                    break
+            }
+        }
+
+        const sortOrder = sortAscending ? -1 : 1
+        return [...filtered].sort((a, b) => {
+            const dataA = getSubmissionData(submissions, a.ID, assignmentID)
+            const dataB = getSubmissionData(submissions, b.ID, assignmentID)
+
+            switch (sortSubmissionsBy) {
+                case SubmissionSort.ID:
+                    return sortOrder * (Number(a.ID) - Number(b.ID))
+                case SubmissionSort.Score:
+                    return sortOrder * (getScoreSortValue(dataB) - getScoreSortValue(dataA))
+                case SubmissionSort.Approved:
+                    return sortOrder * (getApprovalSortValue(dataA) - getApprovalSortValue(dataB))
+                case SubmissionSort.Name:
+                    return sortOrder * ((a.name ?? "").localeCompare(b.name ?? ""))
+                default:
+                    return 0
+            }
+        })
+    }),
+
+    courseMembers: derived(({ groupView, filteredEnrollments, filteredGroups }: State) => {
+        return groupView ? filteredGroups : filteredEnrollments
     }),
     selectedEnrollment: null,
     selectedSubmission: null,
