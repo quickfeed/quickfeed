@@ -37,7 +37,6 @@ const ReviewForm = () => {
             <Button key={review.ID.toString()}
                 text={buttonText}
                 color={buttonColor}
-                type={ButtonType.BUTTON}
                 className={`mr-1 ${className}`}
                 onClick={() => { actions.review.setSelectedReview(index) }}
             />
@@ -51,7 +50,6 @@ const ReviewForm = () => {
             <Button key="add"
                 text="Add Review"
                 color={Color.BLUE}
-                type={ButtonType.BUTTON}
                 className="mr-1"
                 onClick={() => { actions.review.createReview() }}
             />
