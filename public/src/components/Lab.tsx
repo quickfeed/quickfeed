@@ -4,7 +4,6 @@ import { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
-import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
 import ReviewResult from './ReviewResult'
 import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
@@ -75,8 +74,25 @@ const Lab = () => {
 
                     {isManuallyGraded(assignment.reviewers) && review.length > 0 ? <ReviewResult review={review[0]} /> : null}
 
-                    <div className="card bg-light">
-                        <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}>{buildLog}</code>
+                    <div className="card bg-base-200 shadow-xl rounded-2xl overflow-hidden">
+                        <div className="card-body p-0">
+                            <div className="flex items-center justify-between bg-base-300 px-4 py-3 border-b border-base-content/10">
+                                <h3 className="text-sm font-semibold flex items-center gap-2">
+                                    <i className="fa fa-terminal"></i>
+                                    <span>Build Log</span>
+                                </h3>
+                                <div className="flex gap-2">
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ef4444' }}></span>
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#eab308' }}></span>
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#22c55e' }}></span>
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <pre className="p-4 text-sm leading-relaxed font-mono bg-base-200 m-0">
+                                    <code style={{ color: '#f87171', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{buildLog}</code>
+                                </pre>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -89,7 +105,6 @@ const Lab = () => {
             <div className={state.isTeacher ? "" : "col-md-9"}>
                 <InternalLab />
             </div>
-            {state.isTeacher ? null : <CourseLinks />}
         </div>
     )
 }

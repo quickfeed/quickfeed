@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"
 import useWindowSize from "../../hooks/windowsSize"
@@ -10,6 +10,7 @@ const Breadcrumbs = () => {
     const state = useAppState()
     const actions = useActions().global
     const location = useLocation()
+    const navigate = useNavigate()
     const { width } = useWindowSize()
     const [courseName, setCourseName] = useState<string | null>(null)
     const [assignmentName, setAssignmentName] = useState<string | null>(null)
@@ -17,6 +18,7 @@ const Breadcrumbs = () => {
 
     const handleDashboard = () => {
         actions.setActiveCourse(0n)
+        navigate('/')
     }
 
     // Returns course name (or code if small screen)
@@ -46,10 +48,10 @@ const Breadcrumbs = () => {
     }, [pathnames, state.courses, state.assignments, width])
 
     return (
-        <nav aria-label="breadcrumb">
-            <ol className="breadcrumb m-0 bg-transparent">
+        <div className="breadcrumbs flex">
+            <ul className="bg-transparent">
                 <li className="breadcrumb-item">
-                    <Link to="/" onClick={handleDashboard}>Dashboard</Link>
+                    <span onClick={handleDashboard}>Dashboard</span>
                 </li>
                 {pathnames.map((value, index) => {
                     const last = index === pathnames.length - 1
@@ -82,13 +84,13 @@ const Breadcrumbs = () => {
                             {breadcrumbName}
                         </li>
                     ) : (
-                        <li key={to} className="breadcrumb-item">
+                        <li key={to}>
                             <Link to={to}>{breadcrumbName}</Link>
                         </li>
                     )
                 })}
-            </ol>
-        </nav>
+            </ul>
+        </div>
     )
 }
 

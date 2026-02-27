@@ -4,12 +4,8 @@ import { useActions, useAppState } from "../../overmind"
 
 
 /**
- *  TableSort displays a widget that aids in sorting and filtering
- *  table contents.
- *  The widget modifies contents of the state on user interaction.
- *  It is up to each component to use the modified state with
- *  sorting and filtering functions based on the modified values.
- *  TODO: We could modify the state to react to changes coming from this component.
+ * TableSort displays a widget for sorting and filtering the submissions table.
+ * It modifies state values that are used by the table for sorting/filtering.
  */
 const TableSort = () => {
     const state = useAppState()
@@ -24,76 +20,100 @@ const TableSort = () => {
         }
     }, [actions])
 
-    const handleChange = (sort: SubmissionSort) => {
-        actions.setSubmissionSort(sort)
+    const handleSortChange = (sort: SubmissionSort) => {
+        if (state.sortSubmissionsBy === sort) {
+            // If clicking the same sort option, toggle direction
+            actions.setAscending(!state.sortAscending)
+        } else {
+            actions.setSubmissionSort(sort)
+        }
     }
 
-    const toggleIndividualSubmissions = () => {
-        actions.setIndividualSubmissionsView(!state.individualSubmissionView)
-    }
-
-    const boldText = (sort: SubmissionSort) => {
-        return state.sortSubmissionsBy === sort ? "font-weight-bold" : ""
-    }
-    const pointer = state.sortAscending ? "fa fa-caret-down" : "fa fa-caret-down fa-rotate-180"
-    const textForToggleIndividualViewButton = state.individualSubmissionView ? "Individual" : "Group"
-
-    const submissionFilters = [
-        { name: "teachers", text: "Teachers", show: true },
-        { name: "approved", text: "Graded", show: true },
-    ]
-
-    const filterElements = submissionFilters.map((filter) => {
-        const displayText = state.submissionFilters.includes(filter.name)
-            ? <del>{filter.text}</del>
-            : filter.text
-        return filter.show
-            ? <DivButton key={filter.name} text={displayText} onclick={() => actions.setSubmissionFilter(filter.name)} />
-            : null
-    })
-
-    const sortByButtons = [
-        { key: "approved", text: "Approved", className: boldText(SubmissionSort.Approved), onclick: () => handleChange(SubmissionSort.Approved) },
-        { key: "score", text: "Score", className: boldText(SubmissionSort.Score), onclick: () => handleChange(SubmissionSort.Score) },
-        { key: "pointer", text: <i className={pointer} />, onclick: () => actions.setAscending(!state.sortAscending) }
-    ]
-
-    const sortByElements = sortByButtons.map((button) => (
-        <DivButton key={button.key} text={button.text} className={button.className} onclick={button.onclick} />
-    ))
+    const isFilterActive = (filterName: string) => state.submissionFilters.includes(filterName)
 
     return (
-        <div className="p-1 mb-2 bg-dark text-white d-flex flex-row">
-            <div className="d-inline-flex flex-row justify-content-center">
-                <div className="p-2">
-                    <span>Sort by:</span>
+        <div className="flex flex-wrap items-center gap-4 p-3 bg-base-200 rounded-lg">
+            {/* Sort Options */}
+            <div className="flex items-center gap-1">
+                <span className="text-xs font-medium text-base-content/60 mr-1">Sort:</span>
+                <div className="join">
+                    <SortButton
+                        label="Approved"
+                        isActive={state.sortSubmissionsBy === SubmissionSort.Approved}
+                        ascending={state.sortAscending}
+                        onClick={() => handleSortChange(SubmissionSort.Approved)}
+                    />
+                    <SortButton
+                        label="Score"
+                        isActive={state.sortSubmissionsBy === SubmissionSort.Score}
+                        ascending={state.sortAscending}
+                        onClick={() => handleSortChange(SubmissionSort.Score)}
+                    />
                 </div>
-                {sortByElements}
             </div>
-            <div className="d-inline-flex flex-row">
-                <div className="p-2">
-                    Show:
+
+            {/* Divider */}
+            <div className="divider divider-horizontal mx-0" />
+
+            {/* Filter Options */}
+            <div className="flex items-center gap-1">
+                <span className="text-xs font-medium text-base-content/60 mr-1">Hide:</span>
+                <div className="flex gap-1">
+                    <FilterToggle
+                        label="Teachers"
+                        isActive={isFilterActive("teachers")}
+                        onClick={() => actions.setSubmissionFilter("teachers")}
+                    />
+                    <FilterToggle
+                        label="Graded"
+                        isActive={isFilterActive("approved")}
+                        onClick={() => actions.setSubmissionFilter("approved")}
+                    />
                 </div>
-                {filterElements}
-            </div>
-            <div className="d-inline-flex flex-row">
-                <DivButton text={textForToggleIndividualViewButton} onclick={toggleIndividualSubmissions} />
             </div>
         </div>
     )
 }
 
-interface DivButtonProps {
-    text: string | React.JSX.Element
-    className?: string
-    onclick: () => void
+interface SortButtonProps {
+    label: string
+    isActive: boolean
+    ascending: boolean
+    onClick: () => void
 }
 
-const DivButton = ({ text, className, onclick }: DivButtonProps) => {
+/** Sort button that shows direction indicator when active */
+const SortButton = ({ label, isActive, ascending, onClick }: SortButtonProps) => {
+    const directionIcon = ascending ? "fa-arrow-up" : "fa-arrow-down"
+
     return (
-        <div className={`${className ?? ""} p-2`} role="button" aria-hidden="true" onClick={onclick}>
-            {text}
-        </div>
+        <button
+            className={`btn btn-xs join-item gap-1 ${isActive ? "btn-primary" : "btn-ghost"}`}
+            onClick={onClick}
+        >
+            {label}
+            {isActive && <i className={`fa ${directionIcon} text-xs`} />}
+        </button>
+    )
+}
+
+interface FilterToggleProps {
+    label: string
+    isActive: boolean
+    onClick: () => void
+}
+
+/** Filter toggle that shows check mark when active (items are hidden) */
+const FilterToggle = ({ label, isActive, onClick }: FilterToggleProps) => {
+    return (
+        <button
+            className={`btn btn-xs gap-1 ${isActive ? "btn-error btn-outline" : "btn-ghost"}`}
+            onClick={onClick}
+            title={isActive ? `Show ${label.toLowerCase()}` : `Hide ${label.toLowerCase()}`}
+        >
+            {isActive && <i className="fa fa-eye-slash text-xs" />}
+            {label}
+        </button>
     )
 }
 

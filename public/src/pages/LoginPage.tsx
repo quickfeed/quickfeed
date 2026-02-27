@@ -1,32 +1,31 @@
-import React, { useEffect } from "react"
+import React from "react"
 import AboutPage from "./AboutPage"
-import { nextURL } from "../Helpers"
 
 const LoginPage = () => {
-  // Add a class to the body element to style the login page
-  useEffect(() => {
-    document.body.classList.add("login-page")
-    return () => {
-      document.body.classList.remove("login-page")
-    }
-  }, [])
-  return (
-    <div className="loginContainer">
-      <h1 className="loginWelcomeHeader">Welcome to QuickFeed</h1>
-      <p className="lead mt-5 mb-5" style={{ textAlign: "center", marginBottom: "50px" }}>
-        To get started with QuickFeed, please sign in with your GitHub account.
-      </p>
-      <section id="loginBox">
-        <div className="loginBox">
-          <i className="fa fa-5x fa-github align-middle ms-auto" id="github icon" />
-          <h4>Sign in with GitHub</h4>
-          <p className="text-secondary"> to continue to QuickFeed </p>
-          <a href={`/auth/github?next=${nextURL()}`} className="loginButton"> Sign in </a>
+    return (
+        <div className="min-h-screen flex flex-col items-center bg-base-100 text-base-content">
+            <h1 className="text-5xl font-bold mt-16 mb-12 text-base-content">
+                Welcome to QuickFeed
+            </h1>
+            <p className="text-lg text-center mb-12 max-w-2xl px-4 text-base-content/80">
+                To get started with QuickFeed, please sign in with your GitHub account.
+            </p>
+            <section className="mb-12">
+                <div className="card bg-base-200 shadow-xl p-8 text-center min-w-[300px]">
+                    <i className="fa fa-5x fa-github mb-4 text-base-content" />
+                    <h4 className="text-xl font-semibold mb-2">Sign in with GitHub</h4>
+                    <p className="text-base-content/60 mb-6">to continue to QuickFeed</p>
+                    <a
+                        href="/auth/github"
+                        className="btn btn-success text-white hover:btn-success/90 transition-colors"
+                    >
+                        Sign in
+                    </a>
+                </div>
+            </section>
+            <AboutPage />
         </div>
-      </section>
-      <AboutPage />
-    </div>
-  )
+    )
 }
 
 export default LoginPage

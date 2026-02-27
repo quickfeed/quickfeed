@@ -19,9 +19,9 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     const status = getStatusByUser(submission, enrollment.userID)
     const className = isAllApproved(submission) ? "passed" : "failed"
     return (
-        <table className="table table-curved table-striped">
-            <thead className="thead-dark">
-                <tr>
+        <table className="table table-zebra">
+            <thead className="bg-base-300 text-base-content">
+                <tr className="text-lg">
                     <th colSpan={2}>Lab information</th>
                     <th>{assignment.name}</th>
                 </tr>

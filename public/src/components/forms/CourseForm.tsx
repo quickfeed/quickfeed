@@ -50,52 +50,64 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     }
 
     return (
-        <div className="container">
-            <form className="form-group" onSubmit={async e => await submitHandler(e)}>
-                <div className="row">
-                    <FormInput prepend="Name"
-                        name="courseName"
-                        placeholder={"Course Name"}
-                        defaultValue={course.name}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div className="row">
-                    <FormInput
-                        prepend="Code"
-                        name="courseCode"
-                        placeholder={"(ex. DAT320)"}
-                        defaultValue={course.code}
-                        onChange={handleChange}
-                    />
-                    <FormInput
-                        prepend="Tag"
-                        name="courseTag"
-                        placeholder={"(ex. Fall / Spring)"}
-                        defaultValue={course.tag}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div className="row">
-                    <FormInput
-                        prepend="Slip days"
-                        name="slipDays"
-                        placeholder={"(ex. 7)"}
-                        defaultValue={course.slipDays.toString()}
-                        onChange={handleChange}
-                        type="number"
-                    />
-                    <FormInput
-                        prepend="Year"
-                        name="courseYear"
-                        placeholder={"(ex. 2021)"}
-                        defaultValue={course.year.toString()}
-                        onChange={handleChange}
-                        type="number"
-                    />
-                </div>
-                <input className="btn btn-primary" type="submit" value={"Save"} />
-            </form>
+        <div className="card bg-base-200 shadow-xl max-w-2xl mx-auto">
+            <div className="card-body">
+                <h2 className="card-title text-2xl mb-6">
+                    <i className="fa fa-book mr-2" />
+                    Edit Course
+                </h2>
+                <form className="space-y-6" onSubmit={async e => await submitHandler(e)}>
+                    <div className="grid grid-cols-1 gap-4">
+                        <FormInput
+                            prepend="Name"
+                            name="courseName"
+                            placeholder="Course Name"
+                            defaultValue={course.name}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormInput
+                            prepend="Code"
+                            name="courseCode"
+                            placeholder="(ex. DAT320)"
+                            defaultValue={course.code}
+                            onChange={handleChange}
+                        />
+                        <FormInput
+                            prepend="Tag"
+                            name="courseTag"
+                            placeholder="(ex. Fall / Spring)"
+                            defaultValue={course.tag}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormInput
+                            prepend="Slip days"
+                            name="slipDays"
+                            placeholder="(ex. 7)"
+                            defaultValue={course.slipDays.toString()}
+                            onChange={handleChange}
+                            type="number"
+                        />
+                        <FormInput
+                            prepend="Year"
+                            name="courseYear"
+                            placeholder="(ex. 2021)"
+                            defaultValue={course.year.toString()}
+                            onChange={handleChange}
+                            type="number"
+                        />
+                    </div>
+                    <div className="card-actions justify-end pt-4">
+                        <button className="btn btn-primary" type="submit">
+                            <i className="fa fa-save mr-2" />
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

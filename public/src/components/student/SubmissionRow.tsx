@@ -19,16 +19,18 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
     return (
         <div
             key={submission.ID.toString()}
-            className={`row clickable mb-1 py-2 align-items-center text-left ${hoverSubmission}`}
+            className={`flex items-center gap-4 py-3 px-2 mb-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors ${hoverSubmission}`}
             onClick={(e) => { e.stopPropagation(); redirectTo(submission) }}
             role="button"
             aria-hidden="true"
         >
-            <div className="col-8">
+            <div className="flex-1 min-w-0">
                 <ProgressBar courseID={courseID} submission={submission} type={Progress.LAB} />
             </div>
-            <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
-            <div className="col-3">
+            <div className="flex-shrink-0 w-10 flex items-center justify-center">
+                <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
+            </div>
+            <div className="flex-shrink-0 w-40 text-sm font-medium text-right">
                 {assignmentStatusText(assignment, submission, getStatusByUser(submission, selfID))}
             </div>
         </div>

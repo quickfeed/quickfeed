@@ -18,10 +18,10 @@ const NavBar = () => {
     }
 
     return (
-        <nav className="navbar navbar-top navbar-expand-sm flexbox" id="main" >
+        <nav className="navbar bg-base-300 navbar-top navbar-expand-sm flexbox" id="main" >
             <div className="nav-child brand">
                 {hamburger}
-                <Link to="/" style={{ color: "#d4d4d4", fontWeight: "bold" }}>QuickFeed</Link>
+                <Link to="/">QuickFeed</Link>
             </div>
             <NavBarActiveCourse />
             <NavBarUser />

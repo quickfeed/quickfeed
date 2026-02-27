@@ -50,7 +50,7 @@ const TeacherPage = () => {
     return (
         <div className="box">
             <RedirectButton to={root} />
-            <div className="row" hidden={location.pathname !== root}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
                 <Card {...groups} />
