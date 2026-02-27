@@ -24,7 +24,7 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
     const score = submission.score ?? 0
     const scorelimit = assignment?.scoreLimit ?? 0
     const status = getStatusByUser(submission, state.self.ID)
-    const secondaryProgress = scorelimit - score
+    const remainingToPass = Math.max(0, scorelimit - score)
     // Returns a thin line to be used for labs in the NavBar
     if (type === Progress.NAV) {
         const percentage = 100 - score
@@ -45,7 +45,7 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
     let secondaryText = ""
     if (type === Progress.LAB) {
         text = `${score} %`
-        secondaryText = `${secondaryProgress} %`
+        secondaryText = `${remainingToPass} %`
     }
 
     // Returns a regular size progress bar to be used for labs
@@ -68,10 +68,10 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
     }
 
     return (
-        <div className="progress">
+        <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
             <PrimaryProgressBar color={color} score={score} text={text} />
-            {secondaryProgress > 0 &&
-                <SecondaryProgressBar progress={secondaryProgress} text={secondaryText} />
+            {remainingToPass > 0 &&
+                <SecondaryProgressBar startPosition={score} width={remainingToPass} text={secondaryText} />
             }
         </div>
     )
@@ -82,15 +82,17 @@ export default ProgressBar
 // DefaultProgressBar is a function that returns a progress bar for a lab/assignment with no submissions
 export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: number, isGroupLab: boolean }) => {
     return (
-        <div className="row mb-1 py-2 align-items-center text-left">
-            <div className="col-8">
-                <div className="progress">
+        <div className="flex items-center gap-4 py-3 px-2 mb-2 rounded-lg">
+            <div className="flex-1 min-w-0">
+                <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
                     <PrimaryProgressBar score={0} text={"0 %"} />
-                    <SecondaryProgressBar progress={scoreLimit} text={`${scoreLimit} %`} />
+                    <SecondaryProgressBar startPosition={0} width={scoreLimit} text={`${scoreLimit} %`} />
                 </div>
             </div>
-            <SubmissionTypeIcon solo={!isGroupLab} />
-            <div className="col-3">
+            <div className="flex-shrink-0 w-10 flex items-center justify-center">
+                <SubmissionTypeIcon solo={!isGroupLab} />
+            </div>
+            <div className="flex-shrink-0 w-40 text-sm font-medium text-right">
                 No submission
             </div>
         </div>
@@ -101,27 +103,27 @@ export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: num
 const PrimaryProgressBar = ({ color, score, text }: { color?: string, score: number, text: string }) => {
     return (
         <div
-            className={`progress-bar ${color}`}
+            className={`absolute top-0 left-0 h-full ${color || 'bg-primary'} flex items-center justify-center text-xs font-semibold text-primary-content transition-all duration-500`}
             role="progressbar"
-            style={{ width: `${score}%`, transitionDelay: "0.5s" }}
+            style={{ width: `${score}%` }}
             aria-valuenow={score}
             aria-valuemin={0}
             aria-valuemax={100}
         >
-            {text}
+            {score > 10 && text}
         </div>
     )
 }
 
-const SecondaryProgressBar = ({ progress, text }: { progress: number, text: string }) => {
+const SecondaryProgressBar = ({ startPosition, width, text }: { startPosition: number, width: number, text: string }) => {
     return (
         <div
-            className={"progress-bar progressbar-secondary bg-secondary"}
+            className="absolute top-0 h-full bg-base-content/20 flex items-center justify-center text-xs font-semibold text-base-content transition-all duration-300"
             role="progressbar"
-            style={{ width: `${progress}%` }}
+            style={{ left: `${startPosition}%`, width: `${width}%` }}
             aria-valuemax={100}
         >
-            {text}
+            {width > 10 && text}
         </div>
     )
 }
