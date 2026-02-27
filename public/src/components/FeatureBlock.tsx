@@ -1,4 +1,4 @@
-import React, { JSX } from "react"
+import React, { ReactNode } from "react"
 
 interface FeatureBlockProps {
     heading: string
@@ -17,26 +17,25 @@ interface FeatureBlockProps {
 * @param reverse A boolean indicating whether to reverse the order of the image and text.
 */
 
-const FeatureBlock: React.FC<FeatureBlockProps> = ({
-    heading,
-    subheading,
-    content,
-    imageSrc,
-    reverse = false,
-}) => {
+const FeatureBlock: React.FC<FeatureBlockProps> = ({ heading, subheading, content, imageSrc, reverse = false }) => {
     return (
-        <div className={`row featurette ${reverse ? "flex-row-reverse" : ""}`}>
-            <div className="col-md-7">
-                <h2 className="featurette-heading">
-                    {heading}: <span className="text-muted">{subheading}</span>
+        <div className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-12 my-12`}>
+            <div className="flex-1 space-y-4">
+                <h2 className="text-3xl font-bold text-base-content">
+                    {heading}
                 </h2>
-                <p className="lead">{content}</p>
+                <h3 className="text-xl text-base-content/60 font-medium">
+                    {subheading}
+                </h3>
+                <p className="text-base leading-loose text-base-content/80">
+                    {content}
+                </p>
             </div>
-            <div className="col-md-5">
+            <div className="flex-1">
                 <img
-                    className="featurette-image img-responsive about"
                     src={imageSrc}
-                    alt="Feature example"
+                    alt={heading}
+                    className="w-full h-auto rounded-lg shadow-xl"
                 />
             </div>
         </div>
@@ -46,39 +45,17 @@ const FeatureBlock: React.FC<FeatureBlockProps> = ({
 interface MiniFeatureBlockProps {
     title: string
     content: string
-    media?: JSX.Element
-    style?: React.CSSProperties
+    media: ReactNode
 }
 
-/**
- * MiniFeatureBlock is a smaller version of FeatureBlock, used for displaying features in a grid layout.
- * @param title The title of the feature block.
- * @param content The content of the feature block.
- * @param imageSrc (Optional) The source URL of the image to be displayed.
- * @param icon (Optional) An optional icon to be displayed instead of an image.
- * @param style (Optional) Additional styles to be applied to the parent div of the icon.
-*/
-export const MiniFeatureBlock: React.FC<MiniFeatureBlockProps> = ({
-    title,
-    content,
-    media,
-    style,
-}) => {
+export const MiniFeatureBlock: React.FC<MiniFeatureBlockProps> = ({ title, content, media }) => {
     return (
-        <div className="col-lg-4 text-center">
-            <div style={{
-                width: "140px",
-                height: "140px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                ...style
-            }}>
+        <div className="card bg-base-200 shadow-xl p-6 text-center hover:shadow-2xl transition-shadow">
+            <div className="flex justify-center items-center mb-6 h-40">
                 {media}
             </div>
-            <h2>{title}</h2>
-            <p>{content}</p>
+            <h4 className="text-xl font-semibold mb-4 text-base-content">{title}</h4>
+            <p className="text-base leading-relaxed text-base-content/70">{content}</p>
         </div>
     )
 }
