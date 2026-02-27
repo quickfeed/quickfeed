@@ -2,9 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"path/filepath"
 )
 
 var (
@@ -69,6 +70,7 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 		// We must explicitly set it to "development" for dev builds.
 		buildOptions.Define["process.env.NODE_ENV"] = `"development"`
 		buildOptions.LogLevel = api.LogLevelDebug
+		buildOptions.Sourcemap = api.SourceMapLinked
 	}
 	// enabling custom outputDir allow for testing without overwriting current build
 	if outputDir != "" {
