@@ -43,10 +43,10 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
     const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
     const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
     return (
-        <table className="table table-curved table-striped table-hover">
-            <thead className="thead-dark">
-                <tr>
-                    <th colSpan={1} className="col-md-8" data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
+        <table className="table table-zebra">
+            <thead className="bg-base-300 text-base-content">
+                <tr className="text-lg">
+                    <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
                     <th colSpan={1} className="fixed-width-percent" data-key={"score"} role="button" onClick={handleSort}>Score</th>
                     <th colSpan={1} className="fixed-width-percent" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
                     <th colSpan={1} className="fixed-width-percent" data-key={"weight"} data-toggle="tooltip" title={"Maximum % contribution to total score"} role="button" onClick={handleSort}>Max</th>
