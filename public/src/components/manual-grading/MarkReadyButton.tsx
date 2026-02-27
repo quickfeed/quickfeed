@@ -21,8 +21,8 @@ const MarkReadyButton = ({ review }: { review: Review }) => {
             <Button
                 text="Mark in Progress"
                 color={Color.YELLOW}
-                type={ButtonType.BADGE}
                 className="float-right"
+                type={ButtonType.SOFT}
                 onClick={handleMarkReady}
             />
         )
@@ -32,8 +32,7 @@ const MarkReadyButton = ({ review }: { review: Review }) => {
         <Button
             text="Mark Ready"
             color={Color.GREEN}
-            type={ButtonType.BUTTON}
-            className={allCriteriaGraded ? "" : "disabled"}
+            className={allCriteriaGraded ? "" : "btn-disabled"}
             onClick={handleMarkReady}
         />
     )
