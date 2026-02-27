@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isPending, sortEnrollments } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isPending, sortEnrollments, userRepoLink } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
@@ -13,6 +13,7 @@ const Members = () => {
     const state = useAppState()
     const actions = useActions().global
     const courseID = useCourseID()
+    const course = state.courses.find(c => c.ID === courseID)
 
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)
     const [descending, setDescending] = useState<boolean>(false)
@@ -88,26 +89,46 @@ const Members = () => {
                 <DynamicButton
                     text={enrollmentButtonText}
                     color={buttonColor}
-                    type={ButtonType.BADGE}
                     className="mr-2"
                     onClick={handleMemberChange(enrollment, role)}
                 />
                 <DynamicButton
                     text={"Reject"}
                     color={Color.RED}
-                    type={ButtonType.BADGE}
+                    type={ButtonType.OUTLINE}
                     onClick={handleMemberChange(enrollment, Enrollment_UserStatus.NONE)}
                 />
             </div>
         )
         const enrollmentBadgeIcon = (
-            <Badge className="mt-1" color={enrollment.status} text={EnrollmentStatus[enrollment.status]} />
+            <Badge className="mt-1" type="solid" color={enrollment.status} text={EnrollmentStatus[enrollment.status]} />
         )
         // rolebuttons can either be accept/reject, promote/demote or just the badge icon (student/teacher)
         const roleButtons = isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
         const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
+
+        const nameLink = enrollment.user ? (
+            <a
+                href={userRepoLink(enrollment.user, course)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+            >
+                {Name}
+            </a>
+        ) : Name
+
+        const emailLink = Email ? (
+            <a
+                href={`mailto:${Email}`}
+                className="hover:text-primary transition-colors"
+            >
+                {Email}
+            </a>
+        ) : ""
+
         return [
-            Name, Email, StudentID,
+            nameLink, emailLink, StudentID,
             getFormattedTime(enrollment.lastActivityDate),
             enrollment.totalApproved.toString(),
             enrollment.slipDaysRemaining.toString(),
@@ -115,34 +136,31 @@ const Members = () => {
         ]
     })
     return (
-        <>
-            <div className="row no-gutters pb-2">
-                <div className="col-md-6">
+        <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3 pb-4">
+                <div className="flex-1 min-w-[300px]">
                     <Search />
                 </div>
-                <div className="ml-auto">
+                <div className="flex gap-3 ml-auto">
                     <Button
                         text={edit ? "Done" : "Edit"}
                         color={edit ? Color.RED : Color.BLUE}
-                        type={ButtonType.BUTTON}
                         onClick={() => setEditing(!edit)}
                     />
-                </div>
-                {pending?.length > 0 ?
-                    <div style={{ marginLeft: "10px" }}>
+                    {pending?.length > 0 && (
                         <DynamicButton
                             text="Approve All"
                             color={Color.GREEN}
-                            type={ButtonType.BUTTON}
                             onClick={handleApprovePendingEnrollments}
                         />
-                    </div> : null}
+                    )}
+                </div>
             </div>
 
-            <div>
+            <div className="overflow-x-auto">
                 <DynamicTable header={header} data={members} />
             </div>
-        </>
+        </div>
     )
 }
 
