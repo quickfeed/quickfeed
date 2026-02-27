@@ -6,13 +6,49 @@ import { CourseSubmissions } from "../proto/qf/requests_pb"
 import { create, isMessage } from "@bufbuild/protobuf"
 
 export enum Color {
-    RED = "danger",
+    RED = "error",
     BLUE = "primary",
     GREEN = "success",
     YELLOW = "warning",
     GRAY = "secondary",
     WHITE = "light",
     BLACK = "dark",
+}
+
+// Lookup objects for DaisyUI/Tailwind class names
+// These ensure the full class names are present in the code for Tailwind's purge system
+export const ButtonColorClasses: Record<Color, string> = {
+    [Color.RED]: "btn-error",
+    [Color.BLUE]: "btn-primary",
+    [Color.GREEN]: "btn-success",
+    [Color.YELLOW]: "btn-warning",
+    [Color.GRAY]: "btn-neutral",
+    [Color.WHITE]: "btn-ghost",
+    [Color.BLACK]: "btn-neutral",
+}
+
+export const BadgeColorClasses: Record<Color, string> = {
+    [Color.RED]: "badge-error",
+    [Color.BLUE]: "badge-primary",
+    [Color.GREEN]: "badge-success",
+    [Color.YELLOW]: "badge-warning",
+    [Color.GRAY]: "badge-neutral",
+    [Color.WHITE]: "badge-ghost",
+    [Color.BLACK]: "badge-neutral",
+}
+
+export const BackgroundColorClasses: Record<Color, string> = {
+    [Color.RED]: "bg-error",
+    [Color.BLUE]: "bg-primary",
+    [Color.GREEN]: "bg-success",
+    [Color.YELLOW]: "bg-warning",
+    [Color.GRAY]: "bg-neutral",
+    [Color.WHITE]: "bg-base-100",
+    [Color.BLACK]: "bg-neutral",
+}
+
+export enum Badge {
+
 }
 
 export enum Sort {
@@ -146,6 +182,14 @@ export const EnrollmentStatus = {
     1: "Pending",
     2: "Student",
     3: "Teacher",
+}
+
+// Badge color classes for enrollment status
+export const EnrollmentStatusBadgeColor: Record<number, string> = {
+    0: "badge-ghost",
+    1: "badge-warning",
+    2: "badge-success",
+    3: "badge-primary",
 }
 
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
@@ -342,26 +386,26 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
-            return "result-approved"
+            return "bg-success text-success-content"
         }
         if (isAllRevision(submission)) {
-            return "result-revision"
+            return "bg-warning text-warning-content"
         }
         if (isAllRejected(submission)) {
-            return "result-rejected"
+            return "bg-error text-error-content"
         }
         if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {
-            return "result-mixed"
+            return "bg-mixed-status "
         }
     } else {
         if (userHasStatus(submission, owner.userID, Submission_Status.APPROVED)) {
-            return "result-approved"
+            return "bg-success text-success-content"
         }
         if (userHasStatus(submission, owner.userID, Submission_Status.REVISION)) {
-            return "result-revision"
+            return "bg-warning text-warning-content"
         }
         if (userHasStatus(submission, owner.userID, Submission_Status.REJECTED)) {
-            return "result-rejected"
+            return "bg-error text-error-content"
         }
     }
     return "clickable"
