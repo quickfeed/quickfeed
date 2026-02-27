@@ -1,5 +1,6 @@
 import React from "react"
 import AboutPage from "./AboutPage"
+import { nextURL } from "../Helpers"
 
 const LoginPage = () => {
     return (
@@ -16,7 +17,7 @@ const LoginPage = () => {
                     <h4 className="text-xl font-semibold mb-2">Sign in with GitHub</h4>
                     <p className="text-base-content/60 mb-6">to continue to QuickFeed</p>
                     <a
-                        href="/auth/github"
+                        href={`/auth/github?next=${nextURL()}`}
                         className="btn btn-success text-white hover:btn-success/90 transition-colors"
                     >
                         Sign in
