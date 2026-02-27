@@ -1,14 +1,28 @@
-@layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme);
-/* Preflight affects the NavbarUser styling */
-/* @import "tailwindcss/preflight.css" layer(base); */
-@import "tailwindcss/utilities.css" layer(utilities);
-
-/* Not including conflicting DaisyUI Components */
-@source not inline("btn");
-@source not inline("badge");
-@source not inline("card card-{body,title,text}");
+@import 'tailwindcss';
 
 @plugin 'daisyui' {
-  themes: light --default, dark --prefersdark;
+  themes: light --default, dark, cupcake, synthwave, cyberpunk, forest, aqua;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .bg-mixed-status {
+    background: linear-gradient(
+      45deg,
+      var(--color-success) 33%,
+      var(--color-warning) 33%,
+      var(--color-warning) 66%,
+      var(--color-error) 66%
+    );
+  }
 }
