@@ -40,9 +40,6 @@ const Assignments = () => {
                     setTimeout(() => setButtonText("Rebuild All Tests"), 3000)
                 }
             }
-            setButtonText("Rebuilding...")
-            const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.ID, courseID })
-            setButtonText(success ? "Finished rebuilding" : "Failed to rebuild")
         }
 
         return (
