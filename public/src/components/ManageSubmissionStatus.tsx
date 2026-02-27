@@ -42,7 +42,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
     const getButtonType = (status: Submission_Status, grade?: Grade) => {
         const submission = state.selectedSubmission
         if (grade?.Status === status || (submission?.Grades && hasAllStatus(submission, status))) {
-            return ButtonType.BUTTON
+            return ButtonType.SOLID
         }
         return ButtonType.OUTLINE
     }
@@ -60,33 +60,25 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                 text={text}
                 color={color}
                 type={getButtonType(status, grade)}
-                className={`mr-2 ${viewIndividualGrades ? "" : "col"}`}
+                className={viewIndividualGrades ? "" : "flex-1"}
                 onClick={() => handleSetStatusOrGrade(status, grade)}
             />
         ))
-
-        if (grade) {
-            return dynamicButtons
-        }
-        return dynamicButtons.map((button, index) => (
-            <div key={`${buttonsInfo[index].text}-divButton`} className="col">
-                {button}
-            </div>
-        ))
+        return <>{dynamicButtons}</>
     }
 
     const getUserName = (userID: bigint): string =>
         state.courseEnrollments[courseID].find(enrollment => enrollment.userID === userID)?.user?.Name ?? ""
 
     return (
-        <>
-            <div className="row mb-1 ml-auto mr-auto">
+        <div className="space-y-4">
+            <div className="flex flex-wrap gap-3">
                 {state.selectedSubmission?.Grades && state.selectedSubmission.Grades.length > 1 && (
                     <DynamicButton
                         text={viewIndividualGrades ? "All Grades" : "Individual Grades"}
                         color={Color.GRAY}
                         type={ButtonType.OUTLINE}
-                        className="col mr-2"
+                        className="flex-1 min-w-[150px]"
                         onClick={() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades))}
                     />
                 )}
@@ -95,30 +87,36 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}
                         type={ButtonType.OUTLINE}
-                        className="col mr-2"
+                        className="flex-1 min-w-[150px]"
                         onClick={handleRebuild}
                     />
                 )}
             </div>
 
             {!viewIndividualGrades && (
-                <div className="row m-auto">
+                <div className="flex gap-3">
                     <StatusButtons />
                 </div>
             )}
-            {viewIndividualGrades &&
-                <table className="table">
-                    <tbody>
-                        {state.selectedSubmission?.Grades.map((grade) => (
-                            <tr key={grade.UserID.toString()}>
-                                <td className="td-center word-break">{getUserName(grade.UserID)}</td>
-                                <StatusButtons grade={grade} />
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            }
-        </>
+            {viewIndividualGrades && (
+                <div className="overflow-x-auto">
+                    <table className="table table-zebra">
+                        <tbody>
+                            {state.selectedSubmission?.Grades.map((grade) => (
+                                <tr key={grade.UserID.toString()}>
+                                    <td className="font-medium">{getUserName(grade.UserID)}</td>
+                                    <td>
+                                        <div className="flex gap-2 justify-end">
+                                            <StatusButtons grade={grade} />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
     )
 }
 
