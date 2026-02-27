@@ -31,7 +31,7 @@ const AdminPage = () => {
         <div className="box">
             <RedirectButton to={root} />
             <Alerts />
-            <div className="row" hidden={location.pathname !== root}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
                 <Card {...editCourse} />
