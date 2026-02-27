@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 export interface NavLink {
     text: string
@@ -15,25 +15,22 @@ const NavBarLink = ({ link: { text, to, icons, jsx } }: { link: NavLink }) => {
     icons?.forEach((icon) => {
         if (icon) {
             iconElements.push(
-                <div key={icon.text} id="icon" className={`${icon.classname} ml-2`}>
-                    {icon.text}
+                <div key={icon.text} className={`${icon.classname} ml-2 w-6 h-[22px] flex items-center justify-center`}>
+                    <span className="text-xs">{icon.text}</span>
                 </div>
             )
         }
     })
 
     return (
-        <li>
+        <li className="w-full">
             <button
                 type="button"
                 onClick={() => navigate(to)}
-                className="navbar-link-btn"
-                style={{ background: "none", border: "none", padding: 0, width: "100%" }}
+                className="flex justify-between items-center w-full h-16 px-4 hover:bg-base-100 rounded-none"
             >
-                <div className="col" id="title">
-                    <Link to={to}>{text}</Link>
-                </div>
-                <div className="col">
+                <span className="flex-1 text-left">{text}</span>
+                <div className="flex items-center gap-1">
                     {iconElements}
                     {jsx ?? null}
                 </div>

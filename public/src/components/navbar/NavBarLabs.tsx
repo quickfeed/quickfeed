@@ -4,7 +4,6 @@ import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useNavigate, useLocation } from "react-router"
-import { Status } from "../../consts"
 import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
 import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
 
@@ -27,24 +26,21 @@ const NavBarLabs = () => {
         )
     }
 
-    const highlightSubmission = (submission: Submission, assignment: Assignment) => {
+    const isHighlighted = (submission: Submission, assignment: Assignment): boolean => {
         // The submission should be highlighted if:
         // - the assignment ID is equal to the selected assignment ID
         //  AND ONE OF THE FOLLOWING:
         // - the location contains `group-lab` and the submission is a group submission
         // - the location contains `lab` and the submission is not a group submission
-        // Otherwise, return an empty string
-        // This way we can highlight the correct lab link in the navbar
-        let linkClass = ""
         if (BigInt(state.selectedAssignmentID) === assignment.ID) {
             const groupPath = location.pathname.includes("group-lab")
             if (groupPath && isGroupSubmission(submission)) {
-                linkClass = Status.Active
+                return true
             } else if (!groupPath && !isGroupSubmission(submission)) {
-                linkClass = Status.Active
+                return true
             }
         }
-        return linkClass
+        return false
     }
 
     const labLinks = state.assignments[state.activeCourse.toString()]?.map(assignment => {
@@ -61,10 +57,10 @@ const NavBarLabs = () => {
                 to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}`,
                 jsx: submissionIcon(submission)
             }
+            const highlighted = isHighlighted(submission, assignment)
             return (
                 <div
-                    className={highlightSubmission(submission, assignment)}
-                    style={{ position: "relative" }}
+                    className={`relative ${highlighted ? "bg-base-100" : ""}`}
                     key={submission.ID.toString()}
                     onClick={() => { navigate(link.to) }}
                     role="button"
