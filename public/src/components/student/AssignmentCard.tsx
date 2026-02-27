@@ -34,21 +34,25 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
   const ariaHidden = hasSubmissions ? "true" : "false"
   const hover = hasSubmissions ? "hover-effect" : ""
   return (
-    <div key={assignment.ID.toString()} className={`card mb-4 shadow-sm ${hover}`} onClick={redirectToSubmission} role={buttonRole} aria-hidden={ariaHidden}> {/* skipcq: JS-0746, JS-0765 */}
-      <div className="card-header">
-        <div className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
-            <h5 className="card-title mb-0">{assignment.name}</h5>
+    <div key={assignment.ID.toString()} className={`card mb-4 shadow-sm overflow-hidden ${hover}`} onClick={redirectToSubmission} role={buttonRole} aria-hidden={ariaHidden}> {/* skipcq: JS-0746, JS-0765 */}
+      {/* Card Header with Background */}
+      <div className="bg-base-200 px-4 py-2 border-b border-base-300">
+        <div className="flex flex-row justify-between items-center">
+          <div className="flex items-center gap-2">
+            <h5 className="card-title mb-0 text-lg font-bold">{assignment.name}</h5>
             {assignment.isGroupLab && (
-              <Badge className="ml-2 p-2" color="gray" text="Group" />
+              <Badge color="yellow" text="Group" type="solid" />
             )}
           </div>
-          <div>
-            <i className="fa fa-calendar mr-2" /> {getFormattedTime(assignment.deadline, true)}
+          <div className="flex items-center gap-2 text-sm text-base-content/70">
+            <i className="fa fa-calendar" />
+            <span>{getFormattedTime(assignment.deadline, true)}</span>
           </div>
         </div>
       </div>
-      <div className="card-body">
+
+      {/* Card Body */}
+      <div className="card-body card-md">
         {validSubmissions.map((submission) => (
           <SubmissionRow
             key={submission.ID.toString()}
