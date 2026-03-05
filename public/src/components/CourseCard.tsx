@@ -81,7 +81,7 @@ const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
             </div>
 
             {/* Neutral Body Section */}
-            <div className="card-body">
+            <div className="card-body bg-base-300">
                 <h3 className="card-title text-xl">{course.name}</h3>
                 <p className="text-base-content/70">{course.tag} {course.year}</p>
 
