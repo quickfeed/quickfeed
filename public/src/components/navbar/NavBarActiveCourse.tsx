@@ -16,9 +16,9 @@ const NavBarActiveCourse = () => {
     }
 
     return (
-        <div className="nav-child course">
+        <div className="flex items-center">
             <Breadcrumbs />
-            <CourseFavoriteButton enrollment={enrollment} style={{ "paddingRight": "20px" }} />
+            <CourseFavoriteButton enrollment={enrollment} className="mr-5 ml-5" />
             <ToggleSwitch />
         </div>
     )

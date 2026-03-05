@@ -32,7 +32,6 @@ const Users = () => {
                 key={`${user.ID}button`}
                 text={roleActionText}
                 color={buttonColor}
-                type={ButtonType.BADGE}
                 onClick={handlePromoteAdmin(user)}
             />
         ]

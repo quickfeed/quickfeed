@@ -6,13 +6,49 @@ import { CourseSubmissions } from "../proto/qf/requests_pb"
 import { create, isMessage } from "@bufbuild/protobuf"
 
 export enum Color {
-    RED = "danger",
+    RED = "error",
     BLUE = "primary",
     GREEN = "success",
     YELLOW = "warning",
     GRAY = "secondary",
     WHITE = "light",
     BLACK = "dark",
+}
+
+// Lookup objects for DaisyUI/Tailwind class names
+// These ensure the full class names are present in the code for Tailwind's purge system
+export const ButtonColorClasses: Record<Color, string> = {
+    [Color.RED]: "btn-error",
+    [Color.BLUE]: "btn-primary",
+    [Color.GREEN]: "btn-success",
+    [Color.YELLOW]: "btn-warning",
+    [Color.GRAY]: "btn-neutral",
+    [Color.WHITE]: "btn-ghost",
+    [Color.BLACK]: "btn-neutral",
+}
+
+export const BadgeColorClasses: Record<Color, string> = {
+    [Color.RED]: "badge-error",
+    [Color.BLUE]: "badge-primary",
+    [Color.GREEN]: "badge-success",
+    [Color.YELLOW]: "badge-warning",
+    [Color.GRAY]: "badge-neutral",
+    [Color.WHITE]: "badge-ghost",
+    [Color.BLACK]: "badge-neutral",
+}
+
+export const BackgroundColorClasses: Record<Color, string> = {
+    [Color.RED]: "bg-error",
+    [Color.BLUE]: "bg-primary",
+    [Color.GREEN]: "bg-success",
+    [Color.YELLOW]: "bg-warning",
+    [Color.GRAY]: "bg-neutral",
+    [Color.WHITE]: "bg-base-100",
+    [Color.BLACK]: "bg-neutral",
+}
+
+export enum Badge {
+
 }
 
 export enum Sort {
@@ -145,6 +181,14 @@ export const EnrollmentStatus = {
     1: "Pending",
     2: "Student",
     3: "Teacher",
+}
+
+// Badge color classes for enrollment status
+export const EnrollmentStatusBadgeColor: Record<number, string> = {
+    0: "badge-ghost",
+    1: "badge-warning",
+    2: "badge-success",
+    3: "badge-primary",
 }
 
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
@@ -280,13 +324,6 @@ export const getNumApproved = (submissions: Submission[]): number => {
     return num
 }
 
-export const EnrollmentStatusBadge = {
-    0: "",
-    1: "badge badge-info",
-    2: "badge badge-primary",
-    3: "badge badge-danger",
-}
-
 /** SubmissionStatus returns a string with the status of the submission, given the status number, ex. Submission.Status.APPROVED -> "Approved" */
 export const SubmissionStatus = {
     0: "None",
@@ -354,26 +391,26 @@ export const nextURL = (): string => {
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
-            return "result-approved"
+            return "bg-success text-success-content"
         }
         if (isAllRevision(submission)) {
-            return "result-revision"
+            return "bg-warning text-warning-content"
         }
         if (isAllRejected(submission)) {
-            return "result-rejected"
+            return "bg-error text-error-content"
         }
         if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {
-            return "result-mixed"
+            return "bg-mixed-status "
         }
     } else {
         if (userHasStatus(submission, owner.userID, Submission_Status.APPROVED)) {
-            return "result-approved"
+            return "bg-success text-success-content"
         }
         if (userHasStatus(submission, owner.userID, Submission_Status.REVISION)) {
-            return "result-revision"
+            return "bg-warning text-warning-content"
         }
         if (userHasStatus(submission, owner.userID, Submission_Status.REJECTED)) {
-            return "result-rejected"
+            return "bg-error text-error-content"
         }
     }
     return "clickable"
@@ -663,4 +700,69 @@ export class SubmissionsForUser {
             this.groupSubmissions = clone.set(courseID, submissions)
         }
     }
+}
+
+/*******************************************************************************
+ *                    Course Member Filtering and Sorting
+ ******************************************************************************/
+
+/** SubmissionData holds submission information for a course member (enrollment or group) */
+export interface SubmissionData {
+    submissions: Submission[]
+    /** The submission for the selected assignment (if assignmentID > 0) */
+    selectedSubmission?: Submission
+}
+
+/** getSubmissionData extracts submission data for a member from the submissions map */
+export const getSubmissionData = (
+    submissions: Map<bigint, { submissions: Submission[] }>,
+    memberID: bigint,
+    assignmentID: bigint
+): SubmissionData => {
+    const subs = submissions.get(memberID)?.submissions ?? []
+    const selectedSubmission = assignmentID > 0
+        ? subs.find(s => s.AssignmentID === assignmentID)
+        : undefined
+    return { submissions: subs, selectedSubmission }
+}
+
+/** FilterFn is a predicate function for filtering course members */
+type FilterFn<T> = (member: T, data: SubmissionData, numAssignments: number) => boolean
+
+/** Filters members by approval status - keeps members that are NOT fully approved */
+export const filterByApproval: FilterFn<{ ID: bigint }> = (_member, data, numAssignments) => {
+    if (data.selectedSubmission) {
+        return !isAllApproved(data.selectedSubmission)
+    }
+    const numApproved = data.submissions.reduce(
+        (acc, sub) => acc + (isAllApproved(sub) ? 1 : 0), 0
+    )
+    return numApproved < numAssignments
+}
+
+/** Filters members by release status - keeps members that are NOT released */
+export const filterByReleased: FilterFn<{ ID: bigint }> = (_member, data) => {
+    if (data.selectedSubmission) {
+        return !data.selectedSubmission.released
+    }
+    return !data.submissions.some(sub => sub.released)
+}
+
+/** SortValue extracts a comparable value from submission data */
+type SortValueFn = (data: SubmissionData) => number
+
+/** Gets the score for sorting */
+export const getScoreSortValue: SortValueFn = (data) => {
+    if (data.selectedSubmission) {
+        return data.selectedSubmission.score
+    }
+    return getSubmissionsScore(data.submissions)
+}
+
+/** Gets the approval count for sorting */
+export const getApprovalSortValue: SortValueFn = (data) => {
+    if (data.selectedSubmission) {
+        return isAllApproved(data.selectedSubmission) ? 1 : 0
+    }
+    return getNumApproved(data.submissions)
 }

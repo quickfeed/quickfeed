@@ -50,14 +50,30 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     }
 
     return (
-        <div>
+        <div className="w-full">
             {!isValid ? children : null}
-            <form className="form-group" onSubmit={submitHandler}>
+            <form className="space-y-4" onSubmit={submitHandler}>
                 <FormInput prepend="Name" name="name" defaultValue={user.Name} onChange={handleChange} />
                 <FormInput prepend="Email" name="email" defaultValue={user.Email} onChange={handleChange} type="email" />
                 <FormInput prepend="Student ID" name="studentid" defaultValue={user.StudentID} onChange={handleChange} type="number" />
-                <div className="col input-group mb-3">
-                    <input className="btn btn-primary" disabled={!isValid} type="submit" value="Save" style={{ marginTop: "20px" }} />
+                <div className="flex gap-3 mt-6 pt-4 border-t border-base-300">
+                    <button
+                        className="btn btn-primary flex-1 gap-2"
+                        disabled={!isValid}
+                        type="submit"
+                    >
+                        <i className="fa fa-save"></i>
+                        Save Changes
+                    </button>
+                    {state.isValid && (
+                        <button
+                            className="btn btn-ghost"
+                            type="button"
+                            onClick={() => setEditing(false)}
+                        >
+                            Cancel
+                        </button>
+                    )}
                 </div>
             </form>
         </div>

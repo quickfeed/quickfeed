@@ -12,27 +12,30 @@ export const FeedbackFormActions: React.FC<FeedbackFormActionsProps> = ({
     onCancel
 }) => {
     return (
-        <div className="d-flex justify-content-end">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-base-300">
+            <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={onCancel}
+            >
+                Cancel
+            </button>
             <button
                 type="submit"
-                className="btn btn-primary ml-2"
+                className="btn btn-primary gap-2"
                 disabled={isSubmitting || !isFormValid}
             >
                 {isSubmitting ? (
                     <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                        <span className="loading loading-spinner loading-sm" />
                         Submitting...
                     </>
                 ) : (
-                    'Submit Feedback'
+                    <>
+                        <i className="fa fa-paper-plane" />
+                        Submit Feedback
+                    </>
                 )}
-            </button>
-            <button
-                type="button"
-                className="btn btn-secondary ml-2"
-                onClick={onCancel}
-            >
-                Cancel
             </button>
         </div>
     )

@@ -1,6 +1,9 @@
 import React from "react"
 import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
+import DynamicButton from "../DynamicButton"
+import Button, { ButtonType } from "../admin/Button"
+import { Color } from "../../Helpers"
 
 
 const GradeAllCriteria = () => {
@@ -15,10 +18,10 @@ const GradeAllCriteria = () => {
         actions.setAllGrade(grade)
     }
 
-    const buttons: { icon: string, status: GradingCriterion_Grade, style: string, onClick: () => void }[] = [
-        { icon: "fa fa-check", status: GradingCriterion_Grade.PASSED, style: "success", onClick: handleSetAllGrade(GradingCriterion_Grade.PASSED) },
-        { icon: "fa fa-ban", status: GradingCriterion_Grade.NONE, style: "secondary", onClick: handleSetAllGrade(GradingCriterion_Grade.NONE) },
-        { icon: "fa fa-times", status: GradingCriterion_Grade.FAILED, style: "danger", onClick: handleSetAllGrade(GradingCriterion_Grade.FAILED) },
+    const buttons: { icon: string, status: GradingCriterion_Grade, style: Color, onClick: () => void }[] = [
+        { icon: "fa fa-check", status: GradingCriterion_Grade.PASSED, style: Color.GREEN, onClick: handleSetAllGrade(GradingCriterion_Grade.PASSED) },
+        { icon: "fa fa-ban", status: GradingCriterion_Grade.NONE, style: Color.GRAY, onClick: handleSetAllGrade(GradingCriterion_Grade.NONE) },
+        { icon: "fa fa-times", status: GradingCriterion_Grade.FAILED, style: Color.RED, onClick: handleSetAllGrade(GradingCriterion_Grade.FAILED) },
     ]
 
     const StatusButtons = buttons.map((button) => {
@@ -27,12 +30,19 @@ const GradeAllCriteria = () => {
             bm.criteria.every(c => c.grade === button.status))
 
         // if all criteria have the same grade, use solid button style, else outline
-        const style = all ? button.style : `outline-${button.style}`
+        const buttonType = all ? ButtonType.SOLID : ButtonType.GHOST
 
         return (
-            <div role="button" aria-hidden="true" key={button.icon} className={`col btn-xs btn-${style} mr-2 border`} onClick={() => button.onClick()}>
+            <Button
+                text=""
+                key={button.icon}
+                color={button.style}
+                type={buttonType}
+                className={`btn-md mr-2`}
+                onClick={() => button.onClick()}
+            >
                 <i className={button.icon} />
-            </div>
+            </Button>
         )
     })
 

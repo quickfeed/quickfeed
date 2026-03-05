@@ -1,6 +1,8 @@
 import React from "react"
 import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
+import Button, { ButtonType } from "../admin/Button"
+import { Color } from "../../Helpers"
 
 
 const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
@@ -13,19 +15,25 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
         return null
     }
 
-    const buttons: { icon: string, status: GradingCriterion_Grade, style: string, onClick: () => void }[] = [
-        { icon: "fa fa-check", status: GradingCriterion_Grade.PASSED, style: "success", onClick: handleSetGrade(GradingCriterion_Grade.PASSED) },
-        { icon: "fa fa-ban", status: GradingCriterion_Grade.NONE, style: "secondary", onClick: handleSetGrade(GradingCriterion_Grade.NONE) },
-        { icon: "fa fa-times", status: GradingCriterion_Grade.FAILED, style: "danger", onClick: handleSetGrade(GradingCriterion_Grade.FAILED) },
+    const buttons: { icon: string, status: GradingCriterion_Grade, style: Color, onClick: () => void }[] = [
+        { icon: "fa fa-check", status: GradingCriterion_Grade.PASSED, style: Color.GREEN, onClick: handleSetGrade(GradingCriterion_Grade.PASSED) },
+        { icon: "fa fa-ban", status: GradingCriterion_Grade.NONE, style: Color.GRAY, onClick: handleSetGrade(GradingCriterion_Grade.NONE) },
+        { icon: "fa fa-times", status: GradingCriterion_Grade.FAILED, style: Color.RED, onClick: handleSetGrade(GradingCriterion_Grade.FAILED) },
     ]
 
     const StatusButtons = buttons.map((button) => {
-        const style = criterion.grade === button.status ? button.style : `outline-${button.style}`
-        // TODO: Perhaps refactor button into a separate general component to enable reuse
+        const buttonType = criterion.grade === button.status ? ButtonType.SOLID : ButtonType.GHOST
         return (
-            <div role="button" aria-hidden="true" key={button.icon} className={`col btn-xs btn-${style} mr-2 border`} onClick={() => button.onClick()}>
+            <Button
+                text=""
+                key={button.icon}
+                color={button.style}
+                type={buttonType}
+                className={`btn-md mr-2`}
+                onClick={() => button.onClick()}
+            >
                 <i className={button.icon} />
-            </div>
+            </Button>
         )
     })
 

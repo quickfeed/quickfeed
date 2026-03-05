@@ -7,11 +7,13 @@ const ProfileCard = ({ children }: { children: React.ReactNode }) => {
     const self = useAppState().self
 
     return (
-        <div className="card" style={{ width: "28rem" }}>
-            <div className="card-header text-center bg-dark" style={{ height: "5rem", marginBottom: "3rem" }}>
-                <img className="card-img" style={{ borderRadius: "50%", width: "8rem" }} src={self.AvatarURL} alt="Profile Card" />
-            </div>
-            <div className="card-body">
+        <div className="card bg-base-200 shadow-xl w-full max-w-md">
+            <div className="card-body items-center text-center pt-8">
+                <div className="avatar mb-4">
+                    <div className="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                        <img src={self.AvatarURL} alt="Profile avatar" />
+                    </div>
+                </div>
                 {children}
             </div>
         </div>

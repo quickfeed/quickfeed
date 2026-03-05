@@ -79,16 +79,19 @@ const GroupForm = () => {
         }
         if (id !== state.self.ID && !userIds.includes(id)) {
             return (
-                <li hidden={search(enrollment)} key={id.toString()} className="list-group-item">
-                    {enrollment.user?.Name}
-                    <Button
-                        text={"+"}
-                        color={Color.GREEN}
-                        type={ButtonType.BADGE}
-                        className="ml-2 float-right"
+                <div
+                    hidden={search(enrollment)}
+                    key={id.toString()}
+                    className="flex items-center justify-between p-3 hover:bg-base-200 rounded-lg transition-colors group"
+                >
+                    <span className="font-medium">{enrollment.user?.Name}</span>
+                    <button
+                        className="btn btn-sm btn-circle btn-success opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => actions.updateGroupUsers(enrollment.user)}
-                    />
-                </li>
+                    >
+                        <i className="fa fa-plus"></i>
+                    </button>
+                </div>
             )
         }
         return null
@@ -96,17 +99,25 @@ const GroupForm = () => {
 
     const groupMembers = group.users.map(user => {
         return (
-            <li key={user.ID.toString()} className="list-group-item">
-                <img id="group-image" src={user.AvatarURL} alt="" />
-                {user.Name}
-                <Button
-                    text={"-"}
-                    color={Color.RED}
-                    type={ButtonType.BADGE}
-                    className="float-right"
+            <div
+                key={user.ID.toString()}
+                className="flex items-center justify-between p-3 bg-base-200/50 hover:bg-base-200 rounded-lg transition-colors group"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="avatar">
+                        <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                            <img src={user.AvatarURL} alt={`${user.Name}'s avatar`} />
+                        </div>
+                    </div>
+                    <span className="font-medium">{user.Name}</span>
+                </div>
+                <button
+                    className="btn btn-sm btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => actions.updateGroupUsers(user)}
-                />
-            </li>
+                >
+                    <i className="fa fa-times"></i>
+                </button>
+            </div>
         )
     })
 
@@ -120,70 +131,111 @@ const GroupForm = () => {
 
     const EnrollmentTypeButton = () => {
         if (!isTeacher) {
-            return <div>Students</div>
+            return (
+                <div className="flex items-center justify-center gap-2 text-lg font-semibold">
+                    <i className="fa fa-users"></i>
+                    <span>Students</span>
+                </div>
+            )
         }
         return (
-            <button className="btn btn-primary w-100" type="button" onClick={toggleEnrollmentType}>
+            <button className="btn btn-primary w-full gap-2" type="button" onClick={toggleEnrollmentType}>
+                <i className={`fa ${enrollmentType === Enrollment_UserStatus.STUDENT ? 'fa-user-graduate' : 'fa-chalkboard-teacher'}`}></i>
                 {enrollmentType === Enrollment_UserStatus.STUDENT ? "Students" : "Teachers"}
             </button>
         )
     }
 
-    const GroupNameBanner = <div className="card-header" style={{ textAlign: "center" }}>{group.name}</div>
+    const GroupNameBanner = (
+        <div className="flex items-center justify-center gap-2 bg-primary text-primary-content px-4 py-3 rounded-t-2xl">
+            <i className="fa fa-users"></i>
+            <h3 className="text-lg font-bold">{group.name}</h3>
+        </div>
+    )
+
     const GroupNameInput = group && isApprovedGroup(group)
         ? null
-        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)} />
+        : (
+            <div className="form-control px-4 pt-4">
+                <input
+                    className="input input-bordered w-full focus:input-primary"
+                    placeholder="Enter group name..."
+                    onKeyUp={e => actions.updateGroupName(e.currentTarget.value)}
+                />
+            </div>
+        )
 
     return (
-        <div className="container">
-            <div className="row">
-                <div className="card well col-md-offset-2">
-                    <div className="card-header" style={{ textAlign: "center" }}>
-                        <EnrollmentTypeButton />
+        <div className="container mx-auto px-4 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+                {/* Available Users Panel */}
+                <div className="card bg-base-200 shadow-xl">
+                    <div className="card-body p-0">
+                        <div className="bg-base-200 px-4 py-3 rounded-t-2xl">
+                            <EnrollmentTypeButton />
+                        </div>
+                        <div className="px-4 pt-4">
+                            <Search placeholder="Search users..." setQuery={setQuery} />
+                        </div>
+                        <div className="p-4 space-y-1 max-h-96 overflow-y-auto">
+                            {sortedAndFilteredEnrollments.length > 0 ? (
+                                sortedAndFilteredEnrollments.map((enrollment) => {
+                                    return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
+                                })
+                            ) : (
+                                <div className="text-center py-8 text-base-content/60">
+                                    <i className="fa fa-users text-3xl mb-2"></i>
+                                    <p>No users available</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <Search placeholder={"Search"} setQuery={setQuery} />
-
-                    <ul className="list-group list-group-flush">
-                        {sortedAndFilteredEnrollments.map((enrollment) => {
-                            return <AvailableUser key={enrollment.ID} enrollment={enrollment} />
-                        })}
-                    </ul>
                 </div>
 
-                <div className='col'>
-                    <div className="card well col-md-offset-2" >
+                {/* Group Members Panel */}
+                <div className="card bg-base-200 shadow-xl">
+                    <div className="card-body p-0">
                         {GroupNameBanner}
                         {GroupNameInput}
-                        {groupMembers}
-                        {group && group.ID ?
-                            <div className="row justify-content-md-center">
+                        <div className="p-4 space-y-2">
+                            {groupMembers.length > 0 ? (
+                                groupMembers
+                            ) : (
+                                <div className="text-center py-8 text-base-content/60">
+                                    <i className="fa fa-user-plus text-3xl mb-2"></i>
+                                    <p>Add members to your group</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="px-4 pb-4 pt-2 border-t border-base-300">
+                            {group && group.ID ? (
+                                <div className="flex gap-3">
+                                    <DynamicButton
+                                        text="Update Group"
+                                        color={Color.BLUE}
+                                        className="flex-1"
+                                        onClick={() => actions.updateGroup(group)}
+                                    />
+                                    <Button
+                                        text="Cancel"
+                                        color={Color.RED}
+                                        type={ButtonType.OUTLINE}
+                                        onClick={() => actions.setActiveGroup(null)}
+                                    />
+                                </div>
+                            ) : (
                                 <DynamicButton
-                                    text={"Update"}
-                                    color={Color.BLUE}
-                                    type={ButtonType.BUTTON}
-                                    className="ml-2"
-                                    onClick={() => actions.updateGroup(group)}
+                                    text="Create Group"
+                                    color={Color.GREEN}
+                                    className="w-full"
+                                    onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}
                                 />
-                                <Button
-                                    text={"Cancel"}
-                                    color={Color.RED}
-                                    type={ButtonType.OUTLINE}
-                                    className="ml-2"
-                                    onClick={() => actions.setActiveGroup(null)}
-                                />
-                            </div>
-                            :
-                            <DynamicButton
-                                text={"Create Group"}
-                                color={Color.GREEN}
-                                type={ButtonType.BUTTON}
-                                onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}
-                            />
-                        }
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     )
 }
 
