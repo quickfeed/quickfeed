@@ -3,11 +3,11 @@ import { Route, Routes, useLocation } from "react-router"
 import CourseLabs from "../components/student/CourseLabs"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
-import RedirectButton from "../components/RedirectButton"
 import { useCourseID } from "../hooks/useCourseID"
 import Card from "../components/Card"
 import { useAppState } from "../overmind"
 import { RepositoryCards } from "../components/student/RepositoryCards"
+import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
 
 
 const StudentPage = () => {
@@ -20,6 +20,9 @@ const StudentPage = () => {
     const hasGroup = state.hasGroup(courseID.toString())
     const groupName = enrollment?.group ? `(${enrollment.group.name})` : ""
 
+    // Enable Backspace keyboard shortcut to navigate back to root
+    useBackspaceNavigation(root)
+
     const groupCard = {
         title: hasGroup ? `View Group ${groupName}` : "Create a Group",
         text: hasGroup ? "View your group." : "Create a group for this course.",
@@ -28,8 +31,7 @@ const StudentPage = () => {
     }
 
     return (
-        <div className="box">
-            <RedirectButton to={root} />
+        <>
             <div hidden={location.pathname !== root}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <RepositoryCards repositories={repos} groupName={groupName} />
@@ -42,7 +44,7 @@ const StudentPage = () => {
                 <Route path="/lab/:lab" element={<Lab />} />
                 <Route path="/group-lab/:lab" element={<Lab />} />
             </Routes>
-        </div>
+        </>
     )
 }
 
