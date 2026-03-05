@@ -24,22 +24,6 @@
     transform: -ms-translate(-50%, -50%);
 }
 
-#content {
-    transition: margin-left ease-in-out 0.2s;
-    margin-left: 350px;
-    margin-right: 100px;
-    margin-top: 30px;
-    width: 100%;
-}
-
-#content-full {
-    transition: margin-left ease-in-out 0.2s;
-    margin-left: 100px;
-    margin-right: 100px;
-    margin-top: 30px;
-    width: 100%;
-}
-
 body {
     margin: 0px;
 }
