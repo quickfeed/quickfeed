@@ -106,7 +106,6 @@ const Members = () => {
         // rolebuttons can either be accept/reject, promote/demote or just the badge icon (student/teacher)
         const roleButtons = isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
         const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
-
         const nameLink = enrollment.user ? (
             <a
                 href={userRepoLink(enrollment.user, course)}
@@ -114,6 +113,11 @@ const Members = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-primary transition-colors"
             >
+                <img 
+                    src={enrollment.user.AvatarURL} 
+                    alt={`${Name}'s avatar`}
+                    className="w-6 h-6 rounded-full border border-base-300"
+                />
                 {Name}
             </a>
         ) : Name
