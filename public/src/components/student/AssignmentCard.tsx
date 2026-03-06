@@ -36,7 +36,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
   return (
     <div key={assignment.ID.toString()} className={`card mb-4 shadow-sm overflow-hidden ${hover}`} onClick={redirectToSubmission} role={buttonRole} aria-hidden={ariaHidden}> {/* skipcq: JS-0746, JS-0765 */}
       {/* Card Header with Background */}
-      <div className="bg-base-200 px-4 py-2 border-b border-base-300">
+      <div className="bg-base-300 px-4 py-2 border-b border-base-300">
         <div className="flex flex-row justify-between items-center">
           <div className="flex items-center gap-2">
             <h5 className="card-title mb-0 text-lg font-bold">{assignment.name}</h5>
@@ -52,7 +52,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
       </div>
 
       {/* Card Body */}
-      <div className="card-body card-md">
+      <div className="card-body bg-base-200 card-md">
         {validSubmissions.map((submission) => (
           <SubmissionRow
             key={submission.ID.toString()}

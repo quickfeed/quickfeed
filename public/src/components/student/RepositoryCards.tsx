@@ -29,7 +29,7 @@ const RepositoryCard = ({ title, description, links }: RepositoryCardProps) => {
     if (links.length === 0) return null
 
     return (
-        <div className="card bg-base-200 shadow-sm">
+        <div className="card bg-base-300 shadow-sm">
             <div className="card-body">
                 <h5 className="card-title">{title}</h5>
                 <p className="card-text">{description}</p>
