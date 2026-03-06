@@ -1,7 +1,7 @@
 import React from "react"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
-import ProgressBar, { Progress } from "../ProgressBar"
+import ProgressIndicator from "../ProgressIndicator"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useNavigate, useLocation } from "react-router"
 import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
@@ -67,7 +67,7 @@ const NavBarLabs = () => {
                     aria-hidden="true"
                 >
                     <NavBarLink link={link} />
-                    <ProgressBar courseID={state.activeCourse.toString()} submission={submission} type={Progress.NAV} />
+                    <ProgressIndicator courseID={state.activeCourse.toString()} submission={submission} />
                 </div>
             )
         })

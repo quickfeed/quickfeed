@@ -1,7 +1,7 @@
 import React from 'react'
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getStatusByUser, isGroupSubmission } from "../../Helpers"
-import ProgressBar, { Progress } from "../ProgressBar"
+import ProgressBar from "../ProgressBar"
 import SubmissionTypeIcon from './SubmissionTypeIcon'
 
 interface SubmissionRowProps {
@@ -25,7 +25,7 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
             aria-hidden="true"
         >
             <div className="flex-1 min-w-0">
-                <ProgressBar courseID={courseID} submission={submission} type={Progress.LAB} />
+                <ProgressBar courseID={courseID} submission={submission} />
             </div>
             <div className="flex-shrink-0 w-10 flex items-center justify-center">
                 <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />

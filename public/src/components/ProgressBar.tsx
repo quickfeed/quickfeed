@@ -4,19 +4,13 @@ import { Submission, Submission_Status } from "../../proto/qf/types_pb"
 import { getStatusByUser } from "../Helpers"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
-export enum Progress {
-    NAV,
-    LAB,
-    OVERVIEW
-}
-
 type ProgressBarProps = {
     courseID: string,
     submission: Submission,
-    type: Progress
+    showText?: boolean
 }
 
-const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
+const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps) => {
     const state = useAppState()
 
     const assignment = state.assignments[courseID]?.find(assignment => assignment.ID === submission.AssignmentID)
@@ -25,46 +19,28 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
     const scorelimit = assignment?.scoreLimit ?? 0
     const status = getStatusByUser(submission, state.self.ID)
     const remainingToPass = Math.max(0, scorelimit - score)
-    // Returns a thin line to be used for labs in the NavBar
-    if (type === Progress.NAV) {
-        const percentage = 100 - score
-        const color = score >= scorelimit ? "green" : "yellow"
-        return (
-            <div style={{
-                position: "absolute",
-                borderBottom: `2px solid ${color}`,
-                bottom: 0,
-                left: 0,
-                right: `${percentage}%`,
-                opacity: 0.3
-            }} />
-        )
-    }
 
     let text = ""
     let secondaryText = ""
-    if (type === Progress.LAB) {
+    if (showText) {
         text = `${score} %`
         secondaryText = `${remainingToPass} %`
     }
 
-    // Returns a regular size progress bar to be used for labs
     let color = ""
-    if (type > Progress.NAV) {
-        switch (status) {
-            case Submission_Status.NONE:
-                color = "bg-primary"
-                break
-            case Submission_Status.APPROVED:
-                color = "bg-success"
-                break
-            case Submission_Status.REJECTED:
-                color = "bg-danger"
-                break
-            case Submission_Status.REVISION:
-                color = "bg-warning text-dark"
-                break
-        }
+    switch (status) {
+        case Submission_Status.NONE:
+            color = "bg-primary"
+            break
+        case Submission_Status.APPROVED:
+            color = "bg-success"
+            break
+        case Submission_Status.REJECTED:
+            color = "bg-error"
+            break
+        case Submission_Status.REVISION:
+            color = "bg-warning text-dark"
+            break
     }
 
     return (

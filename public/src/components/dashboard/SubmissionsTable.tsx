@@ -3,7 +3,7 @@ import { useNavigate } from "react-router"
 import { assignmentStatusText, getStatusByUser, Icon, isApproved, isExpired, SubmissionStatus, deadlineFormatter } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { Assignment, Enrollment_UserStatus, SubmissionSchema } from "../../../proto/qf/types_pb"
-import ProgressBar, { Progress } from "../ProgressBar"
+import ProgressBar from "../ProgressBar"
 import { create } from "@bufbuild/protobuf"
 import { timestampDate } from "@bufbuild/protobuf/wkt"
 
@@ -57,7 +57,7 @@ const SubmissionsTable = () => {
                         {assignment.isGroupLab ?
                             <span className="badge ml-2 float-right"><i className={Icon.GROUP} title="Group Assignment" /></span> : null}
                     </td>
-                    <td><ProgressBar courseID={courseID.toString()} submission={submission} type={Progress.OVERVIEW} /></td>
+                    <td><ProgressBar courseID={courseID.toString()} submission={submission} /></td>
                     <td>{deadlineInfo.time}</td>
                     <td>{deadlineInfo.message}</td>
                     <td className={SubmissionStatus[status]}>
