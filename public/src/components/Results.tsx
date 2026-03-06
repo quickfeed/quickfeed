@@ -10,7 +10,7 @@ import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Search from "./Search"
-import { SubmissionsTable } from "./submissions-table"
+import SubmissionsTable from "./submissions-table/SubmissionsTable"
 
 const Results = ({ review }: { review: boolean }) => {
     const state = useAppState()
