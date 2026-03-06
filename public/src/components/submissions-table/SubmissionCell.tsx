@@ -24,16 +24,6 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
     const hasGroup = submissionPair.group !== undefined && submissionPair.group !== null
     const hasBothSubmissions = hasIndividual && hasGroup
 
-    // DEBUG: Log what we're receiving
-    console.log("SubmissionCell:", {
-        hasIndividual,
-        hasGroup,
-        hasBothSubmissions,
-        individualId: submissionPair.individual?.ID?.toString(),
-        groupId: submissionPair.group?.ID?.toString(),
-        pairKeys: Object.keys(submissionPair)
-    })
-
     // Local state to toggle between individual and group submission when both exist
     // Only used when both submissions are available
     const [showGroup, setShowGroup] = useState(!state.individualSubmissionView)
