@@ -1,5 +1,5 @@
 import React, { memo, useState } from "react"
-import { Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
+import { Enrollment, GradingCriterion_Grade, Group, Submission } from "../../../proto/qf/types_pb"
 import { getSubmissionCellColor, Icon } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
@@ -128,28 +128,21 @@ const ReviewCell = memo(({ submission, onClick, isSelected, colorClass }: Review
     )?.reviewers ?? 0
 
     // Check if the current user has any pending reviews for this submission
-    const hasPendingReview = reviews.some(r => !r.ready && r.ReviewerID === state.self.ID)
-
-    // Check if the average score meets the minimum for release
-    const avgScore = reviews.length > 0
-        ? reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length
-        : 0
-    const willBeReleased = state.review.minimumScore > 0 && avgScore >= state.review.minimumScore
+    const hasPendingReview = reviews.some(r =>
+        r.gradingBenchmarks.some(benchmark =>
+            benchmark.criteria.some(criterion => criterion.grade === GradingCriterion_Grade.NONE)
+        ) && r.ReviewerID === state.self.ID
+    )
 
     const selectedClass = isSelected ? "ring-2 ring-primary ring-inset" : ""
-    const pendingClass = hasPendingReview ? "shadow-[inset_0_0_0_3px_rgba(255,165,0,0.5)]" : ""
-    const releaseClass = willBeReleased ? "opacity-75" : ""
+    const pendingClass = hasPendingReview ? "shadow-[inset_0_0_0_4px_rgba(255,140,0,0.8)]" : ""
 
     return (
         <td
-            className={`cursor-pointer ${colorClass} ${selectedClass} ${pendingClass} ${releaseClass}`}
+            className={`cursor-pointer ${colorClass} ${selectedClass} ${pendingClass}`}
             onClick={onClick}
         >
             <div className="flex items-center justify-center gap-1">
-                <i
-                    className={submission.released ? "fa fa-unlock" : "fa fa-lock"}
-                    title={submission.released ? "Released" : "Not released"}
-                />
                 <span>{reviews.length}/{numReviewers}</span>
             </div>
         </td>
