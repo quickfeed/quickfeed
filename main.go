@@ -60,6 +60,8 @@ func main() {
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
 		log.Fatal(err)
 	}
+	// Important to load the environment variables before initializing the provider.
+	env.InitProvider()
 
 	// Determine server type based on mode
 	var srvFn web.ServerType
