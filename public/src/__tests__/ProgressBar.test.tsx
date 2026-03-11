@@ -1,5 +1,5 @@
 import React from "react"
-import { Assignment, AssignmentSchema, Submission, SubmissionSchema } from "../../proto/qf/types_pb"
+import { Assignment, AssignmentSchema, EnrollmentSchema, GradeSchema, Submission, SubmissionSchema, Submission_Status } from "../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../components/ProgressBar"
 import { initializeOvermind } from "./TestHelpers"
 import { Provider } from "overmind-react"
@@ -100,6 +100,42 @@ describe("ProgressBar", () => {
             ? "2px solid green"
             : "2px solid yellow"
         expect(bar?.style).toHaveProperty("border-bottom", color)
+    })
+
+    type StatusColorTest = {
+        desc: string,
+        status: Submission_Status,
+        wantColor: string,
+    }
+
+    const statusColorTests: StatusColorTest[] = [
+        { desc: "NONE status shows bg-primary", status: Submission_Status.NONE, wantColor: "bg-primary" },
+        { desc: "APPROVED status shows bg-success", status: Submission_Status.APPROVED, wantColor: "bg-success" },
+        { desc: "REJECTED status shows bg-danger", status: Submission_Status.REJECTED, wantColor: "bg-danger" },
+        { desc: "REVISION status shows bg-warning", status: Submission_Status.REVISION, wantColor: "bg-warning" },
+    ]
+
+    test.each(statusColorTests)(`[Progress.LAB] teacher view: $desc`, (test) => {
+        const studentID = 42n
+        const submission = create(SubmissionSchema, {
+            score: 50,
+            Grades: [create(GradeSchema, { UserID: studentID, Status: test.status })],
+        })
+        const assignment = create(AssignmentSchema, { scoreLimit: 100 })
+        const selectedEnrollment = create(EnrollmentSchema, { userID: studentID })
+
+        const submissions = new SubmissionsForUser()
+        submissions.setSubmissions(1n, "USER", [submission])
+        const overmind = initializeOvermind({ assignments: { "1": [assignment] }, submissions, selectedEnrollment })
+
+        const { container } = render(
+            <Provider value={overmind}>
+                <ProgressBar courseID={"1"} submission={submission} type={Progress.LAB} />
+            </Provider>
+        )
+
+        const bar = container.getElementsByClassName("progress-bar").item(0)
+        expect(bar?.className).toContain(test.wantColor)
     })
 })
 

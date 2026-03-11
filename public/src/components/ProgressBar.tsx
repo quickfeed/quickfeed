@@ -23,7 +23,9 @@ const ProgressBar = ({ courseID, submission, type }: ProgressBarProps) => {
 
     const score = submission.score ?? 0
     const scorelimit = assignment?.scoreLimit ?? 0
-    const status = getStatusByUser(submission, state.self.ID)
+    const enrollment = state.selectedEnrollment ?? state.enrollmentsByCourseID[courseID]
+    const userID = enrollment?.userID ?? state.self.ID
+    const status = getStatusByUser(submission, userID)
     const secondaryProgress = scorelimit - score
     // Returns a thin line to be used for labs in the NavBar
     if (type === Progress.NAV) {
