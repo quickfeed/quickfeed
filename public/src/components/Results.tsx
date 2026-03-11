@@ -100,10 +100,6 @@ const Results = ({ review }: { review: boolean }) => {
         actions.global.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
     }, [actions, handleLabClick, state.activeCourse, state.submissionOwner])
 
-    if (!state.loadedCourse[courseID.toString()]) {
-        return <h1>Fetching Submissions...</h1>
-    }
-
     const generateReviewCell = (submission: Submission, owner: Enrollment | Group): RowElement => {
         if (!state.isManuallyGraded(submission)) {
             return { iconTitle: "auto graded", iconClassName: Icon.DASH, value: "" }
