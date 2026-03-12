@@ -496,13 +496,3 @@ nav.flexbox {
 .nav-item.dropdown:hover .chevron-icon {
     transform: rotate(180deg); /* flips it upwards */
 }
-
-.fixed-width-score {
-    width: 8ch;
-    text-align: right;
-}
-
-.fixed-width-percent {
-    width: 7ch;
-    text-align: right;
-}
