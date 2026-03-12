@@ -28,7 +28,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
             </thead>
             <tbody>
                 <tr>
-                    <td colSpan={2} className={className}>
+                    <td colSpan={2} className={`${className} pl-3!`}>
                         Status
                     </td>
                     <td>{assignmentStatusText(assignment, submission, status)}</td>

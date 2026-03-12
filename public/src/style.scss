@@ -225,11 +225,11 @@ body {
 }
 
 .passed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--color-success) 8px 0px 0px inset;
 }
 
 .failed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, red 5px 0px 0px inset;
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, var(--color-error) 8px 0px 0px inset;
 }
 
 .not-graded {
