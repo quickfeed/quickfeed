@@ -95,7 +95,7 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
             onClick={() => onSubmissionClick(submission)}
         >
             <div className="flex items-center justify-center gap-1">
-                <span>{submission.score}%</span>
+                <span>{submission.score}</span>
                 {renderIndicator()}
             </div>
         </td>
