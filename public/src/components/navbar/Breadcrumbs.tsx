@@ -47,50 +47,46 @@ const Breadcrumbs = () => {
         }
     }, [pathnames, state.courses, state.assignments, width])
 
+    const segments: { label: string; to: string; last: boolean }[] = []
+    pathnames.forEach((value, index) => {
+        const to = `/${pathnames.slice(0, index + 1).join('/')}`
+        // title case the path segment.
+        let breadcrumbName = decodeURIComponent(value.charAt(0).toUpperCase() + value.slice(1))
+        const last = index === pathnames.length - 1
+
+        // skip the first path segment (e.g., 'course/ID').
+        if (index === 0 && value === 'course') return
+        // skip the second path segment (e.g., 'course/ID/lab/ID').
+        if (index === 2 && value === 'lab') return
+        // Replace 'course/ID' with 'course/Course Name' in the breadcrumb.
+        if (index === 1 && courseName && pathnames[0] === 'course') breadcrumbName = courseName
+        // Replace 'lab/ID' with 'lab/Assignment Name' in the breadcrumb.
+        if (index === 3 && assignmentName && pathnames[2] === 'lab') breadcrumbName = assignmentName
+
+        segments.push({ label: breadcrumbName, to, last })
+    })
+
     return (
-        <div className="breadcrumbs flex">
-            <ul className="bg-transparent">
-                <li className="breadcrumb-item">
-                    <span onClick={handleDashboard}>Dashboard</span>
-                </li>
-                {pathnames.map((value, index) => {
-                    const last = index === pathnames.length - 1
-                    const to = `/${pathnames.slice(0, index + 1).join('/')}`
-                    // title case the path segment.
-                    let breadcrumbName = decodeURIComponent(value.charAt(0).toUpperCase() + value.slice(1))
-
-                    // skip the first path segment (e.g., 'course/ID').
-                    if (index === 0 && value === 'course') {
-                        return null
-                    }
-
-                    // skip the second path segment (e.g., 'course/ID/lab/ID').
-                    if (index === 2 && value === 'lab') {
-                        return null
-                    }
-
-                    // Replace 'course/ID' with 'course/Course Name' in the breadcrumb.
-                    if (index === 1 && courseName && pathnames[0] === 'course') {
-                        breadcrumbName = courseName
-                    }
-
-                    // Replace 'lab/ID' with 'lab/Assignment Name' in the breadcrumb.
-                    if (index === 3 && assignmentName && pathnames[2] === 'lab') {
-                        breadcrumbName = assignmentName
-                    }
-
-                    return last ? (
-                        <li key={to} className="breadcrumb-item active" aria-current="page">
-                            {breadcrumbName}
-                        </li>
+        <nav className="flex items-center font-mono text-md select-none">
+            <span
+                onClick={handleDashboard}
+                className="cursor-pointer text-base-content/50 hover:text-primary transition-colors"
+            >
+                ~
+            </span>
+            {segments.map(({ label, to, last }) => (
+                <span key={to} className="flex items-center">
+                    <span className="mx-1 text-base-content/30">/</span>
+                    {last ? (
+                        <span className="text-primary font-semibold">{label}</span>
                     ) : (
-                        <li key={to}>
-                            <Link to={to}>{breadcrumbName}</Link>
-                        </li>
-                    )
-                })}
-            </ul>
-        </div>
+                        <Link to={to} className="text-base-content/60 hover:text-primary transition-colors">
+                            {label}
+                        </Link>
+                    )}
+                </span>
+            ))}
+        </nav>
     )
 }
 
