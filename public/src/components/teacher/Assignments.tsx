@@ -6,11 +6,14 @@ import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import { useCourseID } from "../../hooks/useCourseID"
 import RubricDisplay from "./RubricDisplay"
+import { useNavigate } from "react-router-dom"
 
 const Assignments = () => {
     const courseID = useCourseID()
     const actions = useActions().global
+    const reviewActions = useActions().review
     const state = useAppState()
+    const navigate = useNavigate()
 
     const AssignmentElement = ({ assignment }: { assignment: Assignment }) => {
         const [open, setOpen] = useState<boolean>(false)
@@ -40,6 +43,11 @@ const Assignments = () => {
                     setTimeout(() => setButtonText("Rebuild All Tests"), 3000)
                 }
             }
+        }
+
+        const handleViewSubmissions = () => {
+            reviewActions.setAssignmentID(assignment.ID)
+            navigate(`/course/${courseID}/results`)
         }
 
         return (
@@ -98,7 +106,7 @@ const Assignments = () => {
                                         text="View submissions"
                                         color={Color.GREEN}
                                         type={ButtonType.OUTLINE}
-                                        onClick={() => {/* navigate to submissions list */ }}
+                                        onClick={handleViewSubmissions}
                                     />
                                 </div>
                             </div>
