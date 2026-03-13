@@ -56,7 +56,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     return (
         <>
             <tr className="align-items-center">
-                <td className={`${className} criteria-description`}>{criteria.description}</td>
+                <td className={`${className} pl-3! criteria-description`}>{criteria.description}</td>
                 <td>
                     {criteriaStatusOrPassFailIcon}
                 </td>
