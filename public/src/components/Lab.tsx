@@ -81,11 +81,6 @@ const Lab = () => {
                                     <i className="fa fa-terminal"></i>
                                     <span>Build Log</span>
                                 </h3>
-                                <div className="flex gap-2">
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ef4444' }}></span>
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#eab308' }}></span>
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#22c55e' }}></span>
-                                </div>
                             </div>
                             <div className="overflow-x-auto">
                                 <pre className="p-4 text-sm leading-relaxed font-mono bg-base-200 m-0">
