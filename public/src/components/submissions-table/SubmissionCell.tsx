@@ -94,7 +94,7 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
             className={`cursor-pointer ${colorClass} ${selectedClass}`}
             onClick={() => onSubmissionClick(submission)}
         >
-            <div className="flex items-center justify-center gap-1">
+            <div className="flex items-center justify-left gap-1">
                 <span>{submission.score}</span>
                 {renderIndicator()}
             </div>
