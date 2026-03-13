@@ -16,10 +16,10 @@ const NavBarActiveCourse = () => {
     }
 
     return (
-        <div className="flex items-center">
-            <Breadcrumbs />
-            <CourseFavoriteButton enrollment={enrollment} className="mr-5 ml-5" />
+        <div className="flex items-center gap-4">
             <ToggleSwitch />
+            <Breadcrumbs />
+            <CourseFavoriteButton enrollment={enrollment} />
         </div>
     )
 }
