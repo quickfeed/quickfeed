@@ -64,7 +64,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                 onClick={() => handleSetStatusOrGrade(status, grade)}
             />
         ))
-        return <>{dynamicButtons}</>
+        return dynamicButtons
     }
 
     const getUserName = (userID: bigint): string =>
