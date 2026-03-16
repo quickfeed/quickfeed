@@ -1,7 +1,6 @@
 import React from "react"
 import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
-import DynamicButton from "../DynamicButton"
 import Button, { ButtonType } from "../admin/Button"
 import { Color } from "../../Helpers"
 
