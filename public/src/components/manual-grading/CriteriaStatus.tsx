@@ -29,7 +29,7 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }) => {
                 key={button.icon}
                 color={button.style}
                 type={buttonType}
-                className={`btn-md mr-2`}
+                className={"btn-md mr-2"}
                 onClick={() => button.onClick()}
             >
                 <i className={button.icon} />

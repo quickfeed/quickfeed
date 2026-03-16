@@ -79,12 +79,12 @@ describe("ProgressBar", () => {
         },
     ]
 
-    test.each(progressBarTests)(`[ProgressBar] $desc`, (test) => {
+    test.each(progressBarTests)("[ProgressBar] $desc", (test) => {
         labTest(test)
     })
 
 
-    test.each(progressBarTests)(`[ProgressIndicator] $desc`, (test) => {
+    test.each(progressBarTests)("[ProgressIndicator] $desc", (test) => {
         const submissions = new SubmissionsForUser()
         submissions.setSubmissions(1n, "USER", [test.submission])
         const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions })
@@ -98,8 +98,8 @@ describe("ProgressBar", () => {
         expect(bar?.style).toHaveProperty("right", `${100 - test.submission.score}%`)
 
         // Check for the appropriate Tailwind class based on status and score
-        const expectedClassSuffix = test.submission.score >= test.assignment.scoreLimit 
-            ? "border-b-success" 
+        const expectedClassSuffix = test.submission.score >= test.assignment.scoreLimit
+            ? "border-b-success"
             : "border-b-primary"
         expect(bar?.className).toContain(expectedClassSuffix)
     })
@@ -122,16 +122,16 @@ const labTest = (test: ProgressBarTest) => {
 
     const bars = container.querySelectorAll('[role="progressbar"]')
     expect(bars).toHaveLength(hasSecondary ? 2 : 1)
-    
+
     // Check primary progress bar
     const primary = bars[0]
     expect(primary.getAttribute("style")).toContain(`width: ${score}%`)
-    
+
     // Only expect text to be shown when score > 10 (UI constraint for small bars)
     if (score > 10) {
         expect(primary.textContent).toContain(test.want)
     }
-    
+
     if (hasSecondary) {
         const secondary = bars[1]
         const expectedWidth = test.assignment.scoreLimit - test.submission.score
