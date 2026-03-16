@@ -415,7 +415,9 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
 export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
     state.isLoading = true
     await actions.global.refreshCourseSubmissions(courseID)
-    state.loadedCourse[courseID.toString()] = true
+    // submissionsForCourse only holds data for one course at a time, so clear all
+    // other courses' flags so that navigating back to them triggers a fresh load.
+    state.loadedCourse = { [courseID.toString()]: true }
     state.isLoading = false
 }
 
