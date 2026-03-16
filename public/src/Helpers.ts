@@ -446,7 +446,7 @@ export const convertToBigInt = (value: number | string | bigint | undefined): bi
     const val = value ?? 0
     try {
         return BigInt(val)
-    } catch (e) {
+    } catch {
         return BigInt(0)
     }
 }
