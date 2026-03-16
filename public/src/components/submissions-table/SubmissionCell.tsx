@@ -28,26 +28,28 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
     // Only used when both submissions are available
     const [showGroup, setShowGroup] = useState(!state.individualSubmissionView)
 
-    // Determine which submission to display and whether it's a group submission
-    let submission: Submission
+    // Determine which submission to display and whether it's a group submission.
+    // When both exist, the toggle state (showGroup) decides which one is shown.
+    // When only one exists, we show that one unconditionally.
     let isGroupSubmission: boolean
-
+    let submission: Submission | undefined
     if (hasBothSubmissions) {
-        // Both exist: use toggle state to determine which to show
-        submission = showGroup ? submissionPair.group! : submissionPair.individual!
         isGroupSubmission = showGroup
+        submission = showGroup ? submissionPair.group : submissionPair.individual
     } else if (hasGroup) {
-        // Only group exists
-        submission = submissionPair.group!
         isGroupSubmission = true
+        submission = submissionPair.group
     } else {
-        // Only individual exists (or neither, but that's handled by MemberRow)
-        submission = submissionPair.individual!
         isGroupSubmission = false
+        submission = submissionPair.individual
     }
+
+    // Guard: this should never happen since MemberRow only renders a cell when at least one submission exists
+    if (!submission) return null
 
     const isSelected = state.selectedSubmission?.ID === submission.ID
     const colorClass = getSubmissionCellColor(submission, owner)
+    // Apply a primary ring highlight when this submission is currently selected in the panel
     const selectedClass = isSelected ? "ring-2 ring-primary ring-inset" : ""
 
     const handleToggle = (e: React.MouseEvent) => {
