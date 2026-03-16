@@ -2,7 +2,7 @@ import { create } from "@bufbuild/protobuf"
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, User, UserSchema } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, filterByApproval, filterByReleased, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
+import { Color, ConnStatus, filterByApproval, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint
@@ -349,12 +349,6 @@ export const state: State = {
                     filtered = filtered.filter(g => {
                         const data = getSubmissionData(submissions, g.ID, assignmentID)
                         return filterByApproval(g, data, numAssignments)
-                    })
-                    break
-                case "released":
-                    filtered = filtered.filter(g => {
-                        const data = getSubmissionData(submissions, g.ID, assignmentID)
-                        return filterByReleased(g, data, numAssignments)
                     })
                     break
             }

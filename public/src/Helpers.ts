@@ -740,14 +740,6 @@ export const filterByApproval: FilterFn<{ ID: bigint }> = (_member, data, numAss
     return numApproved < numAssignments
 }
 
-/** Filters members by release status - keeps members that are NOT released */
-export const filterByReleased: FilterFn<{ ID: bigint }> = (_member, data) => {
-    if (data.selectedSubmission) {
-        return !data.selectedSubmission.released
-    }
-    return !data.submissions.some(sub => sub.released)
-}
-
 /** SortValue extracts a comparable value from submission data */
 type SortValueFn = (data: SubmissionData) => number
 
