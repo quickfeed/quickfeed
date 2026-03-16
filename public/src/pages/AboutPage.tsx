@@ -21,7 +21,7 @@ const AboutPage = () => {
                     </p>
                 </div>
 
-                <div className="divider my-12"></div>
+                <div className="divider my-12" />
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                     <MiniFeatureBlock
@@ -41,7 +41,7 @@ const AboutPage = () => {
                     />
                 </div>
 
-                <div className="divider my-16"></div>
+                <div className="divider my-16" />
 
                 <FeatureBlock
                     heading="QuickFeed"
@@ -50,7 +50,7 @@ const AboutPage = () => {
                     imageSrc="/assets/img/intro1.png"
                 />
 
-                <div className="divider my-16"></div>
+                <div className="divider my-16" />
 
                 <FeatureBlock
                     heading="GitHub Integration"
@@ -60,7 +60,7 @@ const AboutPage = () => {
                     reverse
                 />
 
-                <div className="divider my-16"></div>
+                <div className="divider my-16" />
 
                 <FeatureBlock
                     heading="Continuous Integration"
@@ -69,7 +69,7 @@ const AboutPage = () => {
                     imageSrc="/assets/img/intro2.png"
                 />
 
-                <div className="divider my-16"></div>
+                <div className="divider my-16" />
 
                 <FeatureBlock
                     heading="Grading"

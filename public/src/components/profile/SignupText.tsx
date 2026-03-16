@@ -7,7 +7,7 @@ const SignupText = () => {
         <div className="alert alert-error mb-6 shadow-lg">
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                    <i className="fa fa-exclamation-circle text-xl"></i>
+                    <i className="fa fa-exclamation-circle text-xl" />
                     <span className="font-bold">Complete Your Profile</span>
                 </div>
                 <div className="text-sm space-y-1">

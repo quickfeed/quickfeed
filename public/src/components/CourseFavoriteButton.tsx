@@ -20,8 +20,8 @@ const CourseFavoriteButton = ({ enrollment, className }: { enrollment: Enrollmen
             onClick={() => actions.setEnrollmentState(enrollment)}
         >
             {starred
-                ? <span className="font-semibold text-md"><i className="fa fa-star"></i></span>
-                : <span className="opacity-40"><span className="font-semibold"><i className="fa fa-star"></i></span></span>
+                ? <span className="font-semibold text-md"><i className="fa fa-star" /></span>
+                : <span className="opacity-40"><span className="font-semibold"><i className="fa fa-star" /></span></span>
             }
         </button>
     )

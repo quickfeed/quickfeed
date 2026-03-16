@@ -38,7 +38,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             <div className="card-body p-0">
                 <div className="flex items-center justify-between bg-primary text-primary-content px-6 py-4 rounded-t-2xl">
                     <div className="flex items-center gap-2">
-                        <i className="fa fa-clipboard-check text-xl"></i>
+                        <i className="fa fa-clipboard-check text-xl" />
                         <h3 className="text-lg font-bold">{assignmentName}</h3>
                     </div>
                 </div>

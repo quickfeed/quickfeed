@@ -89,7 +89,7 @@ const GroupForm = () => {
                         className="btn btn-sm btn-circle btn-success opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => actions.updateGroupUsers(enrollment.user)}
                     >
-                        <i className="fa fa-plus"></i>
+                        <i className="fa fa-plus" />
                     </button>
                 </div>
             )
@@ -115,7 +115,7 @@ const GroupForm = () => {
                     className="btn btn-sm btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => actions.updateGroupUsers(user)}
                 >
-                    <i className="fa fa-times"></i>
+                    <i className="fa fa-times" />
                 </button>
             </div>
         )
@@ -133,14 +133,14 @@ const GroupForm = () => {
         if (!isTeacher) {
             return (
                 <div className="flex items-center justify-center gap-2 text-lg font-semibold">
-                    <i className="fa fa-users"></i>
+                    <i className="fa fa-users" />
                     <span>Students</span>
                 </div>
             )
         }
         return (
             <button className="btn btn-primary w-full gap-2" type="button" onClick={toggleEnrollmentType}>
-                <i className={`fa ${enrollmentType === Enrollment_UserStatus.STUDENT ? 'fa-user-graduate' : 'fa-chalkboard-teacher'}`}></i>
+                <i className={`fa ${enrollmentType === Enrollment_UserStatus.STUDENT ? 'fa-user-graduate' : 'fa-chalkboard-teacher'}`} />
                 {enrollmentType === Enrollment_UserStatus.STUDENT ? "Students" : "Teachers"}
             </button>
         )
@@ -148,7 +148,7 @@ const GroupForm = () => {
 
     const GroupNameBanner = (
         <div className="flex items-center justify-center gap-2 bg-primary text-primary-content px-4 py-3 rounded-t-2xl">
-            <i className="fa fa-users"></i>
+            <i className="fa fa-users" />
             <h3 className="text-lg font-bold">{group.name}</h3>
         </div>
     )
@@ -184,7 +184,7 @@ const GroupForm = () => {
                                 })
                             ) : (
                                 <div className="text-center py-8 text-base-content/60">
-                                    <i className="fa fa-users text-3xl mb-2"></i>
+                                    <i className="fa fa-users text-3xl mb-2" />
                                     <p>No users available</p>
                                 </div>
                             )}
@@ -202,7 +202,7 @@ const GroupForm = () => {
                                 groupMembers
                             ) : (
                                 <div className="text-center py-8 text-base-content/60">
-                                    <i className="fa fa-user-plus text-3xl mb-2"></i>
+                                    <i className="fa fa-user-plus text-3xl mb-2" />
                                     <p>Add members to your group</p>
                                 </div>
                             )}

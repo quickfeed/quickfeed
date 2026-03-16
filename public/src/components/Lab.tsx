@@ -78,7 +78,7 @@ const Lab = () => {
                         <div className="card-body p-0">
                             <div className="flex items-center justify-between bg-base-300 px-4 py-3 border-b border-base-content/10">
                                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                                    <i className="fa fa-terminal"></i>
+                                    <i className="fa fa-terminal" />
                                     <span>Build Log</span>
                                 </h3>
                             </div>

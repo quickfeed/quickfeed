@@ -38,7 +38,7 @@ const Profile = () => {
                         <h1 className="text-5xl font-bold mb-4">Hi, {state.self.Name}</h1>
                         <p className="text-lg mb-2">You can edit your user information here.</p>
                         <div className="alert alert-warning mt-4">
-                            <i className="fa fa-exclamation-triangle"></i>
+                            <i className="fa fa-exclamation-triangle" />
                             <span><strong>Use your real name as it appears on Canvas</strong> to ensure that approvals are correctly attributed.</span>
                         </div>
                     </div>
