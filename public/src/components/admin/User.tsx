@@ -2,6 +2,7 @@ import React from "react"
 import { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
 import { useGrpc } from "../../overmind"
 import { EnrollmentStatus, EnrollmentStatusBadgeColor } from "../../Helpers"
+import UserInfo from "../UserInfo"
 
 const User = ({ user }: { user: pbUser; hidden: boolean }) => {
     const { api } = useGrpc().global
@@ -60,15 +61,7 @@ const User = ({ user }: { user: pbUser; hidden: boolean }) => {
         >
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="avatar">
-                        <div className="w-10 rounded-full ring ring-base-300">
-                            <img src={user.AvatarURL} alt={user.Name} />
-                        </div>
-                    </div>
-                    <div>
-                        <div className="font-semibold">{user.Name}</div>
-                        <div className="text-sm text-base-content/60">{user.Login}</div>
-                    </div>
+                    <UserInfo user={user} login />
                 </div>
                 <div className="flex items-center gap-2">
                     {user.IsAdmin && (

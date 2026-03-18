@@ -3,6 +3,7 @@ import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isPending, s
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
+import Avatar from "./Avatar"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
@@ -113,11 +114,7 @@ const Members = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-primary transition-colors"
             >
-                <img 
-                    src={enrollment.user.AvatarURL} 
-                    alt={`${Name}'s avatar`}
-                    className="w-6 h-6 rounded-full border border-base-300"
-                />
+                <Avatar src={enrollment.user.AvatarURL} alt={`${Name}'s avatar`} size="w-6" variant="inline" />
                 {Name}
             </a>
         ) : Name

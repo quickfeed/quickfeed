@@ -2,6 +2,7 @@ import React from "react"
 import { isPendingGroup } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import { useCourseID } from "../../hooks/useCourseID"
+import UserInfo from "../UserInfo"
 import Badge from "../Badge"
 
 
@@ -29,12 +30,7 @@ const GroupView = () => {
             key={user.ID.toString()}
             className="flex items-center gap-3 p-3 hover:bg-base-200 rounded-lg transition-colors"
         >
-            <div className="avatar">
-                <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                    <img src={user.AvatarURL} alt={`${user.Name}'s avatar`} />
-                </div>
-            </div>
-            <span className="font-medium">{user.Name}</span>
+            <UserInfo user={user} />
         </div>
     )
 

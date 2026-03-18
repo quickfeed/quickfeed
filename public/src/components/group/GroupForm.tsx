@@ -4,6 +4,7 @@ import { Enrollment, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserS
 import { Color, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
+import UserInfo from "../UserInfo"
 import Button, { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import Search from "../Search"
@@ -104,12 +105,7 @@ const GroupForm = () => {
                 className="flex items-center justify-between p-3 bg-base-200/50 hover:bg-base-200 rounded-lg transition-colors group"
             >
                 <div className="flex items-center gap-3">
-                    <div className="avatar">
-                        <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                            <img src={user.AvatarURL} alt={`${user.Name}'s avatar`} />
-                        </div>
-                    </div>
-                    <span className="font-medium">{user.Name}</span>
+                    <UserInfo user={user} />
                 </div>
                 <button
                     className="btn btn-sm btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"

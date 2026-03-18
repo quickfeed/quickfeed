@@ -7,6 +7,7 @@ import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 import { useCourseID } from "../hooks/useCourseID"
+import Avatar from "./Avatar"
 
 
 /* Lists all groups for a given course. */
@@ -85,19 +86,17 @@ const Groups = () => {
             <td>
                 <div className="flex items-center gap-1">
                     {/* Avatar stack */}
-                    <div className="avatar-group -space-x-4 rtl:space-x-reverse">
+                    <div className="-space-x-3 rtl:space-x-reverse">
                         {group.users.map((user) => (
                             <a
                                 key={user.ID.toString()}
                                 href={`https://github.com/${user.Login}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="avatar tooltip tooltip-bottom"
+                                className="tooltip tooltip-bottom"
                                 data-tip={user.Name}
                             >
-                                <div className="w-8 ring ring-base-100">
-                                    <img src={user.AvatarURL} alt={user.Name} />
-                                </div>
+                                <Avatar src={user.AvatarURL} alt={`${user.Name}'s avatar`} size="w-8" />
                             </a>
                         ))}
                     </div>
