@@ -11,7 +11,7 @@ const Dashboard = () => {
     const state = useAppState()
 
     // Users that are not enrolled in any courses are redirected to the course list.
-    if (!hasEnrollment(state.enrollments)) {
+    if (!state.isLoading && !hasEnrollment(state.enrollments)) {
         return <Navigate to={"/courses"} />
     }
 
