@@ -128,12 +128,7 @@ MemberRow.displayName = "MemberRow"
 const MemberName = ({ name, repoLink }: { name: string; repoLink?: string }) => {
     if (repoLink) {
         return (
-            <a
-                href={repoLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link link-hover"
-            >
+            <a href={repoLink} target="_blank" rel="noopener noreferrer" className="link link-hover">
                 {name}
             </a>
         )
