@@ -1,5 +1,15 @@
 import React from "react"
-import { Color, ButtonColorClasses } from "../../Helpers"
+import { Color } from "../../Helpers"
+
+export const ButtonColorClasses: Record<Color, string> = {
+    [Color.RED]: "btn-error",
+    [Color.BLUE]: "btn-primary",
+    [Color.GREEN]: "btn-success",
+    [Color.YELLOW]: "btn-warning",
+    [Color.GRAY]: "btn-neutral",
+    [Color.WHITE]: "btn-ghost",
+    [Color.BLACK]: "btn-neutral",
+}
 
 export enum ButtonType {
     SOLID = "btn", // Default is solid
