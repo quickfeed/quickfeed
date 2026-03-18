@@ -9,7 +9,7 @@ interface SubmissionsTableProps {
     review?: boolean
 }
 
-const SubmissionsTable = memo(({ onSubmissionClick, review = false }: SubmissionsTableProps) => {
+const SubmissionsTable = memo(function SubmissionsTable({ onSubmissionClick, review = false }: SubmissionsTableProps) {
     const state = useAppState()
     const actions = useActions()
 
@@ -98,7 +98,5 @@ const getMemberKey = (member: Enrollment | Group): string => {
     }
     return `group-${member.ID.toString()}`
 }
-
-SubmissionsTable.displayName = "SubmissionsTable"
 
 export default SubmissionsTable
