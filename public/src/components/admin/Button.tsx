@@ -12,7 +12,7 @@ export const ButtonColorClasses: Record<Color, string> = {
 }
 
 export enum ButtonType {
-    SOLID = "btn", // Default is solid
+    SOLID = "", // Default is solid
     OUTLINE = "btn-outline",
     GHOST = "btn-ghost",
     DASH = "btn-dash",
@@ -28,13 +28,12 @@ export type ButtonProps = {
     className?: string,
     onClick: () => void | Promise<void>,
     disabled?: boolean,
-
 }
 
-const Button = ({ children, text, color, type, className, onClick, disabled }: ButtonProps) => {
+const Button = ({ children, text, color, type = ButtonType.SOLID, className, onClick, disabled }: ButtonProps) => {
     const colorClass = ButtonColorClasses[color]
     return (
-        <button className={`btn ${type ?? ""} ${colorClass} ${className ?? ""}`} onClick={onClick} disabled={disabled}>
+        <button className={`btn ${type} ${colorClass} ${className ?? ""}`} onClick={onClick} disabled={disabled}>
             {children}
             {text}
         </button>

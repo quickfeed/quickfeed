@@ -92,7 +92,6 @@ const Assignments = () => {
                                     <Button
                                         text={buttonText}
                                         color={Color.BLUE}
-                                        type={ButtonType.SOLID}
                                         onClick={rebuild}
                                         disabled={isRebuilding}
                                     />
