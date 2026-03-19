@@ -74,65 +74,6 @@ export const isExpired = (deadline: Timestamp): boolean => {
     return date < oneMonthAgo
 }
 
-export interface Deadline {
-    className: string,
-    message: string,
-    time: string,
-}
-
-export enum TableColor {
-    BLUE = "table-primary",
-    GREEN = "table-success",
-    ORANGE = "table-warning",
-    RED = "table-danger",
-}
-
-const getDaysHoursAndMinutes = (deadline: Timestamp) => {
-    const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
-    const days = Math.round(timeToDeadline / (1000 * 3600 * 24))
-    const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
-    return { days, hours, minutes, timeToDeadline }
-}
-
-/**
- * Utility function for LandingPageTable to format the output string and class/css
- * depending on how far into the future the deadline is.
- *
- * layoutTime = "2021-03-20T23:59:00"
- */
-export const deadlineFormatter = (deadline: Timestamp, scoreLimit: number, submissionScore: number): Deadline => {
-    const { days, hours, minutes, timeToDeadline } = getDaysHoursAndMinutes(deadline)
-    const daysText = Math.abs(days) === 1 ? "day" : "days"
-
-    let className = TableColor.BLUE
-    let message = `${days} ${daysText} to deadline`
-
-    if (timeToDeadline < 0) {
-        className = TableColor.RED
-        message = days < 0
-            ? `Expired ${-days} ${daysText} ago`
-            : `Expired ${-hours} hours ago`
-    } else if (days === 0) {
-        className = TableColor.RED
-        message = `${hours === 0 ? "" : `${hours} hours and `}${minutes} minutes to deadline!`
-    } else if (days < 3) {
-        className = TableColor.ORANGE
-        message = `${days} ${daysText} to deadline!`
-    }
-
-    if (submissionScore >= scoreLimit) {
-        className = TableColor.GREEN
-    }
-
-    return {
-        className,
-        message,
-        time: getFormattedTime(deadline, true),
-    }
-}
-
-
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
     0: "None",

@@ -28,36 +28,6 @@ body {
     margin: 0px;
 }
 
-#github {
-    line-height: 20px;
-}
-
-#LandingPageTable thead tr {
-    background-color: #343a40;
-    color: white;
-}
-
-#LandingPageTable tbody .dark td {
-    border-bottom: 1px solid black;
-}
-
-#LandingPageTable tbody .light:nth-child(even) {
-    background-color: #e0ebf1;
-}
-
-#LandingPageTable tbody .dark:nth-child(even) {
-    background-color: #222;
-}
-
-#LandingPageTable tbody tr {
-    cursor: pointer;
-}
-
-.jumbotron {
-    margin-right: -100px;
-    margin-left: -100px;
-}
-
 .fa-star,
 .fa-star-o {
     color: yellow;
@@ -115,16 +85,6 @@ body {
 
 .pending-review {
     box-shadow: inset 0 0 4px 2px #626280;
-}
-
-#group-image {
-    width: 23px;
-    margin-right: 10px;
-    border-radius: 50%;
-}
-
-.about {
-    width: 100%;
 }
 
 .redirectButton {
@@ -241,10 +201,6 @@ body {
     white-space: normal !important;
     word-wrap: break-word;
     overflow-wrap: break-word;
-}
-
-.width-resize {
-    min-width: 150px;
 }
 
 .navbar-top {
@@ -415,15 +371,4 @@ nav.flexbox {
     }
 
     transition: all 0.3s ease-in-out;
-}
-
-/* LoginPage specific styles */
-
-.chevron-icon {
-    transition: transform 0.3s ease-in-out;
-    display: inline-block;
-    font-size: 1rem;
-}
-.nav-item.dropdown:hover .chevron-icon {
-    transform: rotate(180deg); /* flips it upwards */
 }
