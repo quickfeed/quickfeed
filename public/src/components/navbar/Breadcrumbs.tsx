@@ -36,11 +36,10 @@ const Breadcrumbs = () => {
 
     useEffect(() => {
         const [prefix, courseId, section, assignmentId] = pathnames
-
         if (prefix === 'course' && courseId) {
             setCourseName(resolveCourseName(state.courses, courseId, width))
 
-            if (section === 'lab' && assignmentId) {
+            if ((section === 'lab' || section === 'group-lab') && assignmentId) {
                 const courseAssignments = state.assignments?.[courseId] ?? []
                 setAssignmentName(resolveAssignmentName(courseAssignments, assignmentId))
             }
@@ -57,11 +56,11 @@ const Breadcrumbs = () => {
         // skip the first path segment (e.g., 'course/ID').
         if (index === 0 && value === 'course') return
         // skip the second path segment (e.g., 'course/ID/lab/ID').
-        if (index === 2 && value === 'lab') return
+        if (index === 2 && (value === 'lab' || value === 'group-lab')) return
         // Replace 'course/ID' with 'course/Course Name' in the breadcrumb.
         if (index === 1 && courseName && pathnames[0] === 'course') breadcrumbName = courseName
         // Replace 'lab/ID' with 'lab/Assignment Name' in the breadcrumb.
-        if (index === 3 && assignmentName && pathnames[2] === 'lab') breadcrumbName = assignmentName
+        if (index === 3 && assignmentName && (pathnames[2] === 'lab' || pathnames[2] === 'group-lab')) breadcrumbName = assignmentName
 
         segments.push({ label: breadcrumbName, to, last })
     })
