@@ -34,11 +34,9 @@ const User = ({ user }: { user: pbUser; hidden: boolean }) => {
                     className="flex items-center justify-between p-3 bg-base-300 rounded-lg hover:bg-base-200 transition-colors"
                 >
                     <div className="flex items-center gap-3">
-                        <div>
-                            <div className="font-medium">{enrollment.course?.name ?? "Unknown Course"}</div>
-                            <div className="text-xs text-base-content/60">
-                                {enrollment.course?.code} · {enrollment.course?.year}
-                            </div>
+                        <div className="font-medium">{enrollment.course?.name ?? "Unknown Course"}</div>
+                        <div className="text-xs text-base-content/60">
+                            {enrollment.course?.code} · {enrollment.course?.year}
                         </div>
                     </div>
                     <span className={`badge ${EnrollmentStatusBadgeColor[enrollment.status]}`}>
