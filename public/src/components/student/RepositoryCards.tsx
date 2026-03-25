@@ -13,55 +13,49 @@ interface RepositoryLinkConfig {
 }
 
 const repositoryLinks: RepositoryLinkConfig[] = [
-    { type: Repository_Type.USER, label: "User Repository", group: "repositories" },
-    { type: Repository_Type.GROUP, label: "Group Repository", group: "repositories" },
+    { type: Repository_Type.USER, label: "User Repo", group: "repositories" },
+    { type: Repository_Type.GROUP, label: "Group Repo", group: "repositories" },
     { type: Repository_Type.ASSIGNMENTS, label: "Assignments", group: "resources" },
     { type: Repository_Type.INFO, label: "Course Info", group: "resources" }
 ]
 
-interface RepositoryCardProps {
+interface RepoLinkGroupProps {
     title: string
-    description: string
     links: Array<{ label: string; url: string }>
 }
 
-const RepositoryCard = ({ title, description, links }: RepositoryCardProps) => {
+const RepoLinkGroup = ({ title, links }: RepoLinkGroupProps) => {
     if (links.length === 0) return null
 
     return (
-        <div className="card bg-base-300 shadow-sm">
-            <div className="card-body">
-                <h5 className="card-title">{title}</h5>
-                <p className="card-text">{description}</p>
-                <div className="card-actions justify-start gap-2 flex-wrap">
-                    {links.map((link) => (
-                        <button
-                            key={link.label}
-                            className="btn btn-primary"
-                            onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-                        >
-                            {link.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
+        <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">{title}</span>
+            {links.map((link) => (
+                <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-xs btn-ghost border border-base-content/20"
+                >
+                    {link.label}
+                </a>
+            ))}
         </div>
     )
 }
 
-/** RepositoryCards displays grouped repository links for a course */
+/** RepositoryCards displays grouped repository links for a course as a compact inline strip */
 export const RepositoryCards = ({ repositories, groupName }: RepositoryCardsProps) => {
-    // Build links for "My Repositories" card
     const repositoryGroupLinks = repositoryLinks
         .filter(config => config.group === "repositories" && repositories?.[config.type])
         .map(config => ({
             label: config.type === Repository_Type.GROUP && groupName
-                ? `${config.label} ${groupName}`
+                ? `Group Repo ${groupName}`
                 : config.label,
             url: repositories[config.type]
         }))
 
-    // Build links for "Course Resources" card
     const resourcesGroupLinks = repositoryLinks
         .filter(config => config.group === "resources" && repositories?.[config.type])
         .map(config => ({
@@ -71,16 +65,8 @@ export const RepositoryCards = ({ repositories, groupName }: RepositoryCardsProp
 
     return (
         <>
-            <RepositoryCard
-                title="My Repositories"
-                description="Access your personal and group repositories."
-                links={repositoryGroupLinks}
-            />
-            <RepositoryCard
-                title="Course Resources"
-                description="View assignments and course information."
-                links={resourcesGroupLinks}
-            />
+            <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
+            <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
         </>
     )
 }
