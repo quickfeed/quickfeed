@@ -1,11 +1,12 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import NavBarCourse from "./navbar/NavBarCourse"
 import { isEnrolled, isVisible } from "../Helpers"
 
 const NavFavorites = () => {
     const state = useAppState()
+    const navigate = useNavigate()
 
     const visible = state.enrollments.filter(enrollment => isEnrolled(enrollment) && isVisible(enrollment))
 
@@ -14,16 +15,28 @@ const NavFavorites = () => {
     })
 
     return (
-        <nav className={`navigator ${state.showFavorites ? "" : "hidden"}`}>
-            <ul key="list" className="sidebarList">
+        <nav
+            className={`
+                fixed left-0 w-64 h-screen bg-base-300 shadow-xl overflow-y-auto
+                transition-transform duration-200 ease-in-out
+                ${state.showFavorites ? "translate-x-0" : "-translate-x-full"}
+                scrollbar-hide
+            `}
+            style={{ top: 'var(--navbar-height)' }}
+        >
+            <ul className="menu [&_li>*]:rounded-none p-0 w-full">
                 {courses}
-                {state.isLoggedIn &&
-                    <li key="all" className="courseLink">
-                        <Link to="/courses" className="sidebar-items-link">
-                            View all courses
-                        </Link>
+                {state.isLoggedIn && (
+                    <li key="all" className="w-full mt-2">
+                        <button
+                            onClick={() => navigate("/courses")}
+                            className="flex justify-center items-center gap-2 h-16 font-bold hover:bg-base-100 rounded-none w-full cursor-pointer"
+                        >
+
+                            <span>View all courses</span>
+                        </button>
                     </li>
-                }
+                )}
             </ul>
         </nav>
     )

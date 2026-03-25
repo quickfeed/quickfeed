@@ -1,4 +1,5 @@
 import React from "react"
+import Avatar from "../Avatar"
 import { useAppState } from "../../overmind"
 
 
@@ -7,11 +8,11 @@ const ProfileCard = ({ children }: { children: React.ReactNode }) => {
     const self = useAppState().self
 
     return (
-        <div className="card" style={{ width: "28rem" }}>
-            <div className="card-header text-center bg-dark" style={{ height: "5rem", marginBottom: "3rem" }}>
-                <img className="card-img" style={{ borderRadius: "50%", width: "8rem" }} src={self.AvatarURL} alt="Profile Card" />
-            </div>
-            <div className="card-body">
+        <div className="card bg-base-200 shadow-xl w-full max-w-md">
+            <div className="card-body items-center text-center pt-8">
+                <div className="mb-4">
+                    <Avatar src={self.AvatarURL} alt="Profile avatar" size="w-32" />
+                </div>
                 {children}
             </div>
         </div>

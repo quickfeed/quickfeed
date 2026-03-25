@@ -10,11 +10,10 @@ const ToggleSwitch = () => {
     const navigate = useNavigate()
     const [enrollmentStatus, setEnrollmentStatus] =
         React.useState<boolean>(false)
-    const [text, setText] = React.useState<string>("")
 
     useEffect(() => {
         if (activeCourse && enrollmentsByCourseID[activeCourse.toString()]) {
-            updateStatus(isTeacher())
+            setEnrollmentStatus(isTeacher())
         }
     })
 
@@ -25,14 +24,9 @@ const ToggleSwitch = () => {
         )
     }
 
-    const updateStatus = (isTeacher: boolean) => {
-        setEnrollmentStatus(isTeacher)
-        setText(isTeacher ? "T" : "S")
-    }
-
     const switchView = () => {
         actions.changeView().then(() => {
-            updateStatus(isTeacher())
+            setEnrollmentStatus(isTeacher())
             navigate(`/course/${activeCourse}`)
         })
     }
@@ -42,12 +36,16 @@ const ToggleSwitch = () => {
     }
 
     return (
-        <label className="switch" data-toggle="tooltip" title="Toggle between student and teacher view">
-            <input type="checkbox" readOnly checked={enrollmentStatus} />
-            <span className="slider round" onClick={switchView}>
-                <span className="toggle">{text}</span>
-            </span>
-        </label>
+        <button
+            onClick={switchView}
+            className="font-mono text-md cursor-pointer tooltip tooltip-bottom"
+            data-tip="Toggle between student and teacher view"
+        >
+            {enrollmentStatus
+                ? <span><span className="text-primary font-semibold">#</span> <span className="text-base-content/60">teacher</span></span>
+                : <span><span className="text-primary font-semibold">$</span> <span className="text-base-content/60">student</span></span>
+            }
+        </button>
     )
 }
 

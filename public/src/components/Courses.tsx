@@ -3,7 +3,7 @@ import Collapsible from "./Collapsible"
 import { useAppState } from "../overmind"
 import { Course, Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
 import CourseCard from "./CourseCard"
-import Button, { ButtonType } from "./admin/Button"
+import Button from "./admin/Button"
 import { useNavigate } from "react-router"
 import { Color, isVisible } from "../Helpers"
 import { create } from "@bufbuild/protobuf"
@@ -17,6 +17,19 @@ interface overview {
 // Type for a course card element
 type CourseCardElement = React.ReactElement<ComponentProps<typeof CourseCard>>
 
+// Reusable component for course sections with icon, title, and grid
+const CourseSection = ({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) => (
+    <div className="mb-10">
+        <div className="flex items-center gap-3 mb-6">
+            <i className={`fa ${icon} text-primary text-xl`} />
+            <h2 className="text-3xl font-bold text-base-content">{title}</h2>
+            <div className="flex-grow h-px bg-gradient-to-r from-base-300 to-transparent ml-4" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {children}
+        </div>
+    </div>
+)
 
 /** This component lists the user's courses and courses available for enrollment. */
 const Courses = (overview: overview) => {
@@ -34,14 +47,12 @@ const Courses = (overview: overview) => {
                         <Button
                             text="Go to course creation"
                             color={Color.GREEN}
-                            type={ButtonType.BUTTON}
                             className="mr-3"
                             onClick={() => navigate("/admin/create")}
                         />
                         <Button
                             text="Manage users"
                             color={Color.BLUE}
-                            type={ButtonType.BUTTON}
                             onClick={() => navigate("/admin/manage")}
                         />
                     </div>
@@ -114,8 +125,8 @@ const Courses = (overview: overview) => {
         // Render only favorite courses.
         return (
             favorite.length > 0 &&
-            <div className="container-fluid">
-                <div className="card-deck">
+            <div className="container">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {favorite}
                 </div>
             </div>
@@ -123,51 +134,45 @@ const Courses = (overview: overview) => {
     }
 
     return (
-        <div className="box container-fluid mb-5">
-            {favorite.length > 0 &&
-                <div className="container-fluid">
-                    <h2>Favorites</h2>
-                    <div className="card-deck course-card-row">
-                        {favorite}
-                    </div>
-                </div>
-            }
+        <div className="container mx-auto px-4 mb-5 mt-4">
+            {favorite.length > 0 && (
+                <CourseSection icon="fa-star" title="Favorites">
+                    {favorite}
+                </CourseSection>
+            )}
 
-            {(student.length > 0 || teacher.length > 0) &&
-                <div className="container-fluid myCourses">
-                    <h2>My Courses</h2>
-                    <div className="card-deck course-card-row">
-                        {teacher.sort(sortByYearTerm)}
-                        {student.sort(sortByYearTerm)}
-                    </div>
-                </div>
-            }
-            {pending.length > 0 &&
-                <div className="container-fluid">
-                    {(student.length === 0 && teacher.length === 0) &&
-                        <h2>My Courses</h2>
-                    }
-                    <div className="card-deck">
-                        {pending}
-                    </div>
-                </div>
-            }
+            {(student.length > 0 || teacher.length > 0) && (
+                <CourseSection icon="fa-graduation-cap" title="My Courses">
+                    {teacher.sort(sortByYearTerm)}
+                    {student.sort(sortByYearTerm)}
+                </CourseSection>
+            )}
 
-            {availableCourses.length > 0 &&
-                <>
-                    <h2>Available Courses</h2>
-                    <div className="card-deck course-card-row">
-                        {availableCourses.sort(sortByYearTerm)}
-                    </div>
-                </>
-            }
-            {unavailableCourses.length > 0 &&
+            {pending.length > 0 && (student.length === 0 && teacher.length === 0) && (
+                <CourseSection icon="fa-graduation-cap" title="My Courses">
+                    {pending}
+                </CourseSection>
+            )}
+
+            {pending.length > 0 && (student.length > 0 || teacher.length > 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
+                    {pending}
+                </div>
+            )}
+
+            {availableCourses.length > 0 && (
+                <CourseSection icon="fa-book" title="Available Courses">
+                    {availableCourses.sort(sortByYearTerm)}
+                </CourseSection>
+            )}
+
+            {unavailableCourses.length > 0 && (
                 <Collapsible title={`Unavailable Courses (${unavailableCourses.length})`}>
-                    <div className="card-deck course-card-row">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {unavailableCourses.sort(sortByYearTerm)}
                     </div>
                 </Collapsible>
-            }
+            )}
         </div>
     )
 }

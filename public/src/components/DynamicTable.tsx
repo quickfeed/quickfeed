@@ -2,6 +2,14 @@ import React, { memo } from "react"
 import { isHidden } from "../Helpers"
 import { useAppState } from "../overmind"
 
+/**
+ * Wrap a JSX cell in SearchableCell to enable search in DynamicTable.
+ * Pass `hidden={!isHidden(value, query)}` so the table knows when the cell matches.
+ */
+export const SearchableCell = ({ children }: { hidden: boolean; children: React.ReactNode }) => (
+    <>{children}</>
+)
+
 export type CellElement = {
     value: string,
     iconTitle?: string,
@@ -104,10 +112,9 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
     }
 
     return (
-        <div className="table-overflow" ref={container} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
-            role="scrollbar" aria-valuenow={0} aria-controls="dynamic-table" tabIndex={-1}>
-            <table id="dynamic-table" className="table table-striped table-grp">
-                <thead className="thead-dark">
+        <div className="table-overflow" ref={container} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} role="button" aria-hidden="true">
+            <table className="table table-zebra table-grp">
+                <thead className="bg-base-300">
                     <tr>
                         {head}
                     </tr>

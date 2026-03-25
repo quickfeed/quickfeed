@@ -5,7 +5,6 @@ import { useActions, useAppState } from "../../overmind"
 import DynamicButton from "../DynamicButton"
 import DynamicTable from "../DynamicTable"
 import Search from "../Search"
-import { ButtonType } from "./Button"
 import UserComponent from "./User"
 
 
@@ -32,7 +31,6 @@ const Users = () => {
                 key={`${user.ID}button`}
                 text={roleActionText}
                 color={buttonColor}
-                type={ButtonType.BADGE}
                 onClick={handlePromoteAdmin(user)}
             />
         ]

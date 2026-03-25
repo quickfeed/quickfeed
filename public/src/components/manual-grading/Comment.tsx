@@ -8,7 +8,7 @@ const CriterionComment = ({ comment }: { comment: string }) => {
   }
 
   return (
-    <div className="comment-md">
+    <div className="comment-md text-base-content">
       <ReactMarkdown
         // eslint-disable-next-line react/no-children-prop
         children={comment}

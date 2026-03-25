@@ -51,7 +51,11 @@ const App = () => {
             <Alerts />
             {state.isLoading && <Loading />}
             <div className="app wrapper" hidden={state.isLoading}>
-                <div id={state.showFavorites ? "content" : "content-full"}>
+                <div className={`
+                        transition-[margin] duration-200 ease-in-out
+                        mt-8 mr-8 w-full
+                        ${state.showFavorites ? "ml-64 md:ml-72" : "ml-8"}
+                    `}>
                     {routes}
                 </div>
             </div>

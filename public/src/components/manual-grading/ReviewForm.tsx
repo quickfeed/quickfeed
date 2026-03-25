@@ -2,7 +2,7 @@ import React from "react"
 import { Review } from "../../../proto/qf/types_pb"
 import { isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType } from "../admin/Button"
+import Button from "../admin/Button"
 import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
@@ -36,7 +36,6 @@ const ReviewForm = () => {
             <Button key={review.ID.toString()}
                 text={`Review ${index + 1}`}
                 color={isSelected ? Color.BLUE : Color.GRAY}
-                type={ButtonType.BUTTON}
                 className={`mr-1 ${className}`}
                 onClick={() => { actions.review.setSelectedReview(index) }}
             />
@@ -50,7 +49,6 @@ const ReviewForm = () => {
             <Button key="add"
                 text="Add Review"
                 color={Color.BLUE}
-                type={ButtonType.BUTTON}
                 className="mr-1"
                 onClick={() => { actions.review.createReview() }}
             />

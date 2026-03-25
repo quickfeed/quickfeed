@@ -5,6 +5,7 @@ import ProfileForm from './ProfileForm'
 import ProfileCard from './ProfileCard'
 import ProfileInfo from './ProfileInfo'
 import SignupText from './SignupText'
+import ProfileHero from './ProfileHero'
 
 
 const Profile = () => {
@@ -31,15 +32,9 @@ const Profile = () => {
     }, [state.isValid])
 
     return (
-        <div>
-            <div className="banner jumbotron">
-                <div className="centerblock container">
-                    <h1>Hi, {state.self.Name}</h1>
-                    <p>You can edit your user information here.</p>
-                    <p><span className='font-weight-bold'>Use your real name as it appears on Canvas</span> to ensure that approvals are correctly attributed.</p>
-                </div>
-            </div>
-            <div className="container">
+        <div className="min-h-screen">
+            <ProfileHero name={state.self.Name} />
+            <div className="container mx-auto px-4 py-12 flex justify-center">
                 <ProfileCard>
                     {editing ?
                         <ProfileForm setEditing={setEditing} >

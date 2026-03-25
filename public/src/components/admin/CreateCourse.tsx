@@ -23,22 +23,26 @@ const CreateCourse = () => {
         }
     }, [actions, orgName, state.courses])
 
-    const buttonClass = course ? "btn btn-success disabled" : "btn btn-primary"
+    const buttonClass = course ? "btn btn-success btn-disabled" : "btn btn-primary"
     const findTextOrIcon = course ? <i className="fa fa-check" /> : "Find"
     const refreshIfNoCourse = course ? undefined : refresh
     return (
-        <div className="container">
+        <div className="container mx-auto px-4 space-y-6">
             <CourseCreationInfo />
-            <div className="row">
-                <div className="col input-group mb-3">
-                    <div className="input-group-prepend">
-                        <div className="input-group-text">Get Course</div>
-                    </div>
-                    <input className="form-control" disabled={course ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
-                    <span role="button" aria-hidden="true" className={buttonClass} onClick={refreshIfNoCourse}>
-                        {findTextOrIcon}
-                    </span>
-                </div>
+            <div className="join w-full">
+                <span className="join-item btn btn-neutral no-animation cursor-default">Get Course</span>
+                <input
+                    className="input input-bordered join-item flex-1"
+                    disabled={course ? true : false}
+                    onKeyUp={e => setOrgName(e.currentTarget.value)}
+                    placeholder="Organization name"
+                />
+                <button
+                    className={`${buttonClass} join-item`}
+                    onClick={refreshIfNoCourse}
+                >
+                    {findTextOrIcon}
+                </button>
             </div>
             {course ? <CourseForm courseToEdit={course} /> : null}
         </div>

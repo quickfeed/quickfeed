@@ -6,19 +6,13 @@ import { CourseSubmissions } from "../proto/qf/requests_pb"
 import { create, isMessage } from "@bufbuild/protobuf"
 
 export enum Color {
-    RED = "danger",
+    RED = "error",
     BLUE = "primary",
     GREEN = "success",
     YELLOW = "warning",
     GRAY = "secondary",
     WHITE = "light",
     BLACK = "dark",
-}
-
-export enum Sort {
-    NAME,
-    STATUS,
-    ID
 }
 
 // ConnStatus indicates the status of streaming connection to the server
@@ -80,71 +74,20 @@ export const isExpired = (deadline: Timestamp): boolean => {
     return date < oneMonthAgo
 }
 
-export interface Deadline {
-    className: string,
-    message: string,
-    time: string,
-}
-
-export enum TableColor {
-    BLUE = "table-primary",
-    GREEN = "table-success",
-    ORANGE = "table-warning",
-    RED = "table-danger",
-}
-
-const getDaysHoursAndMinutes = (deadline: Timestamp) => {
-    const timeToDeadline = timestampDate(deadline).getTime() - Date.now()
-    const days = Math.round(timeToDeadline / (1000 * 3600 * 24))
-    const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
-    return { days, hours, minutes, timeToDeadline }
-}
-
-/**
- * Utility function for LandingPageTable to format the output string and class/css
- * depending on how far into the future the deadline is.
- *
- * layoutTime = "2021-03-20T23:59:00"
- */
-export const deadlineFormatter = (deadline: Timestamp, scoreLimit: number, submissionScore: number): Deadline => {
-    const { days, hours, minutes, timeToDeadline } = getDaysHoursAndMinutes(deadline)
-    const daysText = Math.abs(days) === 1 ? "day" : "days"
-
-    let className = TableColor.BLUE
-    let message = `${days} ${daysText} to deadline`
-
-    if (timeToDeadline < 0) {
-        className = TableColor.RED
-        message = days < 0
-            ? `Expired ${-days} ${daysText} ago`
-            : `Expired ${-hours} hours ago`
-    } else if (days === 0) {
-        className = TableColor.RED
-        message = `${hours === 0 ? "" : `${hours} hours and `}${minutes} minutes to deadline!`
-    } else if (days < 3) {
-        className = TableColor.ORANGE
-        message = `${days} ${daysText} to deadline!`
-    }
-
-    if (submissionScore >= scoreLimit) {
-        className = TableColor.GREEN
-    }
-
-    return {
-        className,
-        message,
-        time: getFormattedTime(deadline, true),
-    }
-}
-
-
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
     0: "None",
     1: "Pending",
     2: "Student",
     3: "Teacher",
+}
+
+// Badge color classes for enrollment status
+export const EnrollmentStatusBadgeColor: Record<number, string> = {
+    0: "badge-ghost",
+    1: "badge-warning",
+    2: "badge-success",
+    3: "badge-primary",
 }
 
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
@@ -280,13 +223,6 @@ export const getNumApproved = (submissions: Submission[]): number => {
     return num
 }
 
-export const EnrollmentStatusBadge = {
-    0: "",
-    1: "badge badge-info",
-    2: "badge badge-primary",
-    3: "badge badge-danger",
-}
-
 /** SubmissionStatus returns a string with the status of the submission, given the status number, ex. Submission.Status.APPROVED -> "Approved" */
 export const SubmissionStatus = {
     0: "None",
@@ -354,26 +290,26 @@ export const nextURL = (): string => {
 export const getSubmissionCellColor = (submission: Submission, owner: Enrollment | Group): string => {
     if (isMessage(owner, GroupSchema)) {
         if (isAllApproved(submission)) {
-            return "result-approved"
+            return "bg-success text-success-content"
         }
         if (isAllRevision(submission)) {
-            return "result-revision"
+            return "bg-warning text-warning-content"
         }
         if (isAllRejected(submission)) {
-            return "result-rejected"
+            return "bg-error text-error-content"
         }
         if (submission.Grades.some(grade => grade.Status !== Submission_Status.NONE)) {
-            return "result-mixed"
+            return "bg-mixed-status "
         }
     } else {
         if (userHasStatus(submission, owner.userID, Submission_Status.APPROVED)) {
-            return "result-approved"
+            return "bg-success text-success-content"
         }
         if (userHasStatus(submission, owner.userID, Submission_Status.REVISION)) {
-            return "result-revision"
+            return "bg-warning text-warning-content"
         }
         if (userHasStatus(submission, owner.userID, Submission_Status.REJECTED)) {
-            return "result-rejected"
+            return "bg-error text-error-content"
         }
     }
     return "clickable"
@@ -409,7 +345,7 @@ export const convertToBigInt = (value: number | string | bigint | undefined): bi
     const val = value ?? 0
     try {
         return BigInt(val)
-    } catch (e) {
+    } catch {
         return BigInt(0)
     }
 }
@@ -663,4 +599,61 @@ export class SubmissionsForUser {
             this.groupSubmissions = clone.set(courseID, submissions)
         }
     }
+}
+
+/*******************************************************************************
+ *                    Course Member Filtering and Sorting
+ ******************************************************************************/
+
+/** SubmissionData holds submission information for a course member (enrollment or group) */
+export interface SubmissionData {
+    submissions: Submission[]
+    /** The submission for the selected assignment (if assignmentID > 0) */
+    selectedSubmission?: Submission
+}
+
+/** getSubmissionData extracts submission data for a member from the submissions map */
+export const getSubmissionData = (
+    submissions: Map<bigint, { submissions: Submission[] }>,
+    memberID: bigint,
+    assignmentID: bigint
+): SubmissionData => {
+    const subs = submissions.get(memberID)?.submissions ?? []
+    const selectedSubmission = assignmentID > 0
+        ? subs.find(s => s.AssignmentID === assignmentID)
+        : undefined
+    return { submissions: subs, selectedSubmission }
+}
+
+/** FilterFn is a predicate function for filtering course members */
+type FilterFn<T> = (member: T, data: SubmissionData, numAssignments: number) => boolean
+
+/** Filters members by approval status - keeps members that are NOT fully approved */
+export const filterByApproval: FilterFn<{ ID: bigint }> = (_member, data, numAssignments) => {
+    if (data.selectedSubmission) {
+        return !isAllApproved(data.selectedSubmission)
+    }
+    const numApproved = data.submissions.reduce(
+        (acc, sub) => acc + (isAllApproved(sub) ? 1 : 0), 0
+    )
+    return numApproved < numAssignments
+}
+
+/** SortValue extracts a comparable value from submission data */
+type SortValueFn = (data: SubmissionData) => number
+
+/** Gets the score for sorting */
+export const getScoreSortValue: SortValueFn = (data) => {
+    if (data.selectedSubmission) {
+        return data.selectedSubmission.score
+    }
+    return getSubmissionsScore(data.submissions)
+}
+
+/** Gets the approval count for sorting */
+export const getApprovalSortValue: SortValueFn = (data) => {
+    if (data.selectedSubmission) {
+        return isAllApproved(data.selectedSubmission) ? 1 : 0
+    }
+    return getNumApproved(data.submissions)
 }

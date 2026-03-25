@@ -48,7 +48,15 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps) => {
     return (
         <tr>
             <th colSpan={3}>
-                <textarea rows={20} autoFocus onBlur={handleBlur} onKeyUp={handleKeyUp} defaultValue={grade.comment} className="form-control" /> {/* skipcq: JS-0757 */}
+                <textarea
+                    rows={20}
+                    autoFocus
+                    onBlur={handleBlur}
+                    onKeyUp={handleKeyUp}
+                    defaultValue={grade.comment}
+                    className="w-full p-4 bg-base-100 border border-base-300 rounded-lg text-base-content placeholder-base-content/50 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-200 resize-y"
+                    placeholder="Enter your comment... (Ctrl/Cmd+Enter to save, Escape to cancel)"
+                /> {/* skipcq: JS-0757 */}
             </th>
         </tr>
     )
