@@ -1,15 +1,18 @@
 import { clone, isMessage } from "@bufbuild/protobuf"
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from 'react-router-dom'
 import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
 import { Color } from "../Helpers"
+import { ScreenSize } from "../consts"
 import { useCourseID } from "../hooks/useCourseID"
+import useWindowSize from "../hooks/windowsSize"
 import { useActions, useAppState } from "../overmind"
 import Button from "./admin/Button"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
 import ReviewForm from "./manual-grading/ReviewForm"
 import Search from "./Search"
+import SubmissionModal from "./SubmissionModal"
 import SubmissionsTable from "./submissions-table/SubmissionsTable"
 
 const Results = ({ review }: { review: boolean }) => {
@@ -17,6 +20,11 @@ const Results = ({ review }: { review: boolean }) => {
     const actions = useActions()
     const courseID = useCourseID()
     const [searchParams, setSearchParams] = useSearchParams()
+    const { width } = useWindowSize()
+    const [lockedWide, setLockedWide] = useState(false)
+    const wideTable = lockedWide || width < ScreenSize.TailwindLg
+
+    const toggleWideTable = useCallback(() => setLockedWide(prev => !prev), [])
 
     const loaded = state.loadedCourse[courseID.toString()]
 
@@ -80,6 +88,11 @@ const Results = ({ review }: { review: boolean }) => {
         actions.review.setAssignmentID(-1n)
     }, [actions, state.groupView])
 
+    const closeModal = useCallback(() => {
+        actions.global.setSelectedSubmission({ submission: null })
+        setSearchParams({})
+    }, [actions, setSearchParams])
+
     if (!loaded) {
         return (
             <div className="flex justify-center items-center py-12">
@@ -88,30 +101,50 @@ const Results = ({ review }: { review: boolean }) => {
         )
     }
 
-    const gridCols = state.review.assignmentID >= 0 ? "lg:grid-cols-3" : "lg:grid-cols-2"
+    let gridCols = "grid-cols-1"
+    if (!wideTable) {
+        gridCols = state.review.assignmentID >= 0 ? "lg:grid-cols-3" : "lg:grid-cols-2"
+    }
     const displayMode = state.groupView ? "Group" : "Student"
     const buttonColor = state.groupView ? Color.BLUE : Color.GREEN
 
+    // showModal is true when wide-table mode is active and a submission has been selected
+    const showModal = wideTable && state.selectedSubmission !== null
+
     return (
-        <div className={`grid grid-cols-1 ${gridCols} gap-6`}>
-            <div className="space-y-4">
-                <Search placeholder="Search by name..." className="mb-2">
-                    <Button
-                        text={`View by ${displayMode}`}
-                        color={buttonColor}
-                        className="ml-2"
-                        onClick={toggleGroupView}
-                    />
-                </Search>
-                <TableSort />
-                <div className="overflow-x-auto">
-                    <SubmissionsTable onSubmissionClick={handleSubmissionClick} review={review} />
+        <>
+            <div className={`grid grid-cols-1 ${gridCols} gap-6`}>
+                <div className="space-y-4">
+                    <Search placeholder="Search by name..." className="mb-2">
+                        <Button
+                            text={`View by ${displayMode}`}
+                            color={buttonColor}
+                            className="ml-2"
+                            onClick={toggleGroupView}
+                        />
+                        <button
+                            className="btn btn-sm btn-ghost border border-base-content/20 ml-2"
+                            title={lockedWide ? "Unlock wide view" : "Lock wide view"}
+                            onClick={toggleWideTable}
+                        >
+                            <i className={`fa ${lockedWide ? "fa-compress" : "fa-expand"}`} />
+                        </button>
+                    </Search>
+                    <TableSort />
+                    <div className="overflow-x-auto">
+                        <SubmissionsTable onSubmissionClick={handleSubmissionClick} review={review} />
+                    </div>
                 </div>
-            </div >
-            <div className={state.review.assignmentID >= 0 ? "lg:col-span-2" : ""}>
-                {review ? <ReviewForm /> : <LabResult />}
+                {!wideTable && (
+                    <div className={state.review.assignmentID >= 0 ? "lg:col-span-2" : ""}>
+                        {review ? <ReviewForm /> : <LabResult />}
+                    </div>
+                )}
             </div>
-        </div >
+
+            {/* Wide-table modal: shown when a submission is selected in wide mode */}
+            {showModal && <SubmissionModal review={review} courseID={courseID} onClose={closeModal} />}
+        </>
     )
 }
 
