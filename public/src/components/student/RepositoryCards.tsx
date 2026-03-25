@@ -1,9 +1,12 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { Repository_Type } from "../../../proto/qf/types_pb"
 
 interface RepositoryCardsProps {
     repositories: Record<number, string>
     groupName?: string
+    hasGroup?: boolean
+    groupPath?: string
 }
 
 interface RepositoryLinkConfig {
@@ -46,7 +49,7 @@ const RepoLinkGroup = ({ title, links }: RepoLinkGroupProps) => {
 }
 
 /** RepositoryCards displays grouped repository links for a course as a compact inline strip */
-export const RepositoryCards = ({ repositories, groupName }: RepositoryCardsProps) => {
+export const RepositoryCards = ({ repositories, groupName, hasGroup, groupPath }: RepositoryCardsProps) => {
     const repositoryGroupLinks = repositoryLinks
         .filter(config => config.group === "repositories" && repositories?.[config.type])
         .map(config => ({
@@ -67,6 +70,17 @@ export const RepositoryCards = ({ repositories, groupName }: RepositoryCardsProp
         <>
             <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
             <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
+            {groupPath && (
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">Group</span>
+                    <Link
+                        to={groupPath}
+                        className="btn btn-xs btn-ghost border border-base-content/20"
+                    >
+                        {hasGroup ? `View ${groupName}` : "Create Group"}
+                    </Link>
+                </div>
+            )}
         </>
     )
 }

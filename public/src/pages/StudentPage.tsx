@@ -4,7 +4,6 @@ import CourseLabs from "../components/student/CourseLabs"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import { useCourseID } from "../hooks/useCourseID"
-import Card from "../components/Card"
 import { useAppState } from "../overmind"
 import { RepositoryCards } from "../components/student/RepositoryCards"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
@@ -23,19 +22,12 @@ const StudentPage = () => {
     // Enable Backspace keyboard shortcut to navigate back to root
     useBackspaceNavigation(root)
 
-    const groupCard = {
-        title: hasGroup ? `View Group ${groupName}` : "Create a Group",
-        text: hasGroup ? "View your group." : "Create a group for this course.",
-        buttonText: hasGroup ? "View Group" : "Create a Group",
-        to: `${root}/group`
-    }
-
     return (
         <>
             <div hidden={location.pathname !== root}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <RepositoryCards repositories={repos} groupName={groupName} />
-                    <Card {...groupCard} />
+                {/* Compact top bar with repository links and group navigation */}
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
+                    <RepositoryCards repositories={repos} groupName={groupName} hasGroup={hasGroup} groupPath={`${root}/group`} />
                 </div>
                 <CourseLabs />
             </div>
