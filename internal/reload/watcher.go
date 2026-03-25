@@ -58,7 +58,7 @@ func (w *Watcher) start(ctx context.Context) {
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 				// Compare only the base filename since event.Name is a path.
 				if !slices.Contains(w.watchList, filepath.Base(event.Name)) {
-					continue // Ignore non-watched files and keep watching
+					continue // Ignore non-watched files
 				}
 				// Broadcast event to all clients.
 				w.broadcastMessage(event.Name)
