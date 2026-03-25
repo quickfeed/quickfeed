@@ -2,6 +2,14 @@ import React, { memo } from "react"
 import { isHidden } from "../Helpers"
 import { useAppState } from "../overmind"
 
+/**
+ * Wrap a JSX cell in SearchableCell to enable search in DynamicTable.
+ * Pass `hidden={!isHidden(value, query)}` so the table knows when the cell matches.
+ */
+export const SearchableCell = ({ children }: { hidden: boolean; children: React.ReactNode }) => (
+    <>{children}</>
+)
+
 export type CellElement = {
     value: string,
     iconTitle?: string,

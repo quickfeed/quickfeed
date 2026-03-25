@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isPending, sortEnrollments, userRepoLink } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isHidden, isPending, sortEnrollments, userRepoLink } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import Avatar from "./Avatar"
-import DynamicTable, { Row } from "./DynamicTable"
+import DynamicTable, { Row, SearchableCell } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
 import { useCourseID } from "../hooks/useCourseID"
@@ -108,24 +108,28 @@ const Members = () => {
         const roleButtons = isPending(enrollment) || edit ? buttons : enrollmentBadgeIcon
         const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
         const nameLink = enrollment.user ? (
-            <a
-                href={userRepoLink(enrollment.user, course)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-primary transition-colors"
-            >
-                <Avatar src={enrollment.user.AvatarURL} alt={`${Name}'s avatar`} size="w-6" variant="inline" />
-                {Name}
-            </a>
+            <SearchableCell hidden={!isHidden(Name, state.query)}>
+                <a
+                    href={userRepoLink(enrollment.user, course)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                >
+                    <Avatar src={enrollment.user.AvatarURL} alt={`${Name}'s avatar`} size="w-6" variant="inline" />
+                    {Name}
+                </a>
+            </SearchableCell>
         ) : Name
 
         const emailLink = Email ? (
-            <a
-                href={`mailto:${Email}`}
-                className="hover:text-primary transition-colors"
-            >
-                {Email}
-            </a>
+            <SearchableCell hidden={!isHidden(Email, state.query)}>
+                <a
+                    href={`mailto:${Email}`}
+                    className="hover:text-primary transition-colors"
+                >
+                    {Email}
+                </a>
+            </SearchableCell>
         ) : ""
 
         return [
