@@ -1,6 +1,6 @@
 import React, { memo, useState } from "react"
 import { Enrollment, GradingCriterion_Grade, Group, Submission } from "../../../proto/qf/types_pb"
-import { getSubmissionCellColor, Icon } from "../../Helpers"
+import { getSubmissionCellColor } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
 /** Represents both possible submissions for a group lab assignment */
@@ -119,7 +119,7 @@ const ReviewCell = memo(({ submission, onClick, isSelected, colorClass }: Review
     if (!state.isManuallyGraded(submission)) {
         return (
             <td className="text-base-content/50 text-center" title="Auto graded">
-                <i className={Icon.DASH} />
+                —
             </td>
         )
     }
