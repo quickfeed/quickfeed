@@ -38,23 +38,31 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
     const sortedFeedbacks = sortFeedbacks(assignmentFeedbacks)
 
     return (
-        <div className="container mt-4">
-            <div className="d-flex align-items-center mb-4">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
                 <button
-                    className="btn btn-outline-secondary mr-3"
+                    className="btn btn-ghost gap-2 hover:btn-primary"
                     onClick={() => navigate(`/course/${state.activeCourse}/feedback`)}
                 >
-                    <i className="fa fa-arrow-left mr-2" /> Back to Summary
+                    <i className="fa fa-arrow-left" />
+                    Back to Summary
                 </button>
-                <h1 className="text-primary mb-0">
-                    <i className="fa fa-comments mr-2" />
-                    Feedback for {assignment?.name || `Assignment ${assignmentID}`}
-                </h1>
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+                        <i className="fa fa-comments text-white text-xl" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-base-content">
+                            {assignment?.name || `Assignment ${assignmentID}`}
+                        </h1>
+                        <p className="text-sm text-base-content/60">Detailed Feedback View</p>
+                    </div>
+                </div>
             </div>
 
             {assignmentFeedbacks.length > 0 ? (
                 <>
-                    <div className="row">
+                    <div className="mb-6">
                         <FeedbackGraph feedbacks={assignmentFeedbacks} />
                     </div>
 
@@ -64,21 +72,22 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
                         feedbackCount={assignmentFeedbacks.length}
                     />
 
-                    <div className="row">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedFeedbacks.map(fb => (
-                            <div className="col-lg-4 col-md-6 mb-4" key={fb.ID.toString()}>
-                                <FeedbackCard
-                                    feedback={fb}
-                                    convertToHoursAndMinutes={convertToHoursAndMinutes}
-                                />
-                            </div>
+                            <FeedbackCard
+                                key={fb.ID.toString()}
+                                feedback={fb}
+                                convertToHoursAndMinutes={convertToHoursAndMinutes}
+                            />
                         ))}
                     </div>
                 </>
             ) : (
-                <div className="alert alert-info">
-                    <i className="fa fa-info-circle mr-2" />
-                    No feedback available for this assignment yet.
+                <div className="alert alert-info shadow-lg">
+                    <div className="flex items-center gap-2">
+                        <i className="fa fa-info-circle text-xl" />
+                        <span>No feedback available for this assignment yet.</span>
+                    </div>
                 </div>
             )}
         </div>

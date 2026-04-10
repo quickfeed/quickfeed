@@ -1,6 +1,7 @@
 import React from "react"
 import { Assignment, AssignmentSchema, Submission, SubmissionSchema } from "../../proto/qf/types_pb"
-import ProgressBar, { Progress } from "../components/ProgressBar"
+import ProgressBar from "../components/ProgressBar"
+import ProgressIndicator from "../components/ProgressIndicator"
 import { initializeOvermind } from "./TestHelpers"
 import { Provider } from "overmind-react"
 import { render } from "@testing-library/react"
@@ -78,28 +79,29 @@ describe("ProgressBar", () => {
         },
     ]
 
-    test.each(progressBarTests)(`[Progress.LAB] $desc`, (test) => {
+    test.each(progressBarTests)("[ProgressBar] $desc", (test) => {
         labTest(test)
     })
 
 
-    test.each(progressBarTests)(`[Progress.NAV] $desc`, (test) => {
+    test.each(progressBarTests)("[ProgressIndicator] $desc", (test) => {
         const submissions = new SubmissionsForUser()
         submissions.setSubmissions(1n, "USER", [test.submission])
         const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions })
         const { container } = render(
             <Provider value={overmind}>
-                <ProgressBar courseID={"1"} submission={test.submission} type={Progress.NAV} />
+                <ProgressIndicator courseID={"1"} submission={test.submission} />
             </Provider>
         )
 
         const bar = container.getElementsByTagName("div").item(0)
         expect(bar?.style).toHaveProperty("right", `${100 - test.submission.score}%`)
 
-        const color = test.submission.score >= test.assignment.scoreLimit
-            ? "2px solid green"
-            : "2px solid yellow"
-        expect(bar?.style).toHaveProperty("border-bottom", color)
+        // Check for the appropriate Tailwind class based on status and score
+        const expectedClassSuffix = test.submission.score >= test.assignment.scoreLimit
+            ? "border-b-success"
+            : "border-b-primary"
+        expect(bar?.className).toContain(expectedClassSuffix)
     })
 })
 
@@ -110,27 +112,30 @@ const labTest = (test: ProgressBarTest) => {
 
     const { container } = render(
         <Provider value={overmind}>
-            <ProgressBar courseID={"1"} submission={test.submission} type={Progress.LAB} />
+            <ProgressBar courseID={"1"} submission={test.submission} />
         </Provider>
     )
 
-    // Incorrect assignment index should not have a secondary bar
+    // Check if there should be a secondary progress bar
     const hasSecondary = test.submission.score < test.assignment.scoreLimit
-    // Given an invalid assignment index, we expect the bar to be empty
-    // However, if we pass a submission, we expect the bar to be filled to the correct percentage
     const score = test.submission.score
 
-    const bars = container.getElementsByClassName("progress-bar")
+    const bars = container.querySelectorAll('[role="progressbar"]')
     expect(bars).toHaveLength(hasSecondary ? 2 : 1)
-    if (hasSecondary) {
-        const secondary = container.getElementsByClassName("progressbar-secondary").item(0)
-        if (!secondary) {
-            fail()
-        }
-        expect(secondary.getAttribute("style")).toContain(`width: ${test.assignment.scoreLimit - test.submission.score}%`)
-        expect(secondary.textContent).toEqual(`${test.assignment.scoreLimit - test.submission.score} %`)
+
+    // Check primary progress bar
+    const primary = bars[0]
+    expect(primary.getAttribute("style")).toContain(`width: ${score}%`)
+
+    // Only expect text to be shown when score > 10 (UI constraint for small bars)
+    if (score > 10) {
+        expect(primary.textContent).toContain(test.want)
     }
 
-    expect(container.getElementsByClassName("progress-bar bg-primary").item(0)?.getAttribute("style")).toContain(`width: ${score}%`)
-    expect(bars[0].textContent).toContain(test.want)
+    if (hasSecondary) {
+        const secondary = bars[1]
+        const expectedWidth = test.assignment.scoreLimit - test.submission.score
+        expect(secondary.getAttribute("style")).toContain(`width: ${expectedWidth}%`)
+        expect(secondary.getAttribute("style")).toContain(`left: ${test.submission.score}%`)
+    }
 }

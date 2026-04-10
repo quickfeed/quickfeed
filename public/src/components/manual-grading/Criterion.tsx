@@ -34,7 +34,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     // manageOrShowPassed renders the ManageCriteriaStatus component if the user is a teacher, otherwise it renders a passed/failed icon
     const criteriaStatusOrPassFailIcon = isTeacher
         ? <CriteriaStatus criterion={criteria} />
-        : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
+        : <i className={passed ? "fa fa-check text-success" : "fa fa-exclamation-circle text-error"} />
 
 
     let comment: React.JSX.Element | null = null
@@ -42,13 +42,13 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment
-        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton>
+        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o text-base-content/70 hover:text-base-content" aria-hidden="true" /></UnstyledButton>
         if (criteria.comment.length > 0) {
             comment = <CriterionComment comment={criteria.comment} />
         }
     } else {
         comment = <CriterionComment comment={criteria.comment} />
-        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton>
+        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""} text-base-content/70 hover:text-base-content`} /></UnstyledButton>
     }
 
     // Only display the comment if the comment is not empty
@@ -56,7 +56,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     return (
         <>
             <tr className="align-items-center">
-                <td className={`${className} criteria-description`}>{criteria.description}</td>
+                <td className={`${className} pl-3! criteria-description`}>{criteria.description}</td>
                 <td>
                     {criteriaStatusOrPassFailIcon}
                 </td>

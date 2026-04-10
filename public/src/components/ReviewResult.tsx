@@ -20,8 +20,8 @@ const ReviewResult = ({ review }: { review: Review }) => {
 
     return (
         <table className="table">
-            <thead className="thead-dark">
-                <tr className="table-primary">
+            <thead>
+                <tr>
                     <th>Score:</th>
                     <th>{review.score}</th>
                     <th />

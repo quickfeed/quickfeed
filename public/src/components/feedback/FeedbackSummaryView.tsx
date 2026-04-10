@@ -19,63 +19,74 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
     const navigate = useNavigate()
 
     return (
-        <div className="container mt-4">
-            <h1 className="mb-4 text-primary">
-                <i className="fa fa-comments mr-2" /> Assignment Feedback Summary
-            </h1>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className="mb-8">
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+                        <i className="fa fa-comments text-white text-xl" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-base-content">Assignment Feedback Summary</h1>
+                </div>
+                <p className="text-base-content/60 ml-16">Review student feedback for all assignments</p>
+            </div>
+
             {assignments && courseFeedbackData ? (
-                <div className="row">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {assignments.map(assignment => {
                         const feedbacks = courseFeedbackData.byAssignment.get(assignment.ID) || []
                         const [avgHours, avgMinutes] = avgTimeSpent(assignment.ID)
 
                         return (
-                            <div className="col-lg-6 col-md-6 mb-4" key={assignment.ID.toString()}>
-                                <div
-                                    className="card shadow-sm h-100 cursor-pointer"
-                                    onClick={() => navigate(`/course/${state.activeCourse}/feedback/${assignment.ID}`)}
-                                    style={{ cursor: 'pointer' }}
-                                    aria-hidden="true"
-                                >
-                                    <div className="card-header bg-primary text-white">
-                                        <h5 className="mb-0 d-flex justify-content-between align-items-center">
-                                            <span>
-                                                <i className="fa fa-book mr-2" />
-                                                {assignment.name}
-                                            </span>
-                                        </h5>
+                            <div
+                                key={assignment.ID.toString()}
+                                className="card bg-base-100 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                                onClick={() => navigate(`/course/${state.activeCourse}/feedback/${assignment.ID}`)}
+                                role="button"
+                                aria-hidden="true"
+                            >
+                                <div className="card-body p-6">
+                                    <div className="flex items-start gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <i className="fa fa-book text-primary" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h5 className="text-lg font-bold text-base-content mb-1">{assignment.name}</h5>
+                                            <p className="text-sm text-base-content/60">Assignment Feedback</p>
+                                        </div>
                                     </div>
-                                    <div className="card-body">
-                                        <div className="row text-center">
-                                            <div className="col-6">
-                                                <div className="h3 text-info mb-0">{feedbacks.length}</div>
-                                                <small className="text-muted">Responses</small>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-info/10 rounded-lg p-4 text-center border border-info/20">
+                                            <div className="text-3xl font-bold text-info mb-1">{feedbacks.length}</div>
+                                            <div className="text-xs text-base-content/70 uppercase tracking-wide">Responses</div>
+                                        </div>
+                                        <div className="bg-success/10 rounded-lg p-4 text-center border border-success/20">
+                                            <div className="text-3xl font-bold text-success mb-1">
+                                                {(avgHours > 0 || avgMinutes > 0) ? `${avgHours}h ${avgMinutes}m` : 'N/A'}
                                             </div>
-                                            <div className="col-6">
-                                                <div className="h3 text-success mb-0">
-                                                    {(avgHours > 0 || avgMinutes > 0) ? `${avgHours}h ${avgMinutes}m` : 'N/A'}
-                                                </div>
-                                                <small className="text-muted">Avg. Time</small>
+                                            <div className="text-xs text-base-content/70 uppercase tracking-wide">Avg. Time</div>
+                                        </div>
+                                    </div>
+
+                                    {feedbacks.length > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-base-300">
+                                            <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
+                                                <i className="fa fa-hand-pointer-o" />
+                                                <span>Click to view detailed feedback</span>
                                             </div>
                                         </div>
-                                        {feedbacks.length > 0 && (
-                                            <div className="mt-3">
-                                                <small className="text-muted">
-                                                    <i className="fa fa-hand-pointer-o mr-1" />
-                                                    Click to view detailed feedback
-                                                </small>
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )
                     })}
                 </div>
             ) : (
-                <div className="alert alert-info">
-                    <i className="fa fa-info-circle mr-2" />
-                    No feedback available for this course yet.
+                <div className="alert alert-info shadow-lg">
+                    <div className="flex items-center gap-2">
+                        <i className="fa fa-info-circle text-xl" />
+                        <span>No feedback available for this course yet.</span>
+                    </div>
                 </div>
             )}
         </div>

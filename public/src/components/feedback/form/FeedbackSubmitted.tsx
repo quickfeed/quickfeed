@@ -7,13 +7,15 @@ interface FeedbackSubmittedCardProps {
 
 export const FeedbackSubmittedCard: React.FC<FeedbackSubmittedCardProps> = ({ assignment }) => {
     return (
-        <div className="card mt-3">
-            <div className="card-body">
-                <h5 className="card-title text-success">
-                    <i className="fa fa-check-circle me-2" />
-                    Feedback Submitted
-                </h5>
-                <p className="card-text">Thank you for your feedback on {assignment.name}!</p>
+        <div className="alert alert-success shadow-lg my-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center flex-shrink-0">
+                    <i className="fa fa-check-circle text-2xl" />
+                </div>
+                <div>
+                    <h5 className="font-bold text-lg mb-1">Feedback Submitted Successfully!</h5>
+                    <p className="text-sm">Thank you for your feedback on {assignment.name}!</p>
+                </div>
             </div>
         </div>
     )

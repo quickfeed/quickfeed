@@ -1,12 +1,13 @@
 import React, { useCallback } from "react"
 import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
-import { Color, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { Color, groupRepoLink, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 import { useCourseID } from "../hooks/useCourseID"
+import Avatar from "./Avatar"
 
 
 /* Lists all groups for a given course. */
@@ -14,6 +15,7 @@ const Groups = () => {
     const state = useAppState()
     const actions = useActions().global
     const courseID = useCourseID()
+    const course = state.courses.find(c => c.ID === courseID)
 
     const groupSearch = (group: Group) => {
         // Show all groups if query is empty
@@ -48,7 +50,6 @@ const Groups = () => {
                     key={`approve${group.ID}`}
                     text="Approve"
                     color={Color.BLUE}
-                    type={ButtonType.BADGE}
                     onClick={approveGroup(group)}
                 />
             )
@@ -58,7 +59,7 @@ const Groups = () => {
                 key={`edit${group.ID}`}
                 text="Edit"
                 color={Color.YELLOW}
-                type={ButtonType.BADGE}
+                type={ButtonType.OUTLINE}
                 className="ml-2"
                 onClick={handleEditGroup(group)}
             />
@@ -68,7 +69,6 @@ const Groups = () => {
                 key={`delete${group.ID}`}
                 text="Delete"
                 color={Color.RED}
-                type={ButtonType.BADGE}
                 className="ml-2"
                 onClick={handleDeleteGroup(group)}
             />
@@ -79,26 +79,57 @@ const Groups = () => {
 
     const GroupMembers = ({ group }: { group: Group }) => {
         if (!hasUsers(group)) {
-            return <td>No members</td>
+            return <td><span className="text-base-content/60 text-sm">No members</span></td>
         }
 
-        const members = group.users.map((user, index) => {
-            return (
-                <span key={user.ID.toString()} className="inline-block">
-                    <a href={`https://github.com/${user.Login}`} target="_blank" rel="noopener noreferrer">{user.Name}</a>
-                    {index >= group.users.length - 1 ? "" : ", "}
-                </span>
-            )
-        })
-        return <td>{members}</td>
+        return (
+            <td>
+                <div className="flex items-center gap-1">
+                    {/* Avatar stack */}
+                    <div className="-space-x-3 rtl:space-x-reverse">
+                        {group.users.map((user) => (
+                            <a
+                                key={user.ID.toString()}
+                                href={`https://github.com/${user.Login}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="tooltip tooltip-bottom"
+                                data-tip={user.Name}
+                            >
+                                <Avatar src={user.AvatarURL} alt={`${user.Name}'s avatar`} size="w-8" />
+                            </a>
+                        ))}
+                    </div>
+                    {/* Names list */}
+                    <div className="ml-3 text-sm text-base-content/80">
+                        {group.users.map((user, index) => (
+                            <span key={user.ID.toString()}>
+                                {user.Name}{index < group.users.length - 1 ? ", " : ""}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </td>
+        )
     }
 
     const GroupRow = ({ group }: { group: Group }) => {
         return (
             <tr hidden={groupSearch(group)}>
                 <td key={group.ID.toString()}>
-                    {group.name}
-                    <span className="badge badge-warning ml-2">{isPendingGroup(group) ? "Pending" : null}</span>
+                    <div className="flex items-center gap-2">
+                        <a
+                            href={groupRepoLink(group, course)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 font-semibold hover:text-primary transition-colors"
+                        >
+                            {group.name}
+                        </a>
+                        {isPendingGroup(group) && (
+                            <span className="badge badge-warning badge-sm">Pending</span>
+                        )}
+                    </div>
                 </td>
                 <GroupMembers group={group} />
                 <td>{group.slipDaysRemaining}</td>
@@ -122,8 +153,8 @@ const Groups = () => {
     }
 
     const table = (
-        <table className="table table-striped table-grp table-hover">
-            <thead className="thead-dark">
+        <table className="table table-zebra table-grp table-hover">
+            <thead className="bg-base-300">
                 <tr>
                     <th>Name</th>
                     <th>Members</th>
@@ -139,7 +170,7 @@ const Groups = () => {
     )
 
     return (
-        <div className="box">
+        <div className="">
             <div className="pb-2">
                 <Search />
             </div>

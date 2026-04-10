@@ -132,65 +132,71 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     }
 
     return (
-        <div className="card mt-3 mb-3">
-            <div className="card-header">
+        <div className="card bg-base-100 shadow-lg my-6">
+            <div className="card-body p-0">
                 <button
-                    className="btn btn-link p-0 text-decoration-none w-100 text-start"
+                    className="w-full text-left p-6 hover:bg-base-300 bg-base-200 transition-colors duration-200 flex items-center justify-between"
                     onClick={() => setIsOpen(!isOpen)}
                     type="button"
                     aria-expanded={isOpen}
                 >
-                    <h5 className="mb-0">
-                        <i className={`fa fa-chevron-${isOpen ? 'down' : 'right'} me-2`} />
-                        Give Feedback on This Assignment
-                    </h5>
-                </button>
-            </div>
-
-            {isOpen && (
-                <div className="card-body">
-                    <form onSubmit={handleSubmit}>
-                        <FeedbackTextInput
-                            id="likedContent"
-                            label="What did you like about this assignment?"
-                            value={likedContent}
-                            onChange={setLikedContent}
-                            placeholder="What worked well? What was interesting or helpful?"
-                            wordCount={countWords(likedContent)}
-                            maxWords={200}
-                            minWords={minWords}
-                        />
-                        <FeedbackTextInput
-                            id="improvementSuggestions"
-                            label="What would make this assignment better?"
-                            value={improvementSuggestions}
-                            onChange={setImprovementSuggestions}
-                            placeholder="What was confusing? What could be improved?"
-                            wordCount={countWords(improvementSuggestions)}
-                            maxWords={200}
-                            minWords={minWords}
-                        />
-                        <TimeSpentInput
-                            hours={hours}
-                            minutes={minutes}
-                            onHoursChange={handleHoursChange}
-                            onMinutesChange={handleMinutesChange}
-                        />
-                        <div className="mb-3">
-                            <small className="text-muted">
-                                <i className="fa fa-info-circle me-1" />
-                                Your feedback will be submitted anonymously to help improve the course.
-                            </small>
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-content' : 'bg-primary/10 text-primary'
+                            }`}>
+                            <i className="fa fa-comment-o" />
                         </div>
-                        <FeedbackFormActions
-                            isSubmitting={isSubmitting}
-                            isFormValid={validateForm()}
-                            onCancel={() => setIsOpen(false)}
-                        />
-                    </form >
-                </div >
-            )}
-        </div >
+                        <h5 className="text-lg font-bold text-base-content">Give Feedback on This Assignment</h5>
+                    </div>
+                    <i className={`fa fa-chevron-${isOpen ? 'down' : 'right'} text-base-content/60 transition-transform`} />
+                </button>
+
+                {isOpen && (
+                    <div className="p-6 pt-0">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <fieldset className="fieldset bg-base-200 border-base-300 rounded-box border p-4">
+                                <FeedbackTextInput
+                                    id="likedContent"
+                                    label="What did you like about this assignment?"
+                                    value={likedContent}
+                                    onChange={setLikedContent}
+                                    placeholder="What worked well? What was interesting or helpful?"
+                                    wordCount={countWords(likedContent)}
+                                    maxWords={200}
+                                    minWords={minWords}
+                                />
+                                <FeedbackTextInput
+                                    id="improvementSuggestions"
+                                    label="What would make this assignment better?"
+                                    value={improvementSuggestions}
+                                    onChange={setImprovementSuggestions}
+                                    placeholder="What was confusing? What could be improved?"
+                                    wordCount={countWords(improvementSuggestions)}
+                                    maxWords={200}
+                                    minWords={minWords}
+                                />
+                                <TimeSpentInput
+                                    hours={hours}
+                                    minutes={minutes}
+                                    onHoursChange={handleHoursChange}
+                                    onMinutesChange={handleMinutesChange}
+                                />
+                                <div className="alert alert-info">
+                                    <div className="flex items-start gap-2">
+                                        <i className="fa fa-info-circle mt-0.5" />
+                                        <span className="text-sm">Your feedback will be submitted anonymously to help improve the course.</span>
+                                    </div>
+                                </div>
+                                <FeedbackFormActions
+                                    isSubmitting={isSubmitting}
+                                    isFormValid={validateForm()}
+                                    onCancel={() => setIsOpen(false)}
+                                />
+                            </fieldset>
+                        </form>
+                    </div>
+                )}
+            </div >
+        </div>
     )
 }
 

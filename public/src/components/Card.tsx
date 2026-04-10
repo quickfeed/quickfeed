@@ -20,7 +20,7 @@ const Card = (props: { title: string, text: string, buttonText: string, notifica
     const navigate = useNavigate()
 
     const notification = props.notification
-        ? <i className={`badge badge-${props.notification.color} float-right`}> {props.notification.text} </i>
+        ? <span className={`badge badge-xs badge-${props.notification.color} float-right`}> {props.notification.text} </span>
         : null
 
     // TODO: Maybe support both onclick and to, rather than having to choose one. Not sure where it would be used though.
@@ -34,7 +34,7 @@ const Card = (props: { title: string, text: string, buttonText: string, notifica
     }
     return (
         <div className="col-sm-6" style={{ marginBottom: "10px" }}>
-            <div className="card">
+            <div className="card bg-base-300 shadow-sm">
                 <div className="card-body">
                     <h5 className="card-title">
                         {props.title}
@@ -44,8 +44,10 @@ const Card = (props: { title: string, text: string, buttonText: string, notifica
                     <p className="card-text">
                         {props.text}
                     </p>
-                    <div className="btn btn-primary" onClick={onClick}>
-                        {props.buttonText}
+                    <div className="justify-start card-actions" onClick={onClick}>
+                        <button type="button" className="btn btn-primary clickable">
+                            {props.buttonText}
+                        </button>
                     </div>
                 </div>
             </div>

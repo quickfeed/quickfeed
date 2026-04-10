@@ -1,7 +1,7 @@
 import React from "react"
 import { useAppState } from "../overmind"
 import Groups from "../components/Groups"
-import GroupComponent from "../components/group/Group"
+import GroupView from "../components/group/Group"
 import GroupForm from "../components/group/GroupForm"
 import { useCourseID } from "../hooks/useCourseID"
 
@@ -17,7 +17,7 @@ const GroupPage = () => {
     if (!state.hasGroup(courseID.toString())) {
         return <GroupForm />
     }
-    return <GroupComponent />
+    return <GroupView />
 }
 
 export default GroupPage

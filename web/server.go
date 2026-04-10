@@ -12,6 +12,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/reload"
+	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -89,9 +90,13 @@ func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 }
 
 func WatchHandler(ctx context.Context, handler http.Handler) http.Handler {
-	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "dist"))
+	watcher, err := reload.NewWatcher(ctx, filepath.Join(env.PublicDir(), "assets"), "index.html")
 	if err != nil {
 		log.Printf("Failed to create watcher: %v", err)
+		return handler
+	}
+	if err := ui.Watch(); err != nil {
+		log.Printf("Failed to start UI watcher: %v", err)
 		return handler
 	}
 	mux := http.NewServeMux()

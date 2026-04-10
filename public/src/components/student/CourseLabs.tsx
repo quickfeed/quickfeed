@@ -10,7 +10,7 @@ const CourseLabs = () => {
   const selfID = state.self.ID
 
   return (
-    <ul className="list-group">
+    <div className="flex flex-col">
       {assignments.map((assignment) => {
         const submissions = state.submissions.ForAssignment(assignment)
         return (
@@ -23,7 +23,7 @@ const CourseLabs = () => {
           />
         )
       })}
-    </ul>
+    </div>
   )
 }
 

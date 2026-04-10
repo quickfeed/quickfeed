@@ -14,5 +14,6 @@ export const ScreenSize = {
     Small: 576,
     Medium: 768,
     Large: 992,
+    TailwindLg: 1024,
     ExtraLarge: 1200
 }
