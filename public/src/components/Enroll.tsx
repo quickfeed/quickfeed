@@ -12,7 +12,10 @@ export const Enroll = ({ courseID }: { courseID: bigint }) => {
     const course = state.courses.find(c => c.ID === courseID)
     const enrollment = state.enrollmentsByCourseID[courseID.toString()] || create(EnrollmentSchema)
     if (!course) {
-        // If no course is found, we can return a placeholder or an error message.
+        // Wait until courses are loaded before redirecting, to avoid navigating away on page refresh.
+        if (state.isLoading) {
+            return null
+        }
         return <Navigate to="/" replace />
     }
 
