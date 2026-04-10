@@ -101,6 +101,7 @@ const Groups = () => {
                     <span className="badge badge-warning ml-2">{isPendingGroup(group) ? "Pending" : null}</span>
                 </td>
                 <GroupMembers group={group} />
+                <td>{group.slipDaysRemaining}</td>
                 <GroupButtons group={group} />
             </tr>
         )
@@ -126,6 +127,7 @@ const Groups = () => {
                 <tr>
                     <th>Name</th>
                     <th>Members</th>
+                    <th>Slip days</th>
                     <th>Manage</th>
                 </tr>
             </thead>
