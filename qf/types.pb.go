@@ -562,15 +562,17 @@ func (x *Users) GetUsers() []*User {
 }
 
 type Group struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" gorm:"uniqueIndex:group"`
-	CourseID      uint64                 `protobuf:"varint,3,opt,name=courseID,proto3" json:"courseID,omitempty" gorm:"uniqueIndex:group"`
-	Status        Group_GroupStatus      `protobuf:"varint,5,opt,name=status,proto3,enum=qf.Group_GroupStatus" json:"status,omitempty"`
-	Users         []*User                `protobuf:"bytes,6,rep,name=users,proto3" json:"users,omitempty" gorm:"many2many:group_users;"`
-	Enrollments   []*Enrollment          `protobuf:"bytes,7,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" gorm:"uniqueIndex:group"`
+	CourseID          uint64                 `protobuf:"varint,3,opt,name=courseID,proto3" json:"courseID,omitempty" gorm:"uniqueIndex:group"`
+	Status            Group_GroupStatus      `protobuf:"varint,5,opt,name=status,proto3,enum=qf.Group_GroupStatus" json:"status,omitempty"`
+	Users             []*User                `protobuf:"bytes,6,rep,name=users,proto3" json:"users,omitempty" gorm:"many2many:group_users;"`
+	Enrollments       []*Enrollment          `protobuf:"bytes,7,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
+	UsedSlipDays      []*UsedSlipDays        `protobuf:"bytes,8,rep,name=usedSlipDays,proto3" json:"usedSlipDays,omitempty"`
+	SlipDaysRemaining uint32                 `protobuf:"varint,9,opt,name=slipDaysRemaining,proto3" json:"slipDaysRemaining,omitempty" gorm:"-"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *Group) Reset() {
@@ -643,6 +645,20 @@ func (x *Group) GetEnrollments() []*Enrollment {
 		return x.Enrollments
 	}
 	return nil
+}
+
+func (x *Group) GetUsedSlipDays() []*UsedSlipDays {
+	if x != nil {
+		return x.UsedSlipDays
+	}
+	return nil
+}
+
+func (x *Group) GetSlipDaysRemaining() uint32 {
+	if x != nil {
+		return x.SlipDaysRemaining
+	}
+	return 0
 }
 
 type Groups struct {
@@ -1127,6 +1143,7 @@ type UsedSlipDays struct {
 	EnrollmentID  uint64                 `protobuf:"varint,2,opt,name=enrollmentID,proto3" json:"enrollmentID,omitempty"`
 	AssignmentID  uint64                 `protobuf:"varint,3,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
 	UsedDays      uint32                 `protobuf:"varint,4,opt,name=usedDays,proto3" json:"usedDays,omitempty"`
+	GroupID       uint64                 `protobuf:"varint,5,opt,name=groupID,proto3" json:"groupID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1185,6 +1202,13 @@ func (x *UsedSlipDays) GetAssignmentID() uint64 {
 func (x *UsedSlipDays) GetUsedDays() uint32 {
 	if x != nil {
 		return x.UsedDays
+	}
+	return 0
+}
+
+func (x *UsedSlipDays) GetGroupID() uint64 {
+	if x != nil {
+		return x.GroupID
 	}
 	return 0
 }
@@ -2533,14 +2557,16 @@ const file_qf_types_proto_rawDesc = "" +
 	"\vEnrollments\x18\v \x03(\v2\x0e.qf.EnrollmentR\vEnrollments\x12`\n" +
 	"\x10FeedbackReceipts\x18\f \x03(\v2\x13.qf.FeedbackReceiptB\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"foreignKey:UserID\"R\x10FeedbackReceipts\"'\n" +
 	"\x05Users\x12\x1e\n" +
-	"\x05users\x18\x01 \x03(\v2\b.qf.UserR\x05users\"\xda\x02\n" +
+	"\x05users\x18\x01 \x03(\v2\b.qf.UserR\x05users\"\xcf\x03\n" +
 	"\x05Group\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x123\n" +
 	"\x04name\x18\x02 \x01(\tB\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"uniqueIndex:group\"R\x04name\x12;\n" +
 	"\bcourseID\x18\x03 \x01(\x04B\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"uniqueIndex:group\"R\bcourseID\x12-\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x15.qf.Group.GroupStatusR\x06status\x12D\n" +
 	"\x05users\x18\x06 \x03(\v2\b.qf.UserB$ʵ\x03 \xa2\x01\x1dgorm:\"many2many:group_users;\"R\x05users\x120\n" +
-	"\venrollments\x18\a \x03(\v2\x0e.qf.EnrollmentR\venrollments\"(\n" +
+	"\venrollments\x18\a \x03(\v2\x0e.qf.EnrollmentR\venrollments\x124\n" +
+	"\fusedSlipDays\x18\b \x03(\v2\x10.qf.UsedSlipDaysR\fusedSlipDays\x12=\n" +
+	"\x11slipDaysRemaining\x18\t \x01(\rB\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\x11slipDaysRemaining\"(\n" +
 	"\vGroupStatus\x12\v\n" +
 	"\aPENDING\x10\x00\x12\f\n" +
 	"\bAPPROVED\x10\x01\"+\n" +
@@ -2610,12 +2636,13 @@ const file_qf_types_proto_rawDesc = "" +
 	"\n" +
 	"\x06HIDDEN\x10\x01\x12\v\n" +
 	"\aVISIBLE\x10\x02\x12\f\n" +
-	"\bFAVORITE\x10\x03\"\x82\x01\n" +
+	"\bFAVORITE\x10\x03\"\x9c\x01\n" +
 	"\fUsedSlipDays\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
 	"\fenrollmentID\x18\x02 \x01(\x04R\fenrollmentID\x12\"\n" +
 	"\fassignmentID\x18\x03 \x01(\x04R\fassignmentID\x12\x1a\n" +
-	"\busedDays\x18\x04 \x01(\rR\busedDays\"?\n" +
+	"\busedDays\x18\x04 \x01(\rR\busedDays\x12\x18\n" +
+	"\agroupID\x18\x05 \x01(\x04R\agroupID\"?\n" +
 	"\vEnrollments\x120\n" +
 	"\venrollments\x18\x01 \x03(\v2\x0e.qf.EnrollmentR\venrollments\"\xc2\x04\n" +
 	"\n" +
@@ -2815,49 +2842,50 @@ var file_qf_types_proto_depIdxs = []int32{
 	0,  // 3: qf.Group.status:type_name -> qf.Group.GroupStatus
 	7,  // 4: qf.Group.users:type_name -> qf.User
 	14, // 5: qf.Group.enrollments:type_name -> qf.Enrollment
-	9,  // 6: qf.Groups.groups:type_name -> qf.Group
-	2,  // 7: qf.Course.enrolled:type_name -> qf.Enrollment.UserStatus
-	14, // 8: qf.Course.enrollments:type_name -> qf.Enrollment
-	17, // 9: qf.Course.assignments:type_name -> qf.Assignment
-	9,  // 10: qf.Course.groups:type_name -> qf.Group
-	11, // 11: qf.Courses.courses:type_name -> qf.Course
-	1,  // 12: qf.Repository.repoType:type_name -> qf.Repository.Type
-	20, // 13: qf.Repository.issues:type_name -> qf.Issue
-	7,  // 14: qf.Enrollment.user:type_name -> qf.User
-	11, // 15: qf.Enrollment.course:type_name -> qf.Course
-	9,  // 16: qf.Enrollment.group:type_name -> qf.Group
-	2,  // 17: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
-	3,  // 18: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
-	33, // 19: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
-	15, // 20: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
-	14, // 21: qf.Enrollments.enrollments:type_name -> qf.Enrollment
-	33, // 22: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
-	23, // 23: qf.Assignment.submissions:type_name -> qf.Submission
-	19, // 24: qf.Assignment.tasks:type_name -> qf.Task
-	26, // 25: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	18, // 26: qf.Assignment.ExpectedTests:type_name -> qf.TestInfo
-	20, // 27: qf.Task.issues:type_name -> qf.Issue
-	4,  // 28: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
-	17, // 29: qf.Assignments.assignments:type_name -> qf.Assignment
-	25, // 30: qf.Submission.Grades:type_name -> qf.Grade
-	33, // 31: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
-	29, // 32: qf.Submission.reviews:type_name -> qf.Review
-	34, // 33: qf.Submission.BuildInfo:type_name -> score.BuildInfo
-	35, // 34: qf.Submission.Scores:type_name -> score.Score
-	23, // 35: qf.Submissions.submissions:type_name -> qf.Submission
-	5,  // 36: qf.Grade.Status:type_name -> qf.Submission.Status
-	28, // 37: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
-	26, // 38: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
-	6,  // 39: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
-	26, // 40: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	33, // 41: qf.Review.edited:type_name -> google.protobuf.Timestamp
-	33, // 42: qf.AssignmentFeedback.CreatedAt:type_name -> google.protobuf.Timestamp
-	30, // 43: qf.AssignmentFeedbacks.feedbacks:type_name -> qf.AssignmentFeedback
-	44, // [44:44] is the sub-list for method output_type
-	44, // [44:44] is the sub-list for method input_type
-	44, // [44:44] is the sub-list for extension type_name
-	44, // [44:44] is the sub-list for extension extendee
-	0,  // [0:44] is the sub-list for field type_name
+	15, // 6: qf.Group.usedSlipDays:type_name -> qf.UsedSlipDays
+	9,  // 7: qf.Groups.groups:type_name -> qf.Group
+	2,  // 8: qf.Course.enrolled:type_name -> qf.Enrollment.UserStatus
+	14, // 9: qf.Course.enrollments:type_name -> qf.Enrollment
+	17, // 10: qf.Course.assignments:type_name -> qf.Assignment
+	9,  // 11: qf.Course.groups:type_name -> qf.Group
+	11, // 12: qf.Courses.courses:type_name -> qf.Course
+	1,  // 13: qf.Repository.repoType:type_name -> qf.Repository.Type
+	20, // 14: qf.Repository.issues:type_name -> qf.Issue
+	7,  // 15: qf.Enrollment.user:type_name -> qf.User
+	11, // 16: qf.Enrollment.course:type_name -> qf.Course
+	9,  // 17: qf.Enrollment.group:type_name -> qf.Group
+	2,  // 18: qf.Enrollment.status:type_name -> qf.Enrollment.UserStatus
+	3,  // 19: qf.Enrollment.state:type_name -> qf.Enrollment.DisplayState
+	33, // 20: qf.Enrollment.lastActivityDate:type_name -> google.protobuf.Timestamp
+	15, // 21: qf.Enrollment.usedSlipDays:type_name -> qf.UsedSlipDays
+	14, // 22: qf.Enrollments.enrollments:type_name -> qf.Enrollment
+	33, // 23: qf.Assignment.deadline:type_name -> google.protobuf.Timestamp
+	23, // 24: qf.Assignment.submissions:type_name -> qf.Submission
+	19, // 25: qf.Assignment.tasks:type_name -> qf.Task
+	26, // 26: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	18, // 27: qf.Assignment.ExpectedTests:type_name -> qf.TestInfo
+	20, // 28: qf.Task.issues:type_name -> qf.Issue
+	4,  // 29: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
+	17, // 30: qf.Assignments.assignments:type_name -> qf.Assignment
+	25, // 31: qf.Submission.Grades:type_name -> qf.Grade
+	33, // 32: qf.Submission.approvedDate:type_name -> google.protobuf.Timestamp
+	29, // 33: qf.Submission.reviews:type_name -> qf.Review
+	34, // 34: qf.Submission.BuildInfo:type_name -> score.BuildInfo
+	35, // 35: qf.Submission.Scores:type_name -> score.Score
+	23, // 36: qf.Submissions.submissions:type_name -> qf.Submission
+	5,  // 37: qf.Grade.Status:type_name -> qf.Submission.Status
+	28, // 38: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
+	26, // 39: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
+	6,  // 40: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
+	26, // 41: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	33, // 42: qf.Review.edited:type_name -> google.protobuf.Timestamp
+	33, // 43: qf.AssignmentFeedback.CreatedAt:type_name -> google.protobuf.Timestamp
+	30, // 44: qf.AssignmentFeedbacks.feedbacks:type_name -> qf.AssignmentFeedback
+	45, // [45:45] is the sub-list for method output_type
+	45, // [45:45] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_qf_types_proto_init() }
