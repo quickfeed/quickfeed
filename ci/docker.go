@@ -16,12 +16,10 @@ import (
 	"time"
 
 	"github.com/containerd/errdefs"
-	"github.com/docker/docker/api/types/build"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/moby/moby/api/pkg/stdcopy"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
+	"github.com/moby/moby/client"
 	"go.uber.org/zap"
 )
 
@@ -45,10 +43,7 @@ type Docker struct {
 
 // NewDockerCI returns a runner to run CI tests.
 func NewDockerCI(logger *zap.SugaredLogger) (*Docker, error) {
-	cli, err := client.NewClientWithOpts(
-		client.FromEnv,
-		client.WithAPIVersionNegotiation(),
-	)
+	cli, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +75,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 	d.logger.Infof("Created container image '%s' for %s", job.Image, job.Name)
-	if err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+	if _, err = d.client.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
 		return "", err
 	}
 
@@ -92,7 +87,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	d.logger.Infof("Done waiting for container image '%s' for %s", job.Image, job.Name)
 	// extract the logs before removing the container below
-	logReader, err := d.client.ContainerLogs(ctx, resp.ID, container.LogsOptions{
+	logReader, err := d.client.ContainerLogs(ctx, resp.ID, client.ContainerLogsOptions{
 		ShowStdout: true,
 	})
 	if err != nil {
@@ -101,7 +96,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	d.logger.Infof("Removing container image '%s' for %s", job.Image, job.Name)
 	// remove the container when finished to prevent too many open files
-	err = d.client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
+	_, err = d.client.ContainerRemove(ctx, resp.ID, client.ContainerRemoveOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -117,7 +112,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 }
 
 // createImage creates an image for the given job.
-func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateResponse, error) {
+func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCreateResult, error) {
 	if job.Image == "" {
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
@@ -125,12 +120,12 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 	dockerFileContent := job.BuildContext[Dockerfile]
 	if dockerFileContent != "" {
 		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
-		resp, err := d.client.ImageRemove(ctx, job.Image, image.RemoveOptions{Force: true})
+		resp, err := d.client.ImageRemove(ctx, job.Image, client.ImageRemoveOptions{Force: true})
 		if err != nil {
 			d.logger.Debugf("Expected error (continuing): %v", err)
 			// continue because we may not have an image to remove
 		}
-		for _, r := range resp {
+		for _, r := range resp.Items {
 			d.logger.Infof("Removed image '%s' for '%s'", r.Deleted, job.Name)
 		}
 
@@ -164,13 +159,16 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 		}
 	}
 
-	create := func() (container.CreateResponse, error) {
-		return d.client.ContainerCreate(ctx, &container.Config{
-			Image: job.Image,
-			User:  fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), // Run the image as the current user, e.g., quickfeed
-			Env:   job.Env,                                        // Set default environment variables
-			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
-		}, hostConfig, nil, nil, job.Name)
+	create := func() (client.ContainerCreateResult, error) {
+		return d.client.ContainerCreate(ctx, client.ContainerCreateOptions{
+			Config: &container.Config{
+				Image: job.Image,
+				User:  fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), // Run the image as the current user, e.g., quickfeed
+				Env:   job.Env,                                        // Set default environment variables
+				Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
+			},
+			HostConfig: hostConfig,
+		})
 	}
 
 	resp, err := create()
@@ -192,9 +190,9 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.CreateRe
 
 // waitForContainer waits until the container stops or context times out.
 func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) (string, error) {
-	statusCh, errCh := d.client.ContainerWait(ctx, respID, container.WaitConditionNotRunning)
+	wait := d.client.ContainerWait(ctx, respID, client.ContainerWaitOptions{Condition: container.WaitConditionNotRunning})
 	select {
-	case err := <-errCh:
+	case err := <-wait.Error:
 		if err != nil {
 			d.logger.Errorf("Failed to stop container image '%s' for %s: %v", job.Image, job.Name, err)
 			if !errors.Is(err, context.DeadlineExceeded) {
@@ -202,19 +200,19 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 			}
 			// stop runaway container whose deadline was exceeded
 			timeout := 1 // seconds to wait before forcefully killing the container
-			stopErr := d.client.ContainerStop(context.Background(), respID, container.StopOptions{Timeout: &timeout})
+			_, stopErr := d.client.ContainerStop(context.Background(), respID, client.ContainerStopOptions{Timeout: &timeout})
 			if stopErr != nil {
 				return "", stopErr
 			}
 			// remove the docker container (when stopped due to timeout) to prevent too many open files
-			rmErr := d.client.ContainerRemove(context.Background(), respID, container.RemoveOptions{})
+			_, rmErr := d.client.ContainerRemove(context.Background(), respID, client.ContainerRemoveOptions{})
 			if rmErr != nil {
 				return "", rmErr
 			}
 			// return message to user to be shown in the results log
 			return "Container timeout. Please check for infinite loops or other slowness.", err
 		}
-	case status := <-statusCh:
+	case status := <-wait.Result:
 		d.logger.Infof("Container: '%s' for %s: exited with status: %v", job.Image, job.Name, status.StatusCode)
 	}
 	return "", nil
@@ -223,7 +221,7 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 // pullImage pulls an image from docker hub.
 // This can be slow and should be avoided if possible.
 func (d *Docker) pullImage(ctx context.Context, imageName string) error {
-	progress, err := d.client.ImagePull(ctx, imageName, image.PullOptions{})
+	progress, err := d.client.ImagePull(ctx, imageName, client.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
@@ -258,7 +256,7 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	}
 
 	reader := bytes.NewReader(buf.Bytes())
-	opts := build.ImageBuildOptions{
+	opts := client.ImageBuildOptions{
 		Context:    reader,
 		Dockerfile: Dockerfile,
 		Tags:       []string{job.Image},
