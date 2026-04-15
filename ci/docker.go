@@ -168,6 +168,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCr
 				Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
 			},
 			HostConfig: hostConfig,
+			Name:       job.Name,
 		})
 	}
 
