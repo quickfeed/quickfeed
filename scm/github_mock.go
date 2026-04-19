@@ -393,6 +393,53 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			mustWrite(w, jsonFolderContent)
 		}),
 	)
+	getReposCompareByOwnerByRepoByBaseByHeadHandler := WithRequestMatchHandler(
+		getReposCompareByOwnerByRepoByBaseByHead,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			basehead := r.PathValue("basehead")
+			logger.Debug(replaceArgs(getReposCompareByOwnerByRepoByBaseByHead, owner, repo, basehead))
+
+			// basehead format is "base...head" where base is typically "main" and head is "reponame:main"
+			// The repo parameter is the base repository (e.g., "assignments")
+			// For simplicity, we check if the base repo exists
+			if !s.hasOrgRepo(owner, repo) {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+
+			// Parse basehead to extract the head repository name
+			// Format: "main...reponame:main"
+			// We need to extract "reponame" from the head part
+			comparison := &github.CommitsComparison{
+				AheadBy:      github.Int(0), // Default: no commits ahead
+				BehindBy:     github.Int(0),
+				TotalCommits: github.Int(0),
+				Status:       github.String("identical"),
+			}
+
+			// Extract head repo from basehead (format: "main...headrepo:main")
+			parts := strings.Split(basehead, "...")
+			if len(parts) == 2 {
+				headPart := parts[1]
+				// headPart is "reponame:main", extract "reponame"
+				headRepoParts := strings.Split(headPart, ":")
+				if len(headRepoParts) > 0 {
+					headRepo := headRepoParts[0]
+					// Mark certain repos as having student changes for testing
+					// For example, "meling-labs" and "josie-labs" have student changes
+					if headRepo == "meling-labs" || headRepo == "josie-labs" {
+						comparison.AheadBy = github.Int(5)
+						comparison.TotalCommits = github.Int(5)
+						comparison.Status = github.String("ahead")
+					}
+				}
+			}
+
+			mustWrite(w, comparison)
+		}),
+	)
 	getReposCollaboratorsByOwnerByRepoHandler := WithRequestMatchHandler(
 		getReposCollaboratorsByOwnerByRepo,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -797,6 +844,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		deleteReposByOwnerByRepoHandler,
 		getRepositoriesByIDHandler,
 		getReposContentsByOwnerByRepoByPathHandler,
+		getReposCompareByOwnerByRepoByBaseByHeadHandler,
 		getReposCollaboratorsByOwnerByRepoHandler,
 		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
 		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
