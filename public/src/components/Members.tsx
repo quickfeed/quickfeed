@@ -40,6 +40,7 @@ const Members = () => {
         { value: "Name", onClick: () => setSort(EnrollmentSort.Name) },
         { value: "Email", onClick: () => setSort(EnrollmentSort.Email) },
         { value: "Student ID", onClick: () => setSort(EnrollmentSort.StudentID) },
+        { value: "Group", onClick: () => { setSort(EnrollmentSort.Group) } },
         { value: "Activity", onClick: () => setSort(EnrollmentSort.Activity) },
         { value: "Approved", onClick: () => setSort(EnrollmentSort.Approved) },
         { value: "Slipdays", onClick: () => { setSort(EnrollmentSort.Slipdays) } },
@@ -134,6 +135,7 @@ const Members = () => {
 
         return [
             nameLink, emailLink, StudentID,
+            enrollment.group?.name || "",
             getFormattedTime(enrollment.lastActivityDate),
             enrollment.totalApproved.toString(),
             enrollment.slipDaysRemaining.toString(),
