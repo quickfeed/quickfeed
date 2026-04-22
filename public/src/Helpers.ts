@@ -374,7 +374,8 @@ export enum EnrollmentSort {
     Activity,
     Slipdays,
     Approved,
-    StudentID
+    StudentID,
+    Group
 }
 
 export enum SubmissionSort {
@@ -414,6 +415,11 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
             const aID = a.user?.ID ?? BigInt(0)
             const bID = b.user?.ID ?? BigInt(0)
             return sortOrder * Number(aID - bID)
+        }
+        case EnrollmentSort.Group: {
+            const groupA = a.group?.name ?? ""
+            const groupB = b.group?.name ?? ""
+            return sortOrder * (groupA.localeCompare(groupB))
         }
         default:
             return 0
