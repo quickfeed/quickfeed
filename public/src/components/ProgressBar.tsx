@@ -1,24 +1,16 @@
 import React from "react"
-import { useAppState } from "../overmind"
-import { Submission, Submission_Status } from "../../proto/qf/types_pb"
-import { getStatusByUser } from "../Helpers"
+import { Submission_Status } from "../../proto/qf/types_pb"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
 type ProgressBarProps = {
-    courseID: string,
-    submission: Submission,
+    score: number,
+    scoreLimit: number,
+    status: Submission_Status,
     showText?: boolean
 }
 
-const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps) => {
-    const state = useAppState()
-
-    const assignment = state.assignments[courseID]?.find(assignment => assignment.ID === submission.AssignmentID)
-
-    const score = submission.score ?? 0
-    const scorelimit = assignment?.scoreLimit ?? 0
-    const status = getStatusByUser(submission, state.self.ID)
-    const remainingToPass = Math.max(0, scorelimit - score)
+const ProgressBar = ({ score, scoreLimit, status, showText = true }: ProgressBarProps) => {
+    const remainingToPass = Math.max(0, scoreLimit - score)
 
     let text = ""
     let secondaryText = ""

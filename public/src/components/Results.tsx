@@ -72,6 +72,8 @@ const Results = ({ review }: { review: boolean }) => {
         actions.global.setSelectedSubmission({ submission })
         if (isMessage(owner, EnrollmentSchema)) {
             actions.global.setActiveEnrollment(clone(EnrollmentSchema, owner))
+        } else {
+            actions.global.setActiveEnrollment(null)
         }
         actions.global.setSubmissionOwner(owner)
         setSearchParams({ id: submission.ID.toString() })
