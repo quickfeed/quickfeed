@@ -17,7 +17,7 @@ const (
 
 var provider string
 
-func init() {
+func InitProvider() {
 	provider = os.Getenv("QUICKFEED_SCM_PROVIDER")
 	if provider == "" {
 		provider = defaultProvider
