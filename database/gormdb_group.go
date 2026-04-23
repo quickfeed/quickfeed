@@ -153,6 +153,7 @@ func (db *GormDB) GetGroup(groupID uint64) (*qf.Group, error) {
 		Preload("Enrollments.UsedSlipDays").
 		Preload("Enrollments.User").
 		Preload("Users", "id IN ?", userIDs).
+		Preload("UsedSlipDays").
 		First(&group, groupID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
@@ -179,6 +180,7 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 		Preload("Enrollments.UsedSlipDays").
 		Preload("Enrollments.User").
 		Preload("Users").
+		Preload("UsedSlipDays").
 		Where(&qf.Group{CourseID: courseID}).
 		Where("status in (?)", statuses).
 		Find(&groups).Error; err != nil {
