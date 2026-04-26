@@ -7,7 +7,6 @@ import SubmissionTypeIcon from './SubmissionTypeIcon'
 interface SubmissionRowProps {
     submission: Submission
     assignment: Assignment
-    courseID: string
     selfID: bigint
     redirectTo: (submission: Submission) => void
 }
@@ -19,7 +18,7 @@ const statusConfig: Record<Submission_Status, { color: string; icon: string | nu
     [Submission_Status.REVISION]: { color: "text-warning", icon: "fa-exclamation-circle" },
 }
 
-const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, courseID, selfID, redirectTo }) => {
+const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, selfID, redirectTo }) => {
     const submissionDate = submission.BuildInfo?.SubmissionDate
         ? getFormattedTime(submission.BuildInfo.SubmissionDate)
         : null
@@ -35,7 +34,7 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
             aria-hidden="true"
         >
             <div className="flex-1 min-w-0">
-                <ProgressBar courseID={courseID} submission={submission} />
+                <ProgressBar score={submission.score} scoreLimit={assignment.scoreLimit} status={status} />
             </div>
             <div className="flex-shrink-0 w-8 flex items-center justify-center">
                 <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />

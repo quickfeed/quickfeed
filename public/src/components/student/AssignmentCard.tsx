@@ -66,7 +66,6 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
             <SubmissionRow
               submission={submission}
               assignment={assignment}
-              courseID={courseID}
               selfID={selfID}
               redirectTo={redirectTo}
             />
