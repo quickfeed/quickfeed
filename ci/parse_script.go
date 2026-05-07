@@ -37,10 +37,17 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 			return EnvVars(secret, QuickFeedPath, r.Repo.Name(), r.Assignment.GetName())
 		}
 	}
+	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
+	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentsRepo)
 	return &Job{
 		Name:     r.String(),
 		Image:    image,
+		Language: language,
 		BindDir:  destDir,
+		ReadOnlyMounts: map[string]string{
+			testsDir:      filepath.Join(QuickFeedPath, qf.TestsRepo),
+			assignmentDir: filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
+		},
 		Env:      r.EnvVarsFn(secret, destDir),
 		Commands: commands,
 	}, nil

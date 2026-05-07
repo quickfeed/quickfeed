@@ -139,23 +139,24 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCr
 
 	var hostConfig *container.HostConfig
 	if job.BindDir != "" {
-		goModCacheSrc, err := moduleCachePath()
-		if err != nil {
-			return nil, err
+		mounts := []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: job.BindDir,
+				Target: QuickFeedPath,
+			},
+		}
+					Type:   mount.TypeBind,
+		for _, src := range slices.Sorted(maps.Keys(job.ReadOnlyMounts)) {
+			mounts = append(mounts, mount.Mount{
+				Type:     mount.TypeBind,
+				Source:   src,
+				Target:   job.ReadOnlyMounts[src],
+				ReadOnly: true,
+			})
 		}
 		hostConfig = &container.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: job.BindDir,
-					Target: QuickFeedPath,
-				},
-				{
-					Type:   mount.TypeBind,
-					Source: goModCacheSrc,
-					Target: GoModCache,
-				},
-			},
+			Mounts: mounts,
 		}
 	}
 
