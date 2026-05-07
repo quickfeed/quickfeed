@@ -32,6 +32,7 @@ var languages = map[string]languageConfig{
 			GolangciLintCache: golangciLintCachePath,
 		},
 		envVars: []string{
+			"GOMODCACHE=" + GoModCache,
 			"GOCACHE=" + GoCache,
 			"GOLANGCI_LINT_CACHE=" + GolangciLintCache,
 		},
