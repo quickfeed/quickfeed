@@ -10,6 +10,10 @@ type Job struct {
 	Name string
 	// Image names the image to use to run the job.
 	Image string
+	// Language specifies the programming language for the job.
+	// When set to LanguageGo, Go-specific cache directories are mounted.
+	// Parsed from the #language/ directive in the run script.
+	Language string
 	// BuildContext is a list of files to include in the Docker build context.
 	// These files are available to the Dockerfile (e.g. via COPY/ADD) and can be
 	// copied into the image, such as into the /quickfeed directory, if desired.

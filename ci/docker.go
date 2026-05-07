@@ -29,7 +29,6 @@ var DefaultContainerTimeout = time.Duration(10 * time.Minute)
 const (
 	Dockerfile      = "Dockerfile"
 	QuickFeedPath   = "/quickfeed"
-	GoModCache      = "/quickfeed-go-mod-cache"
 	maxToScan       = 1_000_000 // bytes
 	maxLogSize      = 30_000    // bytes
 	lastSegmentSize = 1_000     // bytes
@@ -146,7 +145,19 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCr
 				Target: QuickFeedPath,
 			},
 		}
+		if cfg, ok := languages[job.Language]; ok {
+			for target, pathFn := range cfg.cacheDirs {
+				src, err := pathFn()
+				if err != nil {
+					return nil, err
+				}
+				mounts = append(mounts, mount.Mount{
 					Type:   mount.TypeBind,
+					Source: src,
+					Target: target,
+				})
+			}
+		}
 		for _, src := range slices.Sorted(maps.Keys(job.ReadOnlyMounts)) {
 			mounts = append(mounts, mount.Mount{
 				Type:     mount.TypeBind,

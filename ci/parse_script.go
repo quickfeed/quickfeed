@@ -26,7 +26,7 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	image, commands, err := parseRunScript(scriptContent)
+	image, language, commands, err := parseRunScript(scriptContent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
@@ -34,7 +34,11 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 		// For docker runs, the home path is set to QuickFeedPath = /quickfeed
 		r.EnvVarsFn = func(secret, _ string) []string {
 			// QuickFeedPath is the home path (inside the container) bound to the temporary tests directory
-			return EnvVars(secret, QuickFeedPath, r.Repo.Name(), r.Assignment.GetName())
+			vars := EnvVars(secret, QuickFeedPath, r.Repo.Name(), r.Assignment.GetName())
+			if cfg, ok := languages[language]; ok {
+				vars = append(vars, cfg.envVars...)
+			}
+			return vars
 		}
 	}
 	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
@@ -74,16 +78,24 @@ func (r *RunData) loadRunScript() (string, error) {
 	return string(b), nil
 }
 
-func parseRunScript(scriptContent string) (image string, commands []string, err error) {
-	s := strings.Split(scriptContent, "\n")
-	if len(s) < 3 {
-		return "", nil, errors.New("empty run script")
+func parseRunScript(scriptContent string) (image, language string, commands []string, err error) {
+	lines := strings.Split(scriptContent, "\n")
+	if len(lines) < 3 {
+		return "", "", nil, errors.New("empty run script")
 	}
-	parts := strings.Split(s[0], "#image/")
+	parts := strings.Split(lines[0], "#image/")
 	if len(parts) < 2 {
-		return "", nil, errors.New("no docker image specified in run script")
+		return "", "", nil, errors.New("no docker image specified in run script")
 	}
-	return strings.ToLower(parts[1]), s[1:], nil
+	image = strings.ToLower(parts[1])
+	for _, line := range lines[1:] {
+		if lang, found := strings.CutPrefix(line, "#language/"); found {
+			language = strings.ToLower(strings.TrimSpace(lang))
+			continue
+		}
+		commands = append(commands, line)
+	}
+	return image, language, commands, nil
 }
 
 func EnvVars(sessionSecret, home, repoName, currentAssignment string) []string {

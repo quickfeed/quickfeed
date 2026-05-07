@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
