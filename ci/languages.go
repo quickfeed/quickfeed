@@ -3,7 +3,8 @@ package ci
 // Language constants for supported languages.
 // These are used in run scripts via the #language/ directive.
 const (
-	LanguageGo = "go"
+	languageGo     = "go"
+	languageDotNet = "dotnet"
 )
 
 // Go-specific container cache paths.
@@ -11,6 +12,7 @@ const (
 	GoModCache        = "/quickfeed-go-mod-cache"
 	GoCache           = "/quickfeed-go-cache"
 	GolangciLintCache = "/quickfeed-golangci-lint-cache"
+	NuGetCache        = "/quickfeed-nuget-cache"
 )
 
 // languageConfig defines language-specific cache mounts and environment variables.
@@ -25,7 +27,7 @@ type languageConfig struct {
 // To add support for a new language, add an entry here with the relevant
 // cache directories and environment variables.
 var languages = map[string]languageConfig{
-	LanguageGo: {
+	languageGo: {
 		cacheDirs: map[string]func() (string, error){
 			GoModCache:        moduleCachePath,
 			GoCache:           goCachePath,
@@ -35,6 +37,14 @@ var languages = map[string]languageConfig{
 			"GOMODCACHE=" + GoModCache,
 			"GOCACHE=" + GoCache,
 			"GOLANGCI_LINT_CACHE=" + GolangciLintCache,
+		},
+	},
+	languageDotNet: {
+		cacheDirs: map[string]func() (string, error){
+			NuGetCache: nugetCachePath,
+		},
+		envVars: []string{
+			"NUGET_PACKAGES=" + NuGetCache,
 		},
 	},
 }

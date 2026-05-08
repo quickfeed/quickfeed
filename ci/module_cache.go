@@ -23,6 +23,10 @@ func golangciLintCachePath() (string, error) {
 	return hostCacheDir(GolangciLintCache)
 }
 
+func nugetCachePath() (string, error) {
+	return hostCacheDir(NuGetCache)
+}
+
 // hostCacheDir returns a cache directory under $HOME with the given name,
 // creating it if necessary. Directories are created owned by the current user,
 // which ensures containers running as that user can read and write them.
