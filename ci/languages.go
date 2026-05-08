@@ -7,7 +7,7 @@ const (
 	languageDotNet = "dotnet"
 )
 
-// Go-specific container cache paths.
+// Language-specific container cache paths.
 const (
 	GoModCache        = "/quickfeed-go-mod-cache"
 	GoCache           = "/quickfeed-go-cache"

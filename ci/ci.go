@@ -11,7 +11,6 @@ type Job struct {
 	// Image names the image to use to run the job.
 	Image string
 	// Language specifies the programming language for the job.
-	// When set to LanguageGo, Go-specific cache directories are mounted.
 	// Parsed from the #language/ directive in the run script.
 	Language string
 	// BuildContext is a list of files to include in the Docker build context.
