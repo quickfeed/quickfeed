@@ -10,6 +10,7 @@ import Assignments from "../components/teacher/Assignments"
 import { useCourseID } from "../hooks/useCourseID"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { RepositoryCards } from "../components/student/RepositoryCards"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -52,6 +53,7 @@ const TeacherPage = () => {
 
     return (
         <>
+            <RepositoryCards />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
