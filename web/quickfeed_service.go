@@ -168,6 +168,9 @@ func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *conne
 func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
 	if err := s.db.CreateEnrollment(in.Msg); err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
+		if errors.Is(err, database.ErrIncompleteProfile) {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create enrollment"))
 	}
 	return &connect.Response[qf.Void]{}, nil
