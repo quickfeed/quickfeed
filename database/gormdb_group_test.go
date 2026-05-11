@@ -517,3 +517,73 @@ func TestUpdateGroupMembers(t *testing.T) {
 		}
 	}
 }
+
+func TestGetGroupWithSlipDays(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{SlipDays: 5}
+	qtest.CreateCourse(t, db, admin, course)
+
+	// Create a group with two students
+	student1 := qtest.CreateFakeUser(t, db)
+	student2 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+
+	group := &qf.Group{
+		Name:     "TestGroup",
+		CourseID: course.GetID(),
+		Status:   qf.Group_APPROVED,
+		Users:    []*qf.User{student1, student2},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// Update slip days for the group
+	usedSlipDays := []*qf.UsedSlipDays{
+		{
+			GroupID:      group.GetID(),
+			AssignmentID: 1,
+			UsedDays:     2,
+		},
+		{
+			GroupID:      group.GetID(),
+			AssignmentID: 2,
+			UsedDays:     1,
+		},
+	}
+	if err := db.UpdateSlipDays(usedSlipDays); err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify GetGroup preloads UsedSlipDays
+	fetchedGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fetchedGroup.GetUsedSlipDays()) != 2 {
+		t.Errorf("expected 2 used slip days, got %d", len(fetchedGroup.GetUsedSlipDays()))
+	}
+	totalUsedDays := uint32(0)
+	for _, usd := range fetchedGroup.GetUsedSlipDays() {
+		totalUsedDays += usd.GetUsedDays()
+	}
+	if totalUsedDays != 3 {
+		t.Errorf("expected total used days to be 3, got %d", totalUsedDays)
+	}
+
+	// Verify GetGroupsByCourse also preloads UsedSlipDays
+	groups, err := db.GetGroupsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(groups) != 1 {
+		t.Fatalf("expected 1 group, got %d", len(groups))
+	}
+	if len(groups[0].GetUsedSlipDays()) != 2 {
+		t.Errorf("expected 2 used slip days, got %d", len(groups[0].GetUsedSlipDays()))
+	}
+}

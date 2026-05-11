@@ -97,6 +97,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 		Preload("Course").
 		Preload("Group").
 		Preload("Group.Users").
+		Preload("Group.UsedSlipDays").
 		Preload("UsedSlipDays").
 		Model(model).
 		Where("status in (?)", statuses).
@@ -106,6 +107,9 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 	}
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.GetCourse())
+		if enrollment.GetGroup() != nil {
+			enrollment.Group.SetSlipDays(enrollment.GetCourse())
+		}
 	}
 	return enrollments, nil
 }

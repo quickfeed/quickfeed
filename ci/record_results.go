@@ -100,23 +100,24 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 }
 
 func (r *RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	enrollments := make([]*qf.Enrollment, 0)
-
-	if submission.GetGroupID() > 0 {
+	if submission.GetGroupID() > 0 && r.Assignment.GetIsGroupLab() {
+		// For group submissions, update the group's slip days
 		group, err := db.GetGroup(submission.GetGroupID())
 		if err != nil {
 			return fmt.Errorf("failed to get group %d: %w", submission.GetGroupID(), err)
 		}
-		enrollments = append(enrollments, group.GetEnrollments()...)
+		if err := group.UpdateSlipDays(r.Assignment, submission); err != nil {
+			return fmt.Errorf("failed to update slip days for group %d in course %d: %w", group.GetID(), r.Assignment.GetCourseID(), err)
+		}
+		if err := db.UpdateSlipDays(group.GetUsedSlipDays()); err != nil {
+			return fmt.Errorf("failed to update slip days for group %d (course %d): %w", group.GetID(), group.GetCourseID(), err)
+		}
 	} else {
+		// For individual submissions, update the student's slip days
 		enroll, err := db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
 		if err != nil {
 			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
-		enrollments = append(enrollments, enroll)
-	}
-
-	for _, enroll := range enrollments {
 		if err := enroll.UpdateSlipDays(r.Assignment, submission); err != nil {
 			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enroll.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
