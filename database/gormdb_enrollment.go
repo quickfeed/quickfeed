@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
@@ -19,7 +18,7 @@ func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 	}
 	// Validate that user has complete profile information before allowing enrollment
 	if err := user.ValidateProfile(); err != nil {
-		return fmt.Errorf("%w: %w", ErrIncompleteProfile, err)
+		return errors.Join(ErrIncompleteProfile, err)
 	}
 
 	var courseCount int64
