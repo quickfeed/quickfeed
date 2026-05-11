@@ -53,9 +53,7 @@ const TeacherPage = () => {
 
     return (
         <>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
-                <RepositoryCards />
-            </div>
+            <RepositoryCards />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />

@@ -72,7 +72,7 @@ export const RepositoryCards = () => {
     const resourcesGroupLinks = linksForGroup("resources")
 
     return (
-        <>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
             <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
             <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
             <div className="flex items-center gap-2">
@@ -84,6 +84,6 @@ export const RepositoryCards = () => {
                     {hasGroup ? `View ${groupName}` : "Create Group"}
                 </Link>
             </div>
-        </>
+        </div>
     )
 }

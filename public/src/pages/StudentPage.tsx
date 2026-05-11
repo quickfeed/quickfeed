@@ -19,10 +19,7 @@ const StudentPage = () => {
     return (
         <>
             <div hidden={location.pathname !== root}>
-                {/* Compact top bar with repository links and group navigation */}
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
-                    <RepositoryCards />
-                </div>
+                <RepositoryCards />
                 <CourseLabs />
             </div>
             <Routes>
