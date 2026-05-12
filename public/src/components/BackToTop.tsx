@@ -8,7 +8,7 @@ const BackToTop: React.FC = () => {
     return (
         <footer className="text-center mt-5">
             <button onClick={ScrollToTop} className="btn align-items-center text-gray-400! hover:scale-105 hover:text-gray-500!">
-                <i className="fa fa-arrow-up" />
+                <i className="fas fa-arrow-up" />
                 <p>Back to top</p>
             </button>
         </footer>

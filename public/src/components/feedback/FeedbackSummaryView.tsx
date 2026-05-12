@@ -23,7 +23,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
             <div className="mb-8">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                        <i className="fa fa-comments text-white text-xl" />
+                        <i className="fas fa-comments text-white text-xl" />
                     </div>
                     <h1 className="text-4xl font-bold text-base-content">Assignment Feedback Summary</h1>
                 </div>
@@ -47,7 +47,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
                                 <div className="card-body p-6">
                                     <div className="flex items-start gap-3 mb-4">
                                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <i className="fa fa-book text-primary" />
+                                            <i className="fas fa-book text-primary" />
                                         </div>
                                         <div className="flex-1">
                                             <h5 className="text-lg font-bold text-base-content mb-1">{assignment.name}</h5>
@@ -71,7 +71,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
                                     {feedbacks.length > 0 && (
                                         <div className="mt-4 pt-4 border-t border-base-300">
                                             <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
-                                                <i className="fa fa-hand-pointer-o" />
+                                                <i className="far fa-hand-pointer" />
                                                 <span>Click to view detailed feedback</span>
                                             </div>
                                         </div>
@@ -84,7 +84,7 @@ export const FeedbackSummaryView: React.FC<FeedbackSummaryViewProps> = ({
             ) : (
                 <div className="alert alert-info shadow-lg">
                     <div className="flex items-center gap-2">
-                        <i className="fa fa-info-circle text-xl" />
+                        <i className="fas fa-circle-info text-xl" />
                         <span>No feedback available for this course yet.</span>
                     </div>
                 </div>

@@ -12,7 +12,7 @@ const NavBarUser = () => {
     if (!isLoggedIn) {
         return (
             <button className="btn bg-black text-white border-black">
-                <i className="fa fa-github" />
+                <i className="fab fa-github" />
                 <a href={`/auth/github?next=${nextURL()}`} className="ml-2">Sign in with GitHub</a>
             </button>
         )

@@ -62,7 +62,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
                         disabled={!isValid}
                         type="submit"
                     >
-                        <i className="fa fa-save" />
+                        <i className="fas fa-floppy-disk" />
                         Save Changes
                     </button>
                     {state.isValid && (

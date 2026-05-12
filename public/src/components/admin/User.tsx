@@ -65,7 +65,7 @@ const User = ({ user }: { user: pbUser; hidden: boolean }) => {
                     {user.IsAdmin && (
                         <span className="badge badge-primary">Admin</span>
                     )}
-                    <i className={`fa fa-chevron-down transition-transform ${showEnrollments ? 'rotate-180' : ''}`} />
+                    <i className={`fas fa-chevron-down transition-transform ${showEnrollments ? 'rotate-180' : ''}`} />
                 </div>
             </div>
             {showEnrollments && enrollmentsList}

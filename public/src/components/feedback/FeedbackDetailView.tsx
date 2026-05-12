@@ -44,12 +44,12 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
                     className="btn btn-ghost gap-2 hover:btn-primary"
                     onClick={() => navigate(`/course/${state.activeCourse}/feedback`)}
                 >
-                    <i className="fa fa-arrow-left" />
+                    <i className="fas fa-arrow-left" />
                     Back to Summary
                 </button>
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                        <i className="fa fa-comments text-white text-xl" />
+                        <i className="fas fa-comments text-white text-xl" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-base-content">
@@ -85,7 +85,7 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
             ) : (
                 <div className="alert alert-info shadow-lg">
                     <div className="flex items-center gap-2">
-                        <i className="fa fa-info-circle text-xl" />
+                        <i className="fas fa-circle-info text-xl" />
                         <span>No feedback available for this assignment yet.</span>
                     </div>
                 </div>

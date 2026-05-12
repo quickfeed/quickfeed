@@ -32,7 +32,7 @@ export const FeedbackFormActions: React.FC<FeedbackFormActionsProps> = ({
                     </>
                 ) : (
                     <>
-                        <i className="fa fa-paper-plane" />
+                        <i className="fas fa-paper-plane" />
                         Submit Feedback
                     </>
                 )}

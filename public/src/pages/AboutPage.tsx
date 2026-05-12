@@ -27,7 +27,7 @@ const AboutPage = () => {
                     <MiniFeatureBlock
                         title="GitHub Integration"
                         content="Manage all students and courses on GitHub. Each student gets their own repository. Teachers get separate repositories for publishing assignments and information to students. All taken care of automatically."
-                        media={<i className="fa fa-5x fa-github text-8xl text-base-content" />}
+                        media={<i className="fab fa-github fa-5x text-8xl text-base-content" />}
                     />
                     <MiniFeatureBlock
                         title="Continuous Integration"
