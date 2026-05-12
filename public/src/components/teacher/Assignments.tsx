@@ -63,7 +63,7 @@ const Assignments = () => {
                             <div className="text-lg font-semibold text-base-content">{assignment.name}</div>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="text-sm text-base-content/70 flex items-center gap-1">
-                                    <i className="fa fa-calendar" />
+                                    <i className="fas fa-calendar" />
                                     {getFormattedTime(assignment.deadline, true)}
                                 </span>
                                 {manually && (
@@ -80,7 +80,7 @@ const Assignments = () => {
                             {/* short description or hint */}
                             Rebuild tests or manage grading
                         </div>
-                        <i className={`fa fa-chevron-down transition-transform ${open ? "rotate-180" : ""}`} />
+                        <i className={`fas fa-chevron-down transition-transform ${open ? "rotate-180" : ""}`} />
                     </div>
                 </div>
 

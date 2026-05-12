@@ -63,12 +63,12 @@ export const FeedbackGraph: React.FC<FeedbackGraphProps> = ({
                 <div className="card-body">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <i className="fa fa-chart-bar text-primary" />
+                            <i className="fas fa-chart-bar text-primary" />
                         </div>
                         <h5 className="text-xl font-bold text-base-content">{title}</h5>
                     </div>
                     <div className="flex flex-col items-center justify-center py-12 text-base-content/50">
-                        <i className="fa fa-clock-o text-5xl mb-4" />
+                        <i className="far fa-clock text-5xl mb-4" />
                         <p className="text-lg">No time data available yet</p>
                     </div>
                 </div>
@@ -82,18 +82,18 @@ export const FeedbackGraph: React.FC<FeedbackGraphProps> = ({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <i className="fa fa-chart-bar text-primary" />
+                            <i className="fas fa-chart-bar text-primary" />
                         </div>
                         <h5 className="text-xl font-bold text-base-content">{title}</h5>
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-base-content/70">
                         <div className="flex items-center gap-2 bg-base-200 px-3 py-1 rounded-full">
-                            <i className="fa fa-users" />
+                            <i className="fas fa-users" />
                             <span className="font-semibold">{totalResponses}</span>
                             <span>responses</span>
                         </div>
                         <div className="flex items-center gap-2 bg-base-200 px-3 py-1 rounded-full">
-                            <i className="fa fa-clock-o" />
+                            <i className="far fa-clock" />
                             <span>Avg: <span className="font-semibold">{getAverageTime()}</span></span>
                         </div>
                     </div>

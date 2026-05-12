@@ -143,11 +143,11 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                     <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-content' : 'bg-primary/10 text-primary'
                             }`}>
-                            <i className="fa fa-comment-o" />
+                            <i className="far fa-comment" />
                         </div>
                         <h5 className="text-lg font-bold text-base-content">Give Feedback on This Assignment</h5>
                     </div>
-                    <i className={`fa fa-chevron-${isOpen ? 'down' : 'right'} text-base-content/60 transition-transform`} />
+                    <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} text-base-content/60 transition-transform`} />
                 </button>
 
                 {isOpen && (
@@ -182,7 +182,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
                                 />
                                 <div className="alert alert-info">
                                     <div className="flex items-start gap-2">
-                                        <i className="fa fa-info-circle mt-0.5" />
+                                        <i className="fas fa-circle-info mt-0.5" />
                                         <span className="text-sm">Your feedback will be submitted anonymously to help improve the course.</span>
                                     </div>
                                 </div>

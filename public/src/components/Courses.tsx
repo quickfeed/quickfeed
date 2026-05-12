@@ -21,7 +21,7 @@ type CourseCardElement = React.ReactElement<ComponentProps<typeof CourseCard>>
 const CourseSection = ({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) => (
     <div className="mb-10">
         <div className="flex items-center gap-3 mb-6">
-            <i className={`fa ${icon} text-primary text-xl`} />
+            <i className={`fas ${icon} text-primary text-xl`} />
             <h2 className="text-3xl font-bold text-base-content">{title}</h2>
             <div className="flex-grow h-px bg-gradient-to-r from-base-300 to-transparent ml-4" />
         </div>

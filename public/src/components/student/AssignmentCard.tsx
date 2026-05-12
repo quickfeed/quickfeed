@@ -48,7 +48,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment, submissions
             )}
           </div>
           <div className="flex items-center gap-2 text-xs text-base-content/60">
-            <i className="fa fa-calendar" />
+            <i className="fas fa-calendar" />
             <span>{getFormattedTime(assignment.deadline, true)}</span>
           </div>
         </div>

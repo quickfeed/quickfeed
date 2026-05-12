@@ -27,23 +27,23 @@ const StreamStatus = () => {
         reconnect()
     }
 
-    const streamStarter = open ? <i className="fa fa-repeat fa-stack-1x " onMouseLeave={handleMouseLeave} onClick={handleOnClick} /> : null
+    const streamStarter = open ? <i className="fas fa-repeat fa-stack-1x " onMouseLeave={handleMouseLeave} onClick={handleOnClick} /> : null
 
     // Show stream status based on connection status
     switch (status) {
         case ConnStatus.CONNECTED:
-            return <i className="fa fa-circle text-success" title="Connected" />
+            return <i className="fas fa-circle text-success" title="Connected" />
         case ConnStatus.RECONNECTING:
             return (
                 <span className="fa-stack fa-lg2">
-                    <i className="fa fa-circle fa-stack-1x text-warning" title="Attempting to re-establish stream connection" onMouseEnter={handleMouseEnter} />
+                    <i className="fas fa-circle fa-stack-1x text-warning" title="Attempting to re-establish stream connection" onMouseEnter={handleMouseEnter} />
                     {streamStarter}
                 </span>
             )
         default:
             return (
                 <span className="fa-stack">
-                    <i className="fa fa-circle fa-stack-1x text-danger" title="No stream connection" onMouseEnter={handleMouseEnter} />
+                    <i className="fas fa-circle fa-stack-1x text-danger" title="No stream connection" onMouseEnter={handleMouseEnter} />
                     {streamStarter}
                 </span>
             )

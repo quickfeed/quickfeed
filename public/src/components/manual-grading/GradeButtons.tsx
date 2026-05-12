@@ -4,9 +4,9 @@ import { Color } from "../../Helpers"
 import Button, { ButtonType } from "../admin/Button"
 
 const GRADE_BUTTONS: { icon: string; grade: GradingCriterion_Grade; color: Color }[] = [
-    { icon: "fa fa-check", grade: GradingCriterion_Grade.PASSED, color: Color.GREEN },
-    { icon: "fa fa-ban", grade: GradingCriterion_Grade.NONE, color: Color.GRAY },
-    { icon: "fa fa-times", grade: GradingCriterion_Grade.FAILED, color: Color.RED },
+    { icon: "fas fa-check", grade: GradingCriterion_Grade.PASSED, color: Color.GREEN },
+    { icon: "fas fa-ban", grade: GradingCriterion_Grade.NONE, color: Color.GRAY },
+    { icon: "fas fa-xmark", grade: GradingCriterion_Grade.FAILED, color: Color.RED },
 ]
 
 interface GradeButtonsProps {

@@ -24,7 +24,7 @@ const CreateCourse = () => {
     }, [actions, orgName, state.courses])
 
     const buttonClass = course ? "btn btn-success btn-disabled" : "btn btn-primary"
-    const findTextOrIcon = course ? <i className="fa fa-check" /> : "Find"
+    const findTextOrIcon = course ? <i className="fas fa-check" /> : "Find"
     const refreshIfNoCourse = course ? undefined : refresh
     return (
         <div className="container mx-auto px-4 space-y-6">

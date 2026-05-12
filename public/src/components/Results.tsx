@@ -127,7 +127,7 @@ const Results = ({ review }: { review: boolean }) => {
                             title={lockedWide ? "Unlock wide view" : "Lock wide view"}
                             onClick={toggleWideTable}
                         >
-                            <i className={`fa ${lockedWide ? "fa-compress" : "fa-expand"}`} />
+                            <i className={`fas ${lockedWide ? "fa-compress" : "fa-expand"}`} />
                         </button>
                     </Search>
                     <TableSort />

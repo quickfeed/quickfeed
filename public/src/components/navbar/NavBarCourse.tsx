@@ -33,7 +33,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
                 className="flex justify-between items-center w-full h-16 px-4 font-bold hover:bg-base-100 cursor-pointer rounded-none"
             >
                 <span>{course?.code}</span>
-                <i className={`fa fa-caret-down fa-lg transition-transform ${active ? "" : "rotate-90"}`} />
+                <i className={`fas fa-caret-down fa-lg transition-transform ${active ? "" : "rotate-90"}`} />
             </button>
             {active && (
                 <ul className="menu p-0 bg-base-200 w-full m-0">

@@ -21,7 +21,7 @@ const NavBarLabs = () => {
         return (
             <>
                 <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
-                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fa fa-check ml-2" />}
+                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fas fa-check ml-2" />}
             </>
         )
     }

@@ -73,7 +73,7 @@ const SubmissionModal = ({ review, courseID, onClose }: SubmissionModalProps) =>
                         {labLink && assignment && (
                             <a href={labLink} target="_blank" rel="noopener noreferrer"
                                 className="text-xs link link-hover text-primary flex items-center gap-1">
-                                <i className="fa fa-external-link" />
+                                <i className="fas fa-arrow-up-right-from-square" />
                                 {assignment.name}
                             </a>
                         )}

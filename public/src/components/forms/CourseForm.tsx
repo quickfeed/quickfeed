@@ -53,7 +53,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
         <div className="card bg-base-200 shadow-xl max-w-2xl mx-auto">
             <div className="card-body">
                 <h2 className="card-title text-2xl mb-6">
-                    <i className="fa fa-book mr-2" />
+                    <i className="fas fa-book mr-2" />
                     Edit Course
                 </h2>
                 <form className="space-y-6" onSubmit={async e => await submitHandler(e)}>
@@ -102,7 +102,7 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
                     </div>
                     <div className="card-actions justify-end pt-4">
                         <button className="btn btn-primary" type="submit">
-                            <i className="fa fa-save mr-2" />
+                            <i className="fas fa-floppy-disk mr-2" />
                             Save Changes
                         </button>
                     </div>
