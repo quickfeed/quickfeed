@@ -26,15 +26,15 @@ const (
 // Score give the score for a single test named TestName.
 type Score struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	SubmissionID  uint64                 `protobuf:"varint,2,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"foreignKey:ID"`
-	Secret        string                 `protobuf:"bytes,3,opt,name=Secret,proto3" json:"Secret,omitempty" gorm:"-"`  // the unique identifier for a scoring session
-	TestName      string                 `protobuf:"bytes,4,opt,name=TestName,proto3" json:"TestName,omitempty"`       // name of the test
-	TaskName      string                 `protobuf:"bytes,5,opt,name=TaskName,proto3" json:"TaskName,omitempty"`       // name of task this score belongs to
-	Score         int32                  `protobuf:"varint,6,opt,name=Score,proto3" json:"Score,omitempty"`            // the score obtained
-	MaxScore      int32                  `protobuf:"varint,7,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`      // max score possible to get on this specific test
-	Weight        int32                  `protobuf:"varint,8,opt,name=Weight,proto3" json:"Weight,omitempty"`          // the weight of this test; used to compute final grade
-	TestDetails   string                 `protobuf:"bytes,9,opt,name=TestDetails,proto3" json:"TestDetails,omitempty"` // if populated, the frontend may display these details
+	Secret        string                 `protobuf:"bytes,3,opt,name=Secret,proto3" json:"Secret,omitempty" gorm:"-" bun:"-"` // the unique identifier for a scoring session
+	TestName      string                 `protobuf:"bytes,4,opt,name=TestName,proto3" json:"TestName,omitempty"`              // name of the test
+	TaskName      string                 `protobuf:"bytes,5,opt,name=TaskName,proto3" json:"TaskName,omitempty"`              // name of task this score belongs to
+	Score         int32                  `protobuf:"varint,6,opt,name=Score,proto3" json:"Score,omitempty"`                   // the score obtained
+	MaxScore      int32                  `protobuf:"varint,7,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`             // max score possible to get on this specific test
+	Weight        int32                  `protobuf:"varint,8,opt,name=Weight,proto3" json:"Weight,omitempty"`                 // the weight of this test; used to compute final grade
+	TestDetails   string                 `protobuf:"bytes,9,opt,name=TestDetails,proto3" json:"TestDetails,omitempty"`        // if populated, the frontend may display these details
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -135,7 +135,7 @@ func (x *Score) GetTestDetails() string {
 // BuildInfo holds build data for an assignment's test execution.
 type BuildInfo struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	ID             uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID             uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	SubmissionID   uint64                 `protobuf:"varint,2,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"foreignKey:ID"`
 	BuildLog       string                 `protobuf:"bytes,3,opt,name=BuildLog,proto3" json:"BuildLog,omitempty"`
 	ExecTime       int64                  `protobuf:"varint,4,opt,name=ExecTime,proto3" json:"ExecTime,omitempty"`
@@ -221,19 +221,19 @@ var File_kit_score_score_proto protoreflect.FileDescriptor
 
 const file_kit_score_score_proto_rawDesc = "" +
 	"\n" +
-	"\x15kit/score/score.proto\x12\x05score\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0epatch/go.proto\"\xa5\x02\n" +
-	"\x05Score\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12?\n" +
-	"\fSubmissionID\x18\x02 \x01(\x04B\x1bʵ\x03\x17\xa2\x01\x14gorm:\"foreignKey:ID\"R\fSubmissionID\x12'\n" +
-	"\x06Secret\x18\x03 \x01(\tB\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\x06Secret\x12\x1a\n" +
+	"\x15kit/score/score.proto\x12\x05score\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0epatch/go.proto\"\xcd\x02\n" +
+	"\x05Score\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12?\n" +
+	"\fSubmissionID\x18\x02 \x01(\x04B\x1bʵ\x03\x17\xa2\x01\x14gorm:\"foreignKey:ID\"R\fSubmissionID\x12/\n" +
+	"\x06Secret\x18\x03 \x01(\tB\x17ʵ\x03\x13\xa2\x01\x10gorm:\"-\" bun:\"-\"R\x06Secret\x12\x1a\n" +
 	"\bTestName\x18\x04 \x01(\tR\bTestName\x12\x1a\n" +
 	"\bTaskName\x18\x05 \x01(\tR\bTaskName\x12\x14\n" +
 	"\x05Score\x18\x06 \x01(\x05R\x05Score\x12\x1a\n" +
 	"\bMaxScore\x18\a \x01(\x05R\bMaxScore\x12\x16\n" +
 	"\x06Weight\x18\b \x01(\x05R\x06Weight\x12 \n" +
-	"\vTestDetails\x18\t \x01(\tR\vTestDetails\"\xf6\x02\n" +
-	"\tBuildInfo\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12?\n" +
+	"\vTestDetails\x18\t \x01(\tR\vTestDetails\"\x96\x03\n" +
+	"\tBuildInfo\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12?\n" +
 	"\fSubmissionID\x18\x02 \x01(\x04B\x1bʵ\x03\x17\xa2\x01\x14gorm:\"foreignKey:ID\"R\fSubmissionID\x12\x1a\n" +
 	"\bBuildLog\x18\x03 \x01(\tR\bBuildLog\x12\x1a\n" +
 	"\bExecTime\x18\x04 \x01(\x03R\bExecTime\x12j\n" +
