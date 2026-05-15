@@ -387,7 +387,7 @@ func (GradingCriterion_Grade) EnumDescriptor() ([]byte, []int) {
 
 type User struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	ID               uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID               uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	IsAdmin          bool                   `protobuf:"varint,2,opt,name=IsAdmin,proto3" json:"IsAdmin,omitempty"`
 	Name             string                 `protobuf:"bytes,3,opt,name=Name,proto3" json:"Name,omitempty"`
 	StudentID        string                 `protobuf:"bytes,4,opt,name=StudentID,proto3" json:"StudentID,omitempty"`
@@ -397,8 +397,8 @@ type User struct {
 	UpdateToken      bool                   `protobuf:"varint,8,opt,name=UpdateToken,proto3" json:"UpdateToken,omitempty"`   // Filter; True if user's JWT token needs to be updated.
 	ScmRemoteID      uint64                 `protobuf:"varint,9,opt,name=ScmRemoteID,proto3" json:"ScmRemoteID,omitempty"`   // Filter; The user's ID on the remote provider.
 	RefreshToken     string                 `protobuf:"bytes,10,opt,name=RefreshToken,proto3" json:"RefreshToken,omitempty"` // Filter; The user's refresh token that may be exchanged for an access token.
-	Enrollments      []*Enrollment          `protobuf:"bytes,11,rep,name=Enrollments,proto3" json:"Enrollments,omitempty"`
-	FeedbackReceipts []*FeedbackReceipt     `protobuf:"bytes,12,rep,name=FeedbackReceipts,proto3" json:"FeedbackReceipts,omitempty" gorm:"foreignKey:UserID"`
+	Enrollments      []*Enrollment          `protobuf:"bytes,11,rep,name=Enrollments,proto3" json:"Enrollments,omitempty" bun:"rel:has-many,join:id=user_id"`
+	FeedbackReceipts []*FeedbackReceipt     `protobuf:"bytes,12,rep,name=FeedbackReceipts,proto3" json:"FeedbackReceipts,omitempty" gorm:"foreignKey:UserID" bun:"rel:has-many,join:id=user_id"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -563,12 +563,12 @@ func (x *Users) GetUsers() []*User {
 
 type Group struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" gorm:"uniqueIndex:group"`
 	CourseID      uint64                 `protobuf:"varint,3,opt,name=courseID,proto3" json:"courseID,omitempty" gorm:"uniqueIndex:group"`
 	Status        Group_GroupStatus      `protobuf:"varint,5,opt,name=status,proto3,enum=qf.Group_GroupStatus" json:"status,omitempty"`
-	Users         []*User                `protobuf:"bytes,6,rep,name=users,proto3" json:"users,omitempty" gorm:"many2many:group_users;"`
-	Enrollments   []*Enrollment          `protobuf:"bytes,7,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
+	Users         []*User                `protobuf:"bytes,6,rep,name=users,proto3" json:"users,omitempty" gorm:"many2many:group_users;" bun:"m2m:group_users,join:Group=User"`
+	Enrollments   []*Enrollment          `protobuf:"bytes,7,rep,name=enrollments,proto3" json:"enrollments,omitempty" bun:"rel:has-many,join:id=group_id"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -691,7 +691,7 @@ func (x *Groups) GetGroups() []*Group {
 
 type Course struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	ID                  uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID                  uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	CourseCreatorID     uint64                 `protobuf:"varint,2,opt,name=courseCreatorID,proto3" json:"courseCreatorID,omitempty"`
 	Name                string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Code                string                 `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty" gorm:"uniqueIndex:course"`
@@ -701,10 +701,10 @@ type Course struct {
 	ScmOrganizationName string                 `protobuf:"bytes,9,opt,name=ScmOrganizationName,proto3" json:"ScmOrganizationName,omitempty"` // The organization's SCM name, e.g., dat520-2020.
 	SlipDays            uint32                 `protobuf:"varint,10,opt,name=slipDays,proto3" json:"slipDays,omitempty"`
 	DockerfileDigest    string                 `protobuf:"bytes,11,opt,name=DockerfileDigest,proto3" json:"DockerfileDigest,omitempty"` // Digest of the dockerfile used to build the course's docker image.
-	Enrolled            Enrollment_UserStatus  `protobuf:"varint,12,opt,name=enrolled,proto3,enum=qf.Enrollment_UserStatus" json:"enrolled,omitempty" gorm:"-"`
-	Enrollments         []*Enrollment          `protobuf:"bytes,13,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	Assignments         []*Assignment          `protobuf:"bytes,14,rep,name=assignments,proto3" json:"assignments,omitempty"`
-	Groups              []*Group               `protobuf:"bytes,15,rep,name=groups,proto3" json:"groups,omitempty"`
+	Enrolled            Enrollment_UserStatus  `protobuf:"varint,12,opt,name=enrolled,proto3,enum=qf.Enrollment_UserStatus" json:"enrolled,omitempty" gorm:"-" bun:"-"`
+	Enrollments         []*Enrollment          `protobuf:"bytes,13,rep,name=enrollments,proto3" json:"enrollments,omitempty" bun:"rel:has-many,join:id=course_id"`
+	Assignments         []*Assignment          `protobuf:"bytes,14,rep,name=assignments,proto3" json:"assignments,omitempty" bun:"rel:has-many,join:id=course_id"`
+	Groups              []*Group               `protobuf:"bytes,15,rep,name=groups,proto3" json:"groups,omitempty" bun:"rel:has-many,join:id=course_id"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -883,14 +883,14 @@ func (x *Courses) GetCourses() []*Course {
 
 type Repository struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	ScmOrganizationID uint64                 `protobuf:"varint,2,opt,name=ScmOrganizationID,proto3" json:"ScmOrganizationID,omitempty" gorm:"uniqueIndex:repository"`
 	ScmRepositoryID   uint64                 `protobuf:"varint,3,opt,name=ScmRepositoryID,proto3" json:"ScmRepositoryID,omitempty"` // ID of a github repository
 	UserID            uint64                 `protobuf:"varint,4,opt,name=userID,proto3" json:"userID,omitempty" gorm:"uniqueIndex:repository"`
 	GroupID           uint64                 `protobuf:"varint,5,opt,name=groupID,proto3" json:"groupID,omitempty" gorm:"uniqueIndex:repository"`
-	HTMLURL           string                 `protobuf:"bytes,6,opt,name=HTMLURL,proto3" json:"HTMLURL,omitempty"`
+	HTMLURL           string                 `protobuf:"bytes,6,opt,name=HTMLURL,proto3" json:"HTMLURL,omitempty" bun:"html_url"`
 	RepoType          Repository_Type        `protobuf:"varint,7,opt,name=repoType,proto3,enum=qf.Repository_Type" json:"repoType,omitempty" gorm:"uniqueIndex:repository"`
-	Issues            []*Issue               `protobuf:"bytes,8,rep,name=issues,proto3" json:"issues,omitempty"` // Issues associated with this repository
+	Issues            []*Issue               `protobuf:"bytes,8,rep,name=issues,proto3" json:"issues,omitempty" bun:"rel:has-many,join:id=repository_id"` // Issues associated with this repository
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -983,19 +983,19 @@ func (x *Repository) GetIssues() []*Issue {
 
 type Enrollment struct {
 	state             protoimpl.MessageState  `protogen:"open.v1"`
-	ID                uint64                  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID                uint64                  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	CourseID          uint64                  `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty" gorm:"uniqueIndex:enrollment"`
 	UserID            uint64                  `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty" gorm:"uniqueIndex:enrollment"`
 	GroupID           uint64                  `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
-	User              *User                   `protobuf:"bytes,5,opt,name=user,proto3" json:"user,omitempty"`
-	Course            *Course                 `protobuf:"bytes,6,opt,name=course,proto3" json:"course,omitempty"`
-	Group             *Group                  `protobuf:"bytes,7,opt,name=group,proto3" json:"group,omitempty"`
+	User              *User                   `protobuf:"bytes,5,opt,name=user,proto3" json:"user,omitempty" bun:"rel:belongs-to,join:user_id=id"`
+	Course            *Course                 `protobuf:"bytes,6,opt,name=course,proto3" json:"course,omitempty" bun:"rel:belongs-to,join:course_id=id"`
+	Group             *Group                  `protobuf:"bytes,7,opt,name=group,proto3" json:"group,omitempty" bun:"rel:belongs-to,join:group_id=id"`
 	Status            Enrollment_UserStatus   `protobuf:"varint,8,opt,name=status,proto3,enum=qf.Enrollment_UserStatus" json:"status,omitempty"`
 	State             Enrollment_DisplayState `protobuf:"varint,9,opt,name=state,proto3,enum=qf.Enrollment_DisplayState" json:"state,omitempty"`
-	SlipDaysRemaining uint32                  `protobuf:"varint,10,opt,name=slipDaysRemaining,proto3" json:"slipDaysRemaining,omitempty" gorm:"-"`
+	SlipDaysRemaining uint32                  `protobuf:"varint,10,opt,name=slipDaysRemaining,proto3" json:"slipDaysRemaining,omitempty" gorm:"-" bun:"-"`
 	LastActivityDate  *timestamppb.Timestamp  `protobuf:"bytes,11,opt,name=lastActivityDate,proto3" json:"lastActivityDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	TotalApproved     uint64                  `protobuf:"varint,12,opt,name=totalApproved,proto3" json:"totalApproved,omitempty"`
-	UsedSlipDays      []*UsedSlipDays         `protobuf:"bytes,13,rep,name=usedSlipDays,proto3" json:"usedSlipDays,omitempty"`
+	UsedSlipDays      []*UsedSlipDays         `protobuf:"bytes,13,rep,name=usedSlipDays,proto3" json:"usedSlipDays,omitempty" bun:"rel:has-many,join:id=enrollment_id"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1123,7 +1123,7 @@ func (x *Enrollment) GetUsedSlipDays() []*UsedSlipDays {
 
 type UsedSlipDays struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	EnrollmentID  uint64                 `protobuf:"varint,2,opt,name=enrollmentID,proto3" json:"enrollmentID,omitempty"`
 	AssignmentID  uint64                 `protobuf:"varint,3,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
 	UsedDays      uint32                 `protobuf:"varint,4,opt,name=usedDays,proto3" json:"usedDays,omitempty"`
@@ -1235,20 +1235,20 @@ func (x *Enrollments) GetEnrollments() []*Enrollment {
 
 type Assignment struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	CourseID          uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"` // foreign key
 	Name              string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Deadline          *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=deadline,proto3" json:"deadline,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	AutoApprove       bool                   `protobuf:"varint,5,opt,name=autoApprove,proto3" json:"autoApprove,omitempty"`
 	Order             uint32                 `protobuf:"varint,6,opt,name=order,proto3" json:"order,omitempty"`
 	IsGroupLab        bool                   `protobuf:"varint,7,opt,name=isGroupLab,proto3" json:"isGroupLab,omitempty"`
-	ScoreLimit        uint32                 `protobuf:"varint,8,opt,name=scoreLimit,proto3" json:"scoreLimit,omitempty"`               // minimal score limit for auto approval
-	Reviewers         uint32                 `protobuf:"varint,9,opt,name=reviewers,proto3" json:"reviewers,omitempty"`                 // number of reviewers that will review submissions for this assignment
-	ContainerTimeout  uint32                 `protobuf:"varint,10,opt,name=containerTimeout,proto3" json:"containerTimeout,omitempty"`  // container timeout for this assignment
-	Submissions       []*Submission          `protobuf:"bytes,11,rep,name=submissions,proto3" json:"submissions,omitempty"`             // submissions produced for this assignment
-	Tasks             []*Task                `protobuf:"bytes,12,rep,name=tasks,proto3" json:"tasks,omitempty"`                         // tasks associated with this assignment
-	GradingBenchmarks []*GradingBenchmark    `protobuf:"bytes,13,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty"` // grading benchmarks for this assignment
-	ExpectedTests     []*TestInfo            `protobuf:"bytes,14,rep,name=ExpectedTests,proto3" json:"ExpectedTests,omitempty"`         // list of expected tests for this assignment
+	ScoreLimit        uint32                 `protobuf:"varint,8,opt,name=scoreLimit,proto3" json:"scoreLimit,omitempty"`                                                        // minimal score limit for auto approval
+	Reviewers         uint32                 `protobuf:"varint,9,opt,name=reviewers,proto3" json:"reviewers,omitempty"`                                                          // number of reviewers that will review submissions for this assignment
+	ContainerTimeout  uint32                 `protobuf:"varint,10,opt,name=containerTimeout,proto3" json:"containerTimeout,omitempty"`                                           // container timeout for this assignment
+	Submissions       []*Submission          `protobuf:"bytes,11,rep,name=submissions,proto3" json:"submissions,omitempty" bun:"rel:has-many,join:id=assignment_id"`             // submissions produced for this assignment
+	Tasks             []*Task                `protobuf:"bytes,12,rep,name=tasks,proto3" json:"tasks,omitempty" bun:"rel:has-many,join:id=assignment_id"`                         // tasks associated with this assignment
+	GradingBenchmarks []*GradingBenchmark    `protobuf:"bytes,13,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty" bun:"rel:has-many,join:id=assignment_id"` // grading benchmarks for this assignment
+	ExpectedTests     []*TestInfo            `protobuf:"bytes,14,rep,name=ExpectedTests,proto3" json:"ExpectedTests,omitempty" bun:"rel:has-many,join:id=assignment_id"`         // list of expected tests for this assignment
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1383,7 +1383,7 @@ func (x *Assignment) GetExpectedTests() []*TestInfo {
 
 type TestInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"uniqueIndex:testinfo"` // foreign key
 	TestName      string                 `protobuf:"bytes,3,opt,name=TestName,proto3" json:"TestName,omitempty" gorm:"uniqueIndex:testinfo"`          // name of the test
 	MaxScore      int32                  `protobuf:"varint,4,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`                                     // max score possible to get on this test
@@ -1467,13 +1467,13 @@ func (x *TestInfo) GetDetails() string {
 
 type Task struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	ID              uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID              uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	AssignmentID    uint64                 `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"` // foreign key
 	AssignmentOrder uint32                 `protobuf:"varint,3,opt,name=assignmentOrder,proto3" json:"assignmentOrder,omitempty"`
 	Title           string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
 	Body            string                 `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
 	Name            string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
-	Issues          []*Issue               `protobuf:"bytes,7,rep,name=issues,proto3" json:"issues,omitempty"` // Issues that use this task as a benchmark
+	Issues          []*Issue               `protobuf:"bytes,7,rep,name=issues,proto3" json:"issues,omitempty" bun:"rel:has-many,join:id=task_id"` // Issues that use this task as a benchmark
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1559,7 +1559,7 @@ func (x *Task) GetIssues() []*Issue {
 
 type Issue struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	ID             uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID             uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	RepositoryID   uint64                 `protobuf:"varint,2,opt,name=repositoryID,proto3" json:"repositoryID,omitempty"`     // Represents the internal ID of a repository
 	TaskID         uint64                 `protobuf:"varint,3,opt,name=taskID,proto3" json:"taskID,omitempty"`                 // Task that this issue draws its content from
 	ScmIssueNumber uint64                 `protobuf:"varint,4,opt,name=ScmIssueNumber,proto3" json:"ScmIssueNumber,omitempty"` // Issue number on scm. Needed for associating db issue with scm issue
@@ -1627,7 +1627,7 @@ func (x *Issue) GetScmIssueNumber() uint64 {
 
 type PullRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	ID              uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID              uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	ScmRepositoryID uint64                 `protobuf:"varint,2,opt,name=ScmRepositoryID,proto3" json:"ScmRepositoryID,omitempty"` // Represents the scm repository ID
 	TaskID          uint64                 `protobuf:"varint,3,opt,name=taskID,proto3" json:"taskID,omitempty"`                   // Foreign key
 	IssueID         uint64                 `protobuf:"varint,4,opt,name=issueID,proto3" json:"issueID,omitempty"`                 // Foreign key
@@ -1779,17 +1779,17 @@ func (x *Assignments) GetAssignments() []*Assignment {
 
 type Submission struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"` // foreign key
 	UserID        uint64                 `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"`
 	GroupID       uint64                 `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
 	Score         uint32                 `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
 	CommitHash    string                 `protobuf:"bytes,6,opt,name=commitHash,proto3" json:"commitHash,omitempty"`
-	Grades        []*Grade               `protobuf:"bytes,7,rep,name=Grades,proto3" json:"Grades,omitempty"`
+	Grades        []*Grade               `protobuf:"bytes,7,rep,name=Grades,proto3" json:"Grades,omitempty" bun:"rel:has-many,join:id=submission_id"`
 	ApprovedDate  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=approvedDate,proto3" json:"approvedDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
-	Reviews       []*Review              `protobuf:"bytes,9,rep,name=reviews,proto3" json:"reviews,omitempty"`      // reviews produced for this submission
-	BuildInfo     *score.BuildInfo       `protobuf:"bytes,10,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty"` // build info for tests
-	Scores        []*score.Score         `protobuf:"bytes,11,rep,name=Scores,proto3" json:"Scores,omitempty"`       // list of scores for different tests
+	Reviews       []*Review              `protobuf:"bytes,9,rep,name=reviews,proto3" json:"reviews,omitempty" bun:"rel:has-many,join:id=submission_id"`     // reviews produced for this submission
+	BuildInfo     *score.BuildInfo       `protobuf:"bytes,10,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty" bun:"rel:has-one,join:id=submission_id"` // build info for tests
+	Scores        []*score.Score         `protobuf:"bytes,11,rep,name=Scores,proto3" json:"Scores,omitempty" bun:"rel:has-many,join:id=submission_id"`      // list of scores for different tests
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1947,8 +1947,8 @@ func (x *Submissions) GetSubmissions() []*Submission {
 
 type Grade struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SubmissionID  uint64                 `protobuf:"varint,1,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"uniqueIndex:grade"`
-	UserID        uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"uniqueIndex:grade"`
+	SubmissionID  uint64                 `protobuf:"varint,1,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"uniqueIndex:grade" bun:",pk"`
+	UserID        uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"uniqueIndex:grade" bun:",pk"`
 	Status        Submission_Status      `protobuf:"varint,3,opt,name=Status,proto3,enum=qf.Submission_Status" json:"Status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2007,13 +2007,13 @@ func (x *Grade) GetStatus() Submission_Status {
 
 type GradingBenchmark struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	CourseID      uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"`         // foreign key
 	AssignmentID  uint64                 `protobuf:"varint,3,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"` // foreign key
 	ReviewID      uint64                 `protobuf:"varint,4,opt,name=ReviewID,proto3" json:"ReviewID,omitempty"`         // foreign key
 	Heading       string                 `protobuf:"bytes,5,opt,name=heading,proto3" json:"heading,omitempty"`
 	Comment       string                 `protobuf:"bytes,6,opt,name=comment,proto3" json:"comment,omitempty"`
-	Criteria      []*GradingCriterion    `protobuf:"bytes,7,rep,name=criteria,proto3" json:"criteria,omitempty" gorm:"foreignKey:BenchmarkID"`
+	Criteria      []*GradingCriterion    `protobuf:"bytes,7,rep,name=criteria,proto3" json:"criteria,omitempty" gorm:"foreignKey:BenchmarkID" bun:"rel:has-many,join:id=benchmark_id"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2143,7 +2143,7 @@ func (x *Benchmarks) GetBenchmarks() []*GradingBenchmark {
 
 type GradingCriterion struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	BenchmarkID   uint64                 `protobuf:"varint,2,opt,name=BenchmarkID,proto3" json:"BenchmarkID,omitempty"` // foreign key
 	CourseID      uint64                 `protobuf:"varint,3,opt,name=CourseID,proto3" json:"CourseID,omitempty"`       // foreign key
 	Points        uint64                 `protobuf:"varint,4,opt,name=points,proto3" json:"points,omitempty"`
@@ -2235,12 +2235,12 @@ func (x *GradingCriterion) GetComment() string {
 
 type Review struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID                uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	SubmissionID      uint64                 `protobuf:"varint,2,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty"` // foreign key
 	ReviewerID        uint64                 `protobuf:"varint,3,opt,name=ReviewerID,proto3" json:"ReviewerID,omitempty"`     // UserID of the reviewer
 	Feedback          string                 `protobuf:"bytes,4,opt,name=feedback,proto3" json:"feedback,omitempty"`
 	Score             uint32                 `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
-	GradingBenchmarks []*GradingBenchmark    `protobuf:"bytes,6,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty" gorm:"foreignKey:ReviewID"`
+	GradingBenchmarks []*GradingBenchmark    `protobuf:"bytes,6,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty" gorm:"foreignKey:ReviewID" bun:"rel:has-many,join:id=review_id"`
 	Edited            *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=edited,proto3" json:"edited,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
@@ -2327,7 +2327,7 @@ func (x *Review) GetEdited() *timestamppb.Timestamp {
 
 type AssignmentFeedback struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
-	ID                     uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID                     uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" bun:",pk,autoincrement"`
 	CourseID               uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"`                            // Required: foreign key
 	AssignmentID           uint64                 `protobuf:"varint,3,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"`                    // Required: foreign key
 	LikedContent           string                 `protobuf:"bytes,4,opt,name=LikedContent,proto3" json:"LikedContent,omitempty"`                     // Required: What did you like about this assignment?
@@ -2419,8 +2419,8 @@ func (x *AssignmentFeedback) GetCreatedAt() *timestamppb.Timestamp {
 
 type FeedbackReceipt struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AssignmentID  uint64                 `protobuf:"varint,1,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"primaryKey;autoIncrement:false"`
-	UserID        uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"primaryKey;autoIncrement:false"`
+	AssignmentID  uint64                 `protobuf:"varint,1,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty" gorm:"primaryKey;autoIncrement:false" bun:",pk"`
+	UserID        uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty" gorm:"primaryKey;autoIncrement:false" bun:",pk"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2517,9 +2517,9 @@ var File_qf_types_proto protoreflect.FileDescriptor
 
 const file_qf_types_proto_rawDesc = "" +
 	"\n" +
-	"\x0eqf/types.proto\x12\x02qf\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15kit/score/score.proto\x1a\x0epatch/go.proto\"\xa8\x03\n" +
-	"\x04User\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x18\n" +
+	"\x0eqf/types.proto\x12\x02qf\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15kit/score/score.proto\x1a\x0epatch/go.proto\"\x97\x04\n" +
+	"\x04User\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\x18\n" +
 	"\aIsAdmin\x18\x02 \x01(\bR\aIsAdmin\x12\x12\n" +
 	"\x04Name\x18\x03 \x01(\tR\x04Name\x12\x1c\n" +
 	"\tStudentID\x18\x04 \x01(\tR\tStudentID\x12\x14\n" +
@@ -2529,25 +2529,25 @@ const file_qf_types_proto_rawDesc = "" +
 	"\vUpdateToken\x18\b \x01(\bR\vUpdateToken\x12 \n" +
 	"\vScmRemoteID\x18\t \x01(\x04R\vScmRemoteID\x12\"\n" +
 	"\fRefreshToken\x18\n" +
-	" \x01(\tR\fRefreshToken\x120\n" +
-	"\vEnrollments\x18\v \x03(\v2\x0e.qf.EnrollmentR\vEnrollments\x12`\n" +
-	"\x10FeedbackReceipts\x18\f \x03(\v2\x13.qf.FeedbackReceiptB\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"foreignKey:UserID\"R\x10FeedbackReceipts\"'\n" +
+	" \x01(\tR\fRefreshToken\x12[\n" +
+	"\vEnrollments\x18\v \x03(\v2\x0e.qf.EnrollmentB)ʵ\x03%\xa2\x01\"bun:\"rel:has-many,join:id=user_id\"R\vEnrollments\x12\x83\x01\n" +
+	"\x10FeedbackReceipts\x18\f \x03(\v2\x13.qf.FeedbackReceiptBBʵ\x03>\xa2\x01;gorm:\"foreignKey:UserID\" bun:\"rel:has-many,join:id=user_id\"R\x10FeedbackReceipts\"'\n" +
 	"\x05Users\x12\x1e\n" +
-	"\x05users\x18\x01 \x03(\v2\b.qf.UserR\x05users\"\xda\x02\n" +
-	"\x05Group\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x123\n" +
+	"\x05users\x18\x01 \x03(\v2\b.qf.UserR\x05users\"\xcc\x03\n" +
+	"\x05Group\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x123\n" +
 	"\x04name\x18\x02 \x01(\tB\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"uniqueIndex:group\"R\x04name\x12;\n" +
 	"\bcourseID\x18\x03 \x01(\x04B\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"uniqueIndex:group\"R\bcourseID\x12-\n" +
-	"\x06status\x18\x05 \x01(\x0e2\x15.qf.Group.GroupStatusR\x06status\x12D\n" +
-	"\x05users\x18\x06 \x03(\v2\b.qf.UserB$ʵ\x03 \xa2\x01\x1dgorm:\"many2many:group_users;\"R\x05users\x120\n" +
-	"\venrollments\x18\a \x03(\v2\x0e.qf.EnrollmentR\venrollments\"(\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x15.qf.Group.GroupStatusR\x06status\x12j\n" +
+	"\x05users\x18\x06 \x03(\v2\b.qf.UserBJʵ\x03F\xa2\x01Cgorm:\"many2many:group_users;\" bun:\"m2m:group_users,join:Group=User\"R\x05users\x12\\\n" +
+	"\venrollments\x18\a \x03(\v2\x0e.qf.EnrollmentB*ʵ\x03&\xa2\x01#bun:\"rel:has-many,join:id=group_id\"R\venrollments\"(\n" +
 	"\vGroupStatus\x12\v\n" +
 	"\aPENDING\x10\x00\x12\f\n" +
 	"\bAPPROVED\x10\x01\"+\n" +
 	"\x06Groups\x12!\n" +
-	"\x06groups\x18\x01 \x03(\v2\t.qf.GroupR\x06groups\"\xcb\x04\n" +
-	"\x06Course\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12(\n" +
+	"\x06groups\x18\x01 \x03(\v2\t.qf.GroupR\x06groups\"\xfa\x05\n" +
+	"\x06Course\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12(\n" +
 	"\x0fcourseCreatorID\x18\x02 \x01(\x04R\x0fcourseCreatorID\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x124\n" +
 	"\x04code\x18\x04 \x01(\tB ʵ\x03\x1c\xa2\x01\x19gorm:\"uniqueIndex:course\"R\x04code\x124\n" +
@@ -2557,48 +2557,48 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x13ScmOrganizationName\x18\t \x01(\tR\x13ScmOrganizationName\x12\x1a\n" +
 	"\bslipDays\x18\n" +
 	" \x01(\rR\bslipDays\x12*\n" +
-	"\x10DockerfileDigest\x18\v \x01(\tR\x10DockerfileDigest\x12F\n" +
-	"\benrolled\x18\f \x01(\x0e2\x19.qf.Enrollment.UserStatusB\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\benrolled\x120\n" +
-	"\venrollments\x18\r \x03(\v2\x0e.qf.EnrollmentR\venrollments\x120\n" +
-	"\vassignments\x18\x0e \x03(\v2\x0e.qf.AssignmentR\vassignments\x12!\n" +
-	"\x06groups\x18\x0f \x03(\v2\t.qf.GroupR\x06groups\"/\n" +
+	"\x10DockerfileDigest\x18\v \x01(\tR\x10DockerfileDigest\x12N\n" +
+	"\benrolled\x18\f \x01(\x0e2\x19.qf.Enrollment.UserStatusB\x17ʵ\x03\x13\xa2\x01\x10gorm:\"-\" bun:\"-\"R\benrolled\x12]\n" +
+	"\venrollments\x18\r \x03(\v2\x0e.qf.EnrollmentB+ʵ\x03'\xa2\x01$bun:\"rel:has-many,join:id=course_id\"R\venrollments\x12]\n" +
+	"\vassignments\x18\x0e \x03(\v2\x0e.qf.AssignmentB+ʵ\x03'\xa2\x01$bun:\"rel:has-many,join:id=course_id\"R\vassignments\x12N\n" +
+	"\x06groups\x18\x0f \x03(\v2\t.qf.GroupB+ʵ\x03'\xa2\x01$bun:\"rel:has-many,join:id=course_id\"R\x06groups\"/\n" +
 	"\aCourses\x12$\n" +
 	"\acourses\x18\x01 \x03(\v2\n" +
-	".qf.CourseR\acourses\"\xf9\x03\n" +
+	".qf.CourseR\acourses\"\xe1\x04\n" +
 	"\n" +
-	"Repository\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12R\n" +
+	"Repository\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12R\n" +
 	"\x11ScmOrganizationID\x18\x02 \x01(\x04B$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:repository\"R\x11ScmOrganizationID\x12(\n" +
 	"\x0fScmRepositoryID\x18\x03 \x01(\x04R\x0fScmRepositoryID\x12<\n" +
 	"\x06userID\x18\x04 \x01(\x04B$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:repository\"R\x06userID\x12>\n" +
-	"\agroupID\x18\x05 \x01(\x04B$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:repository\"R\agroupID\x12\x18\n" +
-	"\aHTMLURL\x18\x06 \x01(\tR\aHTMLURL\x12U\n" +
-	"\brepoType\x18\a \x01(\x0e2\x13.qf.Repository.TypeB$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:repository\"R\brepoType\x12!\n" +
-	"\x06issues\x18\b \x03(\v2\t.qf.IssueR\x06issues\"K\n" +
+	"\agroupID\x18\x05 \x01(\x04B$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:repository\"R\agroupID\x12/\n" +
+	"\aHTMLURL\x18\x06 \x01(\tB\x15ʵ\x03\x11\xa2\x01\x0ebun:\"html_url\"R\aHTMLURL\x12U\n" +
+	"\brepoType\x18\a \x01(\x0e2\x13.qf.Repository.TypeB$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:repository\"R\brepoType\x12R\n" +
+	"\x06issues\x18\b \x03(\v2\t.qf.IssueB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=repository_id\"R\x06issues\"K\n" +
 	"\x04Type\x12\b\n" +
 	"\x04NONE\x10\x00\x12\b\n" +
 	"\x04INFO\x10\x01\x12\x0f\n" +
 	"\vASSIGNMENTS\x10\x02\x12\t\n" +
 	"\x05TESTS\x10\x03\x12\b\n" +
 	"\x04USER\x10\x04\x12\t\n" +
-	"\x05GROUP\x10\x05\"\x95\x06\n" +
+	"\x05GROUP\x10\x05\"\xf8\a\n" +
 	"\n" +
-	"Enrollment\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12@\n" +
+	"Enrollment\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12@\n" +
 	"\bcourseID\x18\x02 \x01(\x04B$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:enrollment\"R\bcourseID\x12<\n" +
 	"\x06userID\x18\x03 \x01(\x04B$ʵ\x03 \xa2\x01\x1dgorm:\"uniqueIndex:enrollment\"R\x06userID\x12\x18\n" +
-	"\agroupID\x18\x04 \x01(\x04R\agroupID\x12\x1c\n" +
-	"\x04user\x18\x05 \x01(\v2\b.qf.UserR\x04user\x12\"\n" +
+	"\agroupID\x18\x04 \x01(\x04R\agroupID\x12I\n" +
+	"\x04user\x18\x05 \x01(\v2\b.qf.UserB+ʵ\x03'\xa2\x01$bun:\"rel:belongs-to,join:user_id=id\"R\x04user\x12Q\n" +
 	"\x06course\x18\x06 \x01(\v2\n" +
-	".qf.CourseR\x06course\x12\x1f\n" +
-	"\x05group\x18\a \x01(\v2\t.qf.GroupR\x05group\x121\n" +
+	".qf.CourseB-ʵ\x03)\xa2\x01&bun:\"rel:belongs-to,join:course_id=id\"R\x06course\x12M\n" +
+	"\x05group\x18\a \x01(\v2\t.qf.GroupB,ʵ\x03(\xa2\x01%bun:\"rel:belongs-to,join:group_id=id\"R\x05group\x121\n" +
 	"\x06status\x18\b \x01(\x0e2\x19.qf.Enrollment.UserStatusR\x06status\x121\n" +
-	"\x05state\x18\t \x01(\x0e2\x1b.qf.Enrollment.DisplayStateR\x05state\x12=\n" +
+	"\x05state\x18\t \x01(\x0e2\x1b.qf.Enrollment.DisplayStateR\x05state\x12E\n" +
 	"\x11slipDaysRemaining\x18\n" +
-	" \x01(\rB\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\x11slipDaysRemaining\x12x\n" +
+	" \x01(\rB\x17ʵ\x03\x13\xa2\x01\x10gorm:\"-\" bun:\"-\"R\x11slipDaysRemaining\x12x\n" +
 	"\x10lastActivityDate\x18\v \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x10lastActivityDate\x12$\n" +
-	"\rtotalApproved\x18\f \x01(\x04R\rtotalApproved\x124\n" +
-	"\fusedSlipDays\x18\r \x03(\v2\x10.qf.UsedSlipDaysR\fusedSlipDays\"=\n" +
+	"\rtotalApproved\x18\f \x01(\x04R\rtotalApproved\x12e\n" +
+	"\fusedSlipDays\x18\r \x03(\v2\x10.qf.UsedSlipDaysB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=enrollment_id\"R\fusedSlipDays\"=\n" +
 	"\n" +
 	"UserStatus\x12\b\n" +
 	"\x04NONE\x10\x00\x12\v\n" +
@@ -2610,17 +2610,17 @@ const file_qf_types_proto_rawDesc = "" +
 	"\n" +
 	"\x06HIDDEN\x10\x01\x12\v\n" +
 	"\aVISIBLE\x10\x02\x12\f\n" +
-	"\bFAVORITE\x10\x03\"\x82\x01\n" +
-	"\fUsedSlipDays\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
+	"\bFAVORITE\x10\x03\"\xa2\x01\n" +
+	"\fUsedSlipDays\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\"\n" +
 	"\fenrollmentID\x18\x02 \x01(\x04R\fenrollmentID\x12\"\n" +
 	"\fassignmentID\x18\x03 \x01(\x04R\fassignmentID\x12\x1a\n" +
 	"\busedDays\x18\x04 \x01(\rR\busedDays\"?\n" +
 	"\vEnrollments\x120\n" +
-	"\venrollments\x18\x01 \x03(\v2\x0e.qf.EnrollmentR\venrollments\"\xc2\x04\n" +
+	"\venrollments\x18\x01 \x03(\v2\x0e.qf.EnrollmentR\venrollments\"\xa6\x06\n" +
 	"\n" +
-	"Assignment\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
+	"Assignment\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\x1a\n" +
 	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12h\n" +
 	"\bdeadline\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\bdeadline\x12 \n" +
@@ -2634,33 +2634,33 @@ const file_qf_types_proto_rawDesc = "" +
 	"scoreLimit\x12\x1c\n" +
 	"\treviewers\x18\t \x01(\rR\treviewers\x12*\n" +
 	"\x10containerTimeout\x18\n" +
-	" \x01(\rR\x10containerTimeout\x120\n" +
-	"\vsubmissions\x18\v \x03(\v2\x0e.qf.SubmissionR\vsubmissions\x12\x1e\n" +
-	"\x05tasks\x18\f \x03(\v2\b.qf.TaskR\x05tasks\x12B\n" +
-	"\x11gradingBenchmarks\x18\r \x03(\v2\x14.qf.GradingBenchmarkR\x11gradingBenchmarks\x122\n" +
-	"\rExpectedTests\x18\x0e \x03(\v2\f.qf.TestInfoR\rExpectedTests\"\xf0\x01\n" +
-	"\bTestInfo\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12F\n" +
+	" \x01(\rR\x10containerTimeout\x12a\n" +
+	"\vsubmissions\x18\v \x03(\v2\x0e.qf.SubmissionB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=assignment_id\"R\vsubmissions\x12O\n" +
+	"\x05tasks\x18\f \x03(\v2\b.qf.TaskB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=assignment_id\"R\x05tasks\x12s\n" +
+	"\x11gradingBenchmarks\x18\r \x03(\v2\x14.qf.GradingBenchmarkB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=assignment_id\"R\x11gradingBenchmarks\x12c\n" +
+	"\rExpectedTests\x18\x0e \x03(\v2\f.qf.TestInfoB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=assignment_id\"R\rExpectedTests\"\x90\x02\n" +
+	"\bTestInfo\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12F\n" +
 	"\fAssignmentID\x18\x02 \x01(\x04B\"ʵ\x03\x1e\xa2\x01\x1bgorm:\"uniqueIndex:testinfo\"R\fAssignmentID\x12>\n" +
 	"\bTestName\x18\x03 \x01(\tB\"ʵ\x03\x1e\xa2\x01\x1bgorm:\"uniqueIndex:testinfo\"R\bTestName\x12\x1a\n" +
 	"\bMaxScore\x18\x04 \x01(\x05R\bMaxScore\x12\x16\n" +
 	"\x06Weight\x18\x05 \x01(\x05R\x06Weight\x12\x18\n" +
-	"\aDetails\x18\x06 \x01(\tR\aDetails\"\xc5\x01\n" +
-	"\x04Task\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
+	"\aDetails\x18\x06 \x01(\tR\aDetails\"\x90\x02\n" +
+	"\x04Task\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\"\n" +
 	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12(\n" +
 	"\x0fassignmentOrder\x18\x03 \x01(\rR\x0fassignmentOrder\x12\x14\n" +
 	"\x05title\x18\x04 \x01(\tR\x05title\x12\x12\n" +
 	"\x04body\x18\x05 \x01(\tR\x04body\x12\x12\n" +
-	"\x04name\x18\x06 \x01(\tR\x04name\x12!\n" +
-	"\x06issues\x18\a \x03(\v2\t.qf.IssueR\x06issues\"{\n" +
-	"\x05Issue\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
+	"\x04name\x18\x06 \x01(\tR\x04name\x12L\n" +
+	"\x06issues\x18\a \x03(\v2\t.qf.IssueB)ʵ\x03%\xa2\x01\"bun:\"rel:has-many,join:id=task_id\"R\x06issues\"\x9b\x01\n" +
+	"\x05Issue\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\"\n" +
 	"\frepositoryID\x18\x02 \x01(\x04R\frepositoryID\x12\x16\n" +
 	"\x06taskID\x18\x03 \x01(\x04R\x06taskID\x12&\n" +
-	"\x0eScmIssueNumber\x18\x04 \x01(\x04R\x0eScmIssueNumber\"\xd6\x02\n" +
-	"\vPullRequest\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12(\n" +
+	"\x0eScmIssueNumber\x18\x04 \x01(\x04R\x0eScmIssueNumber\"\xf6\x02\n" +
+	"\vPullRequest\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12(\n" +
 	"\x0fScmRepositoryID\x18\x02 \x01(\x04R\x0fScmRepositoryID\x12\x16\n" +
 	"\x06taskID\x18\x03 \x01(\x04R\x06taskID\x12\x18\n" +
 	"\aissueID\x18\x04 \x01(\x04R\aissueID\x12\x16\n" +
@@ -2676,50 +2676,50 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x06REVIEW\x10\x02\x12\f\n" +
 	"\bAPPROVED\x10\x03\"?\n" +
 	"\vAssignments\x120\n" +
-	"\vassignments\x18\x01 \x03(\v2\x0e.qf.AssignmentR\vassignments\"\xf7\x03\n" +
+	"\vassignments\x18\x01 \x03(\v2\x0e.qf.AssignmentR\vassignments\"\xda\x05\n" +
 	"\n" +
-	"Submission\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
+	"Submission\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\"\n" +
 	"\fAssignmentID\x18\x02 \x01(\x04R\fAssignmentID\x12\x16\n" +
 	"\x06userID\x18\x03 \x01(\x04R\x06userID\x12\x18\n" +
 	"\agroupID\x18\x04 \x01(\x04R\agroupID\x12\x14\n" +
 	"\x05score\x18\x05 \x01(\rR\x05score\x12\x1e\n" +
 	"\n" +
 	"commitHash\x18\x06 \x01(\tR\n" +
-	"commitHash\x12!\n" +
-	"\x06Grades\x18\a \x03(\v2\t.qf.GradeR\x06Grades\x12p\n" +
-	"\fapprovedDate\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\fapprovedDate\x12$\n" +
+	"commitHash\x12R\n" +
+	"\x06Grades\x18\a \x03(\v2\t.qf.GradeB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=submission_id\"R\x06Grades\x12p\n" +
+	"\fapprovedDate\x18\b \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\fapprovedDate\x12U\n" +
 	"\areviews\x18\t \x03(\v2\n" +
-	".qf.ReviewR\areviews\x12.\n" +
+	".qf.ReviewB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=submission_id\"R\areviews\x12^\n" +
 	"\tBuildInfo\x18\n" +
-	" \x01(\v2\x10.score.BuildInfoR\tBuildInfo\x12$\n" +
-	"\x06Scores\x18\v \x03(\v2\f.score.ScoreR\x06Scores\"<\n" +
+	" \x01(\v2\x10.score.BuildInfoB.ʵ\x03*\xa2\x01'bun:\"rel:has-one,join:id=submission_id\"R\tBuildInfo\x12U\n" +
+	"\x06Scores\x18\v \x03(\v2\f.score.ScoreB/ʵ\x03+\xa2\x01(bun:\"rel:has-many,join:id=submission_id\"R\x06Scores\"<\n" +
 	"\x06Status\x12\b\n" +
 	"\x04NONE\x10\x00\x12\f\n" +
 	"\bAPPROVED\x10\x01\x12\f\n" +
 	"\bREJECTED\x10\x02\x12\f\n" +
 	"\bREVISION\x10\x03\"?\n" +
 	"\vSubmissions\x120\n" +
-	"\vsubmissions\x18\x01 \x03(\v2\x0e.qf.SubmissionR\vsubmissions\"\xb4\x01\n" +
-	"\x05Grade\x12C\n" +
-	"\fSubmissionID\x18\x01 \x01(\x04B\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"uniqueIndex:grade\"R\fSubmissionID\x127\n" +
-	"\x06UserID\x18\x02 \x01(\x04B\x1fʵ\x03\x1b\xa2\x01\x18gorm:\"uniqueIndex:grade\"R\x06UserID\x12-\n" +
-	"\x06Status\x18\x03 \x01(\x0e2\x15.qf.Submission.StatusR\x06Status\"\x8a\x02\n" +
-	"\x10GradingBenchmark\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
+	"\vsubmissions\x18\x01 \x03(\v2\x0e.qf.SubmissionR\vsubmissions\"\xc8\x01\n" +
+	"\x05Grade\x12M\n" +
+	"\fSubmissionID\x18\x01 \x01(\x04B)ʵ\x03%\xa2\x01\"gorm:\"uniqueIndex:grade\" bun:\",pk\"R\fSubmissionID\x12A\n" +
+	"\x06UserID\x18\x02 \x01(\x04B)ʵ\x03%\xa2\x01\"gorm:\"uniqueIndex:grade\" bun:\",pk\"R\x06UserID\x12-\n" +
+	"\x06Status\x18\x03 \x01(\x0e2\x15.qf.Submission.StatusR\x06Status\"\xd2\x02\n" +
+	"\x10GradingBenchmark\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\x1a\n" +
 	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\"\n" +
 	"\fAssignmentID\x18\x03 \x01(\x04R\fAssignmentID\x12\x1a\n" +
 	"\bReviewID\x18\x04 \x01(\x04R\bReviewID\x12\x18\n" +
 	"\aheading\x18\x05 \x01(\tR\aheading\x12\x18\n" +
-	"\acomment\x18\x06 \x01(\tR\acomment\x12V\n" +
-	"\bcriteria\x18\a \x03(\v2\x14.qf.GradingCriterionB$ʵ\x03 \xa2\x01\x1dgorm:\"foreignKey:BenchmarkID\"R\bcriteria\"B\n" +
+	"\acomment\x18\x06 \x01(\tR\acomment\x12~\n" +
+	"\bcriteria\x18\a \x03(\v2\x14.qf.GradingCriterionBLʵ\x03H\xa2\x01Egorm:\"foreignKey:BenchmarkID\" bun:\"rel:has-many,join:id=benchmark_id\"R\bcriteria\"B\n" +
 	"\n" +
 	"Benchmarks\x124\n" +
 	"\n" +
 	"benchmarks\x18\x01 \x03(\v2\x14.qf.GradingBenchmarkR\n" +
-	"benchmarks\"\x91\x02\n" +
-	"\x10GradingCriterion\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12 \n" +
+	"benchmarks\"\xb1\x02\n" +
+	"\x10GradingCriterion\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12 \n" +
 	"\vBenchmarkID\x18\x02 \x01(\x04R\vBenchmarkID\x12\x1a\n" +
 	"\bCourseID\x18\x03 \x01(\x04R\bCourseID\x12\x16\n" +
 	"\x06points\x18\x04 \x01(\x04R\x06points\x12 \n" +
@@ -2731,28 +2731,28 @@ const file_qf_types_proto_rawDesc = "" +
 	"\n" +
 	"\x06FAILED\x10\x01\x12\n" +
 	"\n" +
-	"\x06PASSED\x10\x02\"\xdb\x02\n" +
-	"\x06Review\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
+	"\x06PASSED\x10\x02\"\xa1\x03\n" +
+	"\x06Review\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\"\n" +
 	"\fSubmissionID\x18\x02 \x01(\x04R\fSubmissionID\x12\x1e\n" +
 	"\n" +
 	"ReviewerID\x18\x03 \x01(\x04R\n" +
 	"ReviewerID\x12\x1a\n" +
 	"\bfeedback\x18\x04 \x01(\tR\bfeedback\x12\x14\n" +
-	"\x05score\x18\x05 \x01(\rR\x05score\x12e\n" +
-	"\x11gradingBenchmarks\x18\x06 \x03(\v2\x14.qf.GradingBenchmarkB!ʵ\x03\x1d\xa2\x01\x1agorm:\"foreignKey:ReviewID\"R\x11gradingBenchmarks\x12d\n" +
-	"\x06edited\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xca\x02\n" +
-	"\x12AssignmentFeedback\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
+	"\x05score\x18\x05 \x01(\rR\x05score\x12\x8a\x01\n" +
+	"\x11gradingBenchmarks\x18\x06 \x03(\v2\x14.qf.GradingBenchmarkBFʵ\x03B\xa2\x01?gorm:\"foreignKey:ReviewID\" bun:\"rel:has-many,join:id=review_id\"R\x11gradingBenchmarks\x12d\n" +
+	"\x06edited\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x06edited\"\xea\x02\n" +
+	"\x12AssignmentFeedback\x12.\n" +
+	"\x02ID\x18\x01 \x01(\x04B\x1eʵ\x03\x1a\xa2\x01\x17bun:\",pk,autoincrement\"R\x02ID\x12\x1a\n" +
 	"\bCourseID\x18\x02 \x01(\x04R\bCourseID\x12\"\n" +
 	"\fAssignmentID\x18\x03 \x01(\x04R\fAssignmentID\x12\"\n" +
 	"\fLikedContent\x18\x04 \x01(\tR\fLikedContent\x126\n" +
 	"\x16ImprovementSuggestions\x18\x05 \x01(\tR\x16ImprovementSuggestions\x12\x1c\n" +
 	"\tTimeSpent\x18\x06 \x01(\rR\tTimeSpent\x12j\n" +
-	"\tCreatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"\xa9\x01\n" +
-	"\x0fFeedbackReceipt\x12P\n" +
-	"\fAssignmentID\x18\x01 \x01(\x04B,ʵ\x03(\xa2\x01%gorm:\"primaryKey;autoIncrement:false\"R\fAssignmentID\x12D\n" +
-	"\x06UserID\x18\x02 \x01(\x04B,ʵ\x03(\xa2\x01%gorm:\"primaryKey;autoIncrement:false\"R\x06UserID\"K\n" +
+	"\tCreatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tCreatedAt\"\xbd\x01\n" +
+	"\x0fFeedbackReceipt\x12Z\n" +
+	"\fAssignmentID\x18\x01 \x01(\x04B6ʵ\x032\xa2\x01/gorm:\"primaryKey;autoIncrement:false\" bun:\",pk\"R\fAssignmentID\x12N\n" +
+	"\x06UserID\x18\x02 \x01(\x04B6ʵ\x032\xa2\x01/gorm:\"primaryKey;autoIncrement:false\" bun:\",pk\"R\x06UserID\"K\n" +
 	"\x13AssignmentFeedbacks\x124\n" +
 	"\tfeedbacks\x18\x01 \x03(\v2\x16.qf.AssignmentFeedbackR\tfeedbacksB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
