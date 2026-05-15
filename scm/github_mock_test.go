@@ -251,6 +251,41 @@ func TestMockRepositoryIsEmpty(t *testing.T) {
 	}
 }
 
+// TestMockRepositoryIsEmptyForkedRepo tests that a forked repository with no student changes
+// is considered empty and can be deleted.
+func TestMockRepositoryIsEmptyForkedRepo(t *testing.T) {
+	// Add a test repository that represents a student repo forked from assignments
+	// but with no student changes (AheadBy=0 in the mock)
+	studentRepo := github.Repository{
+		ID:           github.Int64(10),
+		Organization: &ghOrgFoo,
+		Name:         github.String("student-labs"),
+	}
+	allRepos := append(repos, studentRepo)
+
+	tests := []struct {
+		name      string
+		opt       *RepositoryOptions
+		wantEmpty bool
+	}{
+		// Student repo with no changes should be considered empty
+		{name: "ForkedRepoNoChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "student-labs"}, wantEmpty: true},
+		// Student repo with changes should not be empty
+		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantEmpty: false},
+		// Another student repo with changes should not be empty
+		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "josie-labs"}, wantEmpty: false},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(allRepos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
+		t.Run(name, func(t *testing.T) {
+			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
+				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			}
+		})
+	}
+}
+
 func TestMockCreateCourse(t *testing.T) {
 	// repositories that should be created for bar; manually sorted by path
 	wantBarRepos := []*Repository{

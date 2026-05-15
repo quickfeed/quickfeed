@@ -152,7 +152,9 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Reposit
 	return repositories, nil
 }
 
-// RepositoryIsEmpty implements the SCM interface
+// RepositoryIsEmpty implements the SCM interface.
+// It returns true if the repository is empty (no commits) or if the repository
+// is a fork with no commits ahead of the upstream assignments repository.
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
 	repo, err := s.getRepository(ctx, opt)
 	if err != nil {
@@ -171,7 +173,53 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
 	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
 	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
-	return (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0)
+	if (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0) {
+		return true
+	}
+
+	// If the repository has contents, check if it's a fork with no student changes.
+	// This is needed because student repositories are now forked from the assignments repository,
+	// so they will have contents even if the student hasn't made any changes.
+	return s.hasNoStudentChanges(ctx, opt)
+}
+
+// hasNoStudentChanges checks if a repository has any commits ahead of the assignments repository.
+// It returns true if the repository has no commits ahead (i.e., the student hasn't made any changes),
+// false if there are changes or if the comparison cannot be performed.
+// This function is only meaningful for student/group repositories that are forks of the assignments repo.
+func (s *GithubSCM) hasNoStudentChanges(ctx context.Context, opt *RepositoryOptions) bool {
+	// Don't compare course repositories (assignments, tests, info) with themselves.
+	// Only compare student/group repositories with the assignments repository.
+	if opt.Repo == qf.AssignmentsRepo || opt.Repo == qf.TestsRepo || opt.Repo == qf.InfoRepo {
+		s.logger.Debugf("hasNoStudentChanges: %s is a course repo, not a student repo - treating as non-empty", opt.Repo)
+		return false
+	}
+
+	// Compare the student repository with the assignments repository.
+	// The base is the assignments repo, and the head is the student repo.
+	// Format: "owner:branch" or just "branch" for repos in the same org.
+	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", opt.Repo+":main", nil)
+
+	s.logger.Debugf("hasNoStudentChanges: comparing %s/%s:main with %s/%s:main", opt.Owner, opt.Repo, opt.Owner, qf.AssignmentsRepo)
+	s.logger.Debugf("hasNoStudentChanges: err=%v, status=%d", err, statusCode(resp))
+
+	if err != nil {
+		// If comparison fails (e.g., repo is not a fork, branches don't exist, or other errors),
+		// we cannot determine if there are changes, so we treat it as non-empty for safety.
+		s.logger.Debugf("hasNoStudentChanges: comparison failed, treating repo as non-empty: %v", err)
+		return false
+	}
+
+	if comparison == nil || comparison.AheadBy == nil {
+		s.logger.Debugf("hasNoStudentChanges: comparison result is nil or AheadBy is nil")
+		return false
+	}
+
+	aheadBy := *comparison.AheadBy
+	s.logger.Debugf("hasNoStudentChanges: student repo is %d commits ahead of assignments", aheadBy)
+
+	// If the student repository has no commits ahead of assignments, it's safe to delete.
+	return aheadBy == 0
 }
 
 // CreateCourse creates repositories for a new course.
