@@ -3,13 +3,22 @@ package database_test
 import (
 	"testing"
 
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-func TestGetUserByCourse(t *testing.T) {
+func TestDatabaseGetUserByCourse(t *testing.T) {
+	for _, tc := range dbImplementations {
+		t.Run(tc.name, func(t *testing.T) {
+			databaseGetUserByCourse(t, tc.dbFunc)
+		})
+	}
+}
+
+func databaseGetUserByCourse(t *testing.T, dbFunc func(*testing.T) (database.Database, func())) {
 	const username = "meling"
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup := dbFunc(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db)

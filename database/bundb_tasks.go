@@ -28,7 +28,7 @@ func (db *BunDB) GetTasks(query *qf.Task) ([]*qf.Task, error) {
 		return nil, err
 	}
 	if len(tasks) == 0 {
-		return nil, sql.ErrNoRows
+		return nil, toDBError(sql.ErrNoRows)
 	}
 	return tasks, nil
 }

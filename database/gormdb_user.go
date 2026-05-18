@@ -21,7 +21,7 @@ func (db *GormDB) CreateUser(user *qf.User) error {
 func (db *GormDB) GetUser(userID uint64) (*qf.User, error) {
 	var user qf.User
 	if err := db.conn.First(&user, userID).Error; err != nil {
-		return nil, err
+		return nil, toDBError(err)
 	}
 	return &user, nil
 }

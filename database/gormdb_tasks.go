@@ -16,7 +16,7 @@ func (db *GormDB) GetTasks(query *qf.Task) ([]*qf.Task, error) {
 		return nil, err
 	}
 	if len(tasks) == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, toDBError(gorm.ErrRecordNotFound)
 	}
 	return tasks, err
 }

@@ -1,6 +1,24 @@
 package database
 
-import "github.com/quickfeed/quickfeed/qf"
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"github.com/quickfeed/quickfeed/qf"
+	"gorm.io/gorm"
+)
+
+// ErrNotFound is returned when a requested record does not exist.
+var ErrNotFound = errors.New("not found")
+
+func toDBError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	fmt.Printf("unexpected database error: %v\n", err)
+	return err
+}
 
 // Database contains methods for manipulating the database.
 type Database interface {
