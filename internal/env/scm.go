@@ -91,7 +91,7 @@ func AppName() string {
 
 func GetAccessToken() (string, error) {
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) == 0 {
+	if accessToken == "" {
 		return "", errors.New("required 'GITHUB_ACCESS_TOKEN' is not set")
 	}
 	return accessToken, nil
