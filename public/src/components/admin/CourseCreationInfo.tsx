@@ -17,7 +17,7 @@ const CourseCreationInfo = () => {
                     <p>
                         <a
                             className="btn btn-success btn-sm mr-2"
-                            href="https://github.com/organizations/plan"
+                            href={process.env.QUICKFEED_ORGANIZATION_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                         >
