@@ -20,7 +20,7 @@ export class StreamService {
     }
 
     public async submissionStream(options: {
-        onMessage: (payload?: Submission | undefined) => void,
+        onMessage: (payload: Submission) => void,
         onError: (error: Error) => void
         onStatusChange: (status: ConnStatus) => void
     }) {
@@ -31,7 +31,7 @@ export class StreamService {
                 options.onMessage(msg)
             }
         } catch (error) {
-            if (error.code === Code.Canceled) {
+            if (ConnectError.from(error).code === Code.Canceled) {
                 // The stream was canceled, so we don't need to reconnect.
                 // This happens when the stream is closed by the server
                 // which happens only if the user opens a new stream, i.e., opens the frontend in a new tab.

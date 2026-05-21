@@ -29,9 +29,7 @@ export type ResponseClient<Desc extends DescService> = {
 export function createResponseClient<T extends DescService>(
     service: T,
     transport: Transport,
-    errorHandler: (
-        payload?: { method: string; error: ConnectError } | undefined
-    ) => void
+    errorHandler: (payload: { method: string; error: ConnectError }) => void
 ): ResponseClient<T> {
     return makeAnyClient(service, (method) => {
         switch (method.methodKind) {
@@ -55,9 +53,7 @@ type UnaryFn<I extends DescMessage, O extends DescMessage> = (
 export function createUnaryFn<I extends DescMessage, O extends DescMessage>(
     transport: Transport,
     method: DescMethodUnary<I, O>,
-    errorHandler: (
-        payload?: { method: string; error: ConnectError } | undefined
-    ) => void
+    errorHandler: (payload: { method: string; error: ConnectError }) => void
 ): UnaryFn<I, O> {
     return async function (input, options) {
         try {
@@ -76,9 +72,10 @@ export function createUnaryFn<I extends DescMessage, O extends DescMessage>(
             } as Response<MessageShape<O>>
         }
         catch (error) {
-            errorHandler({ method: method.name, error })
+            const connectError = ConnectError.from(error)
+            errorHandler({ method: method.name, error: connectError })
             return {
-                error,
+                error: connectError,
             } as Response<MessageShape<O>>
         }
     }
