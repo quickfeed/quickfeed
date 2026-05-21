@@ -5,7 +5,7 @@ export const useCourseID = (): bigint => {
     const route = useParams<{ id?: string }>()
     try {
         return route.id ? BigInt(route.id) : BigInt(0)
-    } catch (e) {
+    } catch {
         return BigInt(0)
     }
 }
