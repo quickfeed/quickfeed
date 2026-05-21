@@ -7,7 +7,7 @@ import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import './style.scss'
 
-(BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () {
     return this.toString()
 }
 
