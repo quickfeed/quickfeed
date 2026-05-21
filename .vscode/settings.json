@@ -40,6 +40,8 @@
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
     "eslint.format.enable": true,
+    "eslint.workingDirectories": [{"directory": "public"}],
+    "eslint.useFlatConfig": true,
     "typescript.implementationsCodeLens.enabled": true,
     "typescript.referencesCodeLens.enabled": true,
     "typescript.format.enable": true,
