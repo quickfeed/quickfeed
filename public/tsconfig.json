@@ -14,7 +14,8 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "allowJs": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["jest"]
   },
   "include": ["src/**/*"]
 }
