@@ -1,7 +1,8 @@
 import { createConnectTransport } from "@connectrpc/connect-web"
-import { ConnectError } from "@connectrpc/connect"
+import type { ConnectError } from "@connectrpc/connect"
 import { QuickFeedService } from "../../../../proto/qf/quickfeed_pb"
-import { createResponseClient, ResponseClient } from "../../../client"
+import type { ResponseClient } from "../../../client"
+import { createResponseClient } from "../../../client"
 import { StreamService } from "../../../streamService"
 
 

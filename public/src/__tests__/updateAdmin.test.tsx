@@ -1,4 +1,5 @@
-import { User, UserSchema } from "../../proto/qf/types_pb"
+import type { User } from "../../proto/qf/types_pb"
+import { UserSchema } from "../../proto/qf/types_pb"
 import { initializeOvermind, mock } from "./TestHelpers"
 import { ApiClient } from "../overmind/namespaces/global/effects"
 import { create } from "@bufbuild/protobuf"

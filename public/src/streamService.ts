@@ -1,6 +1,7 @@
 import { QuickFeedService } from '../proto/qf/quickfeed_pb'
-import { Submission } from '../proto/qf/types_pb'
-import { Code, createClient, Client } from '@connectrpc/connect'
+import type { Submission } from '../proto/qf/types_pb'
+import type { Client } from '@connectrpc/connect'
+import { Code, ConnectError, createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { ConnStatus } from './Helpers'
 

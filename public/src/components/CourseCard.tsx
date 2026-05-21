@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
-import { Course, Enrollment } from '../../proto/qf/types_pb'
+import type { Course, Enrollment } from '../../proto/qf/types_pb'
 import CourseFavoriteButton from './CourseFavoriteButton'
 import Badge from './Badge'
 

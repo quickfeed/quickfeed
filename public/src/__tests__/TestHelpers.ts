@@ -1,9 +1,9 @@
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { State } from "../overmind/state"
-import { SubType } from "overmind/lib/internalTypes"
-import { ReviewState } from "../overmind/namespaces/review/state"
-import { ApiClient } from "../overmind/namespaces/global/effects"
+import type { State } from "../overmind/state"
+import type { SubType } from "overmind/lib/internalTypes"
+import type { ReviewState } from "../overmind/namespaces/review/state"
+import type { ApiClient } from "../overmind/namespaces/global/effects"
 import { create } from "@bufbuild/protobuf"
 import { TimestampSchema } from "@bufbuild/protobuf/wkt"
 

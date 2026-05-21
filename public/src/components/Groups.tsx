@@ -1,5 +1,6 @@
 import React, { useCallback } from "react"
-import { Group, Group_GroupStatus } from "../../proto/qf/types_pb"
+import type { Group } from "../../proto/qf/types_pb"
+import { Group_GroupStatus } from "../../proto/qf/types_pb"
 import { Color, groupRepoLink, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"

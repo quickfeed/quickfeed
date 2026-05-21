@@ -1,7 +1,8 @@
 import React from "react"
 import { isManuallyGraded } from "../../Helpers"
 import { useAppState } from "../../overmind"
-import NavBarLink, { NavLink } from "./NavBarLink"
+import type { NavLink } from "./NavBarLink"
+import NavBarLink from "./NavBarLink"
 
 
 const NavBarTeacher = () => {

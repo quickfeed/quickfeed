@@ -1,6 +1,6 @@
 import React from "react"
 import { useNavigate } from "react-router"
-import { Color } from "../Helpers"
+import type { Color } from "../Helpers"
 
 
 export interface Notification {

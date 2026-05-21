@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from "react"
 import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isHidden, isPending, sortEnrollments, userRepoLink } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
-import { Enrollment, Enrollment_UserStatus } from "../../proto/qf/types_pb"
+import type { Enrollment } from "../../proto/qf/types_pb"
+import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import Avatar from "./Avatar"
-import DynamicTable, { Row, SearchableCell } from "./DynamicTable"
+import type { Row } from "./DynamicTable"
+import DynamicTable, { SearchableCell } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import Button, { ButtonType } from "./admin/Button"
 import { useCourseID } from "../hooks/useCourseID"
@@ -95,7 +97,7 @@ const Members = () => {
                     onClick={handleMemberChange(enrollment, role)}
                 />
                 <DynamicButton
-                    text={"Reject"}
+                    text="Reject"
                     color={Color.RED}
                     type={ButtonType.OUTLINE}
                     onClick={handleMemberChange(enrollment, Enrollment_UserStatus.NONE)}

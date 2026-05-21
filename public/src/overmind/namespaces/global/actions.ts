@@ -1,25 +1,29 @@
 import { clone, create, isMessage } from "@bufbuild/protobuf"
-import { Code, ConnectError } from "@connectrpc/connect"
-import { Context } from "../.."
+import { Code } from "@connectrpc/connect"
+import type { ConnectError } from "@connectrpc/connect"
+import type { Context } from "../.."
 import { RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../../../proto/qf/requests_pb"
-import {
+import type {
     Course,
     Enrollment,
-    Enrollment_DisplayState,
-    Enrollment_UserStatus,
-    EnrollmentSchema,
     Grade,
     Group,
     Group_GroupStatus,
-    GroupSchema,
     Submission,
     Submission_Status,
+    User
+} from "../../../../proto/qf/types_pb"
+import {
+    Enrollment_DisplayState,
+    Enrollment_UserStatus,
+    EnrollmentSchema,
+    GroupSchema,
     SubmissionSchema,
-    User,
     UserSchema
 } from "../../../../proto/qf/types_pb"
-import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../../../Helpers"
-import { Alert, CourseGroup, SubmissionOwner } from "../../state"
+import type { SubmissionSort } from "../../../Helpers"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionStatus, validateGroup } from "../../../Helpers"
+import type { Alert, CourseGroup, SubmissionOwner } from "../../state"
 import { isEmptyRepo } from "./internalActions"
 
 export const internal = { isEmptyRepo }

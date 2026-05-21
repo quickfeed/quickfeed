@@ -1,6 +1,7 @@
-import { CallOptions, ConnectError, Transport, makeAnyClient } from "@connectrpc/connect"
+import type { CallOptions, Transport } from "@connectrpc/connect"
+import { ConnectError, makeAnyClient } from "@connectrpc/connect"
 import { createAsyncIterable } from "@connectrpc/connect/protocol"
-import {
+import type {
     DescMessage,
     DescMethodServerStreaming,
     DescMethodUnary,

@@ -1,5 +1,5 @@
 import React from "react"
-import { GradingCriterion } from "../../../proto/qf/types_pb"
+import type { GradingCriterion } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 import GradeButtons from "./GradeButtons"
 

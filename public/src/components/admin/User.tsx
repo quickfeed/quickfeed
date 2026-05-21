@@ -1,5 +1,5 @@
 import React from "react"
-import { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
+import type { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
 import { useGrpc } from "../../overmind"
 import { EnrollmentStatus, EnrollmentStatusBadgeColor } from "../../Helpers"
 import UserInfo from "../UserInfo"

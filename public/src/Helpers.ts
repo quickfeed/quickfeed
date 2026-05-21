@@ -1,8 +1,10 @@
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
-import { Score } from "../proto/kit/score/score_pb"
-import { CourseGroup, SubmissionOwner } from "./overmind/state"
-import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt"
-import { CourseSubmissions } from "../proto/qf/requests_pb"
+import type { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Submissions } from "../proto/qf/types_pb"
+import { Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
+import type { Score } from "../proto/kit/score/score_pb"
+import type { CourseGroup, SubmissionOwner } from "./overmind/state"
+import type { Timestamp } from "@bufbuild/protobuf/wkt"
+import { timestampDate } from "@bufbuild/protobuf/wkt"
+import type { CourseSubmissions } from "../proto/qf/requests_pb"
 import { create, isMessage } from "@bufbuild/protobuf"
 
 export enum Color {

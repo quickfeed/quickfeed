@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Course } from "../../../proto/qf/types_pb"
+import type { Course } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 import CourseForm from "../forms/CourseForm"
 import CourseCreationInfo from "./CourseCreationInfo"

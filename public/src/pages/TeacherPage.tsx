@@ -64,13 +64,13 @@ const TeacherPage = () => {
                 <Card {...feedback} />
             </div>
             <Routes>
-                <Route path={"/groups"} element={<GroupPage />} />
-                <Route path={"/members"} element={<Members />} />
-                <Route path={"/review"} element={<ReviewResults />} />
-                <Route path={"/results"} element={<RegularResults />} />
-                <Route path={"/assignments"} element={<Assignments />} />
-                <Route path={"/feedback"} element={<AssignmentFeedbackView />} />
-                <Route path={"/feedback/:assignmentID"} element={<AssignmentFeedbackView />} />
+                <Route path="/groups" element={<GroupPage />} />
+                <Route path="/members" element={<Members />} />
+                <Route path="/review" element={<ReviewResults />} />
+                <Route path="/results" element={<RegularResults />} />
+                <Route path="/assignments" element={<Assignments />} />
+                <Route path="/feedback" element={<AssignmentFeedbackView />} />
+                <Route path="/feedback/:assignmentID" element={<AssignmentFeedbackView />} />
             </Routes>
         </>
     )

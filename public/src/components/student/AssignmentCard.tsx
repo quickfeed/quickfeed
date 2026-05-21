@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { useNavigate } from 'react-router'
-import { Assignment, Submission } from "../../../proto/qf/types_pb"
+import type { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getFormattedTime, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
 import { DefaultProgressBar } from '../ProgressBar'
 import SubmissionRow from './SubmissionRow'

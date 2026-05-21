@@ -1,6 +1,7 @@
 import { create } from "@bufbuild/protobuf"
 import React, { useState } from 'react'
-import { Assignment, AssignmentFeedback, AssignmentFeedbackSchema } from '../../../../proto/qf/types_pb'
+import type { Assignment, AssignmentFeedback } from '../../../../proto/qf/types_pb'
+import { AssignmentFeedbackSchema } from '../../../../proto/qf/types_pb'
 import { Color } from "../../../Helpers"
 import { useActions, useAppState } from '../../../overmind'
 import FeedbackSubmittedCard from "./FeedbackSubmitted"
@@ -33,7 +34,7 @@ const AssignmentFeedbackForm: React.FC<AssignmentFeedbackFormProps> = ({ assignm
     }
 
     const validateTimeInput = (value: string, max: number): boolean => {
-        if (value === '') return true
+        if (value === '') { return true }
         const num = parseInt(value, 10)
         return !isNaN(num) && num >= 0 && num <= max
     }

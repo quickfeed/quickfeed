@@ -1,4 +1,4 @@
-import React, { JSX } from "react"
+import React from "react"
 import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 import BackToTop from "../components/BackToTop"
 
@@ -85,7 +85,7 @@ const AboutPage = () => {
     )
 }
 
-function imageMedia(src: string, alt: string): JSX.Element {
+function imageMedia(src: string, alt: string): React.JSX.Element {
     return (
         <img
             src={src}

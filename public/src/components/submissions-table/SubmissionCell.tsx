@@ -1,5 +1,6 @@
 import React, { memo, useState } from "react"
-import { Enrollment, GradingCriterion_Grade, Group, Submission } from "../../../proto/qf/types_pb"
+import type { Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
+import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { getSubmissionCellColor } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
@@ -45,7 +46,7 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
     }
 
     // Guard: this should never happen since MemberRow only renders a cell when at least one submission exists
-    if (!submission) return null
+    if (!submission) { return null }
 
     const isSelected = state.selectedSubmission?.ID === submission.ID
     const colorClass = getSubmissionCellColor(submission, owner)

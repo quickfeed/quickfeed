@@ -1,5 +1,6 @@
 import React, { useState } from "react"
-import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/types_pb"
+import type { GradingCriterion } from "../../../proto/qf/types_pb"
+import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 import GradeComment from "./GradeComment"
 import CriteriaStatus from "./CriteriaStatus"
@@ -30,7 +31,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
             break
     }
 
-    const passed = criteria.grade == GradingCriterion_Grade.PASSED
+    const passed = criteria.grade === GradingCriterion_Grade.PASSED
     // manageOrShowPassed renders the ManageCriteriaStatus component if the user is a teacher, otherwise it renders a passed/failed icon
     const criteriaStatusOrPassFailIcon = isTeacher
         ? <CriteriaStatus criterion={criteria} />

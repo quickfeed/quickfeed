@@ -1,4 +1,5 @@
-import React, { Dispatch, SetStateAction, useCallback, useState } from "react"
+import type { Dispatch, SetStateAction } from "react"
+import React, { useCallback, useState } from "react"
 import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"

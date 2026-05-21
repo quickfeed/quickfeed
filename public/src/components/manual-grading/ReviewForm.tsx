@@ -1,5 +1,5 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import type { Review } from "../../../proto/qf/types_pb"
 import { isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button from "../admin/Button"
