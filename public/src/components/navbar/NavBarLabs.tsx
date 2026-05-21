@@ -44,7 +44,7 @@ const NavBarLabs = () => {
         return false
     }
 
-    const labLinks = state.assignments[state.activeCourse.toString()]?.map(assignment => {
+    return state.assignments[state.activeCourse.toString()].map(assignment => {
         const submissions = state.submissions.ForAssignment(assignment)
         if (!submissions) {
             return null
@@ -73,8 +73,6 @@ const NavBarLabs = () => {
             )
         })
     })
-
-    return <>{labLinks}</>
 }
 
 export default NavBarLabs
