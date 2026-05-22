@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { useAppState } from '../../overmind'
-import ProfileForm from './ProfileForm'
 import ProfileCard from './ProfileCard'
+import ProfileForm from './ProfileForm'
+import ProfileHero from './ProfileHero'
 import ProfileInfo from './ProfileInfo'
 import SignupText from './SignupText'
-import ProfileHero from './ProfileHero'
 
 
 const Profile = () => {

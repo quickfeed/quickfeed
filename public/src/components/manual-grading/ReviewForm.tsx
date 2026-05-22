@@ -1,11 +1,11 @@
 import React from "react"
 import type { Review } from "../../../proto/qf/types_pb"
-import { isManuallyGraded, Color } from "../../Helpers"
+import { Color, isManuallyGraded } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button from "../admin/Button"
-import ReviewInfo from "./ReviewInfo"
-import ReviewResult from "../ReviewResult"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
+import ReviewResult from "../ReviewResult"
+import ReviewInfo from "./ReviewInfo"
 
 
 const ReviewForm = () => {

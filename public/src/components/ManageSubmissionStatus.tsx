@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react"
+import React, { useCallback, useEffect } from "react"
 import type { Grade } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
 import { Color, hasAllStatus, isManuallyGraded } from "../Helpers"

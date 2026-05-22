@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
+import type { Assignment, AssignmentFeedback } from '../../../proto/qf/types_pb'
 import { useAppState } from '../../overmind'
-import type { AssignmentFeedback, Assignment } from '../../../proto/qf/types_pb'
-import FeedbackGraph from './FeedbackGraph'
 import FeedbackCard from './FeedbackCard'
+import FeedbackGraph from './FeedbackGraph'
 import FeedbackSortControls from './FeedbackSortControls'
 
 interface FeedbackDetailViewProps {

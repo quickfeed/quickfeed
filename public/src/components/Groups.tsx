@@ -2,13 +2,13 @@ import React, { useCallback } from "react"
 import type { Group } from "../../proto/qf/types_pb"
 import { Group_GroupStatus } from "../../proto/qf/types_pb"
 import { Color, groupRepoLink, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
+import Avatar from "./Avatar"
 import DynamicButton from "./DynamicButton"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
-import { useCourseID } from "../hooks/useCourseID"
-import Avatar from "./Avatar"
 
 
 /* Lists all groups for a given course. */

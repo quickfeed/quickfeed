@@ -1,12 +1,12 @@
 import React from "react"
-import { useAppState } from "../../overmind"
+import { useLocation, useNavigate } from "react-router"
 import type { Assignment, Submission } from "../../../proto/qf/types_pb"
+import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
+import { useAppState } from "../../overmind"
 import ProgressIndicator from "../ProgressIndicator"
+import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
 import type { NavLink } from "./NavBarLink"
 import NavBarLink from "./NavBarLink"
-import { useNavigate, useLocation } from "react-router"
-import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
-import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
 
 
 const NavBarLabs = () => {

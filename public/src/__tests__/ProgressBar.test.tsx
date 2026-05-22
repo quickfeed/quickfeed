@@ -1,13 +1,13 @@
+import { create } from "@bufbuild/protobuf"
+import { render } from "@testing-library/react"
+import { Provider } from "overmind-react"
 import React from "react"
 import type { Assignment, Submission } from "../../proto/qf/types_pb"
 import { AssignmentSchema, SubmissionSchema } from "../../proto/qf/types_pb"
 import ProgressBar from "../components/ProgressBar"
 import ProgressIndicator from "../components/ProgressIndicator"
-import { initializeOvermind } from "./TestHelpers"
-import { Provider } from "overmind-react"
-import { render } from "@testing-library/react"
-import { create } from "@bufbuild/protobuf"
 import { SubmissionsForUser } from "../Helpers"
+import { initializeOvermind } from "./TestHelpers"
 
 type ProgressBarTest = {
     desc: string,

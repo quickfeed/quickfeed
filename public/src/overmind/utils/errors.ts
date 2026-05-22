@@ -1,5 +1,5 @@
-import type { Code } from "@connectrpc/connect"
 import type { Message } from "@bufbuild/protobuf"
+import type { Code } from "@connectrpc/connect"
 import type { Response } from "../../client"
 
 /** Prompt contains the messages to display to the user when prompting for confirmation. */

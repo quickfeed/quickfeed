@@ -1,6 +1,6 @@
 import React from "react"
-import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 import BackToTop from "../components/BackToTop"
+import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users on the LoginPage.tsx. */
 const AboutPage = () => {

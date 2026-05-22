@@ -1,7 +1,7 @@
 import React from "react"
 import type { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
-import { useGrpc } from "../../overmind"
 import { EnrollmentStatus, EnrollmentStatusBadgeColor } from "../../Helpers"
+import { useGrpc } from "../../overmind"
 import UserInfo from "../UserInfo"
 
 const User = ({ user }: { user: pbUser; hidden: boolean }) => {

@@ -1,8 +1,8 @@
 import React from "react"
-import { useAppState } from "../overmind"
 import type { Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
 import { getStatusByUser } from "../Helpers"
+import { useAppState } from "../overmind"
 
 type ProgressIndicatorProps = {
     courseID: string,

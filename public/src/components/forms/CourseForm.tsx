@@ -1,10 +1,10 @@
+import { clone } from "@bufbuild/protobuf"
 import React, { useCallback, useState } from "react"
-import { useActions } from "../../overmind"
+import { useNavigate } from "react-router"
 import type { Course } from "../../../proto/qf/types_pb"
 import { CourseSchema } from "../../../proto/qf/types_pb"
+import { useActions } from "../../overmind"
 import FormInput from "./FormInput"
-import { useNavigate } from "react-router"
-import { clone } from "@bufbuild/protobuf"
 
 
 

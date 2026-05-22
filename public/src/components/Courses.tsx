@@ -1,14 +1,14 @@
+import { create } from "@bufbuild/protobuf"
 import type { ComponentProps } from "react"
 import React from "react"
-import Collapsible from "./Collapsible"
-import { useAppState } from "../overmind"
+import { useNavigate } from "react-router"
 import type { Course } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
+import { Color, isVisible } from "../Helpers"
+import { useAppState } from "../overmind"
+import Collapsible from "./Collapsible"
 import CourseCard from "./CourseCard"
 import Button from "./admin/Button"
-import { useNavigate } from "react-router"
-import { Color, isVisible } from "../Helpers"
-import { create } from "@bufbuild/protobuf"
 
 // If home is set to true, display only favorite courses. Otherwise, display all courses.
 // Can be used on dashboard to let the user choose which courses to display based on favorites.

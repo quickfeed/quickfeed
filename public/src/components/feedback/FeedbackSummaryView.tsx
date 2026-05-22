@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router'
-import { useAppState } from '../../overmind'
 import type { Assignment } from '../../../proto/qf/types_pb'
+import { useAppState } from '../../overmind'
 import type { CourseFeedbackData } from "../../overmind/namespaces/feedback/state"
 
 interface FeedbackSummaryViewProps {

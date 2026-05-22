@@ -1,8 +1,8 @@
 import React, { useEffect } from "react"
-import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
-import { useActions, useAppState } from "../../overmind"
-import { hasTeacher } from "../../Helpers"
 import { useNavigate } from "react-router"
+import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
+import { hasTeacher } from "../../Helpers"
+import { useActions, useAppState } from "../../overmind"
 
 const ToggleSwitch = () => {
     const { activeCourse, enrollmentsByCourseID, status } = useAppState()

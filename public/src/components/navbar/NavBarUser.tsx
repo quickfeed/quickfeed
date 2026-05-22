@@ -1,9 +1,9 @@
 import React from "react"
+import { nextURL } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
+import NavMenuItem from "../navbar-buttons/NavMenuItem"
 import StreamStatus from "./StreamStatus"
 import ThemeController from "./ThemeController"
-import NavMenuItem from "../navbar-buttons/NavMenuItem"
-import { nextURL } from "../../Helpers"
 
 const NavBarUser = () => {
     const { self, isLoggedIn } = useAppState()

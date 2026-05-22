@@ -1,5 +1,6 @@
 
 import { create } from "@bufbuild/protobuf"
+import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { BuildInfoSchema, ScoreSchema } from "../../../proto/kit/score/score_pb"
 import type {
     Organization
@@ -37,7 +38,6 @@ import {
     UserSchema,
 } from "../../../proto/qf/types_pb"
 import { SubmissionsForCourse } from "../../Helpers"
-import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 
 export class MockData {
     public static mockedUsers(): User[] {

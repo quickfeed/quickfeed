@@ -1,9 +1,9 @@
 import React, { useState } from "react"
 import type { Course } from "../../../proto/qf/types_pb"
+import { Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import CourseForm from "../forms/CourseForm"
 import CourseCreationInfo from "./CourseCreationInfo"
-import { Color } from "../../Helpers"
 
 
 const CreateCourse = () => {

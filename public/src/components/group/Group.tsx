@@ -1,9 +1,9 @@
 import React from "react"
 import { isPendingGroup } from "../../Helpers"
-import { useAppState } from "../../overmind"
 import { useCourseID } from "../../hooks/useCourseID"
-import UserInfo from "../UserInfo"
+import { useAppState } from "../../overmind"
 import Badge from "../Badge"
+import UserInfo from "../UserInfo"
 
 
 const GroupView = () => {

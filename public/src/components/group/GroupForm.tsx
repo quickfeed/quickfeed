@@ -5,10 +5,10 @@ import { Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from
 import { Color, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
-import UserInfo from "../UserInfo"
 import Button, { ButtonType } from "../admin/Button"
 import DynamicButton from "../DynamicButton"
 import Search from "../Search"
+import UserInfo from "../UserInfo"
 
 
 const GroupForm = () => {

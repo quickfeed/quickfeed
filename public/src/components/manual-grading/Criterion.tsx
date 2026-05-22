@@ -2,10 +2,10 @@ import React, { useState } from "react"
 import type { GradingCriterion } from "../../../proto/qf/types_pb"
 import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
-import GradeComment from "./GradeComment"
-import CriteriaStatus from "./CriteriaStatus"
-import CriterionComment from "./Comment"
 import UnstyledButton from "../UnstyledButton"
+import CriterionComment from "./Comment"
+import CriteriaStatus from "./CriteriaStatus"
+import GradeComment from "./GradeComment"
 
 
 /* Criteria component for the manual grading page */

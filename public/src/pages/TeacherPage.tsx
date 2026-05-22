@@ -1,16 +1,16 @@
 import React, { useCallback } from "react"
 import { Route, Routes, useLocation } from "react-router"
-import { Color, isManuallyGraded } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
 import Card from "../components/Card"
-import GroupPage from "./GroupPage"
+import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 import Members from "../components/Members"
 import Results from "../components/Results"
-import Assignments from "../components/teacher/Assignments"
-import { useCourseID } from "../hooks/useCourseID"
-import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
-import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
 import { RepositoryCards } from "../components/student/RepositoryCards"
+import Assignments from "../components/teacher/Assignments"
+import { Color, isManuallyGraded } from "../Helpers"
+import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { useCourseID } from "../hooks/useCourseID"
+import { useActions, useAppState } from "../overmind"
+import GroupPage from "./GroupPage"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />

@@ -4,9 +4,9 @@ import type { Assignment, AssignmentFeedback } from '../../../../proto/qf/types_
 import { AssignmentFeedbackSchema } from '../../../../proto/qf/types_pb'
 import { Color } from "../../../Helpers"
 import { useActions, useAppState } from '../../../overmind'
+import FeedbackFormActions from "./FeedbackFormActions"
 import FeedbackSubmittedCard from "./FeedbackSubmitted"
 import FeedbackTextInput from "./FeedbackTextInput"
-import FeedbackFormActions from "./FeedbackFormActions"
 import TimeSpentInput from "./TimeSpentInput"
 
 interface AssignmentFeedbackFormProps {
