@@ -1,7 +1,7 @@
 import React from "react"
 import type { Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
-import { getStatusByUser } from "../Helpers"
+import { getEffectiveStatus } from "../Helpers"
 import { useAppState } from "../overmind"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
@@ -18,7 +18,7 @@ const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps
 
     const score = submission.score ?? 0
     const scorelimit = assignment?.scoreLimit ?? 0
-    const status = getStatusByUser(submission, state.self.ID)
+    const status = getEffectiveStatus(submission, state.self.ID)
     const remainingToPass = Math.max(0, scorelimit - score)
 
     let text = ""

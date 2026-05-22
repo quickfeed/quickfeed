@@ -3,7 +3,7 @@ import { render } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import React from "react"
 import type { Assignment, Submission } from "../../proto/qf/types_pb"
-import { AssignmentSchema, SubmissionSchema } from "../../proto/qf/types_pb"
+import { AssignmentSchema, GradeSchema, SubmissionSchema, Submission_Status, UserSchema } from "../../proto/qf/types_pb"
 import ProgressBar from "../components/ProgressBar"
 import ProgressIndicator from "../components/ProgressIndicator"
 import { SubmissionsForUser } from "../Helpers"
@@ -84,6 +84,85 @@ describe("ProgressBar", () => {
         labTest(test)
     })
 
+
+    type ColorTest = {
+        desc: string,
+        viewerID: bigint,
+        grades: { userID: bigint, status: Submission_Status }[],
+        wantColor: string,
+    }
+
+    // Regression for #1271: teachers viewing a submission they are not a
+    // participant of were getting the default "bg-primary" color because
+    // getStatusByUser returned NONE for their userID.
+    const colorTests: ColorTest[] = [
+        {
+            desc: "student viewing own approved submission → success",
+            viewerID: 1n,
+            grades: [{ userID: 1n, status: Submission_Status.APPROVED }],
+            wantColor: "bg-success",
+        },
+        {
+            desc: "teacher viewing student's approved submission → success",
+            viewerID: 999n,
+            grades: [{ userID: 1n, status: Submission_Status.APPROVED }],
+            wantColor: "bg-success",
+        },
+        {
+            desc: "teacher viewing student's rejected submission → error",
+            viewerID: 999n,
+            grades: [{ userID: 1n, status: Submission_Status.REJECTED }],
+            wantColor: "bg-error",
+        },
+        {
+            desc: "teacher viewing student's revision submission → warning",
+            viewerID: 999n,
+            grades: [{ userID: 1n, status: Submission_Status.REVISION }],
+            wantColor: "bg-warning",
+        },
+        {
+            desc: "teacher viewing group submission with all approved → success",
+            viewerID: 999n,
+            grades: [
+                { userID: 1n, status: Submission_Status.APPROVED },
+                { userID: 2n, status: Submission_Status.APPROVED },
+            ],
+            wantColor: "bg-success",
+        },
+        {
+            desc: "teacher viewing group submission with mixed grades → primary (no consensus)",
+            viewerID: 999n,
+            grades: [
+                { userID: 1n, status: Submission_Status.APPROVED },
+                { userID: 2n, status: Submission_Status.REJECTED },
+            ],
+            wantColor: "bg-primary",
+        },
+    ]
+
+    test.each(colorTests)("[ProgressBar color] $desc", (t) => {
+        const submission = create(SubmissionSchema, {
+            score: 50,
+            Grades: t.grades.map(g => create(GradeSchema, { UserID: g.userID, Status: g.status })),
+        })
+        const assignment = create(AssignmentSchema, { scoreLimit: 100 })
+        const submissions = new SubmissionsForUser()
+        submissions.setSubmissions(1n, "USER", [submission])
+        const overmind = initializeOvermind({
+            assignments: { "1": [assignment] },
+            submissions,
+            self: create(UserSchema, { ID: t.viewerID }),
+        })
+
+        const { container } = render(
+            <Provider value={overmind}>
+                <ProgressBar courseID="1" submission={submission} />
+            </Provider>
+        )
+
+        const primary = container.querySelector('[role="progressbar"]')
+        expect(primary?.className).toContain(t.wantColor)
+    })
 
     test.each(progressBarTests)("[ProgressIndicator] $desc", (test) => {
         const submissions = new SubmissionsForUser()
