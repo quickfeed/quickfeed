@@ -1,8 +1,8 @@
-import React, { useEffect } from "react"
-import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
-import { useActions, useAppState } from "../../overmind"
-import { hasTeacher } from "../../Helpers"
+import React, { useCallback, useEffect } from "react"
 import { useNavigate } from "react-router"
+import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
+import { hasTeacher } from "../../Helpers"
+import { useActions, useAppState } from "../../overmind"
 
 const ToggleSwitch = () => {
     const { activeCourse, enrollmentsByCourseID, status } = useAppState()
@@ -11,22 +11,22 @@ const ToggleSwitch = () => {
     const [enrollmentStatus, setEnrollmentStatus] =
         React.useState<boolean>(false)
 
+    const isTeacher = useCallback((courseID: bigint | undefined): boolean => {
+        if (!courseID) {
+            return false
+        }
+        return enrollmentsByCourseID[courseID.toString()]?.status === Enrollment_UserStatus.TEACHER
+    }, [enrollmentsByCourseID])
+
     useEffect(() => {
         if (activeCourse && enrollmentsByCourseID[activeCourse.toString()]) {
-            setEnrollmentStatus(isTeacher())
+            setEnrollmentStatus(isTeacher(activeCourse))
         }
-    })
-
-    const isTeacher = () => {
-        return (
-            enrollmentsByCourseID[activeCourse.toString()].status ===
-            Enrollment_UserStatus.TEACHER
-        )
-    }
+    }, [activeCourse, enrollmentsByCourseID, isTeacher])
 
     const switchView = () => {
         actions.changeView().then(() => {
-            setEnrollmentStatus(isTeacher())
+            setEnrollmentStatus(isTeacher(activeCourse))
             navigate(`/course/${activeCourse}`)
         })
     }

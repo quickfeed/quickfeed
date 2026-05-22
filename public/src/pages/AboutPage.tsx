@@ -1,6 +1,6 @@
-import React, { JSX } from "react"
-import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
+import React from "react"
 import BackToTop from "../components/BackToTop"
+import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users on the LoginPage.tsx. */
 const AboutPage = () => {
@@ -85,7 +85,7 @@ const AboutPage = () => {
     )
 }
 
-function imageMedia(src: string, alt: string): JSX.Element {
+function imageMedia(src: string, alt: string): React.JSX.Element {
     return (
         <img
             src={src}

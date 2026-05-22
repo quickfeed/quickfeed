@@ -1,10 +1,10 @@
 import React, { useLayoutEffect } from "react"
+import { Enroll } from "../components/Enroll"
 import { isEnrolled, isTeacher } from "../Helpers"
+import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
-import { useCourseID } from "../hooks/useCourseID"
-import { Enroll } from "../components/Enroll"
 
 
 /** The CoursePage component renders a Student or Teacher view

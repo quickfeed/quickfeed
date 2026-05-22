@@ -1,7 +1,8 @@
 import React from "react"
-import { useAppState } from "../overmind"
-import { Submission, Submission_Status } from "../../proto/qf/types_pb"
+import type { Submission } from "../../proto/qf/types_pb"
+import { Submission_Status } from "../../proto/qf/types_pb"
 import { getStatusByUser } from "../Helpers"
+import { useAppState } from "../overmind"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
 type ProgressBarProps = {
@@ -61,7 +62,7 @@ export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: num
         <div className="flex items-center gap-4 py-3 px-2 mb-2 rounded-lg">
             <div className="flex-1 min-w-0">
                 <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
-                    <PrimaryProgressBar score={0} text={"0 %"} />
+                    <PrimaryProgressBar score={0} text="0 %" />
                     <SecondaryProgressBar startPosition={0} width={scoreLimit} text={`${scoreLimit} %`} />
                 </div>
             </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { AssignmentFeedback } from '../../../proto/qf/types_pb'
+import type { AssignmentFeedback } from '../../../proto/qf/types_pb'
 
 interface FeedbackCardProps {
     feedback: AssignmentFeedback
@@ -27,8 +27,8 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
                             <i className="far fa-clock text-xs" />
                             {(() => {
                                 const [hours, minutes] = convertToHoursAndMinutes(feedback.TimeSpent)
-                                if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`
-                                if (hours > 0) return `${hours}h`
+                                if (hours > 0 && minutes > 0) { return `${hours}h ${minutes}m` }
+                                if (hours > 0) { return `${hours}h` }
                                 return `${minutes}m`
                             })()}
                         </div>

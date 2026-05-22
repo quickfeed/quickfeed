@@ -1,11 +1,11 @@
 import React from "react"
 import { Route, Routes, useLocation } from "react-router"
-import CourseLabs from "../components/student/CourseLabs"
-import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
-import { useCourseID } from "../hooks/useCourseID"
+import CourseLabs from "../components/student/CourseLabs"
 import { RepositoryCards } from "../components/student/RepositoryCards"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { useCourseID } from "../hooks/useCourseID"
+import GroupPage from "./GroupPage"
 
 
 const StudentPage = () => {

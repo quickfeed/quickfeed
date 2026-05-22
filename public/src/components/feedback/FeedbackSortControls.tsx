@@ -12,20 +12,20 @@ export const FeedbackSortControls: React.FC<FeedbackSortControlsProps> = ({
     feedbackCount
 }) => {
     const toggleSort = () => {
-        if (sortOrder === 'none') setSortOrder('asc')
-        else if (sortOrder === 'asc') setSortOrder('desc')
-        else setSortOrder('none')
+        if (sortOrder === 'none') { setSortOrder('asc') }
+        else if (sortOrder === 'asc') { setSortOrder('desc') }
+        else { setSortOrder('none') }
     }
 
     const getSortIcon = () => {
-        if (sortOrder === 'asc') return 'fa-arrow-up-wide-short'
-        if (sortOrder === 'desc') return 'fa-arrow-down-wide-short'
+        if (sortOrder === 'asc') { return 'fa-arrow-up-wide-short' }
+        if (sortOrder === 'desc') { return 'fa-arrow-down-wide-short' }
         return 'fa-sort'
     }
 
     const getSortLabel = () => {
-        if (sortOrder === 'asc') return 'Time (Low to High)'
-        if (sortOrder === 'desc') return 'Time (High to Low)'
+        if (sortOrder === 'asc') { return 'Time (Low to High)' }
+        if (sortOrder === 'desc') { return 'Time (High to Low)' }
         return 'Sort by Time'
     }
 

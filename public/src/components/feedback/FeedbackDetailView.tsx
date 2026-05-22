@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
+import type { Assignment, AssignmentFeedback } from '../../../proto/qf/types_pb'
 import { useAppState } from '../../overmind'
-import { AssignmentFeedback, Assignment } from '../../../proto/qf/types_pb'
-import FeedbackGraph from './FeedbackGraph'
 import FeedbackCard from './FeedbackCard'
+import FeedbackGraph from './FeedbackGraph'
 import FeedbackSortControls from './FeedbackSortControls'
 
 interface FeedbackDetailViewProps {
@@ -24,7 +24,7 @@ export const FeedbackDetailView: React.FC<FeedbackDetailViewProps> = ({
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'none'>('none')
 
     const sortFeedbacks = (feedbacks: AssignmentFeedback[]) => {
-        if (sortOrder === 'none') return feedbacks
+        if (sortOrder === 'none') { return feedbacks }
 
         return [...feedbacks].sort((a, b) => {
             if (sortOrder === 'asc') {

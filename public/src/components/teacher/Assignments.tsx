@@ -1,12 +1,12 @@
 // ...existing code...
 import React, { useState } from "react"
-import { Assignment } from "../../../proto/qf/types_pb"
-import { isManuallyGraded, Color, getFormattedTime, hasBenchmarks } from "../../Helpers"
+import { useNavigate } from "react-router-dom"
+import type { Assignment } from "../../../proto/qf/types_pb"
+import { Color, getFormattedTime, hasBenchmarks, isManuallyGraded } from "../../Helpers"
+import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
-import { useCourseID } from "../../hooks/useCourseID"
 import RubricDisplay from "./RubricDisplay"
-import { useNavigate } from "react-router-dom"
 
 const Assignments = () => {
     const courseID = useCourseID()

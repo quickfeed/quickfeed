@@ -1,6 +1,6 @@
 import React from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { AssignmentFeedback } from '../../../proto/qf/types_pb'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import type { AssignmentFeedback } from '../../../proto/qf/types_pb'
 
 interface FeedbackGraphProps {
     feedbacks: AssignmentFeedback[]
@@ -43,14 +43,14 @@ export const FeedbackGraph: React.FC<FeedbackGraphProps> = ({
 
     const getAverageTime = (): string => {
         const validFeedbacks = feedbacks.filter(fb => fb.TimeSpent > 0)
-        if (validFeedbacks.length === 0) return "0h 0m"
+        if (validFeedbacks.length === 0) { return "0h 0m" }
 
         const avgMinutes = validFeedbacks.reduce((sum, fb) => sum + fb.TimeSpent, 0) / validFeedbacks.length
         const hours = Math.floor(avgMinutes / 60)
         const minutes = Math.floor(avgMinutes % 60)
 
-        if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`
-        if (hours > 0) return `${hours}h`
+        if (hours > 0 && minutes > 0) { return `${hours}h ${minutes}m` }
+        if (hours > 0) { return `${hours}h` }
         return `${minutes}m`
     }
 

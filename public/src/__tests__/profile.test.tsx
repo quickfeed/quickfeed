@@ -1,12 +1,12 @@
-import { UserSchema } from "../../proto/qf/types_pb"
-import { Provider } from "overmind-react"
-import { createOvermindMock } from "overmind"
-import { config } from "../overmind"
-import Profile from "../components/profile/Profile"
-import { MemoryRouter } from "react-router-dom"
-import React from "react"
-import { render, screen } from "@testing-library/react"
 import { create } from "@bufbuild/protobuf"
+import { render, screen } from "@testing-library/react"
+import { createOvermindMock } from "overmind"
+import { Provider } from "overmind-react"
+import React from "react"
+import { MemoryRouter } from "react-router-dom"
+import { UserSchema } from "../../proto/qf/types_pb"
+import Profile from "../components/profile/Profile"
+import { config } from "../overmind"
 
 
 describe("Profile", () => {

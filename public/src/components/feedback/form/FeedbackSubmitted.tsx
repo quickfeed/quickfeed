@@ -1,5 +1,5 @@
 import React from 'react'
-import { Assignment } from '../../../../proto/qf/types_pb'
+import type { Assignment } from '../../../../proto/qf/types_pb'
 
 interface FeedbackSubmittedCardProps {
     assignment: Assignment

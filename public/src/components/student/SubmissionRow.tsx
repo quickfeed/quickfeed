@@ -1,5 +1,6 @@
 import React from 'react'
-import { Assignment, Submission, Submission_Status } from "../../../proto/qf/types_pb"
+import type { Assignment, Submission } from "../../../proto/qf/types_pb"
+import { Submission_Status } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getStatusByUser, isGroupSubmission } from "../../Helpers"
 import ProgressBar from "../ProgressBar"
 import SubmissionTypeIcon from './SubmissionTypeIcon'
@@ -29,7 +30,7 @@ const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, c
 
     return (
         <div
-            className={`flex items-center gap-4 py-2 px-2 mb-1 rounded-lg cursor-pointer`}
+            className="flex items-center gap-4 py-2 px-2 mb-1 rounded-lg cursor-pointer"
             onClick={(e) => { e.stopPropagation(); redirectTo(submission) }}
             role="button"
             aria-hidden="true"

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Course } from "../../../proto/qf/types_pb"
+import type { Course } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 import DynamicTable from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"
@@ -26,7 +26,7 @@ const EditCourse = () => {
     })
 
     return (
-        <div className={"box"}>
+        <div className="box">
             <DynamicTable header={["Course", "Code", "Tag", "Year", "Slipdays", "Edit"]} data={courses} />
             {course ? <CourseForm courseToEdit={course} /> : null}
         </div>

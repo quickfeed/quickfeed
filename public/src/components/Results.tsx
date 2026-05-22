@@ -1,9 +1,10 @@
 import { clone, isMessage } from "@bufbuild/protobuf"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from 'react-router-dom'
-import { Enrollment, EnrollmentSchema, Group, Submission } from "../../proto/qf/types_pb"
-import { Color } from "../Helpers"
+import type { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
+import { EnrollmentSchema } from "../../proto/qf/types_pb"
 import { ScreenSize } from "../consts"
+import { Color } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import useWindowSize from "../hooks/windowsSize"
 import { useActions, useAppState } from "../overmind"

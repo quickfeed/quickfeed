@@ -1,6 +1,6 @@
-import { Code } from "@connectrpc/connect"
-import { Message } from "@bufbuild/protobuf"
-import { Response } from "../../client"
+import type { Message } from "@bufbuild/protobuf"
+import type { Code } from "@connectrpc/connect"
+import type { Response } from "../../client"
 
 /** Prompt contains the messages to display to the user when prompting for confirmation. */
 export namespace Prompt {

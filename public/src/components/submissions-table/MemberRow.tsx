@@ -1,6 +1,7 @@
 import { isMessage } from "@bufbuild/protobuf"
 import React, { memo } from "react"
-import { Assignment, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../../proto/qf/types_pb"
+import type { Assignment, Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
+import { EnrollmentSchema, GroupSchema } from "../../../proto/qf/types_pb"
 import { groupRepoLink, isHidden, isTeacher, userRepoLink } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import SubmissionCell from "./SubmissionCell"
@@ -69,8 +70,8 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
                 const group = submissions.ForGroup(member)?.find(s => s.AssignmentID === assignment.ID)
                 // Only include properties that actually have submissions
                 const result: SubmissionPair = {}
-                if (individual) result.individual = individual
-                if (group) result.group = group
+                if (individual) { result.individual = individual }
+                if (group) { result.group = group }
                 return result
             }
 

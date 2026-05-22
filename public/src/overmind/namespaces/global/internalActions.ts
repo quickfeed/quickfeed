@@ -1,6 +1,6 @@
 import { Code } from "@connectrpc/connect"
-import { Context } from "../.."
-import { RepositoryRequest } from "../../../../proto/qf/requests_pb"
+import type { Context } from "../.."
+import type { RepositoryRequest } from "../../../../proto/qf/requests_pb"
 import { Prompt, promptOnErrorResponse } from "../../utils/errors"
 
 export const isEmptyRepo = async (

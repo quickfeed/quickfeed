@@ -35,7 +35,7 @@ const Badge = (props: { type: BadgeStyleType, color: Color | Enrollment_UserStat
     let color: Color | null
     if (typeof props.color === 'number') {
         color = RoleColor[props.color]
-        if (!color) return null // Don't render NONE status
+        if (!color) { return null } // Don't render NONE status
     } else {
         color = props.color
     }

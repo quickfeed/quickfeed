@@ -11,11 +11,11 @@
     "newLine": "LF",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
     "allowJs": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["jest"]
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"]
 }

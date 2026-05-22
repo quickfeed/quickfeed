@@ -1,5 +1,5 @@
 import React from "react"
-import { User } from "../../proto/qf/types_pb"
+import type { User } from "../../proto/qf/types_pb"
 import Avatar from "./Avatar"
 
 interface UserInfoProps {

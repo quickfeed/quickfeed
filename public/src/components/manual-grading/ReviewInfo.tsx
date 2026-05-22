@@ -1,5 +1,6 @@
 import React from "react"
-import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
+import type { Review, Submission } from "../../../proto/qf/types_pb"
+import { Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useAppState } from "../../overmind"
