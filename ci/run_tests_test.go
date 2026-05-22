@@ -466,6 +466,90 @@ func TestRecordResultsGroupSlipDays(t *testing.T) {
 	qtest.Diff(t, "slip days mismatch", slipDaysBeforeUpdate, rebuiltGroup.RemainingSlipDays(course))
 }
 
+// TestRecordResultsGroupSubmitsNonGroupLab pins the design decision that a
+// group push to an assignment with IsGroupLab=false is a no-op for slip days:
+// the submission isn't graded, so neither the group's pool nor any individual
+// enrollment counter is touched.
+func TestRecordResultsGroupSubmitsNonGroupLab(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{
+		Name:              "Test",
+		Code:              "DAT320",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
+	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+	group := qtest.CreateFakeGroup(t, db, course, 2)
+
+	assignment := &qf.Assignment{
+		CourseID:         course.GetID(),
+		Name:             "lab1",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		AutoApprove:      true,
+		ScoreLimit:       70,
+		Order:            1,
+		IsGroupLab:       false,
+		ContainerTimeout: 1,
+	}
+	qtest.CreateAssignment(t, db, assignment)
+	results := &score.Results{
+		BuildInfo: createBuildInfo(t),
+		Scores:    createScores(),
+	}
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo: &qf.Repository{
+			RepoType: qf.Repository_GROUP,
+			GroupID:  group.GetID(),
+		},
+		JobOwner: "test",
+		CommitID: "deadbeef",
+	}
+
+	// Submit well past the deadline so any active charging path would
+	// have produced a deduction.
+	lateDate := qtest.Timestamp(t, "2022-11-15T13:00:00")
+	_ = recordResults(t, runData, db, results, lateDate, false)
+
+	// Group pool must not be touched: this isn't a group lab.
+	fetchedGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fetchedGroup.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
+		t.Errorf("group slip days should be unchanged, got %d, want %d",
+			fetchedGroup.RemainingSlipDays(course), course.GetSlipDays())
+	}
+	if len(fetchedGroup.GetUsedSlipDays()) != 0 {
+		t.Errorf("group should have no UsedSlipDays rows, got %d", len(fetchedGroup.GetUsedSlipDays()))
+	}
+
+	// Sweep every enrollment in the course, not just group members:
+	// any accidental charge against an arbitrary enrollment must fail the test.
+	enrollments, err := db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_STUDENT, qf.Enrollment_TEACHER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrollments) == 0 {
+		t.Fatal("expected at least one enrollment for the course")
+	}
+	for _, enrollment := range enrollments {
+		if enrollment.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
+			t.Errorf("enrollment %d (user %d) slip days should be unchanged, got %d, want %d",
+				enrollment.GetID(), enrollment.GetUserID(),
+				enrollment.RemainingSlipDays(course), course.GetSlipDays())
+		}
+		if len(enrollment.GetUsedSlipDays()) != 0 {
+			t.Errorf("enrollment %d (user %d) should have no UsedSlipDays rows, got %d",
+				enrollment.GetID(), enrollment.GetUserID(), len(enrollment.GetUsedSlipDays()))
+		}
+	}
+}
+
 func recordResults(t *testing.T, runData *ci.RunData, db database.Database, results *score.Results, date *timestamppb.Timestamp, rebuild bool) *qf.Submission {
 	if date != nil {
 		results.BuildInfo.BuildDate = date
