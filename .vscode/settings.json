@@ -3,7 +3,8 @@
     "editor.formatOnSave": true,
     "editor.inlineSuggest.enabled": true,
     "editor.codeActionsOnSave": {
-        "source.fixAll": "explicit"
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
     },
     "git.inputValidation": true,
     "git.inputValidationSubjectLength": 72,
@@ -42,12 +43,12 @@
     "eslint.format.enable": true,
     "eslint.workingDirectories": [{"directory": "public"}],
     "eslint.useFlatConfig": true,
-    "typescript.implementationsCodeLens.enabled": true,
-    "typescript.referencesCodeLens.enabled": true,
-    "typescript.format.enable": true,
-    "typescript.suggest.completeFunctionCalls": true,
-    "typescript.autoClosingTags": true,
-    "typescript.format.semicolons": "remove",
+    "js/ts.implementationsCodeLens.enabled": true,
+    "js/ts.referencesCodeLens.enabled": true,
+    "js/ts.format.enabled": true,
+    "js/ts.suggest.completeFunctionCalls": true,
+    "js/ts.autoClosingTags.enabled": true,
+    "js/ts.format.semicolons": "remove",
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features",
     },
