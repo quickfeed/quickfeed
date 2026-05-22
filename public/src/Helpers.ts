@@ -182,6 +182,23 @@ export const getStatusByUser = (submission: Submission, userID: bigint): Submiss
     return grade.Status
 }
 
+// getEffectiveStatus returns the status to display for a submission from the
+// viewer's perspective. When the viewer is a participant (their userID is in
+// the submission's Grades), their personal status is used. When the viewer is
+// not a participant (e.g. a teacher reviewing someone else's submission),
+// returns the consensus across all grades — or NONE if the grades disagree.
+export const getEffectiveStatus = (submission: Submission, viewerID: bigint): Submission_Status => {
+    const grade = submission.Grades.find(grade => grade.UserID === viewerID)
+    if (grade) {
+        return grade.Status
+    }
+    if (submission.Grades.length === 0) {
+        return Submission_Status.NONE
+    }
+    const first = submission.Grades[0].Status
+    return submission.Grades.every(g => g.Status === first) ? first : Submission_Status.NONE
+}
+
 export const setStatusByUser = (submission: Submission, userID: bigint, status: Submission_Status): Submission => {
     const grades = submission.Grades.map(grade => {
         if (grade.UserID === userID) {

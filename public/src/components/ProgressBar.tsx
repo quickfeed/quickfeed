@@ -1,7 +1,8 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Submission, Submission_Status } from "../../proto/qf/types_pb"
-import { getStatusByUser } from "../Helpers"
+import type { Submission } from "../../proto/qf/types_pb"
+import { Submission_Status } from "../../proto/qf/types_pb"
+import { getEffectiveStatus } from "../Helpers"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
 type ProgressBarProps = {
@@ -17,7 +18,7 @@ const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps
 
     const score = submission.score ?? 0
     const scorelimit = assignment?.scoreLimit ?? 0
-    const status = getStatusByUser(submission, state.self.ID)
+    const status = getEffectiveStatus(submission, state.self.ID)
     const remainingToPass = Math.max(0, scorelimit - score)
 
     let text = ""
@@ -61,7 +62,7 @@ export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: num
         <div className="flex items-center gap-4 py-3 px-2 mb-2 rounded-lg">
             <div className="flex-1 min-w-0">
                 <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
-                    <PrimaryProgressBar score={0} text={"0 %"} />
+                    <PrimaryProgressBar score={0} text="0 %" />
                     <SecondaryProgressBar startPosition={0} width={scoreLimit} text={`${scoreLimit} %`} />
                 </div>
             </div>
