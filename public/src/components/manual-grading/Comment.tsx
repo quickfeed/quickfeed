@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown"
 
 
 const CriterionComment = ({ comment }: { comment: string }) => {
-  if (comment == "" || comment.length == 0) {
+  if (comment === "" || comment.length === 0) {
     return null
   }
 

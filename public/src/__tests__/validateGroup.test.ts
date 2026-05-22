@@ -1,5 +1,5 @@
 import { validateGroup } from "../Helpers"
-import { CourseGroup } from "../overmind/state"
+import type { CourseGroup } from "../overmind/state"
 
 
 describe('validateGroup', () => {

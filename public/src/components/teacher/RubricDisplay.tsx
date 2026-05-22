@@ -1,5 +1,5 @@
 import React from "react"
-import { GradingBenchmark } from "../../../proto/qf/types_pb"
+import type { GradingBenchmark } from "../../../proto/qf/types_pb"
 import { hasCriteria } from "../../Helpers"
 
 /** RubricDisplay component shows the grading rubric for a given benchmark

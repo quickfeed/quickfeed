@@ -1,6 +1,6 @@
 import React from "react"
+import type { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
-import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 
 type SubmissionInfoProps = {

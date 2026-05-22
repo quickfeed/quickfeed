@@ -1,6 +1,6 @@
 import React from "react"
-import Avatar from "../Avatar"
 import { useAppState } from "../../overmind"
+import Avatar from "../Avatar"
 
 
 /** ProfileCard displays the profile information of the provided children as a card. */

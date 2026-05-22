@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Assignment, Course } from "../../../proto/qf/types_pb"
+import type { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"
 import useWindowSize from "../../hooks/windowsSize"
 import { useActions, useAppState } from '../../overmind'
@@ -24,7 +24,7 @@ const Breadcrumbs = () => {
     // Returns course name (or code if small screen)
     const resolveCourseName = (courses: Course[], courseId: string, width: number): string | null => {
         const course = courses.find(c => c.ID.toString() === courseId)
-        if (!course) return null
+        if (!course) { return null }
         return width < ScreenSize.ExtraLarge ? course.code : course.name
     }
 
@@ -54,13 +54,13 @@ const Breadcrumbs = () => {
         const last = index === pathnames.length - 1
 
         // skip the first path segment (e.g., 'course/ID').
-        if (index === 0 && value === 'course') return
+        if (index === 0 && value === 'course') { return }
         // skip the second path segment (e.g., 'course/ID/lab/ID').
-        if (index === 2 && (value === 'lab' || value === 'group-lab')) return
+        if (index === 2 && (value === 'lab' || value === 'group-lab')) { return }
         // Replace 'course/ID' with 'course/Course Name' in the breadcrumb.
-        if (index === 1 && courseName && pathnames[0] === 'course') breadcrumbName = courseName
+        if (index === 1 && courseName && pathnames[0] === 'course') { breadcrumbName = courseName }
         // Replace 'lab/ID' with 'lab/Assignment Name' in the breadcrumb.
-        if (index === 3 && assignmentName && (pathnames[2] === 'lab' || pathnames[2] === 'group-lab')) breadcrumbName = assignmentName
+        if (index === 3 && assignmentName && (pathnames[2] === 'lab' || pathnames[2] === 'group-lab')) { breadcrumbName = assignmentName }
 
         segments.push({ label: breadcrumbName, to, last })
     })

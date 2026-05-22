@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
-import { Assignment, Submission } from '../../proto/qf/types_pb'
+import type { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'

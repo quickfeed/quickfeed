@@ -1,13 +1,13 @@
+import { create } from "@bufbuild/protobuf"
+import { render } from "@testing-library/react"
+import { Provider } from "overmind-react"
 import React from "react"
 import type { Assignment, Submission } from "../../proto/qf/types_pb"
 import { AssignmentSchema, GradeSchema, SubmissionSchema, Submission_Status, UserSchema } from "../../proto/qf/types_pb"
 import ProgressBar from "../components/ProgressBar"
 import ProgressIndicator from "../components/ProgressIndicator"
-import { initializeOvermind } from "./TestHelpers"
-import { Provider } from "overmind-react"
-import { render } from "@testing-library/react"
-import { create } from "@bufbuild/protobuf"
 import { SubmissionsForUser } from "../Helpers"
+import { initializeOvermind } from "./TestHelpers"
 
 type ProgressBarTest = {
     desc: string,
@@ -93,7 +93,7 @@ describe("ProgressBar", () => {
     }
 
     // Regression for #1271: teachers viewing a submission they are not a
-    // participant of were getting the default "bg-primary" colour because
+    // participant of were getting the default "bg-primary" color because
     // getStatusByUser returned NONE for their userID.
     const colorTests: ColorTest[] = [
         {

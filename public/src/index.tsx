@@ -1,13 +1,13 @@
-import { createRoot } from "react-dom/client"
-import React from 'react'
 import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
-import { config } from './overmind'
-import App from './App'
+import React from 'react'
+import { createRoot } from "react-dom/client"
 import { BrowserRouter } from 'react-router-dom'
+import App from './App'
+import { config } from './overmind'
 import './style.scss'
 
-(BigInt.prototype as any).toJSON = function () { // skipcq: JS-0323
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () {
     return this.toString()
 }
 

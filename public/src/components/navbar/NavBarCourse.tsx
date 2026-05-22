@@ -1,6 +1,6 @@
 import React from "react"
 import { useNavigate } from "react-router"
-import { Enrollment } from "../../../proto/qf/types_pb"
+import type { Enrollment } from "../../../proto/qf/types_pb"
 import { isStudent, isTeacher } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import NavBarLabs from "./NavBarLabs"

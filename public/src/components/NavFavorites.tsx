@@ -1,8 +1,8 @@
 import React from "react"
-import { useAppState } from "../overmind"
 import { useNavigate } from "react-router-dom"
-import NavBarCourse from "./navbar/NavBarCourse"
 import { isEnrolled, isVisible } from "../Helpers"
+import { useAppState } from "../overmind"
+import NavBarCourse from "./navbar/NavBarCourse"
 
 const NavFavorites = () => {
     const state = useAppState()

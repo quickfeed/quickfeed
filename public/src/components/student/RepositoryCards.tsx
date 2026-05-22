@@ -1,8 +1,8 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Repository_Type } from "../../../proto/qf/types_pb"
-import { useAppState } from "../../overmind"
 import { useCourseID } from "../../hooks/useCourseID"
+import { useAppState } from "../../overmind"
 
 interface RepositoryLinkConfig {
     type: Repository_Type
@@ -26,7 +26,7 @@ interface RepoLinkGroupProps {
 }
 
 const RepoLinkGroup = ({ title, links }: RepoLinkGroupProps) => {
-    if (links.length === 0) return null
+    if (links.length === 0) { return null }
 
     return (
         <div className="flex items-center gap-2">

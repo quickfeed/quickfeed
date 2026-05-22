@@ -1,9 +1,9 @@
 import React from "react"
-import { useActions, useAppState } from "../overmind"
 import { Link } from "react-router-dom"
+import { useActions, useAppState } from "../overmind"
 import NavFavorites from "./NavFavorites"
-import NavBarUser from "./navbar/NavBarUser"
 import NavBarActiveCourse from "./navbar/NavBarActiveCourse"
+import NavBarUser from "./navbar/NavBarUser"
 
 
 const NavBar = () => {

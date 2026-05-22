@@ -6,9 +6,7 @@ import { useAppState } from "../overmind"
  * Wrap a JSX cell in SearchableCell to enable search in DynamicTable.
  * Pass `hidden={!isHidden(value, query)}` so the table knows when the cell matches.
  */
-export const SearchableCell = ({ children }: { hidden: boolean; children: React.ReactNode }) => (
-    <>{children}</>
-)
+export const SearchableCell = ({ children }: { hidden: boolean; children: React.ReactNode }): React.ReactNode => children
 
 export type CellElement = {
     value: string,
@@ -69,10 +67,10 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     const rowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
-            const element = cell.link ? <a href={cell.link} target={"_blank"} rel="noopener noreferrer">{cell.value}</a> : cell.value
+            const element = cell.link ? <a href={cell.link} target="_blank" rel="noopener noreferrer">{cell.value}</a> : cell.value
             return <td key={index} className={cell.className} onClick={cell.onClick}>{element} {icon(cell)}</td>
         }
-        return index == 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
+        return index === 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
     }
 
     const headerRowCell = (cell: RowElement, index: number) => {

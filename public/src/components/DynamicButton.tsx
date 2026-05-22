@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Color } from "../Helpers"
-import { ButtonType } from "./admin/Button"
+import type { ButtonType } from "./admin/Button"
 
 
 export type DynamicButtonProps = {

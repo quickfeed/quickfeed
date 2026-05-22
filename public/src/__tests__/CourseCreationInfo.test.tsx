@@ -1,6 +1,6 @@
-import CourseCreationInfo from "../components/admin/CourseCreationInfo"
-import React from "react"
 import { render } from "@testing-library/react"
+import React from "react"
+import CourseCreationInfo from "../components/admin/CourseCreationInfo"
 
 
 describe("Title should be equal to", () => {
