@@ -21,27 +21,23 @@ func TestUserVerifier(t *testing.T) {
 			web.UserInterceptorFunc,
 		),
 	)
-	ctx := context.Background()
 
 	adminUser := qtest.CreateFakeUser(t, db)
 	student := qtest.CreateFakeUser(t, db)
 
-	adminCookie := client.Cookie(t, adminUser)
-	studentCookie := client.Cookie(t, student)
-
 	userTest := []struct {
 		code     connect.Code
-		cookie   string
+		ctx      context.Context
 		wantUser *qf.User
 	}{
-		{code: connect.CodeUnauthenticated, cookie: "", wantUser: nil},
-		{code: connect.CodeUnauthenticated, cookie: "should fail", wantUser: nil},
-		{code: 0, cookie: adminCookie, wantUser: adminUser},
-		{code: 0, cookie: studentCookie, wantUser: student},
+		{code: connect.CodeUnauthenticated, ctx: context.Background(), wantUser: nil},
+		{code: connect.CodeUnauthenticated, ctx: context.Background(), wantUser: nil},
+		{code: 0, ctx: client.Context(t, adminUser), wantUser: adminUser},
+		{code: 0, ctx: client.Context(t, student), wantUser: student},
 	}
 
 	for _, user := range userTest {
-		gotUser, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, user.cookie))
+		gotUser, err := client.GetUser(user.ctx, &qf.Void{})
 		if err != nil {
 			// zero codes won't actually reach this check, but that's okay, since zero is CodeOK
 			if gotCode := connect.CodeOf(err); gotCode != user.code {
@@ -54,7 +50,7 @@ func TestUserVerifier(t *testing.T) {
 				t.Errorf("GetUser(): %v, want: %v", gotUser, wantUser)
 			}
 		} else {
-			if diff := cmp.Diff(wantUser, gotUser.Msg, qtest.UserDiffOptions()); diff != "" {
+			if diff := cmp.Diff(wantUser, gotUser, qtest.UserDiffOptions()); diff != "" {
 				t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 			}
 		}

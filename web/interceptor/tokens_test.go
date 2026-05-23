@@ -23,12 +23,11 @@ func TestRefreshTokens(t *testing.T) {
 		),
 	)
 	tm := client.TokenManager()
-	ctx := t.Context()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin", ScmRemoteID: 1})
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Test User", Login: "user", ScmRemoteID: 2})
-	adminCookie, adminClaims := createUserAuth(t, tm, admin.GetID(), true)
-	userCookie, userClaims := createUserAuth(t, tm, user.GetID(), false)
+	_, adminClaims := createUserAuth(t, tm, admin.GetID(), true)
+	_, userClaims := createUserAuth(t, tm, user.GetID(), false)
 
 	course := &qf.Course{
 		ID:                  1,
@@ -44,6 +43,9 @@ func TestRefreshTokens(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 	qtest.EnrollStudent(t, db, user, course)
 
+	adminCtx := client.Context(t, admin)
+	userCtx := client.Context(t, user)
+
 	operations := []struct {
 		name      string
 		operation func() error
@@ -57,7 +59,7 @@ func TestRefreshTokens(t *testing.T) {
 		{
 			name: "read operations don't trigger updates",
 			operation: func() error {
-				_, err := client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, adminCookie))
+				_, err := client.GetUsers(adminCtx, &qf.Void{})
 				return err
 			},
 			wantUser: false,
@@ -65,7 +67,7 @@ func TestRefreshTokens(t *testing.T) {
 		{
 			name: "user update triggers token refresh",
 			operation: func() error {
-				_, err := client.UpdateUser(ctx, qtest.RequestWithCookie(user, adminCookie))
+				_, err := client.UpdateUser(adminCtx, user)
 				return err
 			},
 			wantUser: true,
@@ -73,7 +75,7 @@ func TestRefreshTokens(t *testing.T) {
 		{
 			name: "create group doesn't trigger update",
 			operation: func() error {
-				_, err := client.CreateGroup(ctx, qtest.RequestWithCookie(group, adminCookie))
+				_, err := client.CreateGroup(adminCtx, group)
 				return err
 			},
 			wantUser: false,
@@ -81,7 +83,7 @@ func TestRefreshTokens(t *testing.T) {
 		{
 			name: "update group triggers token refresh",
 			operation: func() error {
-				_, err := client.UpdateGroup(ctx, qtest.RequestWithCookie(group, adminCookie))
+				_, err := client.UpdateGroup(adminCtx, group)
 				return err
 			},
 			wantUser: true,
@@ -89,10 +91,10 @@ func TestRefreshTokens(t *testing.T) {
 		{
 			name: "delete group triggers token refresh",
 			operation: func() error {
-				_, err := client.DeleteGroup(ctx, qtest.RequestWithCookie(&qf.GroupRequest{
+				_, err := client.DeleteGroup(adminCtx, &qf.GroupRequest{
 					GroupID:  group.GetID(),
 					CourseID: course.GetID(),
-				}, adminCookie))
+				})
 				return err
 			},
 			wantUser: true,
@@ -109,7 +111,7 @@ func TestRefreshTokens(t *testing.T) {
 
 			if op.wantUser {
 				// If user token needs update, simulate token refresh
-				if _, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, userCookie)); err != nil {
+				if _, err := client.GetUser(userCtx, &qf.Void{}); err != nil {
 					t.Error(err)
 				}
 				checkTokenUpdateRequired(t, tm, userClaims, false, "user")

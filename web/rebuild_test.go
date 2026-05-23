@@ -130,44 +130,44 @@ func TestRebuildSubmissions(t *testing.T) {
 	errFailedRebuildSubmission := connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submission"))
 	tests := []struct {
 		name    string
-		request *connect.Request[qf.RebuildRequest]
+		request *qf.RebuildRequest
 		wantErr error
 	}{
 		{
 			name: "Rebuild non-existing submission",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: assignment.GetID(),
 				SubmissionID: 123,
-			}},
+			},
 			wantErr: errFailedRebuildSubmission,
 		},
 		{
 			name: "Wrong assignment ID",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: 1337,
 				SubmissionID: 1,
-			}},
+			},
 			wantErr: errFailedRebuildSubmission,
 		},
 		{
 			name: "Rebuild all submissions with invalid assignment ID",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: 111,
-			}},
+			},
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions")),
 		},
 		{
 			name: "Rebuild existing submission",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: assignment.GetID(),
 				SubmissionID: 1,
-			}},
+			},
 		},
 		{
 			name: "Rebuild all submissions",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: assignment.GetID(),
-			}},
+			},
 		},
 	}
 	for _, test := range tests {
