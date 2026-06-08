@@ -196,12 +196,26 @@ func (s *GithubSCM) hasNoCommitsAhead(ctx context.Context, opt *RepositoryOption
 		return false
 	}
 
-	// Compare the repository with the assignments repository.
-	// The base is the assignments repo, and the head is the target repo.
-	// Format: "owner:branch" or just "branch" for repos in the same org.
-	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", opt.Repo+":main", nil)
+	headCommit, resp, err := s.client.Repositories.GetCommit(ctx, opt.Owner, opt.Repo, "main", nil)
+	s.logger.Debugf("hasNoCommitsAhead: getting head commit for %s/%s:main", opt.Owner, opt.Repo)
+	s.logger.Debugf("hasNoCommitsAhead: err=%v, status=%d", err, statusCode(resp))
+	if err != nil {
+		s.logger.Debugf("hasNoCommitsAhead: failed to get head commit, treating repo as non-empty: %v", err)
+		return false
+	}
+	if headCommit == nil {
+		s.logger.Debugf("hasNoCommitsAhead: head commit response is nil")
+		return false
+	}
+	headSHA := headCommit.GetSHA()
+	if headSHA == "" {
+		s.logger.Debugf("hasNoCommitsAhead: head commit SHA is empty")
+		return false
+	}
 
-	s.logger.Debugf("hasNoCommitsAhead: comparing %s/%s:main with %s/%s:main", opt.Owner, opt.Repo, opt.Owner, qf.AssignmentsRepo)
+	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", headSHA, nil)
+
+	s.logger.Debugf("hasNoCommitsAhead: comparing %s/%s:main with %s/%s@%s", opt.Owner, qf.AssignmentsRepo, opt.Owner, opt.Repo, headSHA)
 	s.logger.Debugf("hasNoCommitsAhead: err=%v, status=%d", err, statusCode(resp))
 
 	if err != nil {

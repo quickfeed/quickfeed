@@ -68,13 +68,31 @@ func (s *mockOptions) DumpState() string {
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
 func (s *mockOptions) hasOrgRepo(orgName, repoName string) bool {
+	return s.findOrgRepo(orgName, repoName) != nil
+}
+
+func (s *mockOptions) findOrgRepo(orgName, repoName string) *github.Repository {
 	for i := range s.repos {
 		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
-			return true
+			return repo
 		}
 	}
-	return false
+	return nil
+}
+
+func (s *mockOptions) findRepoByHeadSHA(headSHA string) *github.Repository {
+	for i := range s.repos {
+		repo := &s.repos[i]
+		if mockRepoHeadSHA(repo) == headSHA {
+			return repo
+		}
+	}
+	return nil
+}
+
+func mockRepoHeadSHA(repo *github.Repository) string {
+	return fmt.Sprintf("%040x", repo.GetID())
 }
 
 // matchOrgFunc calls f with the organization that matches orgName and returns true if found.

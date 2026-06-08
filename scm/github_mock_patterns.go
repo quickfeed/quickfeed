@@ -15,6 +15,7 @@ const (
 	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository
 	getRepositoriesByID                                       = "GET /repositories/{repository_id}"                                  // getRepository, deleteRepository
 	getReposContentsByOwnerByRepoByPath                       = "GET /repos/{owner}/{repo}/contents/{path...}"                       // RepositoryIsEmpty
+	getReposCommitsByOwnerByRepoByRef                         = "GET /repos/{owner}/{repo}/commits/{ref}"                            // hasNoCommitsAhead
 	getReposCompareByOwnerByRepoByBaseByHead                  = "GET /repos/{owner}/{repo}/compare/{basehead}"                       // RepositoryIsEmpty, hasNoCommitsAhead
 	getReposCollaboratorsByOwnerByRepo                        = "GET /repos/{owner}/{repo}/collaborators"                            // UpdateGroupMembers
 	putReposCollaboratorsByOwnerByRepoByUsername              = "PUT /repos/{owner}/{repo}/collaborators/{username}"                 // CreateCourse, UpdateEnrollment, CreateGroup, UpdateGroupMembers, createStudentRepo, grantPullAccessToCourseRepos
