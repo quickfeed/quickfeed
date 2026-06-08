@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -109,38 +108,31 @@ func TestGetRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teacherCookie := client.Cookie(t, teacher)
-	studentCookie := client.Cookie(t, student)
-	groupStudentCookie := client.Cookie(t, groupStudent)
-	missingEnrollmentCookie := client.Cookie(t, notEnrolledUser)
-
-	ctx := context.Background()
-
 	tests := []struct {
 		name      string
 		courseID  uint64
-		cookie    string
+		user      *qf.User
 		wantRepos *qf.Repositories
 		wantErr   bool
 	}{
 		{
 			name:      "incorrect course ID",
 			courseID:  123,
-			cookie:    teacherCookie,
+			user:      teacher,
 			wantRepos: nil,
 			wantErr:   true,
 		},
 		{
 			name:      "user without course enrollment",
 			courseID:  course.GetID(),
-			cookie:    missingEnrollmentCookie,
+			user:      notEnrolledUser,
 			wantRepos: nil,
 			wantErr:   true,
 		},
 		{
 			name:     "course teacher",
 			courseID: course.GetID(),
-			cookie:   teacherCookie,
+			user:     teacher,
 			wantRepos: &qf.Repositories{
 				URLs: map[uint32]string{
 					uint32(qf.Repository_ASSIGNMENTS): assignments.GetHTMLURL(),
@@ -154,7 +146,7 @@ func TestGetRepositories(t *testing.T) {
 		{
 			name:     "course student, not in a group",
 			courseID: course.GetID(),
-			cookie:   studentCookie,
+			user:     student,
 			wantRepos: &qf.Repositories{
 				URLs: map[uint32]string{
 					uint32(qf.Repository_ASSIGNMENTS): assignments.GetHTMLURL(),
@@ -167,7 +159,7 @@ func TestGetRepositories(t *testing.T) {
 		{
 			name:     "course student, in a group",
 			courseID: course.GetID(),
-			cookie:   groupStudentCookie,
+			user:     groupStudent,
 			wantRepos: &qf.Repositories{
 				URLs: map[uint32]string{
 					uint32(qf.Repository_ASSIGNMENTS): assignments.GetHTMLURL(),
@@ -180,14 +172,14 @@ func TestGetRepositories(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		resp, err := client.GetRepositories(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
+		resp, err := client.GetRepositories(client.Context(t, tt.user), &qf.CourseRequest{
 			CourseID: tt.courseID,
-		}, tt.cookie))
+		})
 		if (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
 		if !tt.wantErr {
-			if diff := cmp.Diff(tt.wantRepos, resp.Msg, protocmp.Transform()); diff != "" {
+			if diff := cmp.Diff(tt.wantRepos, resp, protocmp.Transform()); diff != "" {
 				t.Errorf("%s mismatch repositories (-want +got):\n%s", tt.name, diff)
 			}
 		}
@@ -231,11 +223,11 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 		CourseID: course.GetID(),
 		Users:    []*qf.User{groupStudent},
 	}
-	g, err := client.CreateGroup(context.Background(), qtest.RequestWithCookie(group, "cookie"))
+	g, err := client.CreateGroup(t.Context(), group)
 	if err != nil {
 		t.Fatal(err)
 	}
-	group = g.Msg
+	group = g
 
 	tests := []struct {
 		name    string
@@ -257,11 +249,11 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 				// trigger group repository creation on SCM
 				group.Status = qf.Group_APPROVED
 				group.Users = append(group.GetUsers(), user)
-				if _, err := client.UpdateGroup(context.Background(), qtest.RequestWithCookie(group, "cookie")); err != nil {
+				if _, err := client.UpdateGroup(t.Context(), group); err != nil {
 					t.Fatal(err)
 				}
 			}
-			if _, err := client.IsEmptyRepo(context.Background(), qtest.RequestWithCookie(tt.request, "cookie")); (err != nil) != tt.wantErr {
+			if _, err := client.IsEmptyRepo(t.Context(), tt.request); (err != nil) != tt.wantErr {
 				t.Errorf("IsEmptyRepo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

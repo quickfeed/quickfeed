@@ -391,12 +391,6 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
-	request := connect.NewRequest(message)
-	request.Header().Set("cookie", cookie)
-	return request
-}
-
 // Ptr returns a pointer to the given value.
 //
 // How to use:

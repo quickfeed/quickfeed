@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -20,7 +19,6 @@ func TestUpdateAssignments(t *testing.T) {
 	course := qtest.MockCourses[0]
 	user := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, user, course)
-	cookie := client.Cookie(t, user)
 
 	tests := []struct {
 		name    string
@@ -43,9 +41,10 @@ func TestUpdateAssignments(t *testing.T) {
 		},
 	}
 
+	ctx := client.Context(t, user)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := client.UpdateAssignments(context.Background(), qtest.RequestWithCookie(test.request, cookie))
+			_, err := client.UpdateAssignments(ctx, test.request)
 			if qtest.CheckCode(t, err, test.wantErr) {
 				return // cannot continue since resp is invalid
 			}

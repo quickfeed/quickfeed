@@ -27,9 +27,10 @@ func TestSubmissionStream(t *testing.T) {
 	)
 	user := qtest.CreateFakeUser(t, db)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	ctx := client.Context(t, user)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
 	defer cancel()
-	_, err := client.SubmissionStream(ctx, qtest.RequestWithCookie(&qf.Void{}, client.Cookie(t, user)))
+	_, err := client.SubmissionStream(ctx, &qf.Void{})
 	if err != nil && errors.Is(err, context.Canceled) {
 		t.Fatal(err)
 	}
@@ -69,11 +70,11 @@ func TestGetSubmission(t *testing.T) {
 					SubmissionID: test.submissionID,
 				},
 			}
-			response, err := client.GetSubmission(context.Background(), &connect.Request[qf.SubmissionRequest]{Msg: request})
+			response, err := client.GetSubmission(t.Context(), request)
 			qtest.CheckError(t, err, test.wantErr)
 
 			if test.wantErr == nil {
-				qtest.Diff(t, "GetSubmission() mismatch", response.Msg, submission, protocmp.Transform())
+				qtest.Diff(t, "GetSubmission() mismatch", response, submission, protocmp.Transform())
 			}
 		})
 	}
@@ -110,11 +111,10 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := context.Background()
-	cookie := client.Cookie(t, admin)
+	ctx := client.Context(t, admin)
 
 	approvedGrade := &qf.Grade{SubmissionID: wantSubmission.GetID(), UserID: student.GetID(), Status: qf.Submission_APPROVED}
-	if _, err := client.UpdateSubmission(ctx, qtest.RequestWithCookie(approvedGrade, cookie)); err != nil {
+	if _, err := client.UpdateSubmission(ctx, approvedGrade); err != nil {
 		t.Error(err)
 	}
 
@@ -130,7 +130,7 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	rejectedGrade := &qf.Grade{SubmissionID: wantSubmission.GetID(), UserID: student.GetID(), Status: qf.Submission_REJECTED}
-	if _, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(rejectedGrade, cookie)); err != nil {
+	if _, err = client.UpdateSubmission(ctx, rejectedGrade); err != nil {
 		t.Error(err)
 	}
 
@@ -162,36 +162,35 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
 
-	ctx := context.Background()
-	cookie := client.Cookie(t, admin)
+	ctx := client.Context(t, admin)
 
-	enrols, err := client.GetEnrollments(ctx, qtest.RequestWithCookie(&qf.EnrollmentRequest{
+	enrols, err := client.GetEnrollments(ctx, &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_CourseID{
 			CourseID: course.GetID(),
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	if len(enrols.Msg.GetEnrollments()) != 4 {
-		t.Errorf("expected 4 enrollments, got %d", len(enrols.Msg.GetEnrollments()))
+	if len(enrols.GetEnrollments()) != 4 {
+		t.Errorf("expected 4 enrollments, got %d", len(enrols.GetEnrollments()))
 	}
 
-	group, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{
+	group, err := client.CreateGroup(ctx, &qf.Group{
 		CourseID: course.GetID(),
 		Name:     "group1",
 		Users:    []*qf.User{student1, student3},
 		Status:   qf.Group_APPROVED,
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	group2, err := client.CreateGroup(ctx, qtest.RequestWithCookie(&qf.Group{
+	group2, err := client.CreateGroup(ctx, &qf.Group{
 		CourseID: course.GetID(),
 		Name:     "group2",
 		Users:    []*qf.User{student2},
 		Status:   qf.Group_APPROVED,
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
@@ -226,12 +225,12 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 		Score:        66,
 	}
 	submission3 := &qf.Submission{
-		GroupID:      group.Msg.GetID(),
+		GroupID:      group.GetID(),
 		AssignmentID: lab2.GetID(),
 		Score:        16,
 	}
 	submission4 := &qf.Submission{
-		GroupID:      group2.Msg.GetID(),
+		GroupID:      group2.GetID(),
 		AssignmentID: lab2.GetID(),
 		Score:        29,
 	}
@@ -273,47 +272,47 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	}
 
 	// get all submissions
-	allSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	allSubmissions, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_ALL,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantAllSubmissions, allSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
-		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantAllSubmissions +gotAllSubmissions):\n%s\n%d:%d", diff, len(wantAllSubmissions), len(allSubmissions.Msg.GetSubmissions()))
+	if diff := cmp.Diff(wantAllSubmissions, allSubmissions.GetSubmissions(), protocmp.Transform()); diff != "" {
+		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantAllSubmissions +gotAllSubmissions):\n%s\n%d:%d", diff, len(wantAllSubmissions), len(allSubmissions.GetSubmissions()))
 	}
 
 	// get only individual submissions
-	individualSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	individualSubmissions, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_USER,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantIndividualSubmissions, individualSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantIndividualSubmissions, individualSubmissions.GetSubmissions(), protocmp.Transform()); diff != "" {
 		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantIndividualSubmissions +gotIndividualSubmissions):\n%s", diff)
 	}
 
 	// get only group submissions
-	groupSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	groupSubmissions, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_GROUP,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantGroupSubmissions, groupSubmissions.Msg.GetSubmissions(), protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroupSubmissions, groupSubmissions.GetSubmissions(), protocmp.Transform()); diff != "" {
 		t.Errorf("TestGetSubmissionsByCourse() mismatch (-wantGroupSubmissions +gotGroupSubmissions):\n%s", diff)
 	}
 }
@@ -420,41 +419,40 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantAssignments1 := []*qf.Assignment{lab1c1, lab2c1}
 	wantAssignments2 := []*qf.Assignment{lab1c2, lab2c2}
 
-	ctx := context.Background()
-	cookie := client.Cookie(t, admin)
+	ctx := client.Context(t, admin)
 
-	assignments1, err := client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
+	assignments1, err := client.GetAssignments(ctx, &qf.CourseRequest{
 		CourseID: course1.GetID(),
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	gotAssignments1 := assignments1.Msg.GetAssignments()
+	gotAssignments1 := assignments1.GetAssignments()
 	if diff := cmp.Diff(wantAssignments1, gotAssignments1, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignments() mismatch (-wantAssignments1, +gotAssignments1):\n%s", diff)
 	}
 
-	assignments2, err := client.GetAssignments(ctx, qtest.RequestWithCookie(&qf.CourseRequest{
+	assignments2, err := client.GetAssignments(ctx, &qf.CourseRequest{
 		CourseID: course2.GetID(),
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	gotAssignments2 := assignments2.Msg.GetAssignments()
+	gotAssignments2 := assignments2.GetAssignments()
 	if diff := cmp.Diff(wantAssignments2, gotAssignments2, protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignments() mismatch (-wantAssignments2, +gotAssignments2):\n%s", diff)
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	labsForCourse1, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID:  course1.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	labMap := labsForCourse1.Msg.GetSubmissions()
+	labMap := labsForCourse1.GetSubmissions()
 	t.Log(enrolC1)
 	if submissions, ok := labMap[enrolC1.GetID()]; !ok {
 		t.Fatalf("GetSubmissionsByCourse() did not return submissions for enrollment ID %d", enrolC1.GetID())
@@ -469,16 +467,16 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse2, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	labsForCourse2, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course2.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_ALL,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	labMap = labsForCourse2.Msg.GetSubmissions()
+	labMap = labsForCourse2.GetSubmissions()
 	if submissions, ok := labMap[enrolC2.GetID()]; !ok {
 		t.Fatalf("GetSubmissionsByCourse() did not return submissions for enrollment ID %d", enrolC2.GetID())
 	} else {
@@ -493,16 +491,16 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that buildInformation is not included when not requested
-	labsForCourse3, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	labsForCourse3, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course1.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_ALL,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	for _, labLink := range labsForCourse3.Msg.GetSubmissions() {
+	for _, labLink := range labsForCourse3.GetSubmissions() {
 		for _, submission := range labLink.GetSubmissions() {
 			if submission.GetBuildInfo() != nil {
 				t.Errorf("Expected build info to be nil, got %+v", submission.GetBuildInfo())
@@ -510,16 +508,16 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse4, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	labsForCourse4, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course2.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_ALL,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	for _, labLink := range labsForCourse4.Msg.GetSubmissions() {
+	for _, labLink := range labsForCourse4.GetSubmissions() {
 		for _, submission := range labLink.GetSubmissions() {
 			if submission != nil {
 				if submission.GetBuildInfo() != nil {
@@ -530,9 +528,9 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that no submissions will be returned for a wrong course ID
-	if _, err = client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	if _, err = client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: 234,
-	}, cookie)); err == nil {
+	}); err == nil {
 		t.Error("Expected 'no submissions found'")
 	}
 }
@@ -696,19 +694,18 @@ func TestCreateApproveList(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	cookie := client.Cookie(t, admin)
+	ctx := client.Context(t, admin)
 
-	gotSubmissions, err := client.GetSubmissionsByCourse(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	gotSubmissions, err := client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 		CourseID: course.GetID(),
 		FetchMode: &qf.SubmissionRequest_Type{
 			Type: qf.SubmissionRequest_ALL,
 		},
-	}, cookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
-	for id, submissions := range gotSubmissions.Msg.GetSubmissions() {
+	for id, submissions := range gotSubmissions.GetSubmissions() {
 		if id == admin.GetID() {
 			continue
 		}
@@ -778,22 +775,21 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 		{UserID: student3.GetID(), AssignmentID: lab2},
 	}
 
-	ctx := context.Background()
-	cookie := client.Cookie(t, admin)
+	ctx := client.Context(t, admin)
 
 	var reviews []*qf.Review
 	for _, s := range submissions {
 		if err := db.CreateSubmission(s); err != nil {
 			t.Fatal(err)
 		}
-		review, err := client.CreateReview(ctx, qtest.RequestWithCookie(&qf.ReviewRequest{
+		review, err := client.CreateReview(ctx, &qf.ReviewRequest{
 			CourseID: course.GetID(),
 			Review:   &qf.Review{SubmissionID: s.GetID(), ReviewerID: admin.GetID()},
-		}, cookie))
+		})
 		if err != nil {
 			t.Error(err)
 		}
-		reviews = append(reviews, review.Msg)
+		reviews = append(reviews, review)
 	}
 
 	for _, r := range reviews {
@@ -804,10 +800,10 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 		}
 
 		// Update the review. This will also update the submission score for the related submission.
-		_, err := client.UpdateReview(ctx, qtest.RequestWithCookie(&qf.ReviewRequest{
+		_, err := client.UpdateReview(ctx, &qf.ReviewRequest{
 			CourseID: uint64(course.GetID()),
 			Review:   r,
-		}, cookie))
+		})
 		if err != nil {
 			t.Error(err)
 		}
@@ -836,17 +832,17 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 	}
 
 	// We want to make sure that submissions received by the student do not leak data
-	studentCookie := client.Cookie(t, student1)
+	studentCtx := client.Context(t, student1)
 
-	gotStudentSubmissions, err := client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	gotStudentSubmissions, err := client.GetSubmissions(studentCtx, &qf.SubmissionRequest{
 		CourseID:  course.GetID(),
 		FetchMode: &qf.SubmissionRequest_UserID{UserID: student1.GetID()},
-	}, studentCookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	for _, submission := range gotStudentSubmissions.Msg.GetSubmissions() {
+	for _, submission := range gotStudentSubmissions.GetSubmissions() {
 		// For submissions that have not been released
 		// the score should be 0, and any reviews should be nil
 		checkStudentSubmission(t, submission, false, student1.GetID())
@@ -854,11 +850,11 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 
 	// Approve all submissions for lab 2 (score >= 80)
 	for _, submission := range gotSubmissions2 {
-		if _, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.Grade{
+		if _, err = client.UpdateSubmission(ctx, &qf.Grade{
 			SubmissionID: submission.GetID(),
 			UserID:       submission.GetUserID(),
 			Status:       qf.Submission_APPROVED,
-		}, cookie)); err != nil {
+		}); err != nil {
 			t.Error(err)
 		}
 	}
@@ -876,11 +872,11 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 
 	// Reject all submissions for lab 1 (score < 80)
 	for _, submission := range gotSubmissions1 {
-		if _, err = client.UpdateSubmission(ctx, qtest.RequestWithCookie(&qf.Grade{
+		if _, err = client.UpdateSubmission(ctx, &qf.Grade{
 			SubmissionID: submission.GetID(),
 			UserID:       submission.GetUserID(),
 			Status:       qf.Submission_REJECTED,
-		}, cookie)); err != nil {
+		}); err != nil {
 			t.Error(err)
 		}
 	}
@@ -896,15 +892,15 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 		}
 	}
 
-	gotStudentSubmissions, err = client.GetSubmissions(ctx, qtest.RequestWithCookie(&qf.SubmissionRequest{
+	gotStudentSubmissions, err = client.GetSubmissions(studentCtx, &qf.SubmissionRequest{
 		CourseID:  course.GetID(),
 		FetchMode: &qf.SubmissionRequest_UserID{UserID: student1.GetID()},
-	}, studentCookie))
+	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	for _, submission := range gotStudentSubmissions.Msg.GetSubmissions() {
+	for _, submission := range gotStudentSubmissions.GetSubmissions() {
 		wantApproved := submission.GetAssignmentID() == lab2
 		checkStudentSubmission(t, submission, wantApproved, student1.GetID())
 	}
