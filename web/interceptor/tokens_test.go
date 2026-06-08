@@ -2,9 +2,8 @@ package interceptor_test
 
 import (
 	"testing"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -26,8 +25,6 @@ func TestRefreshTokens(t *testing.T) {
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin", ScmRemoteID: 1})
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Test User", Login: "user", ScmRemoteID: 2})
-	adminClaims := createUserAuth(t, tm, admin.GetID(), true)
-	userClaims := createUserAuth(t, tm, user.GetID(), false)
 
 	course := &qf.Course{
 		ID:                  1,
@@ -44,7 +41,7 @@ func TestRefreshTokens(t *testing.T) {
 	qtest.EnrollStudent(t, db, user, course)
 
 	adminCtx := client.Context(t, admin)
-	userCtx := client.Context(t, user)
+	userCookie := client.Cookie(t, user)
 
 	operations := []struct {
 		name      string
@@ -106,44 +103,45 @@ func TestRefreshTokens(t *testing.T) {
 			if err := op.operation(); err != nil {
 				t.Error(err)
 			}
-			checkTokenUpdateRequired(t, tm, userClaims, op.wantUser, "user")
-			checkTokenUpdateRequired(t, tm, adminClaims, false, "admin") // admin should never need token update in this test
+			checkUpdateTokenRequired(t, tm, user.GetID(), op.wantUser, "user")
+			checkUpdateTokenRequired(t, tm, admin.GetID(), false, "admin") // admin should never need token update in this test
 
+			updatedCookie := getUserRefreshCookie(t, client, userCookie)
 			if op.wantUser {
-				// If user token needs update, simulate token refresh
-				if _, err := client.GetUser(userCtx, &qf.Void{}); err != nil {
-					t.Error(err)
+				if updatedCookie == "" {
+					t.Fatal("expected refreshed cookie in response header")
 				}
-				checkTokenUpdateRequired(t, tm, userClaims, false, "user")
+				userCookie = updatedCookie
+				checkUpdateTokenRequired(t, tm, user.GetID(), false, "user")
+			} else if updatedCookie != "" {
+				t.Fatal("unexpected refreshed cookie in response header")
 			}
 		})
 	}
 }
 
-// createUserAuth returns an authentication cookie and JWT claims for a user.
-func createUserAuth(t *testing.T, tm *auth.TokenManager, userID uint64, isAdmin bool) *auth.Claims {
+func getUserRefreshCookie(t *testing.T, client *web.MockClient, cookie string) string {
 	t.Helper()
-	_, err := tm.NewAuthCookie(userID)
+
+	userCtx, userInfo := connect.NewClientContext(t.Context())
+	userInfo.RequestHeader().Set(auth.Cookie, cookie)
+	if _, err := client.GetUser(userCtx, &qf.Void{}); err != nil {
+		t.Fatal(err)
+	}
+	if got := userInfo.RequestHeader().Get(auth.Cookie); got != cookie {
+		t.Fatal("request context cookie should not be auto-updated")
+	}
+	return userInfo.ResponseHeader().Get(auth.SetCookie)
+}
+
+func checkUpdateTokenRequired(t *testing.T, tm *auth.TokenManager, userID uint64, expected bool, userType string) {
+	t.Helper()
+
+	user, err := tm.Database().GetUser(userID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	claims := &auth.Claims{
-		UserID: userID,
-		Admin:  isAdmin,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
-		},
-	}
-	return claims
-}
-
-func checkTokenUpdateRequired(t *testing.T, tm *auth.TokenManager, claims *auth.Claims, expected bool, userType string) {
-	t.Helper()
-	updated, err := tm.UpdateCookie(claims)
-	if err != nil {
-		t.Error(err)
-	}
-	if (updated != nil) != expected {
+	if user.GetUpdateToken() != expected {
 		if expected {
 			t.Errorf("%s token should be updated but is not", userType)
 		} else {
