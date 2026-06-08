@@ -268,11 +268,13 @@ func TestMockRepositoryIsEmptyForkedRepo(t *testing.T) {
 		opt       *RepositoryOptions
 		wantEmpty bool
 	}{
-		// Student repo with no changes should be considered empty
+		// Student repo with no changes should be considered empty.
+		// "student-labs" is not in allRepos, so the mock will return AheadBy=0 by default.
 		{name: "ForkedRepoNoChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "student-labs"}, wantEmpty: true},
-		// Student repo with changes should not be empty
+		// Student repos with changes should not be empty.
+		// The mock implementation in github_mock.go has special handling for "meling-labs" and "josie-labs",
+		// setting AheadBy=5 to simulate repositories with commits ahead of assignments.
 		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantEmpty: false},
-		// Another student repo with changes should not be empty
 		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "josie-labs"}, wantEmpty: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(allRepos...))

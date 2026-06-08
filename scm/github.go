@@ -177,48 +177,49 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 		return true
 	}
 
-	// If the repository has contents, check if it's a fork with no student changes.
-	// This is needed because student repositories are now forked from the assignments repository,
-	// so they will have contents even if the student hasn't made any changes.
-	return s.hasNoStudentChanges(ctx, opt)
+	// If the repository has contents, check if it's a fork with no commits ahead.
+	// This is needed because forked repositories will have contents even if no new commits
+	// have been made since the fork was created.
+	return s.hasNoCommitsAhead(ctx, opt)
 }
 
-// hasNoStudentChanges checks if a repository has any commits ahead of the assignments repository.
-// It returns true if the repository has no commits ahead (i.e., the student hasn't made any changes),
-// false if there are changes or if the comparison cannot be performed.
-// This function is only meaningful for student/group repositories that are forks of the assignments repo.
-func (s *GithubSCM) hasNoStudentChanges(ctx context.Context, opt *RepositoryOptions) bool {
+// hasNoCommitsAhead checks if a repository has any commits ahead of the assignments repository.
+// It returns true if the repository has no commits ahead (i.e., no changes have been made since fork),
+// false if there are commits ahead or if the comparison cannot be performed.
+// This function is only meaningful for repositories that are forks of the assignments repo.
+func (s *GithubSCM) hasNoCommitsAhead(ctx context.Context, opt *RepositoryOptions) bool {
 	// Don't compare course repositories (assignments, tests, info) with themselves.
-	// Only compare student/group repositories with the assignments repository.
-	if opt.Repo == qf.AssignmentsRepo || opt.Repo == qf.TestsRepo || opt.Repo == qf.InfoRepo {
-		s.logger.Debugf("hasNoStudentChanges: %s is a course repo, not a student repo - treating as non-empty", opt.Repo)
+	// Only compare user/group repositories with the assignments repository.
+	repoType := qf.RepoType(opt.Repo)
+	if repoType.IsCourseRepo() {
+		s.logger.Debugf("hasNoCommitsAhead: %s is a course repo, not a user/group repo - treating as non-empty", opt.Repo)
 		return false
 	}
 
-	// Compare the student repository with the assignments repository.
-	// The base is the assignments repo, and the head is the student repo.
+	// Compare the repository with the assignments repository.
+	// The base is the assignments repo, and the head is the target repo.
 	// Format: "owner:branch" or just "branch" for repos in the same org.
 	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", opt.Repo+":main", nil)
 
-	s.logger.Debugf("hasNoStudentChanges: comparing %s/%s:main with %s/%s:main", opt.Owner, opt.Repo, opt.Owner, qf.AssignmentsRepo)
-	s.logger.Debugf("hasNoStudentChanges: err=%v, status=%d", err, statusCode(resp))
+	s.logger.Debugf("hasNoCommitsAhead: comparing %s/%s:main with %s/%s:main", opt.Owner, opt.Repo, opt.Owner, qf.AssignmentsRepo)
+	s.logger.Debugf("hasNoCommitsAhead: err=%v, status=%d", err, statusCode(resp))
 
 	if err != nil {
 		// If comparison fails (e.g., repo is not a fork, branches don't exist, or other errors),
 		// we cannot determine if there are changes, so we treat it as non-empty for safety.
-		s.logger.Debugf("hasNoStudentChanges: comparison failed, treating repo as non-empty: %v", err)
+		s.logger.Debugf("hasNoCommitsAhead: comparison failed, treating repo as non-empty: %v", err)
 		return false
 	}
 
 	if comparison == nil || comparison.AheadBy == nil {
-		s.logger.Debugf("hasNoStudentChanges: comparison result is nil or AheadBy is nil")
+		s.logger.Debugf("hasNoCommitsAhead: comparison result is nil or AheadBy is nil")
 		return false
 	}
 
 	aheadBy := *comparison.AheadBy
-	s.logger.Debugf("hasNoStudentChanges: student repo is %d commits ahead of assignments", aheadBy)
+	s.logger.Debugf("hasNoCommitsAhead: repo is %d commits ahead of assignments", aheadBy)
 
-	// If the student repository has no commits ahead of assignments, it's safe to delete.
+	// If the repository has no commits ahead of assignments, it's safe to delete.
 	return aheadBy == 0
 }
 
