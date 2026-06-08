@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -224,7 +223,7 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 		CourseID: course.GetID(),
 		Users:    []*qf.User{groupStudent},
 	}
-	g, err := client.CreateGroup(context.Background(), group)
+	g, err := client.CreateGroup(t.Context(), group)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,11 +249,11 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 				// trigger group repository creation on SCM
 				group.Status = qf.Group_APPROVED
 				group.Users = append(group.GetUsers(), user)
-				if _, err := client.UpdateGroup(context.Background(), group); err != nil {
+				if _, err := client.UpdateGroup(t.Context(), group); err != nil {
 					t.Fatal(err)
 				}
 			}
-			if _, err := client.IsEmptyRepo(context.Background(), tt.request); (err != nil) != tt.wantErr {
+			if _, err := client.IsEmptyRepo(t.Context(), tt.request); (err != nil) != tt.wantErr {
 				t.Errorf("IsEmptyRepo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -27,10 +27,9 @@ func TestSubmissionStream(t *testing.T) {
 	)
 	user := qtest.CreateFakeUser(t, db)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	ctx := client.Context(t, user)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
 	defer cancel()
-	ctx, ctxInfo := connect.NewClientContext(ctx)
-	ctxInfo.RequestHeader().Set("cookie", client.Cookie(t, user))
 	_, err := client.SubmissionStream(ctx, &qf.Void{})
 	if err != nil && errors.Is(err, context.Canceled) {
 		t.Fatal(err)
@@ -71,7 +70,7 @@ func TestGetSubmission(t *testing.T) {
 					SubmissionID: test.submissionID,
 				},
 			}
-			response, err := client.GetSubmission(context.Background(), request)
+			response, err := client.GetSubmission(t.Context(), request)
 			qtest.CheckError(t, err, test.wantErr)
 
 			if test.wantErr == nil {

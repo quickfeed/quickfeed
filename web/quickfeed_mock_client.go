@@ -37,7 +37,7 @@ func (m *MockClient) Cookie(t *testing.T, user *qf.User) string {
 // Context returns a context with the authentication cookie set for the given user.
 func (m *MockClient) Context(t *testing.T, user *qf.User) context.Context {
 	t.Helper()
-	ctx, info := connect.NewClientContext(context.Background())
+	ctx, info := connect.NewClientContext(t.Context())
 	info.RequestHeader().Set("cookie", m.Cookie(t, user))
 	return ctx
 }

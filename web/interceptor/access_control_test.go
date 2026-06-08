@@ -93,7 +93,7 @@ func TestAccessControl(t *testing.T) {
 		"group student":     {ctx: groupStudentCtx, courseID: course.GetID(), wantAccess: true},
 		"user":              {ctx: userCtx, courseID: course.GetID(), wantAccess: true},
 		"non-teacher admin": {ctx: adminCtx, courseID: course.GetID(), wantAccess: true},
-		"empty context":     {ctx: context.Background(), wantAccess: false, wantCode: connect.CodeUnauthenticated},
+		"empty context":     {ctx: t.Context(), wantAccess: false, wantCode: connect.CodeUnauthenticated},
 	}
 	for name, tt := range freeAccessTest {
 		t.Run("UnrestrictedAccess/"+name, func(t *testing.T) {

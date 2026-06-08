@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -24,9 +23,7 @@ func TestThirdPartyAppAuth(t *testing.T) {
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithClientOptions(connect.WithInterceptors(
 		interceptor.NewTokenAuthClientInterceptor(token),
 	)))
-	ctx := context.Background()
-
-	userInfo, err := client.GetUser(ctx, &qf.Void{})
+	userInfo, err := client.GetUser(t.Context(), &qf.Void{})
 	check(t, err)
 	if userInfo.GetID() != user.GetID() {
 		t.Errorf("expected user id %d, got %d", user.GetID(), userInfo.GetID())

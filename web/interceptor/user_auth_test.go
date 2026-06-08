@@ -30,8 +30,8 @@ func TestUserVerifier(t *testing.T) {
 		ctx      context.Context
 		wantUser *qf.User
 	}{
-		{code: connect.CodeUnauthenticated, ctx: context.Background(), wantUser: nil},
-		{code: connect.CodeUnauthenticated, ctx: context.Background(), wantUser: nil},
+		{code: connect.CodeUnauthenticated, ctx: t.Context(), wantUser: nil},
+		{code: connect.CodeUnauthenticated, ctx: t.Context(), wantUser: nil},
 		{code: 0, ctx: client.Context(t, adminUser), wantUser: adminUser},
 		{code: 0, ctx: client.Context(t, student), wantUser: student},
 	}

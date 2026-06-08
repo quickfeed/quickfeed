@@ -18,7 +18,7 @@ func TestGetUserExpectUnknownUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
-	_, err := client.GetUser(context.Background(), &qf.Void{})
+	_, err := client.GetUser(t.Context(), &qf.Void{})
 	qtest.CheckError(t, err, connect.NewError(connect.CodeNotFound, errors.New("unknown user")))
 }
 
@@ -26,7 +26,7 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
-	ctx := context.Background()
+	ctx := t.Context()
 
 	unexpectedUsers, err := client.GetUsers(ctx, &qf.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
@@ -53,10 +53,9 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
-	ctx := context.Background()
 
 	var users []*qf.User
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
@@ -89,7 +88,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		},
 	}
 
-	gotEnrollments, err := client.GetEnrollments(ctx, request)
+	gotEnrollments, err := client.GetEnrollments(t.Context(), request)
 	if err != nil {
 		t.Error(err)
 	}

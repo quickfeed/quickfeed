@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -102,7 +101,6 @@ func TestRebuildSubmissions(t *testing.T) {
 		RepoType:          qf.Repository_USER,
 	})
 
-	ctx := context.Background()
 	assignment := &qf.Assignment{
 		CourseID:         course.GetID(),
 		Name:             "lab1",
@@ -172,7 +170,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := q.RebuildSubmissions(ctx, test.request)
+			_, err := q.RebuildSubmissions(t.Context(), test.request)
 			qtest.CheckError(t, err, test.wantErr)
 		})
 	}

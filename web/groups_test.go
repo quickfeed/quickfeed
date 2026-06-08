@@ -115,15 +115,13 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Error(err)
 	}
 
-	teacherCtx := client.Context(t, teacher)
 	// check that teacher can access group
-	_, err = client.GetGroup(teacherCtx, groupReq)
+	_, err = client.GetGroup(client.Context(t, teacher), groupReq)
 	if err != nil {
 		t.Error(err)
 	}
 	// check that admin can access group
-	adminCtx := client.Context(t, admin)
-	_, err = client.GetGroup(adminCtx, groupReq)
+	_, err = client.GetGroup(client.Context(t, admin), groupReq)
 	if err != nil {
 		t.Error(err)
 	}
