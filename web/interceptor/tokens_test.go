@@ -26,8 +26,8 @@ func TestRefreshTokens(t *testing.T) {
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin User", Login: "admin", ScmRemoteID: 1})
 	user := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Test User", Login: "user", ScmRemoteID: 2})
-	_, adminClaims := createUserAuth(t, tm, admin.GetID(), true)
-	_, userClaims := createUserAuth(t, tm, user.GetID(), false)
+	adminClaims := createUserAuth(t, tm, admin.GetID(), true)
+	userClaims := createUserAuth(t, tm, user.GetID(), false)
 
 	course := &qf.Course{
 		ID:                  1,
@@ -121,9 +121,9 @@ func TestRefreshTokens(t *testing.T) {
 }
 
 // createUserAuth returns an authentication cookie and JWT claims for a user.
-func createUserAuth(t *testing.T, tm *auth.TokenManager, userID uint64, isAdmin bool) (string, *auth.Claims) {
+func createUserAuth(t *testing.T, tm *auth.TokenManager, userID uint64, isAdmin bool) *auth.Claims {
 	t.Helper()
-	cookie, err := tm.NewAuthCookie(userID)
+	_, err := tm.NewAuthCookie(userID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +134,7 @@ func createUserAuth(t *testing.T, tm *auth.TokenManager, userID uint64, isAdmin 
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
 	}
-	return cookie.String(), claims
+	return claims
 }
 
 func checkTokenUpdateRequired(t *testing.T, tm *auth.TokenManager, claims *auth.Claims, expected bool, userType string) {
