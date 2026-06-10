@@ -152,26 +152,58 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Reposit
 	return repositories, nil
 }
 
-// RepositoryIsEmpty implements the SCM interface
-func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
+// CommitsAhead implements the SCM interface.
+// It returns the number of commits a repository is ahead of the assignments repository.
+// A return value of 0 with a nil error means no commits ahead; a non-nil error means
+// the comparison could not be performed, and the count is meaningless.
+func (s *GithubSCM) CommitsAhead(ctx context.Context, opt *RepositoryOptions) (int, error) {
 	repo, err := s.getRepository(ctx, opt)
 	if err != nil {
-		s.logger.Error(err)
-		return true
+		return 0, err
 	}
 	opt.ID, opt.Owner, opt.Repo = repo.ID, repo.Owner, repo.Repo
+	return s.commitsAhead(ctx, opt)
+}
 
-	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Repo, "", &github.RepositoryContentGetOptions{})
-	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
-	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
-	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == %d) || (err == nil && %d == 0) == %t",
-		statusCode(resp), http.StatusNotFound, len(contents),
-		(err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0))
+// commitsAhead returns how many commits the repository is ahead of assignments.
+// This function is only meaningful for repositories that are forks of the assignments repo.
+func (s *GithubSCM) commitsAhead(ctx context.Context, opt *RepositoryOptions) (int, error) {
+	// Don't compare course repositories (assignments, tests, info) with themselves.
+	// Only compare user/group repositories with the assignments repository.
+	repoType := qf.RepoType(opt.Repo)
+	if repoType.IsCourseRepo() {
+		return 0, fmt.Errorf("%s is a course repository, not a user or group fork", opt.Repo)
+	}
 
-	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
-	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
-	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
-	return (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0)
+	headCommit, resp, err := s.client.Repositories.GetCommit(ctx, opt.Owner, opt.Repo, "main", nil)
+	s.logger.Debugf("commitsAhead: getting head commit for %s/%s:main", opt.Owner, opt.Repo)
+	s.logger.Debugf("commitsAhead: err=%v, status=%d", err, statusCode(resp))
+	if err != nil {
+		return 0, fmt.Errorf("failed to get head commit for %s/%s: %w", opt.Owner, opt.Repo, err)
+	}
+	headSHA := headCommit.GetSHA()
+	if headSHA == "" {
+		return 0, fmt.Errorf("no head commit SHA for %s/%s", opt.Owner, opt.Repo)
+	}
+
+	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", headSHA, nil)
+
+	s.logger.Debugf("commitsAhead: comparing %s/%s:main with %s/%s@%s", opt.Owner, qf.AssignmentsRepo, opt.Owner, opt.Repo, headSHA)
+	s.logger.Debugf("commitsAhead: err=%v, status=%d", err, statusCode(resp))
+
+	// A comparison may fail because the repo is not a fork, the branches don't exist,
+	// or other transient errors; in all cases we cannot determine the count, so we
+	// return the error and let the caller decide how to handle it.
+	if err != nil {
+		return 0, fmt.Errorf("failed to compare %s/%s with assignments: %w", opt.Owner, opt.Repo, err)
+	}
+	if comparison == nil || comparison.AheadBy == nil {
+		return 0, fmt.Errorf("missing comparison result for %s/%s", opt.Owner, opt.Repo)
+	}
+
+	aheadBy := *comparison.AheadBy
+	s.logger.Debugf("commitsAhead: repo is %d commits ahead of assignments", aheadBy)
+	return aheadBy, nil
 }
 
 // CreateCourse creates repositories for a new course.
