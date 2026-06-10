@@ -39,6 +39,17 @@ type MockedGithubSCM struct {
 	commentID   int64
 }
 
+// SimulateCommit records a commit pushed to the given repository, advancing it one
+// commit ahead of the upstream assignments repository it was forked from.
+// Tests that only configure the mock at construction can use WithCommitsAhead.
+func (s *MockedGithubSCM) SimulateCommit(owner, repo string) error {
+	if s.findOrgRepo(owner, repo) == nil {
+		return fmt.Errorf("cannot simulate commit: repository %s/%s not found", owner, repo)
+	}
+	s.aheadBy[repoKey(owner, repo)]++
+	return nil
+}
+
 // nextIssueNumber returns the next issue number for the given owner and repo.
 func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
 	key := fmt.Sprintf("%s/%s", owner, repo)
@@ -202,6 +213,12 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					Name:         github.String(opts.Name),
 					Owner:        &github.User{Login: github.String(dstOrg)},
 					Fork:         github.Bool(true),
+					// Record the upstream the fork was created from, mirroring how student
+					// and group repositories are forks of the assignments repository.
+					Parent: &github.Repository{
+						Name:  github.String(srcRepo),
+						Owner: &github.User{Login: github.String(srcOwner)},
+					},
 				}
 				s.repos = append(s.repos, fork)
 				if s.groups[dstOrg] == nil {
@@ -433,9 +450,9 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			if len(parts) == 2 {
 				headRepo := s.findRepoByHeadSHA(parts[1])
 				if headRepo != nil {
-					if headRepo.GetName() == "meling-labs" || headRepo.GetName() == "josie-labs" {
-						comparison.AheadBy = github.Int(5)
-						comparison.TotalCommits = github.Int(5)
+					if ahead := s.aheadBy[repoKey(owner, headRepo.GetName())]; ahead > 0 {
+						comparison.AheadBy = github.Int(ahead)
+						comparison.TotalCommits = github.Int(ahead)
 						comparison.Status = github.String("ahead")
 					}
 				}

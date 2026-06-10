@@ -220,42 +220,56 @@ func TestMockGetRepositories(t *testing.T) {
 	}
 }
 
-func TestMockRepositoryIsEmpty(t *testing.T) {
+func TestMockCommitsAhead(t *testing.T) {
 	tests := []struct {
 		name      string
 		opt       *RepositoryOptions
-		wantEmpty bool
+		wantAhead int
+		wantErr   bool
 	}{
-		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantEmpty: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Repo: "info"}, wantEmpty: true},
+		// Invalid options cannot be resolved to a repository and must return an error.
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Repo: "info"}, wantErr: true},
 
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "info"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "assignments"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "tests"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "meling-labs"}, wantEmpty: true},
+		// The "bar" org has no such repositories, so the comparison cannot be performed.
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "info"}, wantErr: true},
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "assignments"}, wantErr: true},
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "tests"}, wantErr: true},
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "meling-labs"}, wantErr: true},
 
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "info"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "assignments"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "tests"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantEmpty: false},
+		// Course repositories are not forks and must never be reported as empty, so they error.
+		{name: "CourseRepo", opt: &RepositoryOptions{Owner: "foo", Repo: "info"}, wantErr: true},
+		{name: "CourseRepo", opt: &RepositoryOptions{Owner: "foo", Repo: "assignments"}, wantErr: true},
+		{name: "CourseRepo", opt: &RepositoryOptions{Owner: "foo", Repo: "tests"}, wantErr: true},
+		// foo/meling-labs has three commits beyond the assignments repo it was forked from.
+		{name: "CompleteRequest/Ahead", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantAhead: 3},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
-				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			// Simulate the commits this repo is expected to be ahead by, then assert
+			// CommitsAhead reports exactly that. A no-op for the zero/error cases.
+			for range tt.wantAhead {
+				if err := s.SimulateCommit(tt.opt.Owner, tt.opt.Repo); err != nil {
+					t.Fatal(err)
+				}
+			}
+			ahead, err := s.CommitsAhead(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CommitsAhead(%+v) error = %v, wantErr %v", *tt.opt, err, tt.wantErr)
+			}
+			if ahead != tt.wantAhead {
+				t.Errorf("CommitsAhead(%+v) = %d, want %d", *tt.opt, ahead, tt.wantAhead)
 			}
 		})
 	}
 }
 
-// TestMockRepositoryIsEmptyForkedRepo tests that a forked repository with no student changes
-// is considered empty and can be deleted.
-func TestMockRepositoryIsEmptyForkedRepo(t *testing.T) {
-	// Add a test repository that represents a student repo forked from assignments
-	// but with no student changes (AheadBy=0 in the mock)
+// TestMockCommitsAheadForkedRepo tests commit-ahead counts for forked repositories.
+func TestMockCommitsAheadForkedRepo(t *testing.T) {
+	// student-labs represents a freshly forked student repo with no commits of its own.
 	studentRepo := github.Repository{
 		ID:           github.Int64(10),
 		Organization: &ghOrgFoo,
@@ -266,23 +280,32 @@ func TestMockRepositoryIsEmptyForkedRepo(t *testing.T) {
 	tests := []struct {
 		name      string
 		opt       *RepositoryOptions
-		wantEmpty bool
+		wantAhead int
+		wantErr   bool
 	}{
-		// Student repo with no changes should be considered empty.
-		// "student-labs" is not in allRepos, so the mock will return AheadBy=0 by default.
-		{name: "ForkedRepoNoChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "student-labs"}, wantEmpty: true},
-		// Student repos with changes should not be empty.
-		// The mock implementation in github_mock.go has special handling for "meling-labs" and "josie-labs",
-		// setting AheadBy=5 to simulate repositories with commits ahead of assignments.
-		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantEmpty: false},
-		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "josie-labs"}, wantEmpty: false},
+		// A fork with no commits of its own is identical to assignments: 0 commits ahead.
+		{name: "ForkedRepoNoChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "student-labs"}, wantAhead: 0},
+		// Forks with simulated commits report exactly how many commits they are ahead.
+		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantAhead: 2},
+		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "josie-labs"}, wantAhead: 1},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(allRepos...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
-				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			// Simulate the commits this repo is expected to be ahead by, then assert
+			// CommitsAhead reports exactly that. A no-op for the zero/error cases.
+			for range tt.wantAhead {
+				if err := s.SimulateCommit(tt.opt.Owner, tt.opt.Repo); err != nil {
+					t.Fatal(err)
+				}
+			}
+			ahead, err := s.CommitsAhead(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CommitsAhead(%+v) error = %v, wantErr %v", *tt.opt, err, tt.wantErr)
+			}
+			if ahead != tt.wantAhead {
+				t.Errorf("CommitsAhead(%+v) = %d, want %d", *tt.opt, ahead, tt.wantAhead)
 			}
 		})
 	}

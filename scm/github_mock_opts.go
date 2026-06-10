@@ -18,7 +18,13 @@ type mockOptions struct {
 	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
 	appConfigs map[string]github.AppConfig                           // map: code -> app config
+	aheadBy    map[string]int                                        // map: "owner/repo" -> commits ahead of the upstream assignments repo
 	userID     int64                                                 // counter for generating unique user IDs
+}
+
+// repoKey is the key used to track per-repository mock state keyed by owner and repository name.
+func repoKey(owner, repo string) string {
+	return owner + "/" + repo
 }
 
 // DumpState returns a string representation of the mock state.
@@ -131,6 +137,7 @@ func newMockOptions() *mockOptions {
 		issues:    map[string]map[string][]github.Issue{},
 		comments:  map[string]map[string]map[int64][]github.IssueComment{},
 		reviewers: map[string]map[string]map[int]github.ReviewersRequest{},
+		aheadBy:   map[string]int{},
 		userID:    0,
 	}
 }
@@ -162,6 +169,16 @@ func WithOrgs(orgs ...github.Organization) MockOption {
 func WithRepos(repos ...github.Repository) MockOption {
 	return func(opts *mockOptions) {
 		opts.repos = append(opts.repos, repos...)
+	}
+}
+
+// WithCommitsAhead seeds the given repository as n commits ahead of the upstream
+// assignments repository it was forked from. Use this when the repository is created
+// during the test (e.g. via an RPC) and the mock instance is not directly reachable;
+// tests that hold the mock can call SimulateCommit instead.
+func WithCommitsAhead(owner, repo string, n int) MockOption {
+	return func(opts *mockOptions) {
+		opts.aheadBy[repoKey(owner, repo)] = n
 	}
 }
 
