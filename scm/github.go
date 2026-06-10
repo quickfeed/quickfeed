@@ -152,89 +152,58 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Reposit
 	return repositories, nil
 }
 
-// RepositoryIsEmpty implements the SCM interface.
-// It returns true if the repository is empty (no commits) or if the repository
-// is a fork with no commits ahead of the upstream assignments repository.
-func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
+// CommitsAhead implements the SCM interface.
+// It returns the number of commits a repository is ahead of the assignments repository.
+// A return value of 0 with a nil error means no commits ahead; a non-nil error means
+// the comparison could not be performed, and the count is meaningless.
+func (s *GithubSCM) CommitsAhead(ctx context.Context, opt *RepositoryOptions) (int, error) {
 	repo, err := s.getRepository(ctx, opt)
 	if err != nil {
-		s.logger.Error(err)
-		return true
+		return 0, err
 	}
 	opt.ID, opt.Owner, opt.Repo = repo.ID, repo.Owner, repo.Repo
-
-	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Repo, "", &github.RepositoryContentGetOptions{})
-	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
-	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
-	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == %d) || (err == nil && %d == 0) == %t",
-		statusCode(resp), http.StatusNotFound, len(contents),
-		(err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0))
-
-	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
-	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
-	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
-	if (err != nil && hasStatus(resp, http.StatusNotFound)) || (err == nil && len(contents) == 0) {
-		return true
-	}
-
-	// If the repository has contents, check if it's a fork with no commits ahead.
-	// This is needed because forked repositories will have contents even if no new commits
-	// have been made since the fork was created.
-	return s.hasNoCommitsAhead(ctx, opt)
+	return s.commitsAhead(ctx, opt)
 }
 
-// hasNoCommitsAhead checks if a repository has any commits ahead of the assignments repository.
-// It returns true if the repository has no commits ahead (i.e., no changes have been made since fork),
-// false if there are commits ahead or if the comparison cannot be performed.
+// commitsAhead returns how many commits the repository is ahead of assignments.
 // This function is only meaningful for repositories that are forks of the assignments repo.
-func (s *GithubSCM) hasNoCommitsAhead(ctx context.Context, opt *RepositoryOptions) bool {
+func (s *GithubSCM) commitsAhead(ctx context.Context, opt *RepositoryOptions) (int, error) {
 	// Don't compare course repositories (assignments, tests, info) with themselves.
 	// Only compare user/group repositories with the assignments repository.
 	repoType := qf.RepoType(opt.Repo)
 	if repoType.IsCourseRepo() {
-		s.logger.Debugf("hasNoCommitsAhead: %s is a course repo, not a user/group repo - treating as non-empty", opt.Repo)
-		return false
+		return 0, fmt.Errorf("%s is a course repository, not a user or group fork", opt.Repo)
 	}
 
 	headCommit, resp, err := s.client.Repositories.GetCommit(ctx, opt.Owner, opt.Repo, "main", nil)
-	s.logger.Debugf("hasNoCommitsAhead: getting head commit for %s/%s:main", opt.Owner, opt.Repo)
-	s.logger.Debugf("hasNoCommitsAhead: err=%v, status=%d", err, statusCode(resp))
+	s.logger.Debugf("commitsAhead: getting head commit for %s/%s:main", opt.Owner, opt.Repo)
+	s.logger.Debugf("commitsAhead: err=%v, status=%d", err, statusCode(resp))
 	if err != nil {
-		s.logger.Debugf("hasNoCommitsAhead: failed to get head commit, treating repo as non-empty: %v", err)
-		return false
-	}
-	if headCommit == nil {
-		s.logger.Debugf("hasNoCommitsAhead: head commit response is nil")
-		return false
+		return 0, fmt.Errorf("failed to get head commit for %s/%s: %w", opt.Owner, opt.Repo, err)
 	}
 	headSHA := headCommit.GetSHA()
 	if headSHA == "" {
-		s.logger.Debugf("hasNoCommitsAhead: head commit SHA is empty")
-		return false
+		return 0, fmt.Errorf("no head commit SHA for %s/%s", opt.Owner, opt.Repo)
 	}
 
 	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", headSHA, nil)
 
-	s.logger.Debugf("hasNoCommitsAhead: comparing %s/%s:main with %s/%s@%s", opt.Owner, qf.AssignmentsRepo, opt.Owner, opt.Repo, headSHA)
-	s.logger.Debugf("hasNoCommitsAhead: err=%v, status=%d", err, statusCode(resp))
+	s.logger.Debugf("commitsAhead: comparing %s/%s:main with %s/%s@%s", opt.Owner, qf.AssignmentsRepo, opt.Owner, opt.Repo, headSHA)
+	s.logger.Debugf("commitsAhead: err=%v, status=%d", err, statusCode(resp))
 
+	// A comparison may fail because the repo is not a fork, the branches don't exist,
+	// or other transient errors; in all cases we cannot determine the count, so we
+	// return the error and let the caller decide how to handle it.
 	if err != nil {
-		// If comparison fails (e.g., repo is not a fork, branches don't exist, or other errors),
-		// we cannot determine if there are changes, so we treat it as non-empty for safety.
-		s.logger.Debugf("hasNoCommitsAhead: comparison failed, treating repo as non-empty: %v", err)
-		return false
+		return 0, fmt.Errorf("failed to compare %s/%s with assignments: %w", opt.Owner, opt.Repo, err)
 	}
-
 	if comparison == nil || comparison.AheadBy == nil {
-		s.logger.Debugf("hasNoCommitsAhead: comparison result is nil or AheadBy is nil")
-		return false
+		return 0, fmt.Errorf("missing comparison result for %s/%s", opt.Owner, opt.Repo)
 	}
 
 	aheadBy := *comparison.AheadBy
-	s.logger.Debugf("hasNoCommitsAhead: repo is %d commits ahead of assignments", aheadBy)
-
-	// If the repository has no commits ahead of assignments, it's safe to delete.
-	return aheadBy == 0
+	s.logger.Debugf("commitsAhead: repo is %d commits ahead of assignments", aheadBy)
+	return aheadBy, nil
 }
 
 // CreateCourse creates repositories for a new course.
