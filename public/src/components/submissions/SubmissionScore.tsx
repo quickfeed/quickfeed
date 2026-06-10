@@ -1,5 +1,5 @@
 import React from "react"
-import { Score } from "../../../proto/kit/score/score_pb"
+import type { Score } from "../../../proto/kit/score/score_pb"
 
 const SubmissionScore = ({
     score,
@@ -8,24 +8,25 @@ const SubmissionScore = ({
     score: Score
     totalWeight: number
 }) => {
-    const className = score.Score === score.MaxScore ? "passed" : "failed"
+    const passed = score.Score === score.MaxScore
+    const rowClass = passed ? "passed" : "failed"
     const percentage = (score.Score / score.MaxScore) * (score.Weight / totalWeight) * 100
     const maxPercentage = (score.MaxScore / score.MaxScore) * (score.Weight / totalWeight) * 100
-    const cellColor = percentage === maxPercentage ? "text-success" : "text-danger"
+    const cellColor = percentage === maxPercentage ? "text-success" : "text-error"
 
     return (
-        <tr>
-            <td className={`${className} pl-4`}>{score.TestName}</td>
-            <td className="fixed-width-score">
+        <tr className={rowClass}>
+            <td className="pl-3! w-full">{score.TestName}</td>
+            <td className="whitespace-nowrap min-w-24 text-right">
                 {score.Score}/{score.MaxScore}
             </td>
-            <td className="fixed-width-percent">
+            <td className="whitespace-nowrap min-w-24 text-right">
                 <span className={cellColor}>
                     {percentage.toFixed(1)}%
                 </span>
             </td>
 
-            <td className="fixed-width-percent">
+            <td className="whitespace-nowrap min-w-24 text-right">
                 <span
                     style={{ opacity: 0.5 }}
                     title={`Weight: ${score.Weight}`}

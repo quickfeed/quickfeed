@@ -1,15 +1,16 @@
 import React, { useCallback } from "react"
 import { Route, Routes, useLocation } from "react-router"
-import { Color, isManuallyGraded } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
 import Card from "../components/Card"
-import GroupPage from "./GroupPage"
-import Members from "../components/Members"
-import RedirectButton from "../components/RedirectButton"
-import Results from "../components/Results"
-import Assignments from "../components/teacher/Assignments"
-import { useCourseID } from "../hooks/useCourseID"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
+import Members from "../components/Members"
+import Results from "../components/Results"
+import { RepositoryCards } from "../components/student/RepositoryCards"
+import Assignments from "../components/teacher/Assignments"
+import { Color, isManuallyGraded } from "../Helpers"
+import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { useCourseID } from "../hooks/useCourseID"
+import { useActions, useAppState } from "../overmind"
+import GroupPage from "./GroupPage"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -22,6 +23,9 @@ const TeacherPage = () => {
     const location = useLocation()
     const root = `/course/${courseID}`
     const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
+
+    // Enable Backspace keyboard shortcut to navigate back to root
+    useBackspaceNavigation(root)
 
     const members = {
         title: "View Members",
@@ -48,9 +52,9 @@ const TeacherPage = () => {
     const feedback = { title: "View Assignment Feedback", text: "View feedback provided by students on assignments.", buttonText: "Feedback", to: `${root}/feedback` }
 
     return (
-        <div className="box">
-            <RedirectButton to={root} />
-            <div className="row" hidden={location.pathname !== root}>
+        <>
+            <RepositoryCards />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
                 <Card {...groups} />
@@ -60,15 +64,15 @@ const TeacherPage = () => {
                 <Card {...feedback} />
             </div>
             <Routes>
-                <Route path={"/groups"} element={<GroupPage />} />
-                <Route path={"/members"} element={<Members />} />
-                <Route path={"/review"} element={<ReviewResults />} />
-                <Route path={"/results"} element={<RegularResults />} />
-                <Route path={"/assignments"} element={<Assignments />} />
-                <Route path={"/feedback"} element={<AssignmentFeedbackView />} />
-                <Route path={"/feedback/:assignmentID"} element={<AssignmentFeedbackView />} />
+                <Route path="/groups" element={<GroupPage />} />
+                <Route path="/members" element={<Members />} />
+                <Route path="/review" element={<ReviewResults />} />
+                <Route path="/results" element={<RegularResults />} />
+                <Route path="/assignments" element={<Assignments />} />
+                <Route path="/feedback" element={<AssignmentFeedbackView />} />
+                <Route path="/feedback/:assignmentID" element={<AssignmentFeedbackView />} />
             </Routes>
-        </div>
+        </>
     )
 }
 

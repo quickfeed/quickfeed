@@ -18,10 +18,10 @@ const Search = ({ placeholder, setQuery, className, children }: { placeholder?: 
     }, [actions])
 
     return (
-        <div className={`input-group ${className}`}>
+        <div className={`flex items-center gap-2 ${className ?? ""}`}>
             <input
-                type={"text"}
-                className="form-control"
+                type="text"
+                className="input input-bordered flex-1 focus:input-primary"
                 placeholder={placeholder ?? "Search"}
                 onKeyUp={handleKeyUp}
             />

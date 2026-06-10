@@ -1,6 +1,7 @@
 import { clone, create } from "@bufbuild/protobuf"
-import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, ReviewSchema, Submission } from '../../../../proto/qf/types_pb'
+import type { Context } from '../..'
+import type { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Submission } from '../../../../proto/qf/types_pb'
+import { ReviewSchema } from '../../../../proto/qf/types_pb'
 import { isAuthor } from '../../../Helpers'
 
 

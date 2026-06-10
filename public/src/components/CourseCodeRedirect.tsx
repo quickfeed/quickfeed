@@ -1,5 +1,5 @@
 import React from "react"
-import { useParams, Navigate } from "react-router-dom"
+import { Navigate, useParams } from "react-router-dom"
 import { useAppState } from "../overmind"
 
 

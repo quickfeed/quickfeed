@@ -45,13 +45,7 @@ ifeq ($(OS),linux)
 endif
 
 ui: version-check
-	@echo "Running npm ci and esbuild"
-	@cd public; npm ci
-	@go run cmd/esbuild/main.go
-
-ui-update: version-check
-	@echo "Running npm install and esbuild"
-	@cd public; npm i
+	@echo "Running esbuild and tailwind"
 	@go run cmd/esbuild/main.go
 
 overmind:
@@ -72,3 +66,13 @@ test:
 
 qcm:
 	@cd cmd/qcm; go install
+
+clean-dev:
+	# This is useful for debugging development environment and configuration issues.
+	# WARNING: This will remove your .env file and configuration directory ~/.config/quickfeed
+	@echo "Removing .env file and .env.bak file"
+	@rm -f .env .env.bak
+	@echo "Removing configuration directory ~/.config/quickfeed"
+	@rm -rf ~/.config/quickfeed
+	@echo "DOMAIN=localhost" > .env
+	@echo ".env file created with DOMAIN=localhost"

@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect } from "react"
-import { User } from "../../../proto/qf/types_pb"
+import type { User } from "../../../proto/qf/types_pb"
 import { Color, isHidden, userLink } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import DynamicButton from "../DynamicButton"
 import DynamicTable from "../DynamicTable"
 import Search from "../Search"
-import { ButtonType } from "./Button"
 import UserComponent from "./User"
 
 
@@ -32,7 +31,6 @@ const Users = () => {
                 key={`${user.ID}button`}
                 text={roleActionText}
                 color={buttonColor}
-                type={ButtonType.BADGE}
                 onClick={handlePromoteAdmin(user)}
             />
         ]

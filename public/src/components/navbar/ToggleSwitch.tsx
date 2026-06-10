@@ -1,8 +1,8 @@
-import React, { useEffect } from "react"
-import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
-import { useActions, useAppState } from "../../overmind"
-import { hasTeacher } from "../../Helpers"
+import React, { useCallback, useEffect } from "react"
 import { useNavigate } from "react-router"
+import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
+import { hasTeacher } from "../../Helpers"
+import { useActions, useAppState } from "../../overmind"
 
 const ToggleSwitch = () => {
     const { activeCourse, enrollmentsByCourseID, status } = useAppState()
@@ -10,29 +10,23 @@ const ToggleSwitch = () => {
     const navigate = useNavigate()
     const [enrollmentStatus, setEnrollmentStatus] =
         React.useState<boolean>(false)
-    const [text, setText] = React.useState<string>("")
+
+    const isTeacher = useCallback((courseID: bigint | undefined): boolean => {
+        if (!courseID) {
+            return false
+        }
+        return enrollmentsByCourseID[courseID.toString()]?.status === Enrollment_UserStatus.TEACHER
+    }, [enrollmentsByCourseID])
 
     useEffect(() => {
         if (activeCourse && enrollmentsByCourseID[activeCourse.toString()]) {
-            updateStatus(isTeacher())
+            setEnrollmentStatus(isTeacher(activeCourse))
         }
-    })
-
-    const isTeacher = () => {
-        return (
-            enrollmentsByCourseID[activeCourse.toString()].status ===
-            Enrollment_UserStatus.TEACHER
-        )
-    }
-
-    const updateStatus = (isTeacher: boolean) => {
-        setEnrollmentStatus(isTeacher)
-        setText(isTeacher ? "T" : "S")
-    }
+    }, [activeCourse, enrollmentsByCourseID, isTeacher])
 
     const switchView = () => {
         actions.changeView().then(() => {
-            updateStatus(isTeacher())
+            setEnrollmentStatus(isTeacher(activeCourse))
             navigate(`/course/${activeCourse}`)
         })
     }
@@ -42,12 +36,16 @@ const ToggleSwitch = () => {
     }
 
     return (
-        <label className="switch" data-toggle="tooltip" title="Toggle between student and teacher view">
-            <input type="checkbox" readOnly checked={enrollmentStatus} />
-            <span className="slider round" onClick={switchView}>
-                <span className="toggle">{text}</span>
-            </span>
-        </label>
+        <button
+            onClick={switchView}
+            className="font-mono text-md cursor-pointer tooltip tooltip-bottom"
+            data-tip="Toggle between student and teacher view"
+        >
+            {enrollmentStatus
+                ? <span><span className="text-primary font-semibold">#</span> <span className="text-base-content/60">teacher</span></span>
+                : <span><span className="text-primary font-semibold">$</span> <span className="text-base-content/60">student</span></span>
+            }
+        </button>
     )
 }
 

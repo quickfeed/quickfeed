@@ -4,7 +4,7 @@ import React from "react"
 const Loading = () => {
     return (
         <div className="centered">
-            <i className="fa fa-refresh fa-spin fa-3x fa-fw" />
+            <i className="fas fa-arrows-rotate fa-spin fa-3x fa-fw" />
             <p><strong>Loading...</strong></p>
         </div>
     )

@@ -11,7 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -19,7 +18,7 @@ func TestGetUserExpectUnknownUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
-	_, err := client.GetUser(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	_, err := client.GetUser(t.Context(), &qf.Void{})
 	qtest.CheckError(t, err, connect.NewError(connect.CodeNotFound, errors.New("unknown user")))
 }
 
@@ -27,24 +26,24 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
-	ctx := context.Background()
+	ctx := t.Context()
 
-	unexpectedUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
-	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.Msg.GetUsers()) > 0 {
+	unexpectedUsers, err := client.GetUsers(ctx, &qf.Void{})
+	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
 
 	admin := qtest.CreateFakeUser(t, db)
 	user2 := qtest.CreateFakeUser(t, db)
 
-	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	foundUsers, err := client.GetUsers(ctx, &qf.Void{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	wantUsers := make([]*qf.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
-	gotUsers := foundUsers.Msg.GetUsers()
+	gotUsers := foundUsers.GetUsers()
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
@@ -54,10 +53,9 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
-	ctx := context.Background()
 
 	var users []*qf.User
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}
@@ -84,19 +82,18 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		qtest.EnrollStudent(t, db, user, qtest.MockCourses[1])
 	}
 
-	request := &connect.Request[qf.EnrollmentRequest]{
-		Msg: &qf.EnrollmentRequest{
-			FetchMode: &qf.EnrollmentRequest_CourseID{
-				CourseID: qtest.MockCourses[0].GetID(),
-			},
+	request := &qf.EnrollmentRequest{
+		FetchMode: &qf.EnrollmentRequest_CourseID{
+			CourseID: qtest.MockCourses[0].GetID(),
 		},
 	}
-	gotEnrollments, err := client.GetEnrollments(ctx, request)
+
+	gotEnrollments, err := client.GetEnrollments(t.Context(), request)
 	if err != nil {
 		t.Error(err)
 	}
 	var gotUsers []*qf.User
-	for _, e := range gotEnrollments.Msg.GetEnrollments() {
+	for _, e := range gotEnrollments.GetEnrollments() {
 		gotUsers = append(gotUsers, e.GetUser())
 	}
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
@@ -109,12 +106,11 @@ func TestUpdateUser(t *testing.T) {
 	defer cleanup()
 
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
-	ctx := context.Background()
 
 	firstAdminUser := qtest.CreateFakeUser(t, db)
 	nonAdminUser := qtest.CreateFakeUser(t, db)
 
-	firstAdminCookie := client.Cookie(t, firstAdminUser)
+	firstAdminCtx := client.Context(t, firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
@@ -132,17 +128,16 @@ func TestUpdateUser(t *testing.T) {
 		t.Error("expected nonAdminUser to have become admin")
 	}
 
-	nameChangeRequest := connect.NewRequest(&qf.User{
+	nameChangeRequest := &qf.User{
 		ID:        nonAdminUser.GetID(),
 		IsAdmin:   nonAdminUser.GetIsAdmin(),
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",
 		AvatarURL: "www.hello.com",
-	})
+	}
 
-	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie)
-	_, err = client.UpdateUser(ctx, nameChangeRequest)
+	_, err = client.UpdateUser(firstAdminCtx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
@@ -169,7 +164,6 @@ func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
-	ctx := context.Background()
 
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	if !admin.GetIsAdmin() {
@@ -179,18 +173,18 @@ func TestUpdateUserFailures(t *testing.T) {
 	if user.GetIsAdmin() {
 		t.Fatalf("expected user %v to be non-admin", user)
 	}
-	userCookie := client.Cookie(t, user)
-	adminCookie := client.Cookie(t, admin)
+	userCtx := client.Context(t, user)
+	adminCtx := client.Context(t, admin)
 	tests := []struct {
 		name     string
-		cookie   string
+		ctx      context.Context
 		req      *qf.User
 		wantUser *qf.User
 		wantErr  bool
 	}{
 		{
-			name:   "user demotes admin, must fail",
-			cookie: userCookie,
+			name: "user demotes admin, must fail",
+			ctx:  userCtx,
 			req: &qf.User{
 				ID:        admin.GetID(),
 				IsAdmin:   false,
@@ -202,8 +196,8 @@ func TestUpdateUserFailures(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "user promotes self to admin, must fail",
-			cookie: userCookie,
+			name: "user promotes self to admin, must fail",
+			ctx:  userCtx,
 			req: &qf.User{
 				ID:        user.GetID(),
 				Name:      user.GetName(),
@@ -215,8 +209,8 @@ func TestUpdateUserFailures(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "admin changes own name, must pass",
-			cookie: adminCookie,
+			name: "admin changes own name, must pass",
+			ctx:  adminCtx,
 			req: &qf.User{
 				ID:   admin.GetID(),
 				Name: "super user",
@@ -237,17 +231,17 @@ func TestUpdateUserFailures(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// UpdateUser returns void, so we cannot check that the user was updated
-			_, err := client.UpdateUser(ctx, qtest.RequestWithCookie(tt.req, tt.cookie))
+			_, err := client.UpdateUser(tt.ctx, tt.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 			}
 			if !tt.wantErr {
 				// Instead (for success cases), get all users and check that the user was updated
-				users, err := client.GetUsers(ctx, qtest.RequestWithCookie(&qf.Void{}, tt.cookie))
+				users, err := client.GetUsers(tt.ctx, &qf.Void{})
 				if err != nil {
 					t.Fatal(err)
 				}
-				for _, u := range users.Msg.GetUsers() {
+				for _, u := range users.GetUsers() {
 					if u.GetID() == tt.wantUser.GetID() {
 						if diff := cmp.Diff(tt.wantUser, u, protocmp.Transform()); diff != "" {
 							t.Errorf("%s: UpdateUser() mismatch (-wantUser +gotUser):\n%s", tt.name, diff)

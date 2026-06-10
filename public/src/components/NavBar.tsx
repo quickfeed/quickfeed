@@ -1,9 +1,9 @@
 import React from "react"
-import { useActions, useAppState } from "../overmind"
 import { Link } from "react-router-dom"
+import { useActions, useAppState } from "../overmind"
 import NavFavorites from "./NavFavorites"
-import NavBarUser from "./navbar/NavBarUser"
 import NavBarActiveCourse from "./navbar/NavBarActiveCourse"
+import NavBarUser from "./navbar/NavBarUser"
 
 
 const NavBar = () => {
@@ -18,10 +18,10 @@ const NavBar = () => {
     }
 
     return (
-        <nav className="navbar navbar-top navbar-expand-sm flexbox" id="main" >
+        <nav className="navbar bg-base-300 navbar-top navbar-expand-sm flexbox" id="main" >
             <div className="nav-child brand">
                 {hamburger}
-                <Link to="/" style={{ color: "#d4d4d4", fontWeight: "bold" }}>QuickFeed</Link>
+                <Link to="/">QuickFeed</Link>
             </div>
             <NavBarActiveCourse />
             <NavBarUser />

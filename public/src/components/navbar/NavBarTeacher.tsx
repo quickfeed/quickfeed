@@ -1,14 +1,15 @@
 import React from "react"
 import { isManuallyGraded } from "../../Helpers"
 import { useAppState } from "../../overmind"
-import NavBarLink, { NavLink } from "./NavBarLink"
+import type { NavLink } from "./NavBarLink"
+import NavBarLink from "./NavBarLink"
 
 
 const NavBarTeacher = () => {
     const state = useAppState()
-    const pending = state.pendingEnrollments.length > 0 ? { text: state.pendingEnrollments.length.toString(), classname: "badge badge-danger" } : null
+    const pending = state.pendingEnrollments.length > 0 ? { text: state.pendingEnrollments.length.toString(), classname: "badge badge-error" } : null
     const enrolled = { text: state.numEnrolled.toString(), classname: "badge badge-primary" }
-    const pendingGroups = state.pendingGroups.length > 0 ? { text: state.pendingGroups.length.toString(), classname: "badge badge-danger" } : null
+    const pendingGroups = state.pendingGroups.length > 0 ? { text: state.pendingGroups.length.toString(), classname: "badge badge-error" } : null
     const approvedGroups = { text: state.numGroups.toString(), classname: "badge badge-primary" }
     const courseHasManualGrading = state.assignments[state.activeCourse.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
 
@@ -22,8 +23,7 @@ const NavBarTeacher = () => {
         links.unshift({ text: "Review", to: `/course/${state.activeCourse}/review` })
     }
 
-    const teacherLinks = links.map((link) => { return <NavBarLink key={link.text} link={link} /> })
-    return <>{teacherLinks}</>
+    return links.map((link) => <NavBarLink key={link.text} link={link} />)
 }
 
 export default NavBarTeacher

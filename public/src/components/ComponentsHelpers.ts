@@ -1,9 +1,11 @@
 import { isMessage } from "@bufbuild/protobuf"
-import { Assignment, Course, Enrollment, EnrollmentSchema, Group, GroupSchema, Submission } from "../../proto/qf/types_pb"
-import { groupRepoLink, Icon, SubmissionsForCourse, SubmissionSort, userRepoLink } from "../Helpers"
-import { useActions } from "../overmind"
-import { AssignmentsMap, State } from "../overmind/state"
-import { CellElement, Row, RowElement } from "./DynamicTable"
+import type { Assignment, Course, Enrollment, Group, Submission } from "../../proto/qf/types_pb"
+import { EnrollmentSchema, GroupSchema } from "../../proto/qf/types_pb"
+import type { SubmissionsForCourse } from "../Helpers"
+import { groupRepoLink, Icon, SubmissionSort, userRepoLink } from "../Helpers"
+import type { useActions } from "../overmind"
+import type { AssignmentsMap, State } from "../overmind/state"
+import type { CellElement, Row, RowElement } from "./DynamicTable"
 import { Icons } from "./Icons"
 
 export const generateSubmissionRows = (elements: Enrollment[] | Group[], generator: (s: Submission, e?: Enrollment | Group) => RowElement, state: State): Row[] => {

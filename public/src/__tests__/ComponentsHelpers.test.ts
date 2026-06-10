@@ -1,10 +1,11 @@
 
 import { create } from "@bufbuild/protobuf"
-import { EnrollmentSchema, GroupSchema, Submission } from "../../proto/qf/types_pb"
+import type { Submission } from "../../proto/qf/types_pb"
+import { EnrollmentSchema, GroupSchema } from "../../proto/qf/types_pb"
 import { generateRow } from "../components/ComponentsHelpers"
+import { Icons } from "../components/Icons"
 import { MockData } from "./mock_data/mockData"
 import { initializeOvermind } from "./TestHelpers"
-import { Icons } from "../components/Icons"
 
 describe("generateRow", () => {
     const tests = [

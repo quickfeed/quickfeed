@@ -1,7 +1,7 @@
 import React from "react"
+import { useCourseID } from "../../hooks/useCourseID"
 import { useAppState } from "../../overmind"
 import AssignmentCard from "./AssignmentCard"
-import { useCourseID } from "../../hooks/useCourseID"
 
 const CourseLabs = () => {
   const state = useAppState()
@@ -10,7 +10,7 @@ const CourseLabs = () => {
   const selfID = state.self.ID
 
   return (
-    <ul className="list-group">
+    <div className="flex flex-col">
       {assignments.map((assignment) => {
         const submissions = state.submissions.ForAssignment(assignment)
         return (
@@ -23,7 +23,7 @@ const CourseLabs = () => {
           />
         )
       })}
-    </ul>
+    </div>
   )
 }
 

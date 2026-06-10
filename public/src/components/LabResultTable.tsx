@@ -1,6 +1,6 @@
 import React from "react"
-import { Assignment, Submission } from "../../proto/qf/types_pb"
-import ProgressBar, { Progress } from "./ProgressBar"
+import type { Assignment, Submission } from "../../proto/qf/types_pb"
+import ProgressBar from "./ProgressBar"
 import SubmissionInfo from "./submissions/SubmissionInfo"
 import SubmissionScores from "./submissions/SubmissionScores"
 
@@ -14,9 +14,9 @@ const LabResultTable = ({ submission, assignment }: LabProps) => {
         return (
             <div className="pb-2">
                 <div className="pb-2">
-                    <ProgressBar key={"progress-bar"} courseID={assignment.CourseID.toString()} submission={submission} type={Progress.LAB} />
+                    <ProgressBar key="progress-bar" courseID={assignment.CourseID.toString()} submission={submission} />
                 </div>
-                <SubmissionInfo submission={submission} assignment={assignment} />    
+                <SubmissionInfo submission={submission} assignment={assignment} />
                 <SubmissionScores submission={submission} />
             </div>
         )

@@ -54,8 +54,7 @@ func NewSCMConfig() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	appKey := env.AppKey()
-	createAppKey, err := key.FromFile(appKey)
+	createAppKey, err := key.FromFile(env.AppPrivKeyFile())
 	if err != nil {
 		return nil, fmt.Errorf("error reading key from file: %w", err)
 	}

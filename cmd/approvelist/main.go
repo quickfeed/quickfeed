@@ -214,12 +214,12 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	user, err := client.GetUser(ctx, connect.NewRequest(&qf.Void{}))
+	user, err := client.GetUser(ctx, &qf.Void{})
 	if err != nil {
 		return nil, nil, err
 	}
 	var courseID uint64
-	for _, enrollment := range user.Msg.GetEnrollments() {
+	for _, enrollment := range user.GetEnrollments() {
 		course := enrollment.GetCourse()
 		if course.GetCode() == courseCode && course.GetYear() == year {
 			courseID = course.GetID()
@@ -236,19 +236,19 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 			Type: qf.SubmissionRequest_ALL,
 		},
 	}
-	submissions, err := client.GetSubmissionsByCourse(ctx, connect.NewRequest(submissionCourseRequest))
+	submissions, err := client.GetSubmissionsByCourse(ctx, submissionCourseRequest)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get submissions for course %s: %w", courseCode, err)
 	}
-	enrollments, err := client.GetEnrollments(ctx, connect.NewRequest(&qf.EnrollmentRequest{
+	enrollments, err := client.GetEnrollments(ctx, &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_CourseID{
 			CourseID: courseID,
 		},
-	}))
+	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get enrollments for course %s: %w", courseCode, err)
 	}
-	return submissions.Msg, enrollments.Msg.GetEnrollments(), err
+	return submissions, enrollments.GetEnrollments(), err
 }
 
 func partialMatch(name string, studentMap map[string]int) (int, error) {

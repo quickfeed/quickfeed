@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -22,13 +21,13 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		cookie   string
+		user     *qf.User
 		feedback *qf.AssignmentFeedback
 		wantErr  error
 	}{
 		{
-			name:   "Valid anonymous feedback",
-			cookie: client.Cookie(t, student),
+			name: "Valid anonymous feedback",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           assignment.GetID(),
@@ -39,8 +38,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:   "Valid teacher feedback",
-			cookie: client.Cookie(t, teacher),
+			name: "Valid teacher feedback",
+			user: teacher,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           assignment.GetID(),
@@ -51,8 +50,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:   "Missing course ID",
-			cookie: client.Cookie(t, student),
+			name: "Missing course ID",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               0, // Missing
 				AssignmentID:           assignment.GetID(),
@@ -64,8 +63,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 		{
-			name:   "Missing assignment ID",
-			cookie: client.Cookie(t, student),
+			name: "Missing assignment ID",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           0, // Missing
@@ -77,8 +76,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 		{
-			name:   "Empty liked content",
-			cookie: client.Cookie(t, student),
+			name: "Empty liked content",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           assignment.GetID(),
@@ -90,8 +89,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 		{
-			name:   "Empty improvement suggestions",
-			cookie: client.Cookie(t, student),
+			name: "Empty improvement suggestions",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           assignment.GetID(),
@@ -103,8 +102,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 		{
-			name:   "Zero time spent",
-			cookie: client.Cookie(t, student),
+			name: "Zero time spent",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           assignment.GetID(),
@@ -116,8 +115,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload")),
 		},
 		{
-			name:   "Non-existing course ID",
-			cookie: client.Cookie(t, student),
+			name: "Non-existing course ID",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               999, // Non-existing
 				AssignmentID:           assignment.GetID(),
@@ -129,8 +128,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateAssignmentFeedback: not student or teacher")),
 		},
 		{
-			name:   "Non-existing assignment ID",
-			cookie: client.Cookie(t, student),
+			name: "Non-existing assignment ID",
+			user: student,
 			feedback: &qf.AssignmentFeedback{
 				CourseID:               course.GetID(),
 				AssignmentID:           99999, // Non-existing
@@ -144,7 +143,8 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := client.CreateAssignmentFeedback(t.Context(), qtest.RequestWithCookie(test.feedback, test.cookie))
+			ctx := client.Context(t, test.user)
+			_, err := client.CreateAssignmentFeedback(ctx, test.feedback)
 			if err == nil && test.wantErr == nil {
 				return // both nil, all good
 			}
@@ -166,12 +166,6 @@ func TestGetAssignmentFeedback(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student2, course)
 
-	// Create cookies for authentication
-	teacherCookie := client.Cookie(t, teacher)
-	student1Cookie := client.Cookie(t, student1)
-	student2Cookie := client.Cookie(t, student2)
-	ctx := t.Context()
-
 	// Create feedback from student1
 	feedback1 := &qf.AssignmentFeedback{
 		CourseID:               course.GetID(),
@@ -180,7 +174,7 @@ func TestGetAssignmentFeedback(t *testing.T) {
 		ImprovementSuggestions: "Add more test cases for edge conditions.",
 		TimeSpent:              240, // 4 hours
 	}
-	_, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback1, student1Cookie))
+	_, err := client.CreateAssignmentFeedback(client.Context(t, student1), feedback1)
 	if err != nil {
 		t.Fatalf("Failed to create feedback1: %v", err)
 	}
@@ -193,37 +187,37 @@ func TestGetAssignmentFeedback(t *testing.T) {
 		ImprovementSuggestions: "Maybe provide starter code templates.",
 		TimeSpent:              300, // 5 hours
 	}
-	_, err = client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback2, student2Cookie))
+	_, err = client.CreateAssignmentFeedback(client.Context(t, student2), feedback2)
 	if err != nil {
 		t.Fatalf("Failed to create feedback2: %v", err)
 	}
 
 	tests := []struct {
 		name    string
-		cookie  string
+		user    *qf.User
 		request *qf.CourseRequest
 		want    *qf.AssignmentFeedbacks
 		wantErr error
 	}{
 		{
-			name:   "Teacher can get feedback by course ID only",
-			cookie: teacherCookie,
+			name: "Teacher can get feedback by course ID only",
+			user: teacher,
 			request: &qf.CourseRequest{
 				CourseID: course.GetID(),
 			},
 			want: &qf.AssignmentFeedbacks{Feedbacks: []*qf.AssignmentFeedback{feedback1, feedback2}},
 		},
 		{
-			name:   "Student cannot get feedback once submitted",
-			cookie: student1Cookie,
+			name: "Student cannot get feedback once submitted",
+			user: student1,
 			request: &qf.CourseRequest{
 				CourseID: course.GetID(),
 			},
 			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for GetAssignmentFeedback: not teacher")),
 		},
 		{
-			name:   "Teacher cannot get feedback for non-existent course",
-			cookie: teacherCookie,
+			name: "Teacher cannot get feedback for non-existent course",
+			user: teacher,
 			request: &qf.CourseRequest{
 				CourseID: 99999,
 			},
@@ -233,11 +227,12 @@ func TestGetAssignmentFeedback(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			resp, err := client.GetAssignmentFeedback(ctx, qtest.RequestWithCookie(test.request, test.cookie))
+			ctx := client.Context(t, test.user)
+			resp, err := client.GetAssignmentFeedback(ctx, test.request)
 			if qtest.CheckCode(t, err, test.wantErr) {
 				return // cannot continue since resp is invalid
 			}
-			got := resp.Msg
+			got := resp
 			want := test.want
 			// UserID is removed in responses, so we ignore it in the comparison
 			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
@@ -266,19 +261,19 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db)
 	qtest.EnrollStudent(t, db, student2, course)
 
-	ctx := context.Background()
-
 	// Helper: get user's feedback receipts
-	getUserReceipts := func(cookie string) []*qf.FeedbackReceipt {
-		resp, err := client.GetUser(ctx, qtest.RequestWithCookie(&qf.Void{}, cookie))
+	getUserReceipts := func(user *qf.User) []*qf.FeedbackReceipt {
+		ctx := client.Context(t, user)
+		resp, err := client.GetUser(ctx, &qf.Void{})
 		if err != nil {
 			t.Fatalf("failed to get user receipts: %v", err)
 		}
-		return resp.Msg.GetFeedbackReceipts()
+		return resp.GetFeedbackReceipts()
 	}
 
 	// Helper: create feedback
-	createFeedback := func(cookie string, assignmentID uint64) error {
+	createFeedback := func(user *qf.User, assignmentID uint64) error {
+		ctx := client.Context(t, user)
 		feedback := &qf.AssignmentFeedback{
 			CourseID:               course.GetID(),
 			AssignmentID:           assignmentID,
@@ -286,7 +281,7 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 			ImprovementSuggestions: "Add more test cases for edge conditions.",
 			TimeSpent:              240,
 		}
-		_, err := client.CreateAssignmentFeedback(ctx, qtest.RequestWithCookie(feedback, cookie))
+		_, err := client.CreateAssignmentFeedback(ctx, feedback)
 		return err
 	}
 
@@ -294,16 +289,16 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 	studentID := student.GetID()
 	student2ID := student2.GetID()
 
-	cookies := map[uint64]string{
-		studentID:  client.Cookie(t, student),
-		student2ID: client.Cookie(t, student2),
-		teacherID:  client.Cookie(t, teacher),
+	users := map[uint64]*qf.User{
+		studentID:  student,
+		student2ID: student2,
+		teacherID:  teacher,
 	}
 
 	// Assertions helpers
 	checkCount := func(t *testing.T, userID uint64, want int) {
 		t.Helper()
-		receipts := getUserReceipts(cookies[userID])
+		receipts := getUserReceipts(users[userID])
 		if got := len(receipts); got != want {
 			t.Fatalf("expected %d receipts, got %d", want, got)
 		}
@@ -311,7 +306,7 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 
 	checkHas := func(t *testing.T, userID uint64, wantAssignmentIDs ...uint64) {
 		t.Helper()
-		receipts := getUserReceipts(cookies[userID])
+		receipts := getUserReceipts(users[userID])
 		seen := make(map[uint64]bool)
 		for _, r := range receipts {
 			if r.GetUserID() != userID {
@@ -426,12 +421,12 @@ func TestFeedbackReceiptCreation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			switch test.do {
 			case create:
-				if err := createFeedback(cookies[test.userID], test.assignmentID); err != nil {
+				if err := createFeedback(users[test.userID], test.assignmentID); err != nil {
 					t.Fatalf("failed to create feedback: %v", err)
 				}
 
 			case duplicate:
-				err := createFeedback(cookies[test.userID], test.assignmentID)
+				err := createFeedback(users[test.userID], test.assignmentID)
 				if test.expectErr && err == nil {
 					t.Fatalf("expected error for duplicate feedback, got nil")
 				}

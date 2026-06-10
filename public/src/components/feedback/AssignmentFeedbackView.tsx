@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
-import { useActions, useAppState } from '../../overmind'
-import FeedbackSummaryView from './FeedbackSummaryView'
-import FeedbackDetailView from './FeedbackDetailView'
 import { convertToBigInt } from "../../Helpers"
+import { useActions, useAppState } from '../../overmind'
+import FeedbackDetailView from './FeedbackDetailView'
+import FeedbackSummaryView from './FeedbackSummaryView'
 
 export const AssignmentFeedbackView = () => {
     const state = useAppState()

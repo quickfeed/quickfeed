@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -64,7 +63,7 @@ func TestBadGroupNames(t *testing.T) {
 				Name:     tt.name,
 				Users:    []*qf.User{user1, user2},
 			}
-			_, err := client.CreateGroup(context.Background(), connect.NewRequest(group))
+			_, err := client.CreateGroup(t.Context(), group)
 			if tt.wantError == nil {
 				if err != nil {
 					t.Errorf("got error %v, want nil", err)

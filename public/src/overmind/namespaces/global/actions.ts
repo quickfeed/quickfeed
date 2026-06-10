@@ -1,30 +1,34 @@
 import { clone, create, isMessage } from "@bufbuild/protobuf"
-import { Code, ConnectError } from "@connectrpc/connect"
-import { Context } from "../.."
+import type { ConnectError } from "@connectrpc/connect"
+import { Code } from "@connectrpc/connect"
+import type { Context } from "../.."
 import { RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../../../proto/qf/requests_pb"
-import {
+import type {
     Course,
     Enrollment,
-    Enrollment_DisplayState,
-    Enrollment_UserStatus,
-    EnrollmentSchema,
     Grade,
     Group,
     Group_GroupStatus,
-    GroupSchema,
     Submission,
     Submission_Status,
+    User
+} from "../../../../proto/qf/types_pb"
+import {
+    Enrollment_DisplayState,
+    Enrollment_UserStatus,
+    EnrollmentSchema,
+    GroupSchema,
     SubmissionSchema,
-    User,
     UserSchema
 } from "../../../../proto/qf/types_pb"
-import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../../../Helpers"
-import { Alert, CourseGroup, SubmissionOwner } from "../../state"
+import type { SubmissionSort } from "../../../Helpers"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionStatus, validateGroup } from "../../../Helpers"
+import type { Alert, CourseGroup, SubmissionOwner } from "../../state"
 import { isEmptyRepo } from "./internalActions"
 
 export const internal = { isEmptyRepo }
 
-export const onInitializeOvermind = async ({ actions, effects }: Context) => {
+export const onInitializeOvermind = async ({ state, actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
     effects.global.api.init(actions.global.errorHandler)
     await actions.global.fetchUserData()
@@ -33,6 +37,24 @@ export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     if (alert) {
         actions.global.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
+    }
+
+    // If user has a stored theme preference, use that,
+    // otherwise check for system preference
+    const storedTheme = localStorage.getItem("theme")
+    if (storedTheme !== null) {
+        state.theme = storedTheme as typeof state.theme
+        document.documentElement.setAttribute("data-theme", storedTheme)
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // User prefers dark theme
+        state.theme = "dark"
+        // set the HTML attribute to dark
+        document.documentElement.setAttribute("data-theme", "dark")
+    } else {
+        // User prefers light theme (or no specific preference)
+        state.theme = "light"
+        // set the HTML attribute to light
+        document.documentElement.setAttribute("data-theme", "light")
     }
 }
 
@@ -397,7 +419,9 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
 export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
     state.isLoading = true
     await actions.global.refreshCourseSubmissions(courseID)
-    state.loadedCourse[courseID.toString()] = true
+    // submissionsForCourse only holds data for one course at a time, so clear all
+    // other courses' flags so that navigating back to them triggers a fresh load.
+    state.loadedCourse = { [courseID.toString()]: true }
     state.isLoading = false
 }
 
@@ -825,4 +849,17 @@ export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group
 
 export const updateSubmissionOwner = ({ state }: Context, owner: SubmissionOwner) => {
     state.submissionOwner = owner
+}
+
+export const setTheme = ({ state }: Context, theme?: string) => {
+    if (theme) {
+        // Set to specific theme
+        state.theme = theme as typeof state.theme
+    } else {
+        // Toggle between light and dark
+        state.theme = state.theme === "dark" ? "light" : "dark"
+    }
+    document.documentElement.setAttribute("data-theme", state.theme)
+    // also store theme preference in localStorage
+    localStorage.setItem("theme", state.theme)
 }

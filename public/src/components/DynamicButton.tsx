@@ -1,13 +1,13 @@
 import React, { useState } from "react"
 import { Color } from "../Helpers"
-import { ButtonType } from "./admin/Button"
+import type { ButtonType } from "./admin/Button"
 
 
 export type DynamicButtonProps = {
     text: string,
     onClick: () => Promise<void>,
     color: Color,
-    type: ButtonType,
+    type?: ButtonType,
     className?: string,
 }
 
@@ -28,9 +28,9 @@ const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonP
         setIsPending(false)
     }
 
-    const buttonClass = `${type}-${isPending ? Color.GRAY : color} ${className ?? ""}`
+    const buttonClass = `btn ${type ?? ""} btn-${isPending ? Color.GRAY : color} ${className ?? ""}`
     const content = isPending
-        ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+        ? <span className="loading loading-spinner" role="status" aria-hidden="true" />
         : text
 
     return (

@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 
@@ -27,29 +26,6 @@ const (
 	clientSecret  = "QUICKFEED_CLIENT_SECRET"  // skipcq: SCT-A000
 	webhookSecret = "QUICKFEED_WEBHOOK_SECRET" // skipcq: SCT-A000
 )
-
-// ReadyForAppCreation returns nil if the environment configuration (envFile)
-// is ready for creating a new GitHub App. Otherwise, it returns an error,
-// e.g., if the envFile already contains App information or if the .env is
-// missing and there is a corresponding .env.bak file. The optional chkFn
-// functions are called to perform additional checks.
-func ReadyForAppCreation(envFile string, chkFns ...func() error) error {
-	if env.HasAppID() {
-		return fmt.Errorf("%s already contains App information", envFile)
-	}
-	// Check for missing .env file and if .env.bak already exists
-	for _, envFile := range []string{env.RootEnv(envFile), env.PublicEnv(envFile)} {
-		if err := env.Prepared(envFile); err != nil {
-			return err
-		}
-	}
-	for _, checker := range chkFns {
-		if err := checker(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func CreateNewQuickFeedApp(srvFn web.ServerType, envFile string, dev bool) error {
 	m := New(envFile, dev)
@@ -135,7 +111,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Create directories on path to PEM file, if not exists
-		appKeyFile := env.AppKey()
+		appKeyFile := env.AppPrivKeyFile()
 		if err := os.MkdirAll(filepath.Dir(appKeyFile), 0o700); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
@@ -176,7 +152,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Build the UI if needed
-		if err := m.buildUI(); err != nil {
+		if err := m.build(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -243,36 +219,6 @@ body {
 	log.Printf("Successfully created the %s GitHub App.", config.GetName())
 	t := template.Must(template.New("success").Parse(tpl))
 	return t.Execute(w, config.GetName())
-}
-
-// buildUI builds the UI. If it fails, it runs npm ci and tries again.
-// This is useful when the UI may not be built yet.
-// The build function can be overridden for testing purposes.
-func (m *Manifest) buildUI() error {
-	if err := m.build(); err != nil {
-		if ok := runNpmCi(); !ok {
-			return fmt.Errorf("failed to run npm ci: %w", err)
-		}
-		// Attempt to build again
-		if err := m.build(); err != nil {
-			return fmt.Errorf("failed to rebuild the UI: %w", err)
-		}
-	}
-	return nil
-}
-
-func runNpmCi() bool {
-	log.Println("Running npm ci...")
-	c := exec.Command("npm", "ci")
-	c.Dir = env.PublicDir()
-	if err := c.Run(); err != nil {
-		log.Print(c.Output())
-		log.Print(err)
-		log.Print("Failed to run npm ci; giving up")
-		return false
-	}
-	log.Print("Done npm ci")
-	return true
 }
 
 func form(w http.ResponseWriter) error {

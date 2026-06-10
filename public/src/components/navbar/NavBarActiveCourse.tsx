@@ -1,9 +1,9 @@
 import React from "react"
+import { useLocation } from "react-router"
 import { useAppState } from "../../overmind"
 import CourseFavoriteButton from "../CourseFavoriteButton"
-import ToggleSwitch from "./ToggleSwitch"
 import Breadcrumbs from "./Breadcrumbs"
-import { useLocation } from "react-router"
+import ToggleSwitch from "./ToggleSwitch"
 
 const NavBarActiveCourse = () => {
     const location = useLocation()
@@ -16,10 +16,10 @@ const NavBarActiveCourse = () => {
     }
 
     return (
-        <div className="nav-child course">
-            <Breadcrumbs />
-            <CourseFavoriteButton enrollment={enrollment} style={{ "paddingRight": "20px" }} />
+        <div className="flex items-center gap-4">
             <ToggleSwitch />
+            <Breadcrumbs />
+            <CourseFavoriteButton enrollment={enrollment} />
         </div>
     )
 }

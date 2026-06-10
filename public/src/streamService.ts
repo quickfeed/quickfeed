@@ -1,7 +1,8 @@
-import { QuickFeedService } from '../proto/qf/quickfeed_pb'
-import { Submission } from '../proto/qf/types_pb'
-import { Code, createClient, Client } from '@connectrpc/connect'
+import type { Client } from '@connectrpc/connect'
+import { Code, ConnectError, createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
+import { QuickFeedService } from '../proto/qf/quickfeed_pb'
+import type { Submission } from '../proto/qf/types_pb'
 import { ConnStatus } from './Helpers'
 
 
@@ -19,7 +20,7 @@ export class StreamService {
     }
 
     public async submissionStream(options: {
-        onMessage: (payload?: Submission | undefined) => void,
+        onMessage: (payload: Submission) => void,
         onError: (error: Error) => void
         onStatusChange: (status: ConnStatus) => void
     }) {
@@ -30,7 +31,7 @@ export class StreamService {
                 options.onMessage(msg)
             }
         } catch (error) {
-            if (error.code === Code.Canceled) {
+            if (ConnectError.from(error).code === Code.Canceled) {
                 // The stream was canceled, so we don't need to reconnect.
                 // This happens when the stream is closed by the server
                 // which happens only if the user opens a new stream, i.e., opens the frontend in a new tab.

@@ -22,22 +22,29 @@ export const FeedbackTextInput: React.FC<FeedbackTextInputProps> = ({
     minWords
 }) => {
     return (
-        <div className="mb-3">
-            <label htmlFor={id} className="form-label">
-                {label} <small className="text-muted">(min {minWords} words, max {maxWords} words)</small>
-            </label>
+        <div className="w-full">
+            <div className="mb-2">
+                <label htmlFor={id} className="block text-base font-semibold text-base-content mb-1">
+                    {label}
+                </label>
+                <div className="text-xs text-base-content/60">
+                    min {minWords}, max {maxWords} words
+                </div>
+            </div>
             <textarea
                 id={id}
-                className="form-control"
-                rows={3}
+                className="textarea h-24 textarea-primary w-full"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 maxLength={2000}
             />
-            <small className="form-text text-muted">
-                {wordCount}/{maxWords} words
-            </small>
+            <div className="flex justify-end mt-1">
+                <span className={`text-xs font-semibold ${wordCount > maxWords ? 'text-error' : wordCount >= minWords ? 'text-success' : 'text-base-content/60'
+                    }`}>
+                    {wordCount}/{maxWords} words
+                </span>
+            </div>
         </div>
     )
 }

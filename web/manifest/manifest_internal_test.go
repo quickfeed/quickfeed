@@ -248,7 +248,7 @@ func TestBuildUI(t *testing.T) {
 	m := Manifest{
 		build: func() error { return ui.Build(t.TempDir(), true) },
 	}
-	if err := m.buildUI(); err != nil {
+	if err := m.build(); err != nil {
 		t.Errorf("buildUI() failed with error: %v", err)
 	}
 }
