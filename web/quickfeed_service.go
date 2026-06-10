@@ -567,13 +567,13 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 		return nil, scmConnectErr
 	}
 
-	if err := isEmpty(ctx, scmClient, repos); err != nil {
+	if err := CommitsAhead(ctx, scmClient, repos); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
 		}
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository is not empty"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
