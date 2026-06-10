@@ -12,23 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var jsonFolderContent = `[
-  {
-    "name": "Dockerfile",
-    "path": "scripts/Dockerfile",
-    "sha": "873c7550c0fc40b07cf173382bc93028f8f87c06",
-    "size": 316,
-    "type": "file"
-  },
-  {
-    "name": "run.sh",
-    "path": "scripts/run.sh",
-    "sha": "fa3515649d92a369bb4c212760bf54b5d4d00d4e",
-    "size": 1381,
-    "type": "file"
-  }
-]`
-
 // MockedGithubSCM implements the SCM interface.
 type MockedGithubSCM struct {
 	*GithubSCM
@@ -393,21 +376,6 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 				}
 			}
 			w.WriteHeader(http.StatusNotFound) // repo not found
-		}),
-	)
-	getReposContentsByOwnerByRepoByPathHandler := WithRequestMatchHandler(
-		getReposContentsByOwnerByRepoByPath,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// we only care about the owner and repo; we ignore the path component
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			logger.Debug(replaceArgs(getReposContentsByOwnerByRepoByPath, owner, repo, ""))
-
-			if !s.hasOrgRepo(owner, repo) {
-				w.WriteHeader(http.StatusNotFound) // org and repo not found
-				return
-			}
-			mustWrite(w, jsonFolderContent)
 		}),
 	)
 	getReposCommitsByOwnerByRepoByRefHandler := WithRequestMatchHandler(
@@ -864,7 +832,6 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getReposByOwnerByRepoHandler,
 		deleteReposByOwnerByRepoHandler,
 		getRepositoriesByIDHandler,
-		getReposContentsByOwnerByRepoByPathHandler,
 		getReposCommitsByOwnerByRepoByRefHandler,
 		getReposCompareByOwnerByRepoByBaseByHeadHandler,
 		getReposCollaboratorsByOwnerByRepoHandler,
