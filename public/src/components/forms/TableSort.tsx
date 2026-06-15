@@ -92,7 +92,7 @@ const SortButton = ({ label, isActive, ascending, onClick }: SortButtonProps) =>
             onClick={onClick}
         >
             {label}
-            {isActive && <i className={`fa ${directionIcon} text-xs`} />}
+            {isActive && <i className={`fas ${directionIcon} text-xs`} />}
         </button>
     )
 }
@@ -111,7 +111,7 @@ const FilterToggle = ({ label, isActive, onClick }: FilterToggleProps) => {
             onClick={onClick}
             title={isActive ? `Show ${label.toLowerCase()}` : `Hide ${label.toLowerCase()}`}
         >
-            {isActive && <i className="fa fa-eye-slash text-xs" />}
+            {isActive && <i className="fas fa-eye-slash text-xs" />}
             {label}
         </button>
     )

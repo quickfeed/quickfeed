@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,6 +32,14 @@ func (m *MockClient) Cookie(t *testing.T, user *qf.User) string {
 		t.Fatal(err)
 	}
 	return cookie.String()
+}
+
+// Context returns a context with the authentication cookie set for the given user.
+func (m *MockClient) Context(t *testing.T, user *qf.User) context.Context {
+	t.Helper()
+	ctx, info := connect.NewClientContext(t.Context())
+	info.RequestHeader().Set("cookie", m.Cookie(t, user))
+	return ctx
 }
 
 // TokenManager returns the underlying TokenManager for advanced test scenarios.

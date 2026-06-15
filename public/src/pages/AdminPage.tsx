@@ -1,11 +1,11 @@
 import React from "react"
-import { Route, Routes, useNavigate, useLocation } from "react-router"
-import { useAppState } from "../overmind"
+import { Route, Routes, useLocation, useNavigate } from "react-router"
+import CreateCourse from "../components/admin/CreateCourse"
 import EditCourse from "../components/admin/EditCourse"
 import Users from "../components/admin/Users"
 import Card from "../components/Card"
-import CreateCourse from "../components/admin/CreateCourse"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { useAppState } from "../overmind"
 
 
 // AdminPage is the page containing the admin-only components.

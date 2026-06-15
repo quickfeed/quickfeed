@@ -1,6 +1,6 @@
 import React from "react"
+import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
-import { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 
 type SubmissionInfoProps = {
@@ -88,22 +88,19 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     )
 }
 
-function usedSlipdaysRows(assignment: Assignment, usedSlipDays: UsedSlipDays[]): React.JSX.Element {
+function usedSlipdaysRows(assignment: Assignment, usedSlipDays: UsedSlipDays[]): React.ReactNode {
     // returns a table row if there exists some used slip days for the assignment, otherwise returns nothing
     if (usedSlipDays.length === 0) {
-        return <></>
+        return null
     }
 
-    const rows = usedSlipDays
+    return usedSlipDays
         .filter(slipDay => slipDay.assignmentID === assignment.ID)
-        .map((slipDay, index) => {
-            return (
-                <span key={index}>
-                    {slipDay.usedDays}
-                </span>
-            )
-        })
-    return <>{rows}</>
+        .map((slipDay, index) => (
+            <span key={index}>
+                {slipDay.usedDays}
+            </span>
+        ))
 }
 
 export default SubmissionInfo

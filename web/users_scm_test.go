@@ -48,7 +48,6 @@ func TestUpdateEnrollmentsAfterUpdateUserLogin(t *testing.T) {
 		},
 	})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scmOpt, memberOpt), web.WithInterceptors())
-	adminCookie := client.Cookie(t, admin)
 
 	// Admin approves the enrollment
 	enrollment, err := db.GetEnrollmentByCourseAndUser(course.GetID(), student.GetID())
@@ -60,7 +59,8 @@ func TestUpdateEnrollmentsAfterUpdateUserLogin(t *testing.T) {
 	req := &qf.Enrollments{
 		Enrollments: []*qf.Enrollment{enrollment},
 	}
-	_, err = client.UpdateEnrollments(t.Context(), qtest.RequestWithCookie(req, adminCookie))
+	adminCtx := client.Context(t, admin)
+	_, err = client.UpdateEnrollments(adminCtx, req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,11 +126,11 @@ func TestUpdateGroupAfterUpdateUserLogin(t *testing.T) {
 		},
 	})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scmOpt, memberOpt), web.WithInterceptors())
-	adminCookie := client.Cookie(t, admin)
+	adminCtx := client.Context(t, admin)
 
 	// Admin updates the group (e.g., approving it)
 	group.Status = qf.Group_APPROVED
-	_, err = client.UpdateGroup(t.Context(), qtest.RequestWithCookie(group, adminCookie))
+	_, err = client.UpdateGroup(adminCtx, group)
 	if err != nil {
 		t.Fatal(err)
 	}

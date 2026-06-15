@@ -1,9 +1,9 @@
 import React from "react"
+import { nextURL } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
+import NavMenuItem from "../navbar-buttons/NavMenuItem"
 import StreamStatus from "./StreamStatus"
 import ThemeController from "./ThemeController"
-import NavMenuItem from "../navbar-buttons/NavMenuItem"
-import { nextURL } from "../../Helpers"
 
 const NavBarUser = () => {
     const { self, isLoggedIn } = useAppState()
@@ -12,7 +12,7 @@ const NavBarUser = () => {
     if (!isLoggedIn) {
         return (
             <button className="btn bg-black text-white border-black">
-                <i className="fa fa-github" />
+                <i className="fab fa-github" />
                 <a href={`/auth/github?next=${nextURL()}`} className="ml-2">Sign in with GitHub</a>
             </button>
         )

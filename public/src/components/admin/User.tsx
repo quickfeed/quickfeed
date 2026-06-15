@@ -1,7 +1,7 @@
 import React from "react"
-import { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
-import { useGrpc } from "../../overmind"
+import type { Enrollment, User as pbUser } from "../../../proto/qf/types_pb"
 import { EnrollmentStatus, EnrollmentStatusBadgeColor } from "../../Helpers"
+import { useGrpc } from "../../overmind"
 import UserInfo from "../UserInfo"
 
 const User = ({ user }: { user: pbUser; hidden: boolean }) => {
@@ -65,7 +65,7 @@ const User = ({ user }: { user: pbUser; hidden: boolean }) => {
                     {user.IsAdmin && (
                         <span className="badge badge-primary">Admin</span>
                     )}
-                    <i className={`fa fa-chevron-down transition-transform ${showEnrollments ? 'rotate-180' : ''}`} />
+                    <i className={`fas fa-chevron-down transition-transform ${showEnrollments ? 'rotate-180' : ''}`} />
                 </div>
             </div>
             {showEnrollments && enrollmentsList}

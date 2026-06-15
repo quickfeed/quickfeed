@@ -1,5 +1,6 @@
 import React from "react"
-import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
+import type { Review, Submission } from "../../../proto/qf/types_pb"
+import { Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
 import { getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useAppState } from "../../overmind"
@@ -38,7 +39,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
             <div className="card-body p-0">
                 <div className="flex items-center justify-between bg-primary text-primary-content px-6 py-4 rounded-t-2xl">
                     <div className="flex items-center gap-2">
-                        <i className="fa fa-clipboard-check text-xl" />
+                        <i className="fas fa-clipboard-check text-xl" />
                         <h3 className="text-lg font-bold">{assignmentName}</h3>
                     </div>
                 </div>

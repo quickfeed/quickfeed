@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mime"
 	"net/http"
 	"os"
 	"os/signal"
@@ -26,24 +25,6 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
-
-func init() {
-	mustAddExtensionType := func(ext, typ string) {
-		if err := mime.AddExtensionType(ext, typ); err != nil {
-			panic(err)
-		}
-	}
-
-	// On Windows, mime types are read from the registry, which often has
-	// outdated content qf. This enforces that the correct mime types
-	// are used on all platforms.
-	mustAddExtensionType(".html", "text/html")
-	mustAddExtensionType(".css", "text/css")
-	mustAddExtensionType(".js", "application/javascript")
-	mustAddExtensionType(".jsx", "application/javascript")
-	mustAddExtensionType(".map", "application/json")
-	mustAddExtensionType(".ts", "application/x-typescript")
-}
 
 func main() {
 	var (

@@ -1,9 +1,11 @@
-import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, Enrollment_UserStatus, Group_GroupStatus, Enrollment_DisplayState, Submission_Status, Submissions, GradeSchema, SubmissionSchema, SubmissionsSchema, GroupSchema } from "../proto/qf/types_pb"
-import { Score } from "../proto/kit/score/score_pb"
-import { CourseGroup, SubmissionOwner } from "./overmind/state"
-import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt"
-import { CourseSubmissions } from "../proto/qf/requests_pb"
 import { create, isMessage } from "@bufbuild/protobuf"
+import type { Timestamp } from "@bufbuild/protobuf/wkt"
+import { timestampDate } from "@bufbuild/protobuf/wkt"
+import type { Score } from "../proto/kit/score/score_pb"
+import type { CourseSubmissions } from "../proto/qf/requests_pb"
+import type { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, Submissions, User } from "../proto/qf/types_pb"
+import { Enrollment_DisplayState, Enrollment_UserStatus, GradeSchema, Group_GroupStatus, GroupSchema, Submission_Status, SubmissionSchema, SubmissionsSchema } from "../proto/qf/types_pb"
+import type { CourseGroup, SubmissionOwner } from "./overmind/state"
 
 export enum Color {
     RED = "error",
@@ -23,9 +25,9 @@ export enum ConnStatus {
 }
 
 export enum Icon {
-    DASH = "fa fa-minus grey",
-    USER = "fa fa-user",
-    GROUP = "fa fa-users",
+    DASH = "fas fa-minus grey",
+    USER = "fas fa-user",
+    GROUP = "fas fa-users",
 }
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -180,6 +182,23 @@ export const getStatusByUser = (submission: Submission, userID: bigint): Submiss
         return Submission_Status.NONE
     }
     return grade.Status
+}
+
+// getEffectiveStatus returns the status to display for a submission from the
+// viewer's perspective. When the viewer is a participant (their userID is in
+// the submission's Grades), their personal status is used. When the viewer is
+// not a participant (e.g. a teacher reviewing someone else's submission),
+// returns the consensus across all grades — or NONE if the grades disagree.
+export const getEffectiveStatus = (submission: Submission, viewerID: bigint): Submission_Status => {
+    const grade = submission.Grades.find(grade => grade.UserID === viewerID)
+    if (grade) {
+        return grade.Status
+    }
+    if (submission.Grades.length === 0) {
+        return Submission_Status.NONE
+    }
+    const first = submission.Grades[0].Status
+    return submission.Grades.every(g => g.Status === first) ? first : Submission_Status.NONE
 }
 
 export const setStatusByUser = (submission: Submission, userID: bigint, status: Submission_Status): Submission => {
@@ -374,7 +393,8 @@ export enum EnrollmentSort {
     Activity,
     Slipdays,
     Approved,
-    StudentID
+    StudentID,
+    Group
 }
 
 export enum SubmissionSort {
@@ -414,6 +434,11 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
             const aID = a.user?.ID ?? BigInt(0)
             const bID = b.user?.ID ?? BigInt(0)
             return sortOrder * Number(aID - bID)
+        }
+        case EnrollmentSort.Group: {
+            const groupA = a.group?.name ?? ""
+            const groupB = b.group?.name ?? ""
+            return sortOrder * (groupA.localeCompare(groupB))
         }
         default:
             return 0

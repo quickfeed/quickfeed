@@ -63,7 +63,8 @@ var entryPoints = []string{
 func getOptions(outputDir string, dev bool) api.BuildOptions {
 	// its important to call env.GetAppURL after the env variable is loaded
 	buildOptions.Define = map[string]string{
-		"process.env.QUICKFEED_APP_URL": fmt.Sprintf("%q", env.GetAppURL()),
+		"process.env.QUICKFEED_APP_URL":          fmt.Sprintf("%q", env.GetAppURL()),
+		"process.env.QUICKFEED_ORGANIZATION_URL": fmt.Sprintf("%q", env.GetOrganizationURL()),
 	}
 	if dev {
 		// Esbuild defaults to production when minifying files.

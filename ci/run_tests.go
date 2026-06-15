@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
@@ -142,9 +141,5 @@ func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 			return err
 		}
 	}
-	// Copy the tests and assignment repos to the destination directory
-	if err = fileop.CopyDir(testsDir, dstDir); err != nil {
-		return err
-	}
-	return fileop.CopyDir(assignmentDir, dstDir)
+	return nil
 }

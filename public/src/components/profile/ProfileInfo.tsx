@@ -1,10 +1,11 @@
-import React, { Dispatch, SetStateAction } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
+import React from 'react'
 import { useAppState } from '../../overmind'
 
 const Field = ({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) => (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-base-100 border border-base-300">
         <div className={`w-9 h-9 rounded-lg ${color} flex items-center justify-center flex-shrink-0`}>
-            <i className={`fa ${icon} text-sm`} />
+            <i className={`fas ${icon} text-sm`} />
         </div>
         <div className="min-w-0 text-left">
             <p className="text-[10px] uppercase font-bold tracking-widest text-base-content/40">{label}</p>
@@ -36,7 +37,7 @@ const ProfileInfo = ({ setEditing }: { setEditing: Dispatch<SetStateAction<boole
                 className="btn btn-primary btn-sm mt-6 gap-2 w-full"
                 onClick={() => setEditing(true)}
             >
-                <i className="fa fa-edit" />
+                <i className="fas fa-pen-to-square" />
                 Edit Profile
             </button>
         </>

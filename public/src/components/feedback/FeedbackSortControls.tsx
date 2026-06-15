@@ -12,20 +12,20 @@ export const FeedbackSortControls: React.FC<FeedbackSortControlsProps> = ({
     feedbackCount
 }) => {
     const toggleSort = () => {
-        if (sortOrder === 'none') setSortOrder('asc')
-        else if (sortOrder === 'asc') setSortOrder('desc')
-        else setSortOrder('none')
+        if (sortOrder === 'none') { setSortOrder('asc') }
+        else if (sortOrder === 'asc') { setSortOrder('desc') }
+        else { setSortOrder('none') }
     }
 
     const getSortIcon = () => {
-        if (sortOrder === 'asc') return 'fa-sort-amount-asc'
-        if (sortOrder === 'desc') return 'fa-sort-amount-desc'
+        if (sortOrder === 'asc') { return 'fa-arrow-up-wide-short' }
+        if (sortOrder === 'desc') { return 'fa-arrow-down-wide-short' }
         return 'fa-sort'
     }
 
     const getSortLabel = () => {
-        if (sortOrder === 'asc') return 'Time (Low to High)'
-        if (sortOrder === 'desc') return 'Time (High to Low)'
+        if (sortOrder === 'asc') { return 'Time (Low to High)' }
+        if (sortOrder === 'desc') { return 'Time (High to Low)' }
         return 'Sort by Time'
     }
 
@@ -33,7 +33,7 @@ export const FeedbackSortControls: React.FC<FeedbackSortControlsProps> = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-base-200 rounded-lg">
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <i className="fa fa-list text-primary" />
+                    <i className="fas fa-list text-primary" />
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-base-content">Individual Feedback</h3>
@@ -44,7 +44,7 @@ export const FeedbackSortControls: React.FC<FeedbackSortControlsProps> = ({
                 className={`btn btn-sm gap-2 ${sortOrder !== 'none' ? 'btn-primary' : 'btn-outline'}`}
                 onClick={toggleSort}
             >
-                <i className={`fa ${getSortIcon()}`} />
+                <i className={`fas ${getSortIcon()}`} />
                 {getSortLabel()}
             </button>
         </div>

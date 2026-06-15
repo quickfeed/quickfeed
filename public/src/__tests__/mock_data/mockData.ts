@@ -1,22 +1,29 @@
-/* eslint-disable no-unused-vars */
+
 import { create } from "@bufbuild/protobuf"
+import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { BuildInfoSchema, ScoreSchema } from "../../../proto/kit/score/score_pb"
-import {
-    CourseSubmissionsSchema,
-    Organization,
-    OrganizationSchema,
+import type {
+    Organization
 } from "../../../proto/qf/requests_pb"
 import {
+    CourseSubmissionsSchema,
+    OrganizationSchema,
+} from "../../../proto/qf/requests_pb"
+import type {
     Assignment,
+    Enrollment,
+    GradingBenchmark,
+    Review,
+    User
+} from "../../../proto/qf/types_pb"
+import {
     AssignmentSchema,
     CourseSchema,
-    Enrollment,
     Enrollment_DisplayState,
     Enrollment_UserStatus,
     EnrollmentSchema,
     EnrollmentsSchema,
     GradeSchema,
-    GradingBenchmark,
     GradingBenchmarkSchema,
     GradingCriterion_Grade,
     GradingCriterionSchema,
@@ -24,16 +31,13 @@ import {
     GroupSchema,
     GroupsSchema,
     Repository_Type,
-    Review,
     ReviewSchema,
     Submission_Status,
     SubmissionSchema,
     SubmissionsSchema,
-    User,
     UserSchema,
 } from "../../../proto/qf/types_pb"
 import { SubmissionsForCourse } from "../../Helpers"
-import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 
 export class MockData {
     public static mockedUsers(): User[] {

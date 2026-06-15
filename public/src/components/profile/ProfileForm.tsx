@@ -1,10 +1,11 @@
-import React, { Dispatch, SetStateAction, useCallback, useState } from "react"
+import { clone } from "@bufbuild/protobuf"
+import type { Dispatch, SetStateAction } from "react"
+import React, { useCallback, useState } from "react"
+import { useNavigate } from "react-router"
+import { UserSchema } from "../../../proto/qf/types_pb"
 import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
-import { useNavigate } from "react-router"
-import { clone } from "@bufbuild/protobuf"
-import { UserSchema } from "../../../proto/qf/types_pb"
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
@@ -62,7 +63,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
                         disabled={!isValid}
                         type="submit"
                     >
-                        <i className="fa fa-save" />
+                        <i className="fas fa-floppy-disk" />
                         Save Changes
                     </button>
                     {state.isValid && (

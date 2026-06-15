@@ -1,12 +1,14 @@
-import React, { ComponentProps } from "react"
-import Collapsible from "./Collapsible"
+import { create } from "@bufbuild/protobuf"
+import type { ComponentProps } from "react"
+import React from "react"
+import { useNavigate } from "react-router"
+import type { Course } from "../../proto/qf/types_pb"
+import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
+import { Color, isVisible } from "../Helpers"
 import { useAppState } from "../overmind"
-import { Course, Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
+import Collapsible from "./Collapsible"
 import CourseCard from "./CourseCard"
 import Button from "./admin/Button"
-import { useNavigate } from "react-router"
-import { Color, isVisible } from "../Helpers"
-import { create } from "@bufbuild/protobuf"
 
 // If home is set to true, display only favorite courses. Otherwise, display all courses.
 // Can be used on dashboard to let the user choose which courses to display based on favorites.
@@ -21,7 +23,7 @@ type CourseCardElement = React.ReactElement<ComponentProps<typeof CourseCard>>
 const CourseSection = ({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) => (
     <div className="mb-10">
         <div className="flex items-center gap-3 mb-6">
-            <i className={`fa ${icon} text-primary text-xl`} />
+            <i className={`fas ${icon} text-primary text-xl`} />
             <h2 className="text-3xl font-bold text-base-content">{title}</h2>
             <div className="flex-grow h-px bg-gradient-to-r from-base-300 to-transparent ml-4" />
         </div>

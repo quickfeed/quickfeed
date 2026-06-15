@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
-import { Assignment, Submission } from '../../proto/qf/types_pb'
+import type { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
@@ -78,7 +78,7 @@ const Lab = () => {
                         <div className="card-body p-0">
                             <div className="flex items-center justify-between bg-base-300 px-4 py-3 border-b border-base-content/10">
                                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                                    <i className="fa fa-terminal" />
+                                    <i className="fas fa-terminal" />
                                     <span>Build Log</span>
                                 </h3>
                             </div>

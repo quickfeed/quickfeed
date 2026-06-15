@@ -62,11 +62,17 @@ func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgNam
 	return sc.UpdateGroupMembers(ctx, opt)
 }
 
-// isEmpty ensured that all of the provided repositories are empty
-func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
+// CommitsAhead ensures that all provided repositories have zero commits ahead.
+func CommitsAhead(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
-		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetScmRepositoryID()}) {
-			return fmt.Errorf("repository %s is not empty", r.Name())
+		ahead, err := sc.CommitsAhead(ctx, &scm.RepositoryOptions{ID: r.GetScmRepositoryID()})
+		if err != nil {
+			// if we cannot determine whether the repository is ahead,
+			// treat it as ahead so we don't delete a repository that may contain work.
+			return fmt.Errorf("could not determine if repository %s is ahead of assignments: %w", r.Name(), err)
+		}
+		if ahead > 0 {
+			return fmt.Errorf("repository %s is %d commits ahead", r.Name(), ahead)
 		}
 	}
 	return nil

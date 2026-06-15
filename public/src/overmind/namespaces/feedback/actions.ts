@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf"
-import { Context } from '../..'
+import type { Context } from '../..'
 import { CourseRequestSchema } from "../../../../proto/qf/requests_pb"
-import { AssignmentFeedback, AssignmentFeedbacks } from '../../../../proto/qf/types_pb'
+import type { AssignmentFeedback, AssignmentFeedbacks } from '../../../../proto/qf/types_pb'
 
 export const createAssignmentFeedback = async (
     { effects }: Context,

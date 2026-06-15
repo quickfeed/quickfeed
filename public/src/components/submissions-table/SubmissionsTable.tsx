@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from "react"
-import { Assignment, Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
+import type { Assignment, Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
 import { Icon, SubmissionSort } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import MemberRow from "./MemberRow"

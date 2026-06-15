@@ -1,5 +1,5 @@
 import React from "react"
-import { Enrollment } from "../../proto/qf/types_pb"
+import type { Enrollment } from "../../proto/qf/types_pb"
 import { isVisible } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 
@@ -20,8 +20,8 @@ const CourseFavoriteButton = ({ enrollment, className }: { enrollment: Enrollmen
             onClick={() => actions.setEnrollmentState(enrollment)}
         >
             {starred
-                ? <span className="font-semibold text-md"><i className="fa fa-star" /></span>
-                : <span className="opacity-40"><span className="font-semibold"><i className="fa fa-star" /></span></span>
+                ? <span className="font-semibold text-md"><i className="fas fa-star" /></span>
+                : <span className="opacity-40"><span className="font-semibold"><i className="fas fa-star" /></span></span>
             }
         </button>
     )

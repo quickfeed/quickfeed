@@ -1,6 +1,6 @@
 import React from "react"
 import { useNavigate } from "react-router"
-import { Enrollment } from "../../../proto/qf/types_pb"
+import type { Enrollment } from "../../../proto/qf/types_pb"
 import { isStudent, isTeacher } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import NavBarLabs from "./NavBarLabs"
@@ -33,7 +33,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }) => {
                 className="flex justify-between items-center w-full h-16 px-4 font-bold hover:bg-base-100 cursor-pointer rounded-none"
             >
                 <span>{course?.code}</span>
-                <i className={`fa fa-caret-down fa-lg transition-transform ${active ? "" : "rotate-90"}`} />
+                <i className={`fas fa-caret-down fa-lg transition-transform ${active ? "" : "rotate-90"}`} />
             </button>
             {active && (
                 <ul className="menu p-0 bg-base-200 w-full m-0">

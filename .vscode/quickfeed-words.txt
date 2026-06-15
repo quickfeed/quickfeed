@@ -157,6 +157,7 @@ maxage
 meling
 migueleliasweb
 mkdir
+moby
 newkey
 ngrok
 nocheck
@@ -245,6 +246,7 @@ Testersen
 testinfo
 testjava
 testjavafile
+testmod
 testorg
 testpackage
 timestamppb

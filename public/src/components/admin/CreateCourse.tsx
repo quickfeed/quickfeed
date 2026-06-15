@@ -1,9 +1,9 @@
 import React, { useState } from "react"
-import { Course } from "../../../proto/qf/types_pb"
+import type { Course } from "../../../proto/qf/types_pb"
+import { Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import CourseForm from "../forms/CourseForm"
 import CourseCreationInfo from "./CourseCreationInfo"
-import { Color } from "../../Helpers"
 
 
 const CreateCourse = () => {
@@ -24,7 +24,7 @@ const CreateCourse = () => {
     }, [actions, orgName, state.courses])
 
     const buttonClass = course ? "btn btn-success btn-disabled" : "btn btn-primary"
-    const findTextOrIcon = course ? <i className="fa fa-check" /> : "Find"
+    const findTextOrIcon = course ? <i className="fas fa-check" /> : "Find"
     const refreshIfNoCourse = course ? undefined : refresh
     return (
         <div className="container mx-auto px-4 space-y-6">

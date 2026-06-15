@@ -1,6 +1,6 @@
 import React from "react"
-import AboutPage from "./AboutPage"
 import { nextURL } from "../Helpers"
+import AboutPage from "./AboutPage"
 
 const LoginPage = () => {
     return (
@@ -13,7 +13,7 @@ const LoginPage = () => {
             </p>
             <section className="mb-12">
                 <div className="card bg-base-200 shadow-xl p-8 text-center min-w-[300px]">
-                    <i className="fa fa-5x fa-github mb-4 text-base-content" />
+                    <i className="fab fa-github fa-5x mb-4 text-base-content self-center" />
                     <h4 className="text-xl font-semibold mb-2">Sign in with GitHub</h4>
                     <p className="text-base-content/60 mb-6">to continue to QuickFeed</p>
                     <a

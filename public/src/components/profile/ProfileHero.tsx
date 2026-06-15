@@ -7,7 +7,7 @@ const ProfileHero = ({ name }: { name: string }) => (
                 <h1 className="text-5xl font-bold mb-4">Hi, {name}</h1>
                 <p className="text-lg mb-2">You can edit your user information here.</p>
                 <div className="alert alert-warning mt-4">
-                    <i className="fa fa-exclamation-triangle" />
+                    <i className="fas fa-triangle-exclamation" />
                     <span><strong>Use your real name as it appears on Canvas</strong> to ensure that approvals are correctly attributed.</span>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react"
-import { Alert as AlertType } from "../../overmind/state"
 import { useActions } from "../../overmind"
+import type { Alert as AlertType } from "../../overmind/state"
 
 /** Alert is a component that displays a single alert.
  *

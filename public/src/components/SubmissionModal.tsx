@@ -25,7 +25,7 @@ const SubmissionModal = ({ review, courseID, onClose }: SubmissionModalProps) =>
     // Register Esc key handler for the lifetime of the modal
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose()
+            if (e.key === "Escape") { onClose() }
         }
         window.addEventListener("keydown", handleKeyDown)
         return () => window.removeEventListener("keydown", handleKeyDown)
@@ -73,7 +73,7 @@ const SubmissionModal = ({ review, courseID, onClose }: SubmissionModalProps) =>
                         {labLink && assignment && (
                             <a href={labLink} target="_blank" rel="noopener noreferrer"
                                 className="text-xs link link-hover text-primary flex items-center gap-1">
-                                <i className="fa fa-external-link" />
+                                <i className="fas fa-arrow-up-right-from-square" />
                                 {assignment.name}
                             </a>
                         )}

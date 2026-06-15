@@ -1,5 +1,6 @@
 import React, { memo, useState } from "react"
-import { Enrollment, GradingCriterion_Grade, Group, Submission } from "../../../proto/qf/types_pb"
+import type { Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
+import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { getSubmissionCellColor } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
@@ -45,7 +46,7 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
     }
 
     // Guard: this should never happen since MemberRow only renders a cell when at least one submission exists
-    if (!submission) return null
+    if (!submission) { return null }
 
     const isSelected = state.selectedSubmission?.ID === submission.ID
     const colorClass = getSubmissionCellColor(submission, owner)
@@ -80,13 +81,13 @@ const SubmissionCell = memo(({ submissionPair, owner, onSubmissionClick, review 
                     className="btn btn-xs btn-ghost px-1 min-h-0 h-5"
                     title={isGroupSubmission ? "Showing group submission (click for individual)" : "Showing individual submission (click for group)"}
                 >
-                    <i className={isGroupSubmission ? "fa fa-users" : "fa fa-user"} />
+                    <i className={isGroupSubmission ? "fas fa-users" : "fas fa-user"} />
                 </button>
             )
         }
         if (hasGroup && !hasIndividual) {
             // Only show group icon when it's a group submission without an individual alternative
-            return <i className="fa fa-users text-xs opacity-60" title="Group submission" />
+            return <i className="fas fa-users text-xs opacity-60" title="Group submission" />
         }
         return null
     }

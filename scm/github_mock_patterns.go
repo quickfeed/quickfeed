@@ -14,7 +14,8 @@ const (
 	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createCourseRepo, createForkedRepo, waitForRepository
 	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository
 	getRepositoriesByID                                       = "GET /repositories/{repository_id}"                                  // getRepository, deleteRepository
-	getReposContentsByOwnerByRepoByPath                       = "GET /repos/{owner}/{repo}/contents/{path...}"                       // RepositoryIsEmpty
+	getReposCommitsByOwnerByRepoByRef                         = "GET /repos/{owner}/{repo}/commits/{ref}"                            // commitsAhead
+	getReposCompareByOwnerByRepoByBaseByHead                  = "GET /repos/{owner}/{repo}/compare/{basehead}"                       // CommitsAhead, commitsAhead
 	getReposCollaboratorsByOwnerByRepo                        = "GET /repos/{owner}/{repo}/collaborators"                            // UpdateGroupMembers
 	putReposCollaboratorsByOwnerByRepoByUsername              = "PUT /repos/{owner}/{repo}/collaborators/{username}"                 // CreateCourse, UpdateEnrollment, CreateGroup, UpdateGroupMembers, createStudentRepo, grantPullAccessToCourseRepos
 	deleteReposCollaboratorsByOwnerByRepoByUsername           = "DELETE /repos/{owner}/{repo}/collaborators/{username}"              // UpdateGroupMembers

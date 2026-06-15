@@ -1,9 +1,9 @@
 import React from "react"
 import { isPendingGroup } from "../../Helpers"
-import { useAppState } from "../../overmind"
 import { useCourseID } from "../../hooks/useCourseID"
-import UserInfo from "../UserInfo"
+import { useAppState } from "../../overmind"
 import Badge from "../Badge"
+import UserInfo from "../UserInfo"
 
 
 const GroupView = () => {
@@ -39,7 +39,7 @@ const GroupView = () => {
             <div className="card-body p-0">
                 <div className="flex items-center justify-between bg-primary text-primary-content px-6 py-4 rounded-t-lg">
                     <div className="flex items-center gap-2">
-                        <i className="fa fa-users text-xl" />
+                        <i className="fas fa-users text-xl" />
                         <h2 className="card-title text-xl">{group.name}</h2>
                     </div>
                     {pendingBadge}
@@ -49,7 +49,7 @@ const GroupView = () => {
                         members
                     ) : (
                         <div className="text-center py-8 text-base-content/60">
-                            <i className="fa fa-user-slash text-3xl mb-2" />
+                            <i className="fas fa-user-slash text-3xl mb-2" />
                             <p>No members yet</p>
                         </div>
                     )}

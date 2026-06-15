@@ -1,11 +1,12 @@
 import React from "react"
-import { useAppState } from "../../overmind"
-import { Assignment, Submission } from "../../../proto/qf/types_pb"
-import ProgressIndicator from "../ProgressIndicator"
-import NavBarLink, { NavLink } from "./NavBarLink"
-import { useNavigate, useLocation } from "react-router"
+import { useLocation, useNavigate } from "react-router"
+import type { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
+import { useAppState } from "../../overmind"
+import ProgressIndicator from "../ProgressIndicator"
 import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
+import type { NavLink } from "./NavBarLink"
+import NavBarLink from "./NavBarLink"
 
 
 const NavBarLabs = () => {
@@ -21,7 +22,7 @@ const NavBarLabs = () => {
         return (
             <>
                 <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
-                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fa fa-check ml-2" />}
+                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fas fa-check ml-2" />}
             </>
         )
     }
@@ -43,7 +44,7 @@ const NavBarLabs = () => {
         return false
     }
 
-    const labLinks = state.assignments[state.activeCourse.toString()]?.map(assignment => {
+    return state.assignments[state.activeCourse.toString()].map(assignment => {
         const submissions = state.submissions.ForAssignment(assignment)
         if (!submissions) {
             return null
@@ -72,8 +73,6 @@ const NavBarLabs = () => {
             )
         })
     })
-
-    return <>{labLinks}</>
 }
 
 export default NavBarLabs

@@ -1,8 +1,10 @@
 import { create } from "@bufbuild/protobuf"
 import { derived } from "overmind"
-import { Context } from "."
-import { Assignment, Course, Enrollment, Enrollment_UserStatus, Group, Submission, User, UserSchema } from "../../proto/qf/types_pb"
-import { Color, ConnStatus, filterByApproval, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
+import type { Context } from "."
+import type { Assignment, Course, Enrollment, Group, Submission, User } from "../../proto/qf/types_pb"
+import { Enrollment_UserStatus, UserSchema } from "../../proto/qf/types_pb"
+import type { Color } from "../Helpers"
+import { ConnStatus, filterByApproval, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint

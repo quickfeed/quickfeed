@@ -2,11 +2,13 @@ package database
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
+
+// ErrIncompleteProfile is returned when a user tries to enroll without complete profile information.
+var ErrIncompleteProfile = errors.New("user must have name, email, and student ID set before enrolling")
 
 // CreateEnrollment creates a new pending enrollment.
 func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
@@ -16,7 +18,7 @@ func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 	}
 	// Validate that user has complete profile information before allowing enrollment
 	if err := user.ValidateProfile(); err != nil {
-		return fmt.Errorf("user must have name, email, and student ID set before enrolling: %w", err)
+		return errors.Join(ErrIncompleteProfile, err)
 	}
 
 	var courseCount int64

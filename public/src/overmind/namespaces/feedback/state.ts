@@ -1,4 +1,4 @@
-import { AssignmentFeedback } from "../../../../proto/qf/types_pb"
+import type { AssignmentFeedback } from "../../../../proto/qf/types_pb"
 
 // Feedback data structure for a course
 export interface CourseFeedbackData {

@@ -8,7 +8,7 @@ const SubmissionTypeIcon: React.FC<SubmissionTypeIconProps> = ({ solo }) => {
     const indicator = solo ? "fa-user" : "fa-users"
     return (
         <i
-            className={`fa ${indicator} submission-icon`}
+            className={`fas ${indicator} submission-icon`}
             title={solo ? "Solo Submission" : "Group Submission"}
         />
     )

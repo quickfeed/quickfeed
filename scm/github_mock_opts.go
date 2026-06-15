@@ -18,7 +18,13 @@ type mockOptions struct {
 	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
 	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
 	appConfigs map[string]github.AppConfig                           // map: code -> app config
+	aheadBy    map[string]int                                        // map: "owner/repo" -> commits ahead of the upstream assignments repo
 	userID     int64                                                 // counter for generating unique user IDs
+}
+
+// repoKey is the key used to track per-repository mock state keyed by owner and repository name.
+func repoKey(owner, repo string) string {
+	return owner + "/" + repo
 }
 
 // DumpState returns a string representation of the mock state.
@@ -68,13 +74,31 @@ func (s *mockOptions) DumpState() string {
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
 func (s *mockOptions) hasOrgRepo(orgName, repoName string) bool {
+	return s.findOrgRepo(orgName, repoName) != nil
+}
+
+func (s *mockOptions) findOrgRepo(orgName, repoName string) *github.Repository {
 	for i := range s.repos {
 		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
-			return true
+			return repo
 		}
 	}
-	return false
+	return nil
+}
+
+func (s *mockOptions) findRepoByHeadSHA(headSHA string) *github.Repository {
+	for i := range s.repos {
+		repo := &s.repos[i]
+		if mockRepoHeadSHA(repo) == headSHA {
+			return repo
+		}
+	}
+	return nil
+}
+
+func mockRepoHeadSHA(repo *github.Repository) string {
+	return fmt.Sprintf("%040x", repo.GetID())
 }
 
 // matchOrgFunc calls f with the organization that matches orgName and returns true if found.
@@ -113,6 +137,7 @@ func newMockOptions() *mockOptions {
 		issues:    map[string]map[string][]github.Issue{},
 		comments:  map[string]map[string]map[int64][]github.IssueComment{},
 		reviewers: map[string]map[string]map[int]github.ReviewersRequest{},
+		aheadBy:   map[string]int{},
 		userID:    0,
 	}
 }
@@ -144,6 +169,16 @@ func WithOrgs(orgs ...github.Organization) MockOption {
 func WithRepos(repos ...github.Repository) MockOption {
 	return func(opts *mockOptions) {
 		opts.repos = append(opts.repos, repos...)
+	}
+}
+
+// WithCommitsAhead seeds the given repository as n commits ahead of the upstream
+// assignments repository it was forked from. Use this when the repository is created
+// during the test (e.g. via an RPC) and the mock instance is not directly reachable;
+// tests that hold the mock can call SimulateCommit instead.
+func WithCommitsAhead(owner, repo string, n int) MockOption {
+	return func(opts *mockOptions) {
+		opts.aheadBy[repoKey(owner, repo)] = n
 	}
 }
 

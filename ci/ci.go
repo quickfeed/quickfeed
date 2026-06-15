@@ -10,6 +10,9 @@ type Job struct {
 	Name string
 	// Image names the image to use to run the job.
 	Image string
+	// Language specifies the programming language for the job.
+	// Parsed from the #language/ directive in the run script.
+	Language string
 	// BuildContext is a list of files to include in the Docker build context.
 	// These files are available to the Dockerfile (e.g. via COPY/ADD) and can be
 	// copied into the image, such as into the /quickfeed directory, if desired.
@@ -18,6 +21,9 @@ type Job struct {
 	BuildContext map[string]string
 	// BindDir is the directory to bind to the container's /quickfeed directory.
 	BindDir string
+	// ReadOnlyMounts maps host source paths to container target paths for read-only bind mounts.
+	// These are mounted in addition to BindDir and are not affected by changes in the container.
+	ReadOnlyMounts map[string]string
 	// Env is a list of environment variables to set for the job.
 	Env []string
 	// Commands is a list of shell commands to run as part of the job.
