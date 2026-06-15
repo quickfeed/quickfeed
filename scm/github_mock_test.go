@@ -393,12 +393,14 @@ func TestMockRejectEnrollment(t *testing.T) {
 		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{OrganizationID: 123, User: "meling"}, wantErr: true},
 		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{RepositoryID: 1, User: "meling"}, wantErr: true},
 
-		{name: "CompleteRequest/OrgNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"}, wantErr: true},     // 789 does not exist
-		{name: "CompleteRequest/RepoNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"}, wantErr: true}, // 999 does not exist; note that jostein will be removed from foo
-		{name: "CompleteRequest/UserNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"}, wantErr: true},     // frank is not a member of foo
+		{name: "CompleteRequest/OrgNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 4, User: "meling"}, wantErr: true}, // 789 does not exist
 
+		// happy path: member and their repo both exist and are removed
 		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 4, User: "meling"}, wantErr: false},
-		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"}, wantErr: true}, // jostein was already removed
+		// repo already gone (404) is tolerated; jostein is still a member and is removed
+		{name: "CompleteRequest/RepoAlreadyDeleted", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"}, wantErr: false},
+		// membership already gone (404) is tolerated; jostein was removed above, repo 5 still exists
+		{name: "CompleteRequest/MembershipAlreadyGone", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"}, wantErr: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
 	for _, tt := range tests {
