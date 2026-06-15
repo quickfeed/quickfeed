@@ -37,14 +37,13 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 }
 
 // DeleteGroup deletes group with the provided ID.
+// The group's GitHub repository is deleted before the database records, so that
+// an interrupted delete leaves the database still referencing the repository,
+// allowing the delete operation to be retried.
 func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
-	}
-	if err := s.db.DeleteGroup(request.GetGroupID()); err != nil {
-		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.GetCode(), group.GetName(), err)
-		// continue with other delete operations
 	}
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -52,19 +51,23 @@ func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, 
 	}
 	if repo == nil {
 		s.logger.Debugf("No %s repository found for group %q: %v", course.GetCode(), group.GetName(), err)
-		// cannot continue without repository information
-		return nil
+		// no repository to delete; only remove the group from the database
+		return s.db.DeleteGroup(request.GetGroupID())
 	}
 
 	// when deleting an approved group, remove github repository as well
-	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
+	if err := sc.DeleteGroup(ctx, repo.GetScmRepositoryID()); err != nil {
+		if !errors.Is(err, scm.ErrNotFound) {
+			return fmt.Errorf("failed to delete %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
+		}
+		// repository already deleted on GitHub, e.g., by a previously interrupted delete
+		s.logger.Debugf("No %s repository found for group %q on GitHub: %v", course.GetCode(), group.GetName(), err)
+	}
+	if err := s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
 		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), group.GetName(), err)
 		// continue with other delete operations
 	}
-	opt := &scm.RepositoryOptions{
-		ID: repo.GetScmRepositoryID(),
-	}
-	return sc.DeleteGroup(ctx, opt.ID)
+	return s.db.DeleteGroup(request.GetGroupID())
 }
 
 // updateGroup updates the group for the given group request.

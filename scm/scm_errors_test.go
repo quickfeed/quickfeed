@@ -392,7 +392,7 @@ func TestErrorRejectEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to delete repository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
+			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to delete repository: repository 999: not found",
 			wantUserErr: userErrPrefix + " for jostein",
 		},
 		{

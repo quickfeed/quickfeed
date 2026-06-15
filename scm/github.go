@@ -559,8 +559,13 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 		return E(op, m, fmt.Errorf("missing ID"))
 	}
 
-	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
+	repo, resp, err := s.client.Repositories.GetByID(ctx, int64(id))
 	if err != nil {
+		if hasStatus(resp, http.StatusNotFound) {
+			// wrap ErrNotFound to allow callers to detect that the repository
+			// is already gone, e.g., from a previously interrupted delete
+			return E(op, m, fmt.Errorf("repository %d: %w", id, ErrNotFound))
+		}
 		return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
 	}
 
