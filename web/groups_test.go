@@ -628,6 +628,62 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 }
 
+// TestDeleteGroupRepoAlreadyDeleted verifies that DeleteGroup succeeds when the
+// group's repository no longer exists on GitHub, e.g., after a previously
+// interrupted delete operation, so that the database records can still be cleaned up.
+func TestDeleteGroupRepoAlreadyDeleted(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	user1 := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "user1", ScmRemoteID: 2})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("admin", "user1"),
+	), web.WithInterceptors())
+
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	qtest.EnrollStudent(t, db, user1, course)
+
+	group := &qf.Group{
+		CourseID: course.GetID(),
+		Name:     "TestGroup",
+		Users:    []*qf.User{user1},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+	// repository record referring to a repository that does not exist on GitHub
+	repo := &qf.Repository{
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		ScmRepositoryID:   999,
+		GroupID:           group.GetID(),
+		RepoType:          qf.Repository_GROUP,
+	}
+	if err := db.CreateRepository(repo); err != nil {
+		t.Fatal(err)
+	}
+
+	adminCtx := client.Context(t, admin)
+	if _, err := client.DeleteGroup(adminCtx, &qf.GroupRequest{
+		CourseID: course.GetID(),
+		GroupID:  group.GetID(),
+	}); err != nil {
+		t.Errorf("DeleteGroup() failed for group with missing GitHub repository: %v", err)
+	}
+	if _, err := db.GetGroup(group.GetID()); err == nil {
+		t.Error("group still exists in the database after DeleteGroup()")
+	}
+	repos, err := db.GetRepositories(&qf.Repository{GroupID: group.GetID(), RepoType: qf.Repository_GROUP})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repos) > 0 {
+		t.Error("repository record still exists in the database after DeleteGroup()")
+	}
+}
+
 func TestGetGroups(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
