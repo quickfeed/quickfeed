@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -183,6 +184,31 @@ func TestErrorGetOrganization(t *testing.T) {
 			_, gotErr := s.GetOrganization(context.Background(), tt.opt)
 			chkErrMsg(t, "GetOrganization()", gotErr, tt.wantErr, tt.wantUserErr)
 		})
+	}
+}
+
+func TestDeleteRepositoryTreatsDelete404AsSuccess(t *testing.T) {
+	calls := 0
+	s := NewGithubUserClient(qtest.Logger(t), "token")
+	s.client = github.NewClient(&http.Client{
+		Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+			calls++
+			switch r.Method + " " + r.URL.Path {
+			case http.MethodGet + " /repositories/1":
+				return githubResponse(http.StatusOK, `{"id":1,"name":"groupX","owner":{"login":"foo"}}`, nil), nil
+			case http.MethodDelete + " /repos/foo/groupX":
+				return githubResponse(http.StatusNotFound, "", nil), nil
+			default:
+				return nil, fmt.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			}
+		}),
+	})
+
+	if err := s.deleteRepository(context.Background(), 1); err != nil {
+		t.Fatalf("deleteRepository() error = %v, want nil", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected 2 requests, got %d", calls)
 	}
 }
 
