@@ -15,9 +15,9 @@ const detachTimeout = 2 * time.Minute
 
 // detachedMethods lists methods that perform multi-step SCM and database
 // mutations without rollback support. Aborting such a method midway, e.g.,
-// because the client closed the connection, leaves the GitHub organization
+// because the client closed the connection, can leave the GitHub organization
 // and the database in inconsistent states.
-// Once started, these methods must run to completion.
+// Once started, these methods should be allowed to complete, bounded by detachTimeout.
 var detachedMethods = map[string]bool{
 	"UpdateGroup":       true, // may create the group repo and add/remove collaborators on GitHub
 	"DeleteGroup":       true, // deletes database records before deleting the GitHub repo
