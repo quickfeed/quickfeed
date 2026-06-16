@@ -571,7 +571,12 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 		return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
 	}
 
-	if _, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+	if deleteResp, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+		if hasStatus(deleteResp, http.StatusNotFound) {
+			// The repository was deleted after GetByID succeeded.
+			// Treat this as success so delete remains idempotent.
+			return nil
+		}
 		return E(op, M("failed to delete repository %s/%s", repo.GetOwner().GetLogin(), repo.GetName()), err)
 	}
 
