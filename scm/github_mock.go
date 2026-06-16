@@ -12,23 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var jsonFolderContent = `[
-  {
-    "name": "Dockerfile",
-    "path": "scripts/Dockerfile",
-    "sha": "873c7550c0fc40b07cf173382bc93028f8f87c06",
-    "size": 316,
-    "type": "file"
-  },
-  {
-    "name": "run.sh",
-    "path": "scripts/run.sh",
-    "sha": "fa3515649d92a369bb4c212760bf54b5d4d00d4e",
-    "size": 1381,
-    "type": "file"
-  }
-]`
-
 // MockedGithubSCM implements the SCM interface.
 type MockedGithubSCM struct {
 	*GithubSCM
@@ -37,6 +20,17 @@ type MockedGithubSCM struct {
 	issueID     int64
 	issueNumber map[string]int // owner/repo -> issue number
 	commentID   int64
+}
+
+// SimulateCommit records a commit pushed to the given repository, advancing it one
+// commit ahead of the upstream assignments repository it was forked from.
+// Tests that only configure the mock at construction can use WithCommitsAhead.
+func (s *MockedGithubSCM) SimulateCommit(owner, repo string) error {
+	if s.findOrgRepo(owner, repo) == nil {
+		return fmt.Errorf("cannot simulate commit: repository %s/%s not found", owner, repo)
+	}
+	s.aheadBy[repoKey(owner, repo)]++
+	return nil
 }
 
 // nextIssueNumber returns the next issue number for the given owner and repo.
@@ -202,6 +196,12 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					Name:         github.String(opts.Name),
 					Owner:        &github.User{Login: github.String(dstOrg)},
 					Fork:         github.Bool(true),
+					// Record the upstream the fork was created from, mirroring how student
+					// and group repositories are forks of the assignments repository.
+					Parent: &github.Repository{
+						Name:  github.String(srcRepo),
+						Owner: &github.User{Login: github.String(srcOwner)},
+					},
 				}
 				s.repos = append(s.repos, fork)
 				if s.groups[dstOrg] == nil {
@@ -378,19 +378,55 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			w.WriteHeader(http.StatusNotFound) // repo not found
 		}),
 	)
-	getReposContentsByOwnerByRepoByPathHandler := WithRequestMatchHandler(
-		getReposContentsByOwnerByRepoByPath,
+	getReposCommitsByOwnerByRepoByRefHandler := WithRequestMatchHandler(
+		getReposCommitsByOwnerByRepoByRef,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// we only care about the owner and repo; we ignore the path component
 			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			logger.Debug(replaceArgs(getReposContentsByOwnerByRepoByPath, owner, repo, ""))
+			repoName := r.PathValue("repo")
+			ref := r.PathValue("ref")
+			logger.Debug(replaceArgs(getReposCommitsByOwnerByRepoByRef, owner, repoName, ref))
 
-			if !s.hasOrgRepo(owner, repo) {
-				w.WriteHeader(http.StatusNotFound) // org and repo not found
+			repo := s.findOrgRepo(owner, repoName)
+			if repo == nil {
+				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			mustWrite(w, jsonFolderContent)
+			mustWrite(w, &github.RepositoryCommit{SHA: github.String(mockRepoHeadSHA(repo))})
+		}),
+	)
+	getReposCompareByOwnerByRepoByBaseByHeadHandler := WithRequestMatchHandler(
+		getReposCompareByOwnerByRepoByBaseByHead,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			basehead := r.PathValue("basehead")
+			logger.Debug(replaceArgs(getReposCompareByOwnerByRepoByBaseByHead, owner, repo, basehead))
+
+			if !s.hasOrgRepo(owner, repo) {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+
+			comparison := &github.CommitsComparison{
+				AheadBy:      github.Int(0), // Default: no commits ahead
+				BehindBy:     github.Int(0),
+				TotalCommits: github.Int(0),
+				Status:       github.String("identical"),
+			}
+
+			parts := strings.Split(basehead, "...")
+			if len(parts) == 2 {
+				headRepo := s.findRepoByHeadSHA(parts[1])
+				if headRepo != nil {
+					if ahead := s.aheadBy[repoKey(owner, headRepo.GetName())]; ahead > 0 {
+						comparison.AheadBy = github.Int(ahead)
+						comparison.TotalCommits = github.Int(ahead)
+						comparison.Status = github.String("ahead")
+					}
+				}
+			}
+
+			mustWrite(w, comparison)
 		}),
 	)
 	getReposCollaboratorsByOwnerByRepoHandler := WithRequestMatchHandler(
@@ -796,7 +832,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getReposByOwnerByRepoHandler,
 		deleteReposByOwnerByRepoHandler,
 		getRepositoriesByIDHandler,
-		getReposContentsByOwnerByRepoByPathHandler,
+		getReposCommitsByOwnerByRepoByRefHandler,
+		getReposCompareByOwnerByRepoByBaseByHeadHandler,
 		getReposCollaboratorsByOwnerByRepoHandler,
 		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
 		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
