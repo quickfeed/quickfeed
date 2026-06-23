@@ -66,7 +66,7 @@ describe("UpdateEnrollment", () => {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
         mockedOvermind.actions.global.setActiveCourse(test.courseID)
-        window.confirm = jest.fn(() => true)
+        window.confirm = vi.fn(() => true)
         await mockedOvermind.actions.global.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })
