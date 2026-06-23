@@ -1,4 +1,4 @@
-name: Jest Test
+name: Vitest
 
 on:
   push:
@@ -26,5 +26,5 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        working-directory: ./public/src/__tests__
-        run: npm test -- --testPathIgnorePatterns="/e2e/|/testHelpers/"
+        working-directory: ./public
+        run: npm run test:ci
