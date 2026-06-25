@@ -17,9 +17,9 @@ import "patch/go.proto";
 
 // Score give the score for a single test named TestName.
 message Score {
-    uint64 ID           = 1;
+    uint64 ID           = 1 [(go.field) = { tags: 'bun:",pk,autoincrement"' }];
     uint64 SubmissionID = 2 [(go.field) = { tags: 'gorm:"foreignKey:ID"' }];
-    string Secret       = 3 [(go.field) = { tags: 'gorm:"-"' }];  // the unique identifier for a scoring session
+    string Secret       = 3 [(go.field) = { tags: 'gorm:"-" bun:"-"' }];  // the unique identifier for a scoring session
 
     string TestName    = 4;  // name of the test
     string TaskName    = 5;  // name of task this score belongs to
@@ -31,7 +31,7 @@ message Score {
 
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
-    uint64 ID           = 1;
+    uint64 ID           = 1 [(go.field) = { tags: 'bun:",pk,autoincrement"' }];
     uint64 SubmissionID = 2 [(go.field) = { tags: 'gorm:"foreignKey:ID"' }];
     string BuildLog     = 3;
     int64 ExecTime      = 4;
