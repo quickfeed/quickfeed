@@ -4,16 +4,16 @@
 
 import type { GenFile, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { AssignmentFeedbackSchema, AssignmentFeedbacksSchema, AssignmentsSchema, CourseSchema, CoursesSchema, EnrollmentSchema, EnrollmentsSchema, GradeSchema, GroupSchema, GroupsSchema, ReviewSchema, SubmissionSchema, SubmissionsSchema, UserSchema, UsersSchema } from "./types_pb";
-import { file_qf_types } from "./types_pb";
-import type { CourseLogRequestSchema, CourseLogSchema, CourseRequestSchema, CourseSubmissionsSchema, EnrollmentRequestSchema, GroupRequestSchema, RebuildRequestSchema, RepositoriesSchema, RepositoryRequestSchema, ReviewRequestSchema, SubmissionRequestSchema, VoidSchema } from "./requests_pb";
+import type { CourseLogRequestSchema, CourseLogSchema, CourseRequestSchema, CourseSubmissionsSchema, EnrollmentRequestSchema, GroupRequestSchema, NoteRequestSchema, NotesRequestSchema, RebuildRequestSchema, RepositoriesSchema, RepositoryRequestSchema, ReviewRequestSchema, SubmissionRequestSchema, VoidSchema } from "./requests_pb";
 import { file_qf_requests } from "./requests_pb";
+import type { AssignmentFeedbackSchema, AssignmentFeedbacksSchema, AssignmentsSchema, CourseSchema, CoursesSchema, EnrollmentSchema, EnrollmentsSchema, GradeSchema, GroupSchema, GroupsSchema, NoteSchema, NotesSchema, ReviewSchema, SubmissionSchema, SubmissionsSchema, UserSchema, UsersSchema } from "./types_pb";
+import { file_qf_types } from "./types_pb";
 
 /**
  * Describes the file qf/quickfeed.proto.
  */
 export const file_qf_quickfeed: GenFile = /*@__PURE__*/
-  fileDesc("ChJxZi9xdWlja2ZlZWQucHJvdG8SAnFmMrYLChBRdWlja0ZlZWRTZXJ2aWNlEh0KB0dldFVzZXISCC5xZi5Wb2lkGggucWYuVXNlchIfCghHZXRVc2VycxIILnFmLlZvaWQaCS5xZi5Vc2VycxIgCgpVcGRhdGVVc2VyEggucWYuVXNlchoILnFmLlZvaWQSJwoIR2V0R3JvdXASEC5xZi5Hcm91cFJlcXVlc3QaCS5xZi5Hcm91cBIyChFHZXRHcm91cHNCeUNvdXJzZRIRLnFmLkNvdXJzZVJlcXVlc3QaCi5xZi5Hcm91cHMSIwoLQ3JlYXRlR3JvdXASCS5xZi5Hcm91cBoJLnFmLkdyb3VwEiMKC1VwZGF0ZUdyb3VwEgkucWYuR3JvdXAaCS5xZi5Hcm91cBIpCgtEZWxldGVHcm91cBIQLnFmLkdyb3VwUmVxdWVzdBoILnFmLlZvaWQSKgoJR2V0Q291cnNlEhEucWYuQ291cnNlUmVxdWVzdBoKLnFmLkNvdXJzZRIjCgpHZXRDb3Vyc2VzEggucWYuVm9pZBoLLnFmLkNvdXJzZXMSJAoMVXBkYXRlQ291cnNlEgoucWYuQ291cnNlGggucWYuVm9pZBIyChZVcGRhdGVDb3Vyc2VWaXNpYmlsaXR5Eg4ucWYuRW5yb2xsbWVudBoILnFmLlZvaWQSNAoOR2V0QXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0Gg8ucWYuQXNzaWdubWVudHMSMAoRVXBkYXRlQXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0GggucWYuVm9pZBI4Cg5HZXRFbnJvbGxtZW50cxIVLnFmLkVucm9sbG1lbnRSZXF1ZXN0Gg8ucWYuRW5yb2xsbWVudHMSLAoQQ3JlYXRlRW5yb2xsbWVudBIOLnFmLkVucm9sbG1lbnQaCC5xZi5Wb2lkEi4KEVVwZGF0ZUVucm9sbG1lbnRzEg8ucWYuRW5yb2xsbWVudHMaCC5xZi5Wb2lkEjYKDUdldFN1Ym1pc3Npb24SFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoOLnFmLlN1Ym1pc3Npb24SOAoOR2V0U3VibWlzc2lvbnMSFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoPLnFmLlN1Ym1pc3Npb25zEkYKFkdldFN1Ym1pc3Npb25zQnlDb3Vyc2USFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoVLnFmLkNvdXJzZVN1Ym1pc3Npb25zEicKEFVwZGF0ZVN1Ym1pc3Npb24SCS5xZi5HcmFkZRoILnFmLlZvaWQSMgoSUmVidWlsZFN1Ym1pc3Npb25zEhIucWYuUmVidWlsZFJlcXVlc3QaCC5xZi5Wb2lkEi0KDENyZWF0ZVJldmlldxIRLnFmLlJldmlld1JlcXVlc3QaCi5xZi5SZXZpZXcSLQoMVXBkYXRlUmV2aWV3EhEucWYuUmV2aWV3UmVxdWVzdBoKLnFmLlJldmlldxI8ChhDcmVhdGVBc3NpZ25tZW50RmVlZGJhY2sSFi5xZi5Bc3NpZ25tZW50RmVlZGJhY2saCC5xZi5Wb2lkEkMKFUdldEFzc2lnbm1lbnRGZWVkYmFjaxIRLnFmLkNvdXJzZVJlcXVlc3QaFy5xZi5Bc3NpZ25tZW50RmVlZGJhY2tzEjMKDEdldENvdXJzZUxvZxIULnFmLkNvdXJzZUxvZ1JlcXVlc3QaDS5xZi5Db3Vyc2VMb2cSNgoPR2V0UmVwb3NpdG9yaWVzEhEucWYuQ291cnNlUmVxdWVzdBoQLnFmLlJlcG9zaXRvcmllcxIuCgtJc0VtcHR5UmVwbxIVLnFmLlJlcG9zaXRvcnlSZXF1ZXN0GggucWYuVm9pZBIuChBTdWJtaXNzaW9uU3RyZWFtEggucWYuVm9pZBoOLnFmLlN1Ym1pc3Npb24wAUImWiFnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQvcWa6AgBiBnByb3RvMw", [file_qf_types, file_qf_requests]);
+  fileDesc("ChJxZi9xdWlja2ZlZWQucHJvdG8SAnFmMooNChBRdWlja0ZlZWRTZXJ2aWNlEh0KB0dldFVzZXISCC5xZi5Wb2lkGggucWYuVXNlchIfCghHZXRVc2VycxIILnFmLlZvaWQaCS5xZi5Vc2VycxIgCgpVcGRhdGVVc2VyEggucWYuVXNlchoILnFmLlZvaWQSJwoIR2V0R3JvdXASEC5xZi5Hcm91cFJlcXVlc3QaCS5xZi5Hcm91cBIyChFHZXRHcm91cHNCeUNvdXJzZRIRLnFmLkNvdXJzZVJlcXVlc3QaCi5xZi5Hcm91cHMSIwoLQ3JlYXRlR3JvdXASCS5xZi5Hcm91cBoJLnFmLkdyb3VwEiMKC1VwZGF0ZUdyb3VwEgkucWYuR3JvdXAaCS5xZi5Hcm91cBIpCgtEZWxldGVHcm91cBIQLnFmLkdyb3VwUmVxdWVzdBoILnFmLlZvaWQSKgoJR2V0Q291cnNlEhEucWYuQ291cnNlUmVxdWVzdBoKLnFmLkNvdXJzZRIjCgpHZXRDb3Vyc2VzEggucWYuVm9pZBoLLnFmLkNvdXJzZXMSJAoMVXBkYXRlQ291cnNlEgoucWYuQ291cnNlGggucWYuVm9pZBIyChZVcGRhdGVDb3Vyc2VWaXNpYmlsaXR5Eg4ucWYuRW5yb2xsbWVudBoILnFmLlZvaWQSNAoOR2V0QXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0Gg8ucWYuQXNzaWdubWVudHMSMAoRVXBkYXRlQXNzaWdubWVudHMSES5xZi5Db3Vyc2VSZXF1ZXN0GggucWYuVm9pZBI4Cg5HZXRFbnJvbGxtZW50cxIVLnFmLkVucm9sbG1lbnRSZXF1ZXN0Gg8ucWYuRW5yb2xsbWVudHMSLAoQQ3JlYXRlRW5yb2xsbWVudBIOLnFmLkVucm9sbG1lbnQaCC5xZi5Wb2lkEi4KEVVwZGF0ZUVucm9sbG1lbnRzEg8ucWYuRW5yb2xsbWVudHMaCC5xZi5Wb2lkEjYKDUdldFN1Ym1pc3Npb24SFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoOLnFmLlN1Ym1pc3Npb24SOAoOR2V0U3VibWlzc2lvbnMSFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoPLnFmLlN1Ym1pc3Npb25zEkYKFkdldFN1Ym1pc3Npb25zQnlDb3Vyc2USFS5xZi5TdWJtaXNzaW9uUmVxdWVzdBoVLnFmLkNvdXJzZVN1Ym1pc3Npb25zEicKEFVwZGF0ZVN1Ym1pc3Npb24SCS5xZi5HcmFkZRoILnFmLlZvaWQSMgoSUmVidWlsZFN1Ym1pc3Npb25zEhIucWYuUmVidWlsZFJlcXVlc3QaCC5xZi5Wb2lkEi0KDENyZWF0ZVJldmlldxIRLnFmLlJldmlld1JlcXVlc3QaCi5xZi5SZXZpZXcSLQoMVXBkYXRlUmV2aWV3EhEucWYuUmV2aWV3UmVxdWVzdBoKLnFmLlJldmlldxInCgpDcmVhdGVOb3RlEg8ucWYuTm90ZVJlcXVlc3QaCC5xZi5Ob3RlEicKClVwZGF0ZU5vdGUSDy5xZi5Ob3RlUmVxdWVzdBoILnFmLk5vdGUSJwoKRGVsZXRlTm90ZRIPLnFmLk5vdGVSZXF1ZXN0GggucWYuVm9pZBInCghHZXROb3RlcxIQLnFmLk5vdGVzUmVxdWVzdBoJLnFmLk5vdGVzEi4KDkdldENvdXJzZU5vdGVzEhEucWYuQ291cnNlUmVxdWVzdBoJLnFmLk5vdGVzEjwKGENyZWF0ZUFzc2lnbm1lbnRGZWVkYmFjaxIWLnFmLkFzc2lnbm1lbnRGZWVkYmFjaxoILnFmLlZvaWQSQwoVR2V0QXNzaWdubWVudEZlZWRiYWNrEhEucWYuQ291cnNlUmVxdWVzdBoXLnFmLkFzc2lnbm1lbnRGZWVkYmFja3MSMwoMR2V0Q291cnNlTG9nEhQucWYuQ291cnNlTG9nUmVxdWVzdBoNLnFmLkNvdXJzZUxvZxI2Cg9HZXRSZXBvc2l0b3JpZXMSES5xZi5Db3Vyc2VSZXF1ZXN0GhAucWYuUmVwb3NpdG9yaWVzEi4KC0lzRW1wdHlSZXBvEhUucWYuUmVwb3NpdG9yeVJlcXVlc3QaCC5xZi5Wb2lkEi4KEFN1Ym1pc3Npb25TdHJlYW0SCC5xZi5Wb2lkGg4ucWYuU3VibWlzc2lvbjABQiZaIWdpdGh1Yi5jb20vcXVpY2tmZWVkL3F1aWNrZmVlZC9xZroCAGIGcHJvdG8z", [file_qf_requests, file_qf_types]);
 
 /**
  * users //
@@ -221,6 +221,48 @@ export const QuickFeedService: GenService<{
     methodKind: "unary";
     input: typeof ReviewRequestSchema;
     output: typeof ReviewSchema;
+  },
+  /**
+   * @generated from rpc qf.QuickFeedService.CreateNote
+   */
+  createNote: {
+    methodKind: "unary";
+    input: typeof NoteRequestSchema;
+    output: typeof NoteSchema;
+  },
+  /**
+   * @generated from rpc qf.QuickFeedService.UpdateNote
+   */
+  updateNote: {
+    methodKind: "unary";
+    input: typeof NoteRequestSchema;
+    output: typeof NoteSchema;
+  },
+  /**
+   * @generated from rpc qf.QuickFeedService.DeleteNote
+   */
+  deleteNote: {
+    methodKind: "unary";
+    input: typeof NoteRequestSchema;
+    output: typeof VoidSchema;
+  },
+  /**
+   * @generated from rpc qf.QuickFeedService.GetNotes
+   */
+  getNotes: {
+    methodKind: "unary";
+    input: typeof NotesRequestSchema;
+    output: typeof NotesSchema;
+  },
+  /**
+   * GetCourseNotes returns all internal notes for a course.
+   *
+   * @generated from rpc qf.QuickFeedService.GetCourseNotes
+   */
+  getCourseNotes: {
+    methodKind: "unary";
+    input: typeof CourseRequestSchema;
+    output: typeof NotesSchema;
   },
   /**
    * @generated from rpc qf.QuickFeedService.CreateAssignmentFeedback
