@@ -51,6 +51,8 @@ type Database interface {
 	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollment changes status of the course enrollment for the given user and course.
 	UpdateEnrollment(*qf.Enrollment) error
+	// GetEnrollmentByID returns the enrollment with the given ID.
+	GetEnrollmentByID(enrollmentID uint64) (*qf.Enrollment, error)
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
