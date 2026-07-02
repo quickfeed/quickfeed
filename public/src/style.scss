@@ -72,10 +72,25 @@ body {
     padding: 0;
 }
 
+/* Flex column variant: lets a fixed header (notes, status buttons) sit above a
+   scrollable region that fills the remaining height, so expanding the notes
+   card shrinks the log area instead of pushing its bottom off-screen. */
+.lab-sticky-col {
+    display: flex;
+    flex-direction: column;
+}
+
 .reviewLabResult {
     overflow: scroll;
     overflow-y: scroll;
     height: 75vh;
+}
+
+/* Used inside .lab-sticky-col to fill the remaining vertical space. */
+.lab-fill {
+    flex: 1;
+    min-height: 0;
+    height: auto;
 }
 
 .table-overflow {
