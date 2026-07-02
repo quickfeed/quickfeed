@@ -4,6 +4,7 @@ import Card from "../components/Card"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 import Members from "../components/Members"
 import Results from "../components/Results"
+import StudentDetails from "../components/StudentDetails"
 import { RepositoryCards } from "../components/student/RepositoryCards"
 import Assignments from "../components/teacher/Assignments"
 import { Color, isManuallyGraded } from "../Helpers"
@@ -66,6 +67,7 @@ const TeacherPage = () => {
             <Routes>
                 <Route path="/groups" element={<GroupPage />} />
                 <Route path="/members" element={<Members />} />
+                <Route path="/members/:enrollmentID" element={<StudentDetails />} />
                 <Route path="/review" element={<ReviewResults />} />
                 <Route path="/results" element={<RegularResults />} />
                 <Route path="/assignments" element={<Assignments />} />
