@@ -5,6 +5,7 @@ import { CourseLinks } from "../components/CourseLinks"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 import Members from "../components/Members"
 import Results from "../components/Results"
+import StudentDetails from "../components/StudentDetails"
 import SubmissionGuide from "../components/student/SubmissionGuide"
 import Assignments from "../components/teacher/Assignments"
 import CourseLogs from "../components/teacher/CourseLogs"
@@ -70,6 +71,7 @@ const TeacherPage = () => {
             <Routes>
                 <Route path="/groups" element={<GroupPage />} />
                 <Route path="/members" element={<Members />} />
+                <Route path="/members/:enrollmentID" element={<StudentDetails />} />
                 <Route path="/review" element={<ReviewResults />} />
                 <Route path="/results" element={<RegularResults />} />
                 <Route path="/assignments" element={<Assignments />} />
