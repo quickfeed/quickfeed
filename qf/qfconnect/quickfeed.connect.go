@@ -105,6 +105,21 @@ const (
 	// QuickFeedServiceUpdateReviewProcedure is the fully-qualified name of the QuickFeedService's
 	// UpdateReview RPC.
 	QuickFeedServiceUpdateReviewProcedure = "/qf.QuickFeedService/UpdateReview"
+	// QuickFeedServiceCreateNoteProcedure is the fully-qualified name of the QuickFeedService's
+	// CreateNote RPC.
+	QuickFeedServiceCreateNoteProcedure = "/qf.QuickFeedService/CreateNote"
+	// QuickFeedServiceUpdateNoteProcedure is the fully-qualified name of the QuickFeedService's
+	// UpdateNote RPC.
+	QuickFeedServiceUpdateNoteProcedure = "/qf.QuickFeedService/UpdateNote"
+	// QuickFeedServiceDeleteNoteProcedure is the fully-qualified name of the QuickFeedService's
+	// DeleteNote RPC.
+	QuickFeedServiceDeleteNoteProcedure = "/qf.QuickFeedService/DeleteNote"
+	// QuickFeedServiceGetNotesProcedure is the fully-qualified name of the QuickFeedService's GetNotes
+	// RPC.
+	QuickFeedServiceGetNotesProcedure = "/qf.QuickFeedService/GetNotes"
+	// QuickFeedServiceGetCourseNotesProcedure is the fully-qualified name of the QuickFeedService's
+	// GetCourseNotes RPC.
+	QuickFeedServiceGetCourseNotesProcedure = "/qf.QuickFeedService/GetCourseNotes"
 	// QuickFeedServiceCreateAssignmentFeedbackProcedure is the fully-qualified name of the
 	// QuickFeedService's CreateAssignmentFeedback RPC.
 	QuickFeedServiceCreateAssignmentFeedbackProcedure = "/qf.QuickFeedService/CreateAssignmentFeedback"
@@ -153,6 +168,12 @@ type QuickFeedServiceClient interface {
 	RebuildSubmissions(context.Context, *qf.RebuildRequest) (*qf.Void, error)
 	CreateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
 	UpdateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
+	CreateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
+	UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
+	DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error)
+	GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error)
+	// GetCourseNotes returns all internal notes for a course, for staff overviews.
+	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
 	CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error)
 	GetAssignmentFeedback(context.Context, *qf.CourseRequest) (*qf.AssignmentFeedbacks, error)
 	GetRepositories(context.Context, *qf.CourseRequest) (*qf.Repositories, error)
@@ -315,6 +336,36 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 			connect.WithClientOptions(opts...),
 		),
+		createNote: connect.NewClient[qf.NoteRequest, qf.Note](
+			httpClient,
+			baseURL+QuickFeedServiceCreateNoteProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("CreateNote")),
+			connect.WithClientOptions(opts...),
+		),
+		updateNote: connect.NewClient[qf.NoteRequest, qf.Note](
+			httpClient,
+			baseURL+QuickFeedServiceUpdateNoteProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateNote")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteNote: connect.NewClient[qf.NoteRequest, qf.Void](
+			httpClient,
+			baseURL+QuickFeedServiceDeleteNoteProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteNote")),
+			connect.WithClientOptions(opts...),
+		),
+		getNotes: connect.NewClient[qf.NotesRequest, qf.Notes](
+			httpClient,
+			baseURL+QuickFeedServiceGetNotesProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetNotes")),
+			connect.WithClientOptions(opts...),
+		),
+		getCourseNotes: connect.NewClient[qf.CourseRequest, qf.Notes](
+			httpClient,
+			baseURL+QuickFeedServiceGetCourseNotesProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("GetCourseNotes")),
+			connect.WithClientOptions(opts...),
+		),
 		createAssignmentFeedback: connect.NewClient[qf.AssignmentFeedback, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceCreateAssignmentFeedbackProcedure,
@@ -374,6 +425,11 @@ type quickFeedServiceClient struct {
 	rebuildSubmissions       *connect.Client[qf.RebuildRequest, qf.Void]
 	createReview             *connect.Client[qf.ReviewRequest, qf.Review]
 	updateReview             *connect.Client[qf.ReviewRequest, qf.Review]
+	createNote               *connect.Client[qf.NoteRequest, qf.Note]
+	updateNote               *connect.Client[qf.NoteRequest, qf.Note]
+	deleteNote               *connect.Client[qf.NoteRequest, qf.Void]
+	getNotes                 *connect.Client[qf.NotesRequest, qf.Notes]
+	getCourseNotes           *connect.Client[qf.CourseRequest, qf.Notes]
 	createAssignmentFeedback *connect.Client[qf.AssignmentFeedback, qf.Void]
 	getAssignmentFeedback    *connect.Client[qf.CourseRequest, qf.AssignmentFeedbacks]
 	getRepositories          *connect.Client[qf.CourseRequest, qf.Repositories]
@@ -597,6 +653,51 @@ func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *qf.Revie
 	return nil, err
 }
 
+// CreateNote calls qf.QuickFeedService.CreateNote.
+func (c *quickFeedServiceClient) CreateNote(ctx context.Context, req *qf.NoteRequest) (*qf.Note, error) {
+	response, err := c.createNote.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// UpdateNote calls qf.QuickFeedService.UpdateNote.
+func (c *quickFeedServiceClient) UpdateNote(ctx context.Context, req *qf.NoteRequest) (*qf.Note, error) {
+	response, err := c.updateNote.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// DeleteNote calls qf.QuickFeedService.DeleteNote.
+func (c *quickFeedServiceClient) DeleteNote(ctx context.Context, req *qf.NoteRequest) (*qf.Void, error) {
+	response, err := c.deleteNote.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// GetNotes calls qf.QuickFeedService.GetNotes.
+func (c *quickFeedServiceClient) GetNotes(ctx context.Context, req *qf.NotesRequest) (*qf.Notes, error) {
+	response, err := c.getNotes.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// GetCourseNotes calls qf.QuickFeedService.GetCourseNotes.
+func (c *quickFeedServiceClient) GetCourseNotes(ctx context.Context, req *qf.CourseRequest) (*qf.Notes, error) {
+	response, err := c.getCourseNotes.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // CreateAssignmentFeedback calls qf.QuickFeedService.CreateAssignmentFeedback.
 func (c *quickFeedServiceClient) CreateAssignmentFeedback(ctx context.Context, req *qf.AssignmentFeedback) (*qf.Void, error) {
 	response, err := c.createAssignmentFeedback.CallUnary(ctx, connect.NewRequest(req))
@@ -669,6 +770,12 @@ type QuickFeedServiceHandler interface {
 	RebuildSubmissions(context.Context, *qf.RebuildRequest) (*qf.Void, error)
 	CreateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
 	UpdateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
+	CreateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
+	UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
+	DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error)
+	GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error)
+	// GetCourseNotes returns all internal notes for a course, for staff overviews.
+	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
 	CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error)
 	GetAssignmentFeedback(context.Context, *qf.CourseRequest) (*qf.AssignmentFeedbacks, error)
 	GetRepositories(context.Context, *qf.CourseRequest) (*qf.Repositories, error)
@@ -827,6 +934,36 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 		connect.WithHandlerOptions(opts...),
 	)
+	quickFeedServiceCreateNoteHandler := connect.NewUnaryHandlerSimple(
+		QuickFeedServiceCreateNoteProcedure,
+		svc.CreateNote,
+		connect.WithSchema(quickFeedServiceMethods.ByName("CreateNote")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceUpdateNoteHandler := connect.NewUnaryHandlerSimple(
+		QuickFeedServiceUpdateNoteProcedure,
+		svc.UpdateNote,
+		connect.WithSchema(quickFeedServiceMethods.ByName("UpdateNote")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceDeleteNoteHandler := connect.NewUnaryHandlerSimple(
+		QuickFeedServiceDeleteNoteProcedure,
+		svc.DeleteNote,
+		connect.WithSchema(quickFeedServiceMethods.ByName("DeleteNote")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetNotesHandler := connect.NewUnaryHandlerSimple(
+		QuickFeedServiceGetNotesProcedure,
+		svc.GetNotes,
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetNotes")),
+		connect.WithHandlerOptions(opts...),
+	)
+	quickFeedServiceGetCourseNotesHandler := connect.NewUnaryHandlerSimple(
+		QuickFeedServiceGetCourseNotesProcedure,
+		svc.GetCourseNotes,
+		connect.WithSchema(quickFeedServiceMethods.ByName("GetCourseNotes")),
+		connect.WithHandlerOptions(opts...),
+	)
 	quickFeedServiceCreateAssignmentFeedbackHandler := connect.NewUnaryHandlerSimple(
 		QuickFeedServiceCreateAssignmentFeedbackProcedure,
 		svc.CreateAssignmentFeedback,
@@ -907,6 +1044,16 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceCreateReviewHandler.ServeHTTP(w, r)
 		case QuickFeedServiceUpdateReviewProcedure:
 			quickFeedServiceUpdateReviewHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCreateNoteProcedure:
+			quickFeedServiceCreateNoteHandler.ServeHTTP(w, r)
+		case QuickFeedServiceUpdateNoteProcedure:
+			quickFeedServiceUpdateNoteHandler.ServeHTTP(w, r)
+		case QuickFeedServiceDeleteNoteProcedure:
+			quickFeedServiceDeleteNoteHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetNotesProcedure:
+			quickFeedServiceGetNotesHandler.ServeHTTP(w, r)
+		case QuickFeedServiceGetCourseNotesProcedure:
+			quickFeedServiceGetCourseNotesHandler.ServeHTTP(w, r)
 		case QuickFeedServiceCreateAssignmentFeedbackProcedure:
 			quickFeedServiceCreateAssignmentFeedbackHandler.ServeHTTP(w, r)
 		case QuickFeedServiceGetAssignmentFeedbackProcedure:
@@ -1020,6 +1167,26 @@ func (UnimplementedQuickFeedServiceHandler) CreateReview(context.Context, *qf.Re
 
 func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) CreateNote(context.Context, *qf.NoteRequest) (*qf.Note, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateNote is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateNote is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteNote is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetNotes is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourseNotes is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error) {

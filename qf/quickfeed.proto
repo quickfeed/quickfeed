@@ -3,8 +3,8 @@ package qf;
 option go_package   = "github.com/quickfeed/quickfeed/qf";
 option swift_prefix = "";
 
-import "qf/types.proto";
 import "qf/requests.proto";
+import "qf/types.proto";
 
 service QuickFeedService {
     // users //
@@ -56,6 +56,15 @@ service QuickFeedService {
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
+
+    // internal notes //
+
+    rpc CreateNote(NoteRequest) returns (Note) {}
+    rpc UpdateNote(NoteRequest) returns (Note) {}
+    rpc DeleteNote(NoteRequest) returns (Void) {}
+    rpc GetNotes(NotesRequest) returns (Notes) {}
+    // GetCourseNotes returns all internal notes for a course.
+    rpc GetCourseNotes(CourseRequest) returns (Notes) {}
 
     // assignment feedback //
 

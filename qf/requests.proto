@@ -72,4 +72,21 @@ message RebuildRequest {
     uint64 submissionID = 3;
 }
 
+// NoteRequest is used to create, update, or delete an internal note.
+message NoteRequest {
+    uint64 courseID = 1;
+    Note note       = 2;
+}
+
+// NotesRequest fetches all internal notes relevant to a target.
+// Exactly one of submissionID, groupID, or enrollmentID should be set.
+// When submissionID is set, the response also includes notes attached to the
+// submission's group and the submitter's enrollment.
+message NotesRequest {
+    uint64 courseID     = 1;
+    uint64 submissionID = 2;
+    uint64 groupID      = 3;
+    uint64 enrollmentID = 4;
+}
+
 message Void {}
