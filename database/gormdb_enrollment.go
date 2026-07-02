@@ -59,15 +59,21 @@ func (db *GormDB) UpdateEnrollment(enrol *qf.Enrollment) error {
 		}).Updates(enrol).Error
 }
 
+// GetEnrollmentByID returns the enrollment with the given ID.
+func (db *GormDB) GetEnrollmentByID(enrollmentID uint64) (*qf.Enrollment, error) {
+	return db.getEnrollment(&qf.Enrollment{ID: enrollmentID})
+}
+
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 func (db *GormDB) GetEnrollmentByCourseAndUser(courseID, userID uint64) (*qf.Enrollment, error) {
+	return db.getEnrollment(&qf.Enrollment{CourseID: courseID, UserID: userID})
+}
+
+func (db *GormDB) getEnrollment(query *qf.Enrollment) (*qf.Enrollment, error) {
 	var enrollment qf.Enrollment
 	m := db.conn.Preload("Course").Preload("User").Preload("UsedSlipDays")
 	if err := m.
-		Where(&qf.Enrollment{
-			CourseID: courseID,
-			UserID:   userID,
-		}).
+		Where(query).
 		First(&enrollment).Error; err != nil {
 		return nil, err
 	}
