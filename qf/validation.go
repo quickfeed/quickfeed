@@ -108,6 +108,23 @@ func (r *ReviewRequest) IsValid() bool {
 	return r.GetCourseID() > 0 && r.GetReview().IsValid()
 }
 
+// IsValid ensures that CourseID is set and the request carries a note.
+// Finer-grained checks (target on create, ID on update/delete) are done in the handler.
+func (r *NoteRequest) IsValid() bool {
+	return r.GetCourseID() > 0 && r.GetNote() != nil
+}
+
+// IsValid ensures that CourseID and exactly one target are set.
+func (r *NotesRequest) IsValid() bool {
+	targets := 0
+	for _, id := range []uint64{r.GetSubmissionID(), r.GetGroupID(), r.GetEnrollmentID()} {
+		if id > 0 {
+			targets++
+		}
+	}
+	return r.GetCourseID() > 0 && targets == 1
+}
+
 // IsValid ensures that the grading benchmark has an AssignmentID and a heading.
 func (bm *GradingBenchmark) IsValid() bool {
 	return bm.GetAssignmentID() > 0 && bm.GetHeading() != ""
