@@ -5,6 +5,7 @@ import type { IContext } from 'overmind'
 import { merge, namespaced } from 'overmind/config'
 import * as feedback from './namespaces/feedback' // skipcq: JS-C1003
 import * as global from './namespaces/global' // skipcq: JS-C1003
+import * as notes from './namespaces/notes' // skipcq: JS-C1003
 import * as review from './namespaces/review' // skipcq: JS-C1003
 
 /* This is the main overmind configuration. */
@@ -17,7 +18,8 @@ export const config = merge(
     namespaced({
         review,
         feedback,
-        global
+        global,
+        notes
     })
 )
 
