@@ -1,3 +1,5 @@
-import { TextDecoder, TextEncoder } from "util"
-global.TextEncoder = TextEncoder as typeof global.TextEncoder
-global.TextDecoder = TextDecoder as typeof global.TextDecoder
+/// <reference types="node" />
+import { TextDecoder, TextEncoder } from "node:util"
+
+globalThis.TextEncoder ??= TextEncoder as typeof globalThis.TextEncoder
+globalThis.TextDecoder ??= TextDecoder as typeof globalThis.TextDecoder
