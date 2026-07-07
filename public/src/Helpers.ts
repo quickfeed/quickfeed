@@ -250,6 +250,14 @@ export const SubmissionStatus = {
     3: "Revision",
 }
 
+/** submissionStatusConfig maps a submission status to its display color and icon. */
+export const submissionStatusConfig: Record<Submission_Status, { color: string; icon: string | null }> = {
+    [Submission_Status.NONE]: { color: "text-base-content/70", icon: null },
+    [Submission_Status.APPROVED]: { color: "text-success", icon: "fa-circle-check" },
+    [Submission_Status.REJECTED]: { color: "text-error", icon: "fa-circle-xmark" },
+    [Submission_Status.REVISION]: { color: "text-warning", icon: "fa-circle-exclamation" },
+}
+
 // TODO: This could possibly be done on the server. Would need to add a field to the proto submission/score model.
 /** assignmentStatusText returns a string that is used to tell the user what the status of their submission is */
 export const assignmentStatusText = (assignment: Assignment, submission: Submission, status: Submission_Status): string => {

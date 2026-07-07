@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import { Link } from "react-router-dom"
 import type { Assignment, Note, Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
-import { EnrollmentStatus, getFormattedTime, getStatusByUser, SubmissionStatus, userRepoLink } from "../Helpers"
+import { EnrollmentStatus, getFormattedTime, getStatusByUser, SubmissionStatus, submissionStatusConfig, userRepoLink } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import { useEnrollmentID } from "../hooks/useEnrollmentID"
 import { useActions, useAppState } from "../overmind"
@@ -155,11 +155,15 @@ const SubmissionTable = ({ assignments, submissions, userID, root }: { assignmen
 
 const SubmissionRow = ({ name, submission, userID, resultsLink }: { name: string, submission?: Submission, userID: bigint, resultsLink?: string }) => {
     const status = submission ? getStatusByUser(submission, userID) : Submission_Status.NONE
+    const { color, icon } = submissionStatusConfig[status]
     return (
         <tr>
             <td>{name}</td>
             <td>{submission ? `${submission.score} %` : "—"}</td>
-            <td>{SubmissionStatus[status]}</td>
+            <td className={`font-medium ${color}`}>
+                {icon && <i className={`fas ${icon} mr-1`} />}
+                {SubmissionStatus[status]}
+            </td>
             <td>{resultsLink && <Link to={resultsLink} className="link link-hover text-primary">Open</Link>}</td>
         </tr>
     )
