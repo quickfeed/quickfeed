@@ -1,7 +1,6 @@
 import React from 'react'
 import type { Assignment, Submission } from "../../../proto/qf/types_pb"
-import { Submission_Status } from "../../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getStatusByUser, isGroupSubmission } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getStatusByUser, isGroupSubmission, submissionStatusConfig } from "../../Helpers"
 import ProgressBar from "../ProgressBar"
 import SubmissionTypeIcon from './SubmissionTypeIcon'
 
@@ -13,20 +12,13 @@ interface SubmissionRowProps {
     redirectTo: (submission: Submission) => void
 }
 
-const statusConfig: Record<Submission_Status, { color: string; icon: string | null }> = {
-    [Submission_Status.NONE]: { color: "text-base-content/70", icon: null },
-    [Submission_Status.APPROVED]: { color: "text-success", icon: "fa-circle-check" },
-    [Submission_Status.REJECTED]: { color: "text-error", icon: "fa-circle-xmark" },
-    [Submission_Status.REVISION]: { color: "text-warning", icon: "fa-circle-exclamation" },
-}
-
 const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, assignment, courseID, selfID, redirectTo }) => {
     const submissionDate = submission.BuildInfo?.SubmissionDate
         ? getFormattedTime(submission.BuildInfo.SubmissionDate)
         : null
 
     const status = getStatusByUser(submission, selfID)
-    const { color, icon } = statusConfig[status]
+    const { color, icon } = submissionStatusConfig[status]
 
     return (
         <div
