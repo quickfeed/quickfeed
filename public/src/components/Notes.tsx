@@ -34,30 +34,44 @@ const Notes = () => {
     const enrollments = state.courseEnrollments[state.activeCourse.toString()] ?? []
     const groups = state.groups[state.activeCourse.toString()] ?? []
 
-    // Resolve which entity a note is attached to, so enrollment notes show the
-    // student's name and group notes show the group name.
+    // TODO(jostein): We should probably have this mapping in the overmind state
+    // TODO(jostein): however, individual elements in maps are not reactive, so we need to recreate the map whenever the underlying array changes.
+    const enrollmentByID = new Map(enrollments.map(e => [e.ID, e]))
+    const enrollmentByUserID = new Map(enrollments.map(e => [e.userID, e]))
+    const groupByID = new Map(groups.map(g => [g.ID, g]))
+
     const targetInfo = (note: Note): TargetInfo => {
         if (note.EnrollmentID > 0n) {
-            const enrollment = enrollments.find(e => e.ID === note.EnrollmentID)
-            return { icon: "fa-user", text: enrollment?.user?.Name ?? "Student" }
+            return { icon: "fa-user", text: enrollmentByID.get(note.EnrollmentID)?.user?.Name ?? "Student" }
         }
         if (note.GroupID > 0n) {
-            const group = groups.find(g => g.ID === note.GroupID)
-            return { icon: "fa-users", text: group?.name ?? "Group" }
+            return { icon: "fa-users", text: groupByID.get(note.GroupID)?.name ?? "Group" }
         }
         return { icon: "fa-file-lines", text: "Submission" }
     }
 
-    // Available targets for a new note: the submission, its group (if any), and the student's enrollment.
+    // Targets are derived from the submission so the list always matches its owner.
     const targets: LabelledTarget[] = [{ label: "This submission", value: { SubmissionID: submission.ID } }]
-    const groupID = submission.groupID > 0n ? submission.groupID : (state.selectedEnrollment?.groupID ?? 0n)
-    if (groupID > 0n) {
-        const group = groups.find(g => g.ID === groupID)
-        targets.push({ label: group ? `Group: ${group.name}` : "Group", value: { GroupID: groupID } })
-    }
-    if (state.selectedEnrollment) {
-        const studentName = state.selectedEnrollment.user?.Name
-        targets.push({ label: studentName ? `Student: ${studentName}` : "Student", value: { EnrollmentID: state.selectedEnrollment.ID } })
+    if (submission.groupID > 0n) {
+        const group = groupByID.get(submission.groupID)
+        targets.push({ label: group ? `Group: ${group.name}` : "Group", value: { GroupID: submission.groupID } })
+        // Groups carry `users`, not enrollments, so resolve each member's enrollment ID.
+        // otherwise we could've just iterated over `group.enrollments` and used the enrollment ID directly.
+        group?.users.forEach(user => {
+            const enrollment = enrollmentByUserID.get(user.ID)
+            if (enrollment) {
+                targets.push({ label: `Student: ${user.Name}`, value: { EnrollmentID: enrollment.ID } })
+            }
+        })
+    } else if (submission.userID > 0n) {
+        const enrollment = enrollmentByUserID.get(submission.userID)
+        if (enrollment) {
+            targets.push({ label: enrollment.user ? `Student: ${enrollment.user.Name}` : "Student", value: { EnrollmentID: enrollment.ID } })
+            const group = enrollment.groupID > 0n ? groupByID.get(enrollment.groupID) : undefined
+            if (group) {
+                targets.push({ label: `Group: ${group.name}`, value: { GroupID: group.ID } })
+            }
+        }
     }
 
     return (
