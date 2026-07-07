@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
@@ -12,18 +13,28 @@ import (
 // CreateNote creates a new internal staff note attached to a submission, group, or enrollment.
 // The author and timestamps are set server-side; the access control interceptor restricts this to teachers.
 func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
-	note := in.GetNote()
-	if !hasSingleTarget(note) {
+	if err := checkNoteBody(in.GetNote().GetBody()); err != nil {
+		return nil, err
+	}
+	if !hasSingleTarget(in.GetNote()) {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note must reference exactly one submission, group, or enrollment"))
 	}
 	courseID := in.GetCourseID()
 	// The interceptor only verifies the caller teaches courseID, not that the
 	// note's target lives in that course; reject cross-course targets here.
-	if !s.noteTargetInCourse(courseID, note) {
+	if !s.noteTargetInCourse(courseID, in.GetNote()) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("note target does not belong to the course"))
 	}
-	note.CourseID = courseID
-	note.AuthorID = userID(ctx)
+	// Build the note from only the fields a client may set; ID, author, course,
+	// and timestamps are server-owned and must not be taken from the request.
+	note := &qf.Note{
+		CourseID:     courseID,
+		AuthorID:     userID(ctx),
+		Body:         in.GetNote().GetBody(),
+		SubmissionID: in.GetNote().GetSubmissionID(),
+		GroupID:      in.GetNote().GetGroupID(),
+		EnrollmentID: in.GetNote().GetEnrollmentID(),
+	}
 	if err := s.db.CreateNote(note); err != nil {
 		s.logger.Errorf("CreateNote failed for note %+v: %v", note, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create note"))
@@ -38,7 +49,11 @@ func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (
 	if err != nil {
 		return nil, err
 	}
-	existing.Body = in.GetNote().GetBody()
+	body := in.GetNote().GetBody()
+	if err := checkNoteBody(body); err != nil {
+		return nil, err
+	}
+	existing.Body = body
 	if err := s.db.UpdateNote(existing); err != nil {
 		s.logger.Errorf("UpdateNote failed for note %+v: %v", existing, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update note"))
@@ -132,6 +147,15 @@ func (s *QuickFeedService) noteTargetInCourse(courseID uint64, note *qf.Note) bo
 		return err == nil && enrollment.GetCourseID() == courseID
 	}
 	return false
+}
+
+// checkNoteBody rejects notes whose body is empty or only whitespace, so a blank
+// note is never persisted even when the RPC is called directly, bypassing the UI.
+func checkNoteBody(body string) error {
+	if strings.TrimSpace(body) == "" {
+		return connect.NewError(connect.CodeInvalidArgument, errors.New("note body must not be empty"))
+	}
+	return nil
 }
 
 // hasSingleTarget returns true if the note references exactly one of a
