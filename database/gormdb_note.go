@@ -1,13 +1,23 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
-// GetNote returns a single internal note matching the given query.
+// ErrEmptyNoteID is returned by GetNote when the query has no ID.
+var ErrEmptyNoteID = errors.New("cannot get note with empty ID")
+
+// GetNote returns the note with the ID set on the query.
 func (db *GormDB) GetNote(query *qf.Note) (*qf.Note, error) {
+	// Reject a zero ID: Gorm ignores zero-value fields in a struct query, so
+	// Where(query).First would otherwise return an arbitrary first row.
+	if query.GetID() == 0 {
+		return nil, ErrEmptyNoteID
+	}
 	var note qf.Note
 	if err := db.conn.Where(query).First(&note).Error; err != nil {
 		return nil, err
