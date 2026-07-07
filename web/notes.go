@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -90,6 +91,9 @@ func (s *QuickFeedService) GetCourseNotes(_ context.Context, in *qf.CourseReques
 func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
 	existing, err := s.db.GetNote(&qf.Note{ID: in.GetNote().GetID()})
 	if err != nil {
+		if errors.Is(err, database.ErrEmptyNoteID) {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note ID is required"))
+		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("note not found"))
 	}
 	if existing.GetCourseID() != in.GetCourseID() {
