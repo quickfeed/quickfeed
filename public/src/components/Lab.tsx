@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
 import type { Assignment, Submission } from '../../proto/qf/types_pb'
-import { hasReviews, isManuallyGraded } from '../Helpers'
+import { convertToBigInt, hasReviews, isManuallyGraded } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import LabResultTable from "./LabResultTable"
@@ -17,7 +17,7 @@ const Lab = () => {
     const actions = useActions().global
     const { id, lab } = useParams()
     const courseID = id ?? ""
-    const assignmentID = lab ? BigInt(lab) : BigInt(-1)
+    const assignmentID = convertToBigInt(lab)
     const location = useLocation()
     const isGroupLab = location.pathname.includes("group-lab")
 
