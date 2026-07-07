@@ -14,7 +14,7 @@ export type TargetInfo = { icon: string, text: string }
  * Notes renders the internal staff notes for the currently selected submission,
  * including the associated group and enrollment notes. Notes are never shown to
  * students; this component is only rendered in teacher views. Authors (and
- * admins) may edit or delete their own notes.
+ * course admins) may edit or delete their own notes.
  */
 const Notes = () => {
     const state = useAppState()
@@ -126,7 +126,7 @@ export const NotePanelBody = ({ notes, targets, targetInfo }: { notes: Note[], t
     )
 }
 
-/** NoteItem renders a single note, with edit/delete controls for its author or an admin. */
+/** NoteItem renders a single note, with edit/delete controls for its author or a course admin. */
 const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorName: string, target?: TargetInfo, canModify: boolean }) => {
     const state = useAppState()
     const actions = useActions().notes
