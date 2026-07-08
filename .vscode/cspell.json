@@ -9,6 +9,9 @@
     "dictionaries": [
         "quickfeed-words"
     ],
+    "ignorePaths": [
+        "public/package-lock.json"
+    ],
     "dictionaryDefinitions": [
         {
             "name": "quickfeed-words",

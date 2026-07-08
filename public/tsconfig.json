@@ -7,7 +7,7 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": false,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "newLine": "LF",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -15,7 +15,7 @@
     "module": "ESNext",
     "allowJs": true,
     "noEmit": true,
-    "types": ["jest"]
+    "types": ["vitest/globals"]
   },
   "include": ["src/**/*"]
 }
