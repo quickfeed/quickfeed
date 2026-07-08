@@ -1,4 +1,3 @@
-import React from "react"
 import { nextURL } from "../Helpers"
 import AboutPage from "./AboutPage"
 

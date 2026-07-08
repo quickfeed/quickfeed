@@ -1,4 +1,3 @@
-import React from "react"
 import { isManuallyGraded } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import type { NavLink } from "./NavBarLink"

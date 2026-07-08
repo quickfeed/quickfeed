@@ -1,4 +1,3 @@
-import React from "react"
 import type { User } from "../../proto/qf/types_pb"
 import Avatar from "./Avatar"
 

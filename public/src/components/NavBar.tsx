@@ -1,4 +1,3 @@
-import React from "react"
 import { Link } from "react-router-dom"
 import { useActions, useAppState } from "../overmind"
 import NavFavorites from "./NavFavorites"

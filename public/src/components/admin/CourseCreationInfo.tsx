@@ -1,4 +1,3 @@
-import React from "react"
 
 
 // CourseCreationInfo is a component that displays information about the course creation process.

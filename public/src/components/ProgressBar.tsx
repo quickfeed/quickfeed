@@ -1,4 +1,3 @@
-import React from "react"
 import type { Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
 import { getEffectiveStatus } from "../Helpers"

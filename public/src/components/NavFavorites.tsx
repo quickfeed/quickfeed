@@ -1,4 +1,3 @@
-import React from "react"
 import { useNavigate } from "react-router-dom"
 import { isEnrolled, isVisible } from "../Helpers"
 import { useAppState } from "../overmind"
