@@ -58,6 +58,8 @@ export default defineConfig([
             }],
             "react/jsx-filename-extension": [2, { extensions: [".ts", ".tsx"] }],
             "react/jsx-newline": "off",
+            "react/react-in-jsx-scope": "off",
+            "react/jsx-uses-react": "off",
             "no-undef": "off",
             "no-unused-vars": "off",
             "@typescript-eslint/no-unused-vars": "warn",
