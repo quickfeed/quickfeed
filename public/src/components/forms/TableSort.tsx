@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import { useEffect } from "react"
 import { SubmissionSort } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 

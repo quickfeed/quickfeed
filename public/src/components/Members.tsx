@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react"
+import { useCallback, useState } from "react"
 import type { Enrollment } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isHidden, isPending, sortEnrollments, userRepoLink } from "../Helpers"

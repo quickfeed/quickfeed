@@ -1,4 +1,3 @@
-import React from "react"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useAppState } from "../../overmind"
 import AssignmentCard from "./AssignmentCard"

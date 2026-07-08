@@ -1,4 +1,3 @@
-import React from "react"
 import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { Color } from "../../Helpers"
 import Button, { ButtonType } from "../admin/Button"

@@ -1,4 +1,3 @@
-import React from 'react'
 
 export enum KnownMessage {
     TeacherNoSubmission = "Select a submission from the results table",

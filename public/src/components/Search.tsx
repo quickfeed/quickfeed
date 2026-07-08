@@ -1,13 +1,21 @@
-import React, { useEffect } from "react"
+import { useEffect } from "react"
+import type { KeyboardEvent, ReactNode } from "react"
 import { useActions } from "../overmind"
 
 
+type SearchProps = {
+    placeholder?: string
+    setQuery?: (query: string) => void
+    className?: string
+    children?: ReactNode
+}
+
 /** Search is used to update the query in state when the user types in the search bar.
  *  If setQuery is passed, it will modify the local state of a component instead of the global state. */
-const Search = ({ placeholder, setQuery, className, children }: { placeholder?: string, setQuery?: (e: unknown) => void, className?: string, children?: React.ReactNode }) => {
+const Search = ({ placeholder, setQuery, className, children }: SearchProps) => {
     const actions = useActions().global
 
-    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
         const value = e.currentTarget.value.toLowerCase()
         setQuery ? setQuery(value) : actions.setQuery(value)
     }

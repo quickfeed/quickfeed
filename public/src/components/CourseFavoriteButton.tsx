@@ -1,4 +1,3 @@
-import React from "react"
 import type { Enrollment } from "../../proto/qf/types_pb"
 import { isVisible } from "../Helpers"
 import { useActions, useAppState } from "../overmind"

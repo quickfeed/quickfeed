@@ -1,4 +1,3 @@
-import React from "react"
 import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
 
 type Color = 'red' | 'yellow' | 'green' | 'blue' | 'gray' | 'cyan'

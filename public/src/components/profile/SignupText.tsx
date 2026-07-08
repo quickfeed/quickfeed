@@ -1,4 +1,3 @@
-import React from "react"
 
 
 /** SignupText is used to display an error message if the user information is incomplete. */

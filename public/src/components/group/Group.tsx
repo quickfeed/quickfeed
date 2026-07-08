@@ -1,4 +1,3 @@
-import React from "react"
 import { isPendingGroup } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useAppState } from "../../overmind"
