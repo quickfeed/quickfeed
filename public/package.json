@@ -3,6 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^26.4.0"
+  },
   "dependencies": {
     "@bufbuild/protobuf": "^2.6.0",
     "@bufbuild/protoc-gen-es": "^2.6.0",
@@ -41,7 +44,7 @@
     "process": "0.11.10",
     "sass": "^1.56.1",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.9"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }
