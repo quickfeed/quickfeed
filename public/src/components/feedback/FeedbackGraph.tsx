@@ -114,8 +114,11 @@ export const FeedbackGraph: React.FC<FeedbackGraphProps> = ({
                                 allowDecimals={false}
                             />
                             <Tooltip
-                                formatter={(value: number) => [`${value} student${value !== 1 ? "s" : ""}`, "Count"]}
-                                labelFormatter={(label: string) => `Time range: ${label}`}
+                                formatter={(value) => {
+                                    const count = Number(value)
+                                    return [`${count} student${count !== 1 ? "s" : ""}`, "Count"]
+                                }}
+                                labelFormatter={(label) => `Time range: ${label}`}
                                 contentStyle={{
                                     backgroundColor: "#f8f9fa",
                                     border: "1px solid #dee2e6",
