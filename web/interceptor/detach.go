@@ -20,8 +20,8 @@ const detachTimeout = 2 * time.Minute
 // Once started, these methods should be allowed to complete, bounded by detachTimeout.
 var detachedMethods = map[string]bool{
 	"UpdateGroup":       true, // may create the group repo and add/remove collaborators on GitHub
-	"DeleteGroup":       true, // deletes database records before deleting the GitHub repo
-	"UpdateEnrollments": true, // may create user repos and update organization membership on GitHub
+	"DeleteGroup":       true, // deletes the GitHub repo before removing database records
+	"UpdateEnrollments": true, // may create/delete user repos and update org membership before database records
 }
 
 // DetachInterceptor detaches handlers for methods in detachedMethods from the
