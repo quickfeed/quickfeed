@@ -246,28 +246,33 @@ func TestFeedbackCommentFormat(t *testing.T) {
 	}
 }
 
-// This test assumes that the test organization has an empty "info" repository
-// and non-empty "tests" repository.
-func TestEmptyRepo(t *testing.T) {
+// This test assumes the repositories are compared against assignments, and that
+// user/group forks may be ahead by zero or more commits.
+func TestCommitsAhead(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, _ := scm.GetTestSCM(t)
 
 	tests := []struct {
 		name      string
 		opt       *scm.RepositoryOptions
-		wantEmpty bool
+		wantAhead int
+		wantErr   bool
 	}{
-		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{Repo: "tests", Owner: qfTestOrg}, wantEmpty: false},
-		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{ID: 328688692}, wantEmpty: false},
-		{name: "EmptyRepo", opt: &scm.RepositoryOptions{Repo: "info", Owner: qfTestOrg}, wantEmpty: true},
-		{name: "EmptyRepo", opt: &scm.RepositoryOptions{ID: 328688666}, wantEmpty: true},
-		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Repo: "some-other-repo", Owner: qfTestOrg}, wantEmpty: true}, // treat non-existent repo as empty
+		{name: "CourseRepo", opt: &scm.RepositoryOptions{Repo: "tests", Owner: qfTestOrg}, wantErr: true},
+		{name: "CourseRepoByID", opt: &scm.RepositoryOptions{ID: 328688692}, wantErr: true},
+		{name: "CourseRepoInfo", opt: &scm.RepositoryOptions{Repo: "info", Owner: qfTestOrg}, wantErr: true},
+		{name: "CourseRepoInfoByID", opt: &scm.RepositoryOptions{ID: 328688666}, wantErr: true},
+		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Repo: "some-other-repo", Owner: qfTestOrg}, wantErr: true},
 	}
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"ID", "Owner", "Repo"}, tt.opt.ID, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
-				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			ahead, err := s.CommitsAhead(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CommitsAhead(%+v) error = %v, wantErr %v", *tt.opt, err, tt.wantErr)
+			}
+			if ahead != tt.wantAhead {
+				t.Errorf("CommitsAhead(%+v) = %d, want %d", *tt.opt, ahead, tt.wantAhead)
 			}
 		})
 	}

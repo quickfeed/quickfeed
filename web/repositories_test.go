@@ -1,6 +1,7 @@
 package web_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -194,11 +195,15 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 2})
 	groupStudent := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "groupStudent", ScmRemoteID: 3})
 
+	course := qtest.MockCourses[0]
+	const groupName = "1001-HackingCrew"
 	client := web.NewMockClient(t, db, scm.WithMockOptions(
 		scm.WithMockOrgs("user", "student", "groupStudent"),
+		scm.WithMockCourses(), // registers the assignments repo that forks are compared against
+		// Simulate the group's fork having one commit beyond assignments
+		scm.WithCommitsAhead(course.GetScmOrganizationName(), groupName, 1),
 	))
 
-	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, user, course)
 
 	qtest.EnrollStudent(t, db, student, course)
@@ -219,7 +224,7 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 	}
 	group := &qf.Group{
 		ID:       1,
-		Name:     "1001-HackingCrew",
+		Name:     groupName,
 		CourseID: course.GetID(),
 		Users:    []*qf.User{groupStudent},
 	}
@@ -234,14 +239,17 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 		request *qf.RepositoryRequest
 		create  bool
 		wantErr bool
+		wantMsg string // when wantErr, the error must contain this substring
 	}{
 		{name: "CourseNotFound", request: &qf.RepositoryRequest{CourseID: 123, UserID: user.GetID()}, wantErr: true},    // unable to get SCM client for unknown course -> error
 		{name: "UserNotFound", request: &qf.RepositoryRequest{CourseID: course.GetID(), UserID: 123}, wantErr: false},   // lookup invalid user should have no repositories (no error)
 		{name: "GroupNotFound", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 123}, wantErr: false}, // lookup invalid group should have no repositories (no error)
 
-		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.GetID()}, wantErr: false},                         // lookup valid user with no repositories should return no repositories (no error)
-		{name: "GroupHasNoRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, wantErr: false},            // lookup valid group with no repositories should return no repositories (no error)
-		{name: "GroupHasRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, create: true, wantErr: true}, // lookup for group with repositories -> error
+		{name: "UserHasNoRepositories", request: &qf.RepositoryRequest{CourseID: 1, UserID: student.GetID()}, wantErr: false},              // lookup valid user with no repositories should return no repositories (no error)
+		{name: "GroupHasNoRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, wantErr: false}, // lookup valid group with no repositories should return no repositories (no error)
+		// The group's fork is one commit ahead of assignments, so emptying it is blocked;
+		// wantMsg checks we block for that reason, not some unrelated error.
+		{name: "GroupHasRepositories", request: &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: group.GetID()}, create: true, wantErr: true, wantMsg: "commits ahead"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -255,6 +263,9 @@ func TestQuickFeedService_IsEmptyRepo(t *testing.T) {
 			}
 			if _, err := client.IsEmptyRepo(t.Context(), tt.request); (err != nil) != tt.wantErr {
 				t.Errorf("IsEmptyRepo() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantMsg != "" && err != nil && !strings.Contains(err.Error(), tt.wantMsg) {
+				t.Errorf("IsEmptyRepo() error = %v, expected error to contain %q", err, tt.wantMsg)
 			}
 		})
 	}

@@ -18,8 +18,8 @@ type SCM interface {
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, string) ([]*Repository, error)
-	// Returns true if there are no commits in the given repository
-	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
+	// Returns the number of commits the repository is ahead of assignments.
+	CommitsAhead(context.Context, *RepositoryOptions) (int, error)
 
 	// CreateCourse creates repositories for a new course.
 	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)

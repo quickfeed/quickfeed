@@ -264,6 +264,7 @@ usermod
 varcheck
 vercheck
 verdana
+Vitest
 Warnf
 wojtekmaj
 WORKDIR
