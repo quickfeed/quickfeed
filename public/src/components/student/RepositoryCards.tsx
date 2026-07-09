@@ -1,4 +1,3 @@
-import React from "react"
 import { Link } from "react-router-dom"
 import { Repository_Type } from "../../../proto/qf/types_pb"
 import { useCourseID } from "../../hooks/useCourseID"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -186,6 +187,31 @@ func TestErrorGetOrganization(t *testing.T) {
 	}
 }
 
+func TestDeleteRepositoryTreatsDelete404AsSuccess(t *testing.T) {
+	calls := 0
+	s := NewGithubUserClient(qtest.Logger(t), "token")
+	s.client = github.NewClient(&http.Client{
+		Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+			calls++
+			switch r.Method + " " + r.URL.Path {
+			case http.MethodGet + " /repositories/1":
+				return githubResponse(http.StatusOK, `{"id":1,"name":"groupX","owner":{"login":"foo"}}`, nil), nil
+			case http.MethodDelete + " /repos/foo/groupX":
+				return githubResponse(http.StatusNotFound, "", nil), nil
+			default:
+				return nil, fmt.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			}
+		}),
+	})
+
+	if err := s.deleteRepository(context.Background(), 1); err != nil {
+		t.Fatalf("deleteRepository() error = %v, want nil", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected 2 requests, got %d", calls)
+	}
+}
+
 func TestErrorCreateCourse(t *testing.T) {
 	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
 	members := []github.Membership{
@@ -364,13 +390,10 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 }
 
 func TestErrorRejectEnrollment(t *testing.T) {
-	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling},
-		{Organization: &ghOrgFoo, User: &jostein},
-		{Organization: &ghOrgBar, User: &meling},
-	}
 	const userErrPrefix = "failed to reject enrollment"
 
+	// Only error cases belong here; idempotency-success cases are covered by
+	// TestMockRejectEnrollment.
 	tests := []struct {
 		name        string
 		opt         *RejectEnrollmentOptions // cannot be nil
@@ -389,32 +412,8 @@ func TestErrorRejectEnrollment(t *testing.T) {
 			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for meling: scm.GetOrganization: failed to get organization by ID: 789: GET http://127.0.0.1/organizations/789: 404  []",
 			wantUserErr: userErrPrefix + " for meling",
 		},
-		{
-			name:        "CompleteRequest/RepoNotFound",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to delete repository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
-			wantUserErr: userErrPrefix + " for jostein",
-		},
-		{
-			name:        "CompleteRequest/UserNotFound",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for frank: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/frank: 404  []",
-			wantUserErr: userErrPrefix + " for frank",
-		},
-		{
-			name:        "CompleteRequest/UserAlreadyRemoved",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/jostein: 404  []",
-			wantUserErr: userErrPrefix + " for jostein",
-		},
-		{
-			name:        "CompleteRequest/Success",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "meling"},
-			wantErr:     "",
-			wantUserErr: "",
-		},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"OrganizationID", "RepositoryID", "User"}, tt.opt.OrganizationID, tt.opt.RepositoryID, tt.opt.User)
 		t.Run(name, func(t *testing.T) {

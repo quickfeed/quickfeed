@@ -1,4 +1,3 @@
-import React from "react"
 import Groups from "../components/Groups"
 import GroupView from "../components/group/Group"
 import GroupForm from "../components/group/GroupForm"

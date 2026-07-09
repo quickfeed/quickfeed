@@ -1,4 +1,3 @@
-import React from "react"
 import type { GradingBenchmark } from "../../../proto/qf/types_pb"
 import { hasCriteria } from "../../Helpers"
 

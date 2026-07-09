@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { Color } from "../Helpers"
 import type { ButtonType } from "./admin/Button"
 

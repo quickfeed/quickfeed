@@ -39,26 +39,22 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 }
 
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
+// The GitHub repository and organization membership are removed before the database
+// records, so that an interrupted reject leaves the database still referencing the
+// repository, allowing the operation to be retried rather than orphaning the repo.
 func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	if err := s.db.RejectEnrollment(user.GetID(), course.GetID()); err != nil {
-		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.GetCode(), user.GetLogin(), err)
-		// continue with other delete operations
-	}
 	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	if repo == nil {
 		s.logger.Debugf("No %s repository found for %q: %v", course.GetCode(), user.GetLogin(), err)
-		// cannot continue without repository information
-		return nil
+		// no repository to delete; only remove the enrollment from the database
+		return s.db.RejectEnrollment(user.GetID(), course.GetID())
 	}
-	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), user.GetLogin(), err)
-		// continue with other delete operations
-	}
+
 	// when deleting a user, remove github repository and organization membership as well
 	opt := &scm.RejectEnrollmentOptions{
 		User:           user.GetLogin(),
@@ -66,9 +62,17 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		RepositoryID:   repo.GetScmRepositoryID(),
 	}
 	if err := sc.RejectEnrollment(ctx, opt); err != nil {
-		s.logger.Debugf("rejectEnrollment: failed to remove %s from %q (expected behavior): %v", user.GetLogin(), course.GetCode(), err)
+		if !errors.Is(err, scm.ErrNotFound) {
+			return fmt.Errorf("failed to remove %s from %q: %w", user.GetLogin(), course.GetCode(), err)
+		}
+		// repository or membership already removed on GitHub, e.g., by a previously interrupted reject
+		s.logger.Debugf("rejectEnrollment: %s already removed from %q on GitHub: %v", user.GetLogin(), course.GetCode(), err)
 	}
-	return nil
+	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), user.GetLogin(), err)
+		// continue with other delete operations
+	}
+	return s.db.RejectEnrollment(user.GetID(), course.GetID())
 }
 
 // enrollStudent enrolls the given user as a student into the given course.

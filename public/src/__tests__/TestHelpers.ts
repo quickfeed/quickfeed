@@ -40,11 +40,9 @@ type Methods = UnaryApiClient["client"]
 */
 export function mock<T extends keyof Methods>(
     _method: T,
-    mockFn: (...req: Parameters<Methods[T]>) => ReturnType<Methods[T]>
+    mockFn: Methods[T]
 ): Methods[T] {
-    return async function (...args: Parameters<Methods[T]>): Promise<ReturnType<Methods[T]>> { // skipcq: JS-0116
-        return mockFn(...args) as ReturnType<Methods[T]>
-    } as Methods[T]
+    return mockFn
 }
 
 const toTimestamp = (date: Date) => {

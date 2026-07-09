@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 import { useActions } from "../../overmind"
 import type { Alert as AlertType } from "../../overmind/state"
 

@@ -1,4 +1,3 @@
-import React from "react"
 import { Navigate } from "react-router"
 import { hasEnrollment } from "../Helpers"
 import { useAppState } from "../overmind"

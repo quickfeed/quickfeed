@@ -1,4 +1,3 @@
-import React from "react"
 import { Route, Routes, useLocation } from "react-router"
 import Lab from "../components/Lab"
 import CourseLabs from "../components/student/CourseLabs"

@@ -10,7 +10,7 @@ const (
 	getOrgsMembershipsByOrgByUsername                         = "GET /orgs/{org}/memberships/{username}"                             // GetOrganization
 	putOrgsMembershipsByOrgByUsername                         = "PUT /orgs/{org}/memberships/{username}"                             // UpdateEnrollment, DemoteTeacherToStudent
 	patchUserMembershipsOrgsByOrg                             = "PATCH /user/memberships/orgs/{org}"                                 // acceptOrgInvitation
-	deleteOrgsMembersByOrgByUsername                          = "DELETE /orgs/{org}/members/{username}"                              // RejectEnrollment
+	deleteOrgsMembershipsByOrgByUsername                      = "DELETE /orgs/{org}/memberships/{username}"                          // RejectEnrollment
 	getReposByOwnerByRepo                                     = "GET /repos/{owner}/{repo}"                                          // CreateCourse, CreateGroup, getRepository, createCourseRepo, createForkedRepo, waitForRepository
 	deleteReposByOwnerByRepo                                  = "DELETE /repos/{owner}/{repo}"                                       // DeleteGroup, RejectEnrollment, deleteRepository
 	getRepositoriesByID                                       = "GET /repositories/{repository_id}"                                  // getRepository, deleteRepository
