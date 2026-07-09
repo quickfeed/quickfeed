@@ -585,7 +585,7 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 	return toRepository(repo), nil
 }
 
-// deleteRepository deletes repository by name or ID.
+// deleteRepository deletes repository by ID.
 func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 	const op Op = "deleteRepository"
 	m := M("failed to delete repository")
