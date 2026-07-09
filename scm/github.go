@@ -313,8 +313,9 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	return nil, E(op, m, fmt.Errorf("invalid enrollment status: %s", opt.Status))
 }
 
-// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
-// If the user was already removed from the organization an error is returned, and the repository deletion is skipped.
+// RejectEnrollment deletes the user's course repository and revokes their
+// organization membership. Revoking the membership (not just removing a member)
+// also cancels a pending invitation. Both steps are idempotent and retry-safe.
 func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	const op Op = "RejectEnrollment"
 	m := M("failed to reject enrollment")
@@ -326,12 +327,13 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if err != nil {
 		return E(op, m, err)
 	}
-	// If user was already removed we report the error and skip the repository deletion
-	if _, err := s.client.Organizations.RemoveMember(ctx, org.GetScmOrganizationName(), opt.User); err != nil {
-		return E(op, m, fmt.Errorf("failed to remove user: %w", err))
-	}
-	if err := s.deleteRepository(ctx, opt.RepositoryID); err != nil {
+	// tolerate an already-deleted repository so reject is idempotent
+	if err := s.deleteRepository(ctx, opt.RepositoryID); err != nil && !errors.Is(err, ErrNotFound) {
 		return E(op, m, err)
+	}
+	// tolerate 404 (no such membership) so reject is idempotent
+	if resp, err := s.client.Organizations.RemoveOrgMembership(ctx, opt.User, org.GetScmOrganizationName()); err != nil && !hasStatus(resp, http.StatusNotFound) {
+		return E(op, m, fmt.Errorf("failed to remove user: %w", err))
 	}
 	return nil
 }
@@ -583,7 +585,7 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 	return toRepository(repo), nil
 }
 
-// deleteRepository deletes repository by name or ID.
+// deleteRepository deletes repository by ID.
 func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 	const op Op = "deleteRepository"
 	m := M("failed to delete repository")
@@ -591,12 +593,22 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 		return E(op, m, fmt.Errorf("missing ID"))
 	}
 
-	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
+	repo, resp, err := s.client.Repositories.GetByID(ctx, int64(id))
 	if err != nil {
+		if hasStatus(resp, http.StatusNotFound) {
+			// wrap ErrNotFound to allow callers to detect that the repository
+			// is already gone, e.g., from a previously interrupted delete
+			return E(op, m, fmt.Errorf("repository %d: %w", id, ErrNotFound))
+		}
 		return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
 	}
 
-	if _, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+	if deleteResp, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+		if hasStatus(deleteResp, http.StatusNotFound) {
+			// The repository was deleted after GetByID succeeded.
+			// Treat this as success so delete remains idempotent.
+			return nil
+		}
 		return E(op, M("failed to delete repository %s/%s", repo.GetOwner().GetLogin(), repo.GetName()), err)
 	}
 

@@ -6,12 +6,14 @@ import (
 )
 
 var (
-	// ErrNotFound indicates that the user is not member of the organization.
+	// ErrNotMember indicates that the user is not member of the organization.
 	ErrNotMember = errors.New("not a member of organization")
 	// ErrNotOwner indicates that the user is not an owner of the organization.
 	ErrNotOwner = errors.New("not an owner of organization")
 	// ErrAlreadyExists indicates that a repository already exist in the organization.
 	ErrAlreadyExists = errors.New("already exist")
+	// ErrNotFound indicates that a repository does not exist in the organization.
+	ErrNotFound = errors.New("not found")
 )
 
 // SCMError holds the operation, user error message and the original error.
