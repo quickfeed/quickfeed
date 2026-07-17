@@ -105,3 +105,6 @@ func (m *Enrollment) UpdateTotalApproved(submissions []*Submission) {
 	}
 	m.TotalApproved = totalApproved
 }
+
+// compile-time assertion for interface compliance.
+var _ slipDayHolder = (*Enrollment)(nil)

@@ -29,3 +29,6 @@ func (m *Group) RemainingSlipDays(c *Course) int32 {
 func (m *Group) SetSlipDays(c *Course) {
 	setSlipDays(m, c)
 }
+
+// compile-time assertion for interface compliance.
+var _ slipDayHolder = (*Group)(nil)
