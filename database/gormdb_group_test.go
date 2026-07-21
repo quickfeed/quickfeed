@@ -574,6 +574,10 @@ func TestGetGroupWithSlipDays(t *testing.T) {
 	if totalUsedDays != 3 {
 		t.Errorf("expected total used days to be 3, got %d", totalUsedDays)
 	}
+	// GetGroup must compute SlipDaysRemaining: course has 5 slip days, 3 used.
+	if got, want := fetchedGroup.GetSlipDaysRemaining(), uint32(2); got != want {
+		t.Errorf("GetGroup: SlipDaysRemaining = %d, want %d", got, want)
+	}
 
 	// Verify GetGroupsByCourse also preloads UsedSlipDays
 	groups, err := db.GetGroupsByCourse(course.GetID())
@@ -585,5 +589,9 @@ func TestGetGroupWithSlipDays(t *testing.T) {
 	}
 	if len(groups[0].GetUsedSlipDays()) != 2 {
 		t.Errorf("expected 2 used slip days, got %d", len(groups[0].GetUsedSlipDays()))
+	}
+	// GetGroupsByCourse must also compute SlipDaysRemaining.
+	if got, want := groups[0].GetSlipDaysRemaining(), uint32(2); got != want {
+		t.Errorf("GetGroupsByCourse: SlipDaysRemaining = %d, want %d", got, want)
 	}
 }

@@ -163,6 +163,9 @@ func (db *GormDB) GetGroup(groupID uint64) (*qf.Group, error) {
 	if len(userIDs) == 0 {
 		return nil, fmt.Errorf("no users found for group with ID %d", groupID)
 	}
+	if err := db.setGroupSlipDays(group.GetCourseID(), &group); err != nil {
+		return nil, err
+	}
 	return &group, nil
 }
 
@@ -186,7 +189,24 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 		Find(&groups).Error; err != nil {
 		return nil, err
 	}
+	if err := db.setGroupSlipDays(courseID, groups...); err != nil {
+		return nil, err
+	}
 	return groups, nil
+}
+
+// setGroupSlipDays computes and sets the SlipDaysRemaining field on the given
+// groups. SlipDaysRemaining is a computed field (gorm:"-") that the group
+// queries do not preload, so it must be derived from the course after loading.
+func (db *GormDB) setGroupSlipDays(courseID uint64, groups ...*qf.Group) error {
+	course, err := db.GetCourse(courseID)
+	if err != nil {
+		return fmt.Errorf("failed to get course %d: %w", courseID, err)
+	}
+	for _, group := range groups {
+		group.SetSlipDays(course)
+	}
+	return nil
 }
 
 // syncGroupGrades synchronizes grade records for all group submissions to match current group membership.
