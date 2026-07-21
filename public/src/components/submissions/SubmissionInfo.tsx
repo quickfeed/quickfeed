@@ -96,8 +96,8 @@ function usedSlipdaysRows(assignment: Assignment, usedSlipDays: UsedSlipDays[]):
 
     return usedSlipDays
         .filter(slipDay => slipDay.assignmentID === assignment.ID)
-        .map((slipDay, index) => (
-            <span key={index}>
+        .map(slipDay => (
+            <span key={slipDay.ID}>
                 {slipDay.usedDays}
             </span>
         ))
