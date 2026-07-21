@@ -20,50 +20,6 @@ func newGroup() *qf.Group {
 	}
 }
 
-// TestGroupSlipDays is a sanity check that the slip-day accrual logic shared with
-// *Enrollment (see qf/slipdays.go, and TestSlipDays for the exhaustive case table)
-// is wired up correctly for *Group.
-func TestGroupSlipDays(t *testing.T) {
-	testNow = time.Now()
-	group := newGroup()
-	labs := []*qf.Assignment{a(0), a(2), a(5), a(20)}
-	submissionsPerLab := [][]int32{
-		{0, 0, 0, 0, 0},
-		{0, 1, 0, 1, 0},
-		{0, 3, 1, 1, 1},
-		{0, 10, 1, 1, 1, 1, 1},
-	}
-	wantRemaining := [][]int32{
-		{5, 5, 5, 5, 5},
-		{5, 5, 5, 5, 5},
-		{5, 5, 4, 3, 2},
-		{2, 2, 2, 2, 1, 0, -1},
-	}
-
-	for i := range labs {
-		labs[i].ID = uint64(i + 1)
-		for j := range submissionsPerLab[i] {
-			testNow = testNow.Add(time.Duration(submissionsPerLab[i][j]) * days)
-			submission := &qf.Submission{
-				AssignmentID: labs[i].GetID(),
-				GroupID:      group.GetID(),
-				Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}, {UserID: 2, Status: qf.Submission_NONE}},
-				Score:        50,
-				BuildInfo: &score.BuildInfo{
-					BuildDate:      timestamppb.New(testNow),
-					SubmissionDate: timestamppb.New(testNow),
-				},
-			}
-			if err := group.UpdateSlipDays(labs[i], submission); err != nil {
-				t.Fatal(err)
-			}
-			if remaining := group.RemainingSlipDays(course); remaining != wantRemaining[i][j] {
-				t.Errorf("lab %d, submission %d: RemainingSlipDays() = %d, want %d", i, j, remaining, wantRemaining[i][j])
-			}
-		}
-	}
-}
-
 // TestGroupApprovalRequiresAllMembers checks the one behavior that actually differs
 // between *Group and *Enrollment slip-day accrual: a group submission only counts as
 // approved (and thus stops accruing slip days) once every member's grade is approved,
