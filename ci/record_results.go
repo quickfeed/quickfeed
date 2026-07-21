@@ -99,36 +99,37 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 	}
 }
 
-func (r *RunData) updateSlipDays(logger *zap.SugaredLogger, db database.Database, submission *qf.Submission) error {
+// slipDayUpdater is satisfied by both *qf.Group and *qf.Enrollment, letting the
+// group and individual submission paths share the same slip-day update logic in RunData.updateSlipDays.
+type slipDayUpdater interface {
+	GetID() uint64
+	GetUsedSlipDays() []*qf.UsedSlipDays
+	UpdateSlipDays(assignment *qf.Assignment, submission *qf.Submission) error
+}
+
+func (r *RunData) updateSlipDays(logger *zap.SugaredLogger, db database.Database, submission *qf.Submission) (err error) {
+	var holder slipDayUpdater
 	if submission.GetGroupID() > 0 {
 		if !r.Assignment.GetIsGroupLab() {
-			// A group submission to a non-group lab should not update slip days
+			// A group submission to a non-group lab should not update slip days.
 			logger.Debugf("Skipping slip-day update: group %d pushed to non-group lab %d", submission.GetGroupID(), r.Assignment.GetID())
 			return nil
 		}
-		// For group submissions to group labs, update the group's slip days.
-		group, err := db.GetGroup(submission.GetGroupID())
+		holder, err = db.GetGroup(submission.GetGroupID())
 		if err != nil {
 			return fmt.Errorf("failed to get group %d: %w", submission.GetGroupID(), err)
 		}
-		if err := group.UpdateSlipDays(r.Assignment, submission); err != nil {
-			return fmt.Errorf("failed to update slip days for group %d in course %d: %w", group.GetID(), r.Assignment.GetCourseID(), err)
+	} else {
+		holder, err = db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
+		if err != nil {
+			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
-		if err := db.UpdateSlipDays(group.GetUsedSlipDays()); err != nil {
-			return fmt.Errorf("failed to update slip days for group %d (course %d): %w", group.GetID(), group.GetCourseID(), err)
-		}
-		return nil
 	}
-	// For individual submissions, update the student's slip days.
-	enroll, err := db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
-	if err != nil {
-		return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
+	if err := holder.UpdateSlipDays(r.Assignment, submission); err != nil {
+		return fmt.Errorf("failed to update slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
 	}
-	if err := enroll.UpdateSlipDays(r.Assignment, submission); err != nil {
-		return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enroll.GetUserID(), r.Assignment.GetCourseID(), err)
-	}
-	if err := db.UpdateSlipDays(enroll.GetUsedSlipDays()); err != nil {
-		return fmt.Errorf("failed to update slip days for enrollment %d (user %d) (course %d): %w", enroll.GetID(), enroll.GetUserID(), enroll.GetCourseID(), err)
+	if err := db.UpdateSlipDays(holder.GetUsedSlipDays()); err != nil {
+		return fmt.Errorf("failed to update slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
 	}
 	return nil
 }
