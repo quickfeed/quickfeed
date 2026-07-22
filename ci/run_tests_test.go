@@ -364,6 +364,192 @@ func runStream(stream *qtest.MockStream[qf.Submission], wg *sync.WaitGroup) {
 	}()
 }
 
+func TestRecordResultsGroupSlipDays(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{
+		Name:              "Test",
+		Code:              "DAT320",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
+	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+	group := qtest.CreateFakeGroup(t, db, course, 3)
+
+	assignment := &qf.Assignment{
+		CourseID:         course.GetID(),
+		Name:             "lab1",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		AutoApprove:      true,
+		ScoreLimit:       70,
+		Order:            1,
+		IsGroupLab:       true,
+		ContainerTimeout: 1,
+	}
+	qtest.CreateAssignment(t, db, assignment)
+	buildInfo := createBuildInfo(t)
+	testScores := createScores()
+	results := &score.Results{
+		BuildInfo: buildInfo,
+		Scores:    testScores,
+	}
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo: &qf.Repository{
+			RepoType: qf.Repository_GROUP,
+			GroupID:  group.GetID(),
+		},
+		JobOwner: "test",
+		CommitID: "deadbeef",
+	}
+
+	// Check that submission is recorded correctly
+	submission := recordResults(t, runData, db, results, nil, false)
+	if submission.IsAllApproved() {
+		t.Error("Submission must not be auto approved")
+	}
+	qtest.Diff(t, "submission score mismatch", testScores, submission.GetScores(), protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
+	qtest.Diff(t, "build info mismatch", buildInfo, submission.GetBuildInfo(), protocmp.Transform())
+
+	// Verify group slip days not used yet (submission before deadline)
+	fetchedGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fetchedGroup.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
+		t.Errorf("Group must have unchanged slip days before deadline, got %d, want %d",
+			fetchedGroup.RemainingSlipDays(course), course.GetSlipDays())
+	}
+
+	// When updating submission after deadline: build info (submission and build dates) and group slip days must be updated
+	newSubmissionDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
+	updatedSubmission := recordResults(t, runData, db, results, newSubmissionDate, false)
+
+	// Verify group slip days were reduced
+	updatedGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updatedGroup.RemainingSlipDays(course) == int32(course.GetSlipDays()) || len(updatedGroup.GetUsedSlipDays()) < 1 {
+		t.Error("Group must have reduced slip days after late submission")
+	}
+	qtest.Diff(t, "build info mismatch", results.GetBuildInfo(), updatedSubmission.GetBuildInfo(), protocmp.Transform())
+
+	// Verify individual student enrollments were NOT affected
+	for _, user := range group.GetUsers() {
+		enrollment, err := db.GetEnrollmentByCourseAndUser(course.GetID(), user.GetID())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if enrollment.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
+			t.Errorf("Individual student enrollment should not have slip days reduced for group submission, got %d, want %d",
+				enrollment.RemainingSlipDays(course), course.GetSlipDays())
+		}
+	}
+
+	// When rebuilding after deadline: delivery date and slip days must stay unchanged, build date must be updated
+	wantSubmissionDate := newSubmissionDate
+	newDate := qtest.Timestamp(t, "2022-11-13T15:00:00")
+	slipDaysBeforeUpdate := updatedGroup.RemainingSlipDays(course)
+	rebuiltSubmission := recordResults(t, runData, db, results, newDate, true)
+
+	qtest.Diff(t, "build date mismatch", newDate, rebuiltSubmission.GetBuildInfo().GetBuildDate(), protocmp.Transform())
+	qtest.Diff(t, "submission date mismatch", wantSubmissionDate, rebuiltSubmission.GetBuildInfo().GetSubmissionDate(), protocmp.Transform())
+
+	rebuiltGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	qtest.Diff(t, "slip days mismatch", slipDaysBeforeUpdate, rebuiltGroup.RemainingSlipDays(course))
+}
+
+// TestRecordResultsGroupSubmitsNonGroupLab pins the design decision that a
+// group push to an assignment with IsGroupLab=false is a no-op for slip days:
+// the submission isn't graded, so neither the group's pool nor any individual
+// enrollment counter is touched.
+func TestRecordResultsGroupSubmitsNonGroupLab(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{
+		Name:              "Test",
+		Code:              "DAT320",
+		ScmOrganizationID: 1,
+		SlipDays:          5,
+	}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+	group := qtest.CreateFakeGroup(t, db, course, 2)
+
+	assignment := &qf.Assignment{
+		CourseID:         course.GetID(),
+		Name:             "lab1",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		AutoApprove:      true,
+		ScoreLimit:       70,
+		Order:            1,
+		IsGroupLab:       false,
+		ContainerTimeout: 1,
+	}
+	qtest.CreateAssignment(t, db, assignment)
+	results := &score.Results{
+		BuildInfo: createBuildInfo(t),
+		Scores:    createScores(),
+	}
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo: &qf.Repository{
+			RepoType: qf.Repository_GROUP,
+			GroupID:  group.GetID(),
+		},
+		JobOwner: "test",
+		CommitID: "deadbeef",
+	}
+
+	// Submit well past the deadline so any active charging path would
+	// have produced a deduction.
+	lateDate := qtest.Timestamp(t, "2022-11-15T13:00:00")
+	_ = recordResults(t, runData, db, results, lateDate, false)
+
+	// Group pool must not be touched: this isn't a group lab.
+	fetchedGroup, err := db.GetGroup(group.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fetchedGroup.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
+		t.Errorf("group slip days should be unchanged, got %d, want %d",
+			fetchedGroup.RemainingSlipDays(course), course.GetSlipDays())
+	}
+	if len(fetchedGroup.GetUsedSlipDays()) != 0 {
+		t.Errorf("group should have no UsedSlipDays rows, got %d", len(fetchedGroup.GetUsedSlipDays()))
+	}
+
+	// Sweep every enrollment in the course, not just group members:
+	// any accidental charge against an arbitrary enrollment must fail the test.
+	enrollments, err := db.GetEnrollmentsByCourse(course.GetID(), qf.Enrollment_STUDENT, qf.Enrollment_TEACHER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrollments) == 0 {
+		t.Fatal("expected at least one enrollment for the course")
+	}
+	for _, enrollment := range enrollments {
+		if enrollment.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
+			t.Errorf("enrollment %d (user %d) slip days should be unchanged, got %d, want %d",
+				enrollment.GetID(), enrollment.GetUserID(),
+				enrollment.RemainingSlipDays(course), course.GetSlipDays())
+		}
+		if len(enrollment.GetUsedSlipDays()) != 0 {
+			t.Errorf("enrollment %d (user %d) should have no UsedSlipDays rows, got %d",
+				enrollment.GetID(), enrollment.GetUserID(), len(enrollment.GetUsedSlipDays()))
+		}
+	}
+}
+
 func recordResults(t *testing.T, runData *ci.RunData, db database.Database, results *score.Results, date *timestamppb.Timestamp, rebuild bool) *qf.Submission {
 	if date != nil {
 		results.BuildInfo.BuildDate = date
