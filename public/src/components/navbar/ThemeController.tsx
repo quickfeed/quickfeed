@@ -1,4 +1,3 @@
-import React from "react"
 import { useActions, useAppState } from "../../overmind"
 
 interface Theme {

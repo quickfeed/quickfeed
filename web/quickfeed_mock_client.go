@@ -131,6 +131,10 @@ func TokenInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ databas
 	return interceptor.NewTokenInterceptor(tm)
 }
 
+func DetachInterceptorFunc(_ *zap.SugaredLogger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
+	return interceptor.NewDetachInterceptor()
+}
+
 // NewMockClient returns a QuickFeed client for invoking RPCs.
 func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, opts ...MockClientOption) *MockClient {
 	t.Helper()

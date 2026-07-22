@@ -1,4 +1,3 @@
-import React from 'react'
 
 const ProfileHero = ({ name }: { name: string }) => (
     <div className="hero">

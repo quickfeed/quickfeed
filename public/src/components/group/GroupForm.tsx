@@ -1,5 +1,5 @@
 import { clone, create } from "@bufbuild/protobuf"
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import type { Enrollment } from "../../../proto/qf/types_pb"
 import { Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../../proto/qf/types_pb"
 import { Color, hasTeacher, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"

@@ -48,7 +48,7 @@ describe("Correct permission status should be set", () => {
             }),
         }
         const { state, actions } = initializeOvermind({ allUsers: [test.user], review: { reviewer: create(UserSchema) } }, api)
-        window.confirm = jest.fn(() => test.confirm)
+        window.confirm = vi.fn(() => test.confirm)
         await actions.global.updateAdmin(test.user)
         expect(state.allUsers[0].IsAdmin).toEqual(test.want)
     })

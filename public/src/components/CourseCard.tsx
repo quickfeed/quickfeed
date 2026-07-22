@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import type { Course, Enrollment } from '../../proto/qf/types_pb'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'

@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from "react"
+import { memo, useCallback } from "react"
 import type { Assignment, Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
 import { Icon, SubmissionSort } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"

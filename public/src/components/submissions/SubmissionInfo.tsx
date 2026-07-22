@@ -1,4 +1,3 @@
-import React from "react"
 import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
 import { useAppState } from "../../overmind"

@@ -1,4 +1,3 @@
-import React from "react"
 import type { Score } from "../../../proto/kit/score/score_pb"
 
 const SubmissionScore = ({

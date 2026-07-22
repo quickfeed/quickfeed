@@ -1,5 +1,5 @@
 // ...existing code...
-import React, { useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Assignment } from "../../../proto/qf/types_pb"
 import { Color, getFormattedTime, hasBenchmarks, isManuallyGraded } from "../../Helpers"

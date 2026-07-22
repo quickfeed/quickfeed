@@ -1,4 +1,3 @@
-import React from "react"
 import type { Assignment, Submission } from "../../proto/qf/types_pb"
 import ProgressBar from "./ProgressBar"
 import SubmissionInfo from "./submissions/SubmissionInfo"
