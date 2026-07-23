@@ -36,7 +36,8 @@ func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.NoteRequest) (
 		EnrollmentID: in.GetNote().GetEnrollmentID(),
 	}
 	if err := s.db.CreateNote(note); err != nil {
-		s.logger.Errorf("CreateNote failed for note %+v: %v", note, err)
+		s.logger.Errorf("CreateNote failed: course=%d author=%d submission=%d group=%d enrollment=%d: %v",
+			note.GetCourseID(), note.GetAuthorID(), note.GetSubmissionID(), note.GetGroupID(), note.GetEnrollmentID(), err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create note"))
 	}
 	return note, nil
@@ -55,7 +56,8 @@ func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (
 	}
 	existing.Body = body
 	if err := s.db.UpdateNote(existing); err != nil {
-		s.logger.Errorf("UpdateNote failed for note %+v: %v", existing, err)
+		s.logger.Errorf("UpdateNote failed: note=%d course=%d author=%d submission=%d group=%d enrollment=%d: %v",
+			existing.GetID(), existing.GetCourseID(), existing.GetAuthorID(), existing.GetSubmissionID(), existing.GetGroupID(), existing.GetEnrollmentID(), err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update note"))
 	}
 	updated, err := s.db.GetNote(&qf.Note{ID: existing.GetID()})
