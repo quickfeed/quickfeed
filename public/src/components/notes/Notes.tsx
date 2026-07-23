@@ -1,14 +1,9 @@
-import React, { useEffect, useState } from "react"
-import type { Note } from "../../proto/qf/types_pb"
-import { getFormattedTime } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
-import type { NoteTarget } from "../overmind/namespaces/notes/actions"
-
-/** A labelled target the staff member may attach a new note to. */
-export type LabelledTarget = { label: string, value: NoteTarget }
-
-/** A short description of which entity a note is attached to. */
-export type TargetInfo = { icon: string, text: string }
+import { useEffect, useState } from "react"
+import type { Note } from "../../../proto/qf/types_pb"
+import { getFormattedTime } from "../../Helpers"
+import { useActions, useAppState } from "../../overmind"
+import type { LabelledTarget, TargetInfo } from "./noteHelpers"
+import { submissionNoteTargetInfo, submissionNoteTargets } from "./noteHelpers"
 
 /**
  * Notes renders the internal staff notes for the currently selected submission,
@@ -34,45 +29,8 @@ const Notes = () => {
     const enrollments = state.courseEnrollments[state.activeCourse.toString()] ?? []
     const groups = state.groups[state.activeCourse.toString()] ?? []
 
-    // TODO(jostein): We should probably have this mapping in the overmind state
-    // TODO(jostein): however, individual elements in maps are not reactive, so we need to recreate the map whenever the underlying array changes.
-    const enrollmentByID = new Map(enrollments.map(e => [e.ID, e]))
-    const enrollmentByUserID = new Map(enrollments.map(e => [e.userID, e]))
-    const groupByID = new Map(groups.map(g => [g.ID, g]))
-
-    const targetInfo = (note: Note): TargetInfo => {
-        if (note.EnrollmentID > 0n) {
-            return { icon: "fa-user", text: enrollmentByID.get(note.EnrollmentID)?.user?.Name ?? "Student" }
-        }
-        if (note.GroupID > 0n) {
-            return { icon: "fa-users", text: groupByID.get(note.GroupID)?.name ?? "Group" }
-        }
-        return { icon: "fa-file-lines", text: "Submission" }
-    }
-
-    // Targets are derived from the submission so the list always matches its owner.
-    const targets: LabelledTarget[] = [{ label: "This submission", value: { SubmissionID: submission.ID } }]
-    if (submission.groupID > 0n) {
-        const group = groupByID.get(submission.groupID)
-        targets.push({ label: group ? `Group: ${group.name}` : "Group", value: { GroupID: submission.groupID } })
-        // Groups carry `users`, not enrollments, so resolve each member's enrollment ID.
-        // otherwise we could've just iterated over `group.enrollments` and used the enrollment ID directly.
-        group?.users.forEach(user => {
-            const enrollment = enrollmentByUserID.get(user.ID)
-            if (enrollment) {
-                targets.push({ label: `Student: ${user.Name}`, value: { EnrollmentID: enrollment.ID } })
-            }
-        })
-    } else if (submission.userID > 0n) {
-        const enrollment = enrollmentByUserID.get(submission.userID)
-        if (enrollment) {
-            targets.push({ label: enrollment.user ? `Student: ${enrollment.user.Name}` : "Student", value: { EnrollmentID: enrollment.ID } })
-            const group = enrollment.groupID > 0n ? groupByID.get(enrollment.groupID) : undefined
-            if (group) {
-                targets.push({ label: `Group: ${group.name}`, value: { GroupID: group.ID } })
-            }
-        }
-    }
+    const targets = submissionNoteTargets(submission, enrollments, groups)
+    const targetInfo = (note: Note): TargetInfo => submissionNoteTargetInfo(note, enrollments, groups)
 
     return (
         <div className="card bg-base-100 shadow-xl mb-4">
@@ -173,7 +131,18 @@ const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorN
 const NoteForm = ({ targets }: { targets: LabelledTarget[] }) => {
     const state = useAppState()
     const actions = useActions().notes
-    const [targetIndex, setTargetIndex] = useState(0)
+    const [targetKey, setTargetKey] = useState(targets[0]?.key ?? "")
+    const selectedTarget = targets.find(target => target.key === targetKey) ?? targets[0]
+
+    useEffect(() => {
+        if (!selectedTarget) {
+            setTargetKey("")
+            return
+        }
+        if (selectedTarget.key !== targetKey) {
+            setTargetKey(selectedTarget.key)
+        }
+    }, [selectedTarget, targetKey])
 
     return (
         <div className="px-6 py-4 border-t border-base-300">
@@ -184,15 +153,15 @@ const NoteForm = ({ targets }: { targets: LabelledTarget[] }) => {
             <div className="flex items-center gap-2 mt-2">
                 {targets.length > 1 && (
                     <select className="select select-bordered select-sm"
-                        value={targetIndex}
-                        onChange={e => setTargetIndex(Number(e.target.value))}
+                        value={selectedTarget?.key ?? ""}
+                        onChange={e => setTargetKey(e.target.value)}
                     >
-                        {targets.map((t, i) => <option key={t.label} value={i}>{t.label}</option>)}
+                        {targets.map(target => <option key={target.key} value={target.key}>{target.label}</option>)}
                     </select>
                 )}
                 <button className="btn btn-sm btn-primary"
-                    disabled={state.notes.draft.trim().length === 0}
-                    onClick={() => actions.createNote(targets[targetIndex].value)}
+                    disabled={!selectedTarget || state.notes.draft.trim().length === 0}
+                    onClick={() => selectedTarget && actions.createNote(selectedTarget.value)}
                 >
                     Add note
                 </button>
