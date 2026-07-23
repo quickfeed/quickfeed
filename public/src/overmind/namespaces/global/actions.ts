@@ -506,7 +506,7 @@ export const toggleFavorites = ({ state }: Context): void => {
     state.showFavorites = !state.showFavorites
 }
 
-export const setSelectedAssignmentID = ({ state }: Context, assignmentID: number): void => {
+export const setSelectedAssignmentID = ({ state }: Context, assignmentID: bigint): void => {
     state.selectedAssignmentID = assignmentID
 }
 

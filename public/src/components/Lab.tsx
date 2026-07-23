@@ -19,14 +19,19 @@ const Lab = () => {
     const { id, lab } = useParams()
     const courseID = id ?? ""
     const assignmentID = convertToBigInt(lab)
+    const validAssignmentID = assignmentID > 0n
     const location = useLocation()
     const isGroupLab = location.pathname.includes("group-lab")
 
     useEffect(() => {
         if (!state.isTeacher) {
-            actions.setSelectedAssignmentID(Number(lab))
+            if (validAssignmentID) {
+                actions.setSelectedAssignmentID(assignmentID)
+            } else {
+                actions.setSelectedAssignmentID(-1n)
+            }
         }
-    }, [actions, lab, state.isTeacher])
+    }, [actions, assignmentID, state.isTeacher, validAssignmentID])
 
     const renderLab = () => {
         let submission: Submission | null
@@ -38,6 +43,9 @@ const Lab = () => {
             assignment = state.assignments[courseID].find(a => a.ID === submission?.AssignmentID) ?? null
         } else {
             // Retrieve the student's submission
+            if (!validAssignmentID) {
+                return <CenteredMessage message={KnownMessage.StudentNoAssignment} />
+            }
             assignment = state.assignments[courseID]?.find(a => a.ID === assignmentID) ?? null
             if (!assignment) {
                 return <CenteredMessage message={KnownMessage.StudentNoAssignment} />
