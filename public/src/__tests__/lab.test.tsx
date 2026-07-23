@@ -1,6 +1,6 @@
 import { clone, create } from "@bufbuild/protobuf"
 import { ConnectError } from "@connectrpc/connect"
-import { act, render, screen } from "@testing-library/react"
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { AssignmentSchema, AssignmentsSchema, SubmissionSchema, SubmissionsSchema, UserSchema } from "../../proto/qf/types_pb"
@@ -111,5 +111,32 @@ describe("Lab view correctly re-renders on state change", () => {
         })
         // verify that the updated submission is shown
         assertContent("This is a build log")
+    })
+
+    test("Invalid assignment route resets selected assignment", async () => {
+        cleanup()
+        const invalidRouteOvermind = initializeOvermind({
+            self: create(UserSchema, {
+                ID: BigInt(1),
+                Name: "Test User",
+                IsAdmin: true,
+            }),
+            selectedAssignmentID: 1n,
+            assignments: {
+                "1": MockData.mockedAssignments().filter(a => a.CourseID === 1n)
+            },
+        }, api)
+        render(
+            <Provider value={invalidRouteOvermind}>
+                <MemoryRouter initialEntries={["/course/1/lab/abcdef"]}>
+                    <Routes>
+                        <Route path="/course/:id/lab/:lab" element={<Lab />} />
+                    </Routes>
+                </MemoryRouter>
+            </Provider>
+        )
+
+        assertContent(KnownMessage.StudentNoAssignment)
+        await waitFor(() => expect(invalidRouteOvermind.state.selectedAssignmentID).toBe(-1n))
     })
 })
