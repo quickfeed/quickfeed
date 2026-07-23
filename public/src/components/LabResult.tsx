@@ -2,7 +2,7 @@ import { useAppState } from "../overmind"
 import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 import Lab from "./Lab"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
-import Notes from "./Notes"
+import Notes from "./notes/Notes"
 
 const LabResult = () => {
     const state = useAppState()
