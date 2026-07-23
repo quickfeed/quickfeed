@@ -172,7 +172,7 @@ type QuickFeedServiceClient interface {
 	UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
 	DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error)
 	GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error)
-	// GetCourseNotes returns all internal notes for a course, for staff overviews.
+	// GetCourseNotes returns all internal notes for a course.
 	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
 	CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error)
 	GetAssignmentFeedback(context.Context, *qf.CourseRequest) (*qf.AssignmentFeedbacks, error)
@@ -774,7 +774,7 @@ type QuickFeedServiceHandler interface {
 	UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
 	DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error)
 	GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error)
-	// GetCourseNotes returns all internal notes for a course, for staff overviews.
+	// GetCourseNotes returns all internal notes for a course.
 	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
 	CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error)
 	GetAssignmentFeedback(context.Context, *qf.CourseRequest) (*qf.AssignmentFeedbacks, error)

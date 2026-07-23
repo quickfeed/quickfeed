@@ -24,7 +24,7 @@ var File_qf_quickfeed_proto protoreflect.FileDescriptor
 
 const file_qf_quickfeed_proto_rawDesc = "" +
 	"\n" +
-	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x0eqf/types.proto\x1a\x11qf/requests.proto2\x99\r\n" +
+	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x11qf/requests.proto\x1a\x0eqf/types.proto2\x99\r\n" +
 	"\x10QuickFeedService\x12\x1f\n" +
 	"\aGetUser\x12\b.qf.Void\x1a\b.qf.User\"\x00\x12!\n" +
 	"\bGetUsers\x12\b.qf.Void\x1a\t.qf.Users\"\x00\x12\"\n" +
@@ -183,8 +183,8 @@ func file_qf_quickfeed_proto_init() {
 	if File_qf_quickfeed_proto != nil {
 		return
 	}
-	file_qf_types_proto_init()
 	file_qf_requests_proto_init()
+	file_qf_types_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
