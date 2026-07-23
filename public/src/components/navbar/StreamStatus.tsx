@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { ConnStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 

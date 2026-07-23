@@ -1,4 +1,3 @@
-import React from "react"
 import { useLocation, useNavigate } from "react-router"
 import type { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"

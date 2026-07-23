@@ -1,4 +1,3 @@
-import React from "react"
 import { useLocation } from "react-router"
 import { useAppState } from "../../overmind"
 import CourseFavoriteButton from "../CourseFavoriteButton"

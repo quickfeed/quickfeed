@@ -1,4 +1,3 @@
-import React from "react"
 import { useAppState } from "../overmind"
 import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 import Lab from "./Lab"

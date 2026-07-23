@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react"
+import { useLayoutEffect } from "react"
 import { Enroll } from "../components/Enroll"
 import { isEnrolled, isTeacher } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"

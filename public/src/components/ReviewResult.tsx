@@ -1,4 +1,3 @@
-import React from "react"
 import type { Review } from "../../proto/qf/types_pb"
 import { hasBenchmarks } from "../Helpers"
 import { useAppState } from "../overmind"

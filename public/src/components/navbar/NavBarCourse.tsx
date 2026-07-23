@@ -1,4 +1,3 @@
-import React from "react"
 import { useNavigate } from "react-router"
 import type { Enrollment } from "../../../proto/qf/types_pb"
 import { isStudent, isTeacher } from "../../Helpers"

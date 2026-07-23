@@ -4,7 +4,7 @@ import { ConnectError } from "@connectrpc/connect"
 import { render, screen } from "@testing-library/react"
 import { createOvermindMock } from "overmind"
 import { Provider } from "overmind-react"
-import React, { act } from "react"
+import { act } from "react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { VoidSchema } from "../../proto/qf/requests_pb"
 import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, NotesSchema, UserSchema } from "../../proto/qf/types_pb"
@@ -69,7 +69,7 @@ describe("UpdateEnrollment", () => {
             throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
         }
         mockedOvermind.actions.global.setActiveCourse(test.courseID)
-        window.confirm = jest.fn(() => true)
+        window.confirm = vi.fn(() => true)
         await mockedOvermind.actions.global.updateEnrollment({ enrollment, status: test.want })
         expect(enrollment.status).toEqual(test.want)
     })

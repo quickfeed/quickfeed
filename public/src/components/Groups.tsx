@@ -133,6 +133,7 @@ const Groups = () => {
                     </div>
                 </td>
                 <GroupMembers group={group} />
+                <td>{group.slipDaysRemaining}</td>
                 <GroupButtons group={group} />
             </tr>
         )
@@ -158,6 +159,7 @@ const Groups = () => {
                 <tr>
                     <th>Name</th>
                     <th>Members</th>
+                    <th>Slip days</th>
                     <th>Manage</th>
                 </tr>
             </thead>

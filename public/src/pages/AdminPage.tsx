@@ -1,4 +1,3 @@
-import React from "react"
 import { Route, Routes, useLocation, useNavigate } from "react-router"
 import CreateCourse from "../components/admin/CreateCourse"
 import EditCourse from "../components/admin/EditCourse"

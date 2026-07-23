@@ -277,12 +277,12 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 			}
 		}),
 	)
-	deleteOrgsMembersByOrgByUsernameHandler := WithRequestMatchHandler(
-		deleteOrgsMembersByOrgByUsername,
+	deleteOrgsMembershipsByOrgByUsernameHandler := WithRequestMatchHandler(
+		deleteOrgsMembershipsByOrgByUsername,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			org := r.PathValue("org")
 			username := r.PathValue("username")
-			logger.Debug(replaceArgs(deleteOrgsMembersByOrgByUsername, org, username))
+			logger.Debug(replaceArgs(deleteOrgsMembershipsByOrgByUsername, org, username))
 
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				for i, m := range s.members {
@@ -292,7 +292,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 						return
 					}
 				}
-				w.WriteHeader(http.StatusNotFound) // member not found
+				w.WriteHeader(http.StatusNotFound) // no membership record
 			})
 			if !found {
 				w.WriteHeader(http.StatusNotFound) // org not found
@@ -828,7 +828,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		getOrgsMembershipsByOrgByUsernameHandler,
 		putOrgsMembershipsByOrgByUsernameHandler,
 		patchUserMembershipsOrgsByOrgHandler,
-		deleteOrgsMembersByOrgByUsernameHandler,
+		deleteOrgsMembershipsByOrgByUsernameHandler,
 		getReposByOwnerByRepoHandler,
 		deleteReposByOwnerByRepoHandler,
 		getRepositoriesByIDHandler,

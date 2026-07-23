@@ -1,4 +1,3 @@
-import React from "react"
 import type { GradingCriterion } from "../../../proto/qf/types_pb"
 import { useActions, useAppState } from "../../overmind"
 import GradeButtons from "./GradeButtons"

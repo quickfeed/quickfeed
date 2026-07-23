@@ -1,5 +1,4 @@
-import React from "react"
-import type { Assignment, Submission } from "../../../proto/qf/types_pb"
+import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
@@ -15,6 +14,12 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     const delivered = getFormattedTime(buildInfo?.SubmissionDate)
     const built = getFormattedTime(buildInfo?.BuildDate)
     const executionTime = buildInfo ? `${buildInfo.ExecTime / BigInt(1000)} seconds` : ""
+
+    const isGroupSubmission = submission.groupID > 0n
+    const group = isGroupSubmission
+        ? (state.groups[assignment.CourseID.toString()]?.find(g => g.ID === submission.groupID)
+            ?? state.userGroup[assignment.CourseID.toString()])
+        : undefined
 
     const status = getStatusByUser(submission, enrollment.userID)
     const className = isAllApproved(submission) ? "passed" : "failed"
@@ -66,12 +71,35 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     <td>{executionTime}</td>
                 </tr>
                 <tr>
-                    <td colSpan={2}>Slip days</td>
-                    <td>{enrollment.slipDaysRemaining}</td>
+                    <td colSpan={2}>{isGroupSubmission ? "Group slip days" : "Slip days"}</td>
+                    <td>{isGroupSubmission ? group?.slipDaysRemaining : enrollment.slipDaysRemaining}</td>
+                </tr>
+                <tr>
+                    <td colSpan={2}>{isGroupSubmission ? "Used group slip days for this assignment" : "Used slip days for this assignment"}</td>
+                    <td>
+                        {isGroupSubmission
+                            ? usedSlipdaysRows(assignment, group?.usedSlipDays ?? [])
+                            : usedSlipdaysRows(assignment, enrollment.usedSlipDays ?? [])}
+                    </td>
                 </tr>
             </tbody>
         </table>
     )
+}
+
+function usedSlipdaysRows(assignment: Assignment, usedSlipDays: UsedSlipDays[]): React.ReactNode {
+    // returns a table row if there exists some used slip days for the assignment, otherwise returns nothing
+    if (usedSlipDays.length === 0) {
+        return null
+    }
+
+    return usedSlipDays
+        .filter(slipDay => slipDay.assignmentID === assignment.ID)
+        .map(slipDay => (
+            <span key={slipDay.ID}>
+                {slipDay.usedDays}
+            </span>
+        ))
 }
 
 export default SubmissionInfo

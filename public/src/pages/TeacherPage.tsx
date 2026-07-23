@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import { useCallback } from "react"
 import { Route, Routes, useLocation } from "react-router"
 import Card from "../components/Card"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"

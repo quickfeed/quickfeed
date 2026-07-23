@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import type { Course } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
 import DynamicTable from "../DynamicTable"

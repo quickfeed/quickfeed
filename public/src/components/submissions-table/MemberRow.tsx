@@ -1,5 +1,5 @@
 import { isMessage } from "@bufbuild/protobuf"
-import React, { memo } from "react"
+import { memo } from "react"
 import type { Assignment, Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
 import { EnrollmentSchema, GroupSchema } from "../../../proto/qf/types_pb"
 import { groupRepoLink, isHidden, isTeacher, userRepoLink } from "../../Helpers"

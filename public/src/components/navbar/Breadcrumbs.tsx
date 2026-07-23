@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"

@@ -1,5 +1,4 @@
 import type { Dispatch, SetStateAction } from 'react'
-import React from 'react'
 import { useAppState } from '../../overmind'
 
 const Field = ({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) => (

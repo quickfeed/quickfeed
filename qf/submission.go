@@ -14,6 +14,9 @@ func (s *Submission) IsApproved(userID uint64) bool {
 }
 
 func (s *Submission) IsAllApproved() bool {
+	if len(s.GetGrades()) == 0 {
+		return false
+	}
 	for _, grade := range s.GetGrades() {
 		if grade.GetStatus() != Submission_APPROVED {
 			return false

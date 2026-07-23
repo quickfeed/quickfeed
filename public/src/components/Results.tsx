@@ -1,5 +1,5 @@
 import { clone, isMessage } from "@bufbuild/protobuf"
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from 'react-router-dom'
 import type { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { EnrollmentSchema } from "../../proto/qf/types_pb"
@@ -58,12 +58,16 @@ const Results = ({ review }: { review: boolean }) => {
         if (selectedLab) {
             const submission = state.submissionsForCourse.ByID(convertToBigInt(selectedLab))
             if (submission) {
+                const owner = state.submissionsForCourse.OwnerByID(submission.ID)
+                if (!owner) {
+                    return
+                }
                 actions.global.setSelectedSubmission({ submission })
-                actions.global.updateSubmissionOwner(state.submissionsForCourse.OwnerByID(submission.ID))
+                actions.global.updateSubmissionOwner(owner)
                 if (submission.reviews.length > 0) {
                     actions.review.setSelectedReview(-1)
                 } else {
-                    actions.global.getSubmission({ submission, owner: state.submissionOwner, courseID: state.activeCourse })
+                    actions.global.getSubmission({ submission, owner, courseID: state.activeCourse })
                 }
             }
         }

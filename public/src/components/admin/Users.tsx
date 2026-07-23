@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react"
+import { useCallback, useEffect } from "react"
 import type { User } from "../../../proto/qf/types_pb"
 import { Color, isHidden, userLink } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"

@@ -559,6 +559,59 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 }
 
+// TestRejectEnrollmentRepoAlreadyDeleted verifies that rejecting an enrollment
+// succeeds even if the student's repository and org membership are already gone
+// on SCM, so that database cleanup can still complete.
+func TestRejectEnrollmentRepoAlreadyDeleted(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 2})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("admin", "student"),
+	), web.WithInterceptors())
+
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	qtest.EnrollStudent(t, db, student, course)
+
+	// Repository record referring to a repository that does not exist on SCM.
+	repo := &qf.Repository{
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		ScmRepositoryID:   999,
+		UserID:            student.GetID(),
+		RepoType:          qf.Repository_USER,
+	}
+	if err := db.CreateRepository(repo); err != nil {
+		t.Fatal(err)
+	}
+
+	adminCtx := client.Context(t, admin)
+	if _, err := client.UpdateEnrollments(adminCtx, &qf.Enrollments{
+		Enrollments: []*qf.Enrollment{{
+			CourseID: course.GetID(),
+			UserID:   student.GetID(),
+			Status:   qf.Enrollment_NONE,
+		}},
+	}); err != nil {
+		t.Errorf("UpdateEnrollments() failed for missing SCM repository: %v", err)
+	}
+
+	if _, err := db.GetEnrollmentByCourseAndUser(course.GetID(), student.GetID()); err == nil {
+		t.Error("enrollment still exists in database after reject")
+	}
+
+	repos, err := db.GetRepositories(&qf.Repository{UserID: student.GetID(), RepoType: qf.Repository_USER})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repos) > 0 {
+		t.Error("repository record still exists in database after reject")
+	}
+}
+
 func TestUpdateCourseVisibility(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

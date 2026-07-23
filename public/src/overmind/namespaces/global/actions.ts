@@ -807,8 +807,8 @@ export const setActiveGroup = ({ state }: Context, group: Group | null): void =>
     }
 }
 
-export const updateGroupUsers = ({ state }: Context, user: User): void => {
-    if (!state.activeGroup) {
+export const updateGroupUsers = ({ state }: Context, user?: User): void => {
+    if (!state.activeGroup || !user) {
         return
     }
     const group = state.activeGroup
