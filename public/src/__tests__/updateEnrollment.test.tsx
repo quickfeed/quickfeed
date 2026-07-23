@@ -7,7 +7,7 @@ import { Provider } from "overmind-react"
 import { act } from "react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { VoidSchema } from "../../proto/qf/requests_pb"
-import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
+import { CourseSchema, Enrollment_UserStatus, EnrollmentSchema, NotesSchema, UserSchema } from "../../proto/qf/types_pb"
 import Members from "../components/Members"
 import { config } from "../overmind"
 import { ApiClient } from "../overmind/namespaces/global/effects"
@@ -19,6 +19,9 @@ describe("UpdateEnrollment", () => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
+        getCourseNotes: mock("getCourseNotes", async () => { // skipcq: JS-0116
+            return { message: create(NotesSchema), error: null }
+        }),
         getCourse: mock("getCourse", async (request) => { // skipcq: JS-0116
             const course = MockData.mockedCourses().find(c => c.ID === request.courseID)
             if (!course) {
@@ -73,6 +76,15 @@ describe("UpdateEnrollment", () => {
 })
 
 describe("UpdateEnrollment in webpage", () => {
+    // Members prefetches course notes on mount, so the api effect must mock GetCourseNotes.
+    const api = new ApiClient()
+    api.client = {
+        ...api.client,
+        getCourseNotes: mock("getCourseNotes", async () => { // skipcq: JS-0116
+            return { message: create(NotesSchema), error: null }
+        }),
+    }
+
     it("If status is teacher, button should display demote", () => {
         const user = create(UserSchema, { ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
         const enrollment = create(EnrollmentSchema, {
@@ -85,7 +97,7 @@ describe("UpdateEnrollment in webpage", () => {
             totalApproved: BigInt(0),
         })
 
-        const mockedOvermind = createOvermindMock(config, (state) => {
+        const mockedOvermind = createOvermindMock(config, { global: { api } }, (state) => {
             state.self = user
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }
@@ -127,7 +139,7 @@ describe("UpdateEnrollment in webpage", () => {
             lastActivityDate: timestampFromDate(new Date(2022, 3, 10)),
             totalApproved: BigInt(0),
         })
-        const mockedOvermind = createOvermindMock(config, (state) => {
+        const mockedOvermind = createOvermindMock(config, { global: { api } }, (state) => {
             state.self = user
             state.activeCourse = BigInt(1)
             state.courseEnrollments = { "1": [enrollment] }

@@ -4,6 +4,7 @@ import { Color, isManuallyGraded } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button from "../admin/Button"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
+import Notes from "../notes/Notes"
 import ReviewResult from "../ReviewResult"
 import ReviewInfo from "./ReviewInfo"
 
@@ -60,6 +61,7 @@ const ReviewForm = () => {
     } else {
         return (
             <div className="col lab-sticky reviewLabResult">
+                <Notes />
                 <div className="mb-1">{selectReviewButton}</div>
                 {state.review.currentReview ? (
                     <>

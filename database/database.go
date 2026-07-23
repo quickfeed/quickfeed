@@ -51,6 +51,8 @@ type Database interface {
 	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollment changes status of the course enrollment for the given user and course.
 	UpdateEnrollment(*qf.Enrollment) error
+	// GetEnrollmentByID returns the enrollment with the given ID.
+	GetEnrollmentByID(enrollmentID uint64) (*qf.Enrollment, error)
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
@@ -117,6 +119,20 @@ type Database interface {
 	UpdateReview(*qf.Review) error
 	// DeleteReview removes all review records matching the query.
 	DeleteReview(*qf.Review) error
+
+	// GetNote returns a single internal note matching the given query.
+	GetNote(query *qf.Note) (*qf.Note, error)
+	// GetNotes returns all internal notes relevant to the given target.
+	// When submissionID is non-zero, the result includes notes attached to the
+	// submission's group and the submitter's enrollment.
+	GetNotes(courseID, submissionID, groupID, enrollmentID uint64) ([]*qf.Note, error)
+	// CreateNote adds a new internal note.
+	CreateNote(*qf.Note) error
+	// UpdateNote updates the body of an existing internal note.
+	UpdateNote(*qf.Note) error
+	// DeleteNote removes the internal note matching the given query.
+	DeleteNote(*qf.Note) error
+
 	// GetBenchmarks return all benchmarks and criteria for an assignment
 	GetBenchmarks(*qf.Assignment) ([]*qf.GradingBenchmark, error)
 	// CreateRepository creates a new repository.

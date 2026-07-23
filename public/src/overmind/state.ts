@@ -152,7 +152,7 @@ export type State = {
     activeCourse: bigint,
 
     /* The currently selected assignment ID */
-    selectedAssignmentID: number,
+    selectedAssignmentID: bigint,
 
     /* The current assignment */
     selectedAssignment: Assignment | null,
@@ -391,7 +391,7 @@ export const state: State = {
     alerts: [],
     isLoading: true,
     activeCourse: BigInt(-1),
-    selectedAssignmentID: -1,
+    selectedAssignmentID: -1n,
     courseEnrollments: {},
     groups: {},
     pendingGroups: derived(({ activeCourse, groups }: State) => {

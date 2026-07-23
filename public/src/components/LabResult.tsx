@@ -2,6 +2,7 @@ import { useAppState } from "../overmind"
 import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 import Lab from "./Lab"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
+import Notes from "./notes/Notes"
 
 const LabResult = () => {
     const state = useAppState()
@@ -13,9 +14,10 @@ const LabResult = () => {
         return <CenteredMessage message={KnownMessage.TeacherNoAssignment} />
     }
     return (
-        <div className="lab-resize lab-sticky">
+        <div className="lab-resize lab-sticky lab-sticky-col">
+            <Notes />
             <ManageSubmissionStatus courseID={assignment.CourseID.toString()} reviewers={assignment.reviewers} />
-            <div className="reviewLabResult mt-2">
+            <div className="reviewLabResult lab-fill mt-2">
                 <Lab />
             </div>
         </div>

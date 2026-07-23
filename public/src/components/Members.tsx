@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import type { Enrollment } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
 import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isHidden, isPending, sortEnrollments, userRepoLink } from "../Helpers"
@@ -11,10 +12,12 @@ import type { Row } from "./DynamicTable"
 import DynamicTable, { SearchableCell } from "./DynamicTable"
 import Search from "./Search"
 import Button, { ButtonType } from "./admin/Button"
+import { noteCountsByEnrollment } from "./notes/noteHelpers"
 
 const Members = () => {
     const state = useAppState()
     const actions = useActions().global
+    const noteActions = useActions().notes
     const courseID = useCourseID()
     const course = state.courses.find(c => c.ID === courseID)
 
@@ -22,6 +25,10 @@ const Members = () => {
     const [descending, setDescending] = useState<boolean>(false)
     const [edit, setEditing] = useState<boolean>(false)
 
+    // Prefetch all course notes once so each row can show its note count without per-row requests.
+    useEffect(() => {
+        noteActions.getCourseNotes()
+    }, [noteActions, courseID])
 
     const setSort = (sort: EnrollmentSort) => {
         if (sortBy === sort) {
@@ -30,11 +37,10 @@ const Members = () => {
         setSortBy(sort)
     }
 
-    let enrollments: Enrollment[] = []
-    if (state.courseEnrollments[courseID.toString()]) {
-        // Clone the enrollments so we can sort them
-        enrollments = state.courseEnrollments[courseID.toString()].slice()
-    }
+    // Clone the enrollments so we can sort them
+    const enrollments: Enrollment[] = state.courseEnrollments[courseID.toString()]?.slice() ?? []
+    const noteCounts = noteCountsByEnrollment(state.notes.courseNotes, enrollments)
+    const noteCount = (enrollmentID: bigint) => noteCounts.get(enrollmentID) ?? 0
 
     const pending = state.pendingEnrollments
 
@@ -46,6 +52,7 @@ const Members = () => {
         { value: "Activity", onClick: () => setSort(EnrollmentSort.Activity) },
         { value: "Approved", onClick: () => setSort(EnrollmentSort.Approved) },
         { value: "Slipdays", onClick: () => { setSort(EnrollmentSort.Slipdays) } },
+        { value: "Notes" },
         { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
     ]
 
@@ -112,15 +119,24 @@ const Members = () => {
         const { Name = "", Email = "", StudentID = "" } = enrollment.user || {}
         const nameLink = enrollment.user ? (
             <SearchableCell hidden={!isHidden(Name, state.query)}>
-                <a
-                    href={userRepoLink(enrollment.user, course)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                    <Avatar src={enrollment.user.AvatarURL} alt={`${Name}'s avatar`} size="w-6" variant="inline" />
-                    {Name}
-                </a>
+                <div className="flex items-center gap-2">
+                    <a
+                        href={userRepoLink(enrollment.user, course)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open GitHub repository"
+                        className="shrink-0 hover:opacity-80 transition-opacity"
+                    >
+                        <Avatar src={enrollment.user.AvatarURL} alt={`${Name}'s avatar`} size="w-6" variant="inline" />
+                    </a>
+                    <Link
+                        to={`/course/${courseID}/members/${enrollment.ID}`}
+                        title="View student details"
+                        className="hover:text-primary transition-colors"
+                    >
+                        {Name}
+                    </Link>
+                </div>
             </SearchableCell>
         ) : Name
 
@@ -135,12 +151,25 @@ const Members = () => {
             </SearchableCell>
         ) : ""
 
+        const count = noteCount(enrollment.ID)
+        const notesButton = (
+            <Link
+                to={`/course/${courseID}/members/${enrollment.ID}`}
+                className="btn btn-xs btn-ghost gap-1"
+                title="Internal notes for this student"
+            >
+                <i className="fas fa-note-sticky" />
+                {count > 0 && <span className="badge badge-sm badge-warning">{count}</span>}
+            </Link>
+        )
+
         return [
             nameLink, emailLink, StudentID,
             enrollment.group?.name || "",
             getFormattedTime(enrollment.lastActivityDate),
             enrollment.totalApproved.toString(),
             enrollment.slipDaysRemaining.toString(),
+            notesButton,
             roleButtons,
         ]
     })

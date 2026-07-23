@@ -1,11 +1,4 @@
-import { useParams } from "react-router"
+import { useIDParam } from "./useIDParam"
 
-/** getCourseID returns the course ID determined by the current route */
-export const useCourseID = (): bigint => {
-    const route = useParams<{ id?: string }>()
-    try {
-        return route.id ? BigInt(route.id) : BigInt(0)
-    } catch {
-        return BigInt(0)
-    }
-}
+/** useCourseID returns the course ID determined by the current route (0n if missing/invalid). */
+export const useCourseID = (): bigint => useIDParam("id")

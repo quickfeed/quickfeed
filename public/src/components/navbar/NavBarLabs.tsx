@@ -32,7 +32,7 @@ const NavBarLabs = () => {
         //  AND ONE OF THE FOLLOWING:
         // - the location contains `group-lab` and the submission is a group submission
         // - the location contains `lab` and the submission is not a group submission
-        if (BigInt(state.selectedAssignmentID) === assignment.ID) {
+        if (state.selectedAssignmentID === assignment.ID) {
             const groupPath = location.pathname.includes("group-lab")
             if (groupPath && isGroupSubmission(submission)) {
                 return true

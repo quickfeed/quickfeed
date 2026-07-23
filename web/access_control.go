@@ -24,6 +24,15 @@ func isTeacher(ctx context.Context, courseID uint64) bool {
 	return claims.Courses[courseID] == qf.Enrollment_TEACHER
 }
 
+// isAdmin returns true if the user is a site administrator.
+func isAdmin(ctx context.Context) bool {
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return false
+	}
+	return claims.Admin
+}
+
 // courseStatus returns the user status in the given course.
 func courseStatus(ctx context.Context, courseID uint64) qf.Enrollment_UserStatus {
 	claims, ok := auth.ClaimsFromContext(ctx)

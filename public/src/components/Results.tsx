@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import type { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { EnrollmentSchema } from "../../proto/qf/types_pb"
 import { ScreenSize } from "../consts"
-import { Color } from "../Helpers"
+import { Color, convertToBigInt } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import useWindowSize from "../hooks/windowsSize"
 import { useActions, useAppState } from "../overmind"
@@ -56,7 +56,7 @@ const Results = ({ review }: { review: boolean }) => {
         }
         const selectedLab = searchParams.get("id")
         if (selectedLab) {
-            const submission = state.submissionsForCourse.ByID(BigInt(selectedLab))
+            const submission = state.submissionsForCourse.ByID(convertToBigInt(selectedLab))
             if (submission) {
                 const owner = state.submissionsForCourse.OwnerByID(submission.ID)
                 if (!owner) {
