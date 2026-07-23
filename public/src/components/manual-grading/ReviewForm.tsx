@@ -4,7 +4,7 @@ import { Color, isManuallyGraded } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button from "../admin/Button"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
-import Notes from "../Notes"
+import Notes from "../notes/Notes"
 import ReviewResult from "../ReviewResult"
 import ReviewInfo from "./ReviewInfo"
 
