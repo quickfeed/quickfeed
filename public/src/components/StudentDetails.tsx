@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import { useEffect } from "react"
 import { Link } from "react-router-dom"
 import type { Assignment, Note, Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
@@ -8,8 +8,8 @@ import { useEnrollmentID } from "../hooks/useEnrollmentID"
 import { useActions, useAppState } from "../overmind"
 import Avatar from "./Avatar"
 import Badge from "./Badge"
-import type { LabelledTarget, TargetInfo } from "./Notes"
-import { NotePanelBody } from "./Notes"
+import { NotePanelBody } from "./notes/Notes"
+import { notesForEnrollment, studentNoteTargetInfo, studentNoteTargets } from "./notes/noteHelpers"
 
 /**
  * StudentDetails is a teacher-only overview of a single student in a course:
@@ -47,21 +47,9 @@ const StudentDetails = () => {
     const submissions = state.submissionsForCourse.ForUser(enrollment)
     const groups = state.groups[courseID.toString()] ?? []
 
-    // Notes shown for the student: those attached directly to the enrollment plus the student's group notes.
-    const notes = state.notes.courseNotes.filter(n =>
-        n.EnrollmentID === enrollment.ID || (enrollment.groupID > 0n && n.GroupID === enrollment.groupID)
-    )
-    const targets: LabelledTarget[] = [{ label: "Student", value: { EnrollmentID: enrollment.ID } }]
-    if (enrollment.groupID > 0n) {
-        targets.push({ label: enrollment.group?.name ? `Group: ${enrollment.group.name}` : "Group", value: { GroupID: enrollment.groupID } })
-    }
-    const targetInfo = (note: Note): TargetInfo => {
-        if (note.GroupID > 0n) {
-            const group = groups.find(g => g.ID === note.GroupID)
-            return { icon: "fa-users", text: group?.name ?? "Group" }
-        }
-        return { icon: "fa-user", text: user.Name }
-    }
+    const notes = notesForEnrollment(state.notes.courseNotes, enrollment)
+    const targets = studentNoteTargets(enrollment)
+    const targetInfo = (note: Note) => studentNoteTargetInfo(note, enrollment, groups)
 
     return (
         <div className="space-y-4">

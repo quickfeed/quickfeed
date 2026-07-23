@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import type { Enrollment } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
@@ -12,6 +12,7 @@ import type { Row } from "./DynamicTable"
 import DynamicTable, { SearchableCell } from "./DynamicTable"
 import Search from "./Search"
 import Button, { ButtonType } from "./admin/Button"
+import { noteCountsByEnrollment } from "./notes/noteHelpers"
 
 const Members = () => {
     const state = useAppState()
@@ -29,21 +30,6 @@ const Members = () => {
         noteActions.getCourseNotes()
     }, [noteActions, courseID])
 
-    // Count notes per enrollment once, so each row is an O(1) lookup instead of scanning all course notes.
-    const noteCounts = useMemo(() => {
-        const counts = new Map<bigint, number>()
-        for (const note of state.notes.courseNotes) {
-            if (note.EnrollmentID > 0n) {
-                counts.set(note.EnrollmentID, (counts.get(note.EnrollmentID) ?? 0) + 1)
-            }
-        }
-        return counts
-    }, [state.notes.courseNotes])
-
-    // Number of internal notes attached directly to each enrollment.
-    const noteCount = (enrollmentID: bigint) => noteCounts.get(enrollmentID) ?? 0
-
-
     const setSort = (sort: EnrollmentSort) => {
         if (sortBy === sort) {
             setDescending(!descending)
@@ -51,11 +37,10 @@ const Members = () => {
         setSortBy(sort)
     }
 
-    let enrollments: Enrollment[] = []
-    if (state.courseEnrollments[courseID.toString()]) {
-        // Clone the enrollments so we can sort them
-        enrollments = state.courseEnrollments[courseID.toString()].slice()
-    }
+    // Clone the enrollments so we can sort them
+    const enrollments: Enrollment[] = state.courseEnrollments[courseID.toString()]?.slice() ?? []
+    const noteCounts = noteCountsByEnrollment(state.notes.courseNotes, enrollments)
+    const noteCount = (enrollmentID: bigint) => noteCounts.get(enrollmentID) ?? 0
 
     const pending = state.pendingEnrollments
 
