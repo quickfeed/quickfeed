@@ -12,13 +12,15 @@ interface AvatarProps {
 }
 
 const Avatar = ({ src, alt, size = "w-10", variant = "ring" }: AvatarProps) => {
+    // avoid passing an empty string to src, which would trigger a needless network request
+    const imgSrc = src || undefined
     if (variant === "inline") {
-        return <img src={src} alt={alt} className={`${size} rounded-full border border-base-300`} />
+        return <img src={imgSrc} alt={alt} className={`${size} rounded-full border border-base-300`} />
     }
     return (
         <div className="avatar">
             <div className={`${size} rounded-full ring ring-primary ring-offset-base-100 ring-offset-2`}>
-                <img src={src} alt={alt} />
+                <img src={imgSrc} alt={alt} />
             </div>
         </div>
     )

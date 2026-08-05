@@ -9,7 +9,7 @@ export default defineConfig({
     resolve: {
         // Include 'module' condition so Vite's SSR resolution picks the ESM build
         // of packages like react-router, preventing a dual-module split that would
-        // break Router context when react-router-dom loads its ESM variant.
+        // break Router context when react-router loads its ESM variant.
         conditions: ["module", "import", "node", "default"],
     },
 })

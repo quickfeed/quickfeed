@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 import { isEnrolled, isVisible } from "../Helpers"
 import { useAppState } from "../overmind"
 import NavBarCourse from "./navbar/NavBarCourse"

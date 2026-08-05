@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router'
 import CourseCodeRedirect from "./components/CourseCodeRedirect"
 import Courses from "./components/Courses"
 import Dashboard from './components/Dashboard'

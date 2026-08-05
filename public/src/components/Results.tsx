@@ -1,6 +1,6 @@
 import { clone, isMessage } from "@bufbuild/protobuf"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router'
 import type { Enrollment, Group, Submission } from "../../proto/qf/types_pb"
 import { EnrollmentSchema } from "../../proto/qf/types_pb"
 import { ScreenSize } from "../consts"

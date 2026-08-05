@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import { Repository_Type } from "../../../proto/qf/types_pb"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useAppState } from "../../overmind"

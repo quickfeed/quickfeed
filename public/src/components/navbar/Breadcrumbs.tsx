@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router'
 import type { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"
 import useWindowSize from "../../hooks/windowsSize"

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import { useActions, useAppState } from "../overmind"
 import NavFavorites from "./NavFavorites"
 import NavBarActiveCourse from "./navbar/NavBarActiveCourse"

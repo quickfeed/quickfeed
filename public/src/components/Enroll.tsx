@@ -1,5 +1,5 @@
 import { create } from "@bufbuild/protobuf"
-import { Navigate } from "react-router-dom"
+import { Navigate } from "react-router"
 import { EnrollmentSchema } from "../../proto/qf/types_pb"
 import { isPending } from "../Helpers"
 import { useAppState } from "../overmind"

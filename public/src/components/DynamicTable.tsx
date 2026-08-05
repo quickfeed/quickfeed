@@ -28,6 +28,20 @@ const isJSXElement = (element: RowElement): element is React.JSX.Element => {
     return (element as React.JSX.Element).type !== undefined
 }
 
+// Derive a stable row key from cell content instead of the row's array index,
+// so sorting/filtering does not reassign component state to the wrong row.
+const rowKey = (row: Row): string => {
+    return row.map(cell => {
+        if (isCellElement(cell)) {
+            return cell.value
+        }
+        if (isJSXElement(cell)) {
+            return String(cell.key ?? "")
+        }
+        return cell
+    }).join("|")
+}
+
 const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     const [isMouseDown, setIsMouseDown] = React.useState(false)
@@ -84,11 +98,11 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     const head = header.map((cell, index) => { return headerRowCell(cell, index) })
 
-    const rows = data.map((row, index) => {
+    const rows = data.map((row) => {
         const generatedRow = row.map((cell, index) => {
             return rowCell(cell, index)
         })
-        return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr> // skipcq: JS-0437
+        return <tr hidden={isRowHidden(row)} key={rowKey(row)}>{generatedRow}</tr>
     })
 
     const onMouseDown = () => {
