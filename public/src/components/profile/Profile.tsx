@@ -13,7 +13,9 @@ const Profile = () => {
     const navigate = useNavigate()
     const location = useLocation()
     // Holds a local state to check whether the user is editing their user information or not
-    const [editing, setEditing] = useState(false)
+    const [editing, setEditing] = useState(!state.isValid)
+    // Tracks the previous validity so we can default back to edit mode when it turns invalid.
+    const [prevIsValid, setPrevIsValid] = useState(state.isValid)
 
     // Redirect from "/" to "/profile" when user object is invalid
     useEffect(() => {
@@ -24,12 +26,14 @@ const Profile = () => {
         }
     }, [state.isLoggedIn, state.isValid, location.pathname, navigate])
 
-    // Default to edit mode if user object does not contain valid information
-    useEffect(() => {
+    // Adjust state during render (not in an Effect) per React's recommended pattern:
+    // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    if (state.isValid !== prevIsValid) {
+        setPrevIsValid(state.isValid)
         if (!state.isValid) {
             setEditing(true)
         }
-    }, [state.isValid])
+    }
 
     return (
         <div className="min-h-screen">

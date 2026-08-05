@@ -48,14 +48,14 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
         return ButtonType.OUTLINE
     }
 
-    const StatusButtons = ({ grade }: { grade?: Grade }) => {
+    const renderStatusButtons = (grade?: Grade) => {
         const buttonsInfo = [
             { text: "Approve", color: Color.GREEN, status: Submission_Status.APPROVED },
             { text: "Revision", color: Color.YELLOW, status: Submission_Status.REVISION },
             { text: "Reject", color: Color.RED, status: Submission_Status.REJECTED }
         ]
 
-        const dynamicButtons = buttonsInfo.map(({ text, color, status }) => (
+        return buttonsInfo.map(({ text, color, status }) => (
             <DynamicButton
                 key={text}
                 text={text}
@@ -65,7 +65,6 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                 onClick={() => handleSetStatusOrGrade(status, grade)}
             />
         ))
-        return dynamicButtons
     }
 
     const getUserName = (userID: bigint): string =>
@@ -96,7 +95,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
 
             {!viewIndividualGrades && (
                 <div className="flex gap-3">
-                    <StatusButtons />
+                    {renderStatusButtons()}
                 </div>
             )}
             {viewIndividualGrades && (
@@ -108,7 +107,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                                     <td className="font-medium">{getUserName(grade.UserID)}</td>
                                     <td>
                                         <div className="flex gap-2 justify-end">
-                                            <StatusButtons grade={grade} />
+                                            {renderStatusButtons(grade)}
                                         </div>
                                     </td>
                                 </tr>

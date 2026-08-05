@@ -1,11 +1,13 @@
 import { create } from "@bufbuild/protobuf"
 import { TimestampSchema } from "@bufbuild/protobuf/wkt"
 import { createOvermindMock } from "overmind"
-import type { SubType } from "overmind/lib/internalTypes"
 import { config } from "../overmind"
 import type { ApiClient } from "../overmind/namespaces/global/effects"
 import type { ReviewState } from "../overmind/namespaces/review/state"
 import type { State } from "../overmind/state"
+
+// Mirrors overmind's internal `SubType` (overmind/lib/internalTypes), which isn't part of its public API surface.
+type SubType<Base, Condition> = Pick<Base, { [Key in keyof Base]: Base[Key] extends Condition | undefined ? Key : never }[keyof Base]>
 
 /** initializeOvermind creates a mock Overmind instance with the given state, reviewState, and mockedEffects.
  * @param state the state to initialize the mock with
