@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import type { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"
@@ -6,14 +5,25 @@ import useWindowSize from "../../hooks/windowsSize"
 import { useActions, useAppState } from '../../overmind'
 
 
+// Returns course name (or code if small screen)
+const resolveCourseName = (courses: Course[], courseId: string, width: number): string | null => {
+    const course = courses.find(c => c.ID.toString() === courseId)
+    if (!course) { return null }
+    return width < ScreenSize.ExtraLarge ? course.code : course.name
+}
+
+// Returns assignment name (or null if not found)
+const resolveAssignmentName = (assignments: Assignment[], assignmentId: string): string | null => {
+    const assignment = assignments.find(a => a.ID.toString() === assignmentId)
+    return assignment?.name ?? null
+}
+
 const Breadcrumbs = () => {
     const state = useAppState()
     const actions = useActions().global
     const location = useLocation()
     const navigate = useNavigate()
     const { width } = useWindowSize()
-    const [courseName, setCourseName] = useState<string | null>(null)
-    const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)
 
     const handleDashboard = () => {
@@ -21,30 +31,13 @@ const Breadcrumbs = () => {
         navigate('/')
     }
 
-    // Returns course name (or code if small screen)
-    const resolveCourseName = (courses: Course[], courseId: string, width: number): string | null => {
-        const course = courses.find(c => c.ID.toString() === courseId)
-        if (!course) { return null }
-        return width < ScreenSize.ExtraLarge ? course.code : course.name
-    }
-
-    // Returns assignment name (or null if not found)
-    const resolveAssignmentName = (assignments: Assignment[], assignmentId: string): string | null => {
-        const assignment = assignments.find(a => a.ID.toString() === assignmentId)
-        return assignment?.name ?? null
-    }
-
-    useEffect(() => {
-        const [prefix, courseId, section, assignmentId] = pathnames
-        if (prefix === 'course' && courseId) {
-            setCourseName(resolveCourseName(state.courses, courseId, width))
-
-            if ((section === 'lab' || section === 'group-lab') && assignmentId) {
-                const courseAssignments = state.assignments?.[courseId] ?? []
-                setAssignmentName(resolveAssignmentName(courseAssignments, assignmentId))
-            }
-        }
-    }, [pathnames, state.courses, state.assignments, width])
+    const [prefix, courseId, section, assignmentId] = pathnames
+    const courseName = prefix === 'course' && courseId
+        ? resolveCourseName(state.courses, courseId, width)
+        : null
+    const assignmentName = courseId && (section === 'lab' || section === 'group-lab') && assignmentId
+        ? resolveAssignmentName(state.assignments?.[courseId] ?? [], assignmentId)
+        : null
 
     const segments: { label: string; to: string; last: boolean }[] = []
     pathnames.forEach((value, index) => {

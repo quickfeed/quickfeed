@@ -23,24 +23,25 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
 
     const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
+        const updatedCourse = clone(CourseSchema, course)
         switch (name) {
             case "courseName":
-                course.name = value
+                updatedCourse.name = value
                 break
             case "courseTag":
-                course.tag = value
+                updatedCourse.tag = value
                 break
             case "courseCode":
-                course.code = value
+                updatedCourse.code = value
                 break
             case "courseYear":
-                course.year = Number(value)
+                updatedCourse.year = Number(value)
                 break
             case "slipDays":
-                course.slipDays = Number(value)
+                updatedCourse.slipDays = Number(value)
                 break
         }
-        setCourse(course)
+        setCourse(updatedCourse)
     }, [course])
 
     // Creates a new course if no course is being edited, otherwise updates the existing course

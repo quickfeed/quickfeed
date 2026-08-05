@@ -4,8 +4,8 @@
 import { defineConfig } from "eslint/config"
 
 import js from "@eslint/js"
-import tsParser from "@typescript-eslint/parser"
 import tsPlugin from "@typescript-eslint/eslint-plugin"
+import tsParser from "@typescript-eslint/parser"
 import reactPlugin from "eslint-plugin-react"
 import reactHooksPlugin from "eslint-plugin-react-hooks"
 
@@ -24,8 +24,8 @@ export default defineConfig([
     tsPlugin.configs["flat/eslint-recommended"],
     reactPlugin.configs.flat.recommended,
     // react-hooks ships two presets: `recommended` is legacy (eslintrc) and
-    // `recommended-latest` is the flat-config equivalent.
-    reactHooksPlugin.configs["recommended-latest"],
+    // `flat.recommended-latest` is the flat-config equivalent.
+    reactHooksPlugin.configs.flat["recommended-latest"],
 
     // TypeScript wiring and project-specific overrides.
     {

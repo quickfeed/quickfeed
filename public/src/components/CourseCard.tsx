@@ -29,7 +29,7 @@ const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
     const state = useAppState()
 
     const handleEnroll = useCallback(() => actions.enroll(course.ID), [actions, course.ID])
-    const CourseEnrollmentButton = () => {
+    const renderCourseEnrollmentButton = () => {
         // Always show 'Go to Course' if enrolled or pending, even if unavailable
         if (hasNone(status)) {
             // Show enroll if not unavailable, or if user is admin
@@ -50,7 +50,7 @@ const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
         return <button className="btn btn-primary course-button" onClick={() => navigate(`/course/${enrollment.courseID}`)}>Go to Course</button>
     }
 
-    const CourseEnrollmentStatus = () => {
+    const renderCourseEnrollmentStatus = () => {
         if (!hasEnrolled(status)) {
             return null
         }
@@ -75,7 +75,7 @@ const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
                     <h2 className="text-2xl font-bold">{course.code}</h2>
                     <div className="flex items-center gap-2">
                         {unavailable && <Badge color="yellow" text="Unavailable" type="solid" />}
-                        <CourseEnrollmentStatus />
+                        {renderCourseEnrollmentStatus()}
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@ const CourseCard = ({ course, enrollment, unavailable }: CardProps) => {
                 <p className="text-base-content/70">{course.tag} {course.year}</p>
 
                 <div className="card-actions justify-end mt-4">
-                    <CourseEnrollmentButton />
+                    {renderCourseEnrollmentButton()}
                 </div>
             </div>
         </div>

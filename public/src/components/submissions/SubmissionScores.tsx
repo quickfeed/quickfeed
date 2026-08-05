@@ -10,7 +10,17 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
     const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
     const [sortAscending, setSortAscending] = React.useState<boolean>(true)
 
-    const sortScores = () => {
+    const handleSort = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
+        const key = event.currentTarget.dataset.key as ScoreSort
+        if (sortKey === key) {
+            setSortAscending(prev => !prev)
+        } else {
+            setSortKey(key)
+            setSortAscending(true)
+        }
+    }, [sortKey])
+
+    const sortedScores = React.useMemo(() => {
         const sortBy = sortAscending ? 1 : -1
         const scores = submission.Scores.map(score => clone(ScoreSchema, score))
         const totalWeight = scores.reduce((acc, score) => acc + score.Weight, 0)
@@ -28,19 +38,7 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
                     return 0
             }
         })
-    }
-
-    const handleSort = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
-        const key = event.currentTarget.dataset.key as ScoreSort
-        if (sortKey === key) {
-            setSortAscending(!sortAscending)
-        } else {
-            setSortKey(key)
-            setSortAscending(true)
-        }
-    }, [sortKey, sortAscending])
-
-    const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
+    }, [submission, sortKey, sortAscending])
     const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
     return (
         <table className="table table-zebra">

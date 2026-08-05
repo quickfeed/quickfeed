@@ -14,6 +14,16 @@ interface ReviewInfoProps {
     review: Review
 }
 
+const InfoRow = ({ label, value, badge }: { label: string, value: React.ReactNode, badge?: React.ReactNode }) => (
+    <div className="flex items-center justify-between py-3 px-4 hover:bg-base-200 transition-colors">
+        <span className="text-sm font-semibold text-base-content/70 min-w-[140px]">{label}:</span>
+        <div className="flex items-center gap-2 flex-1 justify-end">
+            <span className="font-medium">{value}</span>
+            {badge}
+        </div>
+    </div>
+)
+
 const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
 
@@ -24,15 +34,6 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
     }
 
     const submissionStatus = submission ? SubmissionStatus[status] : NoSubmission
-    const InfoRow = ({ label, value, badge }: { label: string, value: React.ReactNode, badge?: React.ReactNode }) => (
-        <div className="flex items-center justify-between py-3 px-4 hover:bg-base-200 transition-colors">
-            <span className="text-sm font-semibold text-base-content/70 min-w-[140px]">{label}:</span>
-            <div className="flex items-center gap-2 flex-1 justify-end">
-                <span className="font-medium">{value}</span>
-                {badge}
-            </div>
-        </div>
-    )
 
     return (
         <div className="card bg-base-100 shadow-xl">

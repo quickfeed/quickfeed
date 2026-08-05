@@ -126,7 +126,7 @@ const GroupForm = () => {
         }
     }
 
-    const EnrollmentTypeButton = () => {
+    const renderEnrollmentTypeButton = () => {
         if (!isTeacher) {
             return (
                 <div className="flex items-center justify-center gap-2 text-lg font-semibold">
@@ -169,7 +169,7 @@ const GroupForm = () => {
                 <div className="card bg-base-200 shadow-xl">
                     <div className="card-body p-0">
                         <div className="bg-base-200 px-4 py-3 rounded-t-2xl">
-                            <EnrollmentTypeButton />
+                            {renderEnrollmentTypeButton()}
                         </div>
                         <div className="px-4 pt-4">
                             <Search placeholder="Search users..." setQuery={setQuery} />
