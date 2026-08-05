@@ -1,7 +1,7 @@
 import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
 import { createRoot } from "react-dom/client"
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router'
 import App from './App'
 import { config } from './overmind'
 import './style.scss'
