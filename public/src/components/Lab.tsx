@@ -62,6 +62,7 @@ const Lab = () => {
                 // using the index as the key is not ideal, but in this case it is acceptable
                 // because the log lines are not expected to change unless a new submission is made
                 // in which case the component will be re-rendered anyways
+                // eslint-disable-next-line react/no-array-index-key
                 buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>) // skipcq: JS-0437
             }
 
