@@ -3,23 +3,29 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 )
 
-// NewGORMLogger returns a zap-based logger for GORM. A logger instance is only returned
+// sqlLabel is the attribute holding the traced SQL statement.
+const sqlLabel = "sql"
+
+// NewGORMLogger returns a slog-based logger for GORM. A logger instance is only returned
 // if the LOGDB environment variable is set to a specific level. This logger is not
 // recommended for production due to the high volume of SQL queries being performed and
 // the associated noise in the logs; it is mainly useful for debugging database issues.
 // If LOGDB is not set, the discard logger is returned.
-func NewGORMLogger(zapLogger *zap.Logger) gormlogger.Interface {
+//
+// The traced SQL statements include the bound column values, which may contain
+// sensitive data, e.g., a user's refresh token. LOGDB must therefore only be
+// enabled for local debugging, never in production. See doc/gorm-issues.md.
+func NewGORMLogger(logger *slog.Logger) gormlogger.Interface {
 	var level gormlogger.LogLevel
 	switch os.Getenv("LOGDB") {
 	case "":
@@ -34,17 +40,16 @@ func NewGORMLogger(zapLogger *zap.Logger) gormlogger.Interface {
 		level = gormlogger.Info
 	}
 	return Logger{
-		ZapLogger:                 zapLogger,
+		Logger:                    logger,
 		LogLevel:                  level,
 		SlowThreshold:             100 * time.Millisecond,
 		IgnoreRecordNotFoundError: false,
 	}
 }
 
-// Logger is an adaption of gorm.Logger that uses the zap logger.
-// The logger is based on code from moul.io/zapgorm2.
+// Logger adapts slog to GORM's logger interface.
 type Logger struct {
-	ZapLogger                 *zap.Logger
+	Logger                    *slog.Logger
 	LogLevel                  gormlogger.LogLevel
 	SlowThreshold             time.Duration
 	IgnoreRecordNotFoundError bool
@@ -52,32 +57,32 @@ type Logger struct {
 
 func (l Logger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
 	return Logger{
-		ZapLogger:                 l.ZapLogger,
+		Logger:                    l.Logger,
 		SlowThreshold:             l.SlowThreshold,
 		LogLevel:                  level,
 		IgnoreRecordNotFoundError: l.IgnoreRecordNotFoundError,
 	}
 }
 
-func (l Logger) Info(_ context.Context, str string, args ...interface{}) {
+func (l Logger) Info(_ context.Context, message string, args ...any) {
 	if l.LogLevel < gormlogger.Info {
 		return
 	}
-	l.logger().Sugar().Debugf(str, args...)
+	l.Logger.Debug("database info", "message", expand(message, args...))
 }
 
-func (l Logger) Warn(_ context.Context, str string, args ...interface{}) {
+func (l Logger) Warn(_ context.Context, message string, args ...any) {
 	if l.LogLevel < gormlogger.Warn {
 		return
 	}
-	l.logger().Sugar().Warnf(str, args...)
+	l.Logger.Warn("database warning", "message", expand(message, args...))
 }
 
-func (l Logger) Error(_ context.Context, str string, args ...interface{}) {
+func (l Logger) Error(_ context.Context, message string, args ...any) {
 	if l.LogLevel < gormlogger.Error {
 		return
 	}
-	l.logger().Sugar().Errorf(str, args...)
+	l.Logger.Error("database error", "message", expand(message, args...))
 }
 
 func (l Logger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -88,32 +93,22 @@ func (l Logger) Trace(_ context.Context, begin time.Time, fc func() (string, int
 	switch {
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
 		sql, rows := fc()
-		l.logger().Error("trace", zap.Error(err), zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.Logger.Error("database trace", sqlLabel, sql, "rows", rows, label.Duration, elapsed, label.Error, err)
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
 		sql, rows := fc()
-		l.logger().Warn("trace", zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.Logger.Warn("slow database trace", sqlLabel, sql, "rows", rows, label.Duration, elapsed)
 	case l.LogLevel >= gormlogger.Info:
 		sql, rows := fc()
-		l.logger().Debug("trace", zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.Logger.Debug("database trace", sqlLabel, sql, "rows", rows, label.Duration, elapsed)
 	}
 }
 
-var (
-	gormPackage      = filepath.Join("gorm.io", "gorm")
-	quickfeedPackage = filepath.Join("github.com", "quickfeed", "quickfeed", "log")
-)
-
-func (l Logger) logger() *zap.Logger {
-	for i := 2; i < 15; i++ {
-		_, file, _, ok := runtime.Caller(i)
-		switch {
-		case !ok:
-		case strings.HasSuffix(file, "_test.go"):
-		case strings.Contains(file, gormPackage):
-		case strings.Contains(file, quickfeedPackage):
-		default:
-			return l.ZapLogger.WithOptions(zap.AddCallerSkip(i))
-		}
+// expand applies GORM's printf-style arguments to message. GORM passes the
+// message as a format string; dropping the arguments would leave unexpanded
+// verbs in the log record.
+func expand(message string, args ...any) string {
+	if len(args) == 0 {
+		return message
 	}
-	return l.ZapLogger
+	return fmt.Sprintf(message, args...)
 }

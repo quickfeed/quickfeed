@@ -6,21 +6,16 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
-	"go.uber.org/zap"
 
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 type UserInterceptor struct {
-	tm     *auth.TokenManager
-	logger *zap.SugaredLogger
+	tm *auth.TokenManager
 }
 
-func NewUserInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager) *UserInterceptor {
-	return &UserInterceptor{
-		tm:     tm,
-		logger: logger,
-	}
+func NewUserInterceptor(tm *auth.TokenManager) *UserInterceptor {
+	return &UserInterceptor{tm: tm}
 }
 
 func (u *UserInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {

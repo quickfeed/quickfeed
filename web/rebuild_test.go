@@ -73,7 +73,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t).Desugar()
+	logger := qtest.Logger(t)
 	q := web.NewQuickFeedService(logger, db, mgr, &ci.Local{}, nil)
 	teacher := qtest.CreateFakeUser(t, db)
 	qtest.UpdateUser(t, db, &qf.User{ID: teacher.GetID(), IsAdmin: true})

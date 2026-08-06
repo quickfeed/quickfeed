@@ -16,7 +16,7 @@ import (
 
 func dockerClient(t *testing.T) (*ci.Docker, func()) {
 	t.Helper()
-	docker, err := ci.NewDockerCI(qtest.Logger(t))
+	docker, err := ci.NewDockerCI()
 	if err != nil {
 		t.Fatalf("Failed to set up docker client: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestFetchAssignments(t *testing.T) {
 	course.UpdateDockerfile(gotBuildContext[ci.Dockerfile])
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
-	if err := buildDockerImage(context.Background(), qtest.Logger(t), docker, course, gotBuildContext); err != nil {
+	if err := buildDockerImage(context.Background(), docker, course, gotBuildContext); err != nil {
 		t.Fatal(err)
 	}
 }

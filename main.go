@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,7 +22,6 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/manifest"
-	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -128,17 +128,15 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 	q := &quickfeed{}
 	var err error
 
-	q.logger, err = qlog.Zap()
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to initialize logger: %w", err)
-	}
+	q.logger = qlog.New(os.Stderr)
+	qlog.SetDefault(q.logger)
 
 	q.db, err = database.NewGormDB(dbFile, q.logger)
 	if err != nil {
 		return nil, q.cleanup, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	q.runner, err = ci.NewDockerCI(q.logger.Sugar())
+	q.runner, err = ci.NewDockerCI()
 	if err != nil {
 		return nil, q.cleanup, fmt.Errorf("failed to set up docker client: %w", err)
 	}
@@ -161,7 +159,7 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 }
 
 type quickfeed struct {
-	logger *zap.Logger
+	logger *slog.Logger
 	db     *database.GormDB
 	runner *ci.Docker
 }
@@ -176,11 +174,6 @@ func (q *quickfeed) cleanup() {
 	if q.db != nil {
 		if e := q.db.Close(); e != nil {
 			err = errors.Join(err, fmt.Errorf("failed to close database: %w", e))
-		}
-	}
-	if q.logger != nil {
-		if e := q.logger.Sync(); e != nil {
-			err = errors.Join(err, fmt.Errorf("failed to sync logger: %w", e))
 		}
 	}
 	if err != nil {

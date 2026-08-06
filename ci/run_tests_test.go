@@ -84,11 +84,12 @@ func TestRunTests(t *testing.T) {
 	defer closeFn()
 
 	runData := setupRunData(t, runner)
-	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
+	ctx, cancel := runData.Assignment.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	scmClient, _ := scm.GetTestSCM(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
+	ctx = qlog.NewContext(ctx, qtest.Logger(t))
+	results, err := runData.RunTests(ctx, scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +108,8 @@ func TestRunTestsTimeout(t *testing.T) {
 	defer cancel()
 
 	scmClient, _ := scm.GetTestSCM(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
+	ctx = qlog.NewContext(ctx, qtest.Logger(t))
+	results, err := runData.RunTests(ctx, scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -556,7 +558,8 @@ func recordResults(t *testing.T, runData *ci.RunData, db database.Database, resu
 		results.BuildInfo.SubmissionDate = date
 	}
 	runData.Rebuild = rebuild
-	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	ctx := qlog.NewContext(context.Background(), qtest.Logger(t))
+	submission, err := runData.RecordResults(ctx, db, results)
 	if err != nil {
 		t.Fatal(err)
 	}

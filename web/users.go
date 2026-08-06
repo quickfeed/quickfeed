@@ -3,6 +3,8 @@ package web
 import (
 	"context"
 
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -10,7 +12,7 @@ import (
 // editUserProfile updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
-func (s *QuickFeedService) editUserProfile(curUser, request *qf.User) error {
+func (s *QuickFeedService) editUserProfile(ctx context.Context, curUser, request *qf.User) error {
 	updateUser, err := s.db.GetUser(request.GetID())
 	if err != nil {
 		return err
@@ -31,7 +33,7 @@ func (s *QuickFeedService) editUserProfile(curUser, request *qf.User) error {
 
 	// log every change to admin state
 	if updateUser.GetIsAdmin() != request.GetIsAdmin() {
-		s.logger.Debugf("User %s attempting to change admin status of user %s to %v", curUser.GetLogin(), updateUser.GetLogin(), request.GetIsAdmin())
+		qlog.FromContext(ctx).Debug("changing administrator status", label.User, curUser.GetLogin(), label.TargetUser, updateUser.GetLogin(), "is_admin", request.GetIsAdmin())
 	}
 	// current user must be admin to change admin status of another user
 	// admin status of super admin (user with ID 1) cannot be changed
@@ -51,7 +53,7 @@ func (s *QuickFeedService) updateUserFromSCM(ctx context.Context, sc scm.SCM, us
 	}
 	ghLogin := ghUser.GetLogin()
 	if ghLogin != "" && ghLogin != user.GetLogin() {
-		s.logger.Infof("Updating SCM login for user ID %d from %q to %q", user.GetID(), user.GetLogin(), ghLogin)
+		qlog.FromContext(ctx).Info("updating SCM login", label.TargetUserID, user.GetID(), "old_login", user.GetLogin(), "new_login", ghLogin)
 		user.Login = ghLogin
 	}
 	ghAvatar := ghUser.GetAvatarURL()

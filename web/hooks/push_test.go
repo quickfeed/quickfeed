@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"context"
 	"sort"
 	"testing"
 
@@ -84,7 +85,7 @@ func TestExtractAssignments(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := wh.extractAssignments(&github.PushEvent{
+		got := wh.extractAssignments(context.Background(), &github.PushEvent{
 			Commits: []*github.HeadCommit{
 				{
 					Modified: tt.modified,
@@ -132,7 +133,7 @@ func TestLastActivityDate(t *testing.T) {
 
 	for _, tt := range tests {
 		date := timestamppb.Now()
-		wh.updateLastActivityDate(course, tt.repo, admin.GetLogin())
+		wh.updateLastActivityDate(context.Background(), course, tt.repo, admin.GetLogin())
 		enrol, err := db.GetEnrollmentByCourseAndUser(course.GetID(), admin.GetID())
 		if err != nil {
 			t.Fatal(err)
@@ -271,7 +272,7 @@ func TestIgnorePush(t *testing.T) {
 					}
 				})
 			}
-			if got := wh.ignorePush(tt.pushEvent, tt.repo); got != tt.want {
+			if got := wh.ignorePush(context.Background(), tt.pushEvent, tt.repo); got != tt.want {
 				t.Errorf("ignorePush(%s, %s) = %t, want %t", branchName(tt.pushEvent.GetRef()), tt.repo.Name(), got, tt.want)
 			}
 		})

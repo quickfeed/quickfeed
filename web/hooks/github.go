@@ -1,24 +1,39 @@
 package hooks
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
-	"go.uber.org/zap"
 )
 
 // maxConcurrentTestRuns is the maximum number of concurrent test runs.
 const maxConcurrentTestRuns = 5
 
+// webhookTimeout bounds the handling of a single push event, which clones the
+// repository and runs the assignment's tests in a container.
+const webhookTimeout = 30 * time.Minute
+
+const (
+	// eventTypeLabel is the attribute holding the GitHub webhook event type.
+	eventTypeLabel = "event_type"
+	// branchRefLabel is the attribute holding the pushed git reference,
+	// e.g., refs/heads/main; see label.Branch for the short branch name.
+	branchRefLabel = "branch_ref"
+)
+
 // GitHubWebHook holds references and data for handling webhook events.
 type GitHubWebHook struct {
-	logger  *zap.SugaredLogger
+	logger  *slog.Logger
 	db      database.Database
 	scmMgr  *scm.Manager
 	runner  ci.Runner
@@ -30,7 +45,7 @@ type GitHubWebHook struct {
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string, streams *stream.StreamServices, tm *auth.TokenManager) *GitHubWebHook {
+func NewGitHubWebHook(logger *slog.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string, streams *stream.StreamServices, tm *auth.TokenManager) *GitHubWebHook {
 	return &GitHubWebHook{
 		logger:  logger,
 		db:      db,
@@ -51,7 +66,7 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := github.ValidatePayload(r, []byte(wh.secret))
 		if err != nil {
-			wh.logger.Errorf("Error in request body: %v", err)
+			wh.logger.Error("invalid webhook request body", label.Error, err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -59,19 +74,23 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 
 		event, err := github.ParseWebHook(github.WebHookType(r), payload)
 		if err != nil {
-			wh.logger.Errorf("Could not parse github webhook: %v", err)
+			wh.logger.Error("failed to parse GitHub webhook", label.Error, err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		wh.logger.Debug(qlog.IndentJson(summarizeEvent(event)))
+		// Scope every record for this event to the event type; the handlers below
+		// derive their logger from the context and add their own scope.
+		ctx, logger := qlog.WithLogger(qlog.NewContext(r.Context(), wh.logger), eventTypeLabel, github.WebHookType(r))
+		logger.Debug("received webhook event")
 
 		switch e := event.(type) {
 		case *github.PushEvent:
 			commitID := e.GetHeadCommit().GetID()
-			wh.logger.Debugf("Received push event: %s", commitID)
+			ctx, logger := qlog.WithLogger(ctx, label.Commit, commitID)
+			logger.Debug("received push event")
 			if wh.dup.Duplicate(commitID) {
-				wh.logger.Debugf("Ignoring duplicate push event: %s", commitID)
+				logger.Debug("ignoring duplicate push event")
 				return
 			}
 
@@ -80,38 +99,45 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			// Note however, if we receive a large number of push events, we may be creating
 			// a large number of goroutines. If this becomes a problem, we can add rate limiting
 			// on the number of goroutines created, by returning a http.StatusTooManyRequests.
+			ctx = context.WithoutCancel(ctx)
 			go func() {
 				wh.sem <- struct{}{} // acquire semaphore
-				wh.handlePush(e)
-				<-wh.sem // release semaphore
-				// remove commitID from duplicate map (to avoid memory leak)
-				wh.dup.Remove(commitID)
+				defer func() {
+					<-wh.sem // release semaphore
+					// remove commitID from duplicate map (to avoid memory leak)
+					wh.dup.Remove(commitID)
+				}()
+				// Start the timeout after acquiring the semaphore, so that time spent
+				// queueing behind other test runs does not count against the handler.
+				ctx, cancel := context.WithTimeout(ctx, webhookTimeout)
+				defer cancel()
+				wh.handlePush(ctx, e)
 			}()
 
 		case *github.PullRequestEvent:
 			switch e.GetAction() {
 			case "opened":
-				wh.handlePullRequestOpened(e)
+				wh.handlePullRequestOpened(ctx, e)
 			case "closed":
-				wh.handlePullRequestClosed(e)
+				wh.handlePullRequestClosed(ctx, e)
 			}
 
 		case *github.PullRequestReviewEvent:
-			wh.handlePullRequestReview(e)
+			wh.handlePullRequestReview(ctx, e)
 
 		case *github.InstallationEvent:
 			switch e.GetAction() {
 			case "created":
-				wh.handleInstallationCreated(e)
+				wh.handleInstallationCreated(ctx, e)
 			case "deleted":
-				wh.handleInstallationDeleted(e)
+				wh.handleInstallationDeleted(ctx, e)
 			default:
 				// either "suspend", "unsuspend", "new_permissions_accepted"
-				wh.logger.Debugf("Ignored installation event action %s", e.GetAction())
+				wh.logger.Debug("Ignored installation event action", "action", e.GetAction())
 			}
 
 		default:
-			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
+			logger.Debug("ignored webhook event")
 		}
 	}
 }

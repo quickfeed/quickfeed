@@ -33,7 +33,7 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(), Logger(t).Desugar())
+	db, err := database.NewGormDB(f.Name(), Logger(t))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)

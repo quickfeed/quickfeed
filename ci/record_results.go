@@ -1,46 +1,55 @@
 package ci
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
+	"runtime/debug"
 
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
-func (r *RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
+func (r *RunData) RecordResults(ctx context.Context, db database.Database, results *score.Results) (*qf.Submission, error) {
+	// The run identifies the course, assignment, and job owner for every record below.
+	logger := qlog.FromContext(ctx).With(runLabel, r.String())
 	defer func() {
 		if m := recover(); m != nil {
-			logger.Errorf("Recovered from panic: %v", m)
+			// A panic here is rare and leaves the submission unrecorded, so keep
+			// the stack: the recover swallows it, and the run attributes alone are
+			// not enough to locate the cause.
+			logger.Error("recovered while recording results", "panic", m, "stack", string(debug.Stack()))
 		}
 	}()
-	logger.Debugf("Fetching (if any) previous submission for %s", r)
+	logger.Debug("fetching previous submission")
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("failed to get previous submission: %w", err)
 	}
 	if previous == nil {
-		logger.Debugf("Recording new submission for %s", r)
+		logger.Debug("recording new submission")
 	} else {
-		logger.Debugf("Updating submission %d for %s", previous.GetID(), r)
+		logger.Debug("updating submission", label.SubmissionID, previous.GetID())
 	}
 
 	resType, newSubmission := r.newSubmission(previous, results)
 	if err = db.CreateSubmission(newSubmission); err != nil {
 		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
 	}
-	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatuses(), newSubmission.GetScore())
+	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
 	if !r.Rebuild {
 		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
 			return nil, fmt.Errorf("failed to update slip days for %s: %w", r, err)
 		}
-		logger.Debugf("Updated slip days for %s", r)
+		logger.Debug("updated slip days")
 	}
 	return newSubmission, nil
 }
@@ -107,12 +116,12 @@ type slipDayUpdater interface {
 	UpdateSlipDays(assignment *qf.Assignment, submission *qf.Submission) error
 }
 
-func (r *RunData) updateSlipDays(logger *zap.SugaredLogger, db database.Database, submission *qf.Submission) (err error) {
+func (r *RunData) updateSlipDays(logger *slog.Logger, db database.Database, submission *qf.Submission) (err error) {
 	var holder slipDayUpdater
 	if submission.GetGroupID() > 0 {
 		if !r.Assignment.GetIsGroupLab() {
 			// A group submission to a non-group lab should not update slip days.
-			logger.Debugf("Skipping slip-day update: group %d pushed to non-group lab %d", submission.GetGroupID(), r.Assignment.GetID())
+			logger.Debug("skipping slip-day update for group submission to individual assignment", label.GroupID, submission.GetGroupID(), label.AssignmentID, r.Assignment.GetID())
 			return nil
 		}
 		holder, err = db.GetGroup(submission.GetGroupID())

@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/shurcooL/githubv4"
-	"go.uber.org/zap"
 )
 
-func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Config, organization string) (*GithubSCM, error) {
+func newGithubAppClient(ctx context.Context, cfg *Config, organization string) (*GithubSCM, error) {
 	inst, err := cfg.fetchInstallation(organization)
 	if err != nil {
 		return nil, err
@@ -27,17 +27,15 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 	}
 	httpClient := installCfg.Client(ctx)
 	return &GithubSCM{
-		logger:             logger,
 		client:             github.NewClient(httpClient),
 		clientV4:           githubv4.NewClient(httpClient),
-		tokenManager:       newAppTokenManager(logger, cfg, inst.GetID()),
+		tokenManager:       newAppTokenManager(cfg, inst.GetID()),
 		providerURL:        "https://github.com",
 		createUserClientFn: newGithubUserClient,
 	}, nil
 }
 
 type appTokenManager struct {
-	logger   *zap.SugaredLogger
 	config   *Config
 	tokenURL string
 
@@ -46,9 +44,8 @@ type appTokenManager struct {
 	expiresAt time.Time
 }
 
-func newAppTokenManager(logger *zap.SugaredLogger, cfg *Config, installationID int64) *appTokenManager {
+func newAppTokenManager(cfg *Config, installationID int64) *appTokenManager {
 	return &appTokenManager{
-		logger:   logger,
 		config:   cfg,
 		tokenURL: fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", installationID),
 	}
@@ -82,7 +79,7 @@ func (m *appTokenManager) Token(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	m.logger.Infof("Fetched new GitHub App access token; expires at: %s", tokenResponse.ExpiresAt)
+	qlog.FromContext(ctx).Info("fetched GitHub App access token", "expires_at", tokenResponse.ExpiresAt)
 
 	m.token = tokenResponse.Token
 	m.expiresAt = tokenResponse.ExpiresAt.Add(-time.Minute) // Refresh one minute before expiry

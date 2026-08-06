@@ -1,7 +1,6 @@
 package scm_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -12,8 +11,8 @@ func TestSCMManager(t *testing.T) {
 	const appName = "QuickFeed Testing App"
 	mgr := scm.GetSCMManager(t)
 	qfTestOrg := scm.GetTestOrganization(t)
-	ctx := context.Background()
-	createdSCM, err := mgr.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
+	ctx := qtest.Context(t)
+	createdSCM, err := mgr.GetOrCreateSCM(ctx, qfTestOrg)
 	if err != nil {
 		t.Logf(scm.InstallInstructions, appName, qfTestOrg, appName)
 		t.Fatal(err)

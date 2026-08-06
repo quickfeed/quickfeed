@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 )
 
 // CreateIssue implements the SCM interface
@@ -24,7 +26,7 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 	if err != nil {
 		return nil, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
-	s.logger.Debugf("Created issue %q on %s/%s", opt.Title, opt.Organization, opt.Repository)
+	qlog.FromContext(ctx).Debug("created issue", label.Repository, opt.Repository, label.Organization, opt.Organization, "title", opt.Title)
 	return toIssue(issue), nil
 }
 
@@ -46,7 +48,7 @@ func (s *GithubSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 	if err != nil {
 		return nil, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
-	s.logger.Debugf("Updated issue number %d on %s/%s", opt.Number, opt.Organization, opt.Repository)
+	qlog.FromContext(ctx).Debug("updated issue", label.Repository, opt.Repository, label.Organization, opt.Organization, "issue", opt.Number)
 	return toIssue(issue), nil
 }
 
