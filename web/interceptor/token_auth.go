@@ -8,8 +8,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
@@ -17,16 +18,14 @@ const tokenHeader = "Authorization"
 
 type TokenAuthInterceptor struct {
 	tm       *auth.TokenManager
-	logger   *zap.SugaredLogger
 	db       database.Database
 	tokenMap map[string]string
 	mu       sync.Mutex
 }
 
-func NewTokenAuthInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager, db database.Database) *TokenAuthInterceptor {
+func NewTokenAuthInterceptor(tm *auth.TokenManager, db database.Database) *TokenAuthInterceptor {
 	return &TokenAuthInterceptor{
 		tm:       tm,
-		logger:   logger,
 		db:       db,
 		tokenMap: make(map[string]string),
 	}
@@ -39,7 +38,7 @@ func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandle
 			return next(ctx, conn)
 		}
 
-		cookie, err := t.lookupToken(token)
+		cookie, err := t.lookupToken(ctx, token)
 		if err != nil {
 			return err
 		}
@@ -69,7 +68,7 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 			return next(ctx, request)
 		}
 
-		cookie, err := t.lookupToken(token)
+		cookie, err := t.lookupToken(ctx, token)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +111,7 @@ func validTokenPrefixes(token string) bool {
 // not, it will attempt to query GitHub for user information associated
 // with the token. If a user exists for the token, we verify that the user
 // exists in our database, and create a cookie with claims for the user.
-func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
+func (t *TokenAuthInterceptor) lookupToken(ctx context.Context, token string) (string, error) {
 	if cookie, exists := t.lookup(token); exists {
 		return cookie, nil
 	}
@@ -130,7 +129,7 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 	if err != nil {
 		return "", connect.NewError(connect.CodeUnauthenticated, err)
 	}
-	t.logger.Debug("Retrieved user", externalUser)
+	qlog.FromContext(ctx).Debug("retrieved external user", label.RemoteID, externalUser.ID, label.User, externalUser.Login)
 	// Fetch user from database using the remote identity received from GitHub.
 	user, err := t.db.GetUserByRemoteIdentity(externalUser.ID)
 	if err != nil {

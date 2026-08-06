@@ -22,12 +22,12 @@ func (a *Assignment) SinceDeadline(now time.Time) time.Duration {
 // WithTimeout returns a context with an execution timeout set to the assignment's specified
 // container timeout. If the assignment has no container timeout, the provided timeout value
 // is used instead.
-func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+func (a *Assignment) WithTimeout(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
 	t := a.GetContainerTimeout()
 	if t > 0 {
 		timeout = time.Duration(t) * time.Minute
 	}
-	return context.WithTimeout(context.Background(), timeout)
+	return context.WithTimeout(parent, timeout)
 }
 
 // CloneWithoutSubmissions returns a deep copy of the assignment without submissions.

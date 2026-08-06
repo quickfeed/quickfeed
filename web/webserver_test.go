@@ -17,7 +17,7 @@ import (
 )
 
 func TestRegisterRouter(t *testing.T) {
-	logger := qtest.Logger(t).Desugar()
+	logger := qtest.Logger(t)
 	db, stop := qtest.TestDB(t)
 	defer stop()
 

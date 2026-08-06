@@ -5,19 +5,22 @@ import (
 	"time"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEvent) {
+func (wh GitHubWebHook) handleInstallationCreated(ctx context.Context, event *github.InstallationEvent) {
+	logger := qlog.FromContext(ctx)
 	installerID := uint64(event.GetSender().GetID())
 	courseCreator, err := wh.db.GetUserByRemoteIdentity(installerID)
 	if err != nil {
-		wh.logger.Errorf("Could not get user by remote identity: %v", err)
+		logger.Error("failed to get user by remote identity", label.Error, err)
 		return
 	}
 
 	if !courseCreator.GetIsAdmin() {
-		wh.logger.Errorf("User %s is not an admin", courseCreator.GetLogin())
+		logger.Error("non-administrator attempted course installation", label.User, courseCreator.GetLogin())
 		return
 	}
 
@@ -34,28 +37,34 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 		Year:                defaultYear(now),
 	}
 
-	ctx := context.Background()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, orgName)
+	ctx, logger = qlog.WithLogger(
+		ctx,
+		label.CourseCode, course.GetCode(),
+		label.Organization, orgName,
+		label.User, courseCreator.GetLogin(),
+	)
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, orgName)
 	if err != nil {
-		wh.logger.Errorf("Could not create SCM client for course %s: %v", orgName, err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return
 	}
 	c, err := createCourse(ctx, wh.db, sc, course, courseCreator)
 	if err != nil {
 		// This may be an scm.ErrAlreadyExists error
-		wh.logger.Errorf("Could not create course %s: %v", orgName, err)
+		logger.Error("failed to create course", label.Error, err)
 		return
 	}
-	wh.logger.Infof("Successfully created course %v", c)
+	logger.Info("created course", label.CourseID, c.GetID())
 
 	if err := wh.tm.Add(courseCreator.GetID()); err != nil {
-		wh.logger.Errorf("Could not add user %s for token refresh: %v", courseCreator.GetLogin(), err)
+		logger.Error("failed to schedule token refresh", label.Error, err)
 	}
 }
 
-func (wh GitHubWebHook) handleInstallationDeleted(event *github.InstallationEvent) {
+func (wh GitHubWebHook) handleInstallationDeleted(ctx context.Context, event *github.InstallationEvent) {
+	logger := qlog.FromContext(ctx)
 	orgName := event.GetInstallation().GetAccount().GetLogin()
-	wh.logger.Infof("Removing SCM client for organization %s due to installation deletion", orgName)
+	logger.Info("removing SCM client due to installation deletion", label.Organization, orgName)
 	wh.scmMgr.DeleteSCM(orgName)
 }
 

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"os"
 	"slices"
@@ -20,7 +21,8 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/mount"
 	"github.com/moby/moby/client"
-	"go.uber.org/zap"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 )
 
 // DefaultContainerTimeout is the default timeout for running a container.
@@ -32,34 +34,27 @@ const (
 	maxToScan       = 1_000_000 // bytes
 	maxLogSize      = 30_000    // bytes
 	lastSegmentSize = 1_000     // bytes
+	imageLabel      = "image"
+	jobLabel        = "job"
 )
 
 // Docker is an implementation of the CI interface using Docker.
 type Docker struct {
 	client *client.Client
-	logger *zap.SugaredLogger
 }
 
 // NewDockerCI returns a runner to run CI tests.
-func NewDockerCI(logger *zap.SugaredLogger) (*Docker, error) {
+func NewDockerCI() (*Docker, error) {
 	cli, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
-	return &Docker{
-		client: cli,
-		logger: logger,
-	}, nil
+	return &Docker{client: cli}, nil
 }
 
 // Close ensures that the docker client is closed.
 func (d *Docker) Close() error {
-	var syncErr error
-	if d.logger != nil {
-		syncErr = d.logger.Sync()
-	}
-	closeErr := d.client.Close()
-	return errors.Join(syncErr, closeErr)
+	return d.client.Close()
 }
 
 // Run implements the CI interface. This method blocks until the job has been
@@ -68,23 +63,25 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	if d.client == nil {
 		return "", fmt.Errorf("cannot run job: %s; docker client not initialized", job.Name)
 	}
+	// Scope every record for this job, including those from the helpers below.
+	ctx, logger := qlog.WithLogger(ctx, imageLabel, job.Image, jobLabel, job.Name)
 
 	resp, err := d.createImage(ctx, job)
 	if err != nil {
 		return "", err
 	}
-	d.logger.Infof("Created container image '%s' for %s", job.Image, job.Name)
+	logger.Info("created container")
 	if _, err = d.client.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
 		return "", err
 	}
 
-	d.logger.Infof("Waiting for container image '%s' for %s", job.Image, job.Name)
-	msg, err := d.waitForContainer(ctx, job, resp.ID)
+	logger.Info("waiting for container")
+	msg, err := d.waitForContainer(ctx, resp.ID)
 	if err != nil {
 		return msg, err
 	}
 
-	d.logger.Infof("Done waiting for container image '%s' for %s", job.Image, job.Name)
+	logger.Info("container completed")
 	// extract the logs before removing the container below
 	logReader, err := d.client.ContainerLogs(ctx, resp.ID, client.ContainerLogsOptions{
 		ShowStdout: true,
@@ -93,7 +90,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 
-	d.logger.Infof("Removing container image '%s' for %s", job.Image, job.Name)
+	logger.Info("removing container")
 	// remove the container when finished to prevent too many open files
 	_, err = d.client.ContainerRemove(ctx, resp.ID, client.ContainerRemoveOptions{})
 	if err != nil {
@@ -112,25 +109,25 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 // createImage creates an image for the given job.
 func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCreateResult, error) {
+	logger := qlog.FromContext(ctx)
 	if job.Image == "" {
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
 	}
 	dockerFileContent := job.BuildContext[Dockerfile]
 	if dockerFileContent != "" {
-		d.logger.Infof("Removing image '%s' for '%s' prior to rebuild", job.Image, job.Name)
+		logger.Info("removing image before rebuild")
 		resp, err := d.client.ImageRemove(ctx, job.Image, client.ImageRemoveOptions{Force: true})
 		if err != nil {
-			d.logger.Debugf("Expected error (continuing): %v", err)
+			logger.Debug("image was not present before rebuild", label.Error, err)
 			// continue because we may not have an image to remove
 		}
 		for _, r := range resp.Items {
-			d.logger.Infof("Removed image '%s' for '%s'", r.Deleted, job.Name)
+			logger.Info("removed image", "removed_image", r.Deleted)
 		}
 
-		d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
-		// Log first line of Dockerfile
-		d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, dockerFileContent[:strings.Index(dockerFileContent, "\n")+1])
+		// Log the first line of the Dockerfile with the build record.
+		logger.Info("building image from Dockerfile", "dockerfile_first_line", dockerFileContent[:strings.Index(dockerFileContent, "\n")+1])
 		if err := d.buildImage(ctx, job); err != nil {
 			return nil, err
 		}
@@ -187,11 +184,11 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCr
 	resp, err := create()
 	switch {
 	case errdefs.IsConflict(err):
-		d.logger.Errorf("Image '%s' already being built for '%s': %v", job.Image, job.Name, err)
+		logger.Error("image already being built", label.Error, err)
 		return nil, ErrConflict
 	case err != nil:
-		d.logger.Errorf("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
-		d.logger.Infof("Trying to pull image: '%s' from remote repository", job.Image)
+		logger.Error("image not available locally", label.Error, err)
+		logger.Info("pulling image")
 		if err := d.pullImage(ctx, job.Image); err != nil {
 			return nil, err
 		}
@@ -202,23 +199,28 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCr
 }
 
 // waitForContainer waits until the container stops or context times out.
-func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) (string, error) {
+func (d *Docker) waitForContainer(ctx context.Context, respID string) (string, error) {
+	logger := qlog.FromContext(ctx)
 	wait := d.client.ContainerWait(ctx, respID, client.ContainerWaitOptions{Condition: container.WaitConditionNotRunning})
 	select {
 	case err := <-wait.Error:
 		if err != nil {
-			d.logger.Errorf("Failed to stop container image '%s' for %s: %v", job.Image, job.Name, err)
+			logger.Error("failed to stop container", label.Error, err)
 			if !errors.Is(err, context.DeadlineExceeded) {
 				return "", err
 			}
-			// stop runaway container whose deadline was exceeded
+			// The job context has expired, so use a detached deadline to bound the
+			// complete stop-and-remove sequence. The Docker stop timeout separately
+			// controls the daemon's grace period before it forcefully kills the container.
 			timeout := 1 // seconds to wait before forcefully killing the container
-			_, stopErr := d.client.ContainerStop(context.Background(), respID, client.ContainerStopOptions{Timeout: &timeout})
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+			defer cancel()
+			_, stopErr := d.client.ContainerStop(cleanupCtx, respID, client.ContainerStopOptions{Timeout: &timeout})
 			if stopErr != nil {
 				return "", stopErr
 			}
 			// remove the docker container (when stopped due to timeout) to prevent too many open files
-			_, rmErr := d.client.ContainerRemove(context.Background(), respID, client.ContainerRemoveOptions{})
+			_, rmErr := d.client.ContainerRemove(cleanupCtx, respID, client.ContainerRemoveOptions{})
 			if rmErr != nil {
 				return "", rmErr
 			}
@@ -226,7 +228,7 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 			return "Container timeout. Please check for infinite loops or other slowness.", err
 		}
 	case status := <-wait.Result:
-		d.logger.Infof("Container: '%s' for %s: exited with status: %v", job.Image, job.Name, status.StatusCode)
+		logger.Info("container exited", "exit_status", status.StatusCode)
 	}
 	return "", nil
 }
@@ -280,10 +282,12 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	}
 	defer res.Body.Close()
 
-	return printInfo(d.logger, res.Body)
+	return printInfo(qlog.FromContext(ctx), res.Body)
 }
 
-func printInfo(logger *zap.SugaredLogger, rd io.Reader) error {
+// printInfo logs the Docker build output, one record per line, at debug level;
+// a single build emits many lines.
+func printInfo(logger *slog.Logger, rd io.Reader) error {
 	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
 		out := &dockerJSON{}
@@ -293,7 +297,7 @@ func printInfo(logger *zap.SugaredLogger, rd io.Reader) error {
 		if out.Error != "" {
 			return errors.New(out.Error)
 		}
-		logger.Info(out)
+		logger.Debug("docker build output", "output", out.String())
 	}
 	return scanner.Err()
 }

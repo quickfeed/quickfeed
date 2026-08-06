@@ -35,7 +35,7 @@ func init() {
 
 func dockerClient(t *testing.T) (*ci.Docker, func()) {
 	t.Helper()
-	docker, err := ci.NewDockerCI(qtest.Logger(t))
+	docker, err := ci.NewDockerCI()
 	if err != nil {
 		t.Fatalf("Failed to set up docker client: %v", err)
 	}

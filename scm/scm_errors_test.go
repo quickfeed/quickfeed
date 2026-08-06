@@ -189,7 +189,7 @@ func TestErrorGetOrganization(t *testing.T) {
 
 func TestDeleteRepositoryTreatsDelete404AsSuccess(t *testing.T) {
 	calls := 0
-	s := NewGithubUserClient(qtest.Logger(t), "token")
+	s := NewGithubUserClient("token")
 	s.client = github.NewClient(&http.Client{
 		Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
 			calls++

@@ -9,7 +9,6 @@ import (
 	"github.com/beatlabs/github-auth/key"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 )
 
 // Manager keeps provider-specific configs (currently only for GitHub)
@@ -84,14 +83,14 @@ func NewSCMManager() (*Manager, error) {
 }
 
 // GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.
-func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
+func (s *Manager) GetOrCreateSCM(ctx context.Context, organization string) (SCM, error) {
 	s.mu.Lock()
 	client, ok := s.scms[organization]
 	s.mu.Unlock()
 	if ok {
 		return client, nil
 	}
-	client, err := newSCMAppClient(ctx, logger, s.Config, organization)
+	client, err := newSCMAppClient(ctx, s.Config, organization)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create github application for %s: %w", organization, err)
 	}
