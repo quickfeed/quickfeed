@@ -20,10 +20,12 @@ const (
 func (s *QuickFeedService) NewQuickFeedHandler() (string, http.Handler) {
 	interceptors := connect.WithInterceptors(
 		interceptor.NewMetricsInterceptor(),
-		interceptor.NewValidationInterceptor(s.logger),
-		interceptor.NewTokenAuthInterceptor(s.logger, s.tm, s.db),
-		interceptor.NewUserInterceptor(s.logger, s.tm),
+		interceptor.NewRPCLoggingInterceptor(s.logger),
+		interceptor.NewValidationInterceptor(),
+		interceptor.NewTokenAuthInterceptor(s.tm, s.db),
+		interceptor.NewUserInterceptor(s.tm),
 		interceptor.NewAccessControlInterceptor(s.db),
+		interceptor.NewContextLoggingInterceptor(),
 		interceptor.NewTokenInterceptor(s.tm),
 		interceptor.NewDetachInterceptor(),
 	)

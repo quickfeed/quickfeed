@@ -152,9 +152,36 @@ In these cases the error is usually ephemeral in nature, and the action should b
 
 ### Backend
 
-Errors are logged at the `QuickFeed Service` level.
-All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly.
-Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
+The backend uses `log/slog` for structured logging.
+Use a stable, concise message and attach variable data as attributes instead of formatting data into the message.
+Do not prefix the message with the RPC or function name: the procedure is already recorded in `rpc_method` and the call site in `source`.
+Say what failed rather than that something failed, e.g., `failed to get course enrollments with activity`, not `GetCourse failed`.
+Use the canonical attribute names from `internal/qlog/label` for stable fields that are queried or shared across backend packages.
+Keep component-specific or one-off attribute names local to the component.
+Functions that accept a context should obtain their logger with `qlog.FromContext(ctx)` so request and course attributes survive calls into SCM, CI, and background work.
+Do not pass a logger alongside a context; derive it from the context instead.
+A constructor that needs a logger for the lifetime of the object it returns is the exception: it takes the logger directly, since a context cannot be stored.
+`qlog.FromContext` safely falls back to the process logger when no logger has been attached.
+
+When a function logs the same attributes more than once, or passes them to functions that log them again, derive the scope once with `qlog.WithLogger`, and pass the returned context downstream:
+
+```go
+ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode(), label.Repository, repo.Name())
+logger.Debug("resolved push repository")
+```
+
+Use `qlog.With` when only the context is needed.
+Do not repeat an attribute that an enclosing scope already carries: slog records duplicate keys as-is, so a repeated attribute appears twice in the same record.
+`web.TestRPCLoggingNoDuplicateScope` guards the RPC scope against this.
+
+RPC completion logging records the procedure, Connect code, and duration without request or response bodies.
+The logging interceptors attach `rpc_method`, and, once authentication and access control have accepted the request, `user_id` for the calling user and `course_id` for the requested course.
+RPC handlers must not add those attributes themselves.
+When a handler acts on some other user than the caller, use `label.TargetUser` and `label.TargetUserID` to keep the two apart.
+
+Never log cookies, authorization headers, environment variables, private keys, access tokens, refresh tokens, or session secrets.
+Redact generated per-run secrets from captured command output before logging it.
+The GORM logger enabled by `LOGDB` traces full SQL statements, including bound column values; keep it for local debugging only.
 
 Errors returned to a user should be few and informative.
 They should not reveal internal details of the application.

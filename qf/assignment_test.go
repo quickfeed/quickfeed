@@ -1,11 +1,27 @@
 package qf
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/kit/score"
 )
+
+type timeoutContextKey struct{}
+
+func TestAssignmentWithTimeoutPreservesParent(t *testing.T) {
+	parent := context.WithValue(context.Background(), timeoutContextKey{}, "value")
+	ctx, cancel := (&Assignment{}).WithTimeout(parent, time.Minute)
+	defer cancel()
+	if got := ctx.Value(timeoutContextKey{}); got != "value" {
+		t.Errorf("WithTimeout() context value = %v, want value", got)
+	}
+	if _, ok := ctx.Deadline(); !ok {
+		t.Error("WithTimeout() context has no deadline")
+	}
+}
 
 func TestAssignmentZeroScoreTests(t *testing.T) {
 	tests := []struct {

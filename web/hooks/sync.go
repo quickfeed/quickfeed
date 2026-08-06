@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -16,9 +18,10 @@ const (
 // syncStudentRepos syncs all student repositories (forks of assignments repo) with the upstream
 // assignments repository. This is called when a push event is received for the assignments repo.
 func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM, course *qf.Course, branch string) {
+	logger := qlog.FromContext(ctx)
 	repos, err := wh.db.GetRepositories(&qf.Repository{ScmOrganizationID: course.GetScmOrganizationID()})
 	if err != nil {
-		wh.logger.Errorf("Failed to get repositories for course %s: %v", course.GetName(), err)
+		logger.Error("failed to get course repositories", label.Error, err)
 		return
 	}
 
@@ -30,11 +33,11 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 		}
 	}
 	if len(studentRepos) == 0 {
-		wh.logger.Debugf("No student repositories to sync for course %s", course.GetName())
+		logger.Debug("no student repositories to synchronize")
 		return
 	}
 
-	wh.logger.Infof("Synchronizing %d student repositories for course %s", len(studentRepos), course.GetName())
+	logger.Info("synchronizing student repositories", "count", len(studentRepos))
 	start := time.Now()
 	errCnt := 0
 	for _, repo := range studentRepos {
@@ -46,11 +49,10 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 		})
 		if err != nil {
 			errCnt++
-			wh.logger.Warnf("Failed to sync repository %s: %v", repo.Name(), err)
+			logger.Warn("failed to synchronize repository", label.Repository, repo.Name(), label.Error, err)
 		}
 	}
 
 	duration := time.Since(start)
-	wh.logger.Infof("Synchronized %d student repositories for course %s in %v (%d errors)",
-		len(studentRepos)-errCnt, course.GetName(), duration, errCnt)
+	logger.Info("synchronized student repositories", label.Duration, duration, "count", len(studentRepos)-errCnt, "errors", errCnt)
 }

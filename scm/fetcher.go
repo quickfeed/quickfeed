@@ -8,6 +8,8 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 )
 
 const authUserName = "quickfeed" // can be anything except an empty string
@@ -27,7 +29,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 	r, err := git.PlainOpen(cloneDir)
 	if err == nil {
 		// Repository already exists, pull the latest changes
-		s.logger.Debugf("Pulling(%s)", s.cloneURL(opt))
+		qlog.FromContext(ctx).Debug("pulling repository", "url", s.cloneURL(opt))
 		w, err := r.Worktree()
 		if err != nil {
 			return "", err
@@ -44,7 +46,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 		return "", err
 	}
 
-	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
+	qlog.FromContext(ctx).Debug("cloning repository", "url", s.cloneURL(opt))
 	var branch plumbing.ReferenceName
 	if opt.Branch != "" {
 		branch = plumbing.NewBranchReferenceName(opt.Branch)
@@ -57,7 +59,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 	if err != nil {
 		return "", err
 	}
-	s.logger.Debugf("CloneDir = %s", cloneDir)
+	qlog.FromContext(ctx).Debug("repository clone directory", label.Path, cloneDir)
 	return cloneDir, nil
 }
 

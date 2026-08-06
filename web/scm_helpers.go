@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -16,7 +18,7 @@ var ErrContextCanceled = errors.New("context canceled because the github interac
 
 // GetSCM returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
-	return q.scmMgr.GetOrCreateSCM(ctx, q.logger, organization)
+	return q.scmMgr.GetOrCreateSCM(ctx, organization)
 }
 
 // getSCMForCourse returns an SCM client for the course organization.
@@ -91,6 +93,17 @@ func ctxErr(ctx context.Context) error {
 		return connect.NewError(connect.CodeDeadlineExceeded, ctx.Err())
 	}
 	return nil
+}
+
+// logCtxErr logs and returns the context error, if any; see ctxErr.
+// A failed SCM interaction is reported as a context error when the request
+// context ended, since that explains the failure better than the SCM error.
+func logCtxErr(ctx context.Context) error {
+	err := ctxErr(ctx)
+	if err != nil {
+		qlog.FromContext(ctx).Error("request context ended", label.Error, err)
+	}
+	return err
 }
 
 // userSCMError returns a user-facing error if the error is an SCM error.

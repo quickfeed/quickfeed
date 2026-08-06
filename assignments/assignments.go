@@ -7,14 +7,15 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 // MaxWait is the maximum time allowed for updating a course's assignments
 // and docker image before aborting.
-const MaxWait = 5 * time.Minute
+const MaxWait = 15 * time.Minute
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
 //
@@ -26,12 +27,21 @@ const MaxWait = 5 * time.Minute
 // caller for an extended period, since it may involve cloning the tests repository,
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
+// The ctx is expected to carry a logger scoped to the course; see qlog.WithLogger.
+func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
 	unlock := course.Lock()
 	defer unlock()
 
-	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
-	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
+	// Scope every record below to the tests repository, so that the individual
+	// statements do not repeat these attributes. The caller is expected to have
+	// scoped the context to the course already.
+	ctx, logger := qlog.WithLogger(
+		ctx,
+		label.Repository, qf.TestsRepo,
+		label.RepositoryType, qf.Repository_TESTS.String(),
+	)
+	logger.Debug("updating from tests repository")
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	clonedTestsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
@@ -40,27 +50,27 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		logger.Errorf("Failed to clone '%s' repository: %v", qf.TestsRepo, err)
+		logger.Error("failed to clone tests repository", label.Error, err)
 		return
 	}
-	logger.Debugf("Successfully cloned tests repository to: %s", clonedTestsRepo)
+	logger.Debug("cloned tests repository", label.Path, clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
 	assignments, buildContext, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
-		logger.Errorf("Failed to parse assignments from '%s' repository: %v", qf.TestsRepo, err)
+		logger.Error("failed to parse assignments", label.Error, err)
 		return
 	}
 
 	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
-		if err = buildDockerImage(ctx, logger, runner, course, buildContext); err != nil {
-			logger.Error(err)
+		if err = buildDockerImage(ctx, runner, course, buildContext); err != nil {
+			logger.Error("failed to build course image", label.Error, err)
 			return
 		}
 		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
-			logger.Errorf("Failed to update Dockerfile for course %s: %v", course.GetCode(), err)
+			logger.Error("failed to store course Dockerfile digest", label.Error, err)
 			return
 		}
 	}
@@ -68,29 +78,30 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 	// Does not store tasks associated with assignments; tasks are handled separately by synchronizeTasksWithIssues below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
-			logger.Debugf("Failed to update database for: %v", assignment)
+			logger.Debug("assignment not updated in database", label.Assignment, assignment.GetName())
 		}
-		logger.Errorf("Failed to update assignments in database: %v", err)
+		logger.Error("failed to update assignments in database", label.Error, err)
 		return
 	}
-	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), qf.TestsRepo)
+	logger.Debug("updated from tests repository")
 
 	if err = synchronizeTasksWithIssues(ctx, db, sc, course, assignments); err != nil {
-		logger.Errorf("Failed to create tasks on '%s' repository: %v", qf.TestsRepo, err)
+		logger.Error("failed to synchronize assignment tasks", label.Error, err)
 		return
 	}
 }
 
 // buildDockerImage builds the Docker image for the given course.
-func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.Runner, course *qf.Course, buildContext map[string]string) error {
-	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
+func buildDockerImage(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string) error {
+	logger := qlog.FromContext(ctx)
+	logger.Debug("building course Dockerfile", "dockerfile", course.GetDockerfile())
 	out, err := runner.Run(ctx, &ci.Job{
 		Name:         course.JobName(),
 		Image:        course.DockerImage(),
 		BuildContext: buildContext,
 		Commands:     []string{`echo -n "Hello from Dockerfile"`},
 	})
-	logger.Debugf("Build completed: %s", out)
+	logger.Debug("course image build completed", "output", out)
 	if err != nil {
 		return fmt.Errorf("failed to build image from %s's Dockerfile: %w", course.GetCode(), err)
 	}

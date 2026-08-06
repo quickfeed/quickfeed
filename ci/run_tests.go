@@ -10,15 +10,21 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 // pattern to prefix the tmp folder for quickfeed tests
 const quickfeedTestsPath = "quickfeed-tests"
+
+// runLabel is the attribute holding the RunData identifier. RunTests and
+// RecordResults scope their records with it, which is why their statements do
+// not repeat the course code, assignment name, job owner, or commit; see
+// RunData.String.
+const runLabel = "run"
 
 // RunData stores CI data
 type RunData struct {
@@ -55,7 +61,9 @@ func (r *RunData) String() string {
 // to run the tests on the student code and manipulate the folders as needed for a particular
 // lab assignment's test requirements. The temporary directory is deleted when the container
 // exits at the end of this method.
-func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, runner Runner) (*score.Results, error) {
+func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*score.Results, error) {
+	// The run identifies the course, assignment, and job owner for every record below.
+	ctx, logger := qlog.WithLogger(ctx, runLabel, r.String())
 	testsStartedCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
 
 	dstDir, err := os.MkdirTemp("", quickfeedTestsPath)
@@ -64,11 +72,11 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	}
 	defer os.RemoveAll(dstDir)
 
-	logger.Debugf("Cloning repository for %s", r)
+	logger.Debug("cloning submission repository")
 	if err = r.clone(ctx, sc, dstDir); err != nil {
 		return nil, err
 	}
-	logger.Debugf("Successfully cloned student repository to: %s", dstDir)
+	logger.Debug("cloned submission repository", label.Path, dstDir)
 
 	if err := scanStudentRepo(filepath.Join(dstDir, r.Repo.Name()), r.Course.GetCode(), r.JobOwner); err != nil {
 		return nil, err
@@ -81,7 +89,7 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	}
 
 	defer timer(r.JobOwner, r.Course.GetCode(), testExecutionTimeGauge)()
-	logger.Debugf("Running tests for %s", r)
+	logger.Debug("running assignment tests")
 	start := time.Now()
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
@@ -94,22 +102,33 @@ func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc sc
 	if err != nil {
 		// We may reach here with a timeout error and a non-empty output
 		testsFailedWithOutputCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
-		logger.Errorf("Test execution failed with output: %v\n%v", err, out)
+		safeOutput := redactOutput(out, randomSecret)
+		logger.Error("test execution failed", label.Error, err, "output", safeOutput)
 	}
 
 	results, err := score.ExtractResults(out, randomSecret, time.Since(start), r.Assignment.ZeroScoreTests())
 	if err != nil {
 		// Log the errors from the extraction process
 		testsFailedExtractResultsCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
-		logger.Debugf("Session secret: %s", randomSecret)
-		logger.Errorf("Failed to extract (some) results for assignment %s for course %s: %v", r.Assignment.GetName(), r.Course.GetName(), err)
+		logger.Error("failed to extract some test results", label.Error, err)
 		// don't return here; we still want partial results!
 	}
 
 	testsSucceededCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
-	logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
+	logger.Debug("test results extracted", "score", results.Sum(), "tests", len(results.Scores))
 	// return the extracted score and filtered log output
 	return results, nil
+}
+
+// redactOutput replaces every occurrence of the given per-run secrets in the
+// captured command output, so that the output can be logged safely.
+func redactOutput(output string, secrets ...string) string {
+	for _, secret := range secrets {
+		if secret != "" {
+			output = strings.ReplaceAll(output, secret, "[REDACTED]")
+		}
+	}
+	return output
 }
 
 func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {

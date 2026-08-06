@@ -8,43 +8,57 @@ import (
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
-func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
-	wh.logger.Debugf("Received push event for branch reference: %s (user's default branch: %s)",
-		payload.GetRef(), payload.GetRepo().GetDefaultBranch())
+func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEvent) {
+	// The commit is already in scope; see the webhook Handle method.
+	ctx, logger := qlog.WithLogger(ctx,
+		branchRefLabel, payload.GetRef(),
+		label.User, payload.GetSender().GetLogin(),
+	)
+	logger.Debug("received push event", "default_branch", payload.GetRepo().GetDefaultBranch())
 
 	repo, err := wh.getRepository(payload.GetRepo().GetID())
 	if err != nil {
-		wh.logger.Errorf("Failed to get repository %s from database: %v", payload.GetRepo().GetFullName(), err)
+		logger.Error("failed to get repository from database", label.Repository, payload.GetRepo().GetFullName(), label.Error, err)
 		return
 	}
-	wh.logger.Debugf("Received push event for repository %v", repo)
+	ctx, logger = qlog.WithLogger(ctx,
+		label.Repository, repo.Name(),
+		label.RepositoryType, repo.GetRepoType().String(),
+	)
+	logger.Debug("resolved push repository")
 
-	if wh.ignorePush(payload, repo) {
-		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
+	if wh.ignorePush(ctx, payload, repo) {
+		logger.Debug("ignoring push event for non-default branch")
 		return
 	}
 
 	course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID())
 	if err != nil {
-		wh.logger.Errorf("Failed to get course from database: %v", err)
+		logger.Error("failed to get course from database", label.Error, err)
 		return
 	}
-	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
+	ctx, logger = qlog.WithLogger(ctx,
+		label.CourseID, course.GetID(),
+		label.CourseCode, course.GetCode(),
+		label.Organization, course.GetScmOrganizationName(),
+	)
+	logger.Debug("resolved push course")
 
 	if repo.IsStudentRepo() {
-		wh.updateLastActivityDate(course, repo, payload.GetSender().GetLogin())
+		wh.updateLastActivityDate(ctx, course, repo, payload.GetSender().GetLogin())
 	}
 
-	ctx := context.Background()
-	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetScmOrganizationName())
+	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
-		wh.logger.Errorf("handlePush: could not create scm client for course %s: %v", course.GetScmOrganizationName(), err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return
 	}
 
@@ -52,7 +66,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, scmClient, course)
+		assignments.UpdateFromTestsRepo(ctx, wh.runner, wh.db, scmClient, course)
 
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
@@ -62,10 +76,10 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			DestDir:      course.CloneDir(),
 		})
 		if err != nil {
-			wh.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentsRepo, err)
+			logger.Error("failed to clone repository", label.Error, err)
 			return
 		}
-		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+		logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
 		if isDefaultBranch(payload) {
 			// Sync all student repositories (forks) with the updated assignments repo
 			wh.syncStudentRepos(ctx, scmClient, course, payload.GetRepo().GetDefaultBranch())
@@ -73,17 +87,17 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsStudentRepo():
 		if payload.GetSender().GetType() == "Bot" {
-			wh.logger.Debugf("Ignoring push event from bot user %s", payload.GetSender().GetLogin())
+			logger.Debug("ignoring push event from bot")
 			return
 		}
-		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
-		assignments := wh.extractAssignments(payload, course)
+		logger.Debug("processing student push")
+		assignments := wh.extractAssignments(ctx, payload, course)
 		for _, assignment := range assignments {
-			wh.runAssignmentTests(scmClient, assignment, repo, course, payload)
+			wh.runAssignmentTests(ctx, scmClient, assignment, repo, course, payload)
 		}
 
 	default:
-		wh.logger.Debug("Nothing to do for this push event")
+		logger.Debug("nothing to do for push event")
 	}
 }
 
@@ -91,7 +105,8 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 // Push events should be ignored if they are not for the default branch
 // of a student or group repository. However, a push event on a non-default branch
 // is allowed for a group repository with an associated pull request.
-func (wh GitHubWebHook) ignorePush(payload *github.PushEvent, repo *qf.Repository) bool {
+func (wh GitHubWebHook) ignorePush(ctx context.Context, payload *github.PushEvent, repo *qf.Repository) bool {
+	logger := qlog.FromContext(ctx)
 	hasPR := false
 	_, err := wh.db.GetPullRequest(&qf.PullRequest{
 		SourceBranch:    branchName(payload.GetRef()),
@@ -99,12 +114,12 @@ func (wh GitHubWebHook) ignorePush(payload *github.PushEvent, repo *qf.Repositor
 	})
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			wh.logger.Errorf("Failed to get pull request for %q branch in repository %q: %v", branchName(payload.GetRef()), repo.Name(), err)
+			logger.Error("failed to get pull request", label.Branch, branchName(payload.GetRef()), label.Error, err)
 			// Ignore this error and continue processing the push event.
 		}
 		// No pull request found for the branch.
 	} else {
-		wh.logger.Debugf("Received push event for %q branch with pull request in repository %q", branchName(payload.GetRef()), repo.Name())
+		logger.Debug("received branch push with pull request", label.Branch, branchName(payload.GetRef()))
 		hasPR = true
 	}
 	return !isDefaultBranch(payload) && (!repo.IsGroupRepo() || !hasPR)
@@ -113,7 +128,8 @@ func (wh GitHubWebHook) ignorePush(payload *github.PushEvent, repo *qf.Repositor
 // extractAssignments extracts information from the push payload from github
 // and determines the assignments that have been changed in this commit by
 // querying the database based on the lab name.
-func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf.Course) []*qf.Assignment {
+func (wh GitHubWebHook) extractAssignments(ctx context.Context, payload *github.PushEvent, course *qf.Course) []*qf.Assignment {
+	logger := qlog.FromContext(ctx)
 	modifiedAssignments := make(map[string]bool)
 	for _, commit := range payload.Commits {
 		extractChanges(commit.Modified, modifiedAssignments)
@@ -126,7 +142,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 		// get assignment based on course id and assignment name
 		assignment, err := wh.db.GetAssignment(&qf.Assignment{Name: name, CourseID: course.GetID()})
 		if err != nil {
-			wh.logger.Errorf("Could not find assignment '%s' for course %d in database: %v", name, course.GetID(), err)
+			logger.Error("failed to find assignment", label.Assignment, name, label.Error, err)
 			continue
 		}
 		assignments = append(assignments, assignment)
@@ -135,7 +151,8 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
+func (wh GitHubWebHook) runAssignmentTests(ctx context.Context, scmClient scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
+	ctx, logger := qlog.WithLogger(ctx, label.Assignment, assignment.GetName())
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -145,22 +162,22 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	if assignment.GradedManually() {
-		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.GetName(), course.GetName())
-		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
-			wh.logger.Error(err)
+		logger.Debug("assignment is manually reviewed")
+		if _, err := runData.RecordResults(ctx, wh.db, nil); err != nil {
+			logger.Error("failed to record manual assignment result", label.Error, err)
 		}
 		return
 	}
-	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
+	ctx, cancel := assignment.WithTimeout(ctx, ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, wh.logger, scmClient, wh.runner)
+	results, err := runData.RunTests(ctx, scmClient, wh.runner)
 	if err != nil {
-		wh.logger.Error(err)
+		logger.Error("failed to run assignment tests", label.Error, err)
 		return
 	}
-	submission, err := runData.RecordResults(wh.logger, wh.db, results)
+	submission, err := runData.RecordResults(ctx, wh.db, results)
 	if err != nil {
-		wh.logger.Error(err)
+		logger.Error("failed to record assignment result", label.Error, err)
 		return
 	}
 	// If we fail to get owners, we ignore sending on the stream.
@@ -179,12 +196,13 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
-func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
+func (wh GitHubWebHook) updateLastActivityDate(ctx context.Context, course *qf.Course, repo *qf.Repository, login string) {
+	logger := qlog.FromContext(ctx)
 	userID := repo.GetUserID()
 	if userID < 1 && repo.IsGroupRepo() {
 		user, err := wh.db.GetUserByCourse(course, login)
 		if err != nil {
-			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
+			logger.Error("failed to find user", label.Error, err)
 			return
 		}
 		userID = user.GetID()
@@ -193,13 +211,13 @@ func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repos
 	// to ensure gorm Select.Updates behave correctly.
 	enrol, err := wh.db.GetEnrollmentByCourseAndUser(course.GetID(), userID)
 	if err != nil {
-		wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
+		logger.Error("failed to find enrollment", label.Error, err)
 		return
 	}
 	enrol.LastActivityDate = timestamppb.Now()
 
 	if err := wh.db.UpdateEnrollment(enrol); err != nil {
-		wh.logger.Errorf("Failed to update the last activity date for user %d (%s): %v", userID, login, err)
+		logger.Error("failed to update last activity", label.TargetUserID, userID, label.Error, err)
 	}
 }
 

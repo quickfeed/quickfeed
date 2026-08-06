@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
@@ -16,9 +18,15 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 	if err != nil {
 		return err
 	}
+	// Scope the enrollment change once; the helpers called below log the same
+	// course and user, and therefore do not repeat these attributes.
+	ctx, logger := qlog.WithLogger(ctx,
+		label.CourseCode, enrollment.GetCourse().GetCode(),
+		label.TargetUser, enrollment.GetUser().GetLogin(),
+	)
 	// log changes to teacher status
 	if enrollment.IsTeacher() || request.IsTeacher() {
-		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.GetUserID(), enrollment.GetStatus(), request.GetStatus())
+		logger.Debug("changing enrollment status", label.User, curUser, "old_status", enrollment.GetStatus(), "new_status", request.GetStatus())
 	}
 
 	// check and update user SCM info before updating enrollment status
@@ -50,7 +58,7 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	if repo == nil {
-		s.logger.Debugf("No %s repository found for %q: %v", course.GetCode(), user.GetLogin(), err)
+		qlog.FromContext(ctx).Debug("course repository not found", label.Error, err)
 		// no repository to delete; only remove the enrollment from the database
 		return s.db.RejectEnrollment(user.GetID(), course.GetID())
 	}
@@ -66,10 +74,10 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 			return fmt.Errorf("failed to remove %s from %q: %w", user.GetLogin(), course.GetCode(), err)
 		}
 		// repository or membership already removed on GitHub, e.g., by a previously interrupted reject
-		s.logger.Debugf("rejectEnrollment: %s already removed from %q on GitHub: %v", user.GetLogin(), course.GetCode(), err)
+		qlog.FromContext(ctx).Debug("user already removed from SCM organization", label.Error, err)
 	}
 	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), user.GetLogin(), err)
+		qlog.FromContext(ctx).Debug("failed to delete course repository from database", label.Error, err)
 		// continue with other delete operations
 	}
 	return s.db.RejectEnrollment(user.GetID(), course.GetID())
@@ -88,7 +96,8 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	}
 	// Use enrollment with full updated info to ensure that gorm Select.Updates works correctly.
 	query.Status = qf.Enrollment_STUDENT
-	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.GetLogin(), course.GetCode(), repo != nil)
+	logger := qlog.FromContext(ctx)
+	logger.Debug("enrolling student", "has_repository", repo != nil)
 	if repo != nil {
 		// repo already exist, update enrollment in database
 		return s.db.UpdateEnrollment(query)
@@ -102,7 +111,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	// Ensure that the user's refresh token is updated after enrollment.
 	if err := s.db.UpdateUser(user); err != nil {
 		// Continue with enrollment; token can be manually refreshed later
-		s.logger.Errorf("Failed to update refresh token for user %q: %v", user.GetLogin(), err)
+		logger.Error("failed to update refresh token", label.Error, err)
 	}
 
 	// create user scmRepo and add user to course organization as a member
@@ -118,7 +127,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
-	s.logger.Debugf("Enrolling student %q in %s; repo update done", user.GetLogin(), course.GetCode())
+	logger.Debug("student enrollment repository updated")
 
 	// add student repo to database if SCM interaction above was successful
 	userRepo := qf.Repository{
@@ -161,7 +170,7 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	})
 	if err != nil {
 		// log error, but continue to update enrollment; we can manually revoke teacher access later
-		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.GetCode(), user.GetLogin(), err)
+		qlog.FromContext(ctx).Error("failed to revoke teacher status", label.Error, err)
 	}
 	query.Status = qf.Enrollment_STUDENT
 	return s.db.UpdateEnrollment(query)

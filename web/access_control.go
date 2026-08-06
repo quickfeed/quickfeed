@@ -3,6 +3,8 @@ package web
 import (
 	"context"
 
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
@@ -34,20 +36,22 @@ func courseStatus(ctx context.Context, courseID uint64) qf.Enrollment_UserStatus
 }
 
 // hasCourseAccess returns true if the given user has access to the given course,
-// as defined by the check function.
-func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*qf.Enrollment) bool) bool {
+// as defined by the check function. The user and course are those of the request,
+// so the request logger already carries them; see enrichRequestLogger.
+func (s *QuickFeedService) hasCourseAccess(ctx context.Context, userID, courseID uint64, check func(*qf.Enrollment) bool) bool {
+	logger := qlog.FromContext(ctx)
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
-		s.logger.Error(err)
+		logger.Error("failed to get enrollment", label.Error, err)
 		return false
 	}
-	s.logger.Debugf("(user=%d, course=%d) has enrollment status %+v", userID, courseID, enrollment.GetStatus())
+	logger.Debug("resolved enrollment", "status", enrollment.GetStatus())
 	return check(enrollment)
 }
 
 // isTeacher returns true if the given user is teacher for the given course.
-func (s *QuickFeedService) isTeacher(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *qf.Enrollment) bool {
+func (s *QuickFeedService) isTeacher(ctx context.Context, userID, courseID uint64) bool {
+	return s.hasCourseAccess(ctx, userID, courseID, func(e *qf.Enrollment) bool {
 		return e.GetStatus() == qf.Enrollment_TEACHER
 	})
 }

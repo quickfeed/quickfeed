@@ -8,17 +8,24 @@ import (
 	"slices"
 	"time"
 
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/shurcooL/githubv4"
 )
 
+const (
+	// statusLabel is the attribute holding an HTTP response status code.
+	statusLabel = "status"
+	// baseRepositoryLabel is the attribute holding the repository compared against.
+	baseRepositoryLabel = "base_repository"
+)
+
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
-	logger       *zap.SugaredLogger
 	client       *github.Client
 	clientV4     *githubv4.Client
 	tokenManager TokenManager
@@ -39,10 +46,9 @@ func (s *staticTokenManager) Token(_ context.Context) (string, error) {
 }
 
 // NewGithubUserClient returns a new Github client implementing the SCM interface.
-func NewGithubUserClient(logger *zap.SugaredLogger, token string) *GithubSCM {
+func NewGithubUserClient(token string) *GithubSCM {
 	client := newGithubUserClient(token)
 	return &GithubSCM{
-		logger:             logger,
 		client:             client,
 		clientV4:           githubv4.NewClient(client.Client()),
 		tokenManager:       &staticTokenManager{token: token},
@@ -175,9 +181,9 @@ func (s *GithubSCM) commitsAhead(ctx context.Context, opt *RepositoryOptions) (i
 		return 0, fmt.Errorf("%s is a course repository, not a user or group fork", opt.Repo)
 	}
 
+	logger := qlog.FromContext(ctx).With(label.Repository, opt.Repo, label.Owner, opt.Owner)
 	headCommit, resp, err := s.client.Repositories.GetCommit(ctx, opt.Owner, opt.Repo, "main", nil)
-	s.logger.Debugf("commitsAhead: getting head commit for %s/%s:main", opt.Owner, opt.Repo)
-	s.logger.Debugf("commitsAhead: err=%v, status=%d", err, statusCode(resp))
+	logger.Debug("got repository head commit", label.Branch, "main", statusLabel, statusCode(resp), label.Error, err)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get head commit for %s/%s: %w", opt.Owner, opt.Repo, err)
 	}
@@ -188,8 +194,7 @@ func (s *GithubSCM) commitsAhead(ctx context.Context, opt *RepositoryOptions) (i
 
 	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", headSHA, nil)
 
-	s.logger.Debugf("commitsAhead: comparing %s/%s:main with %s/%s@%s", opt.Owner, qf.AssignmentsRepo, opt.Owner, opt.Repo, headSHA)
-	s.logger.Debugf("commitsAhead: err=%v, status=%d", err, statusCode(resp))
+	logger.Debug("compared repository commits", baseRepositoryLabel, qf.AssignmentsRepo, "head", headSHA, statusLabel, statusCode(resp), label.Error, err)
 
 	// A comparison may fail because the repo is not a fork, the branches don't exist,
 	// or other transient errors; in all cases we cannot determine the count, so we
@@ -202,7 +207,7 @@ func (s *GithubSCM) commitsAhead(ctx context.Context, opt *RepositoryOptions) (i
 	}
 
 	aheadBy := *comparison.AheadBy
-	s.logger.Debugf("commitsAhead: repo is %d commits ahead of assignments", aheadBy)
+	logger.Debug("repository commits ahead of assignments", "commits", aheadBy)
 	return aheadBy, nil
 }
 
@@ -472,7 +477,7 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err err
 			return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
 		}
 
-		s.logger.Debugf("Retrying sync for %s/%s (attempt %d/%d) after %v", opt.Organization, opt.Repository, attempt+1, opt.MaxRetries, retryDelay)
+		qlog.FromContext(ctx).Debug("retrying repository sync", label.Repository, opt.Repository, label.Organization, opt.Organization, "attempt", attempt+1, "max_attempts", opt.MaxRetries, "delay", retryDelay)
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -529,16 +534,17 @@ func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryO
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
+	logger := qlog.FromContext(ctx).With(label.Repository, opt.Repo, label.Owner, opt.Owner)
 	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
 	if err == nil {
-		s.logger.Debugf("createCourseRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
+		logger.Debug("course repository already exists", "url", repo.GetHTMLURL())
 		return toRepository(repo), nil
 	}
 	if !hasStatus(resp, http.StatusNotFound) {
 		return nil, E(op, m, err)
 	}
 
-	s.logger.Debugf("createCourseRepo: creating %s", opt.Repo)
+	logger.Debug("creating course repository")
 	repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
 		Name:     github.String(opt.Repo),
 		Private:  github.Bool(opt.Private),
@@ -547,7 +553,7 @@ func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryO
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)
 	}
-	s.logger.Debugf("createCourseRepo: successfully created %s/%s", opt.Owner, opt.Repo)
+	logger.Debug("created course repository")
 	return toRepository(repo), nil
 }
 
@@ -559,16 +565,17 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
+	logger := qlog.FromContext(ctx).With(label.Repository, opt.Repo, label.Owner, opt.Owner)
 	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
 	if err == nil {
-		s.logger.Debugf("createForkedRepo: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
+		logger.Debug("forked repository already exists", "url", repo.GetHTMLURL())
 		return toRepository(repo), nil
 	}
 	if !hasStatus(resp, http.StatusNotFound) {
 		return nil, E(op, m, err)
 	}
 
-	s.logger.Debugf("createForkedRepo: forking student/group repository %s from %s", opt.Repo, qf.AssignmentsRepo)
+	logger.Debug("forking repository", "source_repository", qf.AssignmentsRepo)
 	_, resp, forkErr := s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
 		Organization: opt.Owner,
 		Name:         opt.Repo,
@@ -581,7 +588,7 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 	if err != nil {
 		return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
 	}
-	s.logger.Debugf("createForkedRepo: successfully created fork %s/%s", opt.Owner, opt.Repo)
+	logger.Debug("created repository fork")
 	return toRepository(repo), nil
 }
 
@@ -661,19 +668,19 @@ const (
 // This is necessary because GitHub creates forks asynchronously.
 // Returns the repository once it's ready.
 func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (*github.Repository, error) {
+	logger := qlog.FromContext(ctx).With(label.Repository, repo, label.Owner, owner)
 	delay := waitForRepoInitialDelay
 	for attempt := range waitForRepoMaxAttempts {
 		gotRepo, resp, err := s.client.Repositories.Get(ctx, owner, repo)
 		// Repository is ready when we get a 200 OK response and the repo is not nil
 		if err == nil && gotRepo != nil {
-			s.logger.Debugf("waitForRepository: %s/%s ready after %d attempts", owner, repo, attempt+1)
+			logger.Debug("repository ready", "attempts", attempt+1)
 			return gotRepo, nil
 		}
 		// 202 Accepted means fork is still being created - continue waiting
 		// 404 Not Found also means fork is not ready yet
 		if hasStatus(resp, http.StatusAccepted) || hasStatus(resp, http.StatusNotFound) {
-			s.logger.Debugf("waitForRepository: %s/%s not ready (attempt %d/%d, status=%d), waiting %v",
-				owner, repo, attempt+1, waitForRepoMaxAttempts, statusCode(resp), delay)
+			logger.Debug("repository not ready", "attempt", attempt+1, "max_attempts", waitForRepoMaxAttempts, statusLabel, statusCode(resp), "delay", delay)
 		} else {
 			// For any other status, treat this as a real error and stop retrying.
 			if err != nil {

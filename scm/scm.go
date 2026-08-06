@@ -3,10 +3,11 @@ package scm
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 )
 
 // SCM is the source code management interface for managing courses and users.
@@ -69,24 +70,25 @@ type TokenManager interface {
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
+// The logger is only used by the mocked provider, which captures it for its lifetime.
+func NewSCMClient(logger *slog.Logger, token string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
-		return NewGithubUserClient(logger, token), nil
+		return NewGithubUserClient(token), nil
 	case "fake":
 		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (SCM, error) {
+func newSCMAppClient(ctx context.Context, config *Config, organization string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
-		return newGithubAppClient(ctx, logger, config, organization)
+		return newGithubAppClient(ctx, config, organization)
 	case "fake":
-		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
+		return NewMockedGithubSCMClient(qlog.FromContext(ctx), WithMockOrgs()), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }

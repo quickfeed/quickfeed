@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path"
@@ -14,9 +15,8 @@ import (
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
@@ -25,8 +25,8 @@ var httpClient = &http.Client{
 	Timeout: time.Second * 30,
 }
 
-func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err error) {
-	logger.Error(err)
+func authenticationError(logger *slog.Logger, w http.ResponseWriter, err error) {
+	logger.Error("authentication failed", label.Error, err)
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
@@ -50,9 +50,9 @@ func OAuth2Logout() http.HandlerFunc {
 
 // OAuth2Login redirects user to the provider's sign in page or, if user is already signed in with provider,
 // authenticates the user in the background.
-func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret string) http.HandlerFunc {
+func OAuth2Login(logger *slog.Logger, authConfig *oauth2.Config, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("OAuth2Login: started")
+		logger.Debug("handling OAuth2 login request")
 		if r.Method != "GET" {
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
@@ -78,15 +78,15 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		})
 
 		redirectURL := authConfig.AuthCodeURL(secret)
-		logger.Debugf("Redirecting to AuthURL: %v (nextURL=%q)", redirectURL, nextURL)
+		logger.Debug("redirecting to OAuth provider", "next_url", nextURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *slog.Logger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("OAuth2Callback: started")
+		logger.Debug("handling OAuth2 callback request")
 		if r.Method != "GET" {
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
@@ -101,7 +101,9 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			authenticationError(logger, w, err)
 			return
 		}
-		logger.Debugf("ExternalUser: %v", qlog.IndentJson(externalUser))
+		// Scope the remaining records to the authenticating user.
+		logger := logger.With(label.User, externalUser.Login, label.RemoteID, externalUser.ID)
+		logger.Debug("fetched external user")
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err := fetchUser(logger, db, token, externalUser)
@@ -109,7 +111,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			authenticationError(logger, w, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err))
 			return
 		}
-		logger.Debugf("Fetched full user info for user: %v", user)
+		logger.Debug("fetched user", label.UserID, user.GetID())
 
 		cookie, err := tm.NewAuthCookie(user.GetID())
 		if err != nil {
@@ -207,24 +209,25 @@ func CheckExternalUser(externalUser *ExternalUser) error {
 }
 
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
-func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
-	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
+// The logger is expected to carry the external user's login and remote ID.
+func fetchUser(logger *slog.Logger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
+	logger.Debug("looking up user")
 	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
 	switch err {
 	case nil:
-		logger.Debugf("Found user: %v in database", user)
+		logger.Debug("found user", label.UserID, user.GetID())
 		user.RefreshToken = token.RefreshToken
 		if err = db.UpdateUser(user); err != nil {
 			return nil, fmt.Errorf("failed to update access token for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("Refresh token updated: %v", token.RefreshToken)
+		logger.Debug("refresh token updated", label.UserID, user.GetID())
 
 	case gorm.ErrRecordNotFound:
 		// Validate external user information before creating account
 		if err := CheckExternalUser(externalUser); err != nil {
 			return nil, fmt.Errorf("cannot create account for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("User %q not found in database; creating new user", externalUser.Login)
+		logger.Debug("creating user")
 		user = &qf.User{
 			Name:         externalUser.Name,
 			Email:        externalUser.Email,
@@ -236,12 +239,12 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 		if err = db.CreateUser(user); err != nil {
 			return nil, fmt.Errorf("failed to create remote identity for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("New user created: %v", user)
+		logger.Debug("created user", label.UserID, user.GetID())
 
 	default:
 		return nil, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err)
 	}
-	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
+	logger.Debug("reloading user")
 	return db.GetUserByRemoteIdentity(externalUser.ID)
 }
 
