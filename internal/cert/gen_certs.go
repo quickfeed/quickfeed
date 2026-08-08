@@ -69,7 +69,7 @@ func GenerateSelfSignedCert(opts Options) error {
 
 	serverKeyBytes, err := x509.MarshalPKCS8PrivateKey(serverKey)
 	if err != nil {
-		return fmt.Errorf("unable to marshal server private key: %w", err)
+		return fmt.Errorf("marshaling server private key: %w", err)
 	}
 
 	// save CA certificate (for trust store)
@@ -201,11 +201,11 @@ func setHosts(template *x509.Certificate, hostList string) {
 func makeCertificate(template, parent *x509.Certificate, publicKey, privateKey any) (*x509.Certificate, []byte, error) {
 	derCertBytes, err := x509.CreateCertificate(rand.Reader, template, parent, publicKey, privateKey)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create certificate: %w", err)
+		return nil, nil, fmt.Errorf("creating certificate: %w", err)
 	}
 	cert, err := x509.ParseCertificate(derCertBytes)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse certificate: %w", err)
+		return nil, nil, fmt.Errorf("parsing certificate: %w", err)
 	}
 	return cert, derCertBytes, nil
 }
@@ -215,17 +215,17 @@ const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 func savePEM(filename string, block []*pem.Block) error {
 	out, err := os.OpenFile(filename, defaultFileFlags, 0o600)
 	if err != nil {
-		return fmt.Errorf("failed to open %s for writing: %w", filename, err)
+		return fmt.Errorf("opening %s for writing: %w", filename, err)
 	}
 
 	for _, b := range block {
 		if err := pem.Encode(out, b); err != nil {
-			return fmt.Errorf("failed to write data to %s: %w", filename, err)
+			return fmt.Errorf("writing data to %s: %w", filename, err)
 		}
 	}
 
 	if err := out.Close(); err != nil {
-		return fmt.Errorf("error closing %s: %w", filename, err)
+		return fmt.Errorf("closing %s: %w", filename, err)
 	}
 	return nil
 }

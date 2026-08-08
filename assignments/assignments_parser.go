@@ -29,7 +29,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	var newAssignment assignmentData
 	err := json.Unmarshal(contents, &newAssignment)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
+		return nil, fmt.Errorf("unmarshaling assignment: %w", err)
 	}
 	if newAssignment.Order < 1 {
 		return nil, fmt.Errorf("assignment order must be greater than 0")
@@ -40,7 +40,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	}
 	deadline, err := FixDeadline(newAssignment.Deadline)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing deadline: %w", err)
+		return nil, fmt.Errorf("parsing deadline: %w", err)
 	}
 	// AssignmentID field from the parsed json is used to set Order, not assignment ID,
 	// or it will cause a database constraint violation (IDs must be unique)

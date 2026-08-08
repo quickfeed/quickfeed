@@ -97,7 +97,7 @@ func buildDockerImage(ctx context.Context, runner ci.Runner, course *qf.Course, 
 	})
 	logger.Debug("course image build completed", "output", out)
 	if err != nil {
-		return fmt.Errorf("failed to build image from %s's Dockerfile: %w", course.GetCode(), err)
+		return fmt.Errorf("building image from %s's Dockerfile: %w", course.GetCode(), err)
 	}
 	return nil
 }

@@ -21,7 +21,7 @@ var (
 	// name as a previously registered group.
 	ErrDuplicateGroup = errors.New("group with this name already registered")
 	// ErrUpdateGroup is returned when updating a group's enrollment fails.
-	ErrUpdateGroup = errors.New("failed to update group enrollment")
+	ErrUpdateGroup = errors.New("group members not enrolled in the course")
 	// ErrCourseExists is returned when trying to create an association in
 	// the database for a DirectoryId that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")
@@ -29,7 +29,7 @@ var (
 	// with insufficient access privileges.
 	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
 	// ErrCreateRepo is returned when trying to create repository with wrong argument.
-	ErrCreateRepo = errors.New("failed to create repository; invalid arguments")
+	ErrCreateRepo = errors.New("invalid arguments for repository creation")
 	// ErrNotEnrolled is returned when the requested user or group do not have
 	// the expected association with the given course
 	ErrNotEnrolled = errors.New("user or group not enrolled in the course")

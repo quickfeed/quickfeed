@@ -31,7 +31,7 @@ func (r *RunData) RecordResults(ctx context.Context, db database.Database, resul
 	logger.Debug("fetching previous submission")
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("failed to get previous submission: %w", err)
+		return nil, fmt.Errorf("getting previous submission: %w", err)
 	}
 	if previous == nil {
 		logger.Debug("recording new submission")
@@ -41,13 +41,13 @@ func (r *RunData) RecordResults(ctx context.Context, db database.Database, resul
 
 	resType, newSubmission := r.newSubmission(previous, results)
 	if err = db.CreateSubmission(newSubmission); err != nil {
-		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
+		return nil, fmt.Errorf("recording submission %d for %s: %w", previous.GetID(), r, err)
 	}
 	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
 	if !r.Rebuild {
 		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
-			return nil, fmt.Errorf("failed to update slip days for %s: %w", r, err)
+			return nil, fmt.Errorf("updating slip days for %s: %w", r, err)
 		}
 		logger.Debug("updated slip days")
 	}
@@ -126,19 +126,19 @@ func (r *RunData) updateSlipDays(logger *slog.Logger, db database.Database, subm
 		}
 		holder, err = db.GetGroup(submission.GetGroupID())
 		if err != nil {
-			return fmt.Errorf("failed to get group %d: %w", submission.GetGroupID(), err)
+			return fmt.Errorf("getting group %d: %w", submission.GetGroupID(), err)
 		}
 	} else {
 		holder, err = db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
 		if err != nil {
-			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
+			return fmt.Errorf("getting enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
 	}
 	if err := holder.UpdateSlipDays(r.Assignment, submission); err != nil {
-		return fmt.Errorf("failed to update slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
+		return fmt.Errorf("updating slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
 	}
 	if err := db.UpdateSlipDays(holder.GetUsedSlipDays()); err != nil {
-		return fmt.Errorf("failed to update slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
+		return fmt.Errorf("updating slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
 	}
 	return nil
 }
@@ -158,7 +158,7 @@ func (r *RunData) GetOwners(db database.Database) ([]uint64, error) {
 		}
 	}
 	if len(owners) == 0 {
-		return nil, fmt.Errorf("failed to get owners for %s", r)
+		return nil, fmt.Errorf("no owners for %s", r)
 	}
 	return owners, nil
 }

@@ -31,7 +31,7 @@ type ServerType func(handler http.Handler) (*Server, error)
 func NewProductionServer(handler http.Handler) (*Server, error) {
 	whitelist, err := env.Whitelist()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get whitelist: %w", err)
+		return nil, fmt.Errorf("getting whitelist: %w", err)
 	}
 	certManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
@@ -66,7 +66,7 @@ func NewProductionServer(handler http.Handler) (*Server, error) {
 func NewDevelopmentServer(handler http.Handler) (*Server, error) {
 	certificate, err := tls.LoadX509KeyPair(env.FullchainFile(), env.PrivKeyFile())
 	if err != nil {
-		return nil, fmt.Errorf("failed to load certificates from %q: %w", env.CertPath(), err)
+		return nil, fmt.Errorf("loading certificates from %q: %w", env.CertPath(), err)
 	}
 	log.Println("Existing credentials successfully loaded.")
 

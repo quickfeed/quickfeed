@@ -28,7 +28,7 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 	}
 	image, language, commands, err := parseRunScript(scriptContent)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
+		return nil, fmt.Errorf("parsing run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
 	if r.EnvVarsFn == nil {
 		// For docker runs, the home path is set to QuickFeedPath = /quickfeed

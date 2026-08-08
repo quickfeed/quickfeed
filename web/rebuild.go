@@ -79,7 +79,7 @@ func (s *QuickFeedService) internalRebuildSubmission(ctx context.Context, reques
 	}
 	submission, err = runData.RecordResults(ctx, s.db, results)
 	if err != nil {
-		return fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.GetName(), course.GetName(), err)
+		return fmt.Errorf("recording results for assignment %s for course %s: %w", assignment.GetName(), course.GetName(), err)
 	}
 	// If we fail to get owners, we ignore sending on the stream.
 	if userIDs, err := runData.GetOwners(s.db); err == nil {

@@ -17,7 +17,7 @@ var (
 	ErrInvalidAssignmentID = errors.New("cannot create submission without an associated assignment")
 	// ErrAllReviewsCreated is returned if all reviews for a submission have already been created.
 	ErrAllReviewsCreated = func(submissionID uint64, assignmentName string, reviewers uint32) error {
-		return fmt.Errorf("failed to create a new review for submission %d to %s: all %d reviews already created", submissionID, assignmentName, reviewers)
+		return fmt.Errorf("all %d reviews already created for submission %d to %s", reviewers, submissionID, assignmentName)
 	}
 	ErrEmptyReviewID = errors.New("cannot update review with empty ID")
 )

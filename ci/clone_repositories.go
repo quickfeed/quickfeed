@@ -27,7 +27,7 @@ func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf
 			DestDir:      course.CloneDir(),
 		})
 		if err != nil {
-			return fmt.Errorf("failed to clone %q repository: %w", qf.TestsRepo, err)
+			return fmt.Errorf("cloning %q repository: %w", qf.TestsRepo, err)
 		}
 	}
 	if !assignmentsExists {
@@ -38,7 +38,7 @@ func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf
 			DestDir:      course.CloneDir(),
 		})
 		if err != nil {
-			return fmt.Errorf("failed to clone %q repository: %w", qf.AssignmentsRepo, err)
+			return fmt.Errorf("cloning %q repository: %w", qf.AssignmentsRepo, err)
 		}
 	}
 	return nil

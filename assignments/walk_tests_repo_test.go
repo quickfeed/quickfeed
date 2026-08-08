@@ -236,5 +236,5 @@ func checkLabWithInvalidCriteriaFile(t *testing.T, folder string, chkUnmarshal b
 
 // Check if the error is related to invalid JSON unmarshalling.
 func isUnmarshalError(e error) bool {
-	return strings.Contains(e.Error(), "failed to unmarshal")
+	return strings.Contains(e.Error(), "unmarshaling")
 }
