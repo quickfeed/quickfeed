@@ -19,7 +19,7 @@ import (
 func EnsureReady(dev bool, envFile string, forceNewSecret bool) error {
 	// Step 1: Ensure auth secret exists (or force regeneration)
 	if generated, err := EnsureAuthSecret(envFile, forceNewSecret); err != nil {
-		return fmt.Errorf("failed to ensure auth secret: %w", err)
+		return fmt.Errorf("ensuring auth secret: %w", err)
 	} else if generated {
 		if forceNewSecret {
 			log.Println("Generated new JWT signing secret (forced rotation)")
@@ -73,13 +73,13 @@ func ensureCertificates() error {
 		CAFile:        CAFile(),
 		Hosts:         Domain(),
 	}); err != nil {
-		return fmt.Errorf("failed to generate self-signed certificates: %w", err)
+		return fmt.Errorf("generating self-signed certificates: %w", err)
 	}
 	log.Printf("Certificates successfully generated at: %s", CertPath())
 
 	log.Print("Adding certificate to local trust store (may require elevated privileges)")
 	if err := cert.AddTrustedCert(CAFile()); err != nil {
-		return fmt.Errorf("failed to install self-signed certificate: %w", err)
+		return fmt.Errorf("installing self-signed certificate: %w", err)
 	}
 	log.Print("Certificate successfully added to trust store")
 

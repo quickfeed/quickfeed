@@ -131,12 +131,12 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 
 	q.db, err = database.NewGormDB(dbFile, q.logger)
 	if err != nil {
-		return nil, q.cleanup, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, q.cleanup, fmt.Errorf("connecting to database: %w", err)
 	}
 
 	q.runner, err = ci.NewDockerCI()
 	if err != nil {
-		return nil, q.cleanup, fmt.Errorf("failed to set up docker client: %w", err)
+		return nil, q.cleanup, fmt.Errorf("setting up docker client: %w", err)
 	}
 
 	tm, err := auth.NewTokenManager(q.db)
@@ -166,12 +166,12 @@ func (q *quickfeed) cleanup() {
 	var err error
 	if q.runner != nil {
 		if e := q.runner.Close(); e != nil {
-			err = fmt.Errorf("failed to close runner: %w", e)
+			err = fmt.Errorf("closing runner: %w", e)
 		}
 	}
 	if q.db != nil {
 		if e := q.db.Close(); e != nil {
-			err = errors.Join(err, fmt.Errorf("failed to close database: %w", e))
+			err = errors.Join(err, fmt.Errorf("closing database: %w", e))
 		}
 	}
 	if err != nil {

@@ -129,7 +129,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error, got nil: %+v", job)
 	}
-	const wantMsg = "failed to parse run script for assignment lab4-bad-run-script in https://github.com/qf104-2022/tests: empty run script"
+	const wantMsg = "parsing run script for assignment lab4-bad-run-script in https://github.com/qf104-2022/tests: empty run script"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
 	}
@@ -139,7 +139,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error, got nil: %+v", job)
 	}
-	const wantMsg2 = "failed to parse run script for assignment lab5-bad-run-script in https://github.com/qf104-2022/tests: no docker image specified in run script"
+	const wantMsg2 = "parsing run script for assignment lab5-bad-run-script in https://github.com/qf104-2022/tests: no docker image specified in run script"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
 	}

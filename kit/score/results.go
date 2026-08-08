@@ -159,7 +159,7 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 		if HasPrefix(line) {
 			sc, err := parse(line, secret)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("failed on line '%s': %w", line, err))
+				errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
 				continue
 			}
 			// only add the score if it's in the expected tests

@@ -108,14 +108,14 @@ func OAuth2Callback(logger *slog.Logger, db database.Database, tm *TokenManager,
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err := fetchUser(logger, db, token, externalUser)
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err))
+			authenticationError(logger, w, fmt.Errorf("fetching user %q for remote identity: %w", externalUser.Login, err))
 			return
 		}
 		logger.Debug("fetched user", label.UserID, user.GetID())
 
 		cookie, err := tm.NewAuthCookie(user.GetID())
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to create authentication cookie for user %q: %w", externalUser.Login, err))
+			authenticationError(logger, w, fmt.Errorf("creating authentication cookie for user %q: %w", externalUser.Login, err))
 			return
 		}
 		http.SetCookie(w, cookie)
@@ -158,7 +158,7 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 	}
 	token, err := authConfig.Exchange(r.Context(), code)
 	if err != nil {
-		return nil, fmt.Errorf("failed to exchange access token: %w", err)
+		return nil, fmt.Errorf("exchanging access token: %w", err)
 	}
 	return token, nil
 }
@@ -167,13 +167,13 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
 	req, err := http.NewRequest("GET", githubUserAPI, http.NoBody)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create user request: %w", err)
+		return nil, fmt.Errorf("creating user request: %w", err)
 	}
 	token.SetAuthHeader(req)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send user request: %w", err)
+		return nil, fmt.Errorf("sending user request: %w", err)
 	}
 	defer func() {
 		closeErr := resp.Body.Close()
@@ -188,11 +188,11 @@ func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
 	}
 	responseBody, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
-		err = fmt.Errorf("failed to read authentication response: %w", readErr)
+		err = fmt.Errorf("reading authentication response: %w", readErr)
 		return
 	}
 	if jsonErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&user); jsonErr != nil {
-		err = fmt.Errorf("failed to decode user information: %w", jsonErr)
+		err = fmt.Errorf("decoding user information: %w", jsonErr)
 	}
 	return
 }
@@ -218,14 +218,14 @@ func fetchUser(logger *slog.Logger, db database.Database, token *oauth2.Token, e
 		logger.Debug("found user", label.UserID, user.GetID())
 		user.RefreshToken = token.RefreshToken
 		if err = db.UpdateUser(user); err != nil {
-			return nil, fmt.Errorf("failed to update access token for user %q: %w", externalUser.Login, err)
+			return nil, fmt.Errorf("updating access token for user %q: %w", externalUser.Login, err)
 		}
 		logger.Debug("refresh token updated", label.UserID, user.GetID())
 
 	case gorm.ErrRecordNotFound:
 		// Validate external user information before creating account
 		if err := CheckExternalUser(externalUser); err != nil {
-			return nil, fmt.Errorf("cannot create account for user %q: %w", externalUser.Login, err)
+			return nil, fmt.Errorf("creating account for user %q: %w", externalUser.Login, err)
 		}
 		logger.Debug("creating user")
 		user = &qf.User{
@@ -237,12 +237,12 @@ func fetchUser(logger *slog.Logger, db database.Database, token *oauth2.Token, e
 			RefreshToken: token.RefreshToken,
 		}
 		if err = db.CreateUser(user); err != nil {
-			return nil, fmt.Errorf("failed to create remote identity for user %q: %w", externalUser.Login, err)
+			return nil, fmt.Errorf("creating remote identity for user %q: %w", externalUser.Login, err)
 		}
 		logger.Debug("created user", label.UserID, user.GetID())
 
 	default:
-		return nil, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err)
+		return nil, fmt.Errorf("fetching user %q for remote identity: %w", externalUser.Login, err)
 	}
 	logger.Debug("reloading user")
 	return db.GetUserByRemoteIdentity(externalUser.ID)

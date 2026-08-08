@@ -31,7 +31,7 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 
 	// check and update user SCM info before updating enrollment status
 	if err := s.updateUserFromSCM(ctx, sc, enrollment.GetUser()); err != nil {
-		return fmt.Errorf("failed to update SCM info for user %d: %w", enrollment.GetUserID(), err)
+		return fmt.Errorf("updating SCM info for user %d: %w", enrollment.GetUserID(), err)
 	}
 	switch {
 	case (enrollment.IsPending() || enrollment.IsStudent()) && request.IsNone(): // pending or student -> none
@@ -55,7 +55,7 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
+		return fmt.Errorf("getting %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	if repo == nil {
 		qlog.FromContext(ctx).Debug("course repository not found", label.Error, err)
@@ -71,7 +71,7 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 	}
 	if err := sc.RejectEnrollment(ctx, opt); err != nil {
 		if !errors.Is(err, scm.ErrNotFound) {
-			return fmt.Errorf("failed to remove %s from %q: %w", user.GetLogin(), course.GetCode(), err)
+			return fmt.Errorf("removing %s from %q: %w", user.GetLogin(), course.GetCode(), err)
 		}
 		// repository or membership already removed on GitHub, e.g., by a previously interrupted reject
 		qlog.FromContext(ctx).Debug("user already removed from SCM organization", label.Error, err)
@@ -92,7 +92,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	// which could happen if accepting a previously rejected student
 	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
+		return fmt.Errorf("getting %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	// Use enrollment with full updated info to ensure that gorm Select.Updates works correctly.
 	query.Status = qf.Enrollment_STUDENT
@@ -125,7 +125,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 	}
 	scmRepo, err := sc.UpdateEnrollment(ctx, opt)
 	if err != nil {
-		return fmt.Errorf("failed to update %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
+		return fmt.Errorf("updating %s repository membership for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	logger.Debug("student enrollment repository updated")
 
@@ -138,7 +138,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, query 
 		RepoType:          qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(&userRepo); err != nil {
-		return fmt.Errorf("failed to create %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
+		return fmt.Errorf("creating %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 
 	return s.db.UpdateEnrollment(query)
@@ -155,7 +155,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, query 
 		User:         user.GetLogin(),
 		Status:       qf.Enrollment_TEACHER,
 	}); err != nil {
-		return fmt.Errorf("failed to update %s repository membership for teacher %q: %w", course.GetCode(), user.GetLogin(), err)
+		return fmt.Errorf("updating %s repository membership for teacher %q: %w", course.GetCode(), user.GetLogin(), err)
 	}
 	return s.db.UpdateEnrollment(query)
 }

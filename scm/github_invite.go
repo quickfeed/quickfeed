@@ -15,7 +15,7 @@ func (s *GithubSCM) acceptOrgInvitation(ctx context.Context, opt *InvitationOpti
 	userSCM := s.createUserClientFn(opt.AccessToken)
 	state := "active"
 	if _, _, err := userSCM.Organizations.EditOrgMembership(ctx, "", opt.Owner, &github.Membership{State: &state}); err != nil {
-		return fmt.Errorf("failed to accept invitation for %s to organization %s: %w", opt.Login, opt.Owner, err)
+		return fmt.Errorf("accepting invitation for %s to organization %s: %w", opt.Login, opt.Owner, err)
 	}
 	return nil
 }

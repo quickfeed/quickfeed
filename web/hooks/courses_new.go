@@ -31,11 +31,11 @@ func createCourse(ctx context.Context, db database.Database, sc scm.SCM, course 
 			dbRepo.UserID = courseCreator.GetID()
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
-			return nil, fmt.Errorf("failed to create database record for repository %s: %w", repo.Repo, err)
+			return nil, fmt.Errorf("creating database record for repository %s: %w", repo.Repo, err)
 		}
 	}
 	if err := db.CreateCourse(course.GetCourseCreatorID(), course); err != nil {
-		return nil, fmt.Errorf("failed to create database record for course %s: %w", course.GetName(), err)
+		return nil, fmt.Errorf("creating database record for course %s: %w", course.GetName(), err)
 	}
 	return course, nil
 }

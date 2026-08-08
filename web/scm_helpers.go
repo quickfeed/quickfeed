@@ -71,7 +71,7 @@ func CommitsAhead(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error
 		if err != nil {
 			// if we cannot determine whether the repository is ahead,
 			// treat it as ahead so we don't delete a repository that may contain work.
-			return fmt.Errorf("could not determine if repository %s is ahead of assignments: %w", r.Name(), err)
+			return fmt.Errorf("determining if repository %s is ahead of assignments: %w", r.Name(), err)
 		}
 		if ahead > 0 {
 			return fmt.Errorf("repository %s is %d commits ahead", r.Name(), ahead)

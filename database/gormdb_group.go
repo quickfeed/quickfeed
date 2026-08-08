@@ -158,7 +158,7 @@ func (db *GormDB) GetGroup(groupID uint64) (*qf.Group, error) {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
-		return nil, fmt.Errorf("failed to get group with ID %d: %w", groupID, err)
+		return nil, fmt.Errorf("getting group with ID %d: %w", groupID, err)
 	}
 	if len(userIDs) == 0 {
 		return nil, fmt.Errorf("no users found for group with ID %d", groupID)
@@ -201,7 +201,7 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupS
 func (db *GormDB) setGroupSlipDays(courseID uint64, groups ...*qf.Group) error {
 	course, err := db.GetCourse(courseID)
 	if err != nil {
-		return fmt.Errorf("failed to get course %d: %w", courseID, err)
+		return fmt.Errorf("getting course %d: %w", courseID, err)
 	}
 	for _, group := range groups {
 		group.SetSlipDays(course)

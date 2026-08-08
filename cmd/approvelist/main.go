@@ -238,7 +238,7 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 	}
 	submissions, err := client.GetSubmissionsByCourse(ctx, submissionCourseRequest)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get submissions for course %s: %w", courseCode, err)
+		return nil, nil, fmt.Errorf("getting submissions for course %s: %w", courseCode, err)
 	}
 	enrollments, err := client.GetEnrollments(ctx, &qf.EnrollmentRequest{
 		FetchMode: &qf.EnrollmentRequest_CourseID{
@@ -246,7 +246,7 @@ func getSubmissions(serverURL, courseCode string, year uint32) (*qf.CourseSubmis
 		},
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get enrollments for course %s: %w", courseCode, err)
+		return nil, nil, fmt.Errorf("getting enrollments for course %s: %w", courseCode, err)
 	}
 	return submissions, enrollments.GetEnrollments(), err
 }

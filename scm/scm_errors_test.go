@@ -52,7 +52,7 @@ func TestErrorGetOrganization(t *testing.T) {
 		wantUserErrAlreadyExist     = "foo: course repositories (info, assignments, tests): already exist"
 		wantErrAlreadyExist         = "scm.GetOrganization: " + wantUserErrAlreadyExist
 		wantErrPermission           = "scm.GetOrganization: bar: permission denied: meling: not an owner of organization"
-		wantErrPermissionMembership = "scm.GetOrganization: bar: permission denied: failed to get membership: GET http://127.0.0.1/orgs/bar/memberships/jostein: 404  []"
+		wantErrPermissionMembership = "scm.GetOrganization: bar: permission denied: getting membership: GET http://127.0.0.1/orgs/bar/memberships/jostein: 404  []"
 		wantUserErrPermission       = "bar: permission denied"
 		wantUserErrPrefix           = "failed to get organization"
 	)
@@ -253,7 +253,7 @@ func TestErrorCreateCourse(t *testing.T) {
 		{
 			name:        "CompleteRequest/NotMember",
 			opt:         &CourseOptions{OrganizationID: 456, CourseCreator: "lamport"},
-			wantErr:     "scm.GetOrganization: bar: permission denied: failed to get membership: GET http://127.0.0.1/orgs/bar/memberships/lamport: 404  []",
+			wantErr:     "scm.GetOrganization: bar: permission denied: getting membership: GET http://127.0.0.1/orgs/bar/memberships/lamport: 404  []",
 			wantUserErr: "bar: permission denied",
 		},
 		{
@@ -327,7 +327,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/CreateStudRepo",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
-			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/frank: 404  []`,
+			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as student in bar: adding with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/frank: 404  []`,
 			wantUserErr: "failed to enroll frank as student in bar",
 		},
 		{
@@ -366,7 +366,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "CompleteRequest/Student/Fail",
 			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
-			wantErr:     `scm.UpdateEnrollment: failed to enroll meling as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/meling: 404  []`,
+			wantErr:     `scm.UpdateEnrollment: failed to enroll meling as student in bar: adding with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/meling: 404  []`,
 			wantUserErr: "failed to enroll meling as student in bar",
 		},
 
@@ -446,7 +446,7 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling", AccessToken: "string"},
-			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher meling to student in fuzz: failed to update to "member": PUT http://127.0.0.1/orgs/fuzz/memberships/meling: 404  []`,
+			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher meling to student in fuzz: updating to "member": PUT http://127.0.0.1/orgs/fuzz/memberships/meling: 404  []`,
 			wantUserErr: "failed to demote teacher meling to student in fuzz",
 		},
 		// Note: User not found in org will create a new membership with member role (GitHub API behavior)
@@ -549,13 +549,13 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &GroupOptions{Organization: "foo", GroupName: "a"},
-			wantErr:     "scm.UpdateGroupMembers: failed to update group members: failed to get members: GET http://127.0.0.1/repos/foo/a/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: getting members: GET http://127.0.0.1/repos/foo/a/collaborators: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &GroupOptions{Organization: "x", GroupName: "info"},
-			wantErr:     "scm.UpdateGroupMembers: failed to update group members: failed to get members: GET http://127.0.0.1/repos/x/info/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: getting members: GET http://127.0.0.1/repos/x/info/collaborators: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		// TODO: Add more tests to check error handling when updating group members.
