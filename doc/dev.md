@@ -150,6 +150,27 @@ In these cases the error is usually ephemeral in nature, and the action should b
 
 [Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
 
+### Error strings
+
+Phrase an error string as the operation that was attempted, not as an announcement that something failed.
+The error itself already conveys the failure, and prefixes such as `failed to`, `could not`, `unable to`, and `error` accumulate as the error is wrapped on its way up the stack.
+
+```go
+// Good:
+return fmt.Errorf("creating SCM client: %w", err)
+// Bad:
+return fmt.Errorf("failed to create SCM client: %w", err)
+```
+
+An unwound chain then reads as prose: `enrolling user: creating SCM client: 401 Unauthorized`.
+
+An error that wraps nothing names the condition instead, since the operation form would describe an attempt rather than what the error means: `no owners for %s`, not `failed to get owners for %s`.
+Preconditions keep the `cannot X without Y` form.
+Do not annotate an error when the annotation only says that something failed; return the error unchanged instead.
+
+Errors that reach the user are the exception, and keep an explicit failure wording, since the message is the only signal the user gets that something went wrong.
+This covers the `connect.NewError` messages returned by the `QuickFeed Service` handlers, and the user errors built with `scm.M`, both of which the frontend renders in an alert.
+
 ### Backend
 
 The backend uses `log/slog` for structured logging.
