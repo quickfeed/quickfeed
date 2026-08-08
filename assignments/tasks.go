@@ -26,7 +26,7 @@ func newTask(contents []byte, assignmentOrder uint32, name string) (*qf.Task, er
 	}
 	bodyIndex := bytes.Index(contents, []byte("\n\n"))
 	if bodyIndex == -1 {
-		return nil, fmt.Errorf("failed to find task body in task: %s", name)
+		return nil, fmt.Errorf("task with name: %s, does not have a body", name)
 	}
 
 	return &qf.Task{

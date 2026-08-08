@@ -14,7 +14,7 @@ func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback, user
 		// Set the creation timestamp
 		feedback.CreatedAt = timestamppb.Now()
 		if err := tx.Create(feedback).Error; err != nil {
-			return fmt.Errorf("failed to create assignment feedback: %w", err)
+			return fmt.Errorf("creating assignment feedback: %w", err)
 		}
 		// Create a receipt for the feedback
 		receipt := &qf.FeedbackReceipt{
@@ -22,7 +22,7 @@ func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback, user
 			UserID:       userID,
 		}
 		if err := tx.Create(receipt).Error; err != nil {
-			return fmt.Errorf("failed to create feedback receipt: %w", err)
+			return fmt.Errorf("creating feedback receipt: %w", err)
 		}
 		return nil
 	})
@@ -35,7 +35,7 @@ func (db *GormDB) GetAssignmentFeedback(query *qf.CourseRequest) (*qf.Assignment
 	if err := db.conn.Model(&qf.AssignmentFeedback{}).Where(&qf.AssignmentFeedback{
 		CourseID: query.GetCourseID(),
 	}).Find(&feedbacks).Error; err != nil {
-		return nil, fmt.Errorf("failed to get assignment feedback: %w", err)
+		return nil, fmt.Errorf("getting assignment feedback: %w", err)
 	}
 	return &qf.AssignmentFeedbacks{Feedbacks: feedbacks}, nil
 }

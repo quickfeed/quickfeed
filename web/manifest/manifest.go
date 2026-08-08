@@ -66,7 +66,7 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	go func() {
 		if err := server.Serve(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %w", err)
+				m.done <- fmt.Errorf("starting web server for GitHub App creation flow: %w", err)
 				return
 			}
 			// server was closed prematurely, e.g., ctrl-C
@@ -286,7 +286,7 @@ func form(w http.ResponseWriter) error {
 	}
 	t := template.Must(template.New("form").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
+		return fmt.Errorf("executing template: %w", err)
 	}
 	return nil
 }

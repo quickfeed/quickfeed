@@ -26,7 +26,7 @@ type Manager struct {
 func (m *Manager) ExchangeAndUpdateToken(user *qf.User) (string, error) {
 	exchangeToken, err := m.exchangeTokenFn(user.GetRefreshToken())
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange token for user %s: %w", user.GetLogin(), err)
+		return "", fmt.Errorf("exchanging token for user %s: %w", user.GetLogin(), err)
 	}
 	user.UpdateRefreshToken(exchangeToken.RefreshToken)
 	return exchangeToken.AccessToken, nil
@@ -55,11 +55,11 @@ func NewSCMConfig() (*Config, error) {
 	}
 	createAppKey, err := key.FromFile(env.AppPrivKeyFile())
 	if err != nil {
-		return nil, fmt.Errorf("error reading key from file: %w", err)
+		return nil, fmt.Errorf("reading key from file: %w", err)
 	}
 	appConfig, err := app.NewConfig(appID, createAppKey)
 	if err != nil {
-		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
+		return nil, fmt.Errorf("creating GitHub application client: %w", err)
 	}
 	return &Config{
 		ClientID:     clientID,
@@ -92,7 +92,7 @@ func (s *Manager) GetOrCreateSCM(ctx context.Context, organization string) (SCM,
 	}
 	client, err := newSCMAppClient(ctx, s.Config, organization)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create github application for %s: %w", organization, err)
+		return nil, fmt.Errorf("creating GitHub application for %s: %w", organization, err)
 	}
 	s.mu.Lock()
 	s.scms[organization] = client

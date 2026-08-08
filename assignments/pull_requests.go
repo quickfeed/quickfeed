@@ -37,7 +37,7 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 		return err
 	}
 	if teacherReviewer == nil || studentReviewer == nil {
-		return fmt.Errorf("failed to get reviewers for pull request %d", pullRequest.GetNumber())
+		return fmt.Errorf("no reviewers available for pull request %d", pullRequest.GetNumber())
 	}
 
 	opt := &scm.RequestReviewersOptions{
@@ -83,7 +83,7 @@ func getNextReviewer(users []*qf.User, reviewCounter map[uint64]int) *qf.User {
 func getNextTeacherReviewer(db database.Database, course *qf.Course) (*qf.User, error) {
 	teachers, err := db.GetCourseTeachers(course)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get teachers from database: %w", err)
+		return nil, fmt.Errorf("getting teachers from database: %w", err)
 	}
 	teacherReviewCounter.initialize(course.GetID())
 	teacherReviewer := getNextReviewer(teachers, teacherReviewCounter[course.GetID()])
@@ -94,7 +94,7 @@ func getNextTeacherReviewer(db database.Database, course *qf.Course) (*qf.User, 
 func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*qf.User, error) {
 	group, err := db.GetGroup(groupID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get group from database: %w", err)
+		return nil, fmt.Errorf("getting group from database: %w", err)
 	}
 	groupReviewCounter.initialize(group.GetID())
 	// We exclude the PR owner from the search.

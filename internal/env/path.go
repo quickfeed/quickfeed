@@ -72,7 +72,7 @@ func checkModulePath(dir string) error {
 	modFile := filepath.Join(dir, "go.mod")
 	data, err := os.ReadFile(modFile)
 	if err != nil {
-		return fmt.Errorf("failed to read %s: %w", modFile, err)
+		return fmt.Errorf("reading %s: %w", modFile, err)
 	}
 	// The module path must match exactly; a prefix match would also accept
 	// nested modules, such as the kit module.

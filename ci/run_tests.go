@@ -85,7 +85,7 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 	randomSecret := rand.String()
 	job, err := r.parseTestRunnerScript(randomSecret, dstDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
+		return nil, fmt.Errorf("parsing run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
 
 	defer timer(r.JobOwner, r.Course.GetCode(), testExecutionTimeGauge)()
@@ -141,7 +141,7 @@ func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 		Branch:       r.BranchName,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to clone %s/%s repository: %w", r.Course.GetScmOrganizationName(), r.Repo.Name(), err)
+		return fmt.Errorf("cloning %s/%s repository: %w", r.Course.GetScmOrganizationName(), r.Repo.Name(), err)
 	}
 
 	// Clone the course's tests and assignments repositories if they are missing.

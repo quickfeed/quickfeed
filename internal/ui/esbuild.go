@@ -85,7 +85,7 @@ func getOptions(outputDir string, dev bool) api.BuildOptions {
 func Build(outputDir string, dev bool) error {
 	result := api.Build(getOptions(outputDir, dev))
 	if len(result.Errors) > 0 {
-		return fmt.Errorf("failed to build UI: %v", result.Errors)
+		return fmt.Errorf("building UI: %v", result.Errors)
 	}
 	return nil
 }
@@ -94,7 +94,7 @@ func Build(outputDir string, dev bool) error {
 func Watch() error {
 	ctx, err := api.Context(getOptions("", true))
 	if err != nil {
-		return fmt.Errorf("failed to create build context: %w", err)
+		return fmt.Errorf("creating build context: %w", err)
 	}
 	return ctx.Watch(api.WatchOptions{})
 }

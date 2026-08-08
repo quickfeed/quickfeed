@@ -23,7 +23,7 @@ func newGithubAppClient(ctx context.Context, cfg *Config, organization string) (
 	}
 	installCfg, err := cfg.InstallationConfig(strconv.Itoa(int(inst.GetID())))
 	if err != nil {
-		return nil, fmt.Errorf("error configuring github client for installation: %w", err)
+		return nil, fmt.Errorf("configuring github client for installation: %w", err)
 	}
 	httpClient := installCfg.Client(ctx)
 	return &GithubSCM{
@@ -113,7 +113,7 @@ func (m *appTokenManager) requestNewToken(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("failed to fetch installation access token (response status %s): %s", resp.Status, string(body))
+		return nil, fmt.Errorf("fetching installation access token (response status %s): %s", resp.Status, string(body))
 	}
 	return body, nil
 }
@@ -122,23 +122,23 @@ func (cfg *Config) fetchInstallation(organization string) (*github.Installation,
 	const installationURL = "https://api.github.com/app/installations"
 	resp, err := cfg.Client().Get(installationURL)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching GitHub app installation for organization %s: %w", organization, err)
+		return nil, fmt.Errorf("fetching GitHub app installation for organization %s: %w", organization, err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading installation response: %w", err)
+		return nil, fmt.Errorf("reading installation response: %w", err)
 	}
 	var installations []*github.Installation
 	if err := json.Unmarshal(body, &installations); err != nil {
-		return nil, fmt.Errorf("error unmarshalling installation response: %s: %w", body, err)
+		return nil, fmt.Errorf("unmarshaling installation response: %s: %w", body, err)
 	}
 	for _, inst := range installations {
 		if inst.GetAccount().GetLogin() == organization {
 			return inst, nil
 		}
 	}
-	return nil, fmt.Errorf("could not find GitHub app installation for organization %s", organization)
+	return nil, fmt.Errorf("no GitHub app installation for organization %s", organization)
 }
 
 type ExchangeToken struct {
@@ -163,7 +163,7 @@ func (cfg *Config) ExchangeToken(refreshToken string) (*ExchangeToken, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to get access token: %s", resp.Status)
+		return nil, fmt.Errorf("getting access token: %s", resp.Status)
 	}
 	var token ExchangeToken
 	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {

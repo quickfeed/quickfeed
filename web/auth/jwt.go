@@ -53,7 +53,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	}
 	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(tm.secret))
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign token: %w", err)
+		return nil, fmt.Errorf("signing token: %w", err)
 	}
 	return &http.Cookie{
 		Name:     CookieName,
@@ -88,7 +88,7 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 	}
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return nil, fmt.Errorf("failed to parse token: validation error")
+		return nil, errors.New("invalid token claims")
 	}
 	return claims, nil
 }
@@ -144,7 +144,7 @@ func extractToken(cookieString string) (string, error) {
 			return strings.TrimSpace(cookieValue), nil
 		}
 	}
-	return "", errors.New("failed to extract authentication cookie from request header")
+	return "", errors.New("no authentication cookie in request header")
 }
 
 // Context returns a new context with the claims as value.

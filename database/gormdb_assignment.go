@@ -165,13 +165,13 @@ func updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
 				// a new assignment, no actions required
 				return nil
 			}
-			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
+			return fmt.Errorf("fetching assignment %s from database: %w", assignment.GetName(), err)
 		}
 		if len(expectedTests) > 0 {
 			// expected tests changed for this assignment, remove old tests
 			for _, test := range expectedTests {
 				if err := tx.Delete(test).Error; err != nil {
-					return fmt.Errorf("failed to delete expected test %d: %w", test.GetID(), err)
+					return fmt.Errorf("deleting expected test %d: %w", test.GetID(), err)
 				}
 			}
 		}
@@ -190,7 +190,7 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 				// a new assignment, no actions required
 				return nil
 			}
-			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.GetName(), err)
+			return fmt.Errorf("fetching assignment %s from database: %w", assignment.GetName(), err)
 		}
 		if len(gradingBenchmarks) > 0 {
 			if cmp.Equal(assignment.GetGradingBenchmarks(), gradingBenchmarks, cmp.Options{
@@ -207,11 +207,11 @@ func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) 
 				for _, bm := range gradingBenchmarks {
 					for _, c := range bm.GetCriteria() {
 						if err := tx.Delete(c).Error; err != nil {
-							return fmt.Errorf("failed to delete criterion %d: %w", c.GetID(), err)
+							return fmt.Errorf("deleting criterion %d: %w", c.GetID(), err)
 						}
 					}
 					if err := tx.Delete(bm).Error; err != nil {
-						return fmt.Errorf("failed to delete benchmark %d: %w", bm.GetID(), err)
+						return fmt.Errorf("deleting benchmark %d: %w", bm.GetID(), err)
 					}
 				}
 			}
