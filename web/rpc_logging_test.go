@@ -81,39 +81,39 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 		call func()
 	}{
 		{"GetSubmissions", func() {
-			client.GetSubmissions(ctx, &qf.SubmissionRequest{
+			_, _ = client.GetSubmissions(ctx, &qf.SubmissionRequest{
 				CourseID:  course.GetID(),
 				FetchMode: &qf.SubmissionRequest_UserID{UserID: teacher.GetID()},
 			})
 		}},
 		{"GetSubmissionsByCourse", func() {
-			client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
+			_, _ = client.GetSubmissionsByCourse(ctx, &qf.SubmissionRequest{
 				CourseID:  course.GetID(),
 				FetchMode: &qf.SubmissionRequest_Type{Type: qf.SubmissionRequest_ALL},
 			})
 		}},
 		{"GetGroup", func() {
-			client.GetGroup(ctx, &qf.GroupRequest{CourseID: course.GetID(), GroupID: 1234})
+			_, _ = client.GetGroup(ctx, &qf.GroupRequest{CourseID: course.GetID(), GroupID: 1234})
 		}},
 		{"UpdateCourse", func() {
 			// An unknown SCM organization makes the handler log under its scope.
-			client.UpdateCourse(ctx, &qf.Course{
+			_, _ = client.UpdateCourse(ctx, &qf.Course{
 				ID: course.GetID(), Name: course.GetName(), Code: course.GetCode(),
 				Year: course.GetYear(), Tag: course.GetTag(),
 				ScmOrganizationID: 1234, ScmOrganizationName: "unknown-org",
 			})
 		}},
 		{"UpdateGroup", func() {
-			client.UpdateGroup(ctx, &qf.Group{ID: 1234, CourseID: course.GetID(), Name: "unknown", Users: []*qf.User{teacher}})
+			_, _ = client.UpdateGroup(ctx, &qf.Group{ID: 1234, CourseID: course.GetID(), Name: "unknown", Users: []*qf.User{teacher}})
 		}},
 		{"DeleteGroup", func() {
-			client.DeleteGroup(ctx, &qf.GroupRequest{CourseID: course.GetID(), GroupID: 1234})
+			_, _ = client.DeleteGroup(ctx, &qf.GroupRequest{CourseID: course.GetID(), GroupID: 1234})
 		}},
 		{"UpdateAssignments", func() {
-			client.UpdateAssignments(ctx, &qf.CourseRequest{CourseID: course.GetID()})
+			_, _ = client.UpdateAssignments(ctx, &qf.CourseRequest{CourseID: course.GetID()})
 		}},
 		{"IsEmptyRepo", func() {
-			client.IsEmptyRepo(ctx, &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 1234})
+			_, _ = client.IsEmptyRepo(ctx, &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 1234})
 		}},
 	}
 	// Every attribute that some enclosing scope may already carry.
