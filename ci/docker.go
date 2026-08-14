@@ -127,7 +127,8 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*client.ContainerCr
 		}
 
 		// Log the first line of the Dockerfile with the build record.
-		logger.Info("building image from Dockerfile", "dockerfile_first_line", dockerFileContent[:strings.Index(dockerFileContent, "\n")+1])
+		firstLine, _, _ := strings.Cut(dockerFileContent, "\n")
+		logger.Info("building image from Dockerfile", "dockerfile_first_line", firstLine)
 		if err := d.buildImage(ctx, job); err != nil {
 			return nil, err
 		}
