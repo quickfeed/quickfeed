@@ -101,7 +101,7 @@ func (wh GitHubWebHook) getPullRequest(payload *github.PushEvent) (*qf.PullReque
 }
 
 func (wh GitHubWebHook) handlePullRequestReview(ctx context.Context, payload *github.PullRequestReviewEvent) {
-	ctx, logger := qlog.WithLogger(ctx,
+	_, logger := qlog.WithLogger(ctx,
 		label.Repository, payload.GetRepo().GetName(),
 		label.PullRequest, payload.GetPullRequest().GetNumber(),
 		label.User, payload.GetSender().GetLogin(),
@@ -188,7 +188,7 @@ func (wh GitHubWebHook) handlePullRequestOpened(ctx context.Context, payload *gi
 }
 
 func (wh GitHubWebHook) handlePullRequestClosed(ctx context.Context, payload *github.PullRequestEvent) {
-	ctx, logger := qlog.WithLogger(ctx,
+	_, logger := qlog.WithLogger(ctx,
 		label.Repository, payload.GetRepo().GetName(),
 		label.PullRequest, payload.GetPullRequest().GetNumber(),
 		label.User, payload.GetSender().GetLogin(),
