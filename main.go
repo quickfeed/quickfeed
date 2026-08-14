@@ -22,8 +22,6 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/manifest"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 func main() {
@@ -155,7 +153,7 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(os.Getenv("QUICKFEED_WEBHOOK_SECRET"), public)
 
-	return h2c.NewHandler(router, &http2.Server{}), q.cleanup, nil
+	return router, q.cleanup, nil
 }
 
 type quickfeed struct {
