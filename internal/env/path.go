@@ -106,3 +106,8 @@ func DatabasePath() string {
 func TestdataPath() string {
 	return Root("testdata", "courses")
 }
+
+// CourseLogDir returns the path to the directory holding per-course teacher logs.
+func CourseLogDir() string {
+	return Root("logs", "courses")
+}
