@@ -359,11 +359,9 @@ func TestStreamRecordResults(t *testing.T) {
 }
 
 func runStream(stream *qtest.MockStream[qf.Submission], wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		_ = stream.Run()
-	}()
+	})
 }
 
 func TestRecordResultsGroupSlipDays(t *testing.T) {

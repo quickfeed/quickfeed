@@ -691,7 +691,7 @@ func TestGetGroups(t *testing.T) {
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 
 	var users []*qf.User
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 	}

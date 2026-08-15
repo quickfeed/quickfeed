@@ -549,7 +549,7 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 	defer closeFn()
 
 	errCh := make(chan error, numContainers)
-	for i := 0; i < numContainers; i++ {
+	for i := range numContainers {
 		go func(j int) {
 			name := fmt.Sprintf(t.Name()+"-%d-%s", j, qtest.RandomString(t))
 			out, err := docker.Run(context.Background(), &ci.Job{
@@ -568,7 +568,7 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 	}
 	afterContainersStarted := countOpenFiles(t)
 
-	for i := 0; i < numContainers; i++ {
+	for range numContainers {
 		err := <-errCh
 		if err != nil {
 			t.Fatal(err)
