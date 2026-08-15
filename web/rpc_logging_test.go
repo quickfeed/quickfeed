@@ -115,6 +115,9 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 		{"IsEmptyRepo", func() {
 			_, _ = client.IsEmptyRepo(ctx, &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 1234})
 		}},
+		{"GetCourseLog", func() {
+			_, _ = client.GetCourseLog(ctx, &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 1})
+		}},
 	}
 	// Every attribute that some enclosing scope may already carry.
 	scopedKeys := []string{
