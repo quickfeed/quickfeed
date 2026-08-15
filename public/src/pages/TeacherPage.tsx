@@ -6,6 +6,7 @@ import Members from "../components/Members"
 import Results from "../components/Results"
 import { RepositoryCards } from "../components/student/RepositoryCards"
 import Assignments from "../components/teacher/Assignments"
+import CourseLogs from "../components/teacher/CourseLogs"
 import { Color, isManuallyGraded } from "../Helpers"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
 import { useCourseID } from "../hooks/useCourseID"
@@ -50,6 +51,7 @@ const TeacherPage = () => {
     }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
     const feedback = { title: "View Assignment Feedback", text: "View feedback provided by students on assignments.", buttonText: "Feedback", to: `${root}/feedback` }
+    const logs = { title: "Course Logs", text: "View webhook, CI, and rebuild activity for this course.", buttonText: "Logs", to: `${root}/logs` }
 
     return (
         <>
@@ -62,6 +64,7 @@ const TeacherPage = () => {
                 <Card {...assignments} />
                 <Card {...updateAssignments} />
                 <Card {...feedback} />
+                <Card {...logs} />
             </div>
             <Routes>
                 <Route path="/groups" element={<GroupPage />} />
@@ -71,6 +74,7 @@ const TeacherPage = () => {
                 <Route path="/assignments" element={<Assignments />} />
                 <Route path="/feedback" element={<AssignmentFeedbackView />} />
                 <Route path="/feedback/:assignmentID" element={<AssignmentFeedbackView />} />
+                <Route path="/logs" element={<CourseLogs />} />
             </Routes>
         </>
     )

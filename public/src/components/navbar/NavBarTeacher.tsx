@@ -16,6 +16,7 @@ const NavBarTeacher = () => {
         { text: "Results", to: `/course/${state.activeCourse}/results` },
         { text: "Members", to: `/course/${state.activeCourse}/members`, icons: [pending, enrolled] },
         { text: "Groups", to: `/course/${state.activeCourse}/groups`, icons: [pendingGroups, approvedGroups] },
+        { text: "Logs", to: `/course/${state.activeCourse}/logs` },
     ]
 
     if (courseHasManualGrading) {
