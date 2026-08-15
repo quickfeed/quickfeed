@@ -45,11 +45,7 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 		logger.Error("failed to get course from database", label.Error, err)
 		return
 	}
-	ctx, logger = qlog.WithLogger(ctx,
-		label.CourseID, course.GetID(),
-		label.CourseCode, course.GetCode(),
-		label.Organization, course.GetScmOrganizationName(),
-	)
+	ctx, logger = qlog.WithCourse(ctx, course)
 	logger.Debug("resolved push course")
 
 	if repo.IsStudentRepo() {
