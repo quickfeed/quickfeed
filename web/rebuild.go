@@ -49,8 +49,8 @@ func (s *QuickFeedService) internalRebuildSubmission(ctx context.Context, reques
 	}
 	// Scope the rebuild; RunTests and RecordResults log under the same context.
 	// The course ID comes from the request logger; see enrichRequestLogger.
-	ctx, logger := qlog.WithLogger(ctx,
-		label.CourseCode, course.GetCode(),
+	ctx, logger := qlog.WithCourseLog(ctx,
+		course,
 		label.Repository, repo.Name(),
 		label.RepositoryType, repo.GetRepoType().String(),
 		label.Assignment, assignment.GetName(),
@@ -95,7 +95,20 @@ func (s *QuickFeedService) internalRebuildAllSubmissions(ctx context.Context, re
 	if err != nil {
 		return err
 	}
-	logger := qlog.FromContext(ctx).With(label.AssignmentID, request.GetAssignmentID())
+	assignment, err := s.db.GetAssignment(&qf.Assignment{ID: request.GetAssignmentID()})
+	if err != nil {
+		return err
+	}
+	course, err := s.db.GetCourse(assignment.GetCourseID())
+	if err != nil {
+		return err
+	}
+	// logger is scoped to the course so this batch's own summary and failure
+	// records land in the course log too, but ctx is left unscoped: each
+	// rebuild below derives and attaches this same course scope for itself
+	// (see internalRebuildSubmission), and attaching it here as well would
+	// duplicate it in every one of their records.
+	_, logger := qlog.WithCourseLog(ctx, course, label.AssignmentID, request.GetAssignmentID())
 	logger.Debug("rebuilding all submissions")
 	start := time.Now()
 
