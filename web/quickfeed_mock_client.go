@@ -10,6 +10,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
@@ -53,6 +54,7 @@ type MockClientOptions struct {
 	clientOptions    []connect.ClientOption
 	interceptorFuncs []InterceptorFunc
 	logger           *slog.Logger
+	courseLogs       *courselog.Store
 }
 
 // InterceptorFunc is a function that creates an interceptor.
@@ -72,6 +74,15 @@ func WithClientOptions(opts ...connect.ClientOption) MockClientOption {
 func WithLogger(logger *slog.Logger) MockClientOption {
 	return func(o *MockClientOptions) {
 		o.logger = logger
+	}
+}
+
+// WithCourseLogStore sets the course log store GetCourseLog queries. When not
+// set, NewMockClient creates one rooted at t.TempDir() and closes it during
+// test cleanup; pass this to seed records for a test to query.
+func WithCourseLogStore(store *courselog.Store) MockClientOption {
+	return func(o *MockClientOptions) {
+		o.courseLogs = store
 	}
 }
 
@@ -181,7 +192,20 @@ func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, op
 			interceptors = append(interceptors, createInterceptor(logger, tm, db))
 		}
 	}
-	qfService := NewQuickFeedService(logger, db, mgr, &ci.Local{}, tm)
+	courseLogs := options.courseLogs
+	if courseLogs == nil {
+		var err error
+		courseLogs, err = courselog.NewStore(t.TempDir(), logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			if err := courseLogs.Close(); err != nil {
+				t.Errorf("Close() error = %v", err)
+			}
+		})
+	}
+	qfService := NewQuickFeedService(logger, db, mgr, &ci.Local{}, tm, courseLogs)
 
 	router := http.NewServeMux()
 	router.Handle(qfconnect.NewQuickFeedServiceHandler(qfService, connect.WithInterceptors(interceptors...)))
