@@ -5,6 +5,7 @@ import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import LabResultTable from "./LabResultTable"
+import LogOutput from './LogOutput'
 import ReviewResult from './ReviewResult'
 import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
 
@@ -75,21 +76,7 @@ const Lab = () => {
 
                     {isManuallyGraded(assignment.reviewers) && review.length > 0 ? <ReviewResult review={review[0]} /> : null}
 
-                    <div className="card bg-base-200 shadow-xl rounded-2xl overflow-hidden">
-                        <div className="card-body p-0">
-                            <div className="flex items-center justify-between bg-base-300 px-4 py-3 border-b border-base-content/10">
-                                <h3 className="text-sm font-semibold flex items-center gap-2">
-                                    <i className="fas fa-terminal" />
-                                    <span>Build Log</span>
-                                </h3>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <pre className="p-4 text-sm leading-relaxed font-mono bg-base-200 m-0">
-                                    <code style={{ color: '#f87171', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{buildLog}</code>
-                                </pre>
-                            </div>
-                        </div>
-                    </div>
+                    <LogOutput>{buildLog}</LogOutput>
                 </div>
             )
         }
