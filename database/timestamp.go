@@ -19,7 +19,7 @@ type TimestampSerializer struct{}
 // Value implements https://pkg.go.dev/gorm.io/gorm/schema#SerializerValuerInterface to indicate
 // how this struct will be saved into an SQL database field.
 // Serializing timestamppb.Timestamp to time.Time allows saving it to database as "datetime" type.
-func (TimestampSerializer) Value(_ context.Context, _ *schema.Field, _ reflect.Value, fieldValue interface{}) (interface{}, error) {
+func (TimestampSerializer) Value(_ context.Context, _ *schema.Field, _ reflect.Value, fieldValue any) (any, error) {
 	if fieldValue == nil {
 		return nil, nil
 	}
@@ -36,7 +36,7 @@ func (TimestampSerializer) Value(_ context.Context, _ *schema.Field, _ reflect.V
 
 // Scan implements https://pkg.go.dev/gorm.io/gorm/schema#SerializerInterface to indicate how
 // this struct can be loaded from an SQL database field.
-func (TimestampSerializer) Scan(ctx context.Context, field *schema.Field, dst reflect.Value, dbValue interface{}) (err error) {
+func (TimestampSerializer) Scan(ctx context.Context, field *schema.Field, dst reflect.Value, dbValue any) (err error) {
 	var ts *timestamppb.Timestamp
 	if dbValue != nil {
 		t, ok := dbValue.(time.Time)

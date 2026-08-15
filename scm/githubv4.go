@@ -16,7 +16,7 @@ func (s *GithubSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, iss
 			} `graphql:"issue(number:$issueNumber)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
-	variables := map[string]interface{}{
+	variables := map[string]any{
 		"repositoryOwner": githubv4.String(opt.Owner),
 		"repositoryName":  githubv4.String(opt.Repo),
 		"issueNumber":     githubv4.Int(issueNumber),

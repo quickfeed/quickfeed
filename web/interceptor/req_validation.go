@@ -76,7 +76,7 @@ func validate(ctx context.Context, req any) error {
 	return nil
 }
 
-func clean(resp interface{}) {
+func clean(resp any) {
 	if resp != nil {
 		if v, ok := resp.(idCleaner); ok {
 			v.RemoveRemoteID()

@@ -18,8 +18,8 @@ func TestTimestampSerializer_Value(t *testing.T) {
 	now := time.Now()
 	tests := []struct {
 		name       string
-		fieldValue interface{}
-		want       interface{}
+		fieldValue any
+		want       any
 		wantErr    bool
 	}{
 		{
@@ -88,7 +88,7 @@ func TestTimestampSerializer_Scan(t *testing.T) {
 		name    string
 		field   *schema.Field
 		dst     reflect.Value
-		dbValue interface{}
+		dbValue any
 		wantErr bool
 	}{
 		{
