@@ -9,6 +9,11 @@
 // since slog records every attribute it is given, including duplicate keys.
 // When a handler acts on some other user than the caller, use TargetUser and
 // TargetUserID to keep the two apart.
+//
+// CourseLog opts a logger scope into the course-scoped log sink; set it only
+// through qlog.WithCourse, from a database-loaded course, never from request
+// data, since anything reaching a scope carrying it becomes visible to that
+// course's teachers.
 package label
 
 const (
@@ -19,6 +24,7 @@ const (
 	Commit         = "commit"
 	CourseCode     = "course_code"
 	CourseID       = "course_id"
+	CourseLog      = "course_log" // Marks a scope whose records are copied to the named course's log; value is the course's SCM organization name.
 	Duration       = "duration"
 	Error          = "error"
 	Group          = "group"
@@ -34,6 +40,7 @@ const (
 	SubmissionID   = "submission_id"
 	TargetUser     = "target_user"    // SCM login of the user acted upon.
 	TargetUserID   = "target_user_id" // QuickFeed database ID of the user acted upon.
+	Truncated      = "truncated"      // Set on a course log record whose message or an attribute was cut down to size.
 	User           = "user"           // SCM login or another human-readable user identifier.
 	UserID         = "user_id"        // QuickFeed database user ID.
 )
