@@ -18,6 +18,7 @@ import (
 	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -126,7 +127,12 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 	q := &quickfeed{}
 	var err error
 
-	q.logger = qlog.New(os.Stderr)
+	operator := qlog.New(os.Stderr)
+	q.courseLogs, err = courselog.NewStore(env.CourseLogDir(), operator)
+	if err != nil {
+		return nil, q.cleanup, fmt.Errorf("setting up course log store: %w", err)
+	}
+	q.logger = qlog.WithSink(operator, courselog.NewHandler(q.courseLogs))
 	qlog.SetDefault(q.logger)
 
 	q.db, err = database.NewGormDB(dbFile, q.logger)
@@ -157,9 +163,10 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 }
 
 type quickfeed struct {
-	logger *slog.Logger
-	db     *database.GormDB
-	runner *ci.Docker
+	logger     *slog.Logger
+	db         *database.GormDB
+	runner     *ci.Docker
+	courseLogs *courselog.Store
 }
 
 func (q *quickfeed) cleanup() {
@@ -172,6 +179,11 @@ func (q *quickfeed) cleanup() {
 	if q.db != nil {
 		if e := q.db.Close(); e != nil {
 			err = errors.Join(err, fmt.Errorf("closing database: %w", e))
+		}
+	}
+	if q.courseLogs != nil {
+		if e := q.courseLogs.Close(); e != nil {
+			err = errors.Join(err, fmt.Errorf("closing course log store: %w", e))
 		}
 	}
 	if err != nil {
