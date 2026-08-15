@@ -259,6 +259,7 @@ func TestMethodCheckerRequestTypes(t *testing.T) {
 		"GetAssignmentFeedback":  "qf.CourseRequest",
 		"IsEmptyRepo":            "qf.RepositoryRequest",
 		"GetSubmissionsByCourse": "qf.SubmissionRequest",
+		"GetCourseLog":           "qf.CourseLogRequest",
 		"GetRepositories":        "qf.CourseRequest",
 
 		// checkStudentOrTeacher methods
