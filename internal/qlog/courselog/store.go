@@ -23,8 +23,9 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 )
 
-// retention is how long a course's date files are kept before being removed.
-const retention = 14 * 24 * time.Hour
+// Retention is how long a course's date files are kept before being removed.
+// GetCourseLog's handler clamps a request's interval to this window.
+const Retention = 14 * 24 * time.Hour
 
 const dateLayout = "2006-01-02"
 
@@ -183,7 +184,7 @@ func (s *Store) reportError(org, action string, err error) {
 // cleanupExpired removes date files older than the retention window, across
 // every course directory.
 func (s *Store) cleanupExpired() {
-	cutoff := s.now().UTC().Add(-retention)
+	cutoff := s.now().UTC().Add(-Retention)
 	entries, err := os.ReadDir(s.dir)
 	if err != nil {
 		s.operator.Error("course log store: listing course directories", label.Error, err)
