@@ -1,0 +1,209 @@
+import { timestampDate, timestampFromDate } from "@bufbuild/protobuf/wkt"
+import { useEffect, useState } from "react"
+import type { CourseLog, CourseLogEntry } from "../../../proto/qf/requests_pb"
+import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
+import { useCourseID } from "../../hooks/useCourseID"
+import { useGrpc } from "../../overmind"
+import { CenteredMessage } from "../CenteredMessage"
+import LogOutput from "../LogOutput"
+import Search from "../Search"
+
+const LEVEL_NAMES: Record<CourseLogEntry_Level, string> = {
+    [CourseLogEntry_Level.DEBUG]: "Debug",
+    [CourseLogEntry_Level.INFO]: "Info",
+    [CourseLogEntry_Level.WARN]: "Warn",
+    [CourseLogEntry_Level.ERROR]: "Error",
+}
+
+const LEVEL_BADGE_COLOR: Record<CourseLogEntry_Level, string> = {
+    [CourseLogEntry_Level.DEBUG]: "badge-ghost",
+    [CourseLogEntry_Level.INFO]: "badge-info",
+    [CourseLogEntry_Level.WARN]: "badge-warning",
+    [CourseLogEntry_Level.ERROR]: "badge-error",
+}
+
+// toLocalDatetimeInput formats date for a <input type="datetime-local"> value, in the
+// browser's local time zone; Date#toISOString is always UTC, so it cannot be reused here.
+const toLocalDatetimeInput = (date: Date): string => {
+    const pad = (n: number) => n.toString().padStart(2, "0")
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+// entryText renders one entry as a single line of plain text, shared by the
+// on-screen rendering, copy, and download actions.
+const entryText = (entry: CourseLogEntry): string => {
+    const time = entry.time ? timestampDate(entry.time).toLocaleString() : ""
+    const fields = Object.entries(entry.fields).map(([key, value]) => `${key}=${value}`).join(" ")
+    const repository = entry.repository ? `[${entry.repository}]` : ""
+    return [time, LEVEL_NAMES[entry.level], repository, entry.message, fields].filter(Boolean).join(" ")
+}
+
+/** CourseLogs is the teacher-only "Course Logs" page at /course/:id/logs.
+ *  It queries GetCourseLog for the current course and lets a teacher narrow
+ *  the result by interval, repository, and minimum level, then locally
+ *  filter, copy, or download whatever was loaded. Filters other than the
+ *  free-text one only take effect on Refresh; there is no polling or
+ *  streaming in this version. */
+const CourseLogs = () => {
+    const courseID = useCourseID()
+    const { api } = useGrpc().global
+
+    const [from, setFrom] = useState(() => toLocalDatetimeInput(new Date(Date.now() - 24 * 60 * 60 * 1000)))
+    const [to, setTo] = useState(() => toLocalDatetimeInput(new Date()))
+    const [repository, setRepository] = useState("")
+    const [level, setLevel] = useState(CourseLogEntry_Level.DEBUG)
+    const [search, setSearch] = useState("")
+
+    const [result, setResult] = useState<CourseLog | null>(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const fetchLogs = async () => {
+        setLoading(true)
+        setError(null)
+        const response = await api.client.getCourseLog({
+            courseID,
+            from: from ? timestampFromDate(new Date(from)) : undefined,
+            to: to ? timestampFromDate(new Date(to)) : undefined,
+            repository,
+            level,
+        })
+        setLoading(false)
+        if (response.error) {
+            setError(response.error.message)
+            return
+        }
+        setResult(response.message)
+    }
+
+    useEffect(() => {
+        void fetchLogs()
+        // Fetch once, with the default filters, when the page mounts; later
+        // changes are applied only when the teacher clicks Refresh.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const entries = result?.entries ?? []
+    const filtered = search
+        ? entries.filter(entry => entryText(entry).toLowerCase().includes(search))
+        : entries
+
+    const handleCopy = () => {
+        void navigator.clipboard.writeText(filtered.map(entryText).join("\n"))
+    }
+
+    const handleDownload = () => {
+        const blob = new Blob([filtered.map(entryText).join("\n")], { type: "text/plain" })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `course-${courseID}-log.txt`
+        link.click()
+        URL.revokeObjectURL(url)
+    }
+
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="card bg-base-200 shadow-sm">
+                <div className="card-body gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <label className="form-control w-full">
+                            <span className="label-text font-semibold">From</span>
+                            <input
+                                type="datetime-local"
+                                className="input input-bordered w-full"
+                                value={from}
+                                onChange={e => setFrom(e.target.value)}
+                            />
+                        </label>
+                        <label className="form-control w-full">
+                            <span className="label-text font-semibold">To</span>
+                            <input
+                                type="datetime-local"
+                                className="input input-bordered w-full"
+                                value={to}
+                                onChange={e => setTo(e.target.value)}
+                            />
+                        </label>
+                        <label className="form-control w-full">
+                            <span className="label-text font-semibold">Repository</span>
+                            <select
+                                className="select select-bordered w-full"
+                                value={repository}
+                                onChange={e => setRepository(e.target.value)}
+                            >
+                                <option value="">All repositories</option>
+                                {(result?.repositories ?? []).map(repo => <option key={repo} value={repo}>{repo}</option>)}
+                            </select>
+                        </label>
+                        <label className="form-control w-full">
+                            <span className="label-text font-semibold">Minimum level</span>
+                            <select
+                                className="select select-bordered w-full"
+                                value={level}
+                                onChange={e => setLevel(Number(e.target.value))}
+                            >
+                                {Object.values(CourseLogEntry_Level).filter((v): v is CourseLogEntry_Level => typeof v === "number").map(value => (
+                                    <option key={value} value={value}>{LEVEL_NAMES[value]}</option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button type="button" className="btn btn-primary" onClick={() => void fetchLogs()} disabled={loading}>
+                            {loading ? "Refreshing…" : "Refresh"}
+                        </button>
+                        <Search placeholder="Filter loaded entries" setQuery={setSearch} className="flex-1" />
+                    </div>
+                </div>
+            </div>
+
+            {error && <CenteredMessage message={`Failed to load course logs: ${error}`} />}
+            {!error && loading && <CenteredMessage message="Loading course logs…" />}
+            {!error && !loading && result && filtered.length === 0 && (
+                <CenteredMessage message="No log entries match the current filters" />
+            )}
+            {!error && !loading && result && filtered.length > 0 && (
+                <>
+                    {result.truncated && (
+                        <div className="alert alert-warning">
+                            <span>
+                                Showing the newest {filtered.length} matching {filtered.length === 1 ? "entry" : "entries"}.
+                                Narrow the interval or filters to see the rest.
+                            </span>
+                        </div>
+                    )}
+                    <LogOutput
+                        title="Course Logs"
+                        codeClassName="text-base-content"
+                        controls={
+                            <div className="flex items-center gap-2">
+                                <button type="button" className="btn btn-sm" onClick={handleCopy}>Copy</button>
+                                <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
+                            </div>
+                        }
+                    >
+                        {filtered.map((entry, idx) => (
+                            // eslint-disable-next-line react/no-array-index-key
+                            <div key={idx} className="flex flex-wrap items-baseline gap-2 py-0.5">
+                                <span className="text-base-content/60 shrink-0">
+                                    {entry.time ? timestampDate(entry.time).toLocaleString() : "N/A"}
+                                </span>
+                                <span className={`badge badge-xs ${LEVEL_BADGE_COLOR[entry.level]} shrink-0`}>
+                                    {LEVEL_NAMES[entry.level]}
+                                </span>
+                                {entry.repository && (
+                                    <span className="text-base-content/60 shrink-0">[{entry.repository}]</span>
+                                )}
+                                <span className="break-words">{entry.message}</span>
+                                {entry.truncated && <span className="badge badge-xs badge-warning shrink-0">truncated</span>}
+                            </div>
+                        ))}
+                    </LogOutput>
+                </>
+            )}
+        </div>
+    )
+}
+
+export default CourseLogs
