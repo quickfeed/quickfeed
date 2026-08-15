@@ -54,7 +54,9 @@ func (wh GitHubWebHook) handleInstallationCreated(ctx context.Context, event *gi
 		logger.Error("failed to create course", label.Error, err)
 		return
 	}
-	logger.Info("created course", label.CourseID, c.GetID())
+	// The course now exists, so its records can be copied to its log.
+	_, logger = qlog.WithCourse(ctx, c)
+	logger.Info("created course")
 
 	if err := wh.tm.Add(courseCreator.GetID()); err != nil {
 		logger.Error("failed to schedule token refresh", label.Error, err)

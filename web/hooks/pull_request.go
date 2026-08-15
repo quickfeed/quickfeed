@@ -133,7 +133,7 @@ func (wh GitHubWebHook) handlePullRequestReview(ctx context.Context, payload *gi
 		logger.Error("failed to get course", label.Error, err)
 		return
 	}
-	logger = logger.With(label.CourseID, course.GetID(), label.CourseCode, course.GetCode())
+	logger = logger.With(qlog.CourseAttrs(course)...)
 	user, err := wh.db.GetUserByRemoteIdentity(uint64(payload.GetSender().GetID()))
 	if err != nil {
 		logger.Error("failed to get review user", label.Error, err)
@@ -171,17 +171,17 @@ func (wh GitHubWebHook) handlePullRequestOpened(ctx context.Context, payload *gi
 		logger.Error("failed to get pull request repository", label.Error, err)
 		return
 	}
-	ctx, logger = qlog.WithLogger(ctx, label.RepositoryType, repo.GetRepoType().String())
-	if !repo.IsGroupRepo() {
-		logger.Debug("ignoring pull request for non-group repository")
-		return
-	}
 	// Add course scope to the logger only if the event is known to be relevant;
 	// a missing course should not abort the handler.
 	if course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID()); err == nil {
-		ctx, logger = qlog.WithLogger(ctx, label.CourseID, course.GetID(), label.CourseCode, course.GetCode())
+		ctx, logger = qlog.WithCourse(ctx, course, label.RepositoryType, repo.GetRepoType().String())
 	} else {
+		ctx, logger = qlog.WithLogger(ctx, label.RepositoryType, repo.GetRepoType().String())
 		logger.Debug("pull request course not found", label.Error, err)
+	}
+	if !repo.IsGroupRepo() {
+		logger.Debug("ignoring pull request for non-group repository")
+		return
 	}
 	issue, err := findIssue(payload.GetPullRequest().GetBody(), repo.GetIssues())
 	if err != nil {
@@ -207,9 +207,10 @@ func (wh GitHubWebHook) handlePullRequestClosed(ctx context.Context, payload *gi
 	// Add repository and course scope to logger; a repository or course unknown to QuickFeed
 	// need not abort the handler, since the pull request lookup below reports that case.
 	if repo, err := wh.getRepository(payload.GetRepo().GetID()); err == nil {
-		logger = logger.With(label.RepositoryType, repo.GetRepoType().String())
 		if course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID()); err == nil {
-			logger = logger.With(label.CourseID, course.GetID(), label.CourseCode, course.GetCode())
+			logger = logger.With(append(qlog.CourseAttrs(course), label.RepositoryType, repo.GetRepoType().String())...)
+		} else {
+			logger = logger.With(label.RepositoryType, repo.GetRepoType().String())
 		}
 	}
 
