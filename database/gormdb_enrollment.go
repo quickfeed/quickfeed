@@ -86,7 +86,7 @@ func (db *GormDB) GetEnrollmentsByUser(userID uint64, statuses ...qf.Enrollment_
 }
 
 // getEnrollments is generic helper function that return enrollments for either course and user.
-func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error) {
+func (db *GormDB) getEnrollments(model any, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error) {
 	if len(statuses) == 0 {
 		statuses = []qf.Enrollment_UserStatus{
 			qf.Enrollment_PENDING,

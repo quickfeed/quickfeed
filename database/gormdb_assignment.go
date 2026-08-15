@@ -34,7 +34,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 			CourseID: assignment.GetCourseID(),
 			Order:    assignment.GetOrder(),
 		}).
-		Assign(map[string]interface{}{
+		Assign(map[string]any{
 			"name":              assignment.GetName(),
 			"order":             assignment.GetOrder(),
 			"deadline":          assignment.GetDeadline().AsTime(),
