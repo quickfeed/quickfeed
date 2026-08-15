@@ -494,8 +494,10 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	// Scope the logger to the course
-	ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode(), label.Organization, course.GetScmOrganizationName())
+	// Scope the remainder of the method to the course; UpdateFromTestsRepo and
+	// the clone below add only their own repository scope on top of this.
+	// The course ID comes from the request logger; see enrichRequestLogger.
+	ctx, logger := qlog.WithCourseLog(ctx, course)
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		logger.Error("failed to create SCM client", label.Error, err)
