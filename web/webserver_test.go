@@ -45,9 +45,8 @@ func TestRegisterRouter(t *testing.T) {
 		End()
 
 	partialUrl := "/" + qfconnect.QuickFeedServiceName + "/"
-	qfType := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
-	for i := 0; i < qfType.NumMethod(); i++ {
-		method := qfType.Method(i)
+	qfType := reflect.TypeFor[qfconnect.UnimplementedQuickFeedServiceHandler]()
+	for method := range qfType.Methods() {
 		apitest.New(method.Name).
 			Handler(mux).
 			Post(partialUrl+method.Name).
