@@ -99,6 +99,14 @@ A member of the teaching staff can then copy course `info`, the code template fo
 That is, these repositories should not be cloned or forked from an old version of the course.
 This approach prevents accidentally revealing commit history from old course instances.
 
+### Course Logs
+
+The "Course Logs" tile, on the course's teacher page, shows what QuickFeed has done on your course's behalf: incoming webhook events (pushes, pull requests), CI and Docker output from building and testing submissions, and rebuilds or assignment syncs you trigger yourself. It does not include the operator-only server log, and it never includes a student's own successful test output, which stays on that student's submission page.
+
+By default, the page shows the last 24 hours. Use the From/To fields to look further back, up to 14 days: QuickFeed only keeps that much history, so an interval reaching further back is narrowed automatically rather than rejected. The Repository and Minimum level selectors narrow the result further; the repository list always reflects every repository active in the selected interval, so switching one filter never removes an option from the other. Changing any of these takes effect the next time you click Refresh; the free-text box below it, by contrast, filters what is already on screen immediately, with no additional request. Copy and Download act on whatever is currently on screen, filters included.
+
+A course's logs begin accumulating once it starts running on a QuickFeed deployment that has this feature; nothing is recorded retroactively for activity from before that.
+
 ## Teaching Assistants
 
 ### To Give Your Teaching Assistants Access To Your Course You Have To

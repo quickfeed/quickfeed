@@ -200,6 +200,11 @@ The logging interceptors attach `rpc_method`, and, once authentication and acces
 RPC handlers must not add those attributes themselves.
 When a handler acts on some other user than the caller, use `label.TargetUser` and `label.TargetUserID` to keep the two apart.
 
+Some records also belong in a course's teacher-visible log: webhook processing, CI and Docker output, and course operations a teacher triggers themselves, such as a rebuild or an assignment sync.
+Use `qlog.WithCourse(ctx, course, attrs...)` to scope a fresh context to a course, or `qlog.WithCourseLog(ctx, course, attrs...)` where the RPC interceptors already attached `course_id` from the caller's claims and only `course_code` and the marker are needed.
+Both take the course from the database, never from request data: the marker they attach is what a downstream handler keys the course's on-disk log file on, so anything reaching a scope carrying it becomes visible to that course's teachers.
+Ordinary RPC completion records, and everything else that is not explicitly scoped this way, stay operator-only.
+
 Never log cookies, authorization headers, environment variables, private keys, access tokens, refresh tokens, or session secrets.
 Redact generated per-run secrets from captured command output before logging it.
 The GORM logger enabled by `LOGDB` traces full SQL statements, including bound column values; keep it for local debugging only.
