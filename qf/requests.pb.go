@@ -9,6 +9,7 @@ package qf
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -68,6 +69,58 @@ func (x SubmissionRequest_SubmissionType) Number() protoreflect.EnumNumber {
 // Deprecated: Use SubmissionRequest_SubmissionType.Descriptor instead.
 func (SubmissionRequest_SubmissionType) EnumDescriptor() ([]byte, []int) {
 	return file_qf_requests_proto_rawDescGZIP(), []int{6, 0}
+}
+
+type CourseLogEntry_Level int32
+
+const (
+	CourseLogEntry_DEBUG CourseLogEntry_Level = 0
+	CourseLogEntry_INFO  CourseLogEntry_Level = 1
+	CourseLogEntry_WARN  CourseLogEntry_Level = 2
+	CourseLogEntry_ERROR CourseLogEntry_Level = 3
+)
+
+// Enum value maps for CourseLogEntry_Level.
+var (
+	CourseLogEntry_Level_name = map[int32]string{
+		0: "DEBUG",
+		1: "INFO",
+		2: "WARN",
+		3: "ERROR",
+	}
+	CourseLogEntry_Level_value = map[string]int32{
+		"DEBUG": 0,
+		"INFO":  1,
+		"WARN":  2,
+		"ERROR": 3,
+	}
+)
+
+func (x CourseLogEntry_Level) Enum() *CourseLogEntry_Level {
+	p := new(CourseLogEntry_Level)
+	*p = x
+	return p
+}
+
+func (x CourseLogEntry_Level) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CourseLogEntry_Level) Descriptor() protoreflect.EnumDescriptor {
+	return file_qf_requests_proto_enumTypes[1].Descriptor()
+}
+
+func (CourseLogEntry_Level) Type() protoreflect.EnumType {
+	return &file_qf_requests_proto_enumTypes[1]
+}
+
+func (x CourseLogEntry_Level) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CourseLogEntry_Level.Descriptor instead.
+func (CourseLogEntry_Level) EnumDescriptor() ([]byte, []int) {
+	return file_qf_requests_proto_rawDescGZIP(), []int{11, 0}
 }
 
 type CourseSubmissions struct {
@@ -707,6 +760,250 @@ func (x *RebuildRequest) GetSubmissionID() uint64 {
 	return 0
 }
 
+type CourseLogRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CourseID      uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	From          *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`                                 // default: 24 hours before to
+	To            *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`                                     // default: now
+	Repository    string                 `protobuf:"bytes,4,opt,name=repository,proto3" json:"repository,omitempty"`                     // exact match; unset selects every repository
+	Level         CourseLogEntry_Level   `protobuf:"varint,5,opt,name=level,proto3,enum=qf.CourseLogEntry_Level" json:"level,omitempty"` // minimum level to include
+	Limit         uint32                 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`                              // default 2000, server maximum 5000
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CourseLogRequest) Reset() {
+	*x = CourseLogRequest{}
+	mi := &file_qf_requests_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CourseLogRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CourseLogRequest) ProtoMessage() {}
+
+func (x *CourseLogRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_requests_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CourseLogRequest.ProtoReflect.Descriptor instead.
+func (*CourseLogRequest) Descriptor() ([]byte, []int) {
+	return file_qf_requests_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CourseLogRequest) GetCourseID() uint64 {
+	if x != nil {
+		return x.CourseID
+	}
+	return 0
+}
+
+func (x *CourseLogRequest) GetFrom() *timestamppb.Timestamp {
+	if x != nil {
+		return x.From
+	}
+	return nil
+}
+
+func (x *CourseLogRequest) GetTo() *timestamppb.Timestamp {
+	if x != nil {
+		return x.To
+	}
+	return nil
+}
+
+func (x *CourseLogRequest) GetRepository() string {
+	if x != nil {
+		return x.Repository
+	}
+	return ""
+}
+
+func (x *CourseLogRequest) GetLevel() CourseLogEntry_Level {
+	if x != nil {
+		return x.Level
+	}
+	return CourseLogEntry_DEBUG
+}
+
+func (x *CourseLogRequest) GetLimit() uint32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type CourseLogEntry struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Time           *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=time,proto3" json:"time,omitempty"`
+	Level          CourseLogEntry_Level   `protobuf:"varint,2,opt,name=level,proto3,enum=qf.CourseLogEntry_Level" json:"level,omitempty"`
+	Message        string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Source         string                 `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"` // repository-relative file:line
+	Repository     string                 `protobuf:"bytes,5,opt,name=repository,proto3" json:"repository,omitempty"`
+	RepositoryType string                 `protobuf:"bytes,6,opt,name=repositoryType,proto3" json:"repositoryType,omitempty"`
+	Fields         map[string]string      `protobuf:"bytes,7,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // remaining structured attributes
+	Truncated      bool                   `protobuf:"varint,8,opt,name=truncated,proto3" json:"truncated,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CourseLogEntry) Reset() {
+	*x = CourseLogEntry{}
+	mi := &file_qf_requests_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CourseLogEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CourseLogEntry) ProtoMessage() {}
+
+func (x *CourseLogEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_requests_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CourseLogEntry.ProtoReflect.Descriptor instead.
+func (*CourseLogEntry) Descriptor() ([]byte, []int) {
+	return file_qf_requests_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CourseLogEntry) GetTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Time
+	}
+	return nil
+}
+
+func (x *CourseLogEntry) GetLevel() CourseLogEntry_Level {
+	if x != nil {
+		return x.Level
+	}
+	return CourseLogEntry_DEBUG
+}
+
+func (x *CourseLogEntry) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *CourseLogEntry) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *CourseLogEntry) GetRepository() string {
+	if x != nil {
+		return x.Repository
+	}
+	return ""
+}
+
+func (x *CourseLogEntry) GetRepositoryType() string {
+	if x != nil {
+		return x.RepositoryType
+	}
+	return ""
+}
+
+func (x *CourseLogEntry) GetFields() map[string]string {
+	if x != nil {
+		return x.Fields
+	}
+	return nil
+}
+
+func (x *CourseLogEntry) GetTruncated() bool {
+	if x != nil {
+		return x.Truncated
+	}
+	return false
+}
+
+type CourseLog struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entries       []*CourseLogEntry      `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`           // chronological order
+	Repositories  []string               `protobuf:"bytes,2,rep,name=repositories,proto3" json:"repositories,omitempty"` // repositories with entries in the selected interval
+	Truncated     bool                   `protobuf:"varint,3,opt,name=truncated,proto3" json:"truncated,omitempty"`      // set when entries were cut off by the limit
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CourseLog) Reset() {
+	*x = CourseLog{}
+	mi := &file_qf_requests_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CourseLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CourseLog) ProtoMessage() {}
+
+func (x *CourseLog) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_requests_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CourseLog.ProtoReflect.Descriptor instead.
+func (*CourseLog) Descriptor() ([]byte, []int) {
+	return file_qf_requests_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *CourseLog) GetEntries() []*CourseLogEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+func (x *CourseLog) GetRepositories() []string {
+	if x != nil {
+		return x.Repositories
+	}
+	return nil
+}
+
+func (x *CourseLog) GetTruncated() bool {
+	if x != nil {
+		return x.Truncated
+	}
+	return false
+}
+
 type Void struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -715,7 +1012,7 @@ type Void struct {
 
 func (x *Void) Reset() {
 	*x = Void{}
-	mi := &file_qf_requests_proto_msgTypes[10]
+	mi := &file_qf_requests_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -727,7 +1024,7 @@ func (x *Void) String() string {
 func (*Void) ProtoMessage() {}
 
 func (x *Void) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[10]
+	mi := &file_qf_requests_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -740,14 +1037,14 @@ func (x *Void) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Void.ProtoReflect.Descriptor instead.
 func (*Void) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{10}
+	return file_qf_requests_proto_rawDescGZIP(), []int{13}
 }
 
 var File_qf_requests_proto protoreflect.FileDescriptor
 
 const file_qf_requests_proto_rawDesc = "" +
 	"\n" +
-	"\x11qf/requests.proto\x12\x02qf\x1a\x0eqf/types.proto\"\xae\x01\n" +
+	"\x11qf/requests.proto\x12\x02qf\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0eqf/types.proto\"\xae\x01\n" +
 	"\x11CourseSubmissions\x12H\n" +
 	"\vsubmissions\x18\x01 \x03(\v2&.qf.CourseSubmissions.SubmissionsEntryR\vsubmissions\x1aO\n" +
 	"\x10SubmissionsEntry\x12\x10\n" +
@@ -795,7 +1092,39 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\x0eRebuildRequest\x12\x1a\n" +
 	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12\"\n" +
 	"\fassignmentID\x18\x02 \x01(\x04R\fassignmentID\x12\"\n" +
-	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"\x06\n" +
+	"\fsubmissionID\x18\x03 \x01(\x04R\fsubmissionID\"\xf0\x01\n" +
+	"\x10CourseLogRequest\x12\x1a\n" +
+	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12.\n" +
+	"\x04from\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
+	"\x02to\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\x12\x1e\n" +
+	"\n" +
+	"repository\x18\x04 \x01(\tR\n" +
+	"repository\x12.\n" +
+	"\x05level\x18\x05 \x01(\x0e2\x18.qf.CourseLogEntry.LevelR\x05level\x12\x14\n" +
+	"\x05limit\x18\x06 \x01(\rR\x05limit\"\xae\x03\n" +
+	"\x0eCourseLogEntry\x12.\n" +
+	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12.\n" +
+	"\x05level\x18\x02 \x01(\x0e2\x18.qf.CourseLogEntry.LevelR\x05level\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12\x16\n" +
+	"\x06source\x18\x04 \x01(\tR\x06source\x12\x1e\n" +
+	"\n" +
+	"repository\x18\x05 \x01(\tR\n" +
+	"repository\x12&\n" +
+	"\x0erepositoryType\x18\x06 \x01(\tR\x0erepositoryType\x126\n" +
+	"\x06fields\x18\a \x03(\v2\x1e.qf.CourseLogEntry.FieldsEntryR\x06fields\x12\x1c\n" +
+	"\ttruncated\x18\b \x01(\bR\ttruncated\x1a9\n" +
+	"\vFieldsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"1\n" +
+	"\x05Level\x12\t\n" +
+	"\x05DEBUG\x10\x00\x12\b\n" +
+	"\x04INFO\x10\x01\x12\b\n" +
+	"\x04WARN\x10\x02\x12\t\n" +
+	"\x05ERROR\x10\x03\"{\n" +
+	"\tCourseLog\x12,\n" +
+	"\aentries\x18\x01 \x03(\v2\x12.qf.CourseLogEntryR\aentries\x12\"\n" +
+	"\frepositories\x18\x02 \x03(\tR\frepositories\x12\x1c\n" +
+	"\ttruncated\x18\x03 \x01(\bR\ttruncated\"\x06\n" +
 	"\x04VoidB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
@@ -810,39 +1139,52 @@ func file_qf_requests_proto_rawDescGZIP() []byte {
 	return file_qf_requests_proto_rawDescData
 }
 
-var file_qf_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_qf_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_qf_requests_proto_goTypes = []any{
 	(SubmissionRequest_SubmissionType)(0), // 0: qf.SubmissionRequest.SubmissionType
-	(*CourseSubmissions)(nil),             // 1: qf.CourseSubmissions
-	(*ReviewRequest)(nil),                 // 2: qf.ReviewRequest
-	(*CourseRequest)(nil),                 // 3: qf.CourseRequest
-	(*GroupRequest)(nil),                  // 4: qf.GroupRequest
-	(*Organization)(nil),                  // 5: qf.Organization
-	(*EnrollmentRequest)(nil),             // 6: qf.EnrollmentRequest
-	(*SubmissionRequest)(nil),             // 7: qf.SubmissionRequest
-	(*RepositoryRequest)(nil),             // 8: qf.RepositoryRequest
-	(*Repositories)(nil),                  // 9: qf.Repositories
-	(*RebuildRequest)(nil),                // 10: qf.RebuildRequest
-	(*Void)(nil),                          // 11: qf.Void
-	nil,                                   // 12: qf.CourseSubmissions.SubmissionsEntry
-	nil,                                   // 13: qf.Repositories.URLsEntry
-	(*Review)(nil),                        // 14: qf.Review
-	(Enrollment_UserStatus)(0),            // 15: qf.Enrollment.UserStatus
-	(*Submissions)(nil),                   // 16: qf.Submissions
+	(CourseLogEntry_Level)(0),             // 1: qf.CourseLogEntry.Level
+	(*CourseSubmissions)(nil),             // 2: qf.CourseSubmissions
+	(*ReviewRequest)(nil),                 // 3: qf.ReviewRequest
+	(*CourseRequest)(nil),                 // 4: qf.CourseRequest
+	(*GroupRequest)(nil),                  // 5: qf.GroupRequest
+	(*Organization)(nil),                  // 6: qf.Organization
+	(*EnrollmentRequest)(nil),             // 7: qf.EnrollmentRequest
+	(*SubmissionRequest)(nil),             // 8: qf.SubmissionRequest
+	(*RepositoryRequest)(nil),             // 9: qf.RepositoryRequest
+	(*Repositories)(nil),                  // 10: qf.Repositories
+	(*RebuildRequest)(nil),                // 11: qf.RebuildRequest
+	(*CourseLogRequest)(nil),              // 12: qf.CourseLogRequest
+	(*CourseLogEntry)(nil),                // 13: qf.CourseLogEntry
+	(*CourseLog)(nil),                     // 14: qf.CourseLog
+	(*Void)(nil),                          // 15: qf.Void
+	nil,                                   // 16: qf.CourseSubmissions.SubmissionsEntry
+	nil,                                   // 17: qf.Repositories.URLsEntry
+	nil,                                   // 18: qf.CourseLogEntry.FieldsEntry
+	(*Review)(nil),                        // 19: qf.Review
+	(Enrollment_UserStatus)(0),            // 20: qf.Enrollment.UserStatus
+	(*timestamppb.Timestamp)(nil),         // 21: google.protobuf.Timestamp
+	(*Submissions)(nil),                   // 22: qf.Submissions
 }
 var file_qf_requests_proto_depIdxs = []int32{
-	12, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
-	14, // 1: qf.ReviewRequest.review:type_name -> qf.Review
-	15, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
+	16, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
+	19, // 1: qf.ReviewRequest.review:type_name -> qf.Review
+	20, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
 	0,  // 3: qf.SubmissionRequest.Type:type_name -> qf.SubmissionRequest.SubmissionType
-	13, // 4: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
-	16, // 5: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
-	6,  // [6:6] is the sub-list for method output_type
-	6,  // [6:6] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	17, // 4: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
+	21, // 5: qf.CourseLogRequest.from:type_name -> google.protobuf.Timestamp
+	21, // 6: qf.CourseLogRequest.to:type_name -> google.protobuf.Timestamp
+	1,  // 7: qf.CourseLogRequest.level:type_name -> qf.CourseLogEntry.Level
+	21, // 8: qf.CourseLogEntry.time:type_name -> google.protobuf.Timestamp
+	1,  // 9: qf.CourseLogEntry.level:type_name -> qf.CourseLogEntry.Level
+	18, // 10: qf.CourseLogEntry.fields:type_name -> qf.CourseLogEntry.FieldsEntry
+	13, // 11: qf.CourseLog.entries:type_name -> qf.CourseLogEntry
+	22, // 12: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_qf_requests_proto_init() }
@@ -866,8 +1208,8 @@ func file_qf_requests_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_requests_proto_rawDesc), len(file_qf_requests_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   13,
+			NumEnums:      2,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
