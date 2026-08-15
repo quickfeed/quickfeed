@@ -47,6 +47,7 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"UpdateReview":             true,
 		"IsEmptyRepo":              true,
 		"GetSubmissionsByCourse":   true,
+		"GetCourseLog":             true,
 		"GetUsers":                 true,
 		"GetSubmission":            true,
 		"SubmissionStream":         true,
