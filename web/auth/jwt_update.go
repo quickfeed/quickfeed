@@ -88,10 +88,5 @@ func (tm *TokenManager) update(userID uint64, updateToken bool) error {
 
 // exists checks if the ID is in the list.
 func (tm *TokenManager) exists(id uint64) bool {
-	for _, token := range tm.tokensToUpdate {
-		if id == token {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(tm.tokensToUpdate, id)
 }

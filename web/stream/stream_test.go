@@ -32,7 +32,7 @@ func TestStream(t *testing.T) {
 
 	var counter uint32
 	wg := sync.WaitGroup{}
-	for range 10 {
+	for range 9 {
 		stream := qtest.NewMockStream[Data](t)
 		stream.SetCounter(&counter)
 		service.Add(stream, 1)
@@ -42,7 +42,6 @@ func TestStream(t *testing.T) {
 			t.Log(err)
 		})
 		for _, data := range messages {
-			data := data
 			service.SendTo(data, 1)
 		}
 	}

@@ -11,10 +11,10 @@ import (
 // TestAccessControlMethods checks that all QuickFeedService methods have an entry
 // in the access control list.
 func TestAccessControlQuickFeedServiceMethods(t *testing.T) {
-	service := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
+	service := reflect.TypeFor[qfconnect.UnimplementedQuickFeedServiceHandler]()
 	serviceMethods := make(map[string]bool)
-	for i := 0; i < service.NumMethod(); i++ {
-		serviceMethods[service.Method(i).Name] = true
+	for method := range service.Methods() {
+		serviceMethods[method.Name] = true
 	}
 	if err := checkAccessControlMethods(serviceMethods); err != nil {
 		t.Error(err)
