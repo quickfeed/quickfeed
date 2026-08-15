@@ -66,16 +66,14 @@ func (wh *MockWebHook) Handle() http.HandlerFunc {
 			}
 			// The counting semaphore limits concurrency to maxConcurrentTestRuns.
 			// This should also allow webhook events to return quickly to GitHub, avoiding timeouts.
-			wh.wg.Add(1)
-			go func() {
+			wh.wg.Go(func() {
 				wh.sem <- struct{}{} // acquire semaphore
 				atomic.AddInt32(&wh.currentConcurrencyCnt, 1)
 				wh.handlePush(e)
 				<-wh.sem // release semaphore
 				atomic.AddInt32(&wh.currentConcurrencyCnt, -1)
 				wh.dup.Remove(commitID)
-				wh.wg.Done()
-			}()
+			})
 		default:
 			wh.logger.Debug("ignored webhook event", "event_type", github.WebHookType(r))
 		}

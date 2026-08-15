@@ -224,7 +224,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	var users []*qf.User
 	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
-	for i := 0; i < len(enrollments); i++ {
+	for i := range enrollments {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 		if enrollments[i] == qf.Enrollment_PENDING {
@@ -284,7 +284,7 @@ func TestGetGroupsByCourse(t *testing.T) {
 		qf.Enrollment_STUDENT,
 	}
 	// create as many users as the desired number of enrollments
-	for i := 0; i < len(enrollments); i++ {
+	for i := range enrollments {
 		user := qtest.CreateFakeUser(t, db)
 		users = append(users, user)
 		if enrollments[i] == qf.Enrollment_PENDING {
