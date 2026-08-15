@@ -19,35 +19,35 @@ var (
 	ghOrgFoo    = github.Organization{ID: github.Int64(123), Login: foo.Login}
 	ghOrgBar    = github.Organization{ID: github.Int64(456), Login: bar.Login}
 	ghOrgBuz    = github.Organization{ID: github.Int64(678), Login: buz.Login}
-	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: github.String("dat320")}
+	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: new("dat320")}
 )
 
 // mock repositories for organization foo; bar has no repositories
 var repos = []github.Repository{
-	{ID: github.Int64(1), Organization: &ghOrgFoo, Name: github.String("info")},
-	{ID: github.Int64(2), Organization: &ghOrgFoo, Name: github.String("assignments")},
-	{ID: github.Int64(3), Organization: &ghOrgFoo, Name: github.String("tests")},
-	{ID: github.Int64(4), Organization: &ghOrgFoo, Name: github.String("meling-labs")},
-	{ID: github.Int64(5), Organization: &ghOrgFoo, Name: github.String("josie-labs")},
-	{ID: github.Int64(6), Organization: &ghOrgFoo, Name: github.String("groupX")},
-	{ID: github.Int64(7), Organization: &ghOrgBar, Name: github.String("groupY")},
-	{ID: github.Int64(8), Organization: &ghOrgBar, Name: github.String("groupZ")},
+	{ID: github.Int64(1), Organization: &ghOrgFoo, Name: new("info")},
+	{ID: github.Int64(2), Organization: &ghOrgFoo, Name: new("assignments")},
+	{ID: github.Int64(3), Organization: &ghOrgFoo, Name: new("tests")},
+	{ID: github.Int64(4), Organization: &ghOrgFoo, Name: new("meling-labs")},
+	{ID: github.Int64(5), Organization: &ghOrgFoo, Name: new("josie-labs")},
+	{ID: github.Int64(6), Organization: &ghOrgFoo, Name: new("groupX")},
+	{ID: github.Int64(7), Organization: &ghOrgBar, Name: new("groupY")},
+	{ID: github.Int64(8), Organization: &ghOrgBar, Name: new("groupZ")},
 }
 
 var (
-	meling  = github.User{Login: github.String("meling")}
-	leslie  = github.User{Login: github.String("leslie")}
-	lamport = github.User{Login: github.String("lamport")}
-	jostein = github.User{Login: github.String("jostein")}
-	foo     = github.User{Login: github.String("foo")} // organization (user/owner)
-	bar     = github.User{Login: github.String("bar")} // organization (user/owner)
-	buz     = github.User{Login: github.String("buz")} // organization (user/owner)
+	meling  = github.User{Login: new("meling")}
+	leslie  = github.User{Login: new("leslie")}
+	lamport = github.User{Login: new("lamport")}
+	jostein = github.User{Login: new("jostein")}
+	foo     = github.User{Login: new("foo")} // organization (user/owner)
+	bar     = github.User{Login: new("bar")} // organization (user/owner)
+	buz     = github.User{Login: new("buz")} // organization (user/owner)
 )
 
 // memberships: user -> role; two members; one owner, one member
 var members = []github.Membership{
-	{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-	{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgMember)},
+	{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+	{Organization: &ghOrgBar, User: &meling, Role: new(OrgMember)},
 }
 
 // groups map: owner -> repo -> collaborators (only group repos should have collaborators)
@@ -273,7 +273,7 @@ func TestMockCommitsAheadForkedRepo(t *testing.T) {
 	studentRepo := github.Repository{
 		ID:           github.Int64(10),
 		Organization: &ghOrgFoo,
-		Name:         github.String("student-labs"),
+		Name:         new("student-labs"),
 	}
 	// Clone before appending; appending to the shared repos slice directly would
 	// write into its backing array as soon as it has spare capacity, leaking
@@ -324,9 +324,9 @@ func TestMockCreateCourse(t *testing.T) {
 	}
 	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgBar, User: &jostein, Role: github.String(OrgMember)}, // not allowed to create course
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgBar, User: &jostein, Role: new(OrgMember)}, // not allowed to create course
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -478,9 +478,9 @@ func TestMockRejectEnrollment(t *testing.T) {
 
 func TestMockDemoteTeacherToStudent(t *testing.T) {
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgFoo, User: &jostein, Role: github.String(OrgMember)},
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &jostein, Role: new(OrgMember)},
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -561,10 +561,10 @@ func TestMockCreateGroup(t *testing.T) {
 func TestMockUpdateGroupMembers(t *testing.T) {
 	push := map[string]bool{"push": true}
 	var (
-		meling  = github.User{Login: github.String("meling"), Permissions: push}
-		leslie  = github.User{Login: github.String("leslie"), Permissions: push}
-		lamport = github.User{Login: github.String("lamport"), Permissions: push}
-		jostein = github.User{Login: github.String("jostein"), Permissions: push}
+		meling  = github.User{Login: new("meling"), Permissions: push}
+		leslie  = github.User{Login: new("leslie"), Permissions: push}
+		lamport = github.User{Login: new("lamport"), Permissions: push}
+		jostein = github.User{Login: new("jostein"), Permissions: push}
 	)
 	tests := []struct {
 		name      string

@@ -227,10 +227,10 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	// Set restrictions to prevent students from creating new repositories and prevent access
 	// to organization repositories. This will not affect organization owners (teachers).
 	if _, _, err = s.client.Organizations.Edit(ctx, org.GetScmOrganizationName(), &github.Organization{
-		DefaultRepoPermission: github.String("none"),
-		MembersCanCreateRepos: github.Bool(false),
+		DefaultRepoPermission: new("none"),
+		MembersCanCreateRepos: new(false),
 		// required to allow forking the assignments repository
-		MembersCanForkPrivateRepos: github.Bool(true),
+		MembersCanForkPrivateRepos: new(true),
 	}); err != nil {
 		return nil, E(op, m, fmt.Errorf("updating permissions for %s: %w", org.GetScmOrganizationName(), err))
 	}
@@ -461,7 +461,7 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err err
 	for attempt := range opt.MaxRetries {
 		var resp *github.Response
 		_, resp, err = s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
-			Branch: github.String(opt.Branch),
+			Branch: new(opt.Branch),
 		})
 		if err == nil {
 			return nil
@@ -546,9 +546,9 @@ func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryO
 
 	logger.Debug("creating course repository")
 	repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
-		Name:     github.String(opt.Repo),
-		Private:  github.Bool(opt.Private),
-		AutoInit: github.Bool(opt.AutoInit),
+		Name:     new(opt.Repo),
+		Private:  new(opt.Private),
+		AutoInit: new(opt.AutoInit),
 	})
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)

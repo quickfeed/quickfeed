@@ -391,26 +391,6 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-// Ptr returns a pointer to the given value.
-//
-// How to use:
-//   - Use this function to create a pointer to a value.
-//   - This function is useful when initializing a struct with a pointer field.
-//
-// Example:
-//
-//	type MyStruct struct {
-//		Field *int
-//	    Src   *string
-//	}
-//	myStruct := MyStruct{
-//		Field: Ptr(10),
-//		Src:   Ptr("hello"),
-//	}
-func Ptr[T any](t T) *T {
-	return &t
-}
-
 // Diff compares the got and want values and prints a diff with the given message.
 func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	if diff := cmp.Diff(got, want, opts...); diff != "" {

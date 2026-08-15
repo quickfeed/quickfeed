@@ -227,9 +227,9 @@ func WithMockOrgs(members ...string) MockOption {
 			for i, member := range members {
 				userID := opts.getUserID(member)
 				if i == 0 {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{ID: github.Int64(userID), Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: new(OrgOwner), User: &github.User{ID: new(userID), Login: new(member)}})
 				} else {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{ID: github.Int64(userID), Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: new(OrgMember), User: &github.User{ID: new(userID), Login: new(member)}})
 				}
 			}
 		}
@@ -267,14 +267,14 @@ func WithMockOptions(mockOpts ...MockOption) MockOption {
 
 var toOrg = func(course *qf.Course) github.Organization {
 	return github.Organization{
-		ID:    github.Int64(int64(course.GetScmOrganizationID())),
-		Login: github.String(course.GetScmOrganizationName()),
+		ID:    new(int64(course.GetScmOrganizationID())),
+		Login: new(course.GetScmOrganizationName()),
 	}
 }
 
 var toRepo = func(org *github.Organization, name string) github.Repository {
 	return github.Repository{
 		Organization: org,
-		Name:         github.String(name),
+		Name:         new(name),
 	}
 }

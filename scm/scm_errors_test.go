@@ -215,9 +215,9 @@ func TestDeleteRepositoryTreatsDelete404AsSuccess(t *testing.T) {
 func TestErrorCreateCourse(t *testing.T) {
 	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgBar, User: &jostein, Role: github.String(OrgMember)}, // not allowed to create course
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgBar, User: &jostein, Role: new(OrgMember)}, // not allowed to create course
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -425,9 +425,9 @@ func TestErrorRejectEnrollment(t *testing.T) {
 
 func TestErrorDemoteTeacherToStudent(t *testing.T) {
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgFoo, User: &jostein, Role: github.String(OrgMember)},
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &jostein, Role: new(OrgMember)},
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {

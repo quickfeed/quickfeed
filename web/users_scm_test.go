@@ -39,12 +39,12 @@ func TestUpdateEnrollmentsAfterUpdateUserLogin(t *testing.T) {
 
 	// Setup mock SCM with new login
 	scmOpt := scm.WithMockOptions(scm.WithMockCourses(), scm.WithMockOrgs("admin"))
-	ghOrg := github.Organization{Login: github.String(course.GetScmOrganizationName())}
+	ghOrg := github.Organization{Login: new(course.GetScmOrganizationName())}
 	memberOpt := scm.WithMembers(github.Membership{
 		Organization: &ghOrg,
 		User: &github.User{
-			ID:    github.Int64(int64(scmID)),
-			Login: github.String(newLogin),
+			ID:    new(int64(scmID)),
+			Login: new(newLogin),
 		},
 	})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scmOpt, memberOpt), web.WithInterceptors())
@@ -117,12 +117,12 @@ func TestUpdateGroupAfterUpdateUserLogin(t *testing.T) {
 
 	// Setup mock SCM with new login
 	scmOpt := scm.WithMockOptions(scm.WithMockCourses(), scm.WithMockOrgs("admin"))
-	ghOrg := github.Organization{Login: github.String(course.GetScmOrganizationName())}
+	ghOrg := github.Organization{Login: new(course.GetScmOrganizationName())}
 	memberOpt := scm.WithMembers(github.Membership{
 		Organization: &ghOrg,
 		User: &github.User{
-			ID:    github.Int64(int64(scmID)),
-			Login: github.String(newLogin),
+			ID:    new(int64(scmID)),
+			Login: new(newLogin),
 		},
 	})
 	client := web.NewMockClient(t, db, scm.WithMockOptions(scmOpt, memberOpt), web.WithInterceptors())
