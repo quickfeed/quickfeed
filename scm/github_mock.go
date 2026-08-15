@@ -44,7 +44,7 @@ func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
 		s.issueNumber = make(map[string]int)
 	}
 	s.issueNumber[key]++
-	return github.Int(s.issueNumber[key])
+	return new(s.issueNumber[key])
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
@@ -170,7 +170,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				s.repoID++
 				repo.ID = &s.repoID
-				repo.Owner = &github.User{Login: github.String(org)}
+				repo.Owner = &github.User{Login: new(org)}
 				repo.Organization = &o
 				s.repos = append(s.repos, repo)
 				if s.groups[org] == nil {
@@ -199,14 +199,14 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 				fork := github.Repository{
 					ID:           &s.repoID,
 					Organization: &o,
-					Name:         github.String(opts.Name),
-					Owner:        &github.User{Login: github.String(dstOrg)},
-					Fork:         github.Bool(true),
+					Name:         new(opts.Name),
+					Owner:        &github.User{Login: new(dstOrg)},
+					Fork:         new(true),
 					// Record the upstream the fork was created from, mirroring how student
 					// and group repositories are forks of the assignments repository.
 					Parent: &github.Repository{
-						Name:  github.String(srcRepo),
-						Owner: &github.User{Login: github.String(srcOwner)},
+						Name:  new(srcRepo),
+						Owner: &github.User{Login: new(srcOwner)},
 					},
 				}
 				s.repos = append(s.repos, fork)
@@ -269,10 +269,10 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 				// User not found - create new membership (simulates sending invitation)
 				userID := s.getUserID(username)
 				newMembership := github.Membership{
-					Organization: &github.Organization{Login: github.String(org)},
-					User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
+					Organization: &github.Organization{Login: new(org)},
+					User:         &github.User{ID: new(userID), Login: new(username)},
 					Role:         membership.Role,
-					State:        github.String("pending"), // Invitation pending until accepted
+					State:        new("pending"), // Invitation pending until accepted
 				}
 				s.members = append(s.members, newMembership)
 				mustWrite(w, newMembership)
@@ -317,7 +317,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 				for i, m := range s.members {
 					if m.GetOrganization().GetLogin() == o.GetLogin() {
 						// Set state to active (user accepted invitation)
-						s.members[i].State = github.String("active")
+						s.members[i].State = new("active")
 						mustWrite(w, s.members[i])
 						return
 					}
@@ -339,7 +339,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			for i := range s.repos {
 				re := s.repos[i]
 				if re.GetOrganization().GetLogin() == owner && re.GetName() == repo {
-					re.Owner = &github.User{Login: github.String(owner)}
+					re.Owner = &github.User{Login: new(owner)}
 					mustWrite(w, re)
 					return
 				}
@@ -375,7 +375,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			for i := range s.repos {
 				repo := &s.repos[i]
 				if repo.GetID() == id {
-					repo.Owner = &github.User{Login: github.String(repo.GetOrganization().GetLogin())}
+					repo.Owner = &github.User{Login: new(repo.GetOrganization().GetLogin())}
 					mustWrite(w, repo)
 					return
 				}
@@ -396,7 +396,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			mustWrite(w, &github.RepositoryCommit{SHA: github.String(mockRepoHeadSHA(repo))})
+			mustWrite(w, &github.RepositoryCommit{SHA: new(mockRepoHeadSHA(repo))})
 		}),
 	)
 	getReposCompareByOwnerByRepoByBaseByHeadHandler := WithRequestMatchHandler(
@@ -413,10 +413,10 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			}
 
 			comparison := &github.CommitsComparison{
-				AheadBy:      github.Int(0), // Default: no commits ahead
-				BehindBy:     github.Int(0),
-				TotalCommits: github.Int(0),
-				Status:       github.String("identical"),
+				AheadBy:      new(0), // Default: no commits ahead
+				BehindBy:     new(0),
+				TotalCommits: new(0),
+				Status:       new("identical"),
 			}
 
 			parts := strings.Split(basehead, "...")
@@ -424,9 +424,9 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 				headRepo := s.findRepoByHeadSHA(parts[1])
 				if headRepo != nil {
 					if ahead := s.aheadBy[repoKey(owner, headRepo.GetName())]; ahead > 0 {
-						comparison.AheadBy = github.Int(ahead)
-						comparison.TotalCommits = github.Int(ahead)
-						comparison.Status = github.String("ahead")
+						comparison.AheadBy = new(ahead)
+						comparison.TotalCommits = new(ahead)
+						comparison.Status = new("ahead")
 					}
 				}
 			}
@@ -481,18 +481,18 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 
 			userID := s.getUserID(username)
 			permissions := map[string]bool{repoCollaboratorOptions.Permission: true}
-			ghUser := github.User{ID: github.Int64(userID), Login: github.String(username), Permissions: permissions}
+			ghUser := github.User{ID: new(userID), Login: new(username), Permissions: permissions}
 			// this simulates that the user accepts the invitation (mocking the invite response is not supported yet)
 			s.groups[owner][repo] = append(collaborators, ghUser)
 			s.members = append(s.members, github.Membership{
-				Organization: &github.Organization{Login: github.String(owner)},
-				User:         &github.User{ID: github.Int64(userID), Login: github.String(username)},
-				Role:         github.String(repoCollaboratorOptions.Permission),
+				Organization: &github.Organization{Login: new(owner)},
+				User:         &github.User{ID: new(userID), Login: new(username)},
+				Role:         new(repoCollaboratorOptions.Permission),
 			})
 			invite := github.CollaboratorInvitation{
 				Repo: &github.Repository{
-					Owner:       &github.User{Login: github.String(owner)},
-					Name:        github.String(repo),
+					Owner:       &github.User{Login: new(owner)},
+					Name:        new(repo),
 					Permissions: permissions,
 				},
 				Invitee: &ghUser,
@@ -547,14 +547,14 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 
 			s.issueID++
 			issue := github.Issue{
-				ID:       github.Int64(s.issueID),
+				ID:       new(s.issueID),
 				Number:   s.nextIssueNumber(owner, repo),
 				Title:    issueReq.Title,
 				Body:     issueReq.Body,
 				Assignee: &github.User{Name: issueReq.Assignee},
 				Repository: &github.Repository{
-					Owner: &github.User{Login: github.String(owner)},
-					Name:  github.String(repo),
+					Owner: &github.User{Login: new(owner)},
+					Name:  new(repo),
 				},
 			}
 			s.issues[owner][repo] = append(s.issues[owner][repo], issue)
@@ -632,7 +632,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			for _, ghIssue := range s.issues[owner][repo] {
 				if *ghIssue.Number == issueNumber {
 					s.commentID++
-					comment.ID = github.Int64(s.commentID)
+					comment.ID = new(s.commentID)
 					if s.comments[owner][repo] == nil {
 						s.comments[owner][repo] = make(map[int64][]github.IssueComment)
 					}
@@ -684,10 +684,10 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			s.reviewers[owner][repo][pullNumber] = reviewers
 			users := make([]*github.User, 0, len(reviewers.Reviewers))
 			for _, reviewer := range reviewers.Reviewers {
-				users = append(users, &github.User{Login: github.String(reviewer)})
+				users = append(users, &github.User{Login: new(reviewer)})
 			}
 			pr := github.PullRequest{
-				Number:             github.Int(pullNumber),
+				Number:             new(pullNumber),
 				RequestedReviewers: users,
 			}
 			w.WriteHeader(http.StatusCreated)
@@ -732,9 +732,9 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			logger.Debug("mock SCM request", routeLabel, replaceArgs(postReposMergeUpstreamByOwnerByRepo, owner, repo))
 			// Always return success for merge-upstream
 			result := github.RepoMergeUpstreamResult{
-				Message:    github.String("Successfully fetched and fast-forwarded from upstream"),
-				MergeType:  github.String("fast-forward"),
-				BaseBranch: github.String("main"),
+				Message:    new("Successfully fetched and fast-forwarded from upstream"),
+				MergeType:  new("fast-forward"),
+				BaseBranch: new("main"),
 			}
 			w.WriteHeader(http.StatusOK)
 			mustWrite(w, result)
