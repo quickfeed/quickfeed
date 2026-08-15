@@ -155,7 +155,7 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 		return nil, q.cleanup, err
 	}
 
-	qfService := web.NewQuickFeedService(q.logger, q.db, scmMgr, q.runner, tm)
+	qfService := web.NewQuickFeedService(q.logger, q.db, scmMgr, q.runner, tm, q.courseLogs)
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(os.Getenv("QUICKFEED_WEBHOOK_SECRET"), public)
 

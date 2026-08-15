@@ -22,7 +22,7 @@ func TestRegisterRouter(t *testing.T) {
 	defer stop()
 
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
-	qf := web.NewQuickFeedService(logger, db, mgr, nil, &auth.TokenManager{})
+	qf := web.NewQuickFeedService(logger, db, mgr, nil, &auth.TokenManager{}, nil)
 
 	public := createTempPublicDir(t)
 	webHookSecret := ""
