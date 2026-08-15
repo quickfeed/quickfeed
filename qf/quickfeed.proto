@@ -62,6 +62,10 @@ service QuickFeedService {
     rpc CreateAssignmentFeedback(AssignmentFeedback) returns (Void) {}
     rpc GetAssignmentFeedback(CourseRequest) returns (AssignmentFeedbacks) {}
 
+    // logs //
+
+    rpc GetCourseLog(CourseLogRequest) returns (CourseLog) {}
+
     // misc //
 
     rpc GetRepositories(CourseRequest) returns (Repositories) {}
