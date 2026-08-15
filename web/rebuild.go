@@ -49,7 +49,8 @@ func (s *QuickFeedService) internalRebuildSubmission(ctx context.Context, reques
 	}
 	// Scope the rebuild; RunTests and RecordResults log under the same context.
 	// The course ID comes from the request logger; see enrichRequestLogger.
-	ctx, logger := qlog.WithCourseLog(ctx,
+	ctx, logger := qlog.WithCourseLog(
+		ctx,
 		course,
 		label.Repository, repo.Name(),
 		label.RepositoryType, repo.GetRepoType().String(),
@@ -116,7 +117,6 @@ func (s *QuickFeedService) internalRebuildAllSubmissions(ctx context.Context, re
 	sem := make(chan struct{}, maxContainers)
 	errCnt := int32(0)
 	var wg sync.WaitGroup
-	wg.Add(len(submissions))
 	// The rebuilds must complete even if the client disconnects, so detach
 	// them from the request's cancellation; each rebuild is bounded by the
 	// assignment's container timeout.
@@ -127,7 +127,7 @@ func (s *QuickFeedService) internalRebuildAllSubmissions(ctx context.Context, re
 			SubmissionID: submission.GetID(),
 		}
 		// the counting semaphore limits concurrency to maxContainers
-		go func() {
+		wg.Go(func() {
 			sem <- struct{}{} // acquire semaphore
 			err := s.internalRebuildSubmission(workerCtx, rebuildReq)
 			if err != nil {
@@ -135,8 +135,7 @@ func (s *QuickFeedService) internalRebuildAllSubmissions(ctx context.Context, re
 				logger.Error("failed to rebuild submission", label.SubmissionID, rebuildReq.GetSubmissionID(), label.Error, err)
 			}
 			<-sem // release semaphore
-			wg.Done()
-		}()
+		})
 	}
 	// wait for all submissions to finish rebuilding
 	wg.Wait()

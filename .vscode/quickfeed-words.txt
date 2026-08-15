@@ -39,6 +39,7 @@ connectweb
 consts
 containertimeout
 copytruncate
+courselog
 covermode
 coverpkg
 coverprofile

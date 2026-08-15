@@ -31,11 +31,9 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 					sem := make(chan struct{}, maxContainers)
 					errCnt := int32(0)
 					var wg sync.WaitGroup
-					wg.Add(len(submissions))
 					for _, submission := range submissions {
-						submission := submission
 						// the counting semaphore limits concurrency to maxContainers
-						go func() {
+						wg.Go(func() {
 							sem <- struct{}{} // acquire semaphore
 							// here we are rebuilding submission
 							if submission%errRate == 0 { // simulate error every errRate submission
@@ -43,8 +41,7 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 								atomic.AddInt32(&errCnt, 1)
 							}
 							<-sem // release semaphore
-							wg.Done()
-						}()
+						})
 					}
 					// wait for all submissions to finish rebuilding
 					wg.Wait()

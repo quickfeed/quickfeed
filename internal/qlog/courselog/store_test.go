@@ -101,14 +101,12 @@ func TestStoreConcurrentWrites(t *testing.T) {
 	store, _ := newTestStore(t)
 	const n = 100
 	var wg sync.WaitGroup
-	wg.Add(n)
 	for i := range n {
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			if _, err := fmt.Fprintf(store.Writer("dat520-2026"), "line-%d\n", i); err != nil {
 				t.Errorf("Write() error = %v", err)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 

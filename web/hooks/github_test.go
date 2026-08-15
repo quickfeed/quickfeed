@@ -74,10 +74,8 @@ func TestConcurrentHandlePush(t *testing.T) {
 	handlerFunc := wh.Handle()
 
 	var wg sync.WaitGroup
-	wg.Add(concurrentPushEvents)
-	for i := 0; i < concurrentPushEvents; i++ {
-		i := i
-		go func() {
+	for i := range concurrentPushEvents {
+		wg.Go(func() {
 			myPushEvent := &github.PushEvent{
 				Repo: &github.PushEventRepository{
 					Name: github.String(fmt.Sprintf("repo-%02d", i)),
@@ -101,9 +99,7 @@ func TestConcurrentHandlePush(t *testing.T) {
 				Expect(t).
 				Status(http.StatusOK).
 				End()
-
-			wg.Done()
-		}()
+		})
 	}
 	wg.Wait()
 	wh.wg.Wait()
@@ -134,7 +130,7 @@ func TestFilterDuplicatePushEvents(t *testing.T) {
 	pushPayload := qlog.IndentJson(pushEventToSendTwice)
 	signature := hMAC([]byte(pushPayload), []byte(secret))
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		apitest.New().
 			HandlerFunc(handlerFunc).
 			Post(auth.Hook).

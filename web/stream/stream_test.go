@@ -32,17 +32,15 @@ func TestStream(t *testing.T) {
 
 	var counter uint32
 	wg := sync.WaitGroup{}
-	for i := 1; i < 10; i++ {
+	for range 10 {
 		stream := qtest.NewMockStream[Data](t)
 		stream.SetCounter(&counter)
 		service.Add(stream, 1)
 		streams = append(streams, stream)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			err := stream.Run()
 			t.Log(err)
-		}()
+		})
 		for _, data := range messages {
 			data := data
 			service.SendTo(data, 1)
@@ -81,18 +79,14 @@ func TestStreamClose(t *testing.T) {
 	stream := qtest.NewMockStream[Data](t)
 	service.Add(stream, 1)
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		for i := 0; i < 1_000_000; i++ {
+	wg.Go(func() {
+		for i := range 1_000_000 {
 			stream.Send(messages[i%len(messages)])
 		}
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		_ = stream.Run()
-	}()
+	})
 	stream.Close()
 	wg.Wait()
 }

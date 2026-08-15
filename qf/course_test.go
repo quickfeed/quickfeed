@@ -54,17 +54,12 @@ func TestLock(t *testing.T) {
 	rang := 5
 
 	for range rang {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			unlock := course.Lock()
 			defer unlock()
-
 			course.CourseCreatorID++
-		}()
+		})
 	}
-
 	wg.Wait()
 
 	// Asserts the course is accessed concurrently and the course creator ID is updated correctly.
