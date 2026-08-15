@@ -29,8 +29,8 @@ var (
 )
 
 var (
-	member = &github.Membership{Role: github.String(OrgMember)}
-	admin  = &github.Membership{Role: github.String(OrgOwner)}
+	member = &github.Membership{Role: new(OrgMember)}
+	admin  = &github.Membership{Role: new(OrgOwner)}
 )
 
 var (

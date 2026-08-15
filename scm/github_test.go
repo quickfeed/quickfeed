@@ -141,10 +141,10 @@ func TestRequestReviewers(t *testing.T) {
 
 	ctx := context.Background()
 	pullReq, _, err := s.Client().PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
-		Title: github.String("Test Request Reviewers"),
-		Body:  github.String("Test Request Reviewers Body"),
-		Head:  github.String(testReqReviewersBranch),
-		Base:  github.String("master"),
+		Title: new("Test Request Reviewers"),
+		Body:  new("Test Request Reviewers Body"),
+		Head:  new(testReqReviewersBranch),
+		Base:  new("master"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -172,7 +172,7 @@ func TestRequestReviewers(t *testing.T) {
 	t.Logf("PullRequest %d created with reviewer %v", *pullReq.Number, reviewer)
 
 	_, _, err = s.Client().PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
-		State: github.String("closed"),
+		State: new("closed"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -284,8 +284,8 @@ func TestGetUserByID(t *testing.T) {
 		scm.WithMembers(github.Membership{
 			User: &github.User{
 				ID:        github.Int64(2),
-				Login:     github.String("avatar_user"),
-				AvatarURL: github.String("https://avatar.com"),
+				Login:     new("avatar_user"),
+				AvatarURL: new("https://avatar.com"),
 			},
 		}),
 	)
