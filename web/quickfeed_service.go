@@ -10,6 +10,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
@@ -23,24 +24,26 @@ var scmConnectErr = connect.NewError(connect.CodeNotFound, errors.New("unable to
 // QuickFeedService holds references to the database and
 // other shared data structures.
 type QuickFeedService struct {
-	logger *slog.Logger
-	db     database.Database
-	scmMgr *scm.Manager
-	runner ci.Runner
-	tm     *auth.TokenManager
+	logger     *slog.Logger
+	db         database.Database
+	scmMgr     *scm.Manager
+	runner     ci.Runner
+	tm         *auth.TokenManager
+	courseLogs *courselog.Store
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *slog.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, tm *auth.TokenManager) *QuickFeedService {
+func NewQuickFeedService(logger *slog.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, tm *auth.TokenManager, courseLogs *courselog.Store) *QuickFeedService {
 	return &QuickFeedService{
-		logger:  logger,
-		db:      db,
-		scmMgr:  mgr,
-		runner:  runner,
-		tm:      tm,
-		streams: stream.NewStreamServices(),
+		logger:     logger,
+		db:         db,
+		scmMgr:     mgr,
+		runner:     runner,
+		tm:         tm,
+		courseLogs: courseLogs,
+		streams:    stream.NewStreamServices(),
 	}
 }
 
