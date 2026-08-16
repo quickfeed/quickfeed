@@ -283,6 +283,8 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 		// Step 2: Accept the org invitation so user becomes an org member.
 		// Once they are an org member, adding them as collaborator to org-owned
 		// repos grants access immediately without requiring further invitations.
+		// GitHub creates the invitation asynchronously; acceptOrgInvitation
+		// retries if the accept call returns "job scheduled on GitHub side".
 		if err := s.acceptOrgInvitation(ctx, &InvitationOptions{
 			Login:       opt.User,
 			Owner:       org.GetScmOrganizationName(),

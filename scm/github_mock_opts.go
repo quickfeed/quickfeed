@@ -10,16 +10,17 @@ import (
 )
 
 type mockOptions struct {
-	orgs       []github.Organization
-	repos      []github.Repository
-	members    []github.Membership
-	groups     map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
-	issues     map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
-	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
-	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
-	appConfigs map[string]github.AppConfig                           // map: code -> app config
-	aheadBy    map[string]int                                        // map: "owner/repo" -> commits ahead of the upstream assignments repo
-	userID     int64                                                 // counter for generating unique user IDs
+	orgs                  []github.Organization
+	repos                 []github.Repository
+	members               []github.Membership
+	groups                map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
+	issues                map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
+	comments              map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
+	reviewers             map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	appConfigs            map[string]github.AppConfig                           // map: code -> app config
+	aheadBy               map[string]int                                        // map: "owner/repo" -> commits ahead of the upstream assignments repo
+	userID                int64                                                 // counter for generating unique user IDs
+	invitationNotReadyFor int                                                   // remaining 202 responses before PATCH /user/memberships/orgs/{org} succeeds
 }
 
 // repoKey is the key used to track per-repository mock state keyed by owner and repository name.
@@ -185,6 +186,14 @@ func WithCommitsAhead(owner, repo string, n int) MockOption {
 func WithMembers(members ...github.Membership) MockOption {
 	return func(opts *mockOptions) {
 		opts.members = append(opts.members, members...)
+	}
+}
+
+// WithInvitationNotReady makes the next n attempts to accept an organization
+// invitation return HTTP 202, matching GitHub's asynchronous invitation job.
+func WithInvitationNotReady(n int) MockOption {
+	return func(opts *mockOptions) {
+		opts.invitationNotReadyFor = n
 	}
 }
 
