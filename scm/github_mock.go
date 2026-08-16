@@ -312,6 +312,13 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			membership := mustRead[github.Membership](r.Body)
 			logger.Debug("mock SCM request", routeLabel, replaceArgs(patchUserMembershipsOrgsByOrg, org), "membership", membership)
 
+			// Simulate GitHub's asynchronous invitation job.
+			if s.invitationNotReadyFor > 0 {
+				s.invitationNotReadyFor--
+				w.WriteHeader(http.StatusAccepted)
+				return
+			}
+
 			// Find the pending membership and activate it
 			found := s.matchOrgFunc(org, func(o github.Organization) {
 				for i, m := range s.members {
