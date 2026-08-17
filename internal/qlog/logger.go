@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"path/filepath"
+	"strings"
 
 	"github.com/quickfeed/quickfeed/internal/env"
 )
@@ -25,7 +26,11 @@ func New(w io.Writer) *slog.Logger {
 			if !ok {
 				return attr
 			}
-			if path, err := filepath.Rel(root, source.File); err == nil {
+			// Keep the recorded path for records that do not originate below
+			// root, such as those from the standard library or the module
+			// cache, or when the paths recorded by the compiler differ from
+			// root; a relative path would then be a walk-up, not a shorthand.
+			if path, err := filepath.Rel(root, source.File); err == nil && !strings.HasPrefix(path, "..") {
 				source.File = path
 			}
 			return slog.Any(slog.SourceKey, source)
