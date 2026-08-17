@@ -1,12 +1,11 @@
 package env
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/go-git/go-git/v5"
+	"golang.org/x/mod/modfile"
 )
 
 var quickfeedRoot string
@@ -30,49 +29,55 @@ func Root(paths ...string) string {
 }
 
 func setRoot() {
-	root, err := gitRoot()
+	root, err := moduleRoot()
 	if err != nil {
-		// When the working directory is outside the git repository, we must set the QUICKFEED env variable.
+		// When the working directory is outside the repository, we must set the QUICKFEED env variable.
 		wd, _ := os.Getwd()
-		fmt.Printf("Working directory (%s) may be outside quickfeed's git repository.\n", wd)
+		fmt.Printf("Working directory (%s) may be outside quickfeed's repository.\n", wd)
 		fmt.Println("Please set the QUICKFEED environment variable to the root of the repository.")
-		panic(fmt.Sprintf("Failed to determine root of the git repository: %v", err))
-	}
-	if err := checkModulePath(root); err != nil {
-		panic(fmt.Sprintf("Invalid module path: %v", err))
+		panic(fmt.Sprintf("Failed to determine root of the repository: %v", err))
 	}
 	os.Setenv("QUICKFEED", root)
 	quickfeedRoot = root
 }
 
-// gitRoot return the root of the Git repository.
-func gitRoot() (string, error) {
-	path, err := os.Getwd()
+// moduleRoot returns the root of the quickfeed module, that is, the closest
+// directory at or above the working directory holding a go.mod file that
+// declares the quickfeed module path.
+//
+// The search is lexical; it does not resolve symlinks. This keeps the returned
+// path spelled the same way as the working directory, so that paths derived from
+// it remain comparable to the paths reported by the go tool and by the shell.
+func moduleRoot() (string, error) {
+	// os.Getwd prefers $PWD, and thus keeps any symlinks it contains.
+	wd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
-	// PlainOpen opens a git repository from the given path and searches upwards.
-	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
-	if err != nil {
-		return "", err
+	for dir := wd; ; {
+		if err := checkModulePath(dir); err == nil {
+			return dir, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("no go.mod file declaring module %s found in or above %s", quickfeedModulePath, wd)
+		}
+		dir = parent
 	}
-	w, err := repo.Worktree()
-	if err != nil {
-		return "", err
-	}
-	return w.Filesystem.Root(), nil
 }
 
-// checkModulePath checks that the root directory contains a go.mod file
+// checkModulePath checks that the given directory contains a go.mod file
 // with the correct module path for QuickFeed.
-func checkModulePath(root string) error {
-	modFile := filepath.Join(root, "go.mod")
+func checkModulePath(dir string) error {
+	modFile := filepath.Join(dir, "go.mod")
 	data, err := os.ReadFile(modFile)
 	if err != nil {
 		return fmt.Errorf("failed to read %s: %w", modFile, err)
 	}
-	if !bytes.Contains(data, []byte("module "+quickfeedModulePath)) {
-		return fmt.Errorf("invalid go.mod file: %s", modFile)
+	// The module path must match exactly; a prefix match would also accept
+	// nested modules, such as the kit module.
+	if path := modfile.ModulePath(data); path != quickfeedModulePath {
+		return fmt.Errorf("invalid go.mod file: %s declares module %s", modFile, path)
 	}
 	return nil
 }
