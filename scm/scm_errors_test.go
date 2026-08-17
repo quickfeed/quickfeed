@@ -598,10 +598,8 @@ func chkErrMsg(t *testing.T, m string, gotErr error, wantErr, wantUserErr string
 			t.Log("want user error:", wantUserErr)
 			t.Errorf("%s user error mismatch (-want +got):\n%s", m, diff)
 		}
-	} else {
-		if wantUserErr != "" {
-			t.Errorf("%s() user error = nil, want %q", m, wantUserErr)
-		}
+	} else if wantUserErr != "" {
+		t.Errorf("%s() user error = nil, want %q", m, wantUserErr)
 	}
 }
 
@@ -679,10 +677,8 @@ func TestErrorE(t *testing.T) {
 					t.Logf("want user error: %s", tt.wantUserErr)
 					t.Errorf("%s() user error mismatch (-want +got):\n%s", tt.name, diff)
 				}
-			} else {
-				if tt.wantUserErr != "" {
-					t.Errorf("%s() user error = nil, want %q", tt.name, tt.wantUserErr)
-				}
+			} else if tt.wantUserErr != "" {
+				t.Errorf("%s() user error = nil, want %q", tt.name, tt.wantUserErr)
 			}
 		})
 	}

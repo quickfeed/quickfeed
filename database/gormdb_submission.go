@@ -137,9 +137,8 @@ func (db *GormDB) check(submission *qf.Submission) error {
 	if err := m.Count(&idCount).Error; err != nil {
 		if submission.GetUserID() > 0 {
 			return fmt.Errorf("user %d not found for submission: %+v: %w", submission.GetUserID(), submission, err)
-		} else {
-			return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GetGroupID(), submission, err)
 		}
+		return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GetGroupID(), submission, err)
 	}
 
 	// Checks that the assignment exists.

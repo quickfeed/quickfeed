@@ -24,13 +24,13 @@ const accessGranted = ""
 // These checker functions can be used for different RPC methods as needed.
 
 // checkNone allows access to any authenticated user.
-func checkNone(db database.Database, req any, claims *auth.Claims) string {
+func checkNone(database.Database, any, *auth.Claims) string {
 	return accessGranted
 }
 
 // checkUser checks if the user ID in the request matches the user ID in the claims.
 // The [req] is expected to implement [userIDProvider].
-func checkUser(db database.Database, req any, claims *auth.Claims) string {
+func checkUser(_ database.Database, req any, claims *auth.Claims) string {
 	if claims.SameUser(req) { // user role
 		return accessGranted
 	}
@@ -39,7 +39,7 @@ func checkUser(db database.Database, req any, claims *auth.Claims) string {
 
 // checkTeacher checks if the user is a teacher in the course specified in the request.
 // The [req] is expected to implement [courseIDProvider].
-func checkTeacher(db database.Database, req any, claims *auth.Claims) string {
+func checkTeacher(_ database.Database, req any, claims *auth.Claims) string {
 	if claims.IsCourseTeacher(getCourseID(req)) { // teacher role in course
 		return accessGranted
 	}
@@ -47,7 +47,7 @@ func checkTeacher(db database.Database, req any, claims *auth.Claims) string {
 }
 
 // checkAdmin checks if the user has admin privileges.
-func checkAdmin(db database.Database, req any, claims *auth.Claims) string {
+func checkAdmin(_ database.Database, _ any, claims *auth.Claims) string {
 	if claims.Admin { // admin role
 		return accessGranted
 	}
@@ -57,7 +57,7 @@ func checkAdmin(db database.Database, req any, claims *auth.Claims) string {
 // checkUserOrStudentOrTeacherOrAdmin checks if the user is the same as in the request,
 // or is a student or teacher in the course specified in the request, or an admin.
 // The [req] is expected to implement [userIDProvider] or [courseIDProvider].
-func checkUserOrStudentOrTeacherOrAdmin(db database.Database, req any, claims *auth.Claims) string {
+func checkUserOrStudentOrTeacherOrAdmin(_ database.Database, req any, claims *auth.Claims) string {
 	if claims.SameUser(req) { // user role
 		return accessGranted
 	}
@@ -75,7 +75,7 @@ func checkUserOrStudentOrTeacherOrAdmin(db database.Database, req any, claims *a
 
 // checkStudentOrTeacher checks if the user is a student or teacher in the course specified in the request.
 // The [req] is expected to implement [courseIDProvider].
-func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) string {
+func checkStudentOrTeacher(_ database.Database, req any, claims *auth.Claims) string {
 	if claims.IsCourseStudent(getCourseID(req)) { // student role in course
 		return accessGranted
 	}
@@ -88,7 +88,7 @@ func checkStudentOrTeacher(db database.Database, req any, claims *auth.Claims) s
 // checkGroupOrTeacher checks if the user is a member of the group specified in the request,
 // or is a teacher in the course specified in the request.
 // The [req] is expected to implement [groupIDProvider] or [courseIDProvider].
-func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) string {
+func checkGroupOrTeacher(_ database.Database, req any, claims *auth.Claims) string {
 	if claims.IsGroupMember(req) { // CreateGroup: claims user must be member of the group being created
 		return accessGranted
 	}
@@ -103,7 +103,7 @@ func checkGroupOrTeacher(db database.Database, req any, claims *auth.Claims) str
 
 // checkUpdateUser checks if the user is updating their own information or if they are an admin.
 // The [req] is expected to implement [userIDProvider].
-func checkUpdateUser(db database.Database, req any, claims *auth.Claims) string {
+func checkUpdateUser(_ database.Database, req any, claims *auth.Claims) string {
 	if claims.SameUser(req) { // user role
 		if claims.UnauthorizedAdminChange(req) {
 			return fmt.Sprintf("non-admin user %d attempted to grant admin privileges", claims.UserID)
@@ -118,7 +118,7 @@ func checkUpdateUser(db database.Database, req any, claims *auth.Claims) string 
 
 // checkGetSubmissions checks if the user is a student, group member, or teacher for accessing submissions.
 // The [req] is expected to implement [userIDProvider] or [groupIDProvider] or [courseIDProvider].
-func checkGetSubmissions(db database.Database, req any, claims *auth.Claims) string { // roles: student, group, teacher
+func checkGetSubmissions(_ database.Database, req any, claims *auth.Claims) string { // roles: student, group, teacher
 	if !hasGroupID(req) { // student role
 		if !claims.SameUser(req) {
 			return fmt.Sprintf("ID mismatch in claims (%d) and request (%d)", claims.UserID, getUserID(req))

@@ -41,7 +41,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 			calls := 0
 			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
-				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+				Transport: roundTripperFunc(func(*http.Request) (*http.Response, error) {
 					calls++
 					return githubResponse(http.StatusOK, "", nil), nil
 				}),
@@ -67,7 +67,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 			calls := 0
 			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
-				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+				Transport: roundTripperFunc(func(*http.Request) (*http.Response, error) {
 					calls++
 					if calls == 1 {
 						return githubResponse(http.StatusForbidden, `{"message": "rate limit exceeded"}`, map[string]string{
@@ -106,7 +106,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 			calls := 0
 			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
-				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+				Transport: roundTripperFunc(func(*http.Request) (*http.Response, error) {
 					calls++
 					if calls == 1 {
 						return githubResponse(http.StatusForbidden, `{"message": "You have exceeded a secondary rate limit.", "documentation_url": "https://docs.github.com/en/rest/overview/resources-in-the-rest-api#secondary-rate-limits"}`, map[string]string{
@@ -144,7 +144,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 			calls := 0
 			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
-				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+				Transport: roundTripperFunc(func(*http.Request) (*http.Response, error) {
 					calls++
 					return githubResponse(http.StatusInternalServerError, `{"message": "permanent error"}`, nil), nil
 				}),
@@ -170,7 +170,7 @@ func TestSyncForkWithRetry(t *testing.T) {
 			calls := 0
 			s := NewGithubUserClient(qtest.Logger(t), "token")
 			s.client = github.NewClient(&http.Client{
-				Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+				Transport: roundTripperFunc(func(*http.Request) (*http.Response, error) {
 					calls++
 					return githubResponse(http.StatusForbidden, `{"message": "rate limit exceeded"}`, map[string]string{
 						"X-RateLimit-Remaining": "0",

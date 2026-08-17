@@ -53,7 +53,7 @@ func TestRegisterRouter(t *testing.T) {
 			Post(partialUrl+method.Name).
 			Header("Content-Type", "application/json").
 			Body("{}").
-			Expect(t).Assert(func(resp *http.Response, req *http.Request) error {
+			Expect(t).Assert(func(resp *http.Response, _ *http.Request) error {
 			// 415 (Unsupported Media Type) is returned for requests with unsupported content type
 			// 		- this applies to all streaming methods
 			// 400 (Bad Request) is returned if the request is malformed, e.g. missing required fields

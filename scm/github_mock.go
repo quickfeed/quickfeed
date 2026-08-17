@@ -258,9 +258,8 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 					fmt.Println("NOT FOUND", username, "AS ADMIN", membership)
 					w.WriteHeader(http.StatusNotFound)
 					return
-				} else {
-					fmt.Println("ADDING AS MEMBER", username, membership)
 				}
+				fmt.Println("ADDING AS MEMBER", username, membership)
 				// User not found - create new membership (simulates sending invitation)
 				userID := s.getUserID(username)
 				newMembership := github.Membership{
@@ -855,7 +854,7 @@ func NewMockedGithubSCMClient(logger *zap.SugaredLogger, opts ...MockOption) *Mo
 		clientV4:     githubv4.NewClient(httpClient),
 		tokenManager: &staticTokenManager{token: "mock-token"},
 		providerURL:  "file://" + env.RepositoryPath(),
-		createUserClientFn: func(token string) *github.Client {
+		createUserClientFn: func(string) *github.Client {
 			return github.NewClient(httpClient)
 		},
 	}
