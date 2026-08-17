@@ -521,7 +521,7 @@ func TestValidate(t *testing.T) {
 			if s.wantErr != nil {
 				se = s.wantErr.Error()
 			}
-			if !(len(se) > 0 && strings.Contains(e, se)) {
+			if se == "" || !strings.Contains(e, se) {
 				t.Errorf("Validate() = %q, expected %v", err, s.wantErr)
 			}
 		}
