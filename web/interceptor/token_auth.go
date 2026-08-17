@@ -35,7 +35,7 @@ func NewTokenAuthInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager, d
 func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		token := conn.RequestHeader().Get(tokenHeader)
-		if len(token) == 0 {
+		if token == "" {
 			return next(ctx, conn)
 		}
 
@@ -49,7 +49,7 @@ func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandle
 			return err
 		}
 		updatedCookie := conn.ResponseHeader().Get(auth.SetCookie)
-		if len(updatedCookie) != 0 && updatedCookie != cookie {
+		if updatedCookie != "" && updatedCookie != cookie {
 			t.update(token, updatedCookie)
 		}
 		return nil
@@ -65,7 +65,7 @@ func (*TokenAuthInterceptor) WrapStreamingClient(next connect.StreamingClientFun
 func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		token := request.Header().Get(tokenHeader)
-		if len(token) == 0 {
+		if token == "" {
 			return next(ctx, request)
 		}
 
@@ -78,7 +78,7 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 		response, err := next(ctx, request)
 		if response != nil {
 			updatedCookie := response.Header().Get(auth.SetCookie)
-			if len(updatedCookie) != 0 && updatedCookie != cookie {
+			if updatedCookie != "" && updatedCookie != cookie {
 				t.update(token, updatedCookie)
 			}
 		}
