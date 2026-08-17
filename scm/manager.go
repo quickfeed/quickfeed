@@ -109,3 +109,10 @@ func (s *Manager) GetSCM(organization string) (sc SCM, ok bool) {
 	sc, ok = s.scms[organization]
 	return
 }
+
+// DeleteSCM deletes the SCM client for the given organization from the manager's map.
+func (s *Manager) DeleteSCM(organization string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.scms, organization)
+}
