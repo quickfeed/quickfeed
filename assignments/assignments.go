@@ -92,7 +92,7 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, runner ci.
 	})
 	logger.Debugf("Build completed: %s", out)
 	if err != nil {
-		return fmt.Errorf("failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
+		return fmt.Errorf("failed to build image from %s's Dockerfile: %w", course.GetCode(), err)
 	}
 	return nil
 }

@@ -262,7 +262,7 @@ func TestExpiredTokenAndErrorCodePaths(t *testing.T) {
 	}
 	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(env.AuthSecret()))
 	if err != nil {
-		t.Fatal(fmt.Errorf("failed to sign token: %s", err))
+		t.Fatal(fmt.Errorf("failed to sign token: %w", err))
 	}
 
 	newCookie := &http.Cookie{

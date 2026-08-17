@@ -130,17 +130,17 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 
 	q.logger, err = qlog.Zap()
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to initialize logger: %v", err)
+		return nil, nil, fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
 	q.db, err = database.NewGormDB(dbFile, q.logger)
 	if err != nil {
-		return nil, q.cleanup, fmt.Errorf("failed to connect to database: %v", err)
+		return nil, q.cleanup, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	q.runner, err = ci.NewDockerCI(q.logger.Sugar())
 	if err != nil {
-		return nil, q.cleanup, fmt.Errorf("failed to set up docker client: %v", err)
+		return nil, q.cleanup, fmt.Errorf("failed to set up docker client: %w", err)
 	}
 
 	tm, err := auth.NewTokenManager(q.db)

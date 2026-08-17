@@ -53,7 +53,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	}
 	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(tm.secret))
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign token: %s", err)
+		return nil, fmt.Errorf("failed to sign token: %w", err)
 	}
 	return &http.Cookie{
 		Name:     CookieName,

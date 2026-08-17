@@ -77,7 +77,7 @@ type fileProcessor func(filename string, contents []byte, assignment *qf.Assignm
 func processCriteriaFile(_ string, contents []byte, assignment *qf.Assignment, courseID uint64) error {
 	var benchmarks []*qf.GradingBenchmark
 	if err := json.Unmarshal(contents, &benchmarks); err != nil {
-		return fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
+		return fmt.Errorf("failed to unmarshal %q: %w", criteriaFile, err)
 	}
 	// Benchmarks and criteria must have courseID for access control checks
 	for _, bm := range benchmarks {
@@ -94,7 +94,7 @@ func processCriteriaFile(_ string, contents []byte, assignment *qf.Assignment, c
 func processTestsFile(_ string, contents []byte, assignment *qf.Assignment, _ uint64) error {
 	var expectedTests []*qf.TestInfo
 	if err := json.Unmarshal(contents, &expectedTests); err != nil {
-		return fmt.Errorf("failed to unmarshal %q: %s", testsFile, err)
+		return fmt.Errorf("failed to unmarshal %q: %w", testsFile, err)
 	}
 	assignment.ExpectedTests = expectedTests
 	return nil
