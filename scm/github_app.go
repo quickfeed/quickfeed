@@ -94,7 +94,7 @@ func (m *appTokenManager) requestNewToken(ctx context.Context) ([]byte, error) {
 		return nil, errors.New("cannot refresh token without config")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", m.tokenURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "POST", m.tokenURL, http.NoBody)
 	if err != nil {
 		return nil, err
 	}

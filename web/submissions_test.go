@@ -922,11 +922,9 @@ func checkStudentSubmission(t *testing.T, submission *qf.Submission, wantApprove
 		if !submission.IsApproved(userID) {
 			t.Errorf("Expected submission for assignment %d to be approved, got status: %v", assignmentID, status)
 		}
-	} else {
+	} else if isValid && submission.IsApproved(userID) {
 		// Should either not be valid (cleaned) OR be valid but not approved
-		if isValid && submission.IsApproved(userID) {
-			t.Errorf("Expected submission for assignment %d to not be approved, got status: %v", assignmentID, status)
-		}
+		t.Errorf("Expected submission for assignment %d to not be approved, got status: %v", assignmentID, status)
 	}
 }
 

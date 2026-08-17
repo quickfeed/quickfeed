@@ -56,10 +56,8 @@ func TestUserSCMError(t *testing.T) {
 				if !errors.Is(got, wantConnErr.Unwrap()) {
 					t.Errorf("userScmError() err = %v, want %v", got, wantConnErr.Unwrap())
 				}
-			} else {
-				if !errors.Is(got, tt.want) {
-					t.Errorf("userScmError() err = %v, want %v", got, tt.want)
-				}
+			} else if !errors.Is(got, tt.want) {
+				t.Errorf("userScmError() err = %v, want %v", got, tt.want)
 			}
 		})
 	}
