@@ -81,7 +81,10 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 
 		// Scope every record for this event to the event type; the handlers below
 		// derive their logger from the context and add their own scope.
-		ctx, logger := qlog.WithLogger(qlog.NewContext(r.Context(), wh.logger), eventTypeLabel, github.WebHookType(r))
+		// The context is not used for cancellation to avoid that a slow handler
+		// cancels the event handler.
+		ctx := context.WithoutCancel(r.Context())
+		ctx, logger := qlog.WithLogger(qlog.NewContext(ctx, wh.logger), eventTypeLabel, github.WebHookType(r))
 		logger.Debug("received webhook event")
 
 		switch e := event.(type) {
@@ -99,7 +102,6 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			// Note however, if we receive a large number of push events, we may be creating
 			// a large number of goroutines. If this becomes a problem, we can add rate limiting
 			// on the number of goroutines created, by returning a http.StatusTooManyRequests.
-			ctx = context.WithoutCancel(ctx)
 			go func() {
 				wh.sem <- struct{}{} // acquire semaphore
 				defer func() {
