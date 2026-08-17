@@ -200,7 +200,9 @@ To receive webhook events, you must run QuickFeed on a public domain or use a tu
 		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
 		fmt.Print("Do you want to continue? (Y/n) ")
 		var answer string
-		fmt.Scanln(&answer)
+		if _, err := fmt.Scanln(&answer); err != nil && err.Error() != "unexpected newline" {
+			return fmt.Errorf("failed to read answer: %w", err)
+		}
 		if answer != "Y" && answer != "y" {
 			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 		}

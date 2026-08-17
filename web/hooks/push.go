@@ -107,7 +107,7 @@ func (wh GitHubWebHook) ignorePush(payload *github.PushEvent, repo *qf.Repositor
 		wh.logger.Debugf("Received push event for %q branch with pull request in repository %q", branchName(payload.GetRef()), repo.Name())
 		hasPR = true
 	}
-	return !(isDefaultBranch(payload) || (repo.IsGroupRepo() && hasPR))
+	return !isDefaultBranch(payload) && (!repo.IsGroupRepo() || !hasPR)
 }
 
 // extractAssignments extracts information from the push payload from github
