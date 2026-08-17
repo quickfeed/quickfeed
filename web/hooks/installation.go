@@ -53,6 +53,12 @@ func (wh GitHubWebHook) handleInstallationCreated(event *github.InstallationEven
 	}
 }
 
+func (wh GitHubWebHook) handleInstallationDeleted(event *github.InstallationEvent) {
+	orgName := event.GetInstallation().GetAccount().GetLogin()
+	wh.logger.Infof("Removing SCM client for organization %s due to installation deletion", orgName)
+	wh.scmMgr.DeleteSCM(orgName)
+}
+
 func defaultYear(now time.Time) uint32 {
 	if now.Month() > time.October {
 		return uint32(now.Year() + 1)

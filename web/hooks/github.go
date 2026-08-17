@@ -103,8 +103,11 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 			switch e.GetAction() {
 			case "created":
 				wh.handleInstallationCreated(e)
+			case "deleted":
+				wh.handleInstallationDeleted(e)
 			default:
-				// either "deleted", "suspend", "unsuspend", "new_permissions_accepted"
+				// either "suspend", "unsuspend", "new_permissions_accepted"
+				wh.logger.Debugf("Ignored installation event action %s", e.GetAction())
 			}
 
 		default:
