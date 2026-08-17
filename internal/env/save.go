@@ -71,7 +71,9 @@ func update(filename, content string, env map[string]string) error {
 		key, val, found := strings.Cut(line, "=")
 		if !found {
 			// Leave non-environment and blank lines unchanged.
-			fmt.Fprintln(file, line)
+			if _, err := fmt.Fprintln(file, line); err != nil {
+				return err
+			}
 			continue
 		}
 		// Remove spaces around the key and value, if any.
