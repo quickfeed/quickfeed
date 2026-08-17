@@ -59,6 +59,7 @@ envoyproxy
 errcheck
 errdefs
 Errorf
+errorlint
 esbuild
 espeland
 Etternavn
@@ -69,6 +70,9 @@ extldflags
 featurename
 fileop
 Fornavn
+Fprint
+Fprintf
+Fprintln
 Frøyland
 fsnotify
 fullchain
@@ -77,6 +81,7 @@ Getwd
 githubv
 GOBIN
 GOCACHE
+gocritic
 Godkjenning
 Godkjent
 godox
@@ -101,6 +106,7 @@ gosimple
 gotest
 GOTOOLCHAIN
 goveralls
+govet
 Grafana
 Grafana's
 groupname
@@ -118,6 +124,7 @@ hoursmin
 HTMLURL
 Idxs
 Ikke
+ineffassign
 Infof
 Ingve
 ipam
@@ -239,6 +246,7 @@ subtest
 subtests
 swiftui
 synctest
+tabwriter
 testcache
 testdata
 testdb
@@ -257,6 +265,7 @@ unittests
 unmarshalled
 unmarshalling
 unmarshalls
+Unsetenv
 urfave
 URL's
 userids
