@@ -275,7 +275,10 @@ func TestMockCommitsAheadForkedRepo(t *testing.T) {
 		Organization: &ghOrgFoo,
 		Name:         github.String("student-labs"),
 	}
-	allRepos := append(repos, studentRepo)
+	// Clone before appending; appending to the shared repos slice directly would
+	// write into its backing array as soon as it has spare capacity, leaking
+	// student-labs into every other test that reads repos.
+	allRepos := append(slices.Clone(repos), studentRepo)
 
 	tests := []struct {
 		name      string
