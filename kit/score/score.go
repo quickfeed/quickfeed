@@ -182,7 +182,7 @@ func printPanicMessage(testName, msg string, recoverVal any) {
 	s.WriteString("******************\n")
 	s.WriteString(testName)
 	s.WriteString(" panicked: ")
-	s.WriteString(fmt.Sprintf("%v", recoverVal))
+	fmt.Fprintf(&s, "%v", recoverVal)
 	if msg != "" {
 		s.WriteString("\n\nMessage:\n")
 		s.WriteString(msg)
