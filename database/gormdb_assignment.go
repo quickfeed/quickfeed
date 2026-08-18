@@ -88,7 +88,8 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			}
 
 			var assignment qf.Assignment
-			if tx.Model(&qf.Assignment{}).FirstOrInit(&assignment,
+			if tx.Model(&qf.Assignment{}).FirstOrInit(
+				&assignment,
 				&qf.Assignment{
 					CourseID: v.GetCourseID(),
 					Order:    v.GetOrder(),
@@ -103,7 +104,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			if err := db.updateGradingCriteria(tx, v); err != nil {
 				return err // will rollback transaction
 			}
-			if err := db.updateExpectedTests(tx, v); err != nil {
+			if err := updateExpectedTests(tx, v); err != nil {
 				return err // will rollback transaction
 			}
 
@@ -153,7 +154,7 @@ func check(tx *gorm.DB, assignment *qf.Assignment) error {
 	return nil
 }
 
-func (db *GormDB) updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
+func updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
 	if len(assignment.GetExpectedTests()) > 0 {
 		var expectedTests []*qf.TestInfo
 		err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{

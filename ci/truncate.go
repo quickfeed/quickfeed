@@ -14,9 +14,9 @@ const truncateMsg = `
 `
 
 // truncateLog returns the log output truncated at the nearest line before the truncate point.
-// The returned log includes score lines found in the middle segment unless the middle segment's size exceeds max.
-// The returned log also includes the last segment of size given by last.
-func truncateLog(stdout *bytes.Buffer, truncate, last, max int) string {
+// The returned log includes score lines found in the middle segment unless the middle segment's
+// size exceeds maxLen. The returned log also includes the last segment of size given by last.
+func truncateLog(stdout *bytes.Buffer, truncate, last, maxLen int) string {
 	// converting to string here;
 	// could be done more efficiently using stdout.Truncate(maxLogSize)
 	// but then we wouldn't get the last part
@@ -32,7 +32,7 @@ func truncateLog(stdout *bytes.Buffer, truncate, last, max int) string {
 	// score lines will normally replace this string, unless too much output
 	scoreLines := "too much output data to scan (skipping; fix your code)"
 	// scan middle segment for score lines only if middle segment is less than max
-	if len(middleSegment) < max {
+	if len(middleSegment) < maxLen {
 		// find score lines in the middle segment that otherwise gets truncated
 		scoreLines = findScoreLines(middleSegment)
 	}

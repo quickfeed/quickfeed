@@ -144,7 +144,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Print success message, and redirect to main page
-		if err := m.success(w, config); err != nil {
+		if err := success(w, config); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			retErr = err
@@ -174,7 +174,7 @@ func (m *Manifest) createApp() http.HandlerFunc {
 	}
 }
 
-func (m *Manifest) success(w http.ResponseWriter, config *github.AppConfig) error {
+func success(w http.ResponseWriter, config *github.AppConfig) error {
 	const tpl = `<!DOCTYPE html>
 <html>
 <head>
