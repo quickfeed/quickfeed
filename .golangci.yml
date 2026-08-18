@@ -6,6 +6,7 @@ linters:
   # failing DeepSource checks can be reproduced and fixed locally with
   # `golangci-lint run` instead of discovering it on a pull request.
   enable:
+    - predeclared
     - errorlint
     - gocritic
     - gocyclo
@@ -44,11 +45,13 @@ linters:
     gocritic:
       enabled-checks:
         - httpNoBody
+        - paramTypeCombine
 
     revive:
       rules:
         - name: unused-parameter
         - name: indent-error-flow
+        - name: unused-receiver
 
   exclusions:
     paths:

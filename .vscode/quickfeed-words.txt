@@ -82,6 +82,7 @@ githubv
 GOBIN
 GOCACHE
 gocritic
+gocyclo
 Godkjenning
 Godkjent
 godox
@@ -186,6 +187,7 @@ paxos
 pbgo
 pgrep
 pkgs
+predeclared
 Preload
 privkey
 promgrpc
