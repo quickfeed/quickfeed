@@ -111,7 +111,7 @@ func generateKeys(opts Options) (caKey, serverKey any, err error) {
 	return
 }
 
-func certPeriod(opts Options) (notBefore time.Time, notAfter time.Time, err error) {
+func certPeriod(opts Options) (notBefore, notAfter time.Time, err error) {
 	if opts.ValidFrom.IsZero() {
 		notBefore = time.Now()
 	} else {
@@ -130,7 +130,7 @@ func certPeriod(opts Options) (notBefore time.Time, notAfter time.Time, err erro
 	return notBefore, notAfter, nil
 }
 
-func serverCertificateTemplate(privKey any, hostList string, notBefore time.Time, notAfter time.Time) (*x509.Certificate, error) {
+func serverCertificateTemplate(privKey any, hostList string, notBefore, notAfter time.Time) (*x509.Certificate, error) {
 	serialNumber, err := serialNumber()
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func serverCertificateTemplate(privKey any, hostList string, notBefore time.Time
 	return template, err
 }
 
-func caCertificateTemplate(hostList string, notBefore time.Time, notAfter time.Time) (*x509.Certificate, error) {
+func caCertificateTemplate(hostList string, notBefore, notAfter time.Time) (*x509.Certificate, error) {
 	serialNumber, err := serialNumber()
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func setHosts(template *x509.Certificate, hostList string) {
 	}
 }
 
-func makeCertificate(template, parent *x509.Certificate, publicKey any, privateKey any) (*x509.Certificate, []byte, error) {
+func makeCertificate(template, parent *x509.Certificate, publicKey, privateKey any) (*x509.Certificate, []byte, error) {
 	derCertBytes, err := x509.CreateCertificate(rand.Reader, template, parent, publicKey, privateKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create certificate: %w", err)
