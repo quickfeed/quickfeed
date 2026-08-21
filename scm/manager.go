@@ -59,7 +59,7 @@ func NewSCMConfig() (*Config, error) {
 	}
 	appConfig, err := app.NewConfig(appID, createAppKey)
 	if err != nil {
-		return nil, fmt.Errorf("creating GitHub application client: %w", err)
+		return nil, fmt.Errorf("creating GitHub App client: %w", err)
 	}
 	return &Config{
 		ClientID:     clientID,
@@ -92,7 +92,7 @@ func (s *Manager) GetOrCreateSCM(ctx context.Context, organization string) (SCM,
 	}
 	client, err := newSCMAppClient(ctx, s.Config, organization)
 	if err != nil {
-		return nil, fmt.Errorf("creating GitHub application for %s: %w", organization, err)
+		return nil, fmt.Errorf("creating GitHub App client for %s: %w", organization, err)
 	}
 	s.mu.Lock()
 	s.scms[organization] = client

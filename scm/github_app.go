@@ -122,7 +122,7 @@ func (cfg *Config) fetchInstallation(organization string) (*github.Installation,
 	const installationURL = "https://api.github.com/app/installations"
 	resp, err := cfg.Client().Get(installationURL)
 	if err != nil {
-		return nil, fmt.Errorf("fetching GitHub app installation for organization %s: %w", organization, err)
+		return nil, fmt.Errorf("fetching GitHub App installation for organization %s: %w", organization, err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
@@ -138,7 +138,7 @@ func (cfg *Config) fetchInstallation(organization string) (*github.Installation,
 			return inst, nil
 		}
 	}
-	return nil, fmt.Errorf("no GitHub app installation for organization %s", organization)
+	return nil, fmt.Errorf("no GitHub App installation for organization %s", organization)
 }
 
 type ExchangeToken struct {
