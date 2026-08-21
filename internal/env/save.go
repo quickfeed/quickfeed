@@ -11,7 +11,7 @@ import (
 //
 // If the env file does not exist, a MissingError returned.
 // QuickFeed requires the env file to load (some) existing environment variables,
-// even when creating a new GitHub app, and overwriting some environment variables.
+// even when creating a new GitHub App, and overwriting some environment variables.
 // If the backup file exists, an ExistsError is returned.
 // This is to avoid that QuickFeed overwrites an existing backup file.
 func Prepared(filename string) error {

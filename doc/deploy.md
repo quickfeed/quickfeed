@@ -75,7 +75,7 @@ The [installation process](#installation) will populate the environment variable
 Below is an example production deployment on the `example.com` domain.
 
 ```shell
-# The URL for the installed QuickFeed GitHub app.
+# The URL for the installed QuickFeed GitHub App.
 QUICKFEED_APP_URL=""
 # GitHub App IDs and secrets for deployment
 QUICKFEED_APP_ID=""
@@ -201,10 +201,10 @@ After that it will be possible to receive webhook events on QuickFeed server run
 
 1. Start ngrok: `ngrok http 443` - assuming the server runs on port `:443`.
 2. ngrok will generate a new endpoint URL.
-   Copy the urls an update webhook callback information in your GitHub app to point to this URL.
+   Copy the urls an update webhook callback information in your GitHub App to point to this URL.
    E.g., `https://de08-2a01-799-4df-d900-b5af-5adc-a42a-bcf.eu.ngrok.io/hook/`.
 
-After that any webhook events your GitHub app is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
+After that any webhook events your GitHub App is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
 
 Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
 

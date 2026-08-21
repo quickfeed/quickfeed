@@ -126,7 +126,7 @@ Application errors can be classified into several groups and handled in differen
 - Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 
   **Examples**:
-  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization.
+  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub App on the organization.
   As a result, the requested organization cannot be seen by QuickFeed.
   - If a GitHub repository cannot be found, they could have been manually deleted from GitHub.
   Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.

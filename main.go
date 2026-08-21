@@ -101,7 +101,7 @@ func main() {
 	log.Println("QuickFeed shut down gracefully")
 }
 
-// runAppCreation runs the GitHub app creation flow after checking prerequisites.
+// runAppCreation runs the GitHub App creation flow after checking prerequisites.
 func runAppCreation(envFile string, dev bool, srvFn web.ServerType) error {
 	if err := checkDomain(); err != nil {
 		return err
@@ -182,7 +182,7 @@ func (q *quickfeed) cleanup() {
 func checkDomain() error {
 	if env.IsDomainLocal() {
 		msg := `
-WARNING: You are creating a GitHub app on a local or private domain: %q.
+WARNING: You are creating a GitHub App on a local or private domain: %q.
 This is only for development purposes.
 In this mode, QuickFeed will not be able to receive webhook events from GitHub.
 To receive webhook events, you must run QuickFeed on a public domain or use a tunneling service like ngrok.
