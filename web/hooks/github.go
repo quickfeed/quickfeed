@@ -19,8 +19,15 @@ import (
 // maxConcurrentTestRuns is the maximum number of concurrent test runs.
 const maxConcurrentTestRuns = 5
 
-// webhookTimeout bounds the handling of a single push event, which clones the
-// repository and runs the assignment's tests in a container.
+// webhookTimeout bounds the handling of a single push event. The timeout is activated
+// after acquiring the semaphore, so that time spent queueing behind other test runs
+// does not count against the handling of a particular push event. The timeout must be
+// long enough to allow for the slowest handler. Currently, there are two main cases:
+// (1) cloning the repository plus one container run per assignment, and (2) a push to
+// the assignments repository causing a fork sync to every student repository in the course.
+//
+// This timeout is unrelated to the HTTP request timeout for the webhook POST request,
+// since the webhook handler responds to GitHub as soon as it has queued the event.
 const webhookTimeout = 30 * time.Minute
 
 const (
@@ -135,7 +142,7 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 				wh.handleInstallationDeleted(ctx, e)
 			default:
 				// either "suspend", "unsuspend", "new_permissions_accepted"
-				wh.logger.Debug("Ignored installation event action", "action", e.GetAction())
+				logger.Debug("ignored installation event action", "action", e.GetAction())
 			}
 
 		default:

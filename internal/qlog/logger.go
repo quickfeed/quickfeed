@@ -30,10 +30,15 @@ func New(w io.Writer) *slog.Logger {
 			// root, such as those from the standard library or the module
 			// cache, or when the paths recorded by the compiler differ from
 			// root; a relative path would then be a walk-up, not a shorthand.
-			if path, err := filepath.Rel(root, source.File); err == nil && !strings.HasPrefix(path, "..") {
-				source.File = path
+			path, err := filepath.Rel(root, source.File)
+			if err != nil || strings.HasPrefix(path, "..") {
+				return attr
 			}
-			return slog.Any(slog.SourceKey, source)
+			return slog.Any(slog.SourceKey, &slog.Source{
+				Function: source.Function,
+				File:     path,
+				Line:     source.Line,
+			})
 		},
 	})
 	return slog.New(handler)

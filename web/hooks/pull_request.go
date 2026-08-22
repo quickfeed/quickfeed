@@ -101,7 +101,8 @@ func (wh GitHubWebHook) getPullRequest(payload *github.PushEvent) (*qf.PullReque
 }
 
 func (wh GitHubWebHook) handlePullRequestReview(ctx context.Context, payload *github.PullRequestReviewEvent) {
-	_, logger := qlog.WithLogger(ctx,
+	_, logger := qlog.WithLogger(
+		ctx,
 		label.Repository, payload.GetRepo().GetName(),
 		label.PullRequest, payload.GetPullRequest().GetNumber(),
 		label.User, payload.GetSender().GetLogin(),
@@ -157,7 +158,8 @@ func (wh GitHubWebHook) handlePullRequestReview(ctx context.Context, payload *gi
 }
 
 func (wh GitHubWebHook) handlePullRequestOpened(ctx context.Context, payload *github.PullRequestEvent) {
-	ctx, logger := qlog.WithLogger(ctx,
+	ctx, logger := qlog.WithLogger(
+		ctx,
 		label.Repository, payload.GetRepo().GetName(),
 		label.PullRequest, payload.GetPullRequest().GetNumber(),
 		label.User, payload.GetSender().GetLogin(),
@@ -169,15 +171,17 @@ func (wh GitHubWebHook) handlePullRequestOpened(ctx context.Context, payload *gi
 		logger.Error("failed to get pull request repository", label.Error, err)
 		return
 	}
-	course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID())
-	if err != nil {
-		logger.Error("failed to get pull request course", label.Error, err)
-		return
-	}
-	ctx, logger = qlog.WithLogger(ctx, label.CourseID, course.GetID(), label.CourseCode, course.GetCode(), label.RepositoryType, repo.GetRepoType().String())
+	ctx, logger = qlog.WithLogger(ctx, label.RepositoryType, repo.GetRepoType().String())
 	if !repo.IsGroupRepo() {
 		logger.Debug("ignoring pull request for non-group repository")
 		return
+	}
+	// Add course scope to the logger only if the event is known to be relevant;
+	// a missing course should not abort the handler.
+	if course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID()); err == nil {
+		ctx, logger = qlog.WithLogger(ctx, label.CourseID, course.GetID(), label.CourseCode, course.GetCode())
+	} else {
+		logger.Debug("pull request course not found", label.Error, err)
 	}
 	issue, err := findIssue(payload.GetPullRequest().GetBody(), repo.GetIssues())
 	if err != nil {
@@ -188,27 +192,25 @@ func (wh GitHubWebHook) handlePullRequestOpened(ctx context.Context, payload *gi
 }
 
 func (wh GitHubWebHook) handlePullRequestClosed(ctx context.Context, payload *github.PullRequestEvent) {
-	_, logger := qlog.WithLogger(ctx,
+	_, logger := qlog.WithLogger(
+		ctx,
 		label.Repository, payload.GetRepo().GetName(),
 		label.PullRequest, payload.GetPullRequest().GetNumber(),
 		label.User, payload.GetSender().GetLogin(),
 	)
 	logger.Debug("received pull request closed event")
-	repo, err := wh.getRepository(payload.GetRepo().GetID())
-	if err != nil {
-		logger.Error("failed to get pull request repository", label.Error, err)
-		return
-	}
-	course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID())
-	if err != nil {
-		logger.Error("failed to get pull request course", label.Error, err)
-		return
-	}
-	logger = logger.With(label.CourseID, course.GetID(), label.CourseCode, course.GetCode(), label.RepositoryType, repo.GetRepoType().String())
 
 	if !payload.PullRequest.GetMerged() {
 		logger.Debug("ignoring unmerged pull request")
 		return
+	}
+	// Add repository and course scope to logger; a repository or course unknown to QuickFeed
+	// need not abort the handler, since the pull request lookup below reports that case.
+	if repo, err := wh.getRepository(payload.GetRepo().GetID()); err == nil {
+		logger = logger.With(label.RepositoryType, repo.GetRepoType().String())
+		if course, err := wh.db.GetCourseByOrganizationID(repo.GetScmOrganizationID()); err == nil {
+			logger = logger.With(label.CourseID, course.GetID(), label.CourseCode, course.GetCode())
+		}
 	}
 
 	pullRequest, err := wh.db.GetPullRequest(&qf.PullRequest{

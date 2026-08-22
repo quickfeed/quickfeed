@@ -13,6 +13,10 @@ import (
 const (
 	// maxSyncRetries is the maximum number of retries for rate-limited requests.
 	maxSyncRetries = 3
+	// studentRepositoryLabel is the attribute for the student repository being synchronized.
+	// This is to avoid duplicate label.Repository entries, since the originating push event is
+	// already scoped to the assignments repository under label.Repository.
+	studentRepositoryLabel = "student_repository"
 )
 
 // syncStudentRepos syncs all student repositories (forks of assignments repo) with the upstream
@@ -49,7 +53,7 @@ func (wh GitHubWebHook) syncStudentRepos(ctx context.Context, scmClient scm.SCM,
 		})
 		if err != nil {
 			errCnt++
-			logger.Warn("failed to synchronize repository", label.Repository, repo.Name(), label.Error, err)
+			logger.Warn("failed to synchronize repository", studentRepositoryLabel, repo.Name(), label.Error, err)
 		}
 	}
 

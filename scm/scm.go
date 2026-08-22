@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -88,7 +87,9 @@ func newSCMAppClient(ctx context.Context, config *Config, organization string) (
 	case "github":
 		return newGithubAppClient(ctx, config, organization)
 	case "fake":
-		return NewMockedGithubSCMClient(qlog.FromContext(ctx), WithMockOrgs()), nil
+		// The mocked client is cached for the SCM manager's lifetime, so it should not
+		// use the request-scoped logger from ctx; use the default process logger.
+		return NewMockedGithubSCMClient(slog.Default(), WithMockOrgs()), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
