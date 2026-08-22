@@ -36,7 +36,7 @@ func NewHandler(store *Store) slog.Handler {
 }
 
 func (h *handler) Enabled(_ context.Context, level slog.Level) bool {
-	return level >= slog.LevelDebug
+	return h.inner != nil && level >= slog.LevelDebug
 }
 
 func (h *handler) Handle(ctx context.Context, r slog.Record) error {
