@@ -13,34 +13,34 @@ import (
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
 func (s *QuickFeedService) editUserProfile(ctx context.Context, curUser, request *qf.User) error {
-	updateUser, err := s.db.GetUser(request.GetID())
+	targetUser, err := s.db.GetUser(request.GetID())
 	if err != nil {
 		return err
 	}
 
 	if request.GetName() != "" {
-		updateUser.Name = request.GetName()
+		targetUser.Name = request.GetName()
 	}
 	if request.GetStudentID() != "" {
-		updateUser.StudentID = request.GetStudentID()
+		targetUser.StudentID = request.GetStudentID()
 	}
 	if request.GetEmail() != "" {
-		updateUser.Email = request.GetEmail()
+		targetUser.Email = request.GetEmail()
 	}
 	if request.GetAvatarURL() != "" {
-		updateUser.AvatarURL = request.GetAvatarURL()
+		targetUser.AvatarURL = request.GetAvatarURL()
 	}
 
 	// log every change to admin state
-	if updateUser.GetIsAdmin() != request.GetIsAdmin() {
-		qlog.FromContext(ctx).Debug("changing administrator status", label.User, curUser.GetLogin(), label.TargetUser, updateUser.GetLogin(), "is_admin", request.GetIsAdmin())
+	if targetUser.GetIsAdmin() != request.GetIsAdmin() {
+		qlog.FromContext(ctx).Debug("changing administrator status", label.User, curUser.GetLogin(), label.TargetUser, targetUser.GetLogin(), "is_admin", request.GetIsAdmin())
 	}
 	// current user must be admin to change admin status of another user
 	// admin status of super admin (user with ID 1) cannot be changed
 	if curUser.GetIsAdmin() && request.GetID() > 1 {
-		updateUser.IsAdmin = request.GetIsAdmin()
+		targetUser.IsAdmin = request.GetIsAdmin()
 	}
-	return s.db.UpdateUser(updateUser)
+	return s.db.UpdateUser(targetUser)
 }
 
 // updateUserFromSCM fetches the latest user info from the SCM and updates the local user
