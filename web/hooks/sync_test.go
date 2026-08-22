@@ -1,13 +1,18 @@
 package hooks
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
+	"strings"
 	"sync"
 	"testing"
 	"testing/synctest"
 
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -137,4 +142,52 @@ func TestSyncStudentReposWithErrors(t *testing.T) {
 			t.Errorf("expected 2 sync calls, got %d", len(scmClient.syncCalls))
 		}
 	})
+}
+
+// TestSyncStudentReposNoDuplicateScope guards syncStudentRepos against repeating
+// an attribute that the push event's scope already carries. handlePush scopes the
+// context to the assignments repository before calling syncStudentRepos, and slog
+// keeps duplicate keys, so a repeated attribute shows up twice in one record.
+func TestSyncStudentReposNoDuplicateScope(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	var output bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	wh := NewGitHubWebHook(logger, db, nil, &ci.Local{}, "secret", stream.NewStreamServices(), nil)
+	admin := qtest.CreateFakeUser(t, db)
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+
+	repo := &qf.Repository{
+		ScmOrganizationID: course.GetScmOrganizationID(),
+		ScmRepositoryID:   1,
+		UserID:            admin.ID,
+		HTMLURL:           "https://github.com/org/user1-labs",
+		RepoType:          qf.Repository_USER,
+	}
+	if err := db.CreateRepository(repo); err != nil {
+		t.Fatal(err)
+	}
+
+	// The scope handlePush establishes for a push to the assignments repository.
+	ctx := qlog.With(qlog.NewContext(t.Context(), logger),
+		label.Repository, qf.AssignmentsRepo,
+		label.RepositoryType, qf.Repository_ASSIGNMENTS.String(),
+	)
+	// A failing sync exercises the per-repository record, which is the one that
+	// names a repository other than the one the enclosing scope carries.
+	wh.syncStudentRepos(ctx, &mockSCM{errs: []error{errors.New("sync failed")}}, course, "master")
+
+	scopedKeys := []string{label.Repository, label.RepositoryType, label.CourseCode, label.CourseID}
+	for record := range strings.SplitSeq(strings.TrimSpace(output.String()), "\n") {
+		if record == "" {
+			continue
+		}
+		for _, key := range scopedKeys {
+			if count := strings.Count(record, `"`+key+`":`); count > 1 {
+				t.Errorf("log record repeats %q %d times, want at most once: %s", key, count, record)
+			}
+		}
+	}
 }

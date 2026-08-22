@@ -27,19 +27,13 @@ const MaxWait = 15 * time.Minute
 // caller for an extended period, since it may involve cloning the tests repository,
 // scanning the repository for assignments, building the Docker image, updating the
 // database and synchronizing tasks to issues on the students' group repositories.
-// The ctx is expected to carry a logger scoped to the course; see qlog.WithLogger.
+// The ctx is expected to carry a logger scoped with the course and the tests
+// repository, so that the statements below do not repeat those attributes.
 func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
 	unlock := course.Lock()
 	defer unlock()
 
-	// Scope every record below to the tests repository, so that the individual
-	// statements do not repeat these attributes. The caller is expected to have
-	// scoped the context to the course already.
-	ctx, logger := qlog.WithLogger(
-		ctx,
-		label.Repository, qf.TestsRepo,
-		label.RepositoryType, qf.Repository_TESTS.String(),
-	)
+	logger := qlog.FromContext(ctx)
 	logger.Debug("updating from tests repository")
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
@@ -83,7 +77,7 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		logger.Error("failed to update assignments in database", label.Error, err)
 		return
 	}
-	logger.Debug("updated from tests repository")
+	logger.Debug("assignments successfully updated from tests repository")
 
 	if err = synchronizeTasksWithIssues(ctx, db, sc, course, assignments); err != nil {
 		logger.Error("failed to synchronize assignment tasks", label.Error, err)

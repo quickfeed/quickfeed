@@ -494,16 +494,19 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	// Scope the remainder of the method to the course; UpdateFromTestsRepo and
-	// the clone below add only their own repository scope on top of this.
+	// Scope the logger to the course
 	ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode(), label.Organization, course.GetScmOrganizationName())
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
 		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	assignments.UpdateFromTestsRepo(ctx, s.runner, s.db, scmClient, course)
+	// Scope the logger with the tests repository separately, so that it does not
+	// carry over to the assignments repository scope below.
+	testsCtx := qlog.With(ctx, label.Repository, qf.TestsRepo, label.RepositoryType, qf.Repository_TESTS.String())
+	assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
 
+	// Scope the remaining log calls with the assignments repository
 	ctx, logger = qlog.WithLogger(ctx, label.Repository, qf.AssignmentsRepo, label.RepositoryType, qf.Repository_ASSIGNMENTS.String())
 	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetScmOrganizationName(),

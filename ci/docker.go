@@ -206,7 +206,7 @@ func (d *Docker) waitForContainer(ctx context.Context, respID string) (string, e
 	select {
 	case err := <-wait.Error:
 		if err != nil {
-			logger.Error("failed to stop container", label.Error, err)
+			logger.Error("failed while waiting for container", label.Error, err)
 			if !errors.Is(err, context.DeadlineExceeded) {
 				return "", err
 			}
