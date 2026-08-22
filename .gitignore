@@ -7,6 +7,7 @@ public/dist/bundle.js*
 public/dist/bundle.js.map
 quickfeed
 backups
+logs
 scratchpad
 proto-include
 bin
@@ -15,6 +16,8 @@ bin
 cyclone.sh
 start.sh
 update.sh
+update-and-rotate.sh
+backup.sh
 quickfeed-env.sh
 .env*
 !.env-template
@@ -41,6 +44,4 @@ TODO*
 dat320-original.xlsx
 dat320-approve-list.xlsx
 patch/go.pb.go
-oldbackups/*
-backup.sh
 go.work.sum

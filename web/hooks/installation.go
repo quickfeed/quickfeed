@@ -37,9 +37,11 @@ func (wh GitHubWebHook) handleInstallationCreated(ctx context.Context, event *gi
 		Year:                defaultYear(now),
 	}
 
+	// Scope the logger with the course's organization and user, since
+	// the course does not exist yet; we use qlog.WithCourse below to
+	// add the course code and ID.
 	ctx, logger = qlog.WithLogger(
 		ctx,
-		label.CourseCode, course.GetCode(),
 		label.Organization, orgName,
 		label.User, courseCreator.GetLogin(),
 	)
