@@ -1,12 +1,6 @@
 package qf
 
-import (
-	"log/slog"
-	"time"
-
-	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
-	"google.golang.org/protobuf/types/known/timestamppb"
-)
+import "time"
 
 const (
 	defaultCourseLogInterval = 24 * time.Hour
@@ -40,50 +34,4 @@ func (req *CourseLogRequest) EffectiveLimit() int {
 	default:
 		return int(requested)
 	}
-}
-
-// SlogLevel converts level to its slog.Level equivalent.
-func (level CourseLogEntry_Level) SlogLevel() slog.Level {
-	switch level {
-	case CourseLogEntry_INFO:
-		return slog.LevelInfo
-	case CourseLogEntry_WARN:
-		return slog.LevelWarn
-	case CourseLogEntry_ERROR:
-		return slog.LevelError
-	default: // CourseLogEntry_DEBUG
-		return slog.LevelDebug
-	}
-}
-
-// CourseLogLevelFromSlog converts level to the coarser CourseLogEntry_Level.
-func CourseLogLevelFromSlog(level slog.Level) CourseLogEntry_Level {
-	switch {
-	case level >= slog.LevelError:
-		return CourseLogEntry_ERROR
-	case level >= slog.LevelWarn:
-		return CourseLogEntry_WARN
-	case level >= slog.LevelInfo:
-		return CourseLogEntry_INFO
-	default:
-		return CourseLogEntry_DEBUG
-	}
-}
-
-// CourseLogEntriesFrom converts entries, in order, to their proto representation.
-func CourseLogEntriesFrom(entries []courselog.Entry) []*CourseLogEntry {
-	out := make([]*CourseLogEntry, len(entries))
-	for i, e := range entries {
-		out[i] = &CourseLogEntry{
-			Time:           timestamppb.New(e.Time),
-			Level:          CourseLogLevelFromSlog(e.Level),
-			Message:        e.Message,
-			Source:         e.Source,
-			Repository:     e.Repository,
-			RepositoryType: e.RepositoryType,
-			Fields:         e.Fields,
-			Truncated:      e.Truncated,
-		}
-	}
-	return out
 }

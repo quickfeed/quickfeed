@@ -6,7 +6,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -28,21 +27,14 @@ func (s *QuickFeedService) GetCourseLog(ctx context.Context, in *qf.CourseLogReq
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 
-	from, to := in.Interval()
-	entries, repositories, truncated, err := s.courseLogs.Query(course.GetScmOrganizationName(), courselog.Query{
-		From:       from,
-		To:         to,
-		Repository: in.GetRepository(),
-		Level:      in.GetLevel().SlogLevel(),
-		Limit:      in.EffectiveLimit(),
-	})
+	entries, repositories, truncated, err := s.courseLogs.Query(course.GetScmOrganizationName(), in)
 	if err != nil {
 		logger.Error("failed to read course log", label.Error, err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("reading course log"))
 	}
 
 	return &qf.CourseLog{
-		Entries:      qf.CourseLogEntriesFrom(entries),
+		Entries:      entries,
 		Repositories: repositories,
 		Truncated:    truncated,
 	}, nil

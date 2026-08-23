@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
+	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // writeEntry logs one record directly through the Handler, bypassing
@@ -31,12 +33,32 @@ func writeEntry(t *testing.T, store *Store, org string, at time.Time, level slog
 	}
 }
 
+// req builds a CourseLogRequest for Query, with From/To always given so
+// Interval's defaulting never kicks in.
+func req(from, to time.Time, opts ...func(*qf.CourseLogRequest)) *qf.CourseLogRequest {
+	r := &qf.CourseLogRequest{From: timestamppb.New(from), To: timestamppb.New(to), Limit: 100}
+	for _, opt := range opts {
+		opt(r)
+	}
+	return r
+}
+
+func withLimit(limit uint32) func(*qf.CourseLogRequest) {
+	return func(r *qf.CourseLogRequest) { r.Limit = limit }
+}
+
+func withLevel(level qf.CourseLogEntry_Level) func(*qf.CourseLogRequest) {
+	return func(r *qf.CourseLogRequest) { r.Level = level }
+}
+
+func withRepository(repository string) func(*qf.CourseLogRequest) {
+	return func(r *qf.CourseLogRequest) { r.Repository = repository }
+}
+
 func TestQueryEmptyLog(t *testing.T) {
 	store, _ := newTestStore(t)
 	now := time.Now().UTC()
-	entries, repos, truncated, err := store.Query("never-logged", Query{
-		From: now.Add(-time.Hour), To: now, Limit: 100,
-	})
+	entries, repos, truncated, err := store.Query("never-logged", req(now.Add(-time.Hour), now))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -52,9 +74,7 @@ func TestQueryFiltersByTime(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", base.Add(-2*time.Hour), slog.LevelInfo, "before range")
 	writeEntry(t, store, "dat520-2026", base.Add(2*time.Hour), slog.LevelInfo, "after range")
 
-	entries, _, _, err := store.Query("dat520-2026", Query{
-		From: base.Add(-time.Minute), To: base.Add(time.Minute), Limit: 100,
-	})
+	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Minute), base.Add(time.Minute)))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -69,9 +89,7 @@ func TestQueryFiltersByLevel(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", base, slog.LevelDebug, "debug record")
 	writeEntry(t, store, "dat520-2026", base.Add(time.Minute), slog.LevelError, "error record")
 
-	entries, _, _, err := store.Query("dat520-2026", Query{
-		From: base.Add(-time.Hour), To: base.Add(time.Hour), Level: slog.LevelWarn, Limit: 100,
-	})
+	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withLevel(qf.CourseLogEntry_WARN)))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -90,9 +108,7 @@ func TestQueryRepositoryFilterKeepsFullRepositoryList(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", base, slog.LevelInfo, "repo a", slog.String(label.Repository, "repo-a"))
 	writeEntry(t, store, "dat520-2026", base.Add(time.Minute), slog.LevelInfo, "repo b", slog.String(label.Repository, "repo-b"))
 
-	entries, repos, _, err := store.Query("dat520-2026", Query{
-		From: base.Add(-time.Hour), To: base.Add(time.Hour), Repository: "repo-a", Limit: 100,
-	})
+	entries, repos, _, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withRepository("repo-a")))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -112,9 +128,7 @@ func TestQueryLimitKeepsNewestInChronologicalOrder(t *testing.T) {
 		writeEntry(t, store, "dat520-2026", base.Add(time.Duration(i)*time.Minute), slog.LevelInfo, "record")
 	}
 
-	entries, _, truncated, err := store.Query("dat520-2026", Query{
-		From: base.Add(-time.Hour), To: base.Add(time.Hour), Limit: 3,
-	})
+	entries, _, truncated, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withLimit(3)))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -125,8 +139,8 @@ func TestQueryLimitKeepsNewestInChronologicalOrder(t *testing.T) {
 		t.Fatalf("len(entries) = %d, want 3", len(entries))
 	}
 	for i, want := range []time.Time{base.Add(2 * time.Minute), base.Add(3 * time.Minute), base.Add(4 * time.Minute)} {
-		if !entries[i].Time.Equal(want) {
-			t.Errorf("entries[%d].Time = %v, want %v (the newest 3, oldest first)", i, entries[i].Time, want)
+		if !entries[i].GetTime().AsTime().Equal(want) {
+			t.Errorf("entries[%d].Time = %v, want %v (the newest 3, oldest first)", i, entries[i].GetTime().AsTime(), want)
 		}
 	}
 }
@@ -148,9 +162,7 @@ func TestQueryIgnoresMalformedFinalLine(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	entries, _, _, err := store.Query("dat520-2026", Query{
-		From: base.Add(-time.Hour), To: base.Add(time.Hour), Limit: 100,
-	})
+	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour)))
 	if err != nil {
 		t.Fatalf("Query() error = %v, want the malformed final line ignored", err)
 	}
@@ -177,9 +189,7 @@ func TestQuerySurfacesMalformedNonFinalLine(t *testing.T) {
 	}
 	writeEntry(t, store, "dat520-2026", base.Add(time.Minute), slog.LevelInfo, "third record")
 
-	_, _, _, err = store.Query("dat520-2026", Query{
-		From: base.Add(-time.Hour), To: base.Add(time.Hour), Limit: 100,
-	})
+	_, _, _, err = store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour)))
 	if err == nil {
 		t.Fatal("Query() error = nil, want a failure for a malformed line that is not the file's last")
 	}
@@ -192,9 +202,7 @@ func TestQuerySpansMultipleDays(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", day1, slog.LevelInfo, "day one")
 	writeEntry(t, store, "dat520-2026", day2, slog.LevelInfo, "day two")
 
-	entries, _, _, err := store.Query("dat520-2026", Query{
-		From: day1.Add(-time.Hour), To: day2.Add(time.Hour), Limit: 100,
-	})
+	entries, _, _, err := store.Query("dat520-2026", req(day1.Add(-time.Hour), day2.Add(time.Hour)))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -215,7 +223,7 @@ func TestQueryClampsToClockAndRetention(t *testing.T) {
 
 	farFuture := time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
 	farPast := now.Add(-10 * Retention)
-	entries, _, _, err := store.Query("dat520-2026", Query{From: farPast, To: farFuture, Limit: 100})
+	entries, _, _, err := store.Query("dat520-2026", req(farPast, farFuture))
 	if err != nil {
 		t.Fatalf("Query() error = %v, want the far-future/far-past interval clamped rather than walked in full", err)
 	}
@@ -234,9 +242,7 @@ func TestQueryEmptyWhenIntervalInvertedAfterClamp(t *testing.T) {
 	store.now = func() time.Time { return now }
 
 	farFuture := time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
-	entries, repos, truncated, err := store.Query("dat520-2026", Query{
-		From: now.Add(time.Minute), To: farFuture, Limit: 100,
-	})
+	entries, repos, truncated, err := store.Query("dat520-2026", req(now.Add(time.Minute), farFuture))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -266,9 +272,7 @@ func TestQueryFromClampedToRetainedFileBoundary(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", oldestKept.Add(time.Minute), slog.LevelInfo, "retained")
 	store.now = func() time.Time { return now } // writeEntry moved the clock; restore it for Query
 
-	entries, _, _, err := store.Query("dat520-2026", Query{
-		From: now.Add(-2 * Retention), To: now, Limit: 100,
-	})
+	entries, _, _, err := store.Query("dat520-2026", req(now.Add(-2*Retention), now))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
@@ -288,7 +292,7 @@ func TestQueryDecodesDedicatedAndGenericAttributes(t *testing.T) {
 		slog.Uint64(label.SubmissionID, 7),
 	)
 
-	entries, _, _, err := store.Query("dat520-2026", Query{From: base.Add(-time.Minute), To: base.Add(time.Minute), Limit: 10})
+	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Minute), base.Add(time.Minute), withLimit(10)))
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}

@@ -11,61 +11,44 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
+	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Entry is one decoded course log record. Fields holds every attribute not
-// already promoted to a dedicated field, keyed by its label, with values
-// stringified as their JSON text (so a number reads as "42", a string
-// unquoted, and anything else as compact JSON).
-type Entry struct {
-	Time           time.Time
-	Level          slog.Level
-	Message        string
-	Source         string // repository-relative file:line
-	Repository     string
-	RepositoryType string
-	Truncated      bool
-	Fields         map[string]string
-}
-
-// Query selects entries from a course's log.
-type Query struct {
-	From, To   time.Time
-	Repository string // exact match; zero value selects every repository
-	Level      slog.Level
-	Limit      int // must be positive; the caller is responsible for defaults and maximums
-}
-
-// Query returns org's entries matching q in chronological order, every
-// repository with an entry timestamped within [q.From, q.To] regardless of
-// q.Repository or q.Level (so a repository filter never removes its own
-// options), and whether the match count exceeded q.Limit.
+// Query returns org's entries matching req in chronological order, every
+// repository with an entry timestamped within req's resolved interval
+// regardless of req's repository or level filter (so a repository filter
+// never removes its own options), and whether the match count exceeded req's
+// resolved limit.
 //
-// q.To is clamped to now, and q.From to oldestRetainedDate. An interval left
-// inverted after clamping returns an empty result.
+// req's interval and limit default and clamp the same way GetCourseLog
+// documents: To is clamped to now and From to oldestRetainedDate. An interval
+// left inverted after clamping returns an empty result.
 //
 // A malformed final line, characteristic of a partial write, is ignored; any
 // other read failure is returned. A course with no activity in range, or no
 // log at all, returns an empty result rather than an error.
-func (s *Store) Query(org string, q Query) ([]Entry, []string, bool, error) {
+func (s *Store) Query(org string, req *qf.CourseLogRequest) ([]*qf.CourseLogEntry, []string, bool, error) {
 	now := s.now()
-	if q.To.After(now) {
-		q.To = now
+	from, to := req.Interval()
+	if to.After(now) {
+		to = now
 	}
-	if cutoff := oldestRetainedDate(now); q.From.Before(cutoff) {
-		q.From = cutoff
+	if cutoff := oldestRetainedDate(now); from.Before(cutoff) {
+		from = cutoff
 	}
-	if q.From.After(q.To) {
+	if from.After(to) {
 		return nil, nil, false, nil
 	}
 
 	dir := filepath.Join(s.dir, sanitize(org))
-	ring := newEntryRing(q.Limit)
+	ring := newEntryRing(req.EffectiveLimit())
 	repos := make(map[string]bool)
+	repository, level := req.GetRepository(), req.GetLevel()
 
-	for _, date := range datesBetween(q.From, q.To) {
+	for _, date := range datesBetween(from, to) {
 		path := filepath.Join(dir, date+".jsonl")
-		if err := scanFile(path, q, ring, repos); err != nil {
+		if err := scanFile(path, from, to, repository, level, ring, repos); err != nil {
 			return nil, nil, false, fmt.Errorf("reading course log %s: %w", path, err)
 		}
 	}
@@ -102,10 +85,11 @@ func datesBetween(from, to time.Time) []string {
 	return dates
 }
 
-// scanFile decodes path line by line, adding matching entries to ring and
-// every in-range repository to repos. A missing file means the course had no
-// activity that day, not a failure.
-func scanFile(path string, q Query, ring *entryRing, repos map[string]bool) error {
+// scanFile decodes path line by line, adding entries matching [from, to],
+// repository, and level to ring, and every repository with an entry
+// timestamped within [from, to] to repos. A missing file means the course had
+// no activity that day, not a failure.
+func scanFile(path string, from, to time.Time, repository string, level qf.CourseLogEntry_Level, ring *entryRing, repos map[string]bool) error {
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -137,24 +121,25 @@ func scanFile(path string, q Query, ring *entryRing, repos map[string]bool) erro
 			}
 			return err
 		}
-		if entry.Repository != "" && !entry.Time.Before(q.From) && !entry.Time.After(q.To) {
-			repos[entry.Repository] = true
+		t := entry.GetTime().AsTime()
+		if entry.GetRepository() != "" && !t.Before(from) && !t.After(to) {
+			repos[entry.GetRepository()] = true
 		}
-		if matches(entry, q) {
+		if matches(entry, from, to, repository, level) {
 			ring.add(entry)
 		}
 	}
 	return nil
 }
 
-func matches(e Entry, q Query) bool {
-	if e.Time.Before(q.From) || e.Time.After(q.To) {
+func matches(e *qf.CourseLogEntry, from, to time.Time, repository string, level qf.CourseLogEntry_Level) bool {
+	if t := e.GetTime().AsTime(); t.Before(from) || t.After(to) {
 		return false
 	}
-	if e.Level < q.Level {
+	if e.GetLevel() < level {
 		return false
 	}
-	if q.Repository != "" && e.Repository != q.Repository {
+	if repository != "" && e.GetRepository() != repository {
 		return false
 	}
 	return true
@@ -162,20 +147,21 @@ func matches(e Entry, q Query) bool {
 
 // decodeEntry parses one JSONL record written by Handler. slog.JSONHandler's
 // standard keys (time, level, msg, source) and the labels Handler promotes to
-// dedicated Entry fields are recognized by name; everything else becomes a
-// Fields entry.
-func decodeEntry(line string) (Entry, error) {
+// dedicated CourseLogEntry fields are recognized by name; everything else
+// becomes a Fields entry.
+func decodeEntry(line string) (*qf.CourseLogEntry, error) {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal([]byte(line), &raw); err != nil {
-		return Entry{}, err
+		return nil, err
 	}
 
-	entry := Entry{Fields: make(map[string]string, len(raw))}
+	entry := &qf.CourseLogEntry{Fields: make(map[string]string, len(raw))}
+	var t time.Time
 	for key, value := range raw {
 		var err error
 		switch key {
 		case slog.TimeKey:
-			err = json.Unmarshal(value, &entry.Time)
+			err = json.Unmarshal(value, &t)
 		case slog.LevelKey:
 			var level string
 			if err = json.Unmarshal(value, &level); err == nil {
@@ -197,9 +183,10 @@ func decodeEntry(line string) (Entry, error) {
 			entry.Fields[key] = stringify(value)
 		}
 		if err != nil {
-			return Entry{}, fmt.Errorf("decoding %q: %w", key, err)
+			return nil, fmt.Errorf("decoding %q: %w", key, err)
 		}
 	}
+	entry.Time = timestamppb.New(t)
 	return entry, nil
 }
 
@@ -217,20 +204,22 @@ func decodeSource(raw json.RawMessage) (string, error) {
 	return fmt.Sprintf("%s:%d", source.File, source.Line), nil
 }
 
-func parseLevel(s string) slog.Level {
+// parseLevel maps the level text slog.JSONHandler writes to the coarser
+// CourseLogEntry_Level; anything unrecognized reads as INFO.
+func parseLevel(s string) qf.CourseLogEntry_Level {
 	switch s {
 	case "DEBUG":
-		return slog.LevelDebug
+		return qf.CourseLogEntry_DEBUG
 	case "WARN":
-		return slog.LevelWarn
+		return qf.CourseLogEntry_WARN
 	case "ERROR":
-		return slog.LevelError
+		return qf.CourseLogEntry_ERROR
 	default:
-		return slog.LevelInfo
+		return qf.CourseLogEntry_INFO
 	}
 }
 
-// stringify renders raw as the text an Entry.Fields value should carry: a
+// stringify renders raw as the text an entry's Fields value should carry: a
 // string value unquoted, anything else (numbers, booleans, objects) as its
 // compact JSON text.
 func stringify(raw json.RawMessage) string {
@@ -244,7 +233,7 @@ func stringify(raw json.RawMessage) string {
 // entryRing keeps the newest limit entries added to it, in the order added.
 type entryRing struct {
 	limit int
-	buf   []Entry
+	buf   []*qf.CourseLogEntry
 	start int
 	total int
 }
@@ -253,10 +242,10 @@ func newEntryRing(limit int) *entryRing {
 	if limit < 1 {
 		limit = 1
 	}
-	return &entryRing{limit: limit, buf: make([]Entry, 0, limit)}
+	return &entryRing{limit: limit, buf: make([]*qf.CourseLogEntry, 0, limit)}
 }
 
-func (r *entryRing) add(e Entry) {
+func (r *entryRing) add(e *qf.CourseLogEntry) {
 	r.total++
 	if len(r.buf) < r.limit {
 		r.buf = append(r.buf, e)
@@ -268,11 +257,11 @@ func (r *entryRing) add(e Entry) {
 
 // ordered returns the retained entries in chronological order, and whether
 // any entry was evicted to stay within limit.
-func (r *entryRing) ordered() ([]Entry, bool) {
+func (r *entryRing) ordered() ([]*qf.CourseLogEntry, bool) {
 	if r.total <= r.limit {
 		return r.buf, false
 	}
-	ordered := make([]Entry, 0, len(r.buf))
+	ordered := make([]*qf.CourseLogEntry, 0, len(r.buf))
 	ordered = append(ordered, r.buf[r.start:]...)
 	ordered = append(ordered, r.buf[:r.start]...)
 	return ordered, true
