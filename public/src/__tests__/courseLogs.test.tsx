@@ -19,7 +19,7 @@ const teacherState = {
     courses: MockData.mockedCourses(),
 }
 
-const entry = (overrides: Partial<{ message: string; level: CourseLogEntry_Level; repository: string; truncated: boolean }> = {}) =>
+const entry = (overrides: Partial<{ message: string; level: CourseLogEntry_Level; repository: string; truncated: boolean; source: string; fields: Record<string, string> }> = {}) =>
     create(CourseLogEntrySchema, {
         time: timestampFromDate(new Date(2026, 2, 10, 12, 0, 0)),
         level: CourseLogEntry_Level.INFO,
@@ -64,6 +64,32 @@ describe("CourseLogs", () => {
         // The repository selector lists every repository from the response.
         expect(screen.getByRole("option", { name: "student-a" })).toBeTruthy()
         expect(screen.getByRole("option", { name: "student-b" })).toBeTruthy()
+    })
+
+    test("renders the structured fields and source of an entry", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
+                message: create(CourseLogSchema, {
+                    entries: [entry({
+                        message: "test run failed",
+                        level: CourseLogEntry_Level.ERROR,
+                        source: "ci/run_tests.go:120",
+                        fields: { assignment: "lab1", output: "--- FAIL: TestFoo\n    foo_test.go:12: want 1, got 2" },
+                    })],
+                    repositories: ["student-a"],
+                }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+
+        // The CI output a teacher needs lives in fields; it must be on screen,
+        // not only in the copied and downloaded text.
+        expect(await screen.findByText(/--- FAIL: TestFoo/)).toBeTruthy()
+        expect(screen.getByText(/assignment=lab1/)).toBeTruthy()
+        expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
     })
 
     test("shows an error state when the request fails", async () => {

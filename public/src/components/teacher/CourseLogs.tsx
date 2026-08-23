@@ -29,13 +29,26 @@ const toLocalDatetimeInput = (date: Date): string => {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-// entryText renders one entry as a single line of plain text, shared by the
-// on-screen rendering, copy, and download actions.
+const entryTime = (entry: CourseLogEntry): string =>
+    entry.time ? timestampDate(entry.time).toLocaleString() : ""
+
+// entryFields renders an entry's remaining structured attributes, sorted by
+// key because a protobuf map has no order of its own and an entry's fields
+// would otherwise move around between requests.
+const entryFields = (entry: CourseLogEntry): string =>
+    Object.entries(entry.fields)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => `${key}=${value}`)
+        .join(" ")
+
+// entryText renders one entry as plain text for the copy and download actions;
+// it must list the same parts, in the same order, as the rendered row, so that
+// the screen, the clipboard, the downloaded file, and the free-text filter all
+// agree on what an entry says.
 const entryText = (entry: CourseLogEntry): string => {
-    const time = entry.time ? timestampDate(entry.time).toLocaleString() : ""
-    const fields = Object.entries(entry.fields).map(([key, value]) => `${key}=${value}`).join(" ")
     const repository = entry.repository ? `[${entry.repository}]` : ""
-    return [time, LEVEL_NAMES[entry.level], repository, entry.message, fields].filter(Boolean).join(" ")
+    const parts = [entryTime(entry), LEVEL_NAMES[entry.level], repository, entry.message, entryFields(entry), entry.source]
+    return parts.filter(Boolean).join(" ")
 }
 
 /** CourseLogs is the teacher-only "Course Logs" page at /course/:id/logs.
@@ -183,22 +196,29 @@ const CourseLogs = () => {
                             </div>
                         }
                     >
-                        {filtered.map((entry, idx) => (
-                            // eslint-disable-next-line react/no-array-index-key
-                            <div key={idx} className="flex flex-wrap items-baseline gap-2 py-0.5">
-                                <span className="text-base-content/60 shrink-0">
-                                    {entry.time ? timestampDate(entry.time).toLocaleString() : "N/A"}
+                        {filtered.map((entry, idx) => {
+                            const fields = entryFields(entry)
+                            return (
+                                // A row is a <span> because it renders inside the <code> element
+                                // of LogOutput, which only admits phrasing content.
+                                // eslint-disable-next-line react/no-array-index-key
+                                <span key={idx} className="flex flex-wrap items-baseline gap-2 py-0.5">
+                                    <span className="text-base-content/60 shrink-0">{entryTime(entry) || "N/A"}</span>
+                                    <span className={`badge badge-xs ${LEVEL_BADGE_COLOR[entry.level]} shrink-0`}>
+                                        {LEVEL_NAMES[entry.level]}
+                                    </span>
+                                    {entry.repository && (
+                                        <span className="text-base-content/60 shrink-0">[{entry.repository}]</span>
+                                    )}
+                                    <span className="break-words">{entry.message}</span>
+                                    {fields && (
+                                        <span className="text-base-content/70 break-words whitespace-pre-wrap">{fields}</span>
+                                    )}
+                                    {entry.source && <span className="text-base-content/40 shrink-0">{entry.source}</span>}
+                                    {entry.truncated && <span className="badge badge-xs badge-warning shrink-0">truncated</span>}
                                 </span>
-                                <span className={`badge badge-xs ${LEVEL_BADGE_COLOR[entry.level]} shrink-0`}>
-                                    {LEVEL_NAMES[entry.level]}
-                                </span>
-                                {entry.repository && (
-                                    <span className="text-base-content/60 shrink-0">[{entry.repository}]</span>
-                                )}
-                                <span className="break-words">{entry.message}</span>
-                                {entry.truncated && <span className="badge badge-xs badge-warning shrink-0">truncated</span>}
-                            </div>
-                        ))}
+                            )
+                        })}
                     </LogOutput>
                 </>
             )}
