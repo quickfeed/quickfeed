@@ -93,24 +93,14 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 	}
 	defer f.Close()
 
-	var lines []string
-	scanner := bufio.NewScanner(f)
-	// A line may hold a message or attribute truncated up to 64 KiB, plus its
-	// surrounding JSON, so grow well past bufio.Scanner's 64 KiB default cap.
-	scanner.Buffer(make([]byte, 0, 64*1024), 256*1024)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	for i, line := range lines {
+	// apply decodes line and folds it into ring/repos. final marks the file's
+	// true last line: only there is a decode error tolerated, on the theory
+	// that the process was killed mid-write, rather than returned as a
+	// failure of the whole query.
+	apply := func(line string, final bool) error {
 		entry, err := decodeEntry(line)
 		if err != nil {
-			if i == len(lines)-1 {
-				// The process may have been killed mid-write; the last line
-				// of the most recent file is the only one this can affect.
+			if final {
 				return nil
 			}
 			return err
@@ -122,6 +112,36 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 		if matches(entry, from, to, repository, level) {
 			ring.add(entry)
 		}
+		return nil
+	}
+
+	scanner := bufio.NewScanner(f)
+	// A record can carry several fields independently truncated to 64 KiB
+	// each (see maxFieldBytes), so grow well past both a single field and
+	// bufio.Scanner's 64 KiB default cap; a line still over this is corrupt
+	// rather than merely large, and fails the query as any other read error.
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	// pending trails the scanner by one line, so a line is only ever applied
+	// once Scan() has confirmed whether a further line follows it; that is
+	// what lets the final line alone get the partial-write tolerance above,
+	// without first holding the whole file (tens to hundreds of MiB for a
+	// busy course) in memory to find out which line that was.
+	var pending string
+	havePending := false
+	for scanner.Scan() {
+		if havePending {
+			if err := apply(pending, false); err != nil {
+				return err
+			}
+		}
+		pending, havePending = scanner.Text(), true
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if havePending {
+		return apply(pending, true)
 	}
 	return nil
 }
