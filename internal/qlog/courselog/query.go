@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
@@ -30,13 +30,7 @@ import (
 // log at all, returns an empty result rather than an error.
 func (s *Store) Query(org string, req *qf.CourseLogRequest) ([]*qf.CourseLogEntry, []string, bool, error) {
 	now := s.now()
-	from, to := req.Interval()
-	if to.After(now) {
-		to = now
-	}
-	if cutoff := oldestRetainedDate(now); from.Before(cutoff) {
-		from = cutoff
-	}
+	from, to := req.Interval(oldestRetainedDate(now), now)
 	if from.After(to) {
 		return nil, nil, false, nil
 	}
@@ -58,7 +52,7 @@ func (s *Store) Query(org string, req *qf.CourseLogRequest) ([]*qf.CourseLogEntr
 	for repo := range repos {
 		repositories = append(repositories, repo)
 	}
-	sort.Strings(repositories)
+	slices.Sort(repositories)
 	return entries, repositories, truncated, nil
 }
 
