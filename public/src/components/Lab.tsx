@@ -28,7 +28,7 @@ const Lab = () => {
         }
     }, [actions, lab, state.isTeacher])
 
-    const InternalLab = () => {
+    const internalLab = () => {
         let submission: Submission | null
         let assignment: Assignment | null
 
@@ -86,7 +86,7 @@ const Lab = () => {
     return (
         <div className={state.isTeacher ? "" : "row"}>
             <div className={state.isTeacher ? "" : "col-md-9"}>
-                <InternalLab />
+                {internalLab()}
             </div>
         </div>
     )
