@@ -71,10 +71,12 @@ const CourseLogs = () => {
     const [result, setResult] = useState<CourseLog | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [notice, setNotice] = useState<string | null>(null)
 
     const fetchLogs = async () => {
         setLoading(true)
         setError(null)
+        setNotice(null)
         // A To the teacher has not set means "up to now", so leave it out and let
         // the server bound the interval by its own clock; a page left open would
         // otherwise keep querying the interval that ended when it mounted, and
@@ -111,18 +113,28 @@ const CourseLogs = () => {
         ? entries.filter(entry => entryText(entry).toLowerCase().includes(search))
         : entries
 
-    const handleCopy = () => {
-        void navigator.clipboard.writeText(filtered.map(entryText).join("\n"))
+    const logText = () => filtered.map(entryText).join("\n")
+
+    const handleCopy = async () => {
+        try {
+            // navigator.clipboard is undefined outside a secure context, and
+            // writeText rejects when the browser denies clipboard access.
+            await navigator.clipboard.writeText(logText())
+            setNotice(null)
+        } catch {
+            setNotice("Could not copy the log; the browser denied access to the clipboard")
+        }
     }
 
     const handleDownload = () => {
-        const blob = new Blob([filtered.map(entryText).join("\n")], { type: "text/plain" })
-        const url = URL.createObjectURL(blob)
+        const url = URL.createObjectURL(new Blob([logText()], { type: "text/plain" }))
         const link = document.createElement("a")
         link.href = url
         link.download = `course-${courseID}-log.txt`
         link.click()
-        URL.revokeObjectURL(url)
+        // Revoking the URL before the browser has read it cancels the download
+        // the click just started, so leave that to the next tick.
+        setTimeout(() => URL.revokeObjectURL(url), 0)
     }
 
     return (
@@ -181,6 +193,7 @@ const CourseLogs = () => {
                 </div>
             </div>
 
+            {notice && <div className="alert alert-error"><span>{notice}</span></div>}
             {error && <CenteredMessage message={`Failed to load course logs: ${error}`} />}
             {!error && loading && <CenteredMessage message="Loading course logs…" />}
             {/* truncated reports that the server cut its own result at the limit,
@@ -204,7 +217,7 @@ const CourseLogs = () => {
                     codeClassName="text-base-content"
                     controls={
                         <div className="flex items-center gap-2">
-                            <button type="button" className="btn btn-sm" onClick={handleCopy}>Copy</button>
+                            <button type="button" className="btn btn-sm" onClick={() => void handleCopy()}>Copy</button>
                             <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
                         </div>
                     }
