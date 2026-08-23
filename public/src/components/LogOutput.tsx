@@ -1,19 +1,16 @@
 import type { ReactNode } from "react"
 
 type LogOutputProps = {
-    /** Card header title. Defaults to "Build Log", matching the original submission page usage. */
     title?: string
-    /** Optional controls rendered on the right of the header, e.g. copy/download buttons. */
     controls?: ReactNode
-    /** Default text color for the log body; a line can still set its own color. Defaults to "text-error". */
     codeClassName?: string
-    /** The log's rendered lines. */
     children: ReactNode
 }
 
 /** LogOutput is the card shell shared by the submission build log and the course log:
  *  a header with a terminal icon, a title, and an optional right-hand slot for controls,
- *  followed by a scrollable, monospaced body. */
+ *  followed by a monospaced body. The body scrolls within the card rather than growing
+ *  the page, so that a long log leaves the caller's own controls reachable. */
 const LogOutput = ({ title = "Build Log", controls, codeClassName = "text-error", children }: LogOutputProps) => {
     return (
         <div className="card bg-base-200 shadow-xl rounded-2xl overflow-hidden">
@@ -25,7 +22,7 @@ const LogOutput = ({ title = "Build Log", controls, codeClassName = "text-error"
                     </h3>
                     {controls}
                 </div>
-                <div className="overflow-x-auto">
+                <div className="max-h-[70vh] overflow-auto">
                     <pre className="p-4 text-sm leading-relaxed font-mono bg-base-200 m-0">
                         <code className={codeClassName} style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
                             {children}
