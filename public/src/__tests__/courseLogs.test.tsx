@@ -120,13 +120,13 @@ describe("CourseLogs", () => {
         expect(await screen.findByText("No log entries match the current filters")).toBeTruthy()
     })
 
-    test("shows a truncated warning when the result was cut off", async () => {
+    test("reports the server-side cutoff, not the locally filtered count", async () => {
         const api = new ApiClient()
         api.client = {
             ...api.client,
             getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
                 message: create(CourseLogSchema, {
-                    entries: [entry()],
+                    entries: [entry({ message: "resolved push repository" }), entry(), entry()],
                     repositories: ["student-a"],
                     truncated: true,
                 }),
@@ -135,7 +135,15 @@ describe("CourseLogs", () => {
         }
         renderCourseLogs(api)
 
-        await waitFor(() => expect(screen.getByText(/Showing the newest/)).toBeTruthy())
+        await waitFor(() => expect(screen.getByText(/Result limited to the newest 3 entries/)).toBeTruthy())
+
+        // Filtering locally changes neither the cutoff nor the count it reports,
+        // and the warning must survive a filter that matches nothing.
+        const search = screen.getByPlaceholderText("Filter loaded entries")
+        fireEvent.keyUp(search, { target: { value: "no such entry" } })
+
+        await waitFor(() => expect(screen.getByText("No log entries match the current filters")).toBeTruthy())
+        expect(screen.getByText(/Result limited to the newest 3 entries/)).toBeTruthy()
     })
 
     test("filters loaded entries locally without refetching", async () => {
