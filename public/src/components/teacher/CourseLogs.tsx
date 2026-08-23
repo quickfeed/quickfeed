@@ -72,7 +72,9 @@ const CourseLogs = () => {
     const [error, setError] = useState<string | null>(null)
     const [notice, setNotice] = useState<string | null>(null)
 
-    const fetchLogs = async () => {
+    // repo is passed explicitly so that a course change can clear the selection
+    // and query without it in the same pass, before the state update lands.
+    const fetchLogs = async (repo = repository) => {
         setLoading(true)
         setError(null)
         setNotice(null)
@@ -88,7 +90,7 @@ const CourseLogs = () => {
             courseID,
             from: from ? timestampFromDate(new Date(from)) : undefined,
             to: toEdited && to ? timestampFromDate(new Date(to)) : undefined,
-            repository,
+            repository: repo,
             level,
         })
         setLoading(false)
@@ -100,12 +102,24 @@ const CourseLogs = () => {
     }
 
     useEffect(() => {
-        void fetchLogs()
+        // A repository belongs to a single course, so the selection cannot carry
+        // over to another one.
+        setRepository("")
+        void fetchLogs("")
         // Fetch on mount and whenever the route names another course, since the
-        // router keeps this page mounted across that change. The filters are
-        // deliberately left out, so that they apply only on Refresh.
+        // router keeps this page mounted across that change. The remaining
+        // filters are deliberately left out, so that they apply only on Refresh.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseID])
+
+    // The response lists every repository with an entry in the interval, whatever
+    // the repository filter, but a selection whose repository fell silent must
+    // stay in the list; the select would otherwise sit blank while still
+    // filtering on it.
+    const repositories = result?.repositories ?? []
+    const repositoryOptions = repository && !repositories.includes(repository)
+        ? [...repositories, repository].sort((a, b) => a.localeCompare(b))
+        : repositories
 
     const entries = result?.entries ?? []
     const filtered = search
@@ -167,7 +181,7 @@ const CourseLogs = () => {
                                 onChange={e => setRepository(e.target.value)}
                             >
                                 <option value="">All repositories</option>
-                                {(result?.repositories ?? []).map(repo => <option key={repo} value={repo}>{repo}</option>)}
+                                {repositoryOptions.map(repo => <option key={repo} value={repo}>{repo}</option>)}
                             </select>
                         </label>
                         <label className="form-control w-full">
