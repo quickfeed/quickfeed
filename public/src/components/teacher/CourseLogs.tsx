@@ -55,8 +55,7 @@ const entryText = (entry: CourseLogEntry): string => {
  *  It queries GetCourseLog for the current course and lets a teacher narrow
  *  the result by interval, repository, and minimum level, then locally
  *  filter, copy, or download whatever was loaded. Filters other than the
- *  free-text one only take effect on Refresh; there is no polling or
- *  streaming in this version. */
+ *  free-text one take effect only on Refresh. */
 const CourseLogs = () => {
     const courseID = useCourseID()
     const { api } = useGrpc().global
