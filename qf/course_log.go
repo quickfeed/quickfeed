@@ -40,3 +40,21 @@ func (req *CourseLogRequest) EffectiveLimit() int {
 		return int(requested)
 	}
 }
+
+// InInterval reports whether e's timestamp falls within [from, to].
+func (e *CourseLogEntry) InInterval(from, to time.Time) bool {
+	t := e.GetTime().AsTime()
+	return !t.Before(from) && !t.After(to)
+}
+
+// Matches reports whether e falls within [from, to], is at or above level,
+// and, when repository is given, was recorded against it.
+func (e *CourseLogEntry) Matches(from, to time.Time, repository string, level CourseLogEntry_Level) bool {
+	if !e.InInterval(from, to) {
+		return false
+	}
+	if e.GetLevel() < level {
+		return false
+	}
+	return repository == "" || e.GetRepository() == repository
+}
