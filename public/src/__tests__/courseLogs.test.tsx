@@ -3,7 +3,7 @@ import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { ConnectError } from "@connectrpc/connect"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { Provider } from "overmind-react"
-import { MemoryRouter, Route, Routes } from "react-router"
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router"
 import { CourseLogEntry_Level, CourseLogEntrySchema, CourseLogSchema } from "../../proto/qf/requests_pb"
 import { UserSchema } from "../../proto/qf/types_pb"
 import CourseLogs from "../components/teacher/CourseLogs"
@@ -203,6 +203,44 @@ describe("CourseLogs", () => {
 
         await waitFor(() => expect(requests).toHaveLength(2))
         expect(requests[1].to).toBeDefined()
+    })
+    test("refetches when the route names another course", async () => {
+        const requests: { courseID?: unknown }[] = []
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async (request) => { // skipcq: JS-0116
+                requests.push(request)
+                return {
+                    message: create(CourseLogSchema, { entries: [entry()], repositories: ["student-a"] }),
+                    error: null,
+                }
+            }),
+        }
+        // The router keeps CourseLogs mounted when only :id changes, so the page
+        // would otherwise keep showing the previous course's entries.
+        const GoToCourseTwo = () => {
+            const navigate = useNavigate()
+            return <button type="button" onClick={() => navigate("/course/2/logs")}>Course 2</button>
+        }
+        render(
+            <Provider value={initializeOvermind(teacherState, api)}>
+                <MemoryRouter initialEntries={["/course/1/logs"]}>
+                    <GoToCourseTwo />
+                    <Routes>
+                        <Route path="/course/:id/logs" element={<CourseLogs />} />
+                    </Routes>
+                </MemoryRouter>
+            </Provider>
+        )
+        await screen.findByText("resolved push repository")
+        expect(requests).toHaveLength(1)
+        expect(requests[0].courseID).toBe(BigInt(1))
+
+        screen.getByRole("button", { name: "Course 2" }).click()
+
+        await waitFor(() => expect(requests).toHaveLength(2))
+        expect(requests[1].courseID).toBe(BigInt(2))
     })
 })
 
