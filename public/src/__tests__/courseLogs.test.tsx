@@ -204,6 +204,25 @@ describe("CourseLogs", () => {
         await waitFor(() => expect(requests).toHaveLength(2))
         expect(requests[1].to).toBeDefined()
     })
+    test("reports a clipboard the browser will not give access to", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
+                message: create(CourseLogSchema, { entries: [entry()], repositories: ["student-a"] }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+
+        // jsdom leaves navigator.clipboard undefined, as a browser does outside
+        // a secure context; the failure must reach the teacher, not the console.
+        screen.getByRole("button", { name: "Copy" }).click()
+
+        expect(await screen.findByText(/Could not copy the log/)).toBeTruthy()
+    })
+
     test("refetches when the route names another course", async () => {
         const requests: { courseID?: unknown }[] = []
         const api = new ApiClient()
