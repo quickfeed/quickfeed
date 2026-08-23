@@ -173,54 +173,56 @@ const CourseLogs = () => {
 
             {error && <CenteredMessage message={`Failed to load course logs: ${error}`} />}
             {!error && loading && <CenteredMessage message="Loading course logs…" />}
+            {/* truncated reports that the server cut its own result at the limit,
+                which the free-text filter neither causes nor undoes; the count is
+                therefore the server's, and the warning stands even when the filter
+                leaves nothing on screen. */}
+            {!error && !loading && result?.truncated && (
+                <div className="alert alert-warning">
+                    <span>
+                        Result limited to the newest {entries.length} entries.
+                        Narrow the interval or the filters and click Refresh to see the rest.
+                    </span>
+                </div>
+            )}
             {!error && !loading && result && filtered.length === 0 && (
                 <CenteredMessage message="No log entries match the current filters" />
             )}
             {!error && !loading && result && filtered.length > 0 && (
-                <>
-                    {result.truncated && (
-                        <div className="alert alert-warning">
-                            <span>
-                                Showing the newest {filtered.length} matching {filtered.length === 1 ? "entry" : "entries"}.
-                                Narrow the interval or filters to see the rest.
-                            </span>
+                <LogOutput
+                    title="Course Logs"
+                    codeClassName="text-base-content"
+                    controls={
+                        <div className="flex items-center gap-2">
+                            <button type="button" className="btn btn-sm" onClick={handleCopy}>Copy</button>
+                            <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
                         </div>
-                    )}
-                    <LogOutput
-                        title="Course Logs"
-                        codeClassName="text-base-content"
-                        controls={
-                            <div className="flex items-center gap-2">
-                                <button type="button" className="btn btn-sm" onClick={handleCopy}>Copy</button>
-                                <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
-                            </div>
-                        }
-                    >
-                        {filtered.map((entry, idx) => {
-                            const fields = entryFields(entry)
-                            return (
-                                // A row is a <span> because it renders inside the <code> element
-                                // of LogOutput, which only admits phrasing content.
-                                // eslint-disable-next-line react/no-array-index-key
-                                <span key={idx} className="flex flex-wrap items-baseline gap-2 py-0.5">
-                                    <span className="text-base-content/60 shrink-0">{entryTime(entry) || "N/A"}</span>
-                                    <span className={`badge badge-xs ${LEVEL_BADGE_COLOR[entry.level]} shrink-0`}>
-                                        {LEVEL_NAMES[entry.level]}
-                                    </span>
-                                    {entry.repository && (
-                                        <span className="text-base-content/60 shrink-0">[{entry.repository}]</span>
-                                    )}
-                                    <span className="break-words">{entry.message}</span>
-                                    {fields && (
-                                        <span className="text-base-content/70 break-words whitespace-pre-wrap">{fields}</span>
-                                    )}
-                                    {entry.source && <span className="text-base-content/40 shrink-0">{entry.source}</span>}
-                                    {entry.truncated && <span className="badge badge-xs badge-warning shrink-0">truncated</span>}
+                    }
+                >
+                    {filtered.map((entry, idx) => {
+                        const fields = entryFields(entry)
+                        return (
+                            // A row is a <span> because it renders inside the <code> element
+                            // of LogOutput, which only admits phrasing content.
+                            // eslint-disable-next-line react/no-array-index-key
+                            <span key={idx} className="flex flex-wrap items-baseline gap-2 py-0.5">
+                                <span className="text-base-content/60 shrink-0">{entryTime(entry) || "N/A"}</span>
+                                <span className={`badge badge-xs ${LEVEL_BADGE_COLOR[entry.level]} shrink-0`}>
+                                    {LEVEL_NAMES[entry.level]}
                                 </span>
-                            )
-                        })}
-                    </LogOutput>
-                </>
+                                {entry.repository && (
+                                    <span className="text-base-content/60 shrink-0">[{entry.repository}]</span>
+                                )}
+                                <span className="break-words">{entry.message}</span>
+                                {fields && (
+                                    <span className="text-base-content/70 break-words whitespace-pre-wrap">{fields}</span>
+                                )}
+                                {entry.source && <span className="text-base-content/40 shrink-0">{entry.source}</span>}
+                                {entry.truncated && <span className="badge badge-xs badge-warning shrink-0">truncated</span>}
+                            </span>
+                        )
+                    })}
+                </LogOutput>
             )}
         </div>
     )
