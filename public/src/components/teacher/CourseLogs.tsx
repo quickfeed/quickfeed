@@ -72,9 +72,17 @@ const CourseLogs = () => {
     const [error, setError] = useState<string | null>(null)
     const [notice, setNotice] = useState<string | null>(null)
 
+    // From must not run past the end of the interval. An unedited To means "now",
+    // which keeps moving, so compare against the clock rather than against the
+    // value still shown in the field, which only advances on Refresh.
+    const invalidInterval = Boolean(from) && new Date(from) > (toEdited && to ? new Date(to) : new Date())
+
     // repo is passed explicitly so that a course change can clear the selection
     // and query without it in the same pass, before the state update lands.
     const fetchLogs = async (repo = repository) => {
+        if (invalidInterval) {
+            return
+        }
         setLoading(true)
         setError(null)
         setNotice(null)
@@ -197,8 +205,13 @@ const CourseLogs = () => {
                             </select>
                         </label>
                     </div>
+                    {invalidInterval && (
+                        <div className="alert alert-error">
+                            <span>From is after To; pick a From that precedes the end of the interval.</span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-2">
-                        <button type="button" className="btn btn-primary" onClick={() => void fetchLogs()} disabled={loading}>
+                        <button type="button" className="btn btn-primary" onClick={() => void fetchLogs()} disabled={loading || invalidInterval}>
                             {loading ? "Refreshing…" : "Refresh"}
                         </button>
                         <Search placeholder="Filter loaded entries" setQuery={setSearch} className="flex-1" />
