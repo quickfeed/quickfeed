@@ -177,6 +177,33 @@ describe("CourseLogs", () => {
         // The search filter is applied client-side; it must not trigger another fetch.
         expect(calls).toBe(1)
     })
+    test("lets an untouched To follow the clock, and honors an edited one", async () => {
+        const requests: { to?: unknown }[] = []
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async (request) => { // skipcq: JS-0116
+                requests.push(request)
+                return {
+                    message: create(CourseLogSchema, { entries: [entry()], repositories: ["student-a"] }),
+                    error: null,
+                }
+            }),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+
+        // An untouched To is left out, so the server bounds the interval by its
+        // own clock and Refresh picks up whatever was logged since the page loaded.
+        expect(requests[0].to).toBeUndefined()
+
+        const toInput = screen.getByLabelText("To")
+        fireEvent.change(toInput, { target: { value: "2026-03-10T12:00" } })
+        screen.getByRole("button", { name: "Refresh" }).click()
+
+        await waitFor(() => expect(requests).toHaveLength(2))
+        expect(requests[1].to).toBeDefined()
+    })
 })
 
 describe("CourseLogs tile", () => {
