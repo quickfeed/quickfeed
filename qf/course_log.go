@@ -8,17 +8,22 @@ const (
 	maxCourseLogLimit        = 5000
 )
 
-// Interval returns req's query bounds, defaulting to the last 24 hours ending
-// now when From/To are not given. From/To are otherwise returned unclamped;
-// courselog.Store.Query clamps them to their server-enforced maximums.
-func (req *CourseLogRequest) Interval() (from, to time.Time) {
-	to = time.Now()
+// Interval returns req's query bounds, clamped to [minFrom, maxTo]. From/To
+// default to the last 24 hours ending at maxTo when not given.
+func (req *CourseLogRequest) Interval(minFrom, maxTo time.Time) (from, to time.Time) {
+	to = maxTo
 	if t := req.GetTo(); t != nil {
 		to = t.AsTime()
 	}
 	from = to.Add(-defaultCourseLogInterval)
 	if f := req.GetFrom(); f != nil {
 		from = f.AsTime()
+	}
+	if to.After(maxTo) {
+		to = maxTo
+	}
+	if from.Before(minFrom) {
+		from = minFrom
 	}
 	return from, to
 }
