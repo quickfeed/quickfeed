@@ -100,10 +100,11 @@ const CourseLogs = () => {
 
     useEffect(() => {
         void fetchLogs()
-        // Fetch once, with the default filters, when the page mounts; later
-        // changes are applied only when the teacher clicks Refresh.
+        // Fetch on mount and whenever the route names another course, since the
+        // router keeps this page mounted across that change. The filters are
+        // deliberately left out, so that they apply only on Refresh.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [courseID])
 
     const entries = result?.entries ?? []
     const filtered = search
