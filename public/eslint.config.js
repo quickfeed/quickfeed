@@ -23,9 +23,11 @@ export default defineConfig([
     js.configs.recommended,
     tsPlugin.configs["flat/eslint-recommended"],
     reactPlugin.configs.flat.recommended,
-    // react-hooks ships two presets: `recommended` is legacy (eslintrc) and
-    // `recommended-latest` is the flat-config equivalent.
-    reactHooksPlugin.configs["recommended-latest"],
+    // react-hooks ships each preset twice: `configs.recommended` and
+    // `configs["recommended-latest"]` are legacy (eslintrc), whose string
+    // `plugins` array flat config rejects outright; `configs.flat` holds the
+    // flat-config equivalents.
+    reactHooksPlugin.configs.flat["recommended-latest"],
 
     // TypeScript wiring and project-specific overrides.
     {
