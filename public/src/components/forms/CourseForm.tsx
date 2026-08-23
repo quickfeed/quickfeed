@@ -21,26 +21,30 @@ const CourseForm = ({ courseToEdit }: { courseToEdit: Course }) => {
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(clone(CourseSchema, courseToEdit))
 
+    // The edited course is replaced rather than mutated: setCourse with the same
+    // object is a no-op, so the form's own state would drift from what a later
+    // render sees.
     const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
+        const edited = clone(CourseSchema, course)
         switch (name) {
             case "courseName":
-                course.name = value
+                edited.name = value
                 break
             case "courseTag":
-                course.tag = value
+                edited.tag = value
                 break
             case "courseCode":
-                course.code = value
+                edited.code = value
                 break
             case "courseYear":
-                course.year = Number(value)
+                edited.year = Number(value)
                 break
             case "slipDays":
-                course.slipDays = Number(value)
+                edited.slipDays = Number(value)
                 break
         }
-        setCourse(course)
+        setCourse(edited)
     }, [course])
 
     // Creates a new course if no course is being edited, otherwise updates the existing course

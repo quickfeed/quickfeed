@@ -16,26 +16,26 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     const [user, setUser] = useState(clone(UserSchema, state.self))
     const [isValid, setIsValid] = useState(state.isValid)
 
-    // Update the user object when user input changes, and update the state.
+    // Update the user object when user input changes, and update the state. The
+    // edited user is replaced rather than mutated: setUser with the same object
+    // is a no-op, so the form's own state would drift from what a later render
+    // sees.
     const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
+        const edited = clone(UserSchema, user)
         switch (name) {
             case "name":
-                user.Name = value
+                edited.Name = value
                 break
             case "email":
-                user.Email = value
+                edited.Email = value
                 break
             case "studentid":
-                user.StudentID = value
+                edited.StudentID = value
                 break
         }
-        setUser(user)
-        if (user.Name !== "" && user.Email !== "" && user.StudentID !== "") {
-            setIsValid(true)
-        } else {
-            setIsValid(false)
-        }
+        setUser(edited)
+        setIsValid(edited.Name !== "" && edited.Email !== "" && edited.StudentID !== "")
     }, [user])
 
 
