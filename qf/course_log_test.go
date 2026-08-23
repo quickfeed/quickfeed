@@ -1,4 +1,4 @@
-package web
+package qf_test
 
 import (
 	"log/slog"
@@ -10,52 +10,54 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestCourseLogIntervalDefaults(t *testing.T) {
+func TestCourseLogRequestIntervalDefaults(t *testing.T) {
 	before := time.Now()
-	from, to := courseLogInterval(&qf.CourseLogRequest{})
+	from, to := (&qf.CourseLogRequest{}).Interval()
 	after := time.Now()
 
 	if to.Before(before) || to.After(after) {
 		t.Errorf("to = %v, want within [%v, %v]", to, before, after)
 	}
-	if got, want := to.Sub(from), defaultCourseLogInterval; got != want {
+	if got, want := to.Sub(from), 24*time.Hour; got != want {
 		t.Errorf("to.Sub(from) = %v, want the default interval %v", got, want)
 	}
 }
 
-// TestCourseLogIntervalHonorsExplicitBounds guards that courseLogInterval
-// passes explicit From/To through unclamped, including a From beyond
-// Retention or a To in the future.
-func TestCourseLogIntervalHonorsExplicitBounds(t *testing.T) {
+// TestCourseLogRequestIntervalHonorsExplicitBounds guards that Interval
+// passes explicit From/To through unclamped, including a From beyond the
+// store's retention window or a To in the future.
+func TestCourseLogRequestIntervalHonorsExplicitBounds(t *testing.T) {
 	to := time.Now().Add(-time.Hour)
 	from := to.Add(-time.Hour)
-	gotFrom, gotTo := courseLogInterval(&qf.CourseLogRequest{
+	gotFrom, gotTo := (&qf.CourseLogRequest{
 		From: timestamppb.New(from),
 		To:   timestamppb.New(to),
-	})
+	}).Interval()
 	if !gotFrom.Equal(from) || !gotTo.Equal(to) {
-		t.Errorf("courseLogInterval() = (%v, %v), want (%v, %v)", gotFrom, gotTo, from, to)
+		t.Errorf("Interval() = (%v, %v), want (%v, %v)", gotFrom, gotTo, from, to)
 	}
 }
 
-func TestCourseLogLimit(t *testing.T) {
+func TestCourseLogRequestEffectiveLimit(t *testing.T) {
+	const maxCourseLogLimit = 5000
 	tests := []struct {
 		requested uint32
 		want      int
 	}{
-		{requested: 0, want: defaultCourseLogLimit},
+		{requested: 0, want: 2000},
 		{requested: 10, want: 10},
 		{requested: maxCourseLogLimit, want: maxCourseLogLimit},
 		{requested: maxCourseLogLimit + 1000, want: maxCourseLogLimit},
 	}
 	for _, test := range tests {
-		if got := courseLogLimit(test.requested); got != test.want {
-			t.Errorf("courseLogLimit(%d) = %d, want %d", test.requested, got, test.want)
+		req := &qf.CourseLogRequest{Limit: test.requested}
+		if got := req.EffectiveLimit(); got != test.want {
+			t.Errorf("EffectiveLimit(%d) = %d, want %d", test.requested, got, test.want)
 		}
 	}
 }
 
-func TestSlogLevelAndCourseLogEntryLevelRoundTrip(t *testing.T) {
+func TestCourseLogLevelSlogLevelRoundTrip(t *testing.T) {
 	levels := []qf.CourseLogEntry_Level{
 		qf.CourseLogEntry_DEBUG,
 		qf.CourseLogEntry_INFO,
@@ -63,13 +65,13 @@ func TestSlogLevelAndCourseLogEntryLevelRoundTrip(t *testing.T) {
 		qf.CourseLogEntry_ERROR,
 	}
 	for _, level := range levels {
-		if got := courseLogEntryLevel(slogLevel(level)); got != level {
-			t.Errorf("courseLogEntryLevel(slogLevel(%v)) = %v, want %v", level, got, level)
+		if got := qf.CourseLogLevelFromSlog(level.SlogLevel()); got != level {
+			t.Errorf("CourseLogLevelFromSlog(%v.SlogLevel()) = %v, want %v", level, got, level)
 		}
 	}
 }
 
-func TestToCourseLogEntries(t *testing.T) {
+func TestCourseLogEntriesFrom(t *testing.T) {
 	at := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
 	entries := []courselog.Entry{{
 		Time:           at,
@@ -82,9 +84,9 @@ func TestToCourseLogEntries(t *testing.T) {
 		Fields:         map[string]string{"assignment": "lab1"},
 	}}
 
-	got := toCourseLogEntries(entries)
+	got := qf.CourseLogEntriesFrom(entries)
 	if len(got) != 1 {
-		t.Fatalf("len(toCourseLogEntries()) = %d, want 1", len(got))
+		t.Fatalf("len(CourseLogEntriesFrom()) = %d, want 1", len(got))
 	}
 	e := got[0]
 	if !e.GetTime().AsTime().Equal(at) {
