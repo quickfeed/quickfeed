@@ -63,6 +63,7 @@ const CourseLogs = () => {
 
     const [from, setFrom] = useState(() => toLocalDatetimeInput(new Date(Date.now() - 24 * 60 * 60 * 1000)))
     const [to, setTo] = useState(() => toLocalDatetimeInput(new Date()))
+    const [toEdited, setToEdited] = useState(false)
     const [repository, setRepository] = useState("")
     const [level, setLevel] = useState(CourseLogEntry_Level.DEBUG)
     const [search, setSearch] = useState("")
@@ -74,10 +75,18 @@ const CourseLogs = () => {
     const fetchLogs = async () => {
         setLoading(true)
         setError(null)
+        // A To the teacher has not set means "up to now", so leave it out and let
+        // the server bound the interval by its own clock; a page left open would
+        // otherwise keep querying the interval that ended when it mounted, and
+        // Refresh could never show anything logged since. The field is advanced
+        // to match, since it stays pre-filled on screen.
+        if (!toEdited) {
+            setTo(toLocalDatetimeInput(new Date()))
+        }
         const response = await api.client.getCourseLog({
             courseID,
             from: from ? timestampFromDate(new Date(from)) : undefined,
-            to: to ? timestampFromDate(new Date(to)) : undefined,
+            to: toEdited && to ? timestampFromDate(new Date(to)) : undefined,
             repository,
             level,
         })
@@ -135,7 +144,7 @@ const CourseLogs = () => {
                                 type="datetime-local"
                                 className="input input-bordered w-full"
                                 value={to}
-                                onChange={e => setTo(e.target.value)}
+                                onChange={e => { setToEdited(true); setTo(e.target.value) }}
                             />
                         </label>
                         <label className="form-control w-full">
