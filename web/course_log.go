@@ -3,21 +3,12 @@ package web
 import (
 	"context"
 	"errors"
-	"log/slog"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/protobuf/types/known/timestamppb"
-)
-
-const (
-	defaultCourseLogInterval = 24 * time.Hour
-	defaultCourseLogLimit    = 2000
-	maxCourseLogLimit        = 5000
 )
 
 // GetCourseLog returns the course's teacher-visible log for the requested
@@ -37,13 +28,13 @@ func (s *QuickFeedService) GetCourseLog(ctx context.Context, in *qf.CourseLogReq
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 
-	from, to := courseLogInterval(in)
+	from, to := in.Interval()
 	entries, repositories, truncated, err := s.courseLogs.Query(course.GetScmOrganizationName(), courselog.Query{
 		From:       from,
 		To:         to,
 		Repository: in.GetRepository(),
-		Level:      slogLevel(in.GetLevel()),
-		Limit:      courseLogLimit(in.GetLimit()),
+		Level:      in.GetLevel().SlogLevel(),
+		Limit:      in.EffectiveLimit(),
 	})
 	if err != nil {
 		logger.Error("failed to read course log", label.Error, err)
@@ -51,76 +42,8 @@ func (s *QuickFeedService) GetCourseLog(ctx context.Context, in *qf.CourseLogReq
 	}
 
 	return &qf.CourseLog{
-		Entries:      toCourseLogEntries(entries),
+		Entries:      qf.CourseLogEntriesFrom(entries),
 		Repositories: repositories,
 		Truncated:    truncated,
 	}, nil
-}
-
-// courseLogInterval applies in's defaults: the last 24 hours, ending now if
-// To is not given. From/To are otherwise returned unclamped.
-func courseLogInterval(in *qf.CourseLogRequest) (from, to time.Time) {
-	to = time.Now()
-	if t := in.GetTo(); t != nil {
-		to = t.AsTime()
-	}
-	from = to.Add(-defaultCourseLogInterval)
-	if f := in.GetFrom(); f != nil {
-		from = f.AsTime()
-	}
-	return from, to
-}
-
-func courseLogLimit(requested uint32) int {
-	switch {
-	case requested == 0:
-		return defaultCourseLogLimit
-	case requested > maxCourseLogLimit:
-		return maxCourseLogLimit
-	default:
-		return int(requested)
-	}
-}
-
-func slogLevel(level qf.CourseLogEntry_Level) slog.Level {
-	switch level {
-	case qf.CourseLogEntry_INFO:
-		return slog.LevelInfo
-	case qf.CourseLogEntry_WARN:
-		return slog.LevelWarn
-	case qf.CourseLogEntry_ERROR:
-		return slog.LevelError
-	default: // qf.CourseLogEntry_DEBUG
-		return slog.LevelDebug
-	}
-}
-
-func courseLogEntryLevel(level slog.Level) qf.CourseLogEntry_Level {
-	switch {
-	case level >= slog.LevelError:
-		return qf.CourseLogEntry_ERROR
-	case level >= slog.LevelWarn:
-		return qf.CourseLogEntry_WARN
-	case level >= slog.LevelInfo:
-		return qf.CourseLogEntry_INFO
-	default:
-		return qf.CourseLogEntry_DEBUG
-	}
-}
-
-func toCourseLogEntries(entries []courselog.Entry) []*qf.CourseLogEntry {
-	out := make([]*qf.CourseLogEntry, len(entries))
-	for i, e := range entries {
-		out[i] = &qf.CourseLogEntry{
-			Time:           timestamppb.New(e.Time),
-			Level:          courseLogEntryLevel(e.Level),
-			Message:        e.Message,
-			Source:         e.Source,
-			Repository:     e.Repository,
-			RepositoryType: e.RepositoryType,
-			Fields:         e.Fields,
-			Truncated:      e.Truncated,
-		}
-	}
-	return out
 }
