@@ -223,6 +223,73 @@ describe("CourseLogs", () => {
         expect(await screen.findByText(/Could not copy the log/)).toBeTruthy()
     })
 
+    test("keeps a selected repository listed after it falls silent", async () => {
+        const requests: { repository?: unknown }[] = []
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async (request) => { // skipcq: JS-0116
+                requests.push(request)
+                // The second result no longer reports an entry for student-b.
+                const repositories = requests.length === 1 ? ["student-a", "student-b"] : ["student-a"]
+                return {
+                    message: create(CourseLogSchema, { entries: [entry()], repositories }),
+                    error: null,
+                }
+            }),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+
+        fireEvent.change(screen.getByLabelText("Repository"), { target: { value: "student-b" } })
+        screen.getByRole("button", { name: "Refresh" }).click()
+        await waitFor(() => expect(requests).toHaveLength(2))
+        expect(requests[1].repository).toBe("student-b")
+
+        // The select must still show what it is filtering on, not sit blank.
+        expect(screen.getByRole("option", { name: "student-b" })).toBeTruthy()
+        expect((screen.getByLabelText("Repository") as HTMLSelectElement).value).toBe("student-b")
+    })
+
+    test("clears the repository selection when the route names another course", async () => {
+        const requests: { courseID?: unknown; repository?: unknown }[] = []
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async (request) => { // skipcq: JS-0116
+                requests.push(request)
+                return {
+                    message: create(CourseLogSchema, { entries: [entry()], repositories: ["student-a"] }),
+                    error: null,
+                }
+            }),
+        }
+        const GoToCourseTwo = () => {
+            const navigate = useNavigate()
+            return <button type="button" onClick={() => navigate("/course/2/logs")}>Course 2</button>
+        }
+        render(
+            <Provider value={initializeOvermind(teacherState, api)}>
+                <MemoryRouter initialEntries={["/course/1/logs"]}>
+                    <GoToCourseTwo />
+                    <Routes>
+                        <Route path="/course/:id/logs" element={<CourseLogs />} />
+                    </Routes>
+                </MemoryRouter>
+            </Provider>
+        )
+        await screen.findByText("resolved push repository")
+        fireEvent.change(screen.getByLabelText("Repository"), { target: { value: "student-a" } })
+
+        screen.getByRole("button", { name: "Course 2" }).click()
+
+        // A repository belongs to one course; it must not filter another's log.
+        await waitFor(() => expect(requests).toHaveLength(2))
+        expect(requests[1].courseID).toBe(BigInt(2))
+        expect(requests[1].repository).toBe("")
+        expect((screen.getByLabelText("Repository") as HTMLSelectElement).value).toBe("")
+    })
+
     test("refetches when the route names another course", async () => {
         const requests: { courseID?: unknown }[] = []
         const api = new ApiClient()
