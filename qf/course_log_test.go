@@ -77,3 +77,69 @@ func TestCourseLogRequestEffectiveLimit(t *testing.T) {
 		}
 	}
 }
+
+func TestCourseLogEntryInInterval(t *testing.T) {
+	base := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name string
+		at   time.Time
+		want bool
+	}{
+		{name: "before", at: base.Add(-time.Minute), want: false},
+		{name: "at from", at: base, want: true},
+		{name: "inside", at: base.Add(30 * time.Second), want: true},
+		{name: "at to", at: base.Add(time.Minute), want: true},
+		{name: "after", at: base.Add(2 * time.Minute), want: false},
+	}
+	for _, test := range tests {
+		e := &qf.CourseLogEntry{Time: timestamppb.New(test.at)}
+		if got := e.InInterval(base, base.Add(time.Minute)); got != test.want {
+			t.Errorf("%s: InInterval() = %v, want %v", test.name, got, test.want)
+		}
+	}
+}
+
+func TestCourseLogEntryMatches(t *testing.T) {
+	base := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
+	from, to := base, base.Add(time.Hour)
+
+	tests := []struct {
+		name       string
+		e          *qf.CourseLogEntry
+		repository string
+		want       bool
+	}{
+		{
+			name: "outside interval",
+			e:    &qf.CourseLogEntry{Time: timestamppb.New(base.Add(-time.Minute)), Level: qf.CourseLogEntry_INFO},
+			want: false,
+		},
+		{
+			name: "below minimum level",
+			e:    &qf.CourseLogEntry{Time: timestamppb.New(base), Level: qf.CourseLogEntry_DEBUG},
+			want: false,
+		},
+		{
+			name:       "wrong repository",
+			e:          &qf.CourseLogEntry{Time: timestamppb.New(base), Level: qf.CourseLogEntry_INFO, Repository: "repo-b"},
+			repository: "repo-a",
+			want:       false,
+		},
+		{
+			name:       "matches with repository filter",
+			e:          &qf.CourseLogEntry{Time: timestamppb.New(base), Level: qf.CourseLogEntry_WARN, Repository: "repo-a"},
+			repository: "repo-a",
+			want:       true,
+		},
+		{
+			name: "matches with no repository filter",
+			e:    &qf.CourseLogEntry{Time: timestamppb.New(base), Level: qf.CourseLogEntry_INFO, Repository: "repo-b"},
+			want: true,
+		},
+	}
+	for _, test := range tests {
+		if got := test.e.Matches(from, to, test.repository, qf.CourseLogEntry_INFO); got != test.want {
+			t.Errorf("%s: Matches() = %v, want %v", test.name, got, test.want)
+		}
+	}
+}

@@ -105,11 +105,10 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 			}
 			return err
 		}
-		t := entry.GetTime().AsTime()
-		if entry.GetRepository() != "" && !t.Before(from) && !t.After(to) {
+		if entry.GetRepository() != "" && entry.InInterval(from, to) {
 			repos[entry.GetRepository()] = true
 		}
-		if matches(entry, from, to, repository, level) {
+		if entry.Matches(from, to, repository, level) {
 			ring.add(entry)
 		}
 		return nil
@@ -144,19 +143,6 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 		return apply(pending, true)
 	}
 	return nil
-}
-
-func matches(e *qf.CourseLogEntry, from, to time.Time, repository string, level qf.CourseLogEntry_Level) bool {
-	if t := e.GetTime().AsTime(); t.Before(from) || t.After(to) {
-		return false
-	}
-	if e.GetLevel() < level {
-		return false
-	}
-	if repository != "" && e.GetRepository() != repository {
-		return false
-	}
-	return true
 }
 
 // decodeEntry parses one JSONL record written by Handler. slog.JSONHandler's
