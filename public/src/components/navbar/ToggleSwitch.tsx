@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react"
+import { useCallback } from "react"
 import { useNavigate } from "react-router"
 import { Enrollment_UserStatus } from "../../../proto/qf/types_pb"
 import { hasTeacher } from "../../Helpers"
@@ -8,8 +8,6 @@ const ToggleSwitch = () => {
     const { activeCourse, enrollmentsByCourseID, status } = useAppState()
     const actions = useActions().global
     const navigate = useNavigate()
-    const [enrollmentStatus, setEnrollmentStatus] =
-        React.useState<boolean>(false)
 
     const isTeacher = useCallback((courseID: bigint | undefined): boolean => {
         if (!courseID) {
@@ -18,17 +16,12 @@ const ToggleSwitch = () => {
         return enrollmentsByCourseID[courseID.toString()]?.status === Enrollment_UserStatus.TEACHER
     }, [enrollmentsByCourseID])
 
-    useEffect(() => {
-        if (activeCourse && enrollmentsByCourseID[activeCourse.toString()]) {
-            setEnrollmentStatus(isTeacher(activeCourse))
-        }
-    }, [activeCourse, enrollmentsByCourseID, isTeacher])
+    // changeView updates the enrollment this reads, so the label follows from
+    // the enrollment rather than from a copy an effect keeps in step with it.
+    const enrollmentStatus = isTeacher(activeCourse)
 
     const switchView = () => {
-        actions.changeView().then(() => {
-            setEnrollmentStatus(isTeacher(activeCourse))
-            navigate(`/course/${activeCourse}`)
-        })
+        actions.changeView().then(() => navigate(`/course/${activeCourse}`))
     }
 
     if (!hasTeacher(status[activeCourse.toString()])) {

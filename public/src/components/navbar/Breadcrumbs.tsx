@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import type { Assignment, Course } from "../../../proto/qf/types_pb"
 import { ScreenSize } from "../../consts"
@@ -12,8 +11,6 @@ const Breadcrumbs = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const { width } = useWindowSize()
-    const [courseName, setCourseName] = useState<string | null>(null)
-    const [assignmentName, setAssignmentName] = useState<string | null>(null)
     const pathnames = location.pathname.split('/').filter(x => x)
 
     const handleDashboard = () => {
@@ -34,17 +31,14 @@ const Breadcrumbs = () => {
         return assignment?.name ?? null
     }
 
-    useEffect(() => {
-        const [prefix, courseId, section, assignmentId] = pathnames
-        if (prefix === 'course' && courseId) {
-            setCourseName(resolveCourseName(state.courses, courseId, width))
-
-            if ((section === 'lab' || section === 'group-lab') && assignmentId) {
-                const courseAssignments = state.assignments?.[courseId] ?? []
-                setAssignmentName(resolveAssignmentName(courseAssignments, assignmentId))
-            }
-        }
-    }, [pathnames, state.courses, state.assignments, width])
+    // Both names follow from the route and the loaded courses, so they are
+    // computed here rather than mirrored into state by an effect: pathnames is a
+    // fresh array on every render, which made that effect run on every render.
+    const [prefix, courseId, section, assignmentId] = pathnames
+    const onCoursePath = prefix === 'course' && Boolean(courseId)
+    const courseName = onCoursePath ? resolveCourseName(state.courses, courseId, width) : null
+    const onLabPath = onCoursePath && (section === 'lab' || section === 'group-lab') && Boolean(assignmentId)
+    const assignmentName = onLabPath ? resolveAssignmentName(state.assignments?.[courseId] ?? [], assignmentId) : null
 
     const segments: { label: string; to: string; last: boolean }[] = []
     pathnames.forEach((value, index) => {

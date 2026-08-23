@@ -12,8 +12,12 @@ const Profile = () => {
     const state = useAppState()
     const navigate = useNavigate()
     const location = useLocation()
-    // Holds a local state to check whether the user is editing their user information or not
-    const [editing, setEditing] = useState(false)
+    // Holds a local state to check whether the user asked to edit their user
+    // information. Editing is forced while that information is incomplete;
+    // there is nothing useful to show instead, and the signup text belongs
+    // with the form.
+    const [editRequested, setEditing] = useState(false)
+    const editing = editRequested || !state.isValid
 
     // Redirect from "/" to "/profile" when user object is invalid
     useEffect(() => {
@@ -23,13 +27,6 @@ const Profile = () => {
             navigate("/profile")
         }
     }, [state.isLoggedIn, state.isValid, location.pathname, navigate])
-
-    // Default to edit mode if user object does not contain valid information
-    useEffect(() => {
-        if (!state.isValid) {
-            setEditing(true)
-        }
-    }, [state.isValid])
 
     return (
         <div className="min-h-screen">
