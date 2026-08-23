@@ -110,10 +110,16 @@ const CourseLogs = () => {
     }
 
     useEffect(() => {
+        // set-state-in-effect guards against effects that mirror derived state.
+        // This one starts a request instead, which is what an effect is for, and
+        // reporting that it is in flight is unavoidably a state update. Escaping
+        // the rule would take a data-fetching layer this page does not have.
+        /* eslint-disable react-hooks/set-state-in-effect */
         // A repository belongs to a single course, so the selection cannot carry
         // over to another one.
         setRepository("")
         void fetchLogs("")
+        /* eslint-enable react-hooks/set-state-in-effect */
         // Fetch on mount and whenever the route names another course, since the
         // router keeps this page mounted across that change. The remaining
         // filters are deliberately left out, so that they apply only on Refresh.
