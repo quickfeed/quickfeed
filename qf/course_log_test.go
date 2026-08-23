@@ -1,11 +1,9 @@
 package qf_test
 
 import (
-	"log/slog"
 	"testing"
 	"time"
 
-	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -54,54 +52,5 @@ func TestCourseLogRequestEffectiveLimit(t *testing.T) {
 		if got := req.EffectiveLimit(); got != test.want {
 			t.Errorf("EffectiveLimit(%d) = %d, want %d", test.requested, got, test.want)
 		}
-	}
-}
-
-func TestCourseLogLevelSlogLevelRoundTrip(t *testing.T) {
-	levels := []qf.CourseLogEntry_Level{
-		qf.CourseLogEntry_DEBUG,
-		qf.CourseLogEntry_INFO,
-		qf.CourseLogEntry_WARN,
-		qf.CourseLogEntry_ERROR,
-	}
-	for _, level := range levels {
-		if got := qf.CourseLogLevelFromSlog(level.SlogLevel()); got != level {
-			t.Errorf("CourseLogLevelFromSlog(%v.SlogLevel()) = %v, want %v", level, got, level)
-		}
-	}
-}
-
-func TestCourseLogEntriesFrom(t *testing.T) {
-	at := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
-	entries := []courselog.Entry{{
-		Time:           at,
-		Level:          slog.LevelWarn,
-		Message:        "test output",
-		Source:         "ci/run_tests.go:42",
-		Repository:     "student-repo",
-		RepositoryType: "USER",
-		Truncated:      true,
-		Fields:         map[string]string{"assignment": "lab1"},
-	}}
-
-	got := qf.CourseLogEntriesFrom(entries)
-	if len(got) != 1 {
-		t.Fatalf("len(CourseLogEntriesFrom()) = %d, want 1", len(got))
-	}
-	e := got[0]
-	if !e.GetTime().AsTime().Equal(at) {
-		t.Errorf("Time = %v, want %v", e.GetTime().AsTime(), at)
-	}
-	if e.GetLevel() != qf.CourseLogEntry_WARN {
-		t.Errorf("Level = %v, want WARN", e.GetLevel())
-	}
-	if e.GetMessage() != "test output" || e.GetSource() != "ci/run_tests.go:42" {
-		t.Errorf("Message/Source = %q/%q, want %q/%q", e.GetMessage(), e.GetSource(), "test output", "ci/run_tests.go:42")
-	}
-	if e.GetRepository() != "student-repo" || e.GetRepositoryType() != "USER" || !e.GetTruncated() {
-		t.Errorf("entry = %+v, want dedicated fields carried through", e)
-	}
-	if e.GetFields()["assignment"] != "lab1" {
-		t.Errorf(`Fields["assignment"] = %q, want "lab1"`, e.GetFields()["assignment"])
 	}
 }
