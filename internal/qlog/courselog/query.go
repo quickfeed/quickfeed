@@ -41,10 +41,24 @@ type Query struct {
 // q.Repository or q.Level (so a repository filter never removes its own
 // options), and whether the match count exceeded q.Limit.
 //
+// q.To is clamped to now, and q.From to oldestRetainedDate. An interval left
+// inverted after clamping returns an empty result.
+//
 // A malformed final line, characteristic of a partial write, is ignored; any
 // other read failure is returned. A course with no activity in range, or no
 // log at all, returns an empty result rather than an error.
 func (s *Store) Query(org string, q Query) ([]Entry, []string, bool, error) {
+	now := s.now()
+	if q.To.After(now) {
+		q.To = now
+	}
+	if cutoff := oldestRetainedDate(now); q.From.Before(cutoff) {
+		q.From = cutoff
+	}
+	if q.From.After(q.To) {
+		return nil, nil, false, nil
+	}
+
 	dir := filepath.Join(s.dir, sanitize(org))
 	ring := newEntryRing(q.Limit)
 	repos := make(map[string]bool)
@@ -63,6 +77,17 @@ func (s *Store) Query(org string, q Query) ([]Entry, []string, bool, error) {
 	}
 	sort.Strings(repositories)
 	return entries, repositories, truncated, nil
+}
+
+// oldestRetainedDate returns the UTC midnight of the oldest date
+// cleanupCourseDir still guarantees to keep, as of now.
+func oldestRetainedDate(now time.Time) time.Time {
+	cutoff := now.Add(-Retention).UTC()
+	midnight := time.Date(cutoff.Year(), cutoff.Month(), cutoff.Day(), 0, 0, 0, 0, time.UTC)
+	if midnight.Before(cutoff) {
+		return midnight.AddDate(0, 0, 1)
+	}
+	return midnight
 }
 
 // datesBetween returns the UTC calendar dates, inclusive, that could hold

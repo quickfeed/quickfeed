@@ -203,6 +203,80 @@ func TestQuerySpansMultipleDays(t *testing.T) {
 	}
 }
 
+// TestQueryClampsToClockAndRetention guards Query as the one place that
+// bounds a request's interval: a far-future To, or a From far beyond
+// Retention, must not make it walk one date file per day across that whole
+// span, regardless of what a caller (such as the RPC handler) asks for.
+func TestQueryClampsToClockAndRetention(t *testing.T) {
+	store, _ := newTestStore(t)
+	now := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
+	store.now = func() time.Time { return now }
+	writeEntry(t, store, "dat520-2026", now, slog.LevelInfo, "recent record")
+
+	farFuture := time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
+	farPast := now.Add(-10 * Retention)
+	entries, _, _, err := store.Query("dat520-2026", Query{From: farPast, To: farFuture, Limit: 100})
+	if err != nil {
+		t.Fatalf("Query() error = %v, want the far-future/far-past interval clamped rather than walked in full", err)
+	}
+	if len(entries) != 1 || entries[0].Message != "recent record" {
+		t.Errorf("Query() entries = %v, want only the one written record", entries)
+	}
+}
+
+// TestQueryEmptyWhenIntervalInvertedAfterClamp guards that clamping To down
+// to now can legitimately invert the interval (an explicit From already
+// after the clamped To), which must yield an empty result rather than an
+// error or a backward walk.
+func TestQueryEmptyWhenIntervalInvertedAfterClamp(t *testing.T) {
+	store, _ := newTestStore(t)
+	now := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
+	store.now = func() time.Time { return now }
+
+	farFuture := time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
+	entries, repos, truncated, err := store.Query("dat520-2026", Query{
+		From: now.Add(time.Minute), To: farFuture, Limit: 100,
+	})
+	if err != nil {
+		t.Fatalf("Query() error = %v", err)
+	}
+	if len(entries) != 0 || len(repos) != 0 || truncated {
+		t.Errorf("Query() = (%v, %v, %v), want empty once To is clamped to now and From is still after it", entries, repos, truncated)
+	}
+}
+
+// TestQueryFromClampedToRetainedFileBoundary guards that From is clamped to
+// the UTC midnight of the oldest date cleanup still guarantees to keep, not
+// to the raw now-Retention instant: cleanupCourseDir removes a date file once
+// its UTC midnight falls before that instant, so clamping to the instant
+// itself could report a window wider than what the on-disk files can answer
+// for.
+func TestQueryFromClampedToRetainedFileBoundary(t *testing.T) {
+	store, _ := newTestStore(t)
+	// A "now" with a non-zero time-of-day, so now-Retention does not itself
+	// land on a UTC midnight, exercising the boundary's round-up.
+	now := time.Date(2026, 3, 10, 15, 0, 0, 0, time.UTC)
+	store.now = func() time.Time { return now }
+
+	oldestKept := now.Add(-Retention).AddDate(0, 0, 1)
+	oldestKept = time.Date(oldestKept.Year(), oldestKept.Month(), oldestKept.Day(), 0, 0, 0, 0, time.UTC)
+	// One record just before the boundary (in a file cleanup has already
+	// removed) and one just after (in the oldest file cleanup still keeps).
+	writeEntry(t, store, "dat520-2026", oldestKept.Add(-time.Minute), slog.LevelInfo, "expired")
+	writeEntry(t, store, "dat520-2026", oldestKept.Add(time.Minute), slog.LevelInfo, "retained")
+	store.now = func() time.Time { return now } // writeEntry moved the clock; restore it for Query
+
+	entries, _, _, err := store.Query("dat520-2026", Query{
+		From: now.Add(-2 * Retention), To: now, Limit: 100,
+	})
+	if err != nil {
+		t.Fatalf("Query() error = %v", err)
+	}
+	if len(entries) != 1 || entries[0].Message != "retained" {
+		t.Errorf("Query() entries = %v, want only the record inside the retained-file boundary", entries)
+	}
+}
+
 func TestQueryDecodesDedicatedAndGenericAttributes(t *testing.T) {
 	store, _ := newTestStore(t)
 	base := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)

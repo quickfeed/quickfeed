@@ -22,9 +22,8 @@ const (
 
 // GetCourseLog returns the course's teacher-visible log for the requested
 // interval, repository, and minimum level. From/To default to the last 24
-// hours, and Limit to 2000; all three are clamped to their server-enforced
-// maximums rather than rejected, matching how a result that still exceeds
-// Limit is reported with Truncated instead of an error.
+// hours and Limit to 2000; Store.Query clamps all three to their
+// server-enforced maximums and reports an over-limit result as Truncated.
 func (s *QuickFeedService) GetCourseLog(ctx context.Context, in *qf.CourseLogRequest) (*qf.CourseLog, error) {
 	logger := qlog.FromContext(ctx)
 	logger.Debug("fetching course log", label.Repository, in.GetRepository())
@@ -58,9 +57,8 @@ func (s *QuickFeedService) GetCourseLog(ctx context.Context, in *qf.CourseLogReq
 	}, nil
 }
 
-// courseLogInterval applies in's defaults (the last 24 hours) and clamps From
-// to the retention window, rather than rejecting a request for an interval
-// wider than what the store can ever hold.
+// courseLogInterval applies in's defaults: the last 24 hours, ending now if
+// To is not given. From/To are otherwise returned unclamped.
 func courseLogInterval(in *qf.CourseLogRequest) (from, to time.Time) {
 	to = time.Now()
 	if t := in.GetTo(); t != nil {
@@ -69,9 +67,6 @@ func courseLogInterval(in *qf.CourseLogRequest) (from, to time.Time) {
 	from = to.Add(-defaultCourseLogInterval)
 	if f := in.GetFrom(); f != nil {
 		from = f.AsTime()
-	}
-	if cutoff := time.Now().Add(-courselog.Retention); from.Before(cutoff) {
-		from = cutoff
 	}
 	return from, to
 }

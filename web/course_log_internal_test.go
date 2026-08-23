@@ -23,9 +23,10 @@ func TestCourseLogIntervalDefaults(t *testing.T) {
 	}
 }
 
+// TestCourseLogIntervalHonorsExplicitBounds guards that courseLogInterval
+// passes explicit From/To through unclamped, including a From beyond
+// Retention or a To in the future.
 func TestCourseLogIntervalHonorsExplicitBounds(t *testing.T) {
-	// Within the retention window relative to the real clock, so the
-	// retention clamp (tested separately below) does not also kick in here.
 	to := time.Now().Add(-time.Hour)
 	from := to.Add(-time.Hour)
 	gotFrom, gotTo := courseLogInterval(&qf.CourseLogRequest{
@@ -34,27 +35,6 @@ func TestCourseLogIntervalHonorsExplicitBounds(t *testing.T) {
 	})
 	if !gotFrom.Equal(from) || !gotTo.Equal(to) {
 		t.Errorf("courseLogInterval() = (%v, %v), want (%v, %v)", gotFrom, gotTo, from, to)
-	}
-}
-
-// TestCourseLogIntervalClampsToRetention guards that a From beyond the
-// retention window is clamped rather than rejected, consistent with how a
-// result that still exceeds Limit is reported truncated instead of erroring.
-func TestCourseLogIntervalClampsToRetention(t *testing.T) {
-	to := time.Now()
-	from := to.Add(-2 * courselog.Retention)
-	gotFrom, gotTo := courseLogInterval(&qf.CourseLogRequest{
-		From: timestamppb.New(from),
-		To:   timestamppb.New(to),
-	})
-	if !gotTo.Equal(to) {
-		t.Errorf("to = %v, want %v unchanged", gotTo, to)
-	}
-	if cutoff := to.Add(-courselog.Retention); gotFrom.Before(cutoff) {
-		t.Errorf("from = %v, want clamped to no earlier than %v", gotFrom, cutoff)
-	}
-	if gotFrom.Equal(from) {
-		t.Errorf("from = %v, want it clamped rather than left at the requested value", gotFrom)
 	}
 }
 
