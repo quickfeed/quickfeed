@@ -4,10 +4,16 @@
 
 Read [Overview of QuickFeed's code base](qf-overview.md)
 
+## For Students
+
+The QuickFeed frontend provides a course-aware **Submission Guide** from each course page.
+This is the canonical guide for cloning repositories, submitting work, handling group assignments, and resolving synchronization conflicts.
+
 ## For Teachers
 
 Please review the [User Manual](teacher.md) to setup QuickFeed.
-You may also want to copy the [sign up instructions](templates/signup.md) and [lab submission instructions](templates/lab-submission.md), and make the necessary adjustments for your course.
+You may also want to copy the [sign up instructions](templates/signup.md).
+Do not copy general submission instructions into course repositories; add only the [course-specific submission rules](templates/lab-submission.md) that supplement the in-app guide.
 
 ## Technology Stack
 

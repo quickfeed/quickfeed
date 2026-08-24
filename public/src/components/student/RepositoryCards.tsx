@@ -75,6 +75,15 @@ export const RepositoryCards = () => {
             <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
             <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
             <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">Help</span>
+                <Link
+                    to={`/course/${courseID}/submission-guide`}
+                    className="btn btn-xs btn-ghost border border-base-content/20"
+                >
+                    Submission Guide
+                </Link>
+            </div>
+            <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">Group</span>
                 <Link
                     to={`/course/${courseID}/group`}

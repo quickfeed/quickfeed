@@ -5,6 +5,7 @@ import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackVie
 import Members from "../components/Members"
 import Results from "../components/Results"
 import { RepositoryCards } from "../components/student/RepositoryCards"
+import SubmissionGuide from "../components/student/SubmissionGuide"
 import Assignments from "../components/teacher/Assignments"
 import CourseLogs from "../components/teacher/CourseLogs"
 import { Color, isManuallyGraded } from "../Helpers"
@@ -75,6 +76,7 @@ const TeacherPage = () => {
                 <Route path="/feedback" element={<AssignmentFeedbackView />} />
                 <Route path="/feedback/:assignmentID" element={<AssignmentFeedbackView />} />
                 <Route path="/logs" element={<CourseLogs />} />
+                <Route path="/submission-guide" element={<SubmissionGuide />} />
             </Routes>
         </>
     )

@@ -2,6 +2,7 @@ import { Route, Routes, useLocation } from "react-router"
 import Lab from "../components/Lab"
 import CourseLabs from "../components/student/CourseLabs"
 import { RepositoryCards } from "../components/student/RepositoryCards"
+import SubmissionGuide from "../components/student/SubmissionGuide"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
 import { useCourseID } from "../hooks/useCourseID"
 import GroupPage from "./GroupPage"
@@ -23,6 +24,7 @@ const StudentPage = () => {
             </div>
             <Routes>
                 <Route path="/group" element={<GroupPage />} />
+                <Route path="/submission-guide" element={<SubmissionGuide />} />
                 <Route path="/lab/:lab" element={<Lab />} />
                 <Route path="/group-lab/:lab" element={<Lab />} />
             </Routes>

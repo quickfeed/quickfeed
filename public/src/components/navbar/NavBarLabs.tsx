@@ -13,9 +13,7 @@ const NavBarLabs = () => {
     const navigate = useNavigate()
     const location = useLocation()
 
-    if (!state.assignments[state.activeCourse.toString()]) {
-        return null
-    }
+    const assignments = state.assignments[state.activeCourse.toString()] ?? []
 
     const submissionIcon = (submission: Submission) => {
         return (
@@ -43,35 +41,45 @@ const NavBarLabs = () => {
         return false
     }
 
-    return state.assignments[state.activeCourse.toString()].map(assignment => {
-        const submissions = state.submissions.ForAssignment(assignment)
-        if (!submissions) {
-            return null
-        }
-        return submissions.map(submission => {
-            if (!isValidSubmissionForAssignment(submission, assignment)) {
-                return null
-            }
-            const link: NavLink = {
-                text: assignment.name,
-                to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}`,
-                jsx: submissionIcon(submission)
-            }
-            const highlighted = isHighlighted(submission, assignment)
-            return (
-                <div
-                    className={`relative ${highlighted ? "bg-base-100" : ""}`}
-                    key={submission.ID.toString()}
-                    onClick={() => { navigate(link.to) }}
-                    role="button"
-                    aria-hidden="true"
-                >
-                    <NavBarLink link={link} />
-                    <ProgressIndicator courseID={state.activeCourse.toString()} submission={submission} />
-                </div>
-            )
-        })
-    })
+    return (
+        <>
+            <div className={location.pathname.endsWith("/submission-guide") ? "bg-base-100" : ""}>
+                <NavBarLink link={{
+                    text: "Submission Guide",
+                    to: `/course/${state.activeCourse}/submission-guide`
+                }} />
+            </div>
+            {assignments.map(assignment => {
+                const submissions = state.submissions.ForAssignment(assignment)
+                if (!submissions) {
+                    return null
+                }
+                return submissions.map(submission => {
+                    if (!isValidSubmissionForAssignment(submission, assignment)) {
+                        return null
+                    }
+                    const link: NavLink = {
+                        text: assignment.name,
+                        to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}`,
+                        jsx: submissionIcon(submission)
+                    }
+                    const highlighted = isHighlighted(submission, assignment)
+                    return (
+                        <div
+                            className={`relative ${highlighted ? "bg-base-100" : ""}`}
+                            key={submission.ID.toString()}
+                            onClick={() => { navigate(link.to) }}
+                            role="button"
+                            aria-hidden="true"
+                        >
+                            <NavBarLink link={link} />
+                            <ProgressIndicator courseID={state.activeCourse.toString()} submission={submission} />
+                        </div>
+                    )
+                })
+            })}
+        </>
+    )
 }
 
 export default NavBarLabs
