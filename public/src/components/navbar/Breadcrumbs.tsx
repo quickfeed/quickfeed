@@ -54,6 +54,7 @@ const Breadcrumbs = () => {
         if (index === 1 && courseName && pathnames[0] === 'course') { breadcrumbName = courseName }
         // Replace 'lab/ID' with 'lab/Assignment Name' in the breadcrumb.
         if (index === 3 && assignmentName && (pathnames[2] === 'lab' || pathnames[2] === 'group-lab')) { breadcrumbName = assignmentName }
+        if (value === 'submission-guide') { breadcrumbName = 'Submission Guide' }
 
         segments.push({ label: breadcrumbName, to, last })
     })
