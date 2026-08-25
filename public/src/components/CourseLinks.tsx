@@ -1,7 +1,8 @@
+import type { ReactNode } from "react"
 import { Link } from "react-router"
-import { Repository_Type } from "../../../proto/qf/types_pb"
-import { useCourseID } from "../../hooks/useCourseID"
-import { useAppState } from "../../overmind"
+import { Repository_Type } from "../../proto/qf/types_pb"
+import { useCourseID } from "../hooks/useCourseID"
+import { useAppState } from "../overmind"
 
 interface RepositoryLinkConfig {
     type: Repository_Type
@@ -24,29 +25,44 @@ interface RepoLinkGroupProps {
     links: Array<{ label: string; url: string }>
 }
 
+const stripButton = "btn btn-xs btn-ghost border border-base-content/20"
+
+/** StripGroup is one labelled section of the repository strip.
+ *  It is `display: contents` below sm so that its label and its links become cells of
+ *  the strip's own grid: every group's label shares one column and every group's links
+ *  start at the same offset, instead of each stacked row starting wherever its label ends.
+ *  From sm up the strip is a flex row again and the group is an ordinary flex item. */
+const StripGroup = ({ title, className = "", children }: { title: string, className?: string, children: ReactNode }) => (
+    <div className={`contents sm:flex sm:items-center sm:gap-2 ${className}`}>
+        <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">{title}</span>
+        <div className="flex flex-wrap items-center gap-2">
+            {children}
+        </div>
+    </div>
+)
+
 const RepoLinkGroup = ({ title, links }: RepoLinkGroupProps) => {
     if (links.length === 0) { return null }
 
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">{title}</span>
+        <StripGroup title={title}>
             {links.map((link) => (
                 <a
                     key={link.label}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-xs btn-ghost border border-base-content/20"
+                    className={stripButton}
                 >
                     {link.label}
                 </a>
             ))}
-        </div>
+        </StripGroup>
     )
 }
 
-/** RepositoryCards displays grouped repository links for a course as a compact inline strip */
-export const RepositoryCards = () => {
+/** CourseLinks displays the course repository, group, and help links as a compact inline strip */
+export const CourseLinks = () => {
     const state = useAppState()
     const courseID = useCourseID()
     const courseIDStr = courseID.toString()
@@ -71,27 +87,21 @@ export const RepositoryCards = () => {
     const resourcesGroupLinks = linksForGroup("resources")
 
     return (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
+        <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-6 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
             <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
             <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
-            <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">Help</span>
-                <Link
-                    to={`/course/${courseID}/submission-guide`}
-                    className="btn btn-xs btn-ghost border border-base-content/20"
-                >
-                    Submission Guide
-                </Link>
-            </div>
-            <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider whitespace-nowrap">Group</span>
-                <Link
-                    to={`/course/${courseID}/group`}
-                    className="btn btn-xs btn-ghost border border-base-content/20"
-                >
+            <StripGroup title="Group">
+                <Link to={`/course/${courseID}/group`} className={stripButton}>
                     {hasGroup ? `View ${groupName}` : "Create Group"}
                 </Link>
-            </div>
+            </StripGroup>
+            {/* Help sits at the far right of the strip, but only while the strip is a
+                single flex row; when stacked in narrow viewports, it is just the last row of the grid. */}
+            <StripGroup title="Help" className="sm:ml-auto">
+                <Link to={`/course/${courseID}/submission-guide`} className={stripButton}>
+                    Submission Guide
+                </Link>
+            </StripGroup>
         </div>
     )
 }

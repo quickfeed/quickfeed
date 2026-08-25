@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import { CourseSchema, Repository_Type, UserSchema } from "../../proto/qf/types_pb"
+import { CourseLinks } from "../components/CourseLinks"
 import NavBarLabs from "../components/navbar/NavBarLabs"
-import { RepositoryCards } from "../components/student/RepositoryCards"
 import SubmissionGuide from "../components/student/SubmissionGuide"
 import { initializeOvermind } from "./TestHelpers"
 
@@ -46,7 +46,7 @@ describe("SubmissionGuide", () => {
     })
 
     it("is linked from the course resources", () => {
-        renderAtCourseRoute(<RepositoryCards />)
+        renderAtCourseRoute(<CourseLinks />)
 
         expect(screen.getByRole("link", { name: "Submission Guide" }).getAttribute("href"))
             .toBe(`/course/${courseID}/submission-guide`)

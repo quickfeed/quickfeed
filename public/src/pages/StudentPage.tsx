@@ -1,7 +1,7 @@
 import { Route, Routes, useLocation } from "react-router"
+import { CourseLinks } from "../components/CourseLinks"
 import Lab from "../components/Lab"
 import CourseLabs from "../components/student/CourseLabs"
-import { RepositoryCards } from "../components/student/RepositoryCards"
 import SubmissionGuide from "../components/student/SubmissionGuide"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
 import { useCourseID } from "../hooks/useCourseID"
@@ -19,7 +19,7 @@ const StudentPage = () => {
     return (
         <>
             <div hidden={location.pathname !== root}>
-                <RepositoryCards />
+                <CourseLinks />
                 <CourseLabs />
             </div>
             <Routes>
