@@ -97,8 +97,8 @@ const SubmissionGuide = () => {
                 <section>
                     <h2 className="mb-3 text-2xl font-bold">1. Choose the right repository</h2>
                     <p>
-                        Use <strong>User Repo</strong> on the course page for individual work.
-                        For approved group work, use <strong>Group Repo</strong> instead.
+                        Use your <strong>User Repo{userRepository ? ` (${repositoryName(userRepository)})` : ""}</strong> on the course page for individual work.
+                        For group work, use your group&apos;s <strong>Group Repo{groupRepository ? ` (${repositoryName(groupRepository)})` : ""}</strong>.
                         The <strong>Assignments</strong> repository is maintained by the teaching staff and is read-only for students.
                     </p>
                     <p className="mt-3">
@@ -129,7 +129,7 @@ const SubmissionGuide = () => {
                         <li>Only committed changes are pushed and submitted.</li>
                         <li>Push individual work to the repository&apos;s default branch so QuickFeed processes it.</li>
                         <li>You may push again whenever you need to resubmit.</li>
-                        <li>Open the assignment in QuickFeed to see the latest score, status, and available build output.</li>
+                        <li>Open the assignment in QuickFeed to see the latest score, build, and test output.</li>
                     </ul>
                 </section>
 
@@ -142,7 +142,7 @@ const SubmissionGuide = () => {
                         </>
                     ) : (
                         <p>
-                            After your group is approved, <strong>Group Repo</strong> appears on the course page.
+                            After your group is approved, your group&apos;s <strong>Group Repo</strong> appears on the course page.
                             Clone that repository and push shared work there.
                         </p>
                     )}
