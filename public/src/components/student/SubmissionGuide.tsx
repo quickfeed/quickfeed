@@ -1,13 +1,43 @@
+import { useState } from "react"
 import { Repository_Type } from "../../../proto/qf/types_pb"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useAppState } from "../../overmind"
 
 
-const Command = ({ children }: { children: string }) => (
-    <pre className="my-3 overflow-x-auto rounded-lg bg-neutral p-4 text-sm text-neutral-content">
-        <code>{children}</code>
-    </pre>
-)
+const Command = ({ children }: { children: string }) => {
+    const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle")
+    const isSingleLine = !children.includes("\n")
+
+    const copyCommand = async () => {
+        try {
+            await navigator.clipboard.writeText(children)
+            setCopyStatus("copied")
+        } catch {
+            setCopyStatus("failed")
+        }
+    }
+
+    const copyLabel = copyStatus === "copied" ? "Copied" : copyStatus === "failed" ? "Copy failed" : "Copy"
+
+    return (
+        <div className="relative my-3">
+            <pre className={`overflow-x-auto rounded-lg bg-neutral p-4 text-sm text-neutral-content${isSingleLine ? " pr-24" : ""}`}>
+                <code>{children}</code>
+            </pre>
+            {isSingleLine && (
+                <button
+                    type="button"
+                    className="btn btn-ghost btn-xs absolute right-2 top-2 text-neutral-content"
+                    aria-label={`Copy command: ${children}`}
+                    onClick={() => void copyCommand()}
+                >
+                    <i className="fas fa-copy" aria-hidden="true" />
+                    {copyLabel}
+                </button>
+            )}
+        </div>
+    )
+}
 
 const ExternalLink = ({ href, children }: { href: string, children: React.ReactNode }) => (
     <a href={href} target="_blank" rel="noopener noreferrer" className="link link-primary">
