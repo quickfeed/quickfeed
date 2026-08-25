@@ -52,7 +52,6 @@ const SubmissionGuide = () => {
                 <h1 className="mb-4 text-4xl font-bold">Submitting assignments</h1>
                 <p className="max-w-3xl text-lg leading-relaxed text-base-content/75">
                     QuickFeed treats a push to your repository&apos;s default branch as a submission.
-                    There is no separate submit button and no special commit message required by QuickFeed.
                 </p>
             </header>
 
