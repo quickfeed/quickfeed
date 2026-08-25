@@ -1,10 +1,10 @@
 import { useCallback } from "react"
 import { Route, Routes, useLocation } from "react-router"
 import Card from "../components/Card"
+import { CourseLinks } from "../components/CourseLinks"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
 import Members from "../components/Members"
 import Results from "../components/Results"
-import { RepositoryCards } from "../components/student/RepositoryCards"
 import SubmissionGuide from "../components/student/SubmissionGuide"
 import Assignments from "../components/teacher/Assignments"
 import CourseLogs from "../components/teacher/CourseLogs"
@@ -56,7 +56,7 @@ const TeacherPage = () => {
 
     return (
         <>
-            <RepositoryCards />
+            <CourseLinks />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
