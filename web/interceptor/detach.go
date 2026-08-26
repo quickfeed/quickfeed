@@ -16,20 +16,22 @@ const detachTimeout = 2 * time.Minute
 // detachedMethods lists methods that perform multi-step SCM and database
 // mutations without rollback support. Aborting such a method midway, e.g.,
 // because the client closed the connection, can leave the GitHub organization
-// and the database in inconsistent states.
-// Once started, these methods should be allowed to complete, bounded by detachTimeout.
-var detachedMethods = map[string]bool{
-	"UpdateGroup":       true, // may create the group repo and add/remove collaborators on GitHub
-	"DeleteGroup":       true, // deletes the GitHub repo before removing database records
-	"UpdateEnrollments": true, // may create/delete user repos and update org membership before database records
+// and the database in inconsistent states. Once started, these methods should
+// be allowed to complete. A zero timeout means that the handler owns its timeout
+// policy instead of using an interceptor-level deadline.
+var detachedMethods = map[string]time.Duration{
+	"UpdateGroup":        detachTimeout, // may create the group repo and add/remove collaborators on GitHub
+	"DeleteGroup":        detachTimeout, // deletes the GitHub repo before removing database records
+	"UpdateEnrollments":  detachTimeout, // may create/delete user repos and update org membership before database records
+	"RebuildSubmissions": 0,             // each submission uses the assignment's container timeout
 }
 
 // DetachInterceptor detaches handlers for methods in detachedMethods from the
 // connection's context: context values, such as user claims, are preserved,
-// but the client's cancellation is ignored. The handler instead runs under
-// the server-controlled detachTimeout. A disconnected client never receives
-// the response, but the server completes the operation, keeping GitHub and
-// the database consistent.
+// but the client's cancellation is ignored. Methods with a configured timeout
+// run under that server-controlled deadline; other methods manage their own
+// deadlines. A disconnected client never receives the response, but the server
+// completes the operation, keeping GitHub and the database consistent.
 type DetachInterceptor struct{}
 
 func NewDetachInterceptor() *DetachInterceptor {
@@ -40,10 +42,13 @@ func (*DetachInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure
 		method := procedure[strings.LastIndex(procedure, "/")+1:]
-		if detachedMethods[method] {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(context.WithoutCancel(ctx), detachTimeout)
-			defer cancel()
+		if timeout, exists := detachedMethods[method]; exists {
+			ctx = context.WithoutCancel(ctx)
+			if timeout > 0 {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithTimeout(ctx, timeout)
+				defer cancel()
+			}
 		}
 		return next(ctx, request)
 	})
