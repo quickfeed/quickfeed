@@ -5,11 +5,10 @@ import (
 
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gorm.io/gorm"
 )
 
-// ErrEmptyNoteID is returned by GetNote when the query has no ID.
-var ErrEmptyNoteID = errors.New("cannot get note with empty ID")
+// ErrEmptyNoteID is returned when a note operation's query has an empty ID.
+var ErrEmptyNoteID = errors.New("cannot identify note with empty ID")
 
 // GetNote returns the note with the ID set on the query.
 func (db *GormDB) GetNote(query *qf.Note) (*qf.Note, error) {
@@ -103,7 +102,7 @@ func (db *GormDB) CreateNote(note *qf.Note) error {
 // the caller can return it without reloading the row.
 func (db *GormDB) UpdateNote(note *qf.Note) error {
 	if note.GetID() == 0 {
-		return gorm.ErrMissingWhereClause
+		return ErrEmptyNoteID
 	}
 	note.EditedAt = timestamppb.Now()
 	return db.conn.Model(&qf.Note{ID: note.GetID()}).
@@ -114,7 +113,7 @@ func (db *GormDB) UpdateNote(note *qf.Note) error {
 // DeleteNote removes the internal note matching the given query.
 func (db *GormDB) DeleteNote(note *qf.Note) error {
 	if note.GetID() == 0 {
-		return gorm.ErrMissingWhereClause
+		return ErrEmptyNoteID
 	}
 	return db.conn.Delete(&qf.Note{}, note.GetID()).Error
 }
