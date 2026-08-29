@@ -11,11 +11,15 @@ export type NotesState = {
     /* The scope last loaded; determines what is refreshed after a note is created, edited, or deleted. */
     scope: "submission" | "course"
 
-    /* The body of the note currently being drafted */
+    /* The body of the new note being drafted. Kept separate from editDraft so that
+       starting an edit does not discard a new note the user has begun writing. */
     draft: string
 
     /* The ID of the note currently being edited, or 0 if none */
     editing: bigint
+
+    /* The body of the note currently being edited */
+    editDraft: string
 }
 
 export const state: NotesState = {
@@ -24,4 +28,5 @@ export const state: NotesState = {
     scope: "submission",
     draft: "",
     editing: 0n,
+    editDraft: "",
 }

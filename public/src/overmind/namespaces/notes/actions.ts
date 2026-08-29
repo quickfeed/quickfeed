@@ -69,7 +69,7 @@ export const createNote = async ({ state, actions, effects }: Context, target: N
 
 /* updateNote saves an edited note body. Only the note's author may succeed. */
 export const updateNote = async ({ state, actions, effects }: Context, note: Note): Promise<void> => {
-    const body = state.notes.draft.trim()
+    const body = state.notes.editDraft.trim()
     if (!body || !state.activeCourse) {
         return
     }
@@ -78,7 +78,7 @@ export const updateNote = async ({ state, actions, effects }: Context, note: Not
         return
     }
     state.notes.editing = 0n
-    state.notes.draft = ""
+    state.notes.editDraft = ""
     await actions.notes.refresh()
 }
 
@@ -94,19 +94,25 @@ export const deleteNote = async ({ state, actions, effects }: Context, note: Not
     await actions.notes.refresh()
 }
 
-/* startEditing prepares the form to edit an existing note. */
+/* startEditing prepares the form to edit an existing note. The new-note draft is
+   left alone so that an unsent note is not lost by starting an edit. */
 export const startEditing = ({ state }: Context, note: Note): void => {
     state.notes.editing = note.ID
-    state.notes.draft = note.body
+    state.notes.editDraft = note.body
 }
 
-/* cancelEditing clears any in-progress edit or draft. */
+/* cancelEditing discards the in-progress edit, keeping the new-note draft. */
 export const cancelEditing = ({ state }: Context): void => {
     state.notes.editing = 0n
-    state.notes.draft = ""
+    state.notes.editDraft = ""
 }
 
-/* setDraft updates the body of the note being drafted or edited. */
+/* setDraft updates the body of the new note being drafted. */
 export const setDraft = ({ state }: Context, body: string): void => {
     state.notes.draft = body
+}
+
+/* setEditDraft updates the body of the note being edited. */
+export const setEditDraft = ({ state }: Context, body: string): void => {
+    state.notes.editDraft = body
 }
