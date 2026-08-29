@@ -589,3 +589,40 @@ func countOpenFiles(t *testing.T) int {
 	}
 	return bytes.Count(out, []byte("\n"))
 }
+
+// TestDockerNonZeroExit checks that a container exiting with a non-zero status
+// still returns its output, along with a ContainerExitError carrying the exit
+// status, and that stderr is included in the output on failure.
+func TestDockerNonZeroExit(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script = `echo -n "some output"
+echo -n "some error" >&2
+exit 3`
+		image = "golang:latest"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
+	})
+	var exitErr *ci.ContainerExitError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("docker.Run(%#v) error = %v, want ContainerExitError", script, err)
+	}
+	if exitErr.Code != 3 {
+		t.Errorf("docker.Run(%#v) exit status = %d, want 3", script, exitErr.Code)
+	}
+	if !strings.Contains(out, "some output") {
+		t.Errorf("docker.Run(%#v) = %#v, want it to contain stdout %#v", script, out, "some output")
+	}
+	if !strings.Contains(out, "some error") {
+		t.Errorf("docker.Run(%#v) = %#v, want it to contain stderr %#v", script, out, "some error")
+	}
+}

@@ -1,5 +1,6 @@
+import { RunStatus } from "../../../proto/kit/score/score_pb"
 import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded, runFailureText } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
 type SubmissionInfoProps = {
@@ -32,6 +33,13 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                 </tr>
             </thead>
             <tbody>
+                {buildInfo && buildInfo.Status !== RunStatus.SUCCESS ? (
+                    <tr>
+                        <td colSpan={3} className="failed pl-3!">
+                            Last run failed: {runFailureText(buildInfo.Status)} The score shown is from the last successful run.
+                        </td>
+                    </tr>
+                ) : null}
                 <tr>
                     <td colSpan={2} className={`${className} pl-3!`}>
                         Status

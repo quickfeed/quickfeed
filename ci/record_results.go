@@ -45,7 +45,10 @@ func (r *RunData) RecordResults(ctx context.Context, db database.Database, resul
 	}
 	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
-	if !r.Rebuild {
+	// A failed run keeps the previous submission's scores and must not
+	// consume slip days.
+	failedRun := newSubmission.GetBuildInfo().GetStatus() != score.RunStatus_SUCCESS
+	if !r.Rebuild && !failedRun {
 		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
 			return nil, fmt.Errorf("updating slip days for %s: %w", r, err)
 		}
@@ -93,6 +96,9 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
+	if results.GetBuildInfo().GetStatus() != score.RunStatus_SUCCESS {
+		return r.newFailedRunSubmission(previous, results)
+	}
 	score := results.Sum()
 	previous.SetGradesIfApproved(r.Assignment, score)
 	return &qf.Submission{
@@ -105,6 +111,29 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		Grades:       previous.GetGrades(),
 		BuildInfo:    results.GetBuildInfo(),
 		Scores:       results.Scores,
+	}
+}
+
+// newFailedRunSubmission records a failed run without overwriting the previous
+// submission's result: the score, grades, scores, and submission date are kept,
+// while the build info carries the failure status and log, and the commit hash
+// names the failed commit so a rebuild retries it.
+func (r *RunData) newFailedRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
+	buildInfo := results.GetBuildInfo()
+	if previous.GetBuildInfo() != nil {
+		// A failed run is not a delivery; keep the previous submission date.
+		buildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
+	}
+	return &qf.Submission{
+		ID:           previous.GetID(),
+		AssignmentID: r.Assignment.GetID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
+		CommitHash:   r.CommitID,
+		Score:        previous.GetScore(),
+		Grades:       previous.GetGrades(),
+		BuildInfo:    buildInfo,
+		Scores:       previous.GetScores(),
 	}
 }
 

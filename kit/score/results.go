@@ -12,10 +12,11 @@ import (
 
 // Results contains the score objects, build info, and errors.
 type Results struct {
-	BuildInfo *BuildInfo // build info for tests
-	Scores    []*Score   // list of scores for different tests
-	testNames []string   // defines the order
-	scoreMap  map[string]*Score
+	BuildInfo    *BuildInfo // build info for tests
+	Scores       []*Score   // list of scores for different tests
+	ParsedScores int        // number of valid score lines parsed from the test output
+	testNames    []string   // defines the order
+	scoreMap     map[string]*Score
 }
 
 func newResults(scores ...*Score) *Results {
@@ -130,6 +131,7 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 	var filteredLog []string
 	errs := make(parseErrors, 0)
 	results := newResults()
+	parsedScores := 0
 
 	// first, add all expected tests (assumed to already have zero scores)
 	for _, expectedTest := range zeroScoreTests {
@@ -145,6 +147,7 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 				errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
 				continue
 			}
+			parsedScores++
 			// only add the score if it's in the expected tests
 			if slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
 				return expected.GetTestName() == sc.GetTestName()
@@ -163,7 +166,8 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 			BuildLog:       strings.Join(filteredLog, "\n"),
 			ExecTime:       execTime.Milliseconds(),
 		},
-		Scores: results.toScoreSlice(),
+		Scores:       results.toScoreSlice(),
+		ParsedScores: parsedScores,
 	}
 	if len(errs) > 0 {
 		return res, errs

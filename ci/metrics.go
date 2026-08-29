@@ -10,6 +10,8 @@ func TestExecutionMetricsCollectors() []prometheus.Collector {
 		testExecutionTimeGauge,
 		testsStartedCounter,
 		testsFailedCounter,
+		testsFailedWithOutputCounter,
+		testsFailedExtractResultsCounter,
 		testsSucceededCounter,
 	}
 }

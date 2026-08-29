@@ -2,8 +2,8 @@
 // @generated from file kit/score/score.proto (package score, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kit/score/score.proto.
  */
 export const file_kit_score_score: GenFile = /*@__PURE__*/
-  fileDesc("ChVraXQvc2NvcmUvc2NvcmUucHJvdG8SBXNjb3JlIpEBCgVTY29yZRIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSDgoGU2VjcmV0GAMgASgJEhAKCFRlc3ROYW1lGAQgASgJEg0KBVNjb3JlGAUgASgFEhAKCE1heFNjb3JlGAYgASgFEg4KBldlaWdodBgHIAEoBRITCgtUZXN0RGV0YWlscxgIIAEoCSK0AQoJQnVpbGRJbmZvEgoKAklEGAEgASgEEhQKDFN1Ym1pc3Npb25JRBgCIAEoBBIQCghCdWlsZExvZxgDIAEoCRIQCghFeGVjVGltZRgEIAEoAxItCglCdWlsZERhdGUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjIKDlN1Ym1pc3Npb25EYXRlGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIqWihnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQva2l0L3Njb3JlYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("ChVraXQvc2NvcmUvc2NvcmUucHJvdG8SBXNjb3JlIpEBCgVTY29yZRIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSDgoGU2VjcmV0GAMgASgJEhAKCFRlc3ROYW1lGAQgASgJEg0KBVNjb3JlGAUgASgFEhAKCE1heFNjb3JlGAYgASgFEg4KBldlaWdodBgHIAEoBRITCgtUZXN0RGV0YWlscxgIIAEoCSLWAQoJQnVpbGRJbmZvEgoKAklEGAEgASgEEhQKDFN1Ym1pc3Npb25JRBgCIAEoBBIQCghCdWlsZExvZxgDIAEoCRIQCghFeGVjVGltZRgEIAEoAxItCglCdWlsZERhdGUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjIKDlN1Ym1pc3Npb25EYXRlGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIgCgZTdGF0dXMYByABKA4yEC5zY29yZS5SdW5TdGF0dXMqVwoJUnVuU3RhdHVzEgsKB1NVQ0NFU1MQABIRCg1CVUlMRF9GQUlMVVJFEAESCwoHVElNRU9VVBACEg0KCU5PX1NDT1JFUxADEg4KClRFU1RfUEFOSUMQBEIqWihnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQva2l0L3Njb3JlYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * Score give the score for a single test named TestName.
@@ -115,6 +115,13 @@ export type BuildInfo = Message<"score.BuildInfo"> & {
    * @generated from field: google.protobuf.Timestamp SubmissionDate = 6;
    */
   SubmissionDate?: Timestamp | undefined;
+
+  /**
+   * outcome of the test run; non-SUCCESS runs keep the previous submission's scores
+   *
+   * @generated from field: score.RunStatus Status = 7;
+   */
+  Status: RunStatus;
 };
 
 /**
@@ -123,4 +130,54 @@ export type BuildInfo = Message<"score.BuildInfo"> & {
  */
 export const BuildInfoSchema: GenMessage<BuildInfo> = /*@__PURE__*/
   messageDesc(file_kit_score_score, 1);
+
+/**
+ * RunStatus classifies the outcome of a test run. Values other than SUCCESS
+ * mean the run failed to produce a trustworthy result, typically because of
+ * a problem with the test environment rather than the submitted code.
+ *
+ * @generated from enum score.RunStatus
+ */
+export enum RunStatus {
+  /**
+   * the run produced test results
+   *
+   * @generated from enum value: SUCCESS = 0;
+   */
+  SUCCESS = 0,
+
+  /**
+   * the container could not be created or started, or produced no output
+   *
+   * @generated from enum value: BUILD_FAILURE = 1;
+   */
+  BUILD_FAILURE = 1,
+
+  /**
+   * the run exceeded the assignment's container timeout
+   *
+   * @generated from enum value: TIMEOUT = 2;
+   */
+  TIMEOUT = 2,
+
+  /**
+   * the run produced output, but no parsable test scores
+   *
+   * @generated from enum value: NO_SCORES = 3;
+   */
+  NO_SCORES = 3,
+
+  /**
+   * the test execution panicked before producing test scores
+   *
+   * @generated from enum value: TEST_PANIC = 4;
+   */
+  TEST_PANIC = 4,
+}
+
+/**
+ * Describes the enum score.RunStatus.
+ */
+export const RunStatusSchema: GenEnum<RunStatus> = /*@__PURE__*/
+  enumDesc(file_kit_score_score, 0);
 
