@@ -1,6 +1,14 @@
 package database
 
-import "github.com/quickfeed/quickfeed/qf"
+import (
+	"errors"
+
+	"github.com/quickfeed/quickfeed/qf"
+)
+
+// ErrNotEnrolled is returned when the requested user or group do not have
+// the expected association with the given course
+var ErrNotEnrolled = errors.New("user or group not enrolled in the course")
 
 // CreateUser creates new user record. The first user is set as admin.
 func (db *GormDB) CreateUser(user *qf.User) error {

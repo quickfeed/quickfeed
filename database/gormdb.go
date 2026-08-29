@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"log/slog"
 
 	"github.com/quickfeed/quickfeed/kit/score"
@@ -9,30 +8,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-)
-
-var (
-	// ErrDuplicateIdentity is returned when trying to associate a remote identity
-	// with a user account and the identity is already in use.
-	ErrDuplicateIdentity = errors.New("remote identity registered with another user")
-	// ErrEmptyGroup is returned when trying to create a group without users.
-	ErrEmptyGroup = errors.New("cannot create group without users")
-	// ErrDuplicateGroup is returned when trying to create a group with the same
-	// name as a previously registered group.
-	ErrDuplicateGroup = errors.New("group with this name already registered")
-	// ErrUpdateGroup is returned when updating a group's enrollment fails.
-	ErrUpdateGroup = errors.New("group members not enrolled in the course")
-	// ErrCourseExists is returned when trying to create an association in
-	// the database for a DirectoryId that already exists in the database.
-	ErrCourseExists = errors.New("course already exists on git provider")
-	// ErrInsufficientAccess is returned when trying to update database
-	// with insufficient access privileges.
-	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
-	// ErrCreateRepo is returned when trying to create repository with wrong argument.
-	ErrCreateRepo = errors.New("invalid arguments for repository creation")
-	// ErrNotEnrolled is returned when the requested user or group do not have
-	// the expected association with the given course
-	ErrNotEnrolled = errors.New("user or group not enrolled in the course")
 )
 
 // GormDB implements the Database interface.

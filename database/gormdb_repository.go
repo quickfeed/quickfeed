@@ -1,6 +1,13 @@
 package database
 
-import "github.com/quickfeed/quickfeed/qf"
+import (
+	"errors"
+
+	"github.com/quickfeed/quickfeed/qf"
+)
+
+// ErrCreateRepo is returned when trying to create repository with wrong argument.
+var ErrCreateRepo = errors.New("invalid arguments for repository creation")
 
 // CreateRepository creates a new repository record.
 func (db *GormDB) CreateRepository(repo *qf.Repository) error {

@@ -7,6 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// ErrCourseExists is returned when trying to create an association in
+// the database for a DirectoryId that already exists in the database.
+var ErrCourseExists = errors.New("course already exists on git provider")
+
+// ErrInsufficientAccess is returned when trying to update database
+// with insufficient access privileges.
+var ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
+
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 // The provided course must have a unique (GitHub) OrganizationID not already associated with existing course.
 // Similarly, the course must have a unique course code and year.
