@@ -28,6 +28,17 @@ message Score {
     string TestDetails = 8;  // if populated, the frontend may display these details
 }
 
+// RunStatus classifies the outcome of a test run. Values other than SUCCESS
+// mean the run failed to produce a trustworthy result, typically because of
+// a problem with the test environment rather than the submitted code.
+enum RunStatus {
+    SUCCESS       = 0;  // the run produced test results
+    BUILD_FAILURE = 1;  // the container could not be created or started, or produced no output
+    TIMEOUT       = 2;  // the run exceeded the assignment's container timeout
+    NO_SCORES     = 3;  // the run produced output, but no parsable test scores
+    TEST_PANIC    = 4;  // the test execution panicked before producing test scores
+}
+
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
     uint64 ID           = 1;
@@ -37,4 +48,6 @@ message BuildInfo {
 
     google.protobuf.Timestamp BuildDate      = 5 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     google.protobuf.Timestamp SubmissionDate = 6 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+
+    RunStatus Status = 7;  // outcome of the test run; non-SUCCESS runs keep the previous submission's scores
 }

@@ -57,11 +57,6 @@ func (s *Score) Normalize(maxScore int) {
 	s.MaxScore = int32(maxScore)
 }
 
-// weightedScore returns the weighted score for this test score.
-func (s *Score) weightedScore(totalWeight float64) float64 {
-	return weightedScore(float64(s.GetScore()), float64(s.GetMaxScore()), float64(s.GetWeight()), totalWeight)
-}
-
 // Equal returns true if s equals other. Ignores the Secret field.
 func (s *Score) Equal(other *Score) bool {
 	return other != nil &&
