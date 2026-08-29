@@ -17,6 +17,19 @@ describe("note helpers", () => {
         expect(noteCountsByEnrollment(notes, [enrollment, otherEnrollment]).get(otherEnrollment.ID)).toBeUndefined()
     })
 
+    test("a group note counts for every member of the group", () => {
+        const first = create(EnrollmentSchema, { ID: 1n, groupID: 10n })
+        const second = create(EnrollmentSchema, { ID: 2n, groupID: 10n })
+        const notes = [
+            create(NoteSchema, { ID: 1n, GroupID: 10n, body: "group note" }),
+            create(NoteSchema, { ID: 2n, EnrollmentID: 2n, body: "student note" }),
+        ]
+
+        const counts = noteCountsByEnrollment(notes, [first, second])
+        expect(counts.get(first.ID)).toBe(1)
+        expect(counts.get(second.ID)).toBe(2)
+    })
+
     test("student targets use stable keys for direct and group notes", () => {
         const enrollment = create(EnrollmentSchema, {
             ID: 7n,

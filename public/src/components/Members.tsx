@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router"
 import type { Enrollment } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
@@ -37,9 +37,15 @@ const Members = () => {
         setSortBy(sort)
     }
 
+    const courseEnrollments = state.courseEnrollments[courseID.toString()]
     // Clone the enrollments so we can sort them
-    const enrollments: Enrollment[] = state.courseEnrollments[courseID.toString()]?.slice() ?? []
-    const noteCounts = noteCountsByEnrollment(state.notes.courseNotes, enrollments)
+    const enrollments: Enrollment[] = courseEnrollments?.slice() ?? []
+    // Memoized so that re-renders driven by the search query or the sort order
+    // do not recount every note for every member.
+    const noteCounts = useMemo(
+        () => noteCountsByEnrollment(state.notes.courseNotes, courseEnrollments ?? []),
+        [state.notes.courseNotes, courseEnrollments],
+    )
     const noteCount = (enrollmentID: bigint) => noteCounts.get(enrollmentID) ?? 0
 
     const pending = state.pendingEnrollments

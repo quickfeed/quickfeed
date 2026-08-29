@@ -68,12 +68,29 @@ export const notesForEnrollment = (notes: Note[], enrollment: Enrollment): Note[
     note.EnrollmentID === enrollment.ID || (enrollment.groupID > 0n && note.GroupID === enrollment.groupID)
 )
 
+/** noteCountsByEnrollment returns the number of notes relevant to each enrollment,
+    counting the enrollment's own notes and the notes on its group. Enrollments
+    without notes are left out of the map.
+    The notes are indexed by target in a single pass, so the cost is linear in the
+    number of notes and enrollments rather than the product of the two. */
 export const noteCountsByEnrollment = (notes: Note[], enrollments: Enrollment[]): Map<bigint, number> => {
+    const byEnrollment = new Map<bigint, number>()
+    const byGroup = new Map<bigint, number>()
+    for (const note of notes) {
+        // A note has exactly one target, enforced by Note.IsValid() server-side.
+        if (note.EnrollmentID > 0n) {
+            byEnrollment.set(note.EnrollmentID, (byEnrollment.get(note.EnrollmentID) ?? 0) + 1)
+        } else if (note.GroupID > 0n) {
+            byGroup.set(note.GroupID, (byGroup.get(note.GroupID) ?? 0) + 1)
+        }
+    }
+
     const counts = new Map<bigint, number>()
     for (const enrollment of enrollments) {
-        const count = notesForEnrollment(notes, enrollment).length
-        if (count > 0) {
-            counts.set(enrollment.ID, count)
+        const own = byEnrollment.get(enrollment.ID) ?? 0
+        const group = enrollment.groupID > 0n ? byGroup.get(enrollment.groupID) ?? 0 : 0
+        if (own + group > 0) {
+            counts.set(enrollment.ID, own + group)
         }
     }
     return counts
