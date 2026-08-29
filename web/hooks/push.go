@@ -33,7 +33,7 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 	)
 	logger.Debug("resolved push repository")
 
-	if wh.ignorePush(payload) {
+	if ignorePush(payload) {
 		logger.Debug("ignoring push event for non-default branch")
 		return
 	}
@@ -97,7 +97,7 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 
 // ignorePush returns true if the push event should be ignored.
 // Only pushes to the default branch are processed.
-func (wh GitHubWebHook) ignorePush(payload *github.PushEvent) bool {
+func ignorePush(payload *github.PushEvent) bool {
 	return !isDefaultBranch(payload)
 }
 

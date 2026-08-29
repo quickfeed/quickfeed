@@ -16,10 +16,9 @@ import (
 
 // mock organizations foo and bar
 var (
-	ghOrgFoo    = github.Organization{ID: github.Int64(123), Login: foo.Login}
-	ghOrgBar    = github.Organization{ID: github.Int64(456), Login: bar.Login}
-	ghOrgBuz    = github.Organization{ID: github.Int64(678), Login: buz.Login}
-	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: new("dat320")}
+	ghOrgFoo = github.Organization{ID: github.Int64(123), Login: foo.Login}
+	ghOrgBar = github.Organization{ID: github.Int64(456), Login: bar.Login}
+	ghOrgBuz = github.Organization{ID: github.Int64(678), Login: buz.Login}
 )
 
 // mock repositories for organization foo; bar has no repositories
