@@ -38,6 +38,17 @@ const (
 	jobLabel        = "job"
 )
 
+// ContainerExitError reports that the container exited with a non-zero status.
+// A non-zero exit is not necessarily an environment failure, since a course's
+// run script may end with the test command, which fails for failing tests.
+type ContainerExitError struct {
+	Code int64
+}
+
+func (e *ContainerExitError) Error() string {
+	return fmt.Sprintf("container exited with status %d", e.Code)
+}
+
 // Docker is an implementation of the CI interface using Docker.
 type Docker struct {
 	client *client.Client
@@ -76,15 +87,19 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	logger.Info("waiting for container")
-	msg, err := d.waitForContainer(ctx, resp.ID)
-	if err != nil {
-		return msg, err
+	msg, waitErr := d.waitForContainer(ctx, resp.ID)
+	var exitErr *ContainerExitError
+	if waitErr != nil && !errors.As(waitErr, &exitErr) {
+		// A non-zero exit status still has logs worth extracting below;
+		// any other wait failure (timeout, daemon error) aborts here.
+		return msg, waitErr
 	}
 
 	logger.Info("container completed")
 	// extract the logs before removing the container below
 	logReader, err := d.client.ContainerLogs(ctx, resp.ID, client.ContainerLogsOptions{
 		ShowStdout: true,
+		ShowStderr: true,
 	})
 	if err != nil {
 		return "", err
@@ -97,14 +112,21 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 
-	var stdout bytes.Buffer
-	if _, err := stdcopy.StdCopy(&stdout, io.Discard, logReader); err != nil {
+	var stdout, stderr bytes.Buffer
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, logReader); err != nil {
 		return "", err
 	}
-	if stdout.Len() > maxLogSize+lastSegmentSize {
-		return truncateLog(&stdout, maxLogSize, lastSegmentSize, maxToScan), nil
+	// Include stderr when the run failed or produced no regular output;
+	// run scripts do not usually redirect stderr, so environment failures
+	// during setup commands would otherwise be invisible.
+	if stderr.Len() > 0 && (waitErr != nil || stdout.Len() == 0) {
+		stdout.WriteString("\nstderr:\n")
+		stdout.Write(stderr.Bytes())
 	}
-	return stdout.String(), nil
+	if stdout.Len() > maxLogSize+lastSegmentSize {
+		return truncateLog(&stdout, maxLogSize, lastSegmentSize, maxToScan), waitErr
+	}
+	return stdout.String(), waitErr
 }
 
 // createImage creates an image for the given job.
@@ -230,6 +252,9 @@ func (d *Docker) waitForContainer(ctx context.Context, respID string) (string, e
 		}
 	case status := <-wait.Result:
 		logger.Info("container exited", "exit_status", status.StatusCode)
+		if status.StatusCode != 0 {
+			return "", &ContainerExitError{Code: status.StatusCode}
+		}
 	}
 	return "", nil
 }

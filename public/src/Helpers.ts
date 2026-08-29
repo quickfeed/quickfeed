@@ -2,6 +2,7 @@ import { create, isMessage } from "@bufbuild/protobuf"
 import type { Timestamp } from "@bufbuild/protobuf/wkt"
 import { timestampDate } from "@bufbuild/protobuf/wkt"
 import type { Score } from "../proto/kit/score/score_pb"
+import { RunStatus } from "../proto/kit/score/score_pb"
 import type { CourseSubmissions } from "../proto/qf/requests_pb"
 import type { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, Submissions, User } from "../proto/qf/types_pb"
 import { Enrollment_DisplayState, Enrollment_UserStatus, GradeSchema, Group_GroupStatus, GroupSchema, Submission_Status, SubmissionSchema, SubmissionsSchema } from "../proto/qf/types_pb"
@@ -273,6 +274,23 @@ export const assignmentStatusText = (assignment: Assignment, submission: Submiss
     }
     // If the submission is graded, return the status
     return SubmissionStatus[status]
+}
+
+/** runFailureText returns a user-facing explanation for a failed test run.
+ *  Returns an empty string for a successful run. */
+export const runFailureText = (status: RunStatus): string => {
+    switch (status) {
+        case RunStatus.BUILD_FAILURE:
+            return "The test environment failed before the code could be tested."
+        case RunStatus.TIMEOUT:
+            return "The test run timed out."
+        case RunStatus.NO_SCORES:
+            return "The test run produced no test results."
+        case RunStatus.TEST_PANIC:
+            return "The test run panicked before producing test results."
+        default:
+            return ""
+    }
 }
 
 // Helper functions for default values for new courses
