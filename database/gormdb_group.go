@@ -9,6 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// ErrEmptyGroup is returned when trying to create a group without users.
+var ErrEmptyGroup = errors.New("cannot create group without users")
+
+// ErrDuplicateGroup is returned when trying to create a group with the same
+// name as a previously registered group.
+var ErrDuplicateGroup = errors.New("group with this name already registered")
+
+// ErrUpdateGroup is returned when updating a group's enrollment fails.
+var ErrUpdateGroup = errors.New("group members not enrolled in the course")
+
 // CreateGroup creates a new group and assign users to newly created group.
 func (db *GormDB) CreateGroup(group *qf.Group) error {
 	if len(group.GetUsers()) == 0 {
