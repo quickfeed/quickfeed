@@ -32,7 +32,6 @@ const (
 	Organization   = "organization" // SCM organization name.
 	Owner          = "owner"        // SCM owner (organization or user) of a repository.
 	Path           = "path"
-	PullRequest    = "pull_request"
 	RemoteID       = "remote_id" // SCM user ID, i.e., User.ScmRemoteID; distinct from UserID.
 	Repository     = "repository"
 	RepositoryType = "repository_type"

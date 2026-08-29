@@ -675,32 +675,6 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			w.WriteHeader(http.StatusNotFound) // comment not found
 		}),
 	)
-	postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler := WithRequestMatchHandler(
-		postReposPullsRequestedReviewersByOwnerByRepoByPullNumber,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			pullNumber := mustParse[int](r.PathValue("pull_number"))
-			reviewers := mustRead[github.ReviewersRequest](r.Body)
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(postReposPullsRequestedReviewersByOwnerByRepoByPullNumber, owner, repo, pullNumber), "reviewers", reviewers)
-
-			if _, exists := s.reviewers[owner][repo][pullNumber]; !exists {
-				w.WriteHeader(http.StatusNotFound) // pull request not found
-				return
-			}
-			s.reviewers[owner][repo][pullNumber] = reviewers
-			users := make([]*github.User, 0, len(reviewers.Reviewers))
-			for _, reviewer := range reviewers.Reviewers {
-				users = append(users, &github.User{Login: new(reviewer)})
-			}
-			pr := github.PullRequest{
-				Number:             new(pullNumber),
-				RequestedReviewers: users,
-			}
-			w.WriteHeader(http.StatusCreated)
-			mustWrite(w, pr)
-		}),
-	)
 	postAppManifestsByCodeConversionsHandler := WithRequestMatchHandler(
 		postAppManifestsByCodeConversions,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -855,7 +829,6 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 		getReposIssuesByOwnerByRepoHandler,
 		postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler,
 		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
-		postReposPullsRequestedReviewersByOwnerByRepoByPullNumberHandler,
 		postReposMergeUpstreamByOwnerByRepoHandler,
 		postAppManifestsByCodeConversionsHandler,
 		getUserByIDHandler,

@@ -123,17 +123,6 @@ func (wh GitHubWebHook) Handle() http.HandlerFunc {
 				wh.handlePush(ctx, e)
 			}()
 
-		case *github.PullRequestEvent:
-			switch e.GetAction() {
-			case "opened":
-				wh.handlePullRequestOpened(ctx, e)
-			case "closed":
-				wh.handlePullRequestClosed(ctx, e)
-			}
-
-		case *github.PullRequestReviewEvent:
-			wh.handlePullRequestReview(ctx, e)
-
 		case *github.InstallationEvent:
 			switch e.GetAction() {
 			case "created":
