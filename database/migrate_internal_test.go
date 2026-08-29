@@ -9,7 +9,9 @@ import (
 )
 
 func TestDropRetired(t *testing.T) {
-	conn, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "test.db")), &gorm.Config{})
+	conn, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "test.db")), &gorm.Config{
+		SkipDefaultTransaction: true,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
