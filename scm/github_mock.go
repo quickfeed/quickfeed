@@ -10,7 +10,6 @@ import (
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
-	"github.com/shurcooL/githubv4"
 )
 
 // routeLabel is the attribute holding the mocked GitHub API route.
@@ -20,10 +19,7 @@ const routeLabel = "route"
 type MockedGithubSCM struct {
 	*GithubSCM
 	*mockOptions
-	repoID      int64
-	issueID     int64
-	issueNumber map[string]int // owner/repo -> issue number
-	commentID   int64
+	repoID int64
 }
 
 // SimulateCommit records a commit pushed to the given repository, advancing it one
@@ -35,16 +31,6 @@ func (s *MockedGithubSCM) SimulateCommit(owner, repo string) error {
 	}
 	s.aheadBy[repoKey(owner, repo)]++
 	return nil
-}
-
-// nextIssueNumber returns the next issue number for the given owner and repo.
-func (s *MockedGithubSCM) nextIssueNumber(owner, repo string) *int {
-	key := fmt.Sprintf("%s/%s", owner, repo)
-	if s.issueNumber == nil {
-		s.issueNumber = make(map[string]int)
-	}
-	s.issueNumber[key]++
-	return new(s.issueNumber[key])
 }
 
 // NewMockedGithubSCMClient returns a mocked Github client implementing the SCM interface.
@@ -62,32 +48,6 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 		mockOptions: mockOpts,
 	}
 
-	if s.issues == nil {
-		// initial empty issues map: owner -> repo -> issues
-		s.issues = make(map[string]map[string][]github.Issue)
-	}
-	for i := range s.repos {
-		repo := &s.repos[i]
-		org := repo.GetOrganization().GetLogin()
-		if s.issues[org] == nil {
-			s.issues[org] = make(map[string][]github.Issue)
-			s.issues[org][repo.GetName()] = make([]github.Issue, 0)
-		}
-	}
-	if s.comments == nil {
-		// initial empty comments map: owner -> repo -> issue ID -> comments
-		s.comments = make(map[string]map[string]map[int64][]github.IssueComment)
-	}
-	for org, repos := range s.issues {
-		if s.comments[org] == nil {
-			s.comments[org] = make(map[string]map[int64][]github.IssueComment)
-		}
-		for repo := range repos {
-			if s.comments[org][repo] == nil {
-				s.comments[org][repo] = make(map[int64][]github.IssueComment)
-			}
-		}
-	}
 	// To assist with debugging; this may be useful
 	// logger.Debug(s.DumpState())
 
@@ -529,152 +489,6 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			w.WriteHeader(http.StatusNoContent)
 		}),
 	)
-	postReposIssuesByOwnerByRepoHandler := WithRequestMatchHandler(
-		postReposIssuesByOwnerByRepo,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			issueReq := mustRead[github.IssueRequest](r.Body)
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(postReposIssuesByOwnerByRepo, owner, repo), "issue", issueReq)
-
-			if !s.hasOrgRepo(owner, repo) {
-				w.WriteHeader(http.StatusNotFound) // org and repo not found
-				return
-			}
-			if issueReq.Title == nil || issueReq.Body == nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			if s.issues[owner] == nil {
-				s.issues[owner] = make(map[string][]github.Issue)
-			}
-			if s.issues[owner][repo] == nil {
-				s.issues[owner][repo] = make([]github.Issue, 0)
-			}
-
-			s.issueID++
-			issue := github.Issue{
-				ID:       new(s.issueID),
-				Number:   s.nextIssueNumber(owner, repo),
-				Title:    issueReq.Title,
-				Body:     issueReq.Body,
-				Assignee: &github.User{Name: issueReq.Assignee},
-				Repository: &github.Repository{
-					Owner: &github.User{Login: new(owner)},
-					Name:  new(repo),
-				},
-			}
-			s.issues[owner][repo] = append(s.issues[owner][repo], issue)
-			w.WriteHeader(http.StatusCreated)
-			mustWrite(w, issue)
-		}),
-	)
-	patchReposIssuesByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
-		patchReposIssuesByOwnerByRepoByIssueNumber,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			issueNumber := mustParse[int](r.PathValue("issue_number"))
-			issueReq := mustRead[github.IssueRequest](r.Body)
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(patchReposIssuesByOwnerByRepoByIssueNumber, owner, repo, issueNumber), "issue", issueReq)
-
-			for i, ghIssue := range s.issues[owner][repo] {
-				if *ghIssue.Number == issueNumber {
-					ghIssue.Title = issueReq.Title
-					ghIssue.Body = issueReq.Body
-					ghIssue.Assignee = &github.User{Name: issueReq.Assignee}
-					ghIssue.State = issueReq.State
-					s.issues[owner][repo][i] = ghIssue
-					w.WriteHeader(http.StatusOK)
-					mustWrite(w, ghIssue)
-					return
-				}
-			}
-			w.WriteHeader(http.StatusNotFound) // issue not found
-		}),
-	)
-	getReposIssuesByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
-		getReposIssuesByOwnerByRepoByIssueNumber,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			issueNumber := mustParse[int](r.PathValue("issue_number"))
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(getReposIssuesByOwnerByRepoByIssueNumber, owner, repo, issueNumber))
-
-			for _, issue := range s.issues[owner][repo] {
-				if *issue.Number == issueNumber {
-					w.WriteHeader(http.StatusOK)
-					mustWrite(w, issue)
-					return
-				}
-			}
-			w.WriteHeader(http.StatusNotFound) // issue not found
-		}),
-	)
-	getReposIssuesByOwnerByRepoHandler := WithRequestMatchHandler(
-		getReposIssuesByOwnerByRepo,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(getReposIssuesByOwnerByRepo, owner, repo))
-
-			issues := s.issues[owner][repo]
-			if issues == nil {
-				w.WriteHeader(http.StatusNotFound) // org and repo not found
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			mustWrite(w, issues)
-		}),
-	)
-	postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler := WithRequestMatchHandler(
-		postReposIssuesCommentsByOwnerByRepoByIssueNumber,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			issueNumber := mustParse[int](r.PathValue("issue_number"))
-			comment := mustRead[github.IssueComment](r.Body)
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(postReposIssuesCommentsByOwnerByRepoByIssueNumber, owner, repo, issueNumber), "comment", comment)
-
-			for _, ghIssue := range s.issues[owner][repo] {
-				if *ghIssue.Number == issueNumber {
-					s.commentID++
-					comment.ID = new(s.commentID)
-					if s.comments[owner][repo] == nil {
-						s.comments[owner][repo] = make(map[int64][]github.IssueComment)
-					}
-					s.comments[owner][repo][*ghIssue.ID] = append(s.comments[owner][repo][*ghIssue.ID], comment)
-					w.WriteHeader(http.StatusCreated)
-					mustWrite(w, comment)
-					return
-				}
-			}
-			w.WriteHeader(http.StatusNotFound) // issue not found
-		}),
-	)
-	patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler := WithRequestMatchHandler(
-		patchReposIssuesCommentsByOwnerByRepoByCommentID,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			owner := r.PathValue("owner")
-			repo := r.PathValue("repo")
-			commentID := mustParse[int64](r.PathValue("comment_id"))
-			comment := mustRead[github.IssueComment](r.Body)
-			logger.Debug("mock SCM request", routeLabel, replaceArgs(patchReposIssuesCommentsByOwnerByRepoByCommentID, owner, repo, commentID), "comment", comment)
-
-			for _, ghIssue := range s.issues[owner][repo] {
-				for i, ghComment := range s.comments[owner][repo][*ghIssue.ID] {
-					if *ghComment.ID == commentID {
-						comment.ID = ghComment.ID
-						s.comments[owner][repo][*ghIssue.ID][i] = comment
-						w.WriteHeader(http.StatusOK)
-						mustWrite(w, comment)
-						return
-					}
-				}
-			}
-			w.WriteHeader(http.StatusNotFound) // comment not found
-		}),
-	)
 	postAppManifestsByCodeConversionsHandler := WithRequestMatchHandler(
 		postAppManifestsByCodeConversions,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -721,88 +535,6 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			mustWrite(w, result)
 		}),
 	)
-	// Mock query handler for fetching the issue ID based on issue number
-	queryHandler := func(w http.ResponseWriter, vars map[string]any) {
-		owner := vars["repositoryOwner"].(string)
-		repo := vars["repositoryName"].(string)
-		issueNumber := int(vars["issueNumber"].(float64))
-		logger.Debug("mock GraphQL query", label.Repository, repo, label.Owner, owner, "issue", issueNumber)
-
-		var id int64
-		for _, issue := range s.issues[owner][repo] {
-			if issue.GetNumber() == issueNumber {
-				id = issue.GetID()
-				break
-			}
-		}
-		if id == 0 {
-			w.WriteHeader(http.StatusNotFound) // issue not found
-			return
-		}
-
-		respBody := map[string]any{
-			"data": map[string]any{
-				"repository": map[string]any{
-					"issue": map[string]any{
-						"id": id,
-					},
-				},
-			},
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		mustWrite(w, respBody)
-	}
-	// Mock mutation handler for deleting an issue based on issue ID
-	mutationHandler := func(w http.ResponseWriter, vars map[string]any) {
-		id := int64(vars["issueId"].(float64))
-		logger.Debug("mock GraphQL mutation", "issue_id", id)
-
-		var foundRepo string
-		for owner := range s.issues {
-			for repo := range s.issues[owner] {
-				for _, issue := range s.issues[owner][repo] {
-					if issue.GetID() == id {
-						foundRepo = repo
-						issues := s.issues[owner][repo]
-						issues = slices.DeleteFunc(issues, func(i github.Issue) bool { return i.GetID() == id })
-						s.issues[owner][repo] = issues
-						break
-					}
-				}
-			}
-		}
-		if foundRepo == "" {
-			w.WriteHeader(http.StatusNotFound) // issue not found
-			return
-		}
-
-		respBody := map[string]any{
-			"data": map[string]any{
-				"deleteIssue": map[string]any{
-					"repository": map[string]any{
-						"name": foundRepo,
-					},
-				},
-			},
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		mustWrite(w, respBody)
-	}
-	graphQLHandler := WithRequestMatchHandler("/graphql", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		type request struct {
-			Query     string         `json:"query"`
-			Variables map[string]any `json:"variables"`
-		}
-		req := mustRead[request](r.Body)
-
-		if strings.HasPrefix(req.Query, "mutation") {
-			mutationHandler(w, req.Variables["input"].(map[string]any))
-		} else {
-			queryHandler(w, req.Variables)
-		}
-	}))
 
 	httpClient := NewMockedHTTPClient(
 		getOrganizationsByIDHandler,
@@ -823,20 +555,12 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 		getReposCollaboratorsByOwnerByRepoHandler,
 		putReposCollaboratorsByOwnerByRepoByUsernameHandler,
 		deleteReposCollaboratorsByOwnerByRepoByUsernameHandler,
-		postReposIssuesByOwnerByRepoHandler,
-		patchReposIssuesByOwnerByRepoByIssueNumberHandler,
-		getReposIssuesByOwnerByRepoByIssueNumberHandler,
-		getReposIssuesByOwnerByRepoHandler,
-		postReposIssuesCommentsByOwnerByRepoByIssueNumberHandler,
-		patchReposIssuesCommentsByOwnerByRepoByCommentIDHandler,
 		postReposMergeUpstreamByOwnerByRepoHandler,
 		postAppManifestsByCodeConversionsHandler,
 		getUserByIDHandler,
-		graphQLHandler,
 	)
 	s.GithubSCM = &GithubSCM{
 		client:       github.NewClient(httpClient),
-		clientV4:     githubv4.NewClient(httpClient),
 		tokenManager: &staticTokenManager{token: "mock-token"},
 		providerURL:  "file://" + env.RepositoryPath(),
 		createUserClientFn: func(string) *github.Client {

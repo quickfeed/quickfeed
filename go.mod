@@ -19,7 +19,6 @@ require (
 	github.com/moby/moby/client v0.5.1
 	github.com/prometheus/client_golang v1.24.1
 	github.com/quickfeed/quickfeed/kit v0.11.0
-	github.com/shurcooL/githubv4 v0.0.0-20260209031235-2402fdf4a9ed
 	github.com/steinfletcher/apitest v1.6.0
 	golang.org/x/crypto v0.55.0
 	golang.org/x/mod v0.40.0
@@ -68,7 +67,6 @@ require (
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
-	github.com/shurcooL/graphql v0.0.0-20240915155400-7ee5256398cf // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

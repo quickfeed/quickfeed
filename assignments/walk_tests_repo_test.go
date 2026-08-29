@@ -17,21 +17,18 @@ func TestWalkTestsRepository(t *testing.T) {
 	// map of expected files in the testdata/tests folder
 	// Note: run.sh is ignored by walkTestsRepository so they are not included here.
 	wantFiles := map[string]struct{}{
-		"testdata/tests/lab3/task-go-questions.md": {},
-		"testdata/tests/lab3/task-learn-go.md":     {},
-		"testdata/tests/lab3/task-tour-of-go.md":   {},
-		"testdata/tests/scripts/Dockerfile":        {},
-		"testdata/tests/scripts/go.mod":            {},
-		"testdata/tests/scripts/go.sum":            {},
-		"testdata/tests/lab1/assignment.json":      {},
-		"testdata/tests/lab1/tests.json":           {},
-		"testdata/tests/lab2/assignment.json":      {},
-		"testdata/tests/lab2/tests.json":           {},
-		"testdata/tests/lab3/assignment.json":      {},
-		"testdata/tests/lab4/assignment.json":      {},
-		"testdata/tests/lab4/criteria.json":        {},
-		"testdata/tests/lab5/assignment.json":      {},
-		"testdata/tests/lab5/criteria.json":        {},
+		"testdata/tests/scripts/Dockerfile":   {},
+		"testdata/tests/scripts/go.mod":       {},
+		"testdata/tests/scripts/go.sum":       {},
+		"testdata/tests/lab1/assignment.json": {},
+		"testdata/tests/lab1/tests.json":      {},
+		"testdata/tests/lab2/assignment.json": {},
+		"testdata/tests/lab2/tests.json":      {},
+		"testdata/tests/lab3/assignment.json": {},
+		"testdata/tests/lab4/assignment.json": {},
+		"testdata/tests/lab4/criteria.json":   {},
+		"testdata/tests/lab5/assignment.json": {},
+		"testdata/tests/lab5/criteria.json":   {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
@@ -97,23 +94,6 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 			ScoreLimit: 80,
 			Deadline:   qtest.Timestamp(t, "2019-02-14T23:00:00"),
 			IsGroupLab: true,
-			Tasks: []*qf.Task{
-				{
-					Title:           "Exercises from Tour of Go",
-					AssignmentOrder: 3,
-					Name:            "tour-of-go",
-				},
-				{
-					Title:           "Go Exercises",
-					AssignmentOrder: 3,
-					Name:            "learn-go",
-				},
-				{
-					Title:           "Multiple Choice Questions about Go Programming",
-					AssignmentOrder: 3,
-					Name:            "go-questions",
-				},
-			},
 		},
 		{
 			Name:       "lab4",
@@ -166,7 +146,7 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 	if gotBuildContext[ci.Dockerfile] != wantDockerfile {
 		t.Errorf("got Dockerfile %q, want %q", gotBuildContext[ci.Dockerfile], wantDockerfile)
 	}
-	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
+	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
 }
