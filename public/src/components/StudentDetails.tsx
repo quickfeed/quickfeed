@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import type { Assignment, Note, Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
 import { EnrollmentStatus, getFormattedTime, getStatusByUser, SubmissionStatus, submissionStatusConfig, userRepoLink } from "../Helpers"

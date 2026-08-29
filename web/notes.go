@@ -7,6 +7,8 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -36,8 +38,8 @@ func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.NoteRequest) (
 		EnrollmentID: in.GetNote().GetEnrollmentID(),
 	}
 	if err := s.db.CreateNote(note); err != nil {
-		s.logger.Errorf("CreateNote failed: course=%d author=%d submission=%d group=%d enrollment=%d: %v",
-			note.GetCourseID(), note.GetAuthorID(), note.GetSubmissionID(), note.GetGroupID(), note.GetEnrollmentID(), err)
+		qlog.FromContext(ctx).Error("failed to create note",
+			label.SubmissionID, note.GetSubmissionID(), label.GroupID, note.GetGroupID(), "enrollment_id", note.GetEnrollmentID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create note"))
 	}
 	return note, nil
@@ -56,13 +58,12 @@ func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (
 	}
 	existing.Body = body
 	if err := s.db.UpdateNote(existing); err != nil {
-		s.logger.Errorf("UpdateNote failed: note=%d course=%d author=%d submission=%d group=%d enrollment=%d: %v",
-			existing.GetID(), existing.GetCourseID(), existing.GetAuthorID(), existing.GetSubmissionID(), existing.GetGroupID(), existing.GetEnrollmentID(), err)
+		qlog.FromContext(ctx).Error("failed to update note", "note_id", existing.GetID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update note"))
 	}
 	updated, err := s.db.GetNote(&qf.Note{ID: existing.GetID()})
 	if err != nil {
-		s.logger.Errorf("UpdateNote failed to reload note %d: %v", existing.GetID(), err)
+		qlog.FromContext(ctx).Error("failed to reload updated note", "note_id", existing.GetID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update note"))
 	}
 	return updated, nil
@@ -76,17 +77,18 @@ func (s *QuickFeedService) DeleteNote(ctx context.Context, in *qf.NoteRequest) (
 		return nil, err
 	}
 	if err := s.db.DeleteNote(&qf.Note{ID: existing.GetID()}); err != nil {
-		s.logger.Errorf("DeleteNote failed for note %d: %v", existing.GetID(), err)
+		qlog.FromContext(ctx).Error("failed to delete note", "note_id", existing.GetID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete note"))
 	}
 	return &qf.Void{}, nil
 }
 
 // GetNotes returns all internal notes relevant to the requested target.
-func (s *QuickFeedService) GetNotes(_ context.Context, in *qf.NotesRequest) (*qf.Notes, error) {
+func (s *QuickFeedService) GetNotes(ctx context.Context, in *qf.NotesRequest) (*qf.Notes, error) {
 	notes, err := s.db.GetNotes(in.GetCourseID(), in.GetSubmissionID(), in.GetGroupID(), in.GetEnrollmentID())
 	if err != nil {
-		s.logger.Errorf("GetNotes failed for request %+v: %v", in, err)
+		qlog.FromContext(ctx).Error("failed to get notes",
+			label.SubmissionID, in.GetSubmissionID(), label.GroupID, in.GetGroupID(), "enrollment_id", in.GetEnrollmentID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get notes"))
 	}
 	return &qf.Notes{Notes: notes}, nil
@@ -94,10 +96,10 @@ func (s *QuickFeedService) GetNotes(_ context.Context, in *qf.NotesRequest) (*qf
 
 // GetCourseNotes returns all internal notes for a course, used by staff
 // overviews such as the members page to show per-student notes.
-func (s *QuickFeedService) GetCourseNotes(_ context.Context, in *qf.CourseRequest) (*qf.Notes, error) {
+func (s *QuickFeedService) GetCourseNotes(ctx context.Context, in *qf.CourseRequest) (*qf.Notes, error) {
 	notes, err := s.db.GetNotes(in.GetCourseID(), 0, 0, 0)
 	if err != nil {
-		s.logger.Errorf("GetCourseNotes failed for course %d: %v", in.GetCourseID(), err)
+		qlog.FromContext(ctx).Error("failed to get course notes", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get notes"))
 	}
 	return &qf.Notes{Notes: notes}, nil
