@@ -2537,14 +2537,17 @@ func (x *AssignmentFeedbacks) GetFeedbacks() []*AssignmentFeedback {
 	return nil
 }
 
-// Note is an internal note written by course staff (teachers/TAs).
+// Note is an internal note written by teaching staff.
 // Notes are never exposed to students; access is restricted to teachers via the access control interceptor.
 // Exactly one of SubmissionID, GroupID, or EnrollmentID identifies the target the note is attached to.
+// These are plain fields rather than a oneof because Note is also the GORM model, and a oneof generates
+// an interface-typed field that GORM cannot map to columns; Submission uses plain userID and groupID
+// fields for the same reason. Note.IsValid() enforces the exactly-one invariant.
 type Note struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	CourseID      uint64                 `protobuf:"varint,2,opt,name=CourseID,proto3" json:"CourseID,omitempty"` // foreign key; required for access control
-	AuthorID      uint64                 `protobuf:"varint,3,opt,name=AuthorID,proto3" json:"AuthorID,omitempty"` // UserID of the teacher/TA who wrote the note
+	AuthorID      uint64                 `protobuf:"varint,3,opt,name=AuthorID,proto3" json:"AuthorID,omitempty"` // UserID of the staff member who wrote the note
 	Body          string                 `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
 	SubmissionID  uint64                 `protobuf:"varint,5,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty"` // set if the note is attached to a submission
 	GroupID       uint64                 `protobuf:"varint,6,opt,name=GroupID,proto3" json:"GroupID,omitempty"`           // set if the note is attached to a group

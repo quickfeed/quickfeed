@@ -311,13 +311,16 @@ message AssignmentFeedbacks {
 
 //   INTERNAL NOTES   //
 
-// Note is an internal note written by course staff (teachers/TAs).
+// Note is an internal note written by teaching staff.
 // Notes are never exposed to students; access is restricted to teachers via the access control interceptor.
 // Exactly one of SubmissionID, GroupID, or EnrollmentID identifies the target the note is attached to.
+// These are plain fields rather than a oneof because Note is also the GORM model, and a oneof generates
+// an interface-typed field that GORM cannot map to columns; Submission uses plain userID and groupID
+// fields for the same reason. Note.IsValid() enforces the exactly-one invariant.
 message Note {
     uint64 ID                           = 1;
     uint64 CourseID                     = 2;  // foreign key; required for access control
-    uint64 AuthorID                     = 3;  // UserID of the teacher/TA who wrote the note
+    uint64 AuthorID                     = 3;  // UserID of the staff member who wrote the note
     string body                         = 4;
     uint64 SubmissionID                 = 5;  // set if the note is attached to a submission
     uint64 GroupID                      = 6;  // set if the note is attached to a group
