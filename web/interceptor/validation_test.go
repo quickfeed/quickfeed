@@ -45,7 +45,6 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.Groups":              {cleaner: T, validator: F},
 		"qf.Issue":               {cleaner: F, validator: F},
 		"qf.Note":                {cleaner: F, validator: F},
-		"qf.NoteRequest":         {cleaner: F, validator: T},
 		"qf.Notes":               {cleaner: F, validator: F},
 		"qf.NotesRequest":        {cleaner: F, validator: T},
 		"qf.Organization":        {cleaner: F, validator: T},

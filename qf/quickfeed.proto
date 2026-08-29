@@ -59,9 +59,9 @@ service QuickFeedService {
 
     // internal notes //
 
-    rpc CreateNote(NoteRequest) returns (Note) {}
-    rpc UpdateNote(NoteRequest) returns (Note) {}
-    rpc DeleteNote(NoteRequest) returns (Void) {}
+    rpc CreateNote(Note) returns (Note) {}
+    rpc UpdateNote(Note) returns (Note) {}
+    rpc DeleteNote(Note) returns (Void) {}
     rpc GetNotes(NotesRequest) returns (Notes) {}
     // GetCourseNotes returns all internal notes for a course.
     rpc GetCourseNotes(CourseRequest) returns (Notes) {}

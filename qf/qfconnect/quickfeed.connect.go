@@ -171,9 +171,9 @@ type QuickFeedServiceClient interface {
 	RebuildSubmissions(context.Context, *qf.RebuildRequest) (*qf.Void, error)
 	CreateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
 	UpdateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
-	CreateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
-	UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
-	DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error)
+	CreateNote(context.Context, *qf.Note) (*qf.Note, error)
+	UpdateNote(context.Context, *qf.Note) (*qf.Note, error)
+	DeleteNote(context.Context, *qf.Note) (*qf.Void, error)
 	GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error)
 	// GetCourseNotes returns all internal notes for a course.
 	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
@@ -340,19 +340,19 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateReview")),
 			connect.WithClientOptions(opts...),
 		),
-		createNote: connect.NewClient[qf.NoteRequest, qf.Note](
+		createNote: connect.NewClient[qf.Note, qf.Note](
 			httpClient,
 			baseURL+QuickFeedServiceCreateNoteProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("CreateNote")),
 			connect.WithClientOptions(opts...),
 		),
-		updateNote: connect.NewClient[qf.NoteRequest, qf.Note](
+		updateNote: connect.NewClient[qf.Note, qf.Note](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateNoteProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateNote")),
 			connect.WithClientOptions(opts...),
 		),
-		deleteNote: connect.NewClient[qf.NoteRequest, qf.Void](
+		deleteNote: connect.NewClient[qf.Note, qf.Void](
 			httpClient,
 			baseURL+QuickFeedServiceDeleteNoteProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("DeleteNote")),
@@ -435,9 +435,9 @@ type quickFeedServiceClient struct {
 	rebuildSubmissions       *connect.Client[qf.RebuildRequest, qf.Void]
 	createReview             *connect.Client[qf.ReviewRequest, qf.Review]
 	updateReview             *connect.Client[qf.ReviewRequest, qf.Review]
-	createNote               *connect.Client[qf.NoteRequest, qf.Note]
-	updateNote               *connect.Client[qf.NoteRequest, qf.Note]
-	deleteNote               *connect.Client[qf.NoteRequest, qf.Void]
+	createNote               *connect.Client[qf.Note, qf.Note]
+	updateNote               *connect.Client[qf.Note, qf.Note]
+	deleteNote               *connect.Client[qf.Note, qf.Void]
 	getNotes                 *connect.Client[qf.NotesRequest, qf.Notes]
 	getCourseNotes           *connect.Client[qf.CourseRequest, qf.Notes]
 	createAssignmentFeedback *connect.Client[qf.AssignmentFeedback, qf.Void]
@@ -665,7 +665,7 @@ func (c *quickFeedServiceClient) UpdateReview(ctx context.Context, req *qf.Revie
 }
 
 // CreateNote calls qf.QuickFeedService.CreateNote.
-func (c *quickFeedServiceClient) CreateNote(ctx context.Context, req *qf.NoteRequest) (*qf.Note, error) {
+func (c *quickFeedServiceClient) CreateNote(ctx context.Context, req *qf.Note) (*qf.Note, error) {
 	response, err := c.createNote.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
@@ -674,7 +674,7 @@ func (c *quickFeedServiceClient) CreateNote(ctx context.Context, req *qf.NoteReq
 }
 
 // UpdateNote calls qf.QuickFeedService.UpdateNote.
-func (c *quickFeedServiceClient) UpdateNote(ctx context.Context, req *qf.NoteRequest) (*qf.Note, error) {
+func (c *quickFeedServiceClient) UpdateNote(ctx context.Context, req *qf.Note) (*qf.Note, error) {
 	response, err := c.updateNote.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
@@ -683,7 +683,7 @@ func (c *quickFeedServiceClient) UpdateNote(ctx context.Context, req *qf.NoteReq
 }
 
 // DeleteNote calls qf.QuickFeedService.DeleteNote.
-func (c *quickFeedServiceClient) DeleteNote(ctx context.Context, req *qf.NoteRequest) (*qf.Void, error) {
+func (c *quickFeedServiceClient) DeleteNote(ctx context.Context, req *qf.Note) (*qf.Void, error) {
 	response, err := c.deleteNote.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
@@ -790,9 +790,9 @@ type QuickFeedServiceHandler interface {
 	RebuildSubmissions(context.Context, *qf.RebuildRequest) (*qf.Void, error)
 	CreateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
 	UpdateReview(context.Context, *qf.ReviewRequest) (*qf.Review, error)
-	CreateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
-	UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error)
-	DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error)
+	CreateNote(context.Context, *qf.Note) (*qf.Note, error)
+	UpdateNote(context.Context, *qf.Note) (*qf.Note, error)
+	DeleteNote(context.Context, *qf.Note) (*qf.Void, error)
 	GetNotes(context.Context, *qf.NotesRequest) (*qf.Notes, error)
 	// GetCourseNotes returns all internal notes for a course.
 	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
@@ -1198,15 +1198,15 @@ func (UnimplementedQuickFeedServiceHandler) UpdateReview(context.Context, *qf.Re
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateReview is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) CreateNote(context.Context, *qf.NoteRequest) (*qf.Note, error) {
+func (UnimplementedQuickFeedServiceHandler) CreateNote(context.Context, *qf.Note) (*qf.Note, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CreateNote is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateNote(context.Context, *qf.NoteRequest) (*qf.Note, error) {
+func (UnimplementedQuickFeedServiceHandler) UpdateNote(context.Context, *qf.Note) (*qf.Note, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateNote is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) DeleteNote(context.Context, *qf.NoteRequest) (*qf.Void, error) {
+func (UnimplementedQuickFeedServiceHandler) DeleteNote(context.Context, *qf.Note) (*qf.Void, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.DeleteNote is not implemented"))
 }
 

@@ -14,28 +14,28 @@ import (
 
 // CreateNote creates a new internal staff note attached to a submission, group, or enrollment.
 // The author and timestamps are set server-side; the access control interceptor restricts this to teachers.
-func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
-	if err := checkNoteBody(in.GetNote().GetBody()); err != nil {
+func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.Note) (*qf.Note, error) {
+	if err := checkNoteBody(in.GetBody()); err != nil {
 		return nil, err
 	}
-	if !hasSingleTarget(in.GetNote()) {
+	if !hasSingleTarget(in) {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note must reference exactly one submission, group, or enrollment"))
 	}
 	courseID := in.GetCourseID()
 	// The interceptor only verifies the caller teaches courseID, not that the
 	// note's target lives in that course; reject cross-course targets here.
-	if !s.noteTargetInCourse(courseID, in.GetNote()) {
+	if !s.noteTargetInCourse(courseID, in) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("note target does not belong to the course"))
 	}
-	// Build the note from only the fields a client may set; ID, author, course,
-	// and timestamps are server-owned and must not be taken from the request.
+	// Build the note from only the fields a client may set; the ID, author, and
+	// timestamps are server-owned and must not be taken from the request.
 	note := &qf.Note{
 		CourseID:     courseID,
 		AuthorID:     userID(ctx),
-		Body:         in.GetNote().GetBody(),
-		SubmissionID: in.GetNote().GetSubmissionID(),
-		GroupID:      in.GetNote().GetGroupID(),
-		EnrollmentID: in.GetNote().GetEnrollmentID(),
+		Body:         in.GetBody(),
+		SubmissionID: in.GetSubmissionID(),
+		GroupID:      in.GetGroupID(),
+		EnrollmentID: in.GetEnrollmentID(),
 	}
 	if err := s.db.CreateNote(note); err != nil {
 		qlog.FromContext(ctx).Error("failed to create note",
@@ -47,12 +47,12 @@ func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.NoteRequest) (
 
 // UpdateNote updates the body of an existing note.
 // Only the note's author may update it.
-func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
+func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.Note) (*qf.Note, error) {
 	existing, err := s.authorizeNote(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	body := in.GetNote().GetBody()
+	body := in.GetBody()
 	if err := checkNoteBody(body); err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (
 
 // DeleteNote removes an existing note.
 // Only the note's author may delete it.
-func (s *QuickFeedService) DeleteNote(ctx context.Context, in *qf.NoteRequest) (*qf.Void, error) {
+func (s *QuickFeedService) DeleteNote(ctx context.Context, in *qf.Note) (*qf.Void, error) {
 	existing, err := s.authorizeNote(ctx, in)
 	if err != nil {
 		return nil, err
@@ -107,8 +107,8 @@ func (s *QuickFeedService) GetCourseNotes(ctx context.Context, in *qf.CourseRequ
 
 // authorizeNote loads the note referenced by the request and verifies that it
 // belongs to the request's course and that the caller is its author.
-func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
-	existing, err := s.db.GetNote(&qf.Note{ID: in.GetNote().GetID()})
+func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.Note) (*qf.Note, error) {
+	existing, err := s.db.GetNote(&qf.Note{ID: in.GetID()})
 	if err != nil {
 		if errors.Is(err, database.ErrEmptyNoteID) {
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note ID is required"))
