@@ -243,8 +243,8 @@ func TestUpdateAndDeleteNoteAuthorization(t *testing.T) {
 		return &qf.NoteRequest{CourseID: course.GetID(), Note: &qf.Note{ID: note.GetID(), Body: body}}
 	}
 
-	// A different teacher (non-author, non-admin) may not update the note.
-	if _, err := client.UpdateNote(client.Context(t, otherTeacher), updateReq("hijacked")); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author or an administrator may modify it"))) {
+	// A different teacher may not update the note.
+	if _, err := client.UpdateNote(client.Context(t, otherTeacher), updateReq("hijacked")); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))) {
 		t.Errorf("otherTeacher UpdateNote() error = %v, want PermissionDenied", err)
 	}
 
@@ -257,14 +257,14 @@ func TestUpdateAndDeleteNoteAuthorization(t *testing.T) {
 		t.Errorf("note body = %q, want %q", updated.GetBody(), "by author")
 	}
 
-	// An admin may update any note.
-	if _, err := client.UpdateNote(client.Context(t, admin), updateReq("by admin")); err != nil {
-		t.Fatalf("admin UpdateNote() unexpected error: %v", err)
+	// An admin who is not the author may not update the note.
+	if _, err := client.UpdateNote(client.Context(t, admin), updateReq("by admin")); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))) {
+		t.Errorf("admin UpdateNote() error = %v, want PermissionDenied", err)
 	}
 
-	// A non-author, non-admin teacher may not delete the note.
+	// A non-author teacher may not delete the note.
 	delReq := &qf.NoteRequest{CourseID: course.GetID(), Note: &qf.Note{ID: note.GetID()}}
-	if _, err := client.DeleteNote(client.Context(t, otherTeacher), delReq); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author or an administrator may modify it"))) {
+	if _, err := client.DeleteNote(client.Context(t, otherTeacher), delReq); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))) {
 		t.Errorf("otherTeacher DeleteNote() error = %v, want PermissionDenied", err)
 	}
 

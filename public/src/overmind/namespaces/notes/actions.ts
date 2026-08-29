@@ -70,7 +70,7 @@ export const createNote = async ({ state, actions, effects }: Context, target: N
     await actions.notes.refresh()
 }
 
-/* updateNote saves an edited note body. Only the author or an admin may succeed. */
+/* updateNote saves an edited note body. Only the note's author may succeed. */
 export const updateNote = async ({ state, actions, effects }: Context, note: Note): Promise<void> => {
     const body = state.notes.draft.trim()
     if (!body || !state.activeCourse) {
@@ -88,7 +88,7 @@ export const updateNote = async ({ state, actions, effects }: Context, note: Not
     await actions.notes.refresh()
 }
 
-/* deleteNote removes a note. Only the author or an admin may succeed. */
+/* deleteNote removes a note. Only the note's author may succeed. */
 export const deleteNote = async ({ state, actions, effects }: Context, note: Note): Promise<void> => {
     if (!state.activeCourse || !confirm("Are you sure you want to delete this note?")) {
         return
