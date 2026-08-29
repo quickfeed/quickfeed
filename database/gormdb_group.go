@@ -116,7 +116,8 @@ func (db *GormDB) UpdateGroupStatus(group *qf.Group) error {
 	return db.conn.Model(group).Update("status", group.GetStatus()).Error
 }
 
-// DeleteGroup deletes a group and its corresponding enrollments.
+// DeleteGroup deletes a group, its corresponding enrollments, and any internal
+// notes attached to the group.
 func (db *GormDB) DeleteGroup(groupID uint64) error {
 	group, err := db.GetGroup(groupID)
 	if err != nil {
@@ -130,6 +131,12 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 		}
 
 		if err := tx.Model(group).Association("Enrollments").Clear(); err != nil {
+			return err
+		}
+
+		// Notes reference the group by ID without a foreign key constraint;
+		// remove them here so they do not outlive their target.
+		if err := tx.Where("group_id = ?", groupID).Delete(&qf.Note{}).Error; err != nil {
 			return err
 		}
 

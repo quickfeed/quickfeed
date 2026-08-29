@@ -36,13 +36,21 @@ func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 	return db.conn.Create(&enrollment).Error
 }
 
-// RejectEnrollment removes the user enrollment from the database.
+// RejectEnrollment removes the user enrollment from the database, along with any
+// internal notes attached to that enrollment.
 func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		return err
 	}
-	return db.conn.Delete(enrol).Error
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Notes reference the enrollment by ID without a foreign key constraint;
+		// remove them here so they do not outlive their target.
+		if err := tx.Where("enrollment_id = ?", enrol.GetID()).Delete(&qf.Note{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(enrol).Error
+	})
 }
 
 // UpdateEnrollment changes status and display state of the given enrollment.

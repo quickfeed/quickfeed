@@ -137,3 +137,75 @@ func TestUpdateAndDeleteNote(t *testing.T) {
 		t.Error("expected error fetching deleted note")
 	}
 }
+
+// TestDeleteGroupDeletesGroupNotes verifies that notes attached to a group do
+// not outlive the group; nothing enforces this with a foreign key constraint.
+func TestDeleteGroupDeletesGroupNotes(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	student, course, assignment := qtest.SetupCourseAssignment(t, db)
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, course)
+	group := qtest.CreateGroup(t, db, &qf.Group{CourseID: course.GetID(), Name: "group", Users: []*qf.User{student}})
+
+	submission := &qf.Submission{AssignmentID: assignment.GetID(), GroupID: group.GetID()}
+	qtest.CreateSubmission(t, db, submission)
+
+	groupNote := &qf.Note{CourseID: course.GetID(), AuthorID: teacher.GetID(), GroupID: group.GetID(), Body: "group note"}
+	if err := db.CreateNote(groupNote); err != nil {
+		t.Fatal(err)
+	}
+	// A note on the group's submission must survive; the submission does.
+	submissionNote := &qf.Note{CourseID: course.GetID(), AuthorID: teacher.GetID(), SubmissionID: submission.GetID(), Body: "submission note"}
+	if err := db.CreateNote(submissionNote); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.DeleteGroup(group.GetID()); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := db.GetNote(&qf.Note{ID: groupNote.GetID()}); err == nil {
+		t.Error("expected the group's note to be deleted with the group")
+	}
+	if _, err := db.GetNote(&qf.Note{ID: submissionNote.GetID()}); err != nil {
+		t.Errorf("expected the submission's note to survive: %v", err)
+	}
+}
+
+// TestRejectEnrollmentDeletesEnrollmentNotes verifies that notes attached to an
+// enrollment do not outlive the enrollment.
+func TestRejectEnrollmentDeletesEnrollmentNotes(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	student, course, _ := qtest.SetupCourseAssignment(t, db)
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.EnrollTeacher(t, db, teacher, course)
+	enrollment := qtest.GetEnrollment(t, db, student.GetID(), course.GetID())
+
+	other := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, other, course)
+	otherEnrollment := qtest.GetEnrollment(t, db, other.GetID(), course.GetID())
+
+	note := &qf.Note{CourseID: course.GetID(), AuthorID: teacher.GetID(), EnrollmentID: enrollment.GetID(), Body: "student note"}
+	if err := db.CreateNote(note); err != nil {
+		t.Fatal(err)
+	}
+	otherNote := &qf.Note{CourseID: course.GetID(), AuthorID: teacher.GetID(), EnrollmentID: otherEnrollment.GetID(), Body: "other student note"}
+	if err := db.CreateNote(otherNote); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.RejectEnrollment(student.GetID(), course.GetID()); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := db.GetNote(&qf.Note{ID: note.GetID()}); err == nil {
+		t.Error("expected the enrollment's note to be deleted with the enrollment")
+	}
+	if _, err := db.GetNote(&qf.Note{ID: otherNote.GetID()}); err != nil {
+		t.Errorf("expected another student's note to survive: %v", err)
+	}
+}
