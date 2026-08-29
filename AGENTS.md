@@ -131,6 +131,49 @@ When editing protocol buffers in `qf/*.proto`:
 3. Update frontend TypeScript code to use new types
 4. Add comprehensive tests for new RPC methods
 
+#### Request and Response Message Types
+
+QuickFeed does not maintain separate message types for transport and storage.
+The types in `qf/types.proto` are both the API messages and the GORM models, and
+RPC methods take these types directly:
+
+```proto
+rpc CreateGroup(Group) returns (Group) {}
+rpc CreateEnrollment(Enrollment) returns (Void) {}
+rpc CreateAssignmentFeedback(AssignmentFeedback) returns (Void) {}
+```
+
+Define a dedicated `*Request` message in `qf/requests.proto` only when one of the
+following applies:
+
+1. The request is a query rather than an entity, such as `SubmissionRequest`,
+   `GroupRequest`, `EnrollmentRequest`, or `CourseRequest`.
+2. The entity does not carry the `CourseID` that the access control interceptor
+   needs. `ReviewRequest` exists for this reason alone: `Review` has no
+   `CourseID`, so `checkTeacher` could not determine the course from it.
+
+The interceptor resolves the course through the duck-typed `courseIDProvider`
+interface in `web/interceptor/provider_interface.go`, so any type with a
+`GetCourseID()` method works as a request without a wrapper. Wrapping an entity
+that already has a `CourseID` adds a type and a level of nesting without
+enabling anything.
+
+Two consequences follow from types serving both roles:
+
+- Do not use `oneof` in `qf/types.proto`. A `oneof` generates an interface-typed
+  field that GORM cannot map to columns. Express exactly-one-of semantics as
+  plain fields with a comment, as `Submission` does with `userID` and `groupID`.
+  `oneof` is fine in `qf/requests.proto`, where the messages are not persisted.
+- Handlers must treat client-supplied values for server-owned fields as
+  untrusted. Clear or overwrite IDs, author or owner references, and timestamps
+  before persisting; never pass the request message to the database unchanged.
+
+Each request type should implement `IsValid()`, which the validation interceptor
+calls before the handler runs. Put invariants that hold for every RPC using the
+type in `IsValid()`, and keep per-RPC checks in the handler. A create and an
+update share one type but differ on whether the ID must be set, so that check
+belongs in the handler.
+
 #### RPC Service Development
 
 1. Define the RPC method in appropriate `.proto` file
