@@ -13,10 +13,9 @@ import (
 )
 
 const (
-	assignmentFile  = "assignment.json"
-	criteriaFile    = "criteria.json"
-	testsFile       = "tests.json"
-	taskFilePattern = "task-*.md"
+	assignmentFile = "assignment.json"
+	criteriaFile   = "criteria.json"
+	testsFile      = "tests.json"
 )
 
 // filesForBuildContext specifies files for the Docker build context.
@@ -32,7 +31,6 @@ var patterns = []string{
 	criteriaFile,
 	testsFile,
 	ci.Dockerfile,
-	taskFilePattern,
 }
 
 // matchAny returns true if filename matches one of the target patterns
@@ -65,9 +63,8 @@ func lookupFileProcessor(filename string) (fileProcessor, bool) {
 }
 
 var processors = map[string]fileProcessor{
-	criteriaFile:    processCriteriaFile,
-	testsFile:       processTestsFile,
-	taskFilePattern: processTaskFile,
+	criteriaFile: processCriteriaFile,
+	testsFile:    processTestsFile,
 }
 
 // fileProcessor processes specific file types and updates the assignment
@@ -97,17 +94,6 @@ func processTestsFile(_ string, contents []byte, assignment *qf.Assignment, _ ui
 		return fmt.Errorf("unmarshaling %q: %w", testsFile, err)
 	}
 	assignment.ExpectedTests = expectedTests
-	return nil
-}
-
-// processTaskFile handles task-*.md files
-func processTaskFile(filename string, contents []byte, assignment *qf.Assignment, _ uint64) error {
-	taskName := taskName(filename)
-	task, err := newTask(contents, assignment.GetOrder(), taskName)
-	if err != nil {
-		return err
-	}
-	assignment.Tasks = append(assignment.GetTasks(), task)
 	return nil
 }
 
@@ -196,14 +182,11 @@ func processAssignmentFiles(files map[string][]byte, courseID uint64) (map[strin
 	return assignmentsMap, nil
 }
 
-// sortAssignments converts map to sorted slice and sorts tasks within assignments.
+// sortAssignments converts map to sorted slice.
 func sortAssignments(assignmentsMap map[string]*qf.Assignment) []*qf.Assignment {
 	assignments := make([]*qf.Assignment, 0, len(assignmentsMap))
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
-		sort.Slice(assignment.GetTasks(), func(i, j int) bool {
-			return assignment.GetTasks()[i].GetTitle() < assignment.GetTasks()[j].GetTitle()
-		})
 	}
 	sort.Slice(assignments, func(i, j int) bool {
 		return assignments[i].GetOrder() < assignments[j].GetOrder()

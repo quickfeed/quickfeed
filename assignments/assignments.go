@@ -69,7 +69,6 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		}
 	}
 
-	// Does not store tasks associated with assignments; tasks are handled separately by synchronizeTasksWithIssues below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debug("assignment not updated in database", label.Assignment, assignment.GetName())
@@ -78,11 +77,6 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		return
 	}
 	logger.Debug("assignments successfully updated from tests repository")
-
-	if err = synchronizeTasksWithIssues(ctx, db, sc, course, assignments); err != nil {
-		logger.Error("failed to synchronize assignment tasks", label.Error, err)
-		return
-	}
 }
 
 // buildDockerImage builds the Docker image for the given course.

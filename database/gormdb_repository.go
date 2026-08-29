@@ -47,12 +47,3 @@ func (db *GormDB) GetRepositories(query *qf.Repository) ([]*qf.Repository, error
 func (db *GormDB) DeleteRepository(scmRepositoryID uint64) error {
 	return db.conn.Delete(&qf.Repository{}, &qf.Repository{ScmRepositoryID: scmRepositoryID}).Error
 }
-
-// GetRepositoriesWithIssues gets repositories with issues
-func (db *GormDB) GetRepositoriesWithIssues(query *qf.Repository) ([]*qf.Repository, error) {
-	var repos []*qf.Repository
-	if err := db.conn.Preload("Issues").Find(&repos, query).Error; err != nil {
-		return nil, err
-	}
-	return repos, nil
-}

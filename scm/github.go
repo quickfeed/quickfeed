@@ -14,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/shurcooL/githubv4"
 )
 
 const (
@@ -27,7 +26,6 @@ const (
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
 	client       *github.Client
-	clientV4     *githubv4.Client
 	tokenManager TokenManager
 	providerURL  string
 	// createUserClientFn creates a GitHub client using the provided access token.
@@ -50,7 +48,6 @@ func NewGithubUserClient(token string) *GithubSCM {
 	client := newGithubUserClient(token)
 	return &GithubSCM{
 		client:             client,
-		clientV4:           githubv4.NewClient(client.Client()),
 		tokenManager:       &staticTokenManager{token: token},
 		providerURL:        "https://github.com",
 		createUserClientFn: newGithubUserClient,

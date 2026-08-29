@@ -43,8 +43,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 			"is_group_lab":      assignment.GetIsGroupLab(),
 			"reviewers":         assignment.GetReviewers(),
 			"container_timeout": assignment.GetContainerTimeout(),
-			"tasks":             assignment.GetTasks(),
-		}).Omit("Tasks").FirstOrCreate(assignment).Error
+		}).FirstOrCreate(assignment).Error
 }
 
 // GetAssignment returns assignment with the given ID.
@@ -122,7 +121,6 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				Reviewers:        v.GetReviewers(),
 				ContainerTimeout: v.GetContainerTimeout(),
 				// Submissions:       v.GetSubmissions(),
-				Tasks:             v.GetTasks(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),
 				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {

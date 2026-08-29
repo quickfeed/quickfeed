@@ -2,13 +2,11 @@ package scm_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -42,150 +40,6 @@ func TestGetOrganization(t *testing.T) {
 }
 
 // Test case for Creating new Issue on a git Repository
-func TestCreateIssue(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-
-	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
-	defer cleanup()
-
-	if issue.Title != "Test Issue" || issue.Body != "Test Body" {
-		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
-	}
-}
-
-func TestGetIssue(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-
-	opt := &scm.RepositoryOptions{
-		Owner: qfTestOrg,
-		Repo:  qf.StudentRepoName(qfTestUser),
-	}
-
-	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Repo)
-	defer cleanup()
-
-	gotIssue, err := s.GetIssue(context.Background(), opt, wantIssue.Number)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(wantIssue, gotIssue); diff != "" {
-		t.Errorf("scm.TestGetIssue() mismatch (-wantIssue +gotIssue):\n%s", diff)
-	}
-}
-
-// Test case for Updating existing Issue in a git Repository
-func TestUpdateIssue(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-
-	opt := &scm.IssueOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
-		Title:        "Updated Issue",
-		Body:         "Updated Issue Body",
-	}
-
-	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
-	defer cleanup()
-
-	opt.Number = issue.Number
-	gotIssue, err := s.UpdateIssue(context.Background(), opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if gotIssue.Title != opt.Title || gotIssue.Body != opt.Body {
-		t.Errorf("scm.TestUpdateIssue() want (title: %s, body: %s), got (title: %s, body: %s)", opt.Title, opt.Body, gotIssue.Title, gotIssue.Body)
-	}
-}
-
-// This test will delete all open and closed issues for the test user and organization.
-// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestDeleteAllIssues
-func TestDeleteAllIssues(t *testing.T) {
-	if os.Getenv("SCM_TESTS") == "" {
-		t.SkipNow()
-	}
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-
-	opt := &scm.RepositoryOptions{
-		Owner: qfTestOrg,
-		Repo:  qf.StudentRepoName(qfTestUser),
-	}
-	if err := s.DeleteIssues(context.Background(), opt); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCreateIssueComment(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-
-	body := "Test"
-	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
-		Body:         body,
-	}
-
-	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
-	defer cleanup()
-
-	opt.Number = issue.Number
-	_, err := s.CreateIssueComment(context.Background(), opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-// TestFeedbackCommentFormat tests creating a feedback comment on a pull request, with the given result.
-// Note: Manual step required to view the resulting comment: disable the cleanup() function.
-// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestFeedbackCommentFormat
-func TestFeedbackCommentFormat(t *testing.T) {
-	if os.Getenv("SCM_TESTS") == "" {
-		t.SkipNow()
-	}
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-
-	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
-		Body:         "Some initial feedback",
-	}
-	// Using the IssueCommentOptions opt fields to create the issue; the opt will be used below.
-	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
-	defer cleanup()
-
-	opt.Number = issue.Number
-	// The created comment will be deleted when the parent issue is deleted.
-	commentID, err := s.CreateIssueComment(context.Background(), opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	results := &score.Results{
-		Scores: []*score.Score{
-			{TestName: "Test1", TaskName: "1", Score: 5, MaxScore: 7, Weight: 2},
-			{TestName: "Test2", TaskName: "1", Score: 3, MaxScore: 9, Weight: 3},
-			{TestName: "Test3", TaskName: "1", Score: 8, MaxScore: 8, Weight: 5},
-			{TestName: "Test4", TaskName: "1", Score: 2, MaxScore: 5, Weight: 1},
-			{TestName: "Test5", TaskName: "1", Score: 5, MaxScore: 7, Weight: 1},
-			{TestName: "Test6", TaskName: "2", Score: 5, MaxScore: 7, Weight: 1},
-			{TestName: "Test7", TaskName: "3", Score: 5, MaxScore: 7, Weight: 1},
-		},
-	}
-	body := results.MarkdownComment("1", 80)
-	opt.CommentID = commentID
-	opt.Body = body
-	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
-		t.Fatal(err)
-	}
-}
-
 // This test assumes the repositories are compared against assignments, and that
 // user/group forks may be ahead by zero or more commits.
 func TestCommitsAhead(t *testing.T) {
@@ -262,27 +116,5 @@ func TestGetUserByID(t *testing.T) {
 	_, err = s.GetUserByID(ctx, 999)
 	if err == nil {
 		t.Error("expected error for non-existent user ID 999")
-	}
-}
-
-// createIssue on the given repository; returns the issue and a cleanup function.
-func createIssue(t *testing.T, s scm.SCM, org, repo string) (*scm.Issue, func()) {
-	t.Helper()
-	issue, err := s.CreateIssue(context.Background(), &scm.IssueOptions{
-		Organization: org,
-		Repository:   repo,
-		Title:        "Test Issue",
-		Body:         "Test Body",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return issue, func() {
-		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{
-			Owner: org, Repo: repo,
-		}, issue.Number); err != nil {
-			t.Fatal(err)
-		}
 	}
 }

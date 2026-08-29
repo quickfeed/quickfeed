@@ -42,23 +42,6 @@ type SCM interface {
 	// The returned path is the provided destination directory joined with the
 	// repository type, e.g., "assignments" or "tests".
 	Clone(context.Context, *CloneOptions) (string, error)
-
-	// CreateIssue creates an issue.
-	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
-	// UpdateIssue edits an existing issue.
-	UpdateIssue(context.Context, *IssueOptions) (*Issue, error)
-	// GetIssue fetches a specific issue.
-	GetIssue(context.Context, *RepositoryOptions, int) (*Issue, error)
-	// GetIssues fetches all issues in a repository.
-	GetIssues(context.Context, *RepositoryOptions) ([]*Issue, error)
-	// DeleteIssue deletes the given issue number in the given repository.
-	DeleteIssue(context.Context, *RepositoryOptions, int) error
-	// DeleteIssues deletes all issues in the given repository.
-	DeleteIssues(context.Context, *RepositoryOptions) error
-	// CreateIssueComment creates a comment on a SCM issue.
-	CreateIssueComment(context.Context, *IssueCommentOptions) (int64, error)
-	// UpdateIssueComment edits a comment on a SCM issue.
-	UpdateIssueComment(context.Context, *IssueCommentOptions) error
 }
 
 // TokenManager manages the access token for the SCM.
@@ -98,15 +81,4 @@ type Repository struct {
 	Repo    string
 	Owner   string // Only used by GitHub.
 	HTMLURL string // Repository website.
-}
-
-// Issue represents an SCM issue.
-type Issue struct {
-	ID         int64
-	Title      string
-	Body       string
-	Repository string
-	Assignee   string
-	Status     string
-	Number     int
 }
