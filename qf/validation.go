@@ -1,5 +1,7 @@
 package qf
 
+import "strings"
+
 // IsValid on void message always returns true.
 func (*Void) IsValid() bool {
 	return true
@@ -124,13 +126,28 @@ func (r *ReviewRequest) IsValid() bool {
 
 // IsValid ensures that CourseID and exactly one target are set.
 func (r *NotesRequest) IsValid() bool {
+	return r.GetCourseID() > 0 && exactlyOneTarget(r.GetSubmissionID(), r.GetGroupID(), r.GetEnrollmentID())
+}
+
+// IsValid ensures that CourseID is set, the body is not blank, and that the
+// note references exactly one submission, group, or enrollment.
+// The note ID is not checked here since it must be unset on create and set on
+// update and delete; the handler checks it.
+func (n *Note) IsValid() bool {
+	return n.GetCourseID() > 0 &&
+		strings.TrimSpace(n.GetBody()) != "" &&
+		exactlyOneTarget(n.GetSubmissionID(), n.GetGroupID(), n.GetEnrollmentID())
+}
+
+// exactlyOneTarget returns true if exactly one of the given target IDs is set.
+func exactlyOneTarget(ids ...uint64) bool {
 	targets := 0
-	for _, id := range []uint64{r.GetSubmissionID(), r.GetGroupID(), r.GetEnrollmentID()} {
+	for _, id := range ids {
 		if id > 0 {
 			targets++
 		}
 	}
-	return r.GetCourseID() > 0 && targets == 1
+	return targets == 1
 }
 
 // IsValid ensures that the grading benchmark has an AssignmentID and a heading.
