@@ -59,8 +59,6 @@ type SCM interface {
 	CreateIssueComment(context.Context, *IssueCommentOptions) (int64, error)
 	// UpdateIssueComment edits a comment on a SCM issue.
 	UpdateIssueComment(context.Context, *IssueCommentOptions) error
-	// RequestReviewers requests reviewers for a pull request.
-	RequestReviewers(context.Context, *RequestReviewersOptions) error
 }
 
 // TokenManager manages the access token for the SCM.

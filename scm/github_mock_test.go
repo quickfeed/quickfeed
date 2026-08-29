@@ -65,20 +65,6 @@ var groups = map[string]map[string][]github.User{
 	},
 }
 
-// reviewers map: owner -> repo -> pull requests ID -> reviewers
-var reviewers = map[string]map[string]map[int]github.ReviewersRequest{
-	"foo": {
-		"meling-labs": {
-			1: {Reviewers: []string{"meling", "leslie"}},
-			2: {Reviewers: []string{"lamport", "jostein"}},
-		},
-		"josie-labs": {
-			1: {Reviewers: []string{"meling", "leslie"}},
-			2: {Reviewers: []string{"lamport", "jostein"}},
-		},
-	},
-}
-
 func TestReplaceArgs(t *testing.T) {
 	tests := []struct {
 		name    string

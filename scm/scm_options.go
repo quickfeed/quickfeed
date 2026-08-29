@@ -112,18 +112,6 @@ func (opt IssueCommentOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
 }
 
-// RequestReviewersOptions contains information on how to assign reviewers to a pull request.
-type RequestReviewersOptions struct {
-	Organization string
-	Repository   string
-	Number       int
-	Reviewers    []string // Reviewers is a slice of github usernames
-}
-
-func (opt RequestReviewersOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" && opt.Number > 0 && len(opt.Reviewers) != 0
-}
-
 // SyncForkOptions contains information for syncing a forked repository with its upstream.
 type SyncForkOptions struct {
 	Organization string

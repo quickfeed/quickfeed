@@ -16,7 +16,6 @@ type mockOptions struct {
 	groups                map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
 	issues                map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
 	comments              map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
-	reviewers             map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
 	appConfigs            map[string]github.AppConfig                           // map: code -> app config
 	aheadBy               map[string]int                                        // map: "owner/repo" -> commits ahead of the upstream assignments repo
 	userID                int64                                                 // counter for generating unique user IDs
@@ -60,13 +59,6 @@ func (s *mockOptions) DumpState() string {
 				for i, comment := range comments {
 					fmt.Fprintf(b, "Comment[%s][%s][%d][%d]: %v\n", owner, repo, issueID, i, comment)
 				}
-			}
-		}
-	}
-	for owner, repos := range s.reviewers {
-		for repo, prs := range repos {
-			for prID, reviewers := range prs {
-				fmt.Fprintf(b, "Reviewers[%s][%s][%d]: %v\n", owner, repo, prID, reviewers)
 			}
 		}
 	}
@@ -131,15 +123,14 @@ func (s *mockOptions) GetComment(orgName, repoName string, commentID int64) *git
 
 func newMockOptions() *mockOptions {
 	return &mockOptions{
-		orgs:      make([]github.Organization, 0),
-		repos:     make([]github.Repository, 0),
-		members:   make([]github.Membership, 0),
-		groups:    map[string]map[string][]github.User{},
-		issues:    map[string]map[string][]github.Issue{},
-		comments:  map[string]map[string]map[int64][]github.IssueComment{},
-		reviewers: map[string]map[string]map[int]github.ReviewersRequest{},
-		aheadBy:   map[string]int{},
-		userID:    0,
+		orgs:     make([]github.Organization, 0),
+		repos:    make([]github.Repository, 0),
+		members:  make([]github.Membership, 0),
+		groups:   map[string]map[string][]github.User{},
+		issues:   map[string]map[string][]github.Issue{},
+		comments: map[string]map[string]map[int64][]github.IssueComment{},
+		aheadBy:  map[string]int{},
+		userID:   0,
 	}
 }
 
@@ -211,12 +202,6 @@ func WithGroups(groups map[string]map[string][]github.User) MockOption {
 			clonedGroups[owner] = clonedRepos
 		}
 		opts.groups = clonedGroups
-	}
-}
-
-func WithReviewers(reviewers map[string]map[string]map[int]github.ReviewersRequest) MockOption {
-	return func(opts *mockOptions) {
-		opts.reviewers = reviewers
 	}
 }
 

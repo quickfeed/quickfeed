@@ -111,22 +111,6 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 	return nil
 }
 
-// RequestReviewers implements the SCM interface
-func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
-	const op Op = "RequestReviewers"
-	m := M("failed to request reviewers for pull request #%d on %s/%s", opt.Number, opt.Organization, opt.Repository)
-	if !opt.valid() {
-		return E(op, m, fmt.Errorf("missing fields: %+v", opt))
-	}
-	reviewersRequest := github.ReviewersRequest{
-		Reviewers: opt.Reviewers,
-	}
-	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.Number, reviewersRequest); err != nil {
-		return E(op, m, fmt.Errorf("%w: %w", m, err))
-	}
-	return nil
-}
-
 func toIssue(issue *github.Issue) *Issue {
 	return &Issue{
 		ID:         issue.GetID(),

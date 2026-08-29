@@ -239,40 +239,22 @@ func TestIgnorePush(t *testing.T) {
 	pushEventRepo := &github.PushEventRepository{DefaultBranch: new("main")}
 	pushMain := &github.PushEvent{Ref: new("refs/heads/main"), Repo: pushEventRepo}
 	pushFeat := &github.PushEvent{Ref: new("refs/heads/feat-branch"), Repo: pushEventRepo}
-	pullFeat := &qf.PullRequest{ScmRepositoryID: 1, TaskID: 1, IssueID: 1, UserID: 1, Number: 1, SourceBranch: "feat-branch"}
 
 	const ignore bool = true
 	tests := []struct {
-		name        string
-		repo        *qf.Repository
-		pushEvent   *github.PushEvent
-		pullRequest *qf.PullRequest
-		want        bool // true = ignore, false = process
+		name      string
+		repo      *qf.Repository
+		pushEvent *github.PushEvent
+		want      bool // true = ignore, false = process
 	}{
 		{name: "DefaultBranch/UsrRepo", repo: usrRepo, pushEvent: pushMain, want: !ignore},
 		{name: "DefaultBranch/GrpRepo", repo: grpRepo, pushEvent: pushMain, want: !ignore},
-		{name: "DefaultBranch/UsrRepo/WithPullRequest", repo: usrRepo, pushEvent: pushMain, pullRequest: pullFeat, want: !ignore},
-		{name: "DefaultBranch/GrpRepo/WithPullRequest", repo: grpRepo, pushEvent: pushMain, pullRequest: pullFeat, want: !ignore},
 		{name: "FeatureBranch/UsrRepo", repo: usrRepo, pushEvent: pushFeat, want: ignore},
 		{name: "FeatureBranch/GrpRepo", repo: grpRepo, pushEvent: pushFeat, want: ignore},
-		{name: "FeatureBranch/UsrRepo/WithPullRequest", repo: usrRepo, pushEvent: pushFeat, pullRequest: pullFeat, want: ignore},
-		{name: "FeatureBranch/GrpRepo/WithPullRequest", repo: grpRepo, pushEvent: pushFeat, pullRequest: pullFeat, want: !ignore},
 	}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.pullRequest != nil {
-				tt.pullRequest.ID = uint64(i)
-				if err := db.CreatePullRequest(tt.pullRequest); err != nil {
-					t.Fatal(err)
-				}
-				// Clean up between subtests to avoid pull requests being processed in other subtests.
-				t.Cleanup(func() {
-					if err := db.UpdatePullRequest(&qf.PullRequest{ID: tt.pullRequest.GetID()}); err != nil {
-						t.Fatal(err)
-					}
-				})
-			}
-			if got := wh.ignorePush(context.Background(), tt.pushEvent, tt.repo); got != tt.want {
+			if got := wh.ignorePush(tt.pushEvent); got != tt.want {
 				t.Errorf("ignorePush(%s, %s) = %t, want %t", branchName(tt.pushEvent.GetRef()), tt.repo.Name(), got, tt.want)
 			}
 		})
