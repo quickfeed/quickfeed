@@ -33,7 +33,8 @@ func (db *GormDB) GetNote(query *qf.Note) (*qf.Note, error) {
 func (db *GormDB) GetNotes(courseID, submissionID, groupID, enrollmentID uint64) ([]*qf.Note, error) {
 	tx := db.conn.Where("course_id = ?", courseID)
 
-	if submissionID > 0 {
+	switch {
+	case submissionID > 0:
 		// Surface the submission's own notes plus its group and enrollment notes.
 		groupIDs, enrollmentIDs, err := db.relatedTargets(courseID, submissionID)
 		if err != nil {
@@ -47,9 +48,9 @@ func (db *GormDB) GetNotes(courseID, submissionID, groupID, enrollmentID uint64)
 			conditions = conditions.Or("enrollment_id IN ?", enrollmentIDs)
 		}
 		tx = tx.Where(conditions)
-	} else if groupID > 0 {
+	case groupID > 0:
 		tx = tx.Where("group_id = ?", groupID)
-	} else if enrollmentID > 0 {
+	case enrollmentID > 0:
 		tx = tx.Where("enrollment_id = ?", enrollmentID)
 	}
 

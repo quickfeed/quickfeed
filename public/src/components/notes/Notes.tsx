@@ -132,17 +132,9 @@ const NoteForm = ({ targets }: { targets: LabelledTarget[] }) => {
     const state = useAppState()
     const actions = useActions().notes
     const [targetKey, setTargetKey] = useState(targets[0]?.key ?? "")
+    // Falls back to the first target when targetKey no longer matches one, e.g.
+    // after the group or enrollment it pointed to disappears from the list.
     const selectedTarget = targets.find(target => target.key === targetKey) ?? targets[0]
-
-    useEffect(() => {
-        if (!selectedTarget) {
-            setTargetKey("")
-            return
-        }
-        if (selectedTarget.key !== targetKey) {
-            setTargetKey(selectedTarget.key)
-        }
-    }, [selectedTarget, targetKey])
 
     return (
         <div className="px-6 py-4 border-t border-base-300">
