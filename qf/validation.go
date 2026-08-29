@@ -1,7 +1,5 @@
 package qf
 
-import "strings"
-
 // IsValid on void message always returns true.
 func (*Void) IsValid() bool {
 	return true
@@ -129,14 +127,19 @@ func (r *NotesRequest) IsValid() bool {
 	return r.GetCourseID() > 0 && exactlyOneTarget(r.GetSubmissionID(), r.GetGroupID(), r.GetEnrollmentID())
 }
 
-// IsValid ensures that CourseID is set, the body is not blank, and that the
-// note references exactly one submission, group, or enrollment.
-// The note ID is not checked here since it must be unset on create and set on
-// update and delete; the handler checks it.
+// IsValid ensures that CourseID is set.
+// Note is the request type for create, update, and delete, and the three differ
+// on what else they require: create needs a body and a target but no ID, update
+// needs an ID and a body, and delete needs only an ID. CourseID is all they have
+// in common, so the handlers check the rest.
 func (n *Note) IsValid() bool {
-	return n.GetCourseID() > 0 &&
-		strings.TrimSpace(n.GetBody()) != "" &&
-		exactlyOneTarget(n.GetSubmissionID(), n.GetGroupID(), n.GetEnrollmentID())
+	return n.GetCourseID() > 0
+}
+
+// HasSingleTarget reports whether the note references exactly one submission,
+// group, or enrollment.
+func (n *Note) HasSingleTarget() bool {
+	return exactlyOneTarget(n.GetSubmissionID(), n.GetGroupID(), n.GetEnrollmentID())
 }
 
 // exactlyOneTarget returns true if exactly one of the given target IDs is set.
