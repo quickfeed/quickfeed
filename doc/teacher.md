@@ -101,7 +101,7 @@ This approach prevents accidentally revealing commit history from old course ins
 
 ### Course Logs
 
-The "Course Logs" tile, on the course's teacher page, shows what QuickFeed has done on your course's behalf: incoming webhook events (pushes, pull requests), CI and Docker output from building and testing submissions, and rebuilds or assignment syncs you trigger yourself. It does not include the operator-only server log, and it never includes a student's own successful test output, which stays on that student's submission page.
+The "Course Logs" tile, on the course's teacher page, shows what QuickFeed has done on your course's behalf: incoming webhook events, CI and Docker output from building and testing submissions, and rebuilds or assignment syncs you trigger yourself. It does not include the operator-only server log, and it never includes a student's own successful test output, which stays on that student's submission page.
 
 By default, the page shows the last 24 hours, ending whenever you last clicked Refresh; leave To alone and each Refresh brings the view up to the present. Use the From/To fields to look further back, up to 14 days: QuickFeed only keeps that much history, so an interval reaching further back is narrowed automatically rather than rejected. A From that falls after To is rejected, since no entry can lie in such an interval. The Repository and Minimum level selectors narrow the result further; the repository list always reflects every repository active in the selected interval, so switching one filter never removes an option from the other, and a repository you have selected stays listed even once it falls quiet. Changing any of these takes effect the next time you click Refresh; the free-text box below it, by contrast, filters what is already on screen immediately, with no additional request. Copy and Download act on whatever is currently on screen, filters included.
 
@@ -170,16 +170,6 @@ If an assignment requires a different test runner, you can supply a custom `run.
 The `scripts` folder may also contain a custom Dockerfile for the course.
 Otherwise, the [test runner](#test-runners) for each assignment specifies which Docker image to use.
 
-**(Beta feature: Issues and Pull Requests)**
-In addition, an assignment folder may contain one or more `task-*.md` files with exercise task descriptions.
-These task files must contain markdown content with a title specified on the first line.
-That is, the first line must start with `#` followed by the title.
-The title must then be followed by a blank line before the task description body text.
-
-Tasks will be used to create issues on the repositories of students and groups.
-Tasks are sorted within an assignment grouping by their title.
-Henceforth, if a particular ordering is desired, the teacher may prefix the title with `Task 1:` and so on.
-
 ```text
 tests┐
      ├── lab1
@@ -191,10 +181,7 @@ tests┐
      │   ├── tests.json
      ├── lab3
      │   ├── assignment.json
-     │   ├── tests.json
-     │   ├── task-go-questions.md
-     │   ├── task-learn-go.md
-     │   └── task-tour-of-go.md
+     │   └── tests.json
      ├── lab4
      │   ├── assignment.json
      │   └── criteria.json
@@ -353,26 +340,6 @@ A test execution can read the session secret from the `$QUICKFEED_SESSION_SECRET
 However, once the test code has read the session secret into memory, it should set the environment variable to the empty string `""`.
 
 For additional information about writing tests, please see the Go-based `score` package in the `kit` module.
-
-## Tasks and Pull Requests (Experimental feature)
-
-As mentioned above, an assignment folder may contain one or more `task-*.md` files with exercise task descriptions.
-These task files must contain markdown content with a title specified on the first line.
-
-```md
-# Task 1: Go Questions
-
-Here are some questions about Go.
-```
-
-These tasks will be used to create issues on group repositories.
-
-The idea is that the students in a group solve the tasks/issues and then submit a pull request.
-The students of the group can then review each other's code and make suggestions for improvements.
-Once all the tests pass for a particular issue, the pull request can be reviewed by one or more teachers.
-Once the pull request is approved, the students of the group can then merge the pull request.
-
-Note: We don't support creating issues on student repositories since we don't have a good way to prevent cheating if we were to give access between student repositories.
 
 ## Reviewing student submissions
 
