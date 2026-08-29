@@ -229,10 +229,6 @@ func TestDefaultBranch(t *testing.T) {
 }
 
 func TestIgnorePush(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	wh := NewGitHubWebHook(qtest.Logger(t), db, &scm.Manager{}, &ci.Local{}, "secret", stream.NewStreamServices(), nil)
-
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: "dat520-2024"}
 	usrRepo := &qf.Repository{RepoType: qf.Repository_USER, HTMLURL: repo.StudentRepoURL("user")}
 	grpRepo := &qf.Repository{RepoType: qf.Repository_GROUP, HTMLURL: repo.GroupRepoURL("group")}
@@ -254,7 +250,7 @@ func TestIgnorePush(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := wh.ignorePush(tt.pushEvent); got != tt.want {
+			if got := ignorePush(tt.pushEvent); got != tt.want {
 				t.Errorf("ignorePush(%s, %s) = %t, want %t", branchName(tt.pushEvent.GetRef()), tt.repo.Name(), got, tt.want)
 			}
 		})
