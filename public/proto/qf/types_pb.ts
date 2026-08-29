@@ -1397,9 +1397,12 @@ export const AssignmentFeedbacksSchema: GenMessage<AssignmentFeedbacks> = /*@__P
   messageDesc(file_qf_types, 25);
 
 /**
- * Note is an internal note written by course staff (teachers/TAs).
+ * Note is an internal note written by teaching staff.
  * Notes are never exposed to students; access is restricted to teachers via the access control interceptor.
  * Exactly one of SubmissionID, GroupID, or EnrollmentID identifies the target the note is attached to.
+ * These are plain fields rather than a oneof because Note is also the GORM model, and a oneof generates
+ * an interface-typed field that GORM cannot map to columns; Submission uses plain userID and groupID
+ * fields for the same reason. Note.IsValid() enforces the exactly-one invariant.
  *
  * @generated from message qf.Note
  */
@@ -1417,7 +1420,7 @@ export type Note = Message<"qf.Note"> & {
   CourseID: bigint;
 
   /**
-   * UserID of the teacher/TA who wrote the note
+   * UserID of the staff member who wrote the note
    *
    * @generated from field: uint64 AuthorID = 3;
    */
