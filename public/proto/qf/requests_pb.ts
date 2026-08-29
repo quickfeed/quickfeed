@@ -6,7 +6,7 @@ import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2"
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
-import type { Enrollment_UserStatus, Note, Review, Submissions } from "./types_pb";
+import type { Enrollment_UserStatus, Review, Submissions } from "./types_pb";
 import { file_qf_types } from "./types_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file qf/requests.proto.
  */
 export const file_qf_requests: GenFile = /*@__PURE__*/
-  fileDesc("ChFxZi9yZXF1ZXN0cy5wcm90bxICcWYilQEKEUNvdXJzZVN1Ym1pc3Npb25zEjsKC3N1Ym1pc3Npb25zGAEgAygLMiYucWYuQ291cnNlU3VibWlzc2lvbnMuU3VibWlzc2lvbnNFbnRyeRpDChBTdWJtaXNzaW9uc0VudHJ5EgsKA2tleRgBIAEoBBIeCgV2YWx1ZRgCIAEoCzIPLnFmLlN1Ym1pc3Npb25zOgI4ASI9Cg1SZXZpZXdSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhoKBnJldmlldxgCIAEoCzIKLnFmLlJldmlldyIhCg1Db3Vyc2VSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEIkEKDEdyb3VwUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIOCgZ1c2VySUQYAiABKAQSDwoHZ3JvdXBJRBgDIAEoBCJGCgxPcmdhbml6YXRpb24SGQoRU2NtT3JnYW5pemF0aW9uSUQYASABKAQSGwoTU2NtT3JnYW5pemF0aW9uTmFtZRgCIAEoCSJzChFFbnJvbGxtZW50UmVxdWVzdBISCghjb3Vyc2VJRBgBIAEoBEgAEhAKBnVzZXJJRBgCIAEoBEgAEisKCHN0YXR1c2VzGAMgAygOMhkucWYuRW5yb2xsbWVudC5Vc2VyU3RhdHVzQgsKCUZldGNoTW9kZSLrAQoRU3VibWlzc2lvblJlcXVlc3QSEAoIQ291cnNlSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKBlVzZXJJRBgDIAEoBEgAEhEKB0dyb3VwSUQYBCABKARIABIWCgxTdWJtaXNzaW9uSUQYBSABKARIABI0CgRUeXBlGAYgASgOMiQucWYuU3VibWlzc2lvblJlcXVlc3QuU3VibWlzc2lvblR5cGVIACIuCg5TdWJtaXNzaW9uVHlwZRIHCgNBTEwQABIICgRVU0VSEAESCQoFR1JPVVAQAkILCglGZXRjaE1vZGUiRgoRUmVwb3NpdG9yeVJlcXVlc3QSDgoGdXNlcklEGAEgASgEEg8KB2dyb3VwSUQYAiABKAQSEAoIY291cnNlSUQYAyABKAQiZQoMUmVwb3NpdG9yaWVzEigKBFVSTHMYASADKAsyGi5xZi5SZXBvc2l0b3JpZXMuVVJMc0VudHJ5GisKCVVSTHNFbnRyeRILCgNrZXkYASABKA0SDQoFdmFsdWUYAiABKAk6AjgBIk4KDlJlYnVpbGRSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIUCgxzdWJtaXNzaW9uSUQYAyABKAQiNwoLTm90ZVJlcXVlc3QSEAoIY291cnNlSUQYASABKAQSFgoEbm90ZRgCIAEoCzIILnFmLk5vdGUiXQoMTm90ZXNSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDHN1Ym1pc3Npb25JRBgCIAEoBBIPCgdncm91cElEGAMgASgEEhQKDGVucm9sbG1lbnRJRBgEIAEoBCLCAQoQQ291cnNlTG9nUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIoCgRmcm9tGAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBImCgJ0bxgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEgoKcmVwb3NpdG9yeRgEIAEoCRInCgVsZXZlbBgFIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsEg0KBWxpbWl0GAYgASgNItUCCg5Db3Vyc2VMb2dFbnRyeRIoCgR0aW1lGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBInCgVsZXZlbBgCIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsEg8KB21lc3NhZ2UYAyABKAkSDgoGc291cmNlGAQgASgJEhIKCnJlcG9zaXRvcnkYBSABKAkSFgoOcmVwb3NpdG9yeVR5cGUYBiABKAkSLgoGZmllbGRzGAcgAygLMh4ucWYuQ291cnNlTG9nRW50cnkuRmllbGRzRW50cnkSEQoJdHJ1bmNhdGVkGAggASgIGi0KC0ZpZWxkc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiMQoFTGV2ZWwSCQoFREVCVUcQABIICgRJTkZPEAESCAoEV0FSThACEgkKBUVSUk9SEAMiWQoJQ291cnNlTG9nEiMKB2VudHJpZXMYASADKAsyEi5xZi5Db3Vyc2VMb2dFbnRyeRIUCgxyZXBvc2l0b3JpZXMYAiADKAkSEQoJdHJ1bmNhdGVkGAMgASgIIgYKBFZvaWRCJlohZ2l0aHViLmNvbS9xdWlja2ZlZWQvcXVpY2tmZWVkL3FmugIAYgZwcm90bzM", [file_google_protobuf_timestamp, file_qf_types]);
+  fileDesc("ChFxZi9yZXF1ZXN0cy5wcm90bxICcWYilQEKEUNvdXJzZVN1Ym1pc3Npb25zEjsKC3N1Ym1pc3Npb25zGAEgAygLMiYucWYuQ291cnNlU3VibWlzc2lvbnMuU3VibWlzc2lvbnNFbnRyeRpDChBTdWJtaXNzaW9uc0VudHJ5EgsKA2tleRgBIAEoBBIeCgV2YWx1ZRgCIAEoCzIPLnFmLlN1Ym1pc3Npb25zOgI4ASI9Cg1SZXZpZXdSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhoKBnJldmlldxgCIAEoCzIKLnFmLlJldmlldyIhCg1Db3Vyc2VSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEIkEKDEdyb3VwUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIOCgZ1c2VySUQYAiABKAQSDwoHZ3JvdXBJRBgDIAEoBCJGCgxPcmdhbml6YXRpb24SGQoRU2NtT3JnYW5pemF0aW9uSUQYASABKAQSGwoTU2NtT3JnYW5pemF0aW9uTmFtZRgCIAEoCSJzChFFbnJvbGxtZW50UmVxdWVzdBISCghjb3Vyc2VJRBgBIAEoBEgAEhAKBnVzZXJJRBgCIAEoBEgAEisKCHN0YXR1c2VzGAMgAygOMhkucWYuRW5yb2xsbWVudC5Vc2VyU3RhdHVzQgsKCUZldGNoTW9kZSLrAQoRU3VibWlzc2lvblJlcXVlc3QSEAoIQ291cnNlSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKBlVzZXJJRBgDIAEoBEgAEhEKB0dyb3VwSUQYBCABKARIABIWCgxTdWJtaXNzaW9uSUQYBSABKARIABI0CgRUeXBlGAYgASgOMiQucWYuU3VibWlzc2lvblJlcXVlc3QuU3VibWlzc2lvblR5cGVIACIuCg5TdWJtaXNzaW9uVHlwZRIHCgNBTEwQABIICgRVU0VSEAESCQoFR1JPVVAQAkILCglGZXRjaE1vZGUiRgoRUmVwb3NpdG9yeVJlcXVlc3QSDgoGdXNlcklEGAEgASgEEg8KB2dyb3VwSUQYAiABKAQSEAoIY291cnNlSUQYAyABKAQiZQoMUmVwb3NpdG9yaWVzEigKBFVSTHMYASADKAsyGi5xZi5SZXBvc2l0b3JpZXMuVVJMc0VudHJ5GisKCVVSTHNFbnRyeRILCgNrZXkYASABKA0SDQoFdmFsdWUYAiABKAk6AjgBIk4KDlJlYnVpbGRSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIUCgxzdWJtaXNzaW9uSUQYAyABKAQiXQoMTm90ZXNSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDHN1Ym1pc3Npb25JRBgCIAEoBBIPCgdncm91cElEGAMgASgEEhQKDGVucm9sbG1lbnRJRBgEIAEoBCLCAQoQQ291cnNlTG9nUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIoCgRmcm9tGAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBImCgJ0bxgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEgoKcmVwb3NpdG9yeRgEIAEoCRInCgVsZXZlbBgFIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsEg0KBWxpbWl0GAYgASgNItUCCg5Db3Vyc2VMb2dFbnRyeRIoCgR0aW1lGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBInCgVsZXZlbBgCIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsEg8KB21lc3NhZ2UYAyABKAkSDgoGc291cmNlGAQgASgJEhIKCnJlcG9zaXRvcnkYBSABKAkSFgoOcmVwb3NpdG9yeVR5cGUYBiABKAkSLgoGZmllbGRzGAcgAygLMh4ucWYuQ291cnNlTG9nRW50cnkuRmllbGRzRW50cnkSEQoJdHJ1bmNhdGVkGAggASgIGi0KC0ZpZWxkc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiMQoFTGV2ZWwSCQoFREVCVUcQABIICgRJTkZPEAESCAoEV0FSThACEgkKBUVSUk9SEAMiWQoJQ291cnNlTG9nEiMKB2VudHJpZXMYASADKAsyEi5xZi5Db3Vyc2VMb2dFbnRyeRIUCgxyZXBvc2l0b3JpZXMYAiADKAkSEQoJdHJ1bmNhdGVkGAMgASgIIgYKBFZvaWRCJlohZ2l0aHViLmNvbS9xdWlja2ZlZWQvcXVpY2tmZWVkL3FmugIAYgZwcm90bzM", [file_google_protobuf_timestamp, file_qf_types]);
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -324,30 +324,6 @@ export const RebuildRequestSchema: GenMessage<RebuildRequest> = /*@__PURE__*/
   messageDesc(file_qf_requests, 9);
 
 /**
- * NoteRequest is used to create, update, or delete an internal note.
- *
- * @generated from message qf.NoteRequest
- */
-export type NoteRequest = Message<"qf.NoteRequest"> & {
-  /**
-   * @generated from field: uint64 courseID = 1;
-   */
-  courseID: bigint;
-
-  /**
-   * @generated from field: qf.Note note = 2;
-   */
-  note?: Note | undefined;
-};
-
-/**
- * Describes the message qf.NoteRequest.
- * Use `create(NoteRequestSchema)` to create a new message.
- */
-export const NoteRequestSchema: GenMessage<NoteRequest> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 10);
-
-/**
  * NotesRequest fetches all internal notes relevant to a target.
  * Exactly one of submissionID, groupID, or enrollmentID should be set.
  * When submissionID is set, the response also includes notes attached to the
@@ -382,7 +358,7 @@ export type NotesRequest = Message<"qf.NotesRequest"> & {
  * Use `create(NotesRequestSchema)` to create a new message.
  */
 export const NotesRequestSchema: GenMessage<NotesRequest> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 11);
+  messageDesc(file_qf_requests, 10);
 
 /**
  * @generated from message qf.CourseLogRequest
@@ -434,7 +410,7 @@ export type CourseLogRequest = Message<"qf.CourseLogRequest"> & {
  * Use `create(CourseLogRequestSchema)` to create a new message.
  */
 export const CourseLogRequestSchema: GenMessage<CourseLogRequest> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 12);
+  messageDesc(file_qf_requests, 11);
 
 /**
  * @generated from message qf.CourseLogEntry
@@ -490,7 +466,7 @@ export type CourseLogEntry = Message<"qf.CourseLogEntry"> & {
  * Use `create(CourseLogEntrySchema)` to create a new message.
  */
 export const CourseLogEntrySchema: GenMessage<CourseLogEntry> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 13);
+  messageDesc(file_qf_requests, 12);
 
 /**
  * @generated from enum qf.CourseLogEntry.Level
@@ -521,7 +497,7 @@ export enum CourseLogEntry_Level {
  * Describes the enum qf.CourseLogEntry.Level.
  */
 export const CourseLogEntry_LevelSchema: GenEnum<CourseLogEntry_Level> = /*@__PURE__*/
-  enumDesc(file_qf_requests, 13, 0);
+  enumDesc(file_qf_requests, 12, 0);
 
 /**
  * @generated from message qf.CourseLog
@@ -554,7 +530,7 @@ export type CourseLog = Message<"qf.CourseLog"> & {
  * Use `create(CourseLogSchema)` to create a new message.
  */
 export const CourseLogSchema: GenMessage<CourseLog> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 14);
+  messageDesc(file_qf_requests, 13);
 
 /**
  * @generated from message qf.Void
@@ -567,5 +543,5 @@ export type Void = Message<"qf.Void"> & {
  * Use `create(VoidSchema)` to create a new message.
  */
 export const VoidSchema: GenMessage<Void> = /*@__PURE__*/
-  messageDesc(file_qf_requests, 15);
+  messageDesc(file_qf_requests, 14);
 

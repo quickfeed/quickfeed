@@ -58,11 +58,8 @@ export const createNote = async ({ state, actions, effects }: Context, target: N
     if (!body || !state.activeCourse) {
         return
     }
-    const note = create(NoteSchema, { body, ...target })
-    const response = await effects.global.api.client.createNote({
-        courseID: state.activeCourse,
-        note,
-    })
+    const note = create(NoteSchema, { CourseID: state.activeCourse, body, ...target })
+    const response = await effects.global.api.client.createNote(note)
     if (response.error) {
         return
     }
@@ -76,10 +73,7 @@ export const updateNote = async ({ state, actions, effects }: Context, note: Not
     if (!body || !state.activeCourse) {
         return
     }
-    const response = await effects.global.api.client.updateNote({
-        courseID: state.activeCourse,
-        note: { ...note, body },
-    })
+    const response = await effects.global.api.client.updateNote({ ...note, body })
     if (response.error) {
         return
     }
@@ -93,10 +87,7 @@ export const deleteNote = async ({ state, actions, effects }: Context, note: Not
     if (!state.activeCourse || !confirm("Are you sure you want to delete this note?")) {
         return
     }
-    const response = await effects.global.api.client.deleteNote({
-        courseID: state.activeCourse,
-        note,
-    })
+    const response = await effects.global.api.client.deleteNote(note)
     if (response.error) {
         return
     }

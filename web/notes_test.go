@@ -25,10 +25,7 @@ func TestCreateNoteAccess(t *testing.T) {
 	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: student.GetID()}
 	qtest.CreateSubmission(t, db, submission)
 
-	req := &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{SubmissionID: submission.GetID(), Body: "fix issue B"},
-	}
+	req := &qf.Note{CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "fix issue B"}
 
 	// A student must not be able to create a note.
 	if _, err := client.CreateNote(client.Context(t, student), req); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("access denied for CreateNote: not teacher"))) {
@@ -63,24 +60,21 @@ func TestNoteBodyRequired(t *testing.T) {
 	emptyBodyErr := connect.NewError(connect.CodeInvalidArgument, errors.New("note body must not be empty"))
 
 	// A whitespace-only body is rejected on create.
-	if _, err := client.CreateNote(ctx, &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{SubmissionID: submission.GetID(), Body: "   "},
+	if _, err := client.CreateNote(ctx, &qf.Note{
+		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "   ",
 	}); !qtest.CheckCode(t, err, emptyBodyErr) {
 		t.Errorf("CreateNote() with blank body error = %v, want %v", err, emptyBodyErr)
 	}
 
 	// Create a valid note, then attempt to blank it via update.
-	note, err := client.CreateNote(ctx, &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{SubmissionID: submission.GetID(), Body: "original"},
+	note, err := client.CreateNote(ctx, &qf.Note{
+		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "original",
 	})
 	if err != nil {
 		t.Fatalf("CreateNote() unexpected error: %v", err)
 	}
-	if _, err := client.UpdateNote(ctx, &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{ID: note.GetID(), Body: ""},
+	if _, err := client.UpdateNote(ctx, &qf.Note{
+		CourseID: course.GetID(), ID: note.GetID(), Body: "",
 	}); !qtest.CheckCode(t, err, emptyBodyErr) {
 		t.Errorf("UpdateNote() with empty body error = %v, want %v", err, emptyBodyErr)
 	}
@@ -101,15 +95,13 @@ func TestCreateNoteIgnoresServerOwnedFields(t *testing.T) {
 	qtest.CreateSubmission(t, db, submission)
 
 	// The client attempts to dictate the primary key and author.
-	note, err := client.CreateNote(client.Context(t, teacher), &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note: &qf.Note{
-			ID:           999,
-			AuthorID:     student.GetID(),
-			CreatedAt:    timestamppb.New(time.Unix(0, 0)),
-			SubmissionID: submission.GetID(),
-			Body:         "note body",
-		},
+	note, err := client.CreateNote(client.Context(t, teacher), &qf.Note{
+		ID:           999,
+		CourseID:     course.GetID(),
+		AuthorID:     student.GetID(),
+		CreatedAt:    timestamppb.New(time.Unix(0, 0)),
+		SubmissionID: submission.GetID(),
+		Body:         "note body",
 	})
 	if err != nil {
 		t.Fatalf("CreateNote() unexpected error: %v", err)
@@ -141,9 +133,8 @@ func TestUpdateDeleteNoteRequireID(t *testing.T) {
 	qtest.CreateSubmission(t, db, submission)
 	ctx := client.Context(t, teacher)
 
-	if _, err := client.CreateNote(ctx, &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{SubmissionID: submission.GetID(), Body: "keep me"},
+	if _, err := client.CreateNote(ctx, &qf.Note{
+		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "keep me",
 	}); err != nil {
 		t.Fatalf("CreateNote() unexpected error: %v", err)
 	}
@@ -151,17 +142,15 @@ func TestUpdateDeleteNoteRequireID(t *testing.T) {
 	missingIDErr := connect.NewError(connect.CodeInvalidArgument, errors.New("note ID is required"))
 
 	// Update with a zero ID must not fall back to the first note in the table.
-	if _, err := client.UpdateNote(ctx, &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{Body: "hijack"},
+	if _, err := client.UpdateNote(ctx, &qf.Note{
+		CourseID: course.GetID(), Body: "hijack",
 	}); !qtest.CheckCode(t, err, missingIDErr) {
 		t.Errorf("UpdateNote() with zero ID error = %v, want %v", err, missingIDErr)
 	}
 
 	// Delete with a zero ID must be rejected.
-	if _, err := client.DeleteNote(ctx, &qf.NoteRequest{
+	if _, err := client.DeleteNote(ctx, &qf.Note{
 		CourseID: course.GetID(),
-		Note:     &qf.Note{},
 	}); !qtest.CheckCode(t, err, missingIDErr) {
 		t.Errorf("DeleteNote() with zero ID error = %v, want %v", err, missingIDErr)
 	}
@@ -210,8 +199,8 @@ func TestCreateNoteCrossCourse(t *testing.T) {
 		"enrollment": {EnrollmentID: enrollmentB.GetID()},
 	} {
 		note.Body = "cross-course note"
-		req := &qf.NoteRequest{CourseID: courseA.GetID(), Note: note}
-		if _, err := client.CreateNote(ctx, req); !qtest.CheckCode(t, err, wantErr) {
+		note.CourseID = courseA.GetID()
+		if _, err := client.CreateNote(ctx, note); !qtest.CheckCode(t, err, wantErr) {
 			t.Errorf("CreateNote(%s target from course B) error = %v, want PermissionDenied", name, err)
 		}
 	}
@@ -231,16 +220,15 @@ func TestUpdateAndDeleteNoteAuthorization(t *testing.T) {
 	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: student.GetID()}
 	qtest.CreateSubmission(t, db, submission)
 
-	note, err := client.CreateNote(client.Context(t, author), &qf.NoteRequest{
-		CourseID: course.GetID(),
-		Note:     &qf.Note{SubmissionID: submission.GetID(), Body: "original"},
+	note, err := client.CreateNote(client.Context(t, author), &qf.Note{
+		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "original",
 	})
 	if err != nil {
 		t.Fatalf("CreateNote() unexpected error: %v", err)
 	}
 
-	updateReq := func(body string) *qf.NoteRequest {
-		return &qf.NoteRequest{CourseID: course.GetID(), Note: &qf.Note{ID: note.GetID(), Body: body}}
+	updateReq := func(body string) *qf.Note {
+		return &qf.Note{CourseID: course.GetID(), ID: note.GetID(), Body: body}
 	}
 
 	// A different teacher may not update the note.
@@ -263,7 +251,7 @@ func TestUpdateAndDeleteNoteAuthorization(t *testing.T) {
 	}
 
 	// A non-author teacher may not delete the note.
-	delReq := &qf.NoteRequest{CourseID: course.GetID(), Note: &qf.Note{ID: note.GetID()}}
+	delReq := &qf.Note{CourseID: course.GetID(), ID: note.GetID()}
 	if _, err := client.DeleteNote(client.Context(t, otherTeacher), delReq); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))) {
 		t.Errorf("otherTeacher DeleteNote() error = %v, want PermissionDenied", err)
 	}
@@ -288,11 +276,11 @@ func TestGetNotes(t *testing.T) {
 	qtest.CreateSubmission(t, db, submission)
 
 	ctx := client.Context(t, teacher)
-	for _, body := range []*qf.NoteRequest{
-		{CourseID: course.GetID(), Note: &qf.Note{SubmissionID: submission.GetID(), Body: "submission"}},
-		{CourseID: course.GetID(), Note: &qf.Note{EnrollmentID: enrollment.GetID(), Body: "enrollment"}},
+	for _, note := range []*qf.Note{
+		{CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "submission"},
+		{CourseID: course.GetID(), EnrollmentID: enrollment.GetID(), Body: "enrollment"},
 	} {
-		if _, err := client.CreateNote(ctx, body); err != nil {
+		if _, err := client.CreateNote(ctx, note); err != nil {
 			t.Fatal(err)
 		}
 	}
