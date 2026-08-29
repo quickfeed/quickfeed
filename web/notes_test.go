@@ -42,9 +42,8 @@ func TestCreateNoteAccess(t *testing.T) {
 	}
 }
 
-// TestNoteBodyRequired verifies that blank note bodies are rejected by the
-// validation interceptor on both create and update, independent of the UI's own
-// trimming.
+// TestNoteBodyRequired verifies that blank note bodies are rejected server-side
+// on both create and update, independent of the UI's own trimming.
 func TestNoteBodyRequired(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -58,13 +57,13 @@ func TestNoteBodyRequired(t *testing.T) {
 	qtest.CreateSubmission(t, db, submission)
 	ctx := client.Context(t, teacher)
 
-	invalidErr := connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload"))
+	emptyBodyErr := connect.NewError(connect.CodeInvalidArgument, errors.New("note body must not be empty"))
 
 	// A whitespace-only body is rejected on create.
 	if _, err := client.CreateNote(ctx, &qf.Note{
 		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "   ",
-	}); !qtest.CheckCode(t, err, invalidErr) {
-		t.Errorf("CreateNote() with blank body error = %v, want %v", err, invalidErr)
+	}); !qtest.CheckCode(t, err, emptyBodyErr) {
+		t.Errorf("CreateNote() with blank body error = %v, want %v", err, emptyBodyErr)
 	}
 
 	// Create a valid note, then attempt to blank it via update.
@@ -75,14 +74,16 @@ func TestNoteBodyRequired(t *testing.T) {
 		t.Fatalf("CreateNote() unexpected error: %v", err)
 	}
 	if _, err := client.UpdateNote(ctx, &qf.Note{
-		CourseID: course.GetID(), ID: note.GetID(), SubmissionID: submission.GetID(), Body: "",
-	}); !qtest.CheckCode(t, err, invalidErr) {
-		t.Errorf("UpdateNote() with empty body error = %v, want %v", err, invalidErr)
+		CourseID: course.GetID(), ID: note.GetID(), Body: "",
+	}); !qtest.CheckCode(t, err, emptyBodyErr) {
+		t.Errorf("UpdateNote() with empty body error = %v, want %v", err, emptyBodyErr)
 	}
 }
 
-// TestNoteSingleTargetRequired verifies that the validation interceptor rejects
-// notes that reference no target or more than one target.
+// TestNoteSingleTargetRequired verifies that CreateNote rejects notes that
+// reference no target or more than one target. A note naming targets in two
+// courses must not slip past the cross-course check, which inspects only the
+// first target it finds.
 func TestNoteSingleTargetRequired(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -97,7 +98,7 @@ func TestNoteSingleTargetRequired(t *testing.T) {
 	qtest.CreateSubmission(t, db, submission)
 	ctx := client.Context(t, teacher)
 
-	invalidErr := connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload"))
+	wantErr := connect.NewError(connect.CodeInvalidArgument, errors.New("note must reference exactly one submission, group, or enrollment"))
 	for name, note := range map[string]*qf.Note{
 		"no target": {CourseID: course.GetID(), Body: "note"},
 		"two targets": {
@@ -107,8 +108,8 @@ func TestNoteSingleTargetRequired(t *testing.T) {
 			Body:         "note",
 		},
 	} {
-		if _, err := client.CreateNote(ctx, note); !qtest.CheckCode(t, err, invalidErr) {
-			t.Errorf("CreateNote(%s) error = %v, want %v", name, err, invalidErr)
+		if _, err := client.CreateNote(ctx, note); !qtest.CheckCode(t, err, wantErr) {
+			t.Errorf("CreateNote(%s) error = %v, want %v", name, err, wantErr)
 		}
 	}
 }
@@ -176,14 +177,14 @@ func TestUpdateDeleteNoteRequireID(t *testing.T) {
 
 	// Update with a zero ID must not fall back to the first note in the table.
 	if _, err := client.UpdateNote(ctx, &qf.Note{
-		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "hijack",
+		CourseID: course.GetID(), Body: "hijack",
 	}); !qtest.CheckCode(t, err, missingIDErr) {
 		t.Errorf("UpdateNote() with zero ID error = %v, want %v", err, missingIDErr)
 	}
 
 	// Delete with a zero ID must be rejected.
 	if _, err := client.DeleteNote(ctx, &qf.Note{
-		CourseID: course.GetID(), SubmissionID: submission.GetID(), Body: "hijack",
+		CourseID: course.GetID(),
 	}); !qtest.CheckCode(t, err, missingIDErr) {
 		t.Errorf("DeleteNote() with zero ID error = %v, want %v", err, missingIDErr)
 	}
@@ -261,7 +262,7 @@ func TestUpdateAndDeleteNoteAuthorization(t *testing.T) {
 	}
 
 	updateReq := func(body string) *qf.Note {
-		return &qf.Note{CourseID: course.GetID(), ID: note.GetID(), SubmissionID: submission.GetID(), Body: body}
+		return &qf.Note{CourseID: course.GetID(), ID: note.GetID(), Body: body}
 	}
 
 	// A different teacher may not update the note.
@@ -284,7 +285,7 @@ func TestUpdateAndDeleteNoteAuthorization(t *testing.T) {
 	}
 
 	// A non-author teacher may not delete the note.
-	delReq := &qf.Note{CourseID: course.GetID(), ID: note.GetID(), SubmissionID: submission.GetID(), Body: "original"}
+	delReq := &qf.Note{CourseID: course.GetID(), ID: note.GetID()}
 	if _, err := client.DeleteNote(client.Context(t, otherTeacher), delReq); !qtest.CheckCode(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))) {
 		t.Errorf("otherTeacher DeleteNote() error = %v, want PermissionDenied", err)
 	}

@@ -3,18 +3,26 @@ package web
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"connectrpc.com/connect"
-	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
 // CreateNote creates a new internal staff note attached to a submission, group, or enrollment.
-// The validation interceptor rejects blank bodies and notes without exactly one target;
-// the author and timestamps are set server-side; the access control interceptor restricts this to teachers.
+// The author and timestamps are set server-side; the access control interceptor restricts this to teachers.
 func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.Note) (*qf.Note, error) {
+	if err := checkNoteBody(in.GetBody()); err != nil {
+		return nil, err
+	}
+	// This must precede noteTargetInCourse, which inspects only the first target
+	// it finds: a note naming targets in two courses would otherwise be stored
+	// after being checked against just one of them.
+	if !in.HasSingleTarget() {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note must reference exactly one submission, group, or enrollment"))
+	}
 	courseID := in.GetCourseID()
 	// The interceptor only verifies the caller teaches courseID, not that the
 	// note's target lives in that course; reject cross-course targets here.
@@ -44,6 +52,9 @@ func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.Note) (*qf.Not
 func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.Note) (*qf.Note, error) {
 	existing, err := s.authorizeNote(ctx, in)
 	if err != nil {
+		return nil, err
+	}
+	if err := checkNoteBody(in.GetBody()); err != nil {
 		return nil, err
 	}
 	existing.Body = in.GetBody()
@@ -92,14 +103,17 @@ func (s *QuickFeedService) GetCourseNotes(ctx context.Context, in *qf.CourseRequ
 	return &qf.Notes{Notes: notes}, nil
 }
 
-// authorizeNote loads the note referenced by the request and verifies that it
-// belongs to the request's course and that the caller is its author.
+// authorizeNote loads the note named by the request and verifies that the
+// request carries a note ID, that the note belongs to the request's course, and
+// that the caller is its author.
 func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.Note) (*qf.Note, error) {
+	// Update and delete both name an existing note; without an ID, Gorm would
+	// ignore the zero-value field and return an arbitrary row.
+	if in.GetID() == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note ID is required"))
+	}
 	existing, err := s.db.GetNote(&qf.Note{ID: in.GetID()})
 	if err != nil {
-		if errors.Is(err, database.ErrEmptyNoteID) {
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("note ID is required"))
-		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("note not found"))
 	}
 	if existing.GetCourseID() != in.GetCourseID() {
@@ -109,6 +123,15 @@ func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.Note) (*qf.
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))
 	}
 	return existing, nil
+}
+
+// checkNoteBody rejects notes whose body is empty or only whitespace, so a blank
+// note is never persisted even when the RPC is called directly, bypassing the UI.
+func checkNoteBody(body string) error {
+	if strings.TrimSpace(body) == "" {
+		return connect.NewError(connect.CodeInvalidArgument, errors.New("note body must not be empty"))
+	}
+	return nil
 }
 
 // noteTargetInCourse reports whether the note's single target (submission,
