@@ -438,3 +438,131 @@ func TestCreateCriterion(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateAssignmentsRemovedExpectedTests(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &qf.Assignment{
+		CourseID: course.GetID(),
+		Name:     "LabName",
+		Deadline: qtest.Timestamp(t, "2022-11-11T23:59:00"),
+		Order:    1,
+		ExpectedTests: []*qf.TestInfo{
+			{TestName: "test1", MaxScore: 10, Weight: 10},
+			{TestName: "test2", MaxScore: 20, Weight: 20},
+		},
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	// Removing entries from tests.json must remove the corresponding
+	// test_infos rows from the database (issue #1439).
+	for _, expectedTests := range [][]*qf.TestInfo{nil, {}} {
+		assignment.ExpectedTests = []*qf.TestInfo{{TestName: "test1", MaxScore: 10, Weight: 10}}
+		if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+			t.Fatal(err)
+		}
+
+		assignment.ExpectedTests = expectedTests
+		if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+			t.Fatal(err)
+		}
+		gotAssignment, err := db.GetAssignment(&qf.Assignment{Name: "LabName", CourseID: course.GetID()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(gotAssignment.GetExpectedTests()) != 0 {
+			t.Errorf("expected no expected tests after removal, got %d", len(gotAssignment.GetExpectedTests()))
+		}
+	}
+}
+
+func TestUpdateAssignmentsNeverHadExpectedTests(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &qf.Assignment{
+		CourseID: course.GetID(),
+		Name:     "LabName",
+		Deadline: qtest.Timestamp(t, "2022-11-11T23:59:00"),
+		Order:    1,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	// Syncing an assignment without a tests.json multiple times must not fail.
+	for range 2 {
+		if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	gotAssignment, err := db.GetAssignment(&qf.Assignment{Name: "LabName", CourseID: course.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotAssignment.GetExpectedTests()) != 0 {
+		t.Errorf("expected no expected tests, got %d", len(gotAssignment.GetExpectedTests()))
+	}
+}
+
+func TestUpdateAssignmentsRemovedGradingBenchmarks(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &qf.Assignment{
+		CourseID: course.GetID(),
+		Name:     "LabName",
+		Deadline: qtest.Timestamp(t, "2022-11-11T23:59:00"),
+		Order:    1,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+	benchmark := &qf.GradingBenchmark{
+		CourseID:     course.GetID(),
+		AssignmentID: assignment.GetID(),
+		Heading:      "Test benchmark 1",
+		Criteria: []*qf.GradingCriterion{
+			{CourseID: course.GetID(), Description: "Criterion 1", Points: 5},
+		},
+	}
+	if err := db.CreateBenchmark(benchmark); err != nil {
+		t.Fatal(err)
+	}
+	gotBenchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignment.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotBenchmarks) != 1 {
+		t.Fatalf("expected 1 benchmark before removal, got %d", len(gotBenchmarks))
+	}
+
+	// Removing criteria.json must remove the assignment's benchmarks
+	// and criteria from the database (issue #1439).
+	assignment.GradingBenchmarks = nil
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+		t.Fatal(err)
+	}
+	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotBenchmarks) != 0 {
+		t.Errorf("expected no benchmarks after removal, got %d", len(gotBenchmarks))
+	}
+}
