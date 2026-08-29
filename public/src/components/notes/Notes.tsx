@@ -8,8 +8,8 @@ import { submissionNoteTargetInfo, submissionNoteTargets } from "./noteHelpers"
 /**
  * Notes renders the internal staff notes for the currently selected submission,
  * including the associated group and enrollment notes. Notes are never shown to
- * students; this component is only rendered in teacher views. Authors (and
- * course admins) may edit or delete their own notes.
+ * students; this component is only rendered in teacher views. Only a note's
+ * author may edit or delete it.
  */
 const Notes = () => {
     const state = useAppState()
@@ -60,7 +60,7 @@ const Notes = () => {
  */
 export const NotePanelBody = ({ notes, targets, targetInfo }: { notes: Note[], targets: LabelledTarget[], targetInfo?: (note: Note) => TargetInfo }) => {
     const state = useAppState()
-    const canModify = (note: Note) => note.AuthorID === state.self.ID || state.self.IsAdmin
+    const canModify = (note: Note) => note.AuthorID === state.self.ID
     const authorName = (authorID: bigint) => state.courseTeachers[authorID.toString()]?.Name ?? "Staff"
 
     return (
@@ -84,7 +84,7 @@ export const NotePanelBody = ({ notes, targets, targetInfo }: { notes: Note[], t
     )
 }
 
-/** NoteItem renders a single note, with edit/delete controls for its author or a course admin. */
+/** NoteItem renders a single note, with edit/delete controls for its author. */
 const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorName: string, target?: TargetInfo, canModify: boolean }) => {
     const state = useAppState()
     const actions = useActions().notes

@@ -46,7 +46,7 @@ func (s *QuickFeedService) CreateNote(ctx context.Context, in *qf.NoteRequest) (
 }
 
 // UpdateNote updates the body of an existing note.
-// Only the note's author or a site administrator may update it.
+// Only the note's author may update it.
 func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
 	existing, err := s.authorizeNote(ctx, in)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.NoteRequest) (
 }
 
 // DeleteNote removes an existing note.
-// Only the note's author or a site administrator may delete it.
+// Only the note's author may delete it.
 func (s *QuickFeedService) DeleteNote(ctx context.Context, in *qf.NoteRequest) (*qf.Void, error) {
 	existing, err := s.authorizeNote(ctx, in)
 	if err != nil {
@@ -106,7 +106,7 @@ func (s *QuickFeedService) GetCourseNotes(ctx context.Context, in *qf.CourseRequ
 }
 
 // authorizeNote loads the note referenced by the request and verifies that it
-// belongs to the request's course and that the caller is its author or an admin.
+// belongs to the request's course and that the caller is its author.
 func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.NoteRequest) (*qf.Note, error) {
 	existing, err := s.db.GetNote(&qf.Note{ID: in.GetNote().GetID()})
 	if err != nil {
@@ -118,13 +118,8 @@ func (s *QuickFeedService) authorizeNote(ctx context.Context, in *qf.NoteRequest
 	if existing.GetCourseID() != in.GetCourseID() {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("note does not belong to the course"))
 	}
-
-	// TODO(jostein): Currently the interceptor only checks that the caller is a teacher in the course, so any call that ends up here is from a teacher in the course.
-	// This means that only admins that are *also teachers* in the course can update notes that they did not author.
-	// If we want to allow *any admins* that are not also teachers in the course to update notes, we would need to change the interceptor to allow that.
-	// This can be done by adding a "checkTeacherOrAdmin" to the access control interceptor.
-	if existing.GetAuthorID() != userID(ctx) && !isAdmin(ctx) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author or an administrator may modify it"))
+	if existing.GetAuthorID() != userID(ctx) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("only the note's author may modify it"))
 	}
 	return existing, nil
 }
