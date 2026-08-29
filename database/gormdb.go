@@ -45,9 +45,6 @@ func NewGormDB(path string, logger *slog.Logger) (*GormDB, error) {
 		&qf.Note{},
 		&qf.AssignmentFeedback{},
 		&qf.FeedbackReceipt{},
-		&qf.Issue{},
-		&qf.Task{},
-		&qf.PullRequest{},
 		&score.BuildInfo{},
 		&score.Score{},
 	); err != nil {
