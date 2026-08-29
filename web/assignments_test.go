@@ -33,11 +33,14 @@ func TestUpdateAssignments(t *testing.T) {
 			wantErr: connect.NewError(connect.CodePermissionDenied, errors.New("access denied for UpdateAssignments: not teacher")),
 		},
 		{
-			name: "Valid course ID but failed to clone repository",
+			// The mock's tests repository is empty, so the clone inside
+			// UpdateFromTestsRepo fails; previously this failure was silently
+			// ignored and the RPC continued to the assignments repository.
+			name: "Valid course ID but failed to clone tests repository",
 			request: &qf.CourseRequest{
 				CourseID: course.GetID(),
 			},
-			wantErr: connect.NewError(connect.CodeNotFound, errors.New("failed to clone assignments repository")),
+			wantErr: connect.NewError(connect.CodeInternal, errors.New("failed to update assignments from tests repository")),
 		},
 	}
 

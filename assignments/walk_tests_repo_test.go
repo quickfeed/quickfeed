@@ -14,21 +14,21 @@ import (
 const testsFolder = "testdata/tests"
 
 func TestWalkTestsRepository(t *testing.T) {
-	// map of expected files in the testdata/tests folder
+	// map of expected files in the testdata/tests folder, relative to that folder.
 	// Note: run.sh is ignored by walkTestsRepository so they are not included here.
 	wantFiles := map[string]struct{}{
-		"testdata/tests/scripts/Dockerfile":   {},
-		"testdata/tests/scripts/go.mod":       {},
-		"testdata/tests/scripts/go.sum":       {},
-		"testdata/tests/lab1/assignment.json": {},
-		"testdata/tests/lab1/tests.json":      {},
-		"testdata/tests/lab2/assignment.json": {},
-		"testdata/tests/lab2/tests.json":      {},
-		"testdata/tests/lab3/assignment.json": {},
-		"testdata/tests/lab4/assignment.json": {},
-		"testdata/tests/lab4/criteria.json":   {},
-		"testdata/tests/lab5/assignment.json": {},
-		"testdata/tests/lab5/criteria.json":   {},
+		"scripts/Dockerfile":   {},
+		"scripts/go.mod":       {},
+		"scripts/go.sum":       {},
+		"lab1/assignment.json": {},
+		"lab1/tests.json":      {},
+		"lab2/assignment.json": {},
+		"lab2/tests.json":      {},
+		"lab3/assignment.json": {},
+		"lab4/assignment.json": {},
+		"lab4/criteria.json":   {},
+		"lab5/assignment.json": {},
+		"lab5/criteria.json":   {},
 	}
 	files, err := walkTestsRepository(testsFolder)
 	if err != nil {
@@ -139,7 +139,7 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 		},
 	}
 
-	gotAssignments, gotBuildContext, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotBuildContext, gotIssues, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,10 +149,20 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
+	// lab5's criteria.json has an empty heading and an empty description, and
+	// lab3 is auto-graded without a tests.json.
+	wantIssues := []RepoIssue{
+		{Assignment: "lab5", File: "lab5/criteria.json", Problem: "benchmark with empty heading"},
+		{Assignment: "lab5", File: "lab5/criteria.json", Problem: `criterion with empty description in benchmark ""`},
+		{Assignment: "lab3", File: "lab3/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
+	}
+	if diff := cmp.Diff(wantIssues, gotIssues); diff != "" {
+		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestBuildContextContainsModuleFiles(t *testing.T) {
-	_, gotBuildContext, err := readTestsRepositoryContent(testsFolder, 1)
+	_, gotBuildContext, _, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,35 +196,93 @@ func TestBuildContextContainsModuleFiles(t *testing.T) {
 }
 
 func TestReadTestsRepositoryContentBadContent(t *testing.T) {
-	// Check that ReadTestsRepositoryContent handles bad content gracefully without panicking.
+	// Check that readTestsRepositoryContent reports bad content as issues
+	// instead of aborting, and excludes the affected assignments.
 	tests := []struct {
-		name         string
-		folder       string
-		chkUnmarshal bool
+		name        string
+		folder      string
+		wantProblem string
 	}{
-		{name: "InvalidTypes", folder: "testdata/invalid-tests/invalid-types", chkUnmarshal: true},
-		{name: "NegativeInteger", folder: "testdata/invalid-tests/negative-integer", chkUnmarshal: true},
-		{name: "MissingAssignment1", folder: "testdata/invalid-tests/missing-assignment-json1", chkUnmarshal: false},
-		{name: "MissingAssignment2", folder: "testdata/invalid-tests/missing-assignment-json2", chkUnmarshal: false},
+		{name: "InvalidTypes", folder: "testdata/invalid-tests/invalid-types", wantProblem: "unmarshaling"},
+		{name: "NegativeInteger", folder: "testdata/invalid-tests/negative-integer", wantProblem: "unmarshaling"},
+		{name: "MissingAssignment1", folder: "testdata/invalid-tests/missing-assignment-json1", wantProblem: "missing"},
+		{name: "MissingAssignment2", folder: "testdata/invalid-tests/missing-assignment-json2", wantProblem: "missing"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			checkLabWithInvalidCriteriaFile(t, tc.folder, tc.chkUnmarshal)
+			assignments, _, issues, err := readTestsRepositoryContent(tc.folder, 1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(assignments) != 0 {
+				t.Errorf("len(assignments) = %d, want 0", len(assignments))
+			}
+			if len(issues) == 0 {
+				t.Fatal("expected issues, got none")
+			}
+			for _, issue := range issues {
+				if !strings.Contains(issue.Problem, tc.wantProblem) {
+					t.Errorf("issue %q does not mention %q", issue, tc.wantProblem)
+				}
+			}
 		})
 	}
 }
 
-func checkLabWithInvalidCriteriaFile(t *testing.T, folder string, chkUnmarshal bool) {
-	_, _, err := readTestsRepositoryContent(folder, 1)
-	if err == nil {
-		t.Errorf("expected error")
-	}
-	if chkUnmarshal && !isUnmarshalError(err) {
-		t.Errorf("expected unmarshal error, got: %v", err)
-	}
-}
+func TestReadTestsRepositoryContentIssues(t *testing.T) {
+	testsDir := t.TempDir()
 
-// Check if the error is related to invalid JSON unmarshalling.
-func isUnmarshalError(e error) bool {
-	return strings.Contains(e.Error(), "unmarshaling")
+	const badTestsJSON = `[
+		{"TestName": "TestA", "MaxScore": 10, "Weight": 1},
+		{"TestName": "", "MaxScore": 5, "Weight": 1},
+		{"TestName": "TestB", "MaxScore": 0, "Weight": 1},
+		{"TestName": "TestC", "MaxScore": 5, "Weight": 0},
+		{"TestName": "TestA", "MaxScore": 7, "Weight": 2}
+	]`
+	for _, c := range []struct {
+		path, filename, content string
+	}{
+		{"lab1", "assignment.json", j1},
+		{"lab1", "tests.json", badTestsJSON},
+		{"lab2", "tests.json", testJson},              // no assignment.json for lab2
+		{"lab3", "assignment.json", j3},               //
+		{"lab3", "Dockerfile", "FROM golang"},         // Dockerfile outside scripts
+		{"internal/pkg", "tests.json", "not json"},    // nested; must be ignored
+		{"lab1/testdata", "criteria.json", "ignored"}, // nested; must be ignored
+		{"scripts", "Dockerfile", df},
+		{"", "criteria.json", "[]"}, // repository root; must be reported
+	} {
+		writeFile(t, testsDir, c.path, c.filename, c.content)
+	}
+
+	assignments, gotBuildContext, issues, err := readTestsRepositoryContent(testsDir, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// lab1 and lab3 must survive; lab2 has no assignment.json
+	if len(assignments) != 2 {
+		t.Errorf("len(assignments) = %d, want 2", len(assignments))
+	}
+	// The invalid tests.json entries must be dropped, keeping only TestA
+	wantTests := []*qf.TestInfo{{TestName: "TestA", MaxScore: 10, Weight: 1}}
+	if diff := cmp.Diff(wantTests, assignments[0].GetExpectedTests(), protocmp.Transform()); diff != "" {
+		t.Errorf("ExpectedTests mismatch (-want +got):\n%s", diff)
+	}
+	if gotBuildContext[ci.Dockerfile] != df {
+		t.Errorf("got Dockerfile %q, want %q", gotBuildContext[ci.Dockerfile], df)
+	}
+
+	wantIssues := []RepoIssue{
+		{File: "criteria.json", Problem: "file must be inside an assignment folder"},
+		{Assignment: "lab1", File: "lab1/tests.json", Problem: "test entry with empty test name"},
+		{Assignment: "lab1", File: "lab1/tests.json", Problem: `test "TestB" must have max score greater than 0`},
+		{Assignment: "lab1", File: "lab1/tests.json", Problem: `test "TestC" must have weight greater than 0`},
+		{Assignment: "lab1", File: "lab1/tests.json", Problem: `duplicate test name "TestA"`},
+		{Assignment: "lab2", File: "lab2/tests.json", Problem: `missing "lab2/assignment.json"`},
+		{Assignment: "lab3", File: "lab3/Dockerfile", Problem: "Dockerfile must be in the scripts folder"},
+		{Assignment: "lab3", File: "lab3/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
+	}
+	if diff := cmp.Diff(wantIssues, issues); diff != "" {
+		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+	}
 }

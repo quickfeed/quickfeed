@@ -116,4 +116,10 @@ message CourseLog {
     bool truncated                  = 3;  // set when entries were cut off by the limit
 }
 
+// TestsRepositoryIssues lists content problems found in the tests repository,
+// such as malformed json files, formatted as "path: problem" strings.
+message TestsRepositoryIssues {
+    repeated string issues = 1;
+}
+
 message Void {}

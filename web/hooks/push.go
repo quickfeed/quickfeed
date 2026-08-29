@@ -59,8 +59,10 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 	switch {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
-		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(ctx, wh.runner, wh.db, scmClient, course)
+		// should update the course data (assignments) in the database;
+		// issues and errors are logged with the course scope inside
+		// UpdateFromTestsRepo, and there is no other reporting channel here
+		_, _ = assignments.UpdateFromTestsRepo(ctx, wh.runner, wh.db, scmClient, course)
 
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
