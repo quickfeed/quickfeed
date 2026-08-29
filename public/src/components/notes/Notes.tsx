@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import type { Note } from "../../../proto/qf/types_pb"
 import { getFormattedTime } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
+import type { NoteScope } from "../../overmind/namespaces/notes/state"
 import type { LabelledTarget, TargetInfo } from "./noteHelpers"
 import { submissionNoteTargetInfo, submissionNoteTargets } from "./noteHelpers"
 
@@ -47,7 +48,7 @@ const Notes = () => {
 
             {open && (
                 <div className="card-body p-0">
-                    <NotePanelBody notes={notes} targets={targets} targetInfo={targetInfo} />
+                    <NotePanelBody notes={notes} targets={targets} targetInfo={targetInfo} scope="submission" />
                 </div>
             )}
         </div>
@@ -56,9 +57,10 @@ const Notes = () => {
 
 /**
  * NotePanelBody renders the list of notes and the add/edit form. It is shared by
- * the collapsible submission panel and the per-student notes modal.
+ * the collapsible submission panel and the per-student details view. The scope
+ * says which note list this panel shows, so a mutation reloads that list.
  */
-export const NotePanelBody = ({ notes, targets, targetInfo }: { notes: Note[], targets: LabelledTarget[], targetInfo?: (note: Note) => TargetInfo }) => {
+export const NotePanelBody = ({ notes, targets, targetInfo, scope }: { notes: Note[], targets: LabelledTarget[], targetInfo?: (note: Note) => TargetInfo, scope: NoteScope }) => {
     const state = useAppState()
     const canModify = (note: Note) => note.AuthorID === state.self.ID
     const authorName = (authorID: bigint) => state.courseTeachers[authorID.toString()]?.Name ?? "Staff"
@@ -75,17 +77,18 @@ export const NotePanelBody = ({ notes, targets, targetInfo }: { notes: Note[], t
                         authorName={authorName(note.AuthorID)}
                         target={targetInfo?.(note)}
                         canModify={canModify(note)}
+                        scope={scope}
                     />
                 ))}
             </ul>
 
-            <NoteForm targets={targets} />
+            <NoteForm targets={targets} scope={scope} />
         </>
     )
 }
 
 /** NoteItem renders a single note, with edit/delete controls for its author. */
-const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorName: string, target?: TargetInfo, canModify: boolean }) => {
+const NoteItem = ({ note, authorName, target, canModify, scope }: { note: Note, authorName: string, target?: TargetInfo, canModify: boolean, scope: NoteScope }) => {
     const state = useAppState()
     const actions = useActions().notes
     const isEditing = state.notes.editing === note.ID
@@ -100,7 +103,7 @@ const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorN
                 <div className="flex gap-2 mt-2">
                     <button className="btn btn-sm btn-primary"
                         disabled={state.notes.editDraft.trim().length === 0}
-                        onClick={() => actions.updateNote(note)}
+                        onClick={() => actions.updateNote({ note, scope })}
                     >Save</button>
                     <button className="btn btn-sm btn-ghost" onClick={() => actions.cancelEditing()}>Cancel</button>
                 </div>
@@ -122,7 +125,7 @@ const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorN
                 {canModify && (
                     <div className="flex gap-2">
                         <button className="link link-hover" onClick={() => actions.startEditing(note)}>Edit</button>
-                        <button className="link link-hover text-error" onClick={() => actions.deleteNote(note)}>Delete</button>
+                        <button className="link link-hover text-error" onClick={() => actions.deleteNote({ note, scope })}>Delete</button>
                     </div>
                 )}
             </div>
@@ -131,7 +134,7 @@ const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorN
 }
 
 /** NoteForm lets staff draft a new note and choose which target to attach it to. */
-const NoteForm = ({ targets }: { targets: LabelledTarget[] }) => {
+const NoteForm = ({ targets, scope }: { targets: LabelledTarget[], scope: NoteScope }) => {
     const state = useAppState()
     const actions = useActions().notes
     const [targetKey, setTargetKey] = useState(targets[0]?.key ?? "")
@@ -156,7 +159,7 @@ const NoteForm = ({ targets }: { targets: LabelledTarget[] }) => {
                 )}
                 <button className="btn btn-sm btn-primary"
                     disabled={!selectedTarget || state.notes.draft.trim().length === 0}
-                    onClick={() => selectedTarget && actions.createNote(selectedTarget.value)}
+                    onClick={() => selectedTarget && actions.createNote({ target: selectedTarget.value, scope })}
                 >
                     Add note
                 </button>

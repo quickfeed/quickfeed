@@ -2,6 +2,7 @@ import { create } from "@bufbuild/protobuf"
 import type { Context } from "../.."
 import type { Note } from "../../../../proto/qf/types_pb"
 import { NoteSchema } from "../../../../proto/qf/types_pb"
+import type { NoteScope } from "./state"
 
 /* NoteTarget identifies which entity a new note is attached to.
    Exactly one of the fields should be set. */
@@ -10,7 +11,6 @@ export type NoteTarget = { SubmissionID?: bigint, GroupID?: bigint, EnrollmentID
 /* getNotes fetches all notes relevant to the currently selected submission,
    including the associated group and enrollment notes. */
 export const getNotes = async ({ state, effects }: Context): Promise<void> => {
-    state.notes.scope = "submission"
     const submission = state.selectedSubmission
     if (!submission || !state.activeCourse) {
         return
@@ -30,7 +30,6 @@ export const getNotes = async ({ state, effects }: Context): Promise<void> => {
 /* getCourseNotes fetches every note in the active course, used by staff
    overviews such as the members page to show per-student notes. */
 export const getCourseNotes = async ({ state, effects }: Context): Promise<void> => {
-    state.notes.scope = "course"
     if (!state.activeCourse) {
         return
     }
@@ -41,10 +40,11 @@ export const getCourseNotes = async ({ state, effects }: Context): Promise<void>
     state.notes.courseNotes = response.message.notes
 }
 
-/* refresh reloads whichever note scope was last loaded, so mutations update the
-   correct view (a submission's notes or the course-wide list). */
-export const refresh = async ({ state, actions }: Context): Promise<void> => {
-    if (state.notes.scope === "course") {
+/* refresh reloads the note list the calling view is showing, so a mutation
+   updates that view. The scope is passed in by the view rather than tracked in
+   state, so a background load elsewhere cannot redirect the refresh. */
+export const refresh = async ({ actions }: Context, scope: NoteScope): Promise<void> => {
+    if (scope === "course") {
         await actions.notes.getCourseNotes()
     } else {
         await actions.notes.getNotes()
@@ -53,7 +53,7 @@ export const refresh = async ({ state, actions }: Context): Promise<void> => {
 
 /* createNote creates a note attached to the given target (submission, group, or
    enrollment) and refreshes the notes for the current submission. */
-export const createNote = async ({ state, actions, effects }: Context, target: NoteTarget): Promise<void> => {
+export const createNote = async ({ state, actions, effects }: Context, { target, scope }: { target: NoteTarget, scope: NoteScope }): Promise<void> => {
     const body = state.notes.draft.trim()
     if (!body || !state.activeCourse) {
         return
@@ -64,11 +64,11 @@ export const createNote = async ({ state, actions, effects }: Context, target: N
         return
     }
     state.notes.draft = ""
-    await actions.notes.refresh()
+    await actions.notes.refresh(scope)
 }
 
 /* updateNote saves an edited note body. Only the note's author may succeed. */
-export const updateNote = async ({ state, actions, effects }: Context, note: Note): Promise<void> => {
+export const updateNote = async ({ state, actions, effects }: Context, { note, scope }: { note: Note, scope: NoteScope }): Promise<void> => {
     const body = state.notes.editDraft.trim()
     if (!body || !state.activeCourse) {
         return
@@ -79,11 +79,11 @@ export const updateNote = async ({ state, actions, effects }: Context, note: Not
     }
     state.notes.editing = 0n
     state.notes.editDraft = ""
-    await actions.notes.refresh()
+    await actions.notes.refresh(scope)
 }
 
 /* deleteNote removes a note. Only the note's author may succeed. */
-export const deleteNote = async ({ state, actions, effects }: Context, note: Note): Promise<void> => {
+export const deleteNote = async ({ state, actions, effects }: Context, { note, scope }: { note: Note, scope: NoteScope }): Promise<void> => {
     if (!state.activeCourse || !confirm("Are you sure you want to delete this note?")) {
         return
     }
@@ -91,7 +91,7 @@ export const deleteNote = async ({ state, actions, effects }: Context, note: Not
     if (response.error) {
         return
     }
-    await actions.notes.refresh()
+    await actions.notes.refresh(scope)
 }
 
 /* startEditing prepares the form to edit an existing note. The new-note draft is
