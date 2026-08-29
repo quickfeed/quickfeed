@@ -156,7 +156,7 @@ type QuickFeedServiceClient interface {
 	UpdateCourse(context.Context, *qf.Course) (*qf.Void, error)
 	UpdateCourseVisibility(context.Context, *qf.Enrollment) (*qf.Void, error)
 	GetAssignments(context.Context, *qf.CourseRequest) (*qf.Assignments, error)
-	UpdateAssignments(context.Context, *qf.CourseRequest) (*qf.Void, error)
+	UpdateAssignments(context.Context, *qf.CourseRequest) (*qf.TestsRepositoryIssues, error)
 	GetEnrollments(context.Context, *qf.EnrollmentRequest) (*qf.Enrollments, error)
 	CreateEnrollment(context.Context, *qf.Enrollment) (*qf.Void, error)
 	UpdateEnrollments(context.Context, *qf.Enrollments) (*qf.Void, error)
@@ -274,7 +274,7 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("GetAssignments")),
 			connect.WithClientOptions(opts...),
 		),
-		updateAssignments: connect.NewClient[qf.CourseRequest, qf.Void](
+		updateAssignments: connect.NewClient[qf.CourseRequest, qf.TestsRepositoryIssues](
 			httpClient,
 			baseURL+QuickFeedServiceUpdateAssignmentsProcedure,
 			connect.WithSchema(quickFeedServiceMethods.ByName("UpdateAssignments")),
@@ -424,7 +424,7 @@ type quickFeedServiceClient struct {
 	updateCourse             *connect.Client[qf.Course, qf.Void]
 	updateCourseVisibility   *connect.Client[qf.Enrollment, qf.Void]
 	getAssignments           *connect.Client[qf.CourseRequest, qf.Assignments]
-	updateAssignments        *connect.Client[qf.CourseRequest, qf.Void]
+	updateAssignments        *connect.Client[qf.CourseRequest, qf.TestsRepositoryIssues]
 	getEnrollments           *connect.Client[qf.EnrollmentRequest, qf.Enrollments]
 	createEnrollment         *connect.Client[qf.Enrollment, qf.Void]
 	updateEnrollments        *connect.Client[qf.Enrollments, qf.Void]
@@ -566,7 +566,7 @@ func (c *quickFeedServiceClient) GetAssignments(ctx context.Context, req *qf.Cou
 }
 
 // UpdateAssignments calls qf.QuickFeedService.UpdateAssignments.
-func (c *quickFeedServiceClient) UpdateAssignments(ctx context.Context, req *qf.CourseRequest) (*qf.Void, error) {
+func (c *quickFeedServiceClient) UpdateAssignments(ctx context.Context, req *qf.CourseRequest) (*qf.TestsRepositoryIssues, error) {
 	response, err := c.updateAssignments.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
@@ -775,7 +775,7 @@ type QuickFeedServiceHandler interface {
 	UpdateCourse(context.Context, *qf.Course) (*qf.Void, error)
 	UpdateCourseVisibility(context.Context, *qf.Enrollment) (*qf.Void, error)
 	GetAssignments(context.Context, *qf.CourseRequest) (*qf.Assignments, error)
-	UpdateAssignments(context.Context, *qf.CourseRequest) (*qf.Void, error)
+	UpdateAssignments(context.Context, *qf.CourseRequest) (*qf.TestsRepositoryIssues, error)
 	GetEnrollments(context.Context, *qf.EnrollmentRequest) (*qf.Enrollments, error)
 	CreateEnrollment(context.Context, *qf.Enrollment) (*qf.Void, error)
 	UpdateEnrollments(context.Context, *qf.Enrollments) (*qf.Void, error)
@@ -1154,7 +1154,7 @@ func (UnimplementedQuickFeedServiceHandler) GetAssignments(context.Context, *qf.
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetAssignments is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) UpdateAssignments(context.Context, *qf.CourseRequest) (*qf.Void, error) {
+func (UnimplementedQuickFeedServiceHandler) UpdateAssignments(context.Context, *qf.CourseRequest) (*qf.TestsRepositoryIssues, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateAssignments is not implemented"))
 }
 

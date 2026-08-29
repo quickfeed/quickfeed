@@ -491,7 +491,9 @@ func (s *QuickFeedService) GetAssignments(ctx context.Context, in *qf.CourseRequ
 
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
-func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.Void, error) {
+// The response lists content issues found in the tests repository, such as
+// malformed json files, so that the teaching staff can fix them.
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.TestsRepositoryIssues, error) {
 	course, err := s.db.GetCourse(in.GetCourseID())
 	if err != nil {
 		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
@@ -509,7 +511,11 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 	// Scope the logger with the tests repository separately, so that it does not
 	// carry over to the assignments repository scope below.
 	testsCtx := qlog.With(ctx, label.Repository, qf.TestsRepo, label.RepositoryType, qf.Repository_TESTS.String())
-	assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
+	issues, err := assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
+	if err != nil {
+		// already logged with the course scope inside UpdateFromTestsRepo
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to update assignments from tests repository"))
+	}
 
 	// Scope the remaining log calls with the assignments repository
 	ctx, logger = qlog.WithLogger(ctx, label.Repository, qf.AssignmentsRepo, label.RepositoryType, qf.Repository_ASSIGNMENTS.String())
@@ -524,7 +530,11 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 	}
 	logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
 
-	return &qf.Void{}, nil
+	issueList := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		issueList = append(issueList, issue.String())
+	}
+	return &qf.TestsRepositoryIssues{Issues: issueList}, nil
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
