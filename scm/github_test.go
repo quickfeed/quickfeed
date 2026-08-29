@@ -120,66 +120,6 @@ func TestDeleteAllIssues(t *testing.T) {
 	}
 }
 
-// TestRequestReviewers tests the ability to request reviewers for a pull request.
-// It will first create a pull request, then request reviewers for it and then closes the pull request.
-//
-// Note: This test requires manual steps before execution:
-// 1. Create branch test-request-reviewers on the qfTestUser repo
-// 2. Make edits on the test-request-reviewers branch
-// 3. Push the changes to the qfTestUser repo
-//
-// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestRequestReviewers
-func TestRequestReviewers(t *testing.T) {
-	if os.Getenv("SCM_TESTS") == "" {
-		t.SkipNow()
-	}
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
-	repo := qf.StudentRepoName(qfTestUser)
-
-	testReqReviewersBranch := "test-request-reviewers"
-
-	ctx := context.Background()
-	pullReq, _, err := s.Client().PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
-		Title: new("Test Request Reviewers"),
-		Body:  new("Test Request Reviewers Body"),
-		Head:  new(testReqReviewersBranch),
-		Base:  new("master"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("PullRequest %d opened", *pullReq.Number)
-
-	// Pick a reviewer that is not the current user (that created the PR above).
-	var reviewer string
-	for _, r := range []string{"meling", "JosteinLindhom"} {
-		if r != qfTestUser {
-			reviewer = r
-			break
-		}
-	}
-
-	opt := &scm.RequestReviewersOptions{
-		Organization: qfTestOrg,
-		Repository:   repo,
-		Number:       *pullReq.Number,
-		Reviewers:    []string{reviewer},
-	}
-	if err := s.RequestReviewers(ctx, opt); err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("PullRequest %d created with reviewer %v", *pullReq.Number, reviewer)
-
-	_, _, err = s.Client().PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
-		State: new("closed"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("PullRequest %d closed", *pullReq.Number)
-}
-
 func TestCreateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, qfTestUser := scm.GetTestSCM(t)

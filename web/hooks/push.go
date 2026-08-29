@@ -2,7 +2,6 @@ package hooks
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/google/go-github/v62/github"
@@ -13,7 +12,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gorm.io/gorm"
 )
 
 func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEvent) {
@@ -35,7 +33,7 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 	)
 	logger.Debug("resolved push repository")
 
-	if wh.ignorePush(ctx, payload, repo) {
+	if wh.ignorePush(payload) {
 		logger.Debug("ignoring push event for non-default branch")
 		return
 	}
@@ -98,27 +96,9 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 }
 
 // ignorePush returns true if the push event should be ignored.
-// Push events should be ignored if they are not for the default branch
-// of a student or group repository. However, a push event on a non-default branch
-// is allowed for a group repository with an associated pull request.
-func (wh GitHubWebHook) ignorePush(ctx context.Context, payload *github.PushEvent, repo *qf.Repository) bool {
-	logger := qlog.FromContext(ctx)
-	hasPR := false
-	_, err := wh.db.GetPullRequest(&qf.PullRequest{
-		SourceBranch:    branchName(payload.GetRef()),
-		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
-	})
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			logger.Error("failed to get pull request", label.Branch, branchName(payload.GetRef()), label.Error, err)
-			// Ignore this error and continue processing the push event.
-		}
-		// No pull request found for the branch.
-	} else {
-		logger.Debug("received branch push with pull request", label.Branch, branchName(payload.GetRef()))
-		hasPR = true
-	}
-	return !isDefaultBranch(payload) && (!repo.IsGroupRepo() || !hasPR)
+// Only pushes to the default branch are processed.
+func (wh GitHubWebHook) ignorePush(payload *github.PushEvent) bool {
+	return !isDefaultBranch(payload)
 }
 
 // extractAssignments extracts information from the push payload from github
@@ -181,12 +161,6 @@ func (wh GitHubWebHook) runAssignmentTests(ctx context.Context, scmClient scm.SC
 		// Note that streaming the submission as-is will send all grades
 		// to all participants for a given group submission.
 		wh.streams.Submission.SendTo(submission, userIDs...)
-	}
-	// Non-default branch indicates push to a group repo with an associated pull request.
-	if !isDefaultBranch(payload) && repo.IsGroupRepo() {
-		// Attempt to find the pull request for the branch, if it exists,
-		// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-		wh.handlePullRequestPush(ctx, scmClient, payload, results, runData)
 	}
 }
 

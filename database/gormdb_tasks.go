@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"sort"
 
 	"github.com/quickfeed/quickfeed/qf"
@@ -96,47 +95,4 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 	})
 
 	return createdTasks, updatedTasks, err
-}
-
-// CreatePullRequest creates a pull request.
-// It is initially in the "draft" stage, signaling that it is not yet ready for review
-func (db *GormDB) CreatePullRequest(pullRequest *qf.PullRequest) error {
-	if !pullRequest.Valid() {
-		return errors.New("pull request is not valid for creation")
-	}
-	pullRequest.SetDraft()
-	return db.conn.Create(pullRequest).Error
-}
-
-// GetPullRequest returns the pull request matching the given query
-func (db *GormDB) GetPullRequest(query *qf.PullRequest) (*qf.PullRequest, error) {
-	var pullRequest qf.PullRequest
-	if err := db.conn.Where(query).Last(&pullRequest).Error; err != nil {
-		return nil, err
-	}
-	return &pullRequest, nil
-}
-
-// HandleMergingPR handles merging a pull request
-// If a pull request has not been approved, it should not have been merged.
-// We therefore do not delete the associated issue.
-// To resume a working state, students are expected to reopen
-// the issue that was closed from this merging, and create a new PR for it.
-func (db *GormDB) HandleMergingPR(pullRequest *qf.PullRequest) error {
-	if !pullRequest.IsApproved() {
-		return db.conn.Delete(pullRequest).Error
-	}
-	var associatedIssue *qf.Issue
-	if err := db.conn.First(associatedIssue, &qf.Issue{ID: pullRequest.GetIssueID()}).Error; err != nil {
-		return err
-	}
-	_ = db.conn.Delete(associatedIssue).Error
-	return db.conn.Delete(pullRequest).Error
-}
-
-// DeletePullRequest updates the pull request matching the given query
-func (db *GormDB) UpdatePullRequest(pullRequest *qf.PullRequest) error {
-	return db.conn.Model(&qf.PullRequest{}).Select("*").
-		Where(&qf.PullRequest{ID: pullRequest.GetID()}).
-		Updates(pullRequest).Error
 }
