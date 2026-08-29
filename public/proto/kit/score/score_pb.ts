@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kit/score/score.proto.
  */
 export const file_kit_score_score: GenFile = /*@__PURE__*/
-  fileDesc("ChVraXQvc2NvcmUvc2NvcmUucHJvdG8SBXNjb3JlIqMBCgVTY29yZRIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSDgoGU2VjcmV0GAMgASgJEhAKCFRlc3ROYW1lGAQgASgJEhAKCFRhc2tOYW1lGAUgASgJEg0KBVNjb3JlGAYgASgFEhAKCE1heFNjb3JlGAcgASgFEg4KBldlaWdodBgIIAEoBRITCgtUZXN0RGV0YWlscxgJIAEoCSK0AQoJQnVpbGRJbmZvEgoKAklEGAEgASgEEhQKDFN1Ym1pc3Npb25JRBgCIAEoBBIQCghCdWlsZExvZxgDIAEoCRIQCghFeGVjVGltZRgEIAEoAxItCglCdWlsZERhdGUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjIKDlN1Ym1pc3Npb25EYXRlGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIqWihnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQva2l0L3Njb3JlYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("ChVraXQvc2NvcmUvc2NvcmUucHJvdG8SBXNjb3JlIpEBCgVTY29yZRIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSDgoGU2VjcmV0GAMgASgJEhAKCFRlc3ROYW1lGAQgASgJEg0KBVNjb3JlGAUgASgFEhAKCE1heFNjb3JlGAYgASgFEg4KBldlaWdodBgHIAEoBRITCgtUZXN0RGV0YWlscxgIIAEoCSK0AQoJQnVpbGRJbmZvEgoKAklEGAEgASgEEhQKDFN1Ym1pc3Npb25JRBgCIAEoBBIQCghCdWlsZExvZxgDIAEoCRIQCghFeGVjVGltZRgEIAEoAxItCglCdWlsZERhdGUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjIKDlN1Ym1pc3Npb25EYXRlGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIqWihnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQva2l0L3Njb3JlYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * Score give the score for a single test named TestName.
@@ -45,37 +45,30 @@ export type Score = Message<"score.Score"> & {
   TestName: string;
 
   /**
-   * name of task this score belongs to
-   *
-   * @generated from field: string TaskName = 5;
-   */
-  TaskName: string;
-
-  /**
    * the score obtained
    *
-   * @generated from field: int32 Score = 6;
+   * @generated from field: int32 Score = 5;
    */
   Score: number;
 
   /**
    * max score possible to get on this specific test
    *
-   * @generated from field: int32 MaxScore = 7;
+   * @generated from field: int32 MaxScore = 6;
    */
   MaxScore: number;
 
   /**
    * the weight of this test; used to compute final grade
    *
-   * @generated from field: int32 Weight = 8;
+   * @generated from field: int32 Weight = 7;
    */
   Weight: number;
 
   /**
    * if populated, the frontend may display these details
    *
-   * @generated from field: string TestDetails = 9;
+   * @generated from field: string TestDetails = 8;
    */
   TestDetails: string;
 };
