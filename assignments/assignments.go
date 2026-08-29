@@ -29,7 +29,12 @@ const MaxWait = 15 * time.Minute
 // database and synchronizing tasks to issues on the students' group repositories.
 // The ctx is expected to carry a logger scoped with the course and the tests
 // repository, so that the statements below do not repeat those attributes.
-func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
+//
+// The returned issues describe content problems in the tests repository that
+// did not abort the update, such as a malformed json file for one assignment.
+// Both issues and errors are logged here with the course scope, so callers
+// need not log them again; the webhook caller has no other reporting channel.
+func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) ([]RepoIssue, error) {
 	unlock := course.Lock()
 	defer unlock()
 
@@ -45,27 +50,31 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 	})
 	if err != nil {
 		logger.Error("failed to clone tests repository", label.Error, err)
-		return
+		return nil, fmt.Errorf("cloning tests repository: %w", err)
 	}
 	logger.Debug("cloned tests repository", label.Path, clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, buildContext, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
+	assignments, buildContext, issues, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
 		logger.Error("failed to parse assignments", label.Error, err)
-		return
+		return nil, fmt.Errorf("reading tests repository content: %w", err)
+	}
+	for _, issue := range issues {
+		logger.Warn("tests repository issue",
+			label.Assignment, issue.Assignment, label.Path, issue.File, "problem", issue.Problem)
 	}
 
 	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
 		if err = buildDockerImage(ctx, runner, course, buildContext); err != nil {
 			logger.Error("failed to build course image", label.Error, err)
-			return
+			return issues, fmt.Errorf("building course image: %w", err)
 		}
 		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Error("failed to store course Dockerfile digest", label.Error, err)
-			return
+			return issues, fmt.Errorf("storing course Dockerfile digest: %w", err)
 		}
 	}
 
@@ -74,9 +83,10 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 			logger.Debug("assignment not updated in database", label.Assignment, assignment.GetName())
 		}
 		logger.Error("failed to update assignments in database", label.Error, err)
-		return
+		return issues, fmt.Errorf("updating assignments in database: %w", err)
 	}
 	logger.Debug("assignments successfully updated from tests repository")
+	return issues, nil
 }
 
 // buildDockerImage builds the Docker image for the given course.

@@ -1076,6 +1076,52 @@ func (x *CourseLog) GetTruncated() bool {
 	return false
 }
 
+// TestsRepositoryIssues lists content problems found in the tests repository,
+// such as malformed json files, formatted as "path: problem" strings.
+type TestsRepositoryIssues struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Issues        []string               `protobuf:"bytes,1,rep,name=issues,proto3" json:"issues,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TestsRepositoryIssues) Reset() {
+	*x = TestsRepositoryIssues{}
+	mi := &file_qf_requests_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TestsRepositoryIssues) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TestsRepositoryIssues) ProtoMessage() {}
+
+func (x *TestsRepositoryIssues) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_requests_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TestsRepositoryIssues.ProtoReflect.Descriptor instead.
+func (*TestsRepositoryIssues) Descriptor() ([]byte, []int) {
+	return file_qf_requests_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *TestsRepositoryIssues) GetIssues() []string {
+	if x != nil {
+		return x.Issues
+	}
+	return nil
+}
+
 type Void struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1084,7 +1130,7 @@ type Void struct {
 
 func (x *Void) Reset() {
 	*x = Void{}
-	mi := &file_qf_requests_proto_msgTypes[14]
+	mi := &file_qf_requests_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1096,7 +1142,7 @@ func (x *Void) String() string {
 func (*Void) ProtoMessage() {}
 
 func (x *Void) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_requests_proto_msgTypes[14]
+	mi := &file_qf_requests_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1109,7 +1155,7 @@ func (x *Void) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Void.ProtoReflect.Descriptor instead.
 func (*Void) Descriptor() ([]byte, []int) {
-	return file_qf_requests_proto_rawDescGZIP(), []int{14}
+	return file_qf_requests_proto_rawDescGZIP(), []int{15}
 }
 
 var File_qf_requests_proto protoreflect.FileDescriptor
@@ -1201,7 +1247,9 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\tCourseLog\x12,\n" +
 	"\aentries\x18\x01 \x03(\v2\x12.qf.CourseLogEntryR\aentries\x12\"\n" +
 	"\frepositories\x18\x02 \x03(\tR\frepositories\x12\x1c\n" +
-	"\ttruncated\x18\x03 \x01(\bR\ttruncated\"\x06\n" +
+	"\ttruncated\x18\x03 \x01(\bR\ttruncated\"/\n" +
+	"\x15TestsRepositoryIssues\x12\x16\n" +
+	"\x06issues\x18\x01 \x03(\tR\x06issues\"\x06\n" +
 	"\x04VoidB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
@@ -1217,7 +1265,7 @@ func file_qf_requests_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_qf_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_qf_requests_proto_goTypes = []any{
 	(SubmissionRequest_SubmissionType)(0), // 0: qf.SubmissionRequest.SubmissionType
 	(CourseLogEntry_Level)(0),             // 1: qf.CourseLogEntry.Level
@@ -1235,29 +1283,30 @@ var file_qf_requests_proto_goTypes = []any{
 	(*CourseLogRequest)(nil),              // 13: qf.CourseLogRequest
 	(*CourseLogEntry)(nil),                // 14: qf.CourseLogEntry
 	(*CourseLog)(nil),                     // 15: qf.CourseLog
-	(*Void)(nil),                          // 16: qf.Void
-	nil,                                   // 17: qf.CourseSubmissions.SubmissionsEntry
-	nil,                                   // 18: qf.Repositories.URLsEntry
-	nil,                                   // 19: qf.CourseLogEntry.FieldsEntry
-	(*Review)(nil),                        // 20: qf.Review
-	(Enrollment_UserStatus)(0),            // 21: qf.Enrollment.UserStatus
-	(*timestamppb.Timestamp)(nil),         // 22: google.protobuf.Timestamp
-	(*Submissions)(nil),                   // 23: qf.Submissions
+	(*TestsRepositoryIssues)(nil),         // 16: qf.TestsRepositoryIssues
+	(*Void)(nil),                          // 17: qf.Void
+	nil,                                   // 18: qf.CourseSubmissions.SubmissionsEntry
+	nil,                                   // 19: qf.Repositories.URLsEntry
+	nil,                                   // 20: qf.CourseLogEntry.FieldsEntry
+	(*Review)(nil),                        // 21: qf.Review
+	(Enrollment_UserStatus)(0),            // 22: qf.Enrollment.UserStatus
+	(*timestamppb.Timestamp)(nil),         // 23: google.protobuf.Timestamp
+	(*Submissions)(nil),                   // 24: qf.Submissions
 }
 var file_qf_requests_proto_depIdxs = []int32{
-	17, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
-	20, // 1: qf.ReviewRequest.review:type_name -> qf.Review
-	21, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
+	18, // 0: qf.CourseSubmissions.submissions:type_name -> qf.CourseSubmissions.SubmissionsEntry
+	21, // 1: qf.ReviewRequest.review:type_name -> qf.Review
+	22, // 2: qf.EnrollmentRequest.statuses:type_name -> qf.Enrollment.UserStatus
 	0,  // 3: qf.SubmissionRequest.Type:type_name -> qf.SubmissionRequest.SubmissionType
-	18, // 4: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
-	22, // 5: qf.CourseLogRequest.from:type_name -> google.protobuf.Timestamp
-	22, // 6: qf.CourseLogRequest.to:type_name -> google.protobuf.Timestamp
+	19, // 4: qf.Repositories.URLs:type_name -> qf.Repositories.URLsEntry
+	23, // 5: qf.CourseLogRequest.from:type_name -> google.protobuf.Timestamp
+	23, // 6: qf.CourseLogRequest.to:type_name -> google.protobuf.Timestamp
 	1,  // 7: qf.CourseLogRequest.level:type_name -> qf.CourseLogEntry.Level
-	22, // 8: qf.CourseLogEntry.time:type_name -> google.protobuf.Timestamp
+	23, // 8: qf.CourseLogEntry.time:type_name -> google.protobuf.Timestamp
 	1,  // 9: qf.CourseLogEntry.level:type_name -> qf.CourseLogEntry.Level
-	19, // 10: qf.CourseLogEntry.fields:type_name -> qf.CourseLogEntry.FieldsEntry
+	20, // 10: qf.CourseLogEntry.fields:type_name -> qf.CourseLogEntry.FieldsEntry
 	14, // 11: qf.CourseLog.entries:type_name -> qf.CourseLogEntry
-	23, // 12: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
+	24, // 12: qf.CourseSubmissions.SubmissionsEntry.value:type_name -> qf.Submissions
 	13, // [13:13] is the sub-list for method output_type
 	13, // [13:13] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
@@ -1287,7 +1336,7 @@ func file_qf_requests_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qf_requests_proto_rawDesc), len(file_qf_requests_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   18,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

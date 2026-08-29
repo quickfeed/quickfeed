@@ -647,6 +647,15 @@ export const updateAssignments = async ({ actions, effects }: Context, courseID:
     if (response.error) {
         return
     }
+    const issues = response.message.issues
+    if (issues.length > 0) {
+        // The tests repository has content issues; the course log has details.
+        actions.global.alert({
+            text: `Assignments updated with ${issues.length} issue${issues.length > 1 ? "s" : ""} (see also the course logs):\n${issues.join("\n")}`,
+            color: Color.YELLOW,
+        })
+        return
+    }
     actions.global.alert({ text: "Assignments updated", color: Color.GREEN })
 }
 

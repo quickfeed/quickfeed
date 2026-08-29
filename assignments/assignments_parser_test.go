@@ -3,6 +3,7 @@ package assignments
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -14,7 +15,7 @@ import (
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, _, err := readTestsRepositoryContent(dir, 0)
+	_, _, _, err := readTestsRepositoryContent(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -157,12 +158,19 @@ func TestParse(t *testing.T) {
 		GradingBenchmarks: wantCriteria,
 	}
 
-	assignments, gotBuildContext, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, gotBuildContext, issues, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(assignments) != 2 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
+	}
+	// lab1 is auto-graded without a tests.json; expect a warning issue for it
+	wantIssues := []RepoIssue{
+		{Assignment: "lab1", File: "lab1/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
+	}
+	if diff := cmp.Diff(wantIssues, issues); diff != "" {
+		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
 	}
 	if gotBuildContext[ci.Dockerfile] != df {
 		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, gotBuildContext[ci.Dockerfile])
@@ -189,9 +197,18 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
-	_, _, err := readTestsRepositoryContent(testsDir, 0)
-	if err == nil {
-		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
+	assignments, _, issues, err := readTestsRepositoryContent(testsDir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 0 {
+		t.Errorf("len(assignments) = %d, want 0", len(assignments))
+	}
+	wantIssues := []RepoIssue{
+		{Assignment: "lab3", File: "lab3/assignment.json", Problem: "assignment order must be greater than 0"},
+	}
+	if diff := cmp.Diff(wantIssues, issues); diff != "" {
+		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -210,10 +227,18 @@ func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
-	// Since lab3 contains an old assignmentid field, this will return an error
-	_, _, err := readTestsRepositoryContent(testsDir, 0)
-	if err == nil {
-		t.Fatal("want error: 'assignment order must be greater than 0', got nil")
+	// Since lab3 contains an old assignmentid field, it is excluded from the
+	// returned assignments and reported as an issue; lab1 and lab2 are kept.
+	assignments, _, issues, err := readTestsRepositoryContent(testsDir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 2 {
+		t.Errorf("len(assignments) = %d, want 2", len(assignments))
+	}
+	wantIssue := RepoIssue{Assignment: "lab3", File: "lab3/assignment.json", Problem: "assignment order must be greater than 0"}
+	if !slices.Contains(issues, wantIssue) {
+		t.Errorf("issues = %v, want issue %v", issues, wantIssue)
 	}
 }
 
@@ -238,7 +263,7 @@ func TestParseUnknownFields(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, _, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +298,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignments, _, err := readTestsRepositoryContent(testsDir, course.GetID())
+	assignments, _, _, err := readTestsRepositoryContent(testsDir, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +325,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	writeFile(t, testsDir, "lab3", "assignment.json", j3)
 
 	// Parse the new assignment
-	newAssignments, _, err := readTestsRepositoryContent(testsDir, course.GetID())
+	newAssignments, _, _, err := readTestsRepositoryContent(testsDir, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
