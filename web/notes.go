@@ -51,12 +51,9 @@ func (s *QuickFeedService) UpdateNote(ctx context.Context, in *qf.Note) (*qf.Not
 		qlog.FromContext(ctx).Error("failed to update note", "note_id", existing.GetID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update note"))
 	}
-	updated, err := s.db.GetNote(&qf.Note{ID: existing.GetID()})
-	if err != nil {
-		qlog.FromContext(ctx).Error("failed to reload updated note", "note_id", existing.GetID(), label.Error, err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update note"))
-	}
-	return updated, nil
+	// UpdateNote stamps the new edited time on existing, which authorizeNote
+	// loaded in full, so it already reflects the updated row.
+	return existing, nil
 }
 
 // DeleteNote removes an existing note.

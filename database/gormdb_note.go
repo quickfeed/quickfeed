@@ -98,14 +98,17 @@ func (db *GormDB) CreateNote(note *qf.Note) error {
 	return db.conn.Create(note).Error
 }
 
-// UpdateNote updates the body of an existing internal note and bumps its edited time.
+// UpdateNote updates the body of an existing internal note and bumps its edited
+// time. The new edited time is stamped on the given note, as CreateNote does, so
+// the caller can return it without reloading the row.
 func (db *GormDB) UpdateNote(note *qf.Note) error {
 	if note.GetID() == 0 {
 		return gorm.ErrMissingWhereClause
 	}
+	note.EditedAt = timestamppb.Now()
 	return db.conn.Model(&qf.Note{ID: note.GetID()}).
 		Select("Body", "EditedAt").
-		Updates(&qf.Note{Body: note.GetBody(), EditedAt: timestamppb.Now()}).Error
+		Updates(&qf.Note{Body: note.GetBody(), EditedAt: note.GetEditedAt()}).Error
 }
 
 // DeleteNote removes the internal note matching the given query.
