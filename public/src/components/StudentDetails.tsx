@@ -101,7 +101,7 @@ const StudentDetails = () => {
                     {notes.length > 0 && <span className="badge badge-sm">{notes.length}</span>}
                 </div>
                 <div className="card-body p-0">
-                    <NotePanelBody notes={notes} targets={targets} targetInfo={targetInfo} />
+                    <NotePanelBody notes={notes} targets={targets} targetInfo={targetInfo} scope="course" />
                 </div>
             </div>
         </div>
