@@ -109,6 +109,7 @@ func TestUpdateAndDeleteNote(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	created := note.GetEditedAt().AsTime()
 	note.Body = "after"
 	if err := db.UpdateNote(note); err != nil {
 		t.Fatal(err)
@@ -119,6 +120,14 @@ func TestUpdateAndDeleteNote(t *testing.T) {
 	}
 	if got.GetBody() != "after" {
 		t.Errorf("UpdateNote body = %q, want %q", got.GetBody(), "after")
+	}
+	// UpdateNote stamps the new edited time on the given note, so callers can
+	// return it without reloading the row.
+	if !note.GetEditedAt().AsTime().Equal(got.GetEditedAt().AsTime()) {
+		t.Errorf("UpdateNote EditedAt = %v, want the stored %v", note.GetEditedAt().AsTime(), got.GetEditedAt().AsTime())
+	}
+	if !note.GetEditedAt().AsTime().After(created) {
+		t.Errorf("UpdateNote EditedAt = %v, want after the creation time %v", note.GetEditedAt().AsTime(), created)
 	}
 
 	if err := db.DeleteNote(&qf.Note{ID: note.GetID()}); err != nil {
