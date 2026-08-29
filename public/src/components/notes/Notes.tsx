@@ -79,7 +79,7 @@ export const NotePanelBody = ({ notes, targets, targetInfo }: { notes: Note[], t
                 ))}
             </ul>
 
-            {state.notes.editing === 0n && <NoteForm targets={targets} />}
+            <NoteForm targets={targets} />
         </>
     )
 }
@@ -94,11 +94,14 @@ const NoteItem = ({ note, authorName, target, canModify }: { note: Note, authorN
         return (
             <li className="px-6 py-4">
                 <textarea className="textarea textarea-bordered w-full" rows={3}
-                    value={state.notes.draft}
-                    onChange={e => actions.setDraft(e.target.value)}
+                    value={state.notes.editDraft}
+                    onChange={e => actions.setEditDraft(e.target.value)}
                 />
                 <div className="flex gap-2 mt-2">
-                    <button className="btn btn-sm btn-primary" onClick={() => actions.updateNote(note)}>Save</button>
+                    <button className="btn btn-sm btn-primary"
+                        disabled={state.notes.editDraft.trim().length === 0}
+                        onClick={() => actions.updateNote(note)}
+                    >Save</button>
                     <button className="btn btn-sm btn-ghost" onClick={() => actions.cancelEditing()}>Cancel</button>
                 </div>
             </li>
