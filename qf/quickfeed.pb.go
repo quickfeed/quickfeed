@@ -24,7 +24,7 @@ var File_qf_quickfeed_proto protoreflect.FileDescriptor
 
 const file_qf_quickfeed_proto_rawDesc = "" +
 	"\n" +
-	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x11qf/requests.proto\x1a\x0eqf/types.proto2\xcc\r\n" +
+	"\x12qf/quickfeed.proto\x12\x02qf\x1a\x11qf/requests.proto\x1a\x0eqf/types.proto2\xc7\r\n" +
 	"\x10QuickFeedService\x12\x1f\n" +
 	"\aGetUser\x12\b.qf.Void\x1a\b.qf.User\"\x00\x12!\n" +
 	"\bGetUsers\x12\b.qf.Void\x1a\t.qf.Users\"\x00\x12\"\n" +
@@ -43,8 +43,8 @@ const file_qf_quickfeed_proto_rawDesc = "" +
 	"\fUpdateCourse\x12\n" +
 	".qf.Course\x1a\b.qf.Void\"\x00\x124\n" +
 	"\x16UpdateCourseVisibility\x12\x0e.qf.Enrollment\x1a\b.qf.Void\"\x00\x126\n" +
-	"\x0eGetAssignments\x12\x11.qf.CourseRequest\x1a\x0f.qf.Assignments\"\x00\x12C\n" +
-	"\x11UpdateAssignments\x12\x11.qf.CourseRequest\x1a\x19.qf.TestsRepositoryIssues\"\x00\x12:\n" +
+	"\x0eGetAssignments\x12\x11.qf.CourseRequest\x1a\x0f.qf.Assignments\"\x00\x12>\n" +
+	"\x11UpdateAssignments\x12\x11.qf.CourseRequest\x1a\x14.qf.RepositoryIssues\"\x00\x12:\n" +
 	"\x0eGetEnrollments\x12\x15.qf.EnrollmentRequest\x1a\x0f.qf.Enrollments\"\x00\x12.\n" +
 	"\x10CreateEnrollment\x12\x0e.qf.Enrollment\x1a\b.qf.Void\"\x00\x120\n" +
 	"\x11UpdateEnrollments\x12\x0f.qf.Enrollments\x1a\b.qf.Void\"\x00\x128\n" +
@@ -73,37 +73,37 @@ const file_qf_quickfeed_proto_rawDesc = "" +
 	"\x10SubmissionStream\x12\b.qf.Void\x1a\x0e.qf.Submission\"\x000\x01B&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var file_qf_quickfeed_proto_goTypes = []any{
-	(*Void)(nil),                  // 0: qf.Void
-	(*User)(nil),                  // 1: qf.User
-	(*GroupRequest)(nil),          // 2: qf.GroupRequest
-	(*CourseRequest)(nil),         // 3: qf.CourseRequest
-	(*Group)(nil),                 // 4: qf.Group
-	(*Course)(nil),                // 5: qf.Course
-	(*Enrollment)(nil),            // 6: qf.Enrollment
-	(*EnrollmentRequest)(nil),     // 7: qf.EnrollmentRequest
-	(*Enrollments)(nil),           // 8: qf.Enrollments
-	(*SubmissionRequest)(nil),     // 9: qf.SubmissionRequest
-	(*Grade)(nil),                 // 10: qf.Grade
-	(*RebuildRequest)(nil),        // 11: qf.RebuildRequest
-	(*ReviewRequest)(nil),         // 12: qf.ReviewRequest
-	(*Note)(nil),                  // 13: qf.Note
-	(*NotesRequest)(nil),          // 14: qf.NotesRequest
-	(*AssignmentFeedback)(nil),    // 15: qf.AssignmentFeedback
-	(*CourseLogRequest)(nil),      // 16: qf.CourseLogRequest
-	(*RepositoryRequest)(nil),     // 17: qf.RepositoryRequest
-	(*Users)(nil),                 // 18: qf.Users
-	(*Groups)(nil),                // 19: qf.Groups
-	(*Courses)(nil),               // 20: qf.Courses
-	(*Assignments)(nil),           // 21: qf.Assignments
-	(*TestsRepositoryIssues)(nil), // 22: qf.TestsRepositoryIssues
-	(*Submission)(nil),            // 23: qf.Submission
-	(*Submissions)(nil),           // 24: qf.Submissions
-	(*CourseSubmissions)(nil),     // 25: qf.CourseSubmissions
-	(*Review)(nil),                // 26: qf.Review
-	(*Notes)(nil),                 // 27: qf.Notes
-	(*AssignmentFeedbacks)(nil),   // 28: qf.AssignmentFeedbacks
-	(*CourseLog)(nil),             // 29: qf.CourseLog
-	(*Repositories)(nil),          // 30: qf.Repositories
+	(*Void)(nil),                // 0: qf.Void
+	(*User)(nil),                // 1: qf.User
+	(*GroupRequest)(nil),        // 2: qf.GroupRequest
+	(*CourseRequest)(nil),       // 3: qf.CourseRequest
+	(*Group)(nil),               // 4: qf.Group
+	(*Course)(nil),              // 5: qf.Course
+	(*Enrollment)(nil),          // 6: qf.Enrollment
+	(*EnrollmentRequest)(nil),   // 7: qf.EnrollmentRequest
+	(*Enrollments)(nil),         // 8: qf.Enrollments
+	(*SubmissionRequest)(nil),   // 9: qf.SubmissionRequest
+	(*Grade)(nil),               // 10: qf.Grade
+	(*RebuildRequest)(nil),      // 11: qf.RebuildRequest
+	(*ReviewRequest)(nil),       // 12: qf.ReviewRequest
+	(*Note)(nil),                // 13: qf.Note
+	(*NotesRequest)(nil),        // 14: qf.NotesRequest
+	(*AssignmentFeedback)(nil),  // 15: qf.AssignmentFeedback
+	(*CourseLogRequest)(nil),    // 16: qf.CourseLogRequest
+	(*RepositoryRequest)(nil),   // 17: qf.RepositoryRequest
+	(*Users)(nil),               // 18: qf.Users
+	(*Groups)(nil),              // 19: qf.Groups
+	(*Courses)(nil),             // 20: qf.Courses
+	(*Assignments)(nil),         // 21: qf.Assignments
+	(*RepositoryIssues)(nil),    // 22: qf.RepositoryIssues
+	(*Submission)(nil),          // 23: qf.Submission
+	(*Submissions)(nil),         // 24: qf.Submissions
+	(*CourseSubmissions)(nil),   // 25: qf.CourseSubmissions
+	(*Review)(nil),              // 26: qf.Review
+	(*Notes)(nil),               // 27: qf.Notes
+	(*AssignmentFeedbacks)(nil), // 28: qf.AssignmentFeedbacks
+	(*CourseLog)(nil),           // 29: qf.CourseLog
+	(*Repositories)(nil),        // 30: qf.Repositories
 }
 var file_qf_quickfeed_proto_depIdxs = []int32{
 	0,  // 0: qf.QuickFeedService.GetUser:input_type -> qf.Void
@@ -154,7 +154,7 @@ var file_qf_quickfeed_proto_depIdxs = []int32{
 	0,  // 45: qf.QuickFeedService.UpdateCourse:output_type -> qf.Void
 	0,  // 46: qf.QuickFeedService.UpdateCourseVisibility:output_type -> qf.Void
 	21, // 47: qf.QuickFeedService.GetAssignments:output_type -> qf.Assignments
-	22, // 48: qf.QuickFeedService.UpdateAssignments:output_type -> qf.TestsRepositoryIssues
+	22, // 48: qf.QuickFeedService.UpdateAssignments:output_type -> qf.RepositoryIssues
 	8,  // 49: qf.QuickFeedService.GetEnrollments:output_type -> qf.Enrollments
 	0,  // 50: qf.QuickFeedService.CreateEnrollment:output_type -> qf.Void
 	0,  // 51: qf.QuickFeedService.UpdateEnrollments:output_type -> qf.Void

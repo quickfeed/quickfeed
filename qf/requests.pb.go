@@ -1076,29 +1076,29 @@ func (x *CourseLog) GetTruncated() bool {
 	return false
 }
 
-// TestsRepositoryIssues lists content problems found in the tests repository,
-// such as malformed json files, formatted as "path: problem" strings.
-type TestsRepositoryIssues struct {
+// RepositoryIssues reports the number of content problems found in a repository.
+// Details are available in the course log.
+type RepositoryIssues struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Issues        []string               `protobuf:"bytes,1,rep,name=issues,proto3" json:"issues,omitempty"`
+	Count         uint32                 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TestsRepositoryIssues) Reset() {
-	*x = TestsRepositoryIssues{}
+func (x *RepositoryIssues) Reset() {
+	*x = RepositoryIssues{}
 	mi := &file_qf_requests_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TestsRepositoryIssues) String() string {
+func (x *RepositoryIssues) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TestsRepositoryIssues) ProtoMessage() {}
+func (*RepositoryIssues) ProtoMessage() {}
 
-func (x *TestsRepositoryIssues) ProtoReflect() protoreflect.Message {
+func (x *RepositoryIssues) ProtoReflect() protoreflect.Message {
 	mi := &file_qf_requests_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1110,16 +1110,16 @@ func (x *TestsRepositoryIssues) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TestsRepositoryIssues.ProtoReflect.Descriptor instead.
-func (*TestsRepositoryIssues) Descriptor() ([]byte, []int) {
+// Deprecated: Use RepositoryIssues.ProtoReflect.Descriptor instead.
+func (*RepositoryIssues) Descriptor() ([]byte, []int) {
 	return file_qf_requests_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *TestsRepositoryIssues) GetIssues() []string {
+func (x *RepositoryIssues) GetCount() uint32 {
 	if x != nil {
-		return x.Issues
+		return x.Count
 	}
-	return nil
+	return 0
 }
 
 type Void struct {
@@ -1247,9 +1247,9 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\tCourseLog\x12,\n" +
 	"\aentries\x18\x01 \x03(\v2\x12.qf.CourseLogEntryR\aentries\x12\"\n" +
 	"\frepositories\x18\x02 \x03(\tR\frepositories\x12\x1c\n" +
-	"\ttruncated\x18\x03 \x01(\bR\ttruncated\"/\n" +
-	"\x15TestsRepositoryIssues\x12\x16\n" +
-	"\x06issues\x18\x01 \x03(\tR\x06issues\"\x06\n" +
+	"\ttruncated\x18\x03 \x01(\bR\ttruncated\"(\n" +
+	"\x10RepositoryIssues\x12\x14\n" +
+	"\x05count\x18\x01 \x01(\rR\x05count\"\x06\n" +
 	"\x04VoidB&Z!github.com/quickfeed/quickfeed/qf\xba\x02\x00b\x06proto3"
 
 var (
@@ -1283,7 +1283,7 @@ var file_qf_requests_proto_goTypes = []any{
 	(*CourseLogRequest)(nil),              // 13: qf.CourseLogRequest
 	(*CourseLogEntry)(nil),                // 14: qf.CourseLogEntry
 	(*CourseLog)(nil),                     // 15: qf.CourseLog
-	(*TestsRepositoryIssues)(nil),         // 16: qf.TestsRepositoryIssues
+	(*RepositoryIssues)(nil),              // 16: qf.RepositoryIssues
 	(*Void)(nil),                          // 17: qf.Void
 	nil,                                   // 18: qf.CourseSubmissions.SubmissionsEntry
 	nil,                                   // 19: qf.Repositories.URLsEntry

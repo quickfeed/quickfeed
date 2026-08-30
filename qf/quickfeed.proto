@@ -32,7 +32,7 @@ service QuickFeedService {
     // assignments //
 
     rpc GetAssignments(CourseRequest) returns (Assignments) {}
-    rpc UpdateAssignments(CourseRequest) returns (TestsRepositoryIssues) {}
+    rpc UpdateAssignments(CourseRequest) returns (RepositoryIssues) {}
 
     // enrollments //
 
