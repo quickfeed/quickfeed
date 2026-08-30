@@ -586,8 +586,7 @@ func chkErrMsg(t *testing.T, m string, gotErr error, wantErr, wantUserErr string
 		t.Log("want error:", wantErr)
 		t.Errorf("%s error mismatch (-want +got):\n%s", m, diff)
 	}
-	var userErr *UserError
-	if errors.As(gotErr, &userErr) {
+	if userErr, ok := errors.AsType[*UserError](gotErr); ok {
 		gotUserErr := userErr.Error()
 		if debugErrMsg {
 			fmt.Printf("%s      error: %v\n", m, gotErr)
