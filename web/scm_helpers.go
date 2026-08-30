@@ -108,8 +108,7 @@ func logCtxErr(ctx context.Context) error {
 
 // userSCMError returns a user-facing error if the error is an SCM error.
 func userSCMError(err error) error {
-	var scmErr *scm.SCMError
-	if errors.As(err, &scmErr) {
+	if scmErr, ok := errors.AsType[*scm.SCMError](err); ok {
 		userErr := scmErr.UserError()
 		if errors.Is(err, scm.ErrAlreadyExists) {
 			return connect.NewError(connect.CodeAlreadyExists, userErr)
