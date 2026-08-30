@@ -49,7 +49,11 @@
 //
 //	func TestMain(m *testing.M) {
 //	    score.PrintTestInfo()
-//	    os.Exit(m.Run())
+//	    exitCode := m.Run()
+//	    if err := score.Validate(); err != nil {
+//	        fmt.Println(err)
+//	    }
+//	    os.Exit(exitCode)
 //	}
 //
 // To implement a test with scoring, you may use score.Max() to obtain a score object
