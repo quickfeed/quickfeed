@@ -499,8 +499,8 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	// Scope the remainder of the method to the course; UpdateFromTestsRepo and
-	// the clone below add only their own repository scope on top of this.
+	// Scope the remainder of the method to the course; the update below uses a
+	// tests-repository scope on top of this.
 	// The course ID comes from the request logger; see enrichRequestLogger.
 	ctx, logger := qlog.WithCourseLog(ctx, course)
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
@@ -508,28 +508,12 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	// Scope the logger with the tests repository separately, so that it does not
-	// carry over to the assignments repository scope below.
 	testsCtx := qlog.With(ctx, label.Repository, qf.TestsRepo, label.RepositoryType, qf.Repository_TESTS.String())
 	issueCount, err := assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
 	if err != nil {
 		qlog.FromContext(testsCtx).Error("failed to update assignments from tests repository", label.Error, err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to update assignments from tests repository"))
 	}
-
-	// Scope the remaining log calls with the assignments repository
-	ctx, logger = qlog.WithLogger(ctx, label.Repository, qf.AssignmentsRepo, label.RepositoryType, qf.Repository_ASSIGNMENTS.String())
-	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetScmOrganizationName(),
-		Repository:   qf.AssignmentsRepo,
-		DestDir:      course.CloneDir(),
-	})
-	if err != nil {
-		logger.Error("failed to clone assignments repository", label.Error, err)
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to clone assignments repository"))
-	}
-	logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
-
 	return &qf.RepositoryIssues{Count: uint32(issueCount)}, nil
 }
 

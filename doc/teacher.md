@@ -160,6 +160,9 @@ To facilitate automated testing and scoring of student submitted solutions, a te
 This is the purpose of the `tests` repository.
 
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
+Every top-level assignment folder must occur in both repositories.
+Each assignment folder in the `tests` repository must contain `assignment.json` and at least one of `tests.json` or `criteria.json`.
+QuickFeed checks these requirements whenever either repository is updated and reports problems in the course log.
 The `assignment.json` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
 If the assignment has tests that should be run by QuickFeed, the the tests should be listed in the `tests.json` file.
