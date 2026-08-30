@@ -107,9 +107,9 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 	}
 
 	status := classifyRun(err, out, results.ParsedScores)
-	if status != score.RunStatus_SUCCESS {
-		// The run failed for an environment reason; record it as a failed run
-		// so that the previous submission's scores are kept (issue #1593).
+	if status.Failed() {
+		// Record the failure status and student-facing explanation. A compilation
+		// failure has valid zero scores; other failures keep the previous scores.
 		if out == "" {
 			testsFailedCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
 		} else {
@@ -119,8 +119,7 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 			"output", redactOutput(out, randomSecret))
 		return failedRunResults(status, results), nil
 	}
-	var exitErr *ContainerExitError
-	if errors.As(err, &exitErr) {
+	if exitErr, ok := errors.AsType[*ContainerExitError](err); ok {
 		// A non-zero exit with parsed scores is normal for run scripts that
 		// end with the test command; note the exit status and continue.
 		logger.Debug("container exited with non-zero status", "exit_status", exitErr.Code)

@@ -31,10 +31,13 @@ func TestClassifyRun(t *testing.T) {
 		{name: "SuccessNonZeroExit", runErr: &ContainerExitError{Code: 1}, out: "go test failed", parsedScores: 3, want: score.RunStatus_SUCCESS},
 		{name: "Timeout", runErr: context.DeadlineExceeded, out: "Container timeout.", parsedScores: 0, want: score.RunStatus_TIMEOUT},
 		{name: "TimeoutWrapped", runErr: wrappedTimeout, out: "Container timeout.", parsedScores: 5, want: score.RunStatus_TIMEOUT},
-		{name: "BuildFailure", runErr: errors.New("failed to create container"), out: "", parsedScores: 0, want: score.RunStatus_BUILD_FAILURE},
-		{name: "BuildFailureNonZeroExit", runErr: &ContainerExitError{Code: 2}, out: "", parsedScores: 0, want: score.RunStatus_BUILD_FAILURE},
-		{name: "NoScores", runErr: nil, out: "compile error: missing file", parsedScores: 0, want: score.RunStatus_NO_SCORES},
-		{name: "NoScoresNonZeroExit", runErr: &ContainerExitError{Code: 2}, out: "compile error", parsedScores: 0, want: score.RunStatus_NO_SCORES},
+		{name: "NoOutput", runErr: errors.New("failed to create container"), out: "", parsedScores: 0, want: score.RunStatus_NO_SCORES},
+		{name: "NoOutputNonZeroExit", runErr: &ContainerExitError{Code: 2}, out: "", parsedScores: 0, want: score.RunStatus_NO_SCORES},
+		{name: "GoCompilationFailure", runErr: &ContainerExitError{Code: 1}, out: "FAIL\texample/student [build failed]", parsedScores: 0, want: score.RunStatus_BUILD_FAILURE},
+		{name: "DotNetCompilationFailure", runErr: &ContainerExitError{Code: 1}, out: "Program.cs(3,4): error CS1002: ; expected\nBuild FAILED.", parsedScores: 0, want: score.RunStatus_BUILD_FAILURE},
+		{name: "CompilationFailureWithScores", runErr: &ContainerExitError{Code: 1}, out: "FAIL\texample/student [build failed]", parsedScores: 2, want: score.RunStatus_SUCCESS},
+		{name: "NoScores", runErr: nil, out: "test command produced no score output", parsedScores: 0, want: score.RunStatus_NO_SCORES},
+		{name: "NoScoresNonZeroExit", runErr: &ContainerExitError{Code: 2}, out: "dependency download failed", parsedScores: 0, want: score.RunStatus_NO_SCORES},
 		{name: "Panic", runErr: nil, out: "goroutine 1 [running]:\npanic: runtime error", parsedScores: 0, want: score.RunStatus_TEST_PANIC},
 		{name: "PanicWithScores", runErr: nil, out: "panic: runtime error", parsedScores: 2, want: score.RunStatus_SUCCESS},
 	}
@@ -44,6 +47,28 @@ func TestClassifyRun(t *testing.T) {
 				t.Errorf("classifyRun(%v, %q, %d) = %s, want %s", tc.runErr, tc.out, tc.parsedScores, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestCompilationFailureProducesZeroScore(t *testing.T) {
+	const (
+		secret = "quickfeed-session-secret"
+		out    = "# example/student\n./student.go:8:2: undefined: missing\nFAIL\texample/student [build failed]"
+	)
+	results, err := score.ExtractResults(out, secret, 10, []*score.Score{{TestName: "TestStudent", MaxScore: 10, Weight: 1}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	status := classifyRun(&ContainerExitError{Code: 1}, out, results.ParsedScores)
+	if status != score.RunStatus_BUILD_FAILURE {
+		t.Fatalf("classifyRun() = %s, want BUILD_FAILURE", status)
+	}
+	failed := failedRunResults(status, results)
+	if !failed.ScoresValid() {
+		t.Fatal("compilation failure scores must be valid")
+	}
+	if got := failed.Sum(); got != 0 {
+		t.Errorf("compilation failure score = %d, want 0", got)
 	}
 }
 

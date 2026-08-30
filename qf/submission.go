@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+// Failed reports whether the submission's latest test run failed.
+func (s *Submission) Failed() bool {
+	return s.GetBuildInfo().Failed()
+}
+
 func (s *Submission) IsApproved(userID uint64) bool {
 	for _, grade := range s.GetGrades() {
 		if grade.GetUserID() == userID && grade.GetStatus() == Submission_APPROVED {

@@ -82,6 +82,25 @@ func TestNewestSubmissionDate(t *testing.T) {
 	}
 }
 
+func TestSubmissionFailed(t *testing.T) {
+	tests := []struct {
+		name       string
+		submission *qf.Submission
+		failed     bool
+	}{
+		{name: "NoBuildInfo", submission: &qf.Submission{}},
+		{name: "Success", submission: &qf.Submission{BuildInfo: &score.BuildInfo{Status: score.RunStatus_SUCCESS}}},
+		{name: "Failure", submission: &qf.Submission{BuildInfo: &score.BuildInfo{Status: score.RunStatus_NO_SCORES}}, failed: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := test.submission.Failed(); got != test.failed {
+				t.Errorf("Submission.Failed() = %t, want %t", got, test.failed)
+			}
+		})
+	}
+}
+
 func TestByUser(t *testing.T) {
 	submission := &qf.Submission{}
 	if submission.ByUser(0) {
