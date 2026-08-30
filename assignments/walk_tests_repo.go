@@ -100,20 +100,33 @@ func processCriteriaFile(contents []byte, assignment *qf.Assignment, courseID ui
 		return nil, fmt.Errorf("unmarshaling %q: %w", criteriaFile, err)
 	}
 	var problems []string
+	validBenchmarks := make([]*qf.GradingBenchmark, 0, len(benchmarks))
 	// Benchmarks and criteria must have courseID for access control checks
 	for _, bm := range benchmarks {
+		if bm == nil {
+			problems = append(problems, "null benchmark")
+			continue
+		}
 		bm.CourseID = courseID
 		if bm.GetHeading() == "" {
 			problems = append(problems, "benchmark with empty heading")
 		}
+		validCriteria := make([]*qf.GradingCriterion, 0, len(bm.GetCriteria()))
 		for _, c := range bm.GetCriteria() {
+			if c == nil {
+				problems = append(problems, fmt.Sprintf("null criterion in benchmark %q", bm.GetHeading()))
+				continue
+			}
 			c.CourseID = courseID
 			if c.GetDescription() == "" {
 				problems = append(problems, fmt.Sprintf("criterion with empty description in benchmark %q", bm.GetHeading()))
 			}
+			validCriteria = append(validCriteria, c)
 		}
+		bm.Criteria = validCriteria
+		validBenchmarks = append(validBenchmarks, bm)
 	}
-	assignment.GradingBenchmarks = benchmarks
+	assignment.GradingBenchmarks = validBenchmarks
 	return problems, nil
 }
 
@@ -209,28 +222,37 @@ func processAssignmentFolderFile(path string, contents []byte, assignmentsMap ma
 		return nil // already processed by processAssignmentFiles
 	}
 	if filename == ci.Dockerfile {
-		return []RepoIssue{{Assignment: assignmentName, File: path,
-			Problem: fmt.Sprintf("%s must be in the %s folder", ci.Dockerfile, scriptsDir)}}
+		return []RepoIssue{{
+			Assignment: assignmentName,
+			File:       path,
+			Problem:    fmt.Sprintf("%s must be in the %s folder", ci.Dockerfile, scriptsDir),
+		}}
 	}
 	processor, exists := lookupFileProcessor(filename)
 	if !exists {
 		return nil // other files in assignment folders (go.mod, go.sum) are ignored
 	}
-	if broken[assignmentName] {
-		return nil // the folder's assignment.json failed to parse; already reported
-	}
 	assignment, exists := assignmentsMap[assignmentName]
+	var issues []RepoIssue
 	if !exists {
-		return []RepoIssue{{Assignment: assignmentName, File: path,
-			Problem: fmt.Sprintf("missing %q", filepath.Join(assignmentName, assignmentFile))}}
+		if !broken[assignmentName] {
+			broken[assignmentName] = true
+			issues = append(issues, RepoIssue{
+				Assignment: assignmentName,
+				File:       path,
+				Problem:    fmt.Sprintf("missing %q", filepath.Join(assignmentName, assignmentFile)),
+			})
+		}
+		// Continue validating the remaining files even when assignment.json is
+		// missing or invalid, but do not add their content to the database update.
+		assignment = &qf.Assignment{}
 	}
 	problems, err := processor(contents, assignment, courseID)
 	if err != nil {
 		broken[assignmentName] = true
 		delete(assignmentsMap, assignmentName)
-		return []RepoIssue{{Assignment: assignmentName, File: path, Problem: err.Error()}}
+		return append(issues, RepoIssue{Assignment: assignmentName, File: path, Problem: err.Error()})
 	}
-	issues := make([]RepoIssue, 0, len(problems))
 	for _, problem := range problems {
 		issues = append(issues, RepoIssue{Assignment: assignmentName, File: path, Problem: problem})
 	}
@@ -244,12 +266,15 @@ func missingTestsIssues(assignmentsMap map[string]*qf.Assignment) []RepoIssue {
 	var issues []RepoIssue
 	for _, name := range slices.Sorted(maps.Keys(assignmentsMap)) {
 		assignment := assignmentsMap[name]
-		if assignment.GradedManually() || len(assignment.GetGradingBenchmarks()) > 0 {
+		if assignment.GradedManually() {
 			continue
 		}
 		if len(assignment.GetExpectedTests()) == 0 {
-			issues = append(issues, RepoIssue{Assignment: name, File: filepath.Join(name, testsFile),
-				Problem: "missing or empty tests.json: all submissions will score zero"})
+			issues = append(issues, RepoIssue{
+				Assignment: name,
+				File:       filepath.Join(name, testsFile),
+				Problem:    "missing or empty tests.json: all submissions will score zero",
+			})
 		}
 	}
 	return issues

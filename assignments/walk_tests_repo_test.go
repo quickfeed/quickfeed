@@ -1,6 +1,7 @@
 package assignments
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -149,12 +150,15 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform()); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
-	// lab5's criteria.json has an empty heading and an empty description, and
-	// lab3 is auto-graded without a tests.json.
+	// lab5's criteria.json has an empty heading and an empty description.
+	// Labs 3-5 are auto-graded without a tests.json; criteria alone does not
+	// make an assignment manually graded.
 	wantIssues := []RepoIssue{
 		{Assignment: "lab5", File: "lab5/criteria.json", Problem: "benchmark with empty heading"},
 		{Assignment: "lab5", File: "lab5/criteria.json", Problem: `criterion with empty description in benchmark ""`},
 		{Assignment: "lab3", File: "lab3/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
+		{Assignment: "lab4", File: "lab4/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
+		{Assignment: "lab5", File: "lab5/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
 	}
 	if diff := cmp.Diff(wantIssues, gotIssues); diff != "" {
 		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
@@ -220,10 +224,10 @@ func TestReadTestsRepositoryContentBadContent(t *testing.T) {
 			if len(issues) == 0 {
 				t.Fatal("expected issues, got none")
 			}
-			for _, issue := range issues {
-				if !strings.Contains(issue.Problem, tc.wantProblem) {
-					t.Errorf("issue %q does not mention %q", issue, tc.wantProblem)
-				}
+			if !slices.ContainsFunc(issues, func(issue RepoIssue) bool {
+				return strings.Contains(issue.Problem, tc.wantProblem)
+			}) {
+				t.Errorf("issues %q do not mention %q", issues, tc.wantProblem)
 			}
 		})
 	}
@@ -284,5 +288,83 @@ func TestReadTestsRepositoryContentIssues(t *testing.T) {
 	}
 	if diff := cmp.Diff(wantIssues, issues); diff != "" {
 		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestProcessCriteriaFileNullEntries(t *testing.T) {
+	const criteria = `[
+		null,
+		{"heading":"Valid benchmark","criteria":[null,{"description":"Valid criterion"}]}
+	]`
+	assignment := &qf.Assignment{}
+	problems, err := processCriteriaFile([]byte(criteria), assignment, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantProblems := []string{
+		"null benchmark",
+		`null criterion in benchmark "Valid benchmark"`,
+	}
+	if diff := cmp.Diff(wantProblems, problems); diff != "" {
+		t.Errorf("processCriteriaFile() problem mismatch (-want +got):\n%s", diff)
+	}
+	wantBenchmarks := []*qf.GradingBenchmark{
+		{
+			CourseID: 1,
+			Heading:  "Valid benchmark",
+			Criteria: []*qf.GradingCriterion{
+				{CourseID: 1, Description: "Valid criterion"},
+			},
+		},
+	}
+	if diff := cmp.Diff(wantBenchmarks, assignment.GetGradingBenchmarks(), protocmp.Transform()); diff != "" {
+		t.Errorf("processCriteriaFile() benchmark mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestReadTestsRepositoryContentCollectsIssuesForBrokenAssignment(t *testing.T) {
+	testsDir := t.TempDir()
+	for _, filename := range []string{assignmentFile, criteriaFile, testsFile} {
+		writeFile(t, testsDir, "lab1", filename, "{")
+	}
+
+	assignments, _, issues, err := readTestsRepositoryContent(testsDir, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 0 {
+		t.Errorf("len(assignments) = %d, want 0", len(assignments))
+	}
+	wantFiles := []string{
+		"lab1/assignment.json",
+		"lab1/criteria.json",
+		"lab1/tests.json",
+	}
+	if len(issues) != len(wantFiles) {
+		t.Fatalf("len(issues) = %d, want %d: %v", len(issues), len(wantFiles), issues)
+	}
+	for i, issue := range issues {
+		if issue.File != wantFiles[i] {
+			t.Errorf("issues[%d].File = %q, want %q", i, issue.File, wantFiles[i])
+		}
+		if !strings.Contains(issue.Problem, "unmarshaling") {
+			t.Errorf("issues[%d].Problem = %q, want unmarshaling error", i, issue.Problem)
+		}
+	}
+}
+
+func TestMissingTestsIssuesWithCriteria(t *testing.T) {
+	criteria := []*qf.GradingBenchmark{{Heading: "Benchmark"}}
+	assignments := map[string]*qf.Assignment{
+		"auto":   {GradingBenchmarks: criteria},
+		"manual": {Reviewers: 1, GradingBenchmarks: criteria},
+	}
+	want := []RepoIssue{{
+		Assignment: "auto",
+		File:       "auto/tests.json",
+		Problem:    "missing or empty tests.json: all submissions will score zero",
+	}}
+	if diff := cmp.Diff(want, missingTestsIssues(assignments)); diff != "" {
+		t.Errorf("missingTestsIssues() mismatch (-want +got):\n%s", diff)
 	}
 }
