@@ -24,15 +24,16 @@ const MaxWait = 15 * time.Minute
 // the frontend.
 //
 // Note that calling this function concurrently is safe, but it may block the
-// caller for an extended period, since it may involve cloning the tests repository,
-// scanning the repository for assignments, building the Docker image, updating the
-// database and synchronizing tasks to issues on the students' group repositories.
+// caller for an extended period, since it may involve cloning the tests and
+// assignments repositories, scanning the repositories for assignments, building
+// the Docker image and updating the database.
 // The ctx is expected to carry a logger scoped with the course and the tests
 // repository, so that the statements below do not repeat those attributes.
 //
-// The returned count reports content problems in the tests repository that did
-// not abort the update, such as a malformed json file for one assignment.
-// Issue details are logged here so webhook updates reach the course log.
+// The returned count reports content problems in the tests repository and
+// alignment problems between the tests and assignments repositories that did not
+// abort the update. Issue details are logged here so webhook updates reach the
+// course log.
 // Callers are responsible for logging returned errors.
 func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) (int, error) {
 	unlock := course.Lock()
@@ -59,10 +60,7 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		return 0, fmt.Errorf("reading tests repository content: %w", err)
 	}
 	issueCount := len(issues)
-	for _, issue := range issues {
-		logger.Warn("tests repository issue",
-			label.Assignment, issue.Assignment, label.Path, issue.File, "problem", issue.Problem)
-	}
+	logRepositoryIssues(ctx, "tests repository issue", issues)
 
 	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
@@ -82,7 +80,23 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		return issueCount, fmt.Errorf("updating assignments in database: %w", err)
 	}
 	logger.Debug("assignments successfully updated from tests repository")
-	return issueCount, nil
+
+	clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetScmOrganizationName(),
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		return issueCount, fmt.Errorf("cloning assignments repository: %w", err)
+	}
+	logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
+
+	alignmentIssues, err := courseRepositoryIssues(clonedTestsRepo, clonedAssignmentsRepo, assignments)
+	if err != nil {
+		return issueCount, fmt.Errorf("validating course repositories: %w", err)
+	}
+	logRepositoryIssues(ctx, "course repository issue", alignmentIssues)
+	return issueCount + len(alignmentIssues), nil
 }
 
 // buildDockerImage builds the Docker image for the given course.
