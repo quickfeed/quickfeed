@@ -165,9 +165,11 @@ func TestParse(t *testing.T) {
 	if len(assignments) != 2 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
 	}
-	// lab1 is auto-graded without a tests.json; expect a warning issue for it
+	// Both assignments are auto-graded without a tests.json; criteria alone
+	// does not make lab2 manually graded.
 	wantIssues := []RepoIssue{
 		{Assignment: "lab1", File: "lab1/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
+		{Assignment: "lab2", File: "lab2/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
 	}
 	if diff := cmp.Diff(wantIssues, issues); diff != "" {
 		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
