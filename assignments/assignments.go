@@ -30,11 +30,11 @@ const MaxWait = 15 * time.Minute
 // The ctx is expected to carry a logger scoped with the course and the tests
 // repository, so that the statements below do not repeat those attributes.
 //
-// The returned issues describe content problems in the tests repository that
-// did not abort the update, such as a malformed json file for one assignment.
-// Issues are logged here so webhook updates reach the course log.
+// The returned count reports content problems in the tests repository that did
+// not abort the update, such as a malformed json file for one assignment.
+// Issue details are logged here so webhook updates reach the course log.
 // Callers are responsible for logging returned errors.
-func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) ([]RepoIssue, error) {
+func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) (int, error) {
 	unlock := course.Lock()
 	defer unlock()
 
@@ -49,15 +49,16 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cloning tests repository: %w", err)
+		return 0, fmt.Errorf("cloning tests repository: %w", err)
 	}
 	logger.Debug("cloned tests repository", label.Path, clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
 	assignments, buildContext, issues, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
-		return nil, fmt.Errorf("reading tests repository content: %w", err)
+		return 0, fmt.Errorf("reading tests repository content: %w", err)
 	}
+	issueCount := len(issues)
 	for _, issue := range issues {
 		logger.Warn("tests repository issue",
 			label.Assignment, issue.Assignment, label.Path, issue.File, "problem", issue.Problem)
@@ -66,11 +67,11 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
 		if err = buildDockerImage(ctx, runner, course, buildContext); err != nil {
-			return issues, fmt.Errorf("building course image: %w", err)
+			return issueCount, fmt.Errorf("building course image: %w", err)
 		}
 		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
-			return issues, fmt.Errorf("storing course Dockerfile digest: %w", err)
+			return issueCount, fmt.Errorf("storing course Dockerfile digest: %w", err)
 		}
 	}
 
@@ -78,10 +79,10 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		for _, assignment := range assignments {
 			logger.Debug("assignment not updated in database", label.Assignment, assignment.GetName())
 		}
-		return issues, fmt.Errorf("updating assignments in database: %w", err)
+		return issueCount, fmt.Errorf("updating assignments in database: %w", err)
 	}
 	logger.Debug("assignments successfully updated from tests repository")
-	return issues, nil
+	return issueCount, nil
 }
 
 // buildDockerImage builds the Docker image for the given course.

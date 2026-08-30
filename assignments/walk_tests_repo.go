@@ -24,19 +24,12 @@ const (
 
 // RepoIssue describes a content problem detected in the tests repository,
 // such as a malformed json file or a missing assignment.json. Issues are
-// reported to the teaching staff via the course log and the UpdateAssignments
-// RPC; they do not abort the assignment update.
+// reported to the teaching staff via the course log; they do not abort the
+// assignment update.
 type RepoIssue struct {
 	Assignment string // assignment folder name; empty for repository-level issues
 	File       string // repository-relative path, e.g., "lab1/tests.json"
 	Problem    string
-}
-
-func (i RepoIssue) String() string {
-	if i.File == "" {
-		return i.Problem
-	}
-	return fmt.Sprintf("%s: %s", i.File, i.Problem)
 }
 
 // filesForBuildContext specifies files for the Docker build context.
