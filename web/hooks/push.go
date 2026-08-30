@@ -65,17 +65,10 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 		}
 
 	case repo.IsAssignmentsRepo():
-		// the push event is for the 'assignments' repo; we need to update the local working copy
-		clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
-			Organization: course.GetScmOrganizationName(),
-			Repository:   qf.AssignmentsRepo,
-			DestDir:      course.CloneDir(),
-		})
-		if err != nil {
+		if err := validateAssignmentsPush(ctx, scmClient, course); err != nil {
 			logger.Error("failed to clone repository", label.Error, err)
 			return
 		}
-		logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
 		if isDefaultBranch(payload) {
 			// Sync all student repositories (forks) with the updated assignments repo
 			wh.syncStudentRepos(ctx, scmClient, course, payload.GetRepo().GetDefaultBranch())
@@ -95,6 +88,40 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 	default:
 		logger.Debug("nothing to do for push event")
 	}
+}
+
+// validateAssignmentsPush updates both local course repositories and checks
+// their content and assignment-folder alignment. A tests repository failure is
+// logged but does not prevent syncing the assignments repository to students.
+func validateAssignmentsPush(ctx context.Context, scmClient scm.SCM, course *qf.Course) error {
+	unlock := course.Lock()
+	defer unlock()
+
+	logger := qlog.FromContext(ctx)
+	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetScmOrganizationName(),
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		return err
+	}
+	logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
+
+	clonedTestsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetScmOrganizationName(),
+		Repository:   qf.TestsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		logger.Error("failed to clone tests repository for validation", label.Error, err)
+		return nil
+	}
+	logger.Debug("cloned tests repository for validation", label.Path, clonedTestsRepo)
+	if _, err := assignments.ValidateCourseRepositories(ctx, clonedTestsRepo, clonedAssignmentsRepo, course.GetID()); err != nil {
+		logger.Error("failed to validate course repositories", label.Error, err)
+	}
+	return nil
 }
 
 // ignorePush returns true if the push event should be ignored.
