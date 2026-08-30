@@ -40,12 +40,10 @@ func TestUserSCMError(t *testing.T) {
 				return
 			}
 
-			var gotConnErr *connect.Error
-			if !errors.As(got, &gotConnErr) {
+			if _, ok := errors.AsType[*connect.Error](got); !ok {
 				t.Fatalf("Expected a connect.Error, got %T", got)
 			}
-			var wantConnErr *connect.Error
-			if errors.As(tt.want, &wantConnErr) {
+			if wantConnErr, ok := errors.AsType[*connect.Error](tt.want); ok {
 				gotCode := connect.CodeOf(got)
 				wantCode := connect.CodeOf(wantConnErr)
 				if gotCode != wantCode {

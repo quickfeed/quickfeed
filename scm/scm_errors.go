@@ -99,8 +99,7 @@ func (e *SCMError) Unwrap() error {
 // UserError returns the error message to be displayed to the user.
 // It returns the first error in the chain of user errors.
 func (e *SCMError) UserError() error {
-	var ue *UserError
-	if errors.As(e.err, &ue) {
+	if ue, ok := errors.AsType[*UserError](e.err); ok {
 		return ue
 	}
 	return nil
