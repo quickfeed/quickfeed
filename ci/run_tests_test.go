@@ -196,6 +196,24 @@ func TestRecordResults(t *testing.T) {
 
 	updatedEnrollment := qtest.GetEnrollment(t, db, course.GetID(), admin.GetID())
 	qtest.Diff(t, "slip days mismatch", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
+
+	// A compilation failure is a failed run with trustworthy zero scores.
+	zeroScores := createScores()
+	zeroScores[0].Score = 0
+	compilationResults := &score.Results{
+		BuildInfo: &score.BuildInfo{Status: score.RunStatus_BUILD_FAILURE},
+		Scores:    zeroScores,
+	}
+	compilationDate := qtest.Timestamp(t, "2022-11-14T13:00:00")
+	compilationSubmission := recordResults(t, runData, db, compilationResults, compilationDate, false)
+	if !compilationSubmission.Failed() {
+		t.Error("compilation failure must retain its failed run status")
+	}
+	if got := compilationSubmission.GetScore(); got != 0 {
+		t.Errorf("compilation failure score = %d, want 0", got)
+	}
+	qtest.Diff(t, "compilation failure scores mismatch", zeroScores, compilationSubmission.GetScores(),
+		protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
 }
 
 func TestRecordResultsForManualReview(t *testing.T) {
@@ -592,8 +610,8 @@ func createScores() []*score.Score {
 }
 
 // TestRecordResultsFailedRun checks that a failed run does not overwrite the
-// previous submission's result: the score, scores, and grades are kept, the
-// build info carries the failure, and no slip days are consumed (issue #1593).
+// previous submission's result: the score, scores, and grades are kept, while
+// the failed attempt's date participates in slip-day accounting (issue #1593).
 func TestRecordResultsFailedRun(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -662,14 +680,25 @@ func TestRecordResultsFailedRun(t *testing.T) {
 	if buildInfo.GetStatus() != score.RunStatus_NO_SCORES {
 		t.Errorf("failed run status = %s, want NO_SCORES", buildInfo.GetStatus())
 	}
-	// The failed run is not a delivery: the previous submission date is kept
-	// and no slip days are consumed, even though the run was after the deadline.
-	qtest.Diff(t, "failed run must keep previous submission date",
-		goodSubmission.GetBuildInfo().GetSubmissionDate(), buildInfo.GetSubmissionDate(), protocmp.Transform())
+	qtest.Diff(t, "failed run must keep its submission date",
+		failedResults.GetBuildInfo().GetSubmissionDate(), buildInfo.GetSubmissionDate(), protocmp.Transform())
 	enrollment := qtest.GetEnrollment(t, db, course.GetID(), admin.GetID())
-	if enrollment.RemainingSlipDays(course) != int32(course.GetSlipDays()) {
-		t.Errorf("slip days = %d, want %d (failed run must not consume slip days)",
-			enrollment.RemainingSlipDays(course), course.GetSlipDays())
+	if got, want := enrollment.RemainingSlipDays(course), int32(course.GetSlipDays()-1); got != want {
+		t.Errorf("slip days after failed run = %d, want %d", got, want)
+	}
+
+	// A successful rebuild keeps the failed attempt's submission date and does
+	// not account for the same push a second time.
+	rebuildDate := qtest.Timestamp(t, "2022-11-13T13:00:00")
+	rebuiltSubmission := recordResults(t, runData, db, &score.Results{
+		BuildInfo: createBuildInfo(t),
+		Scores:    createScores(),
+	}, rebuildDate, true)
+	qtest.Diff(t, "rebuild must keep failed attempt submission date",
+		buildInfo.GetSubmissionDate(), rebuiltSubmission.GetBuildInfo().GetSubmissionDate(), protocmp.Transform())
+	enrollment = qtest.GetEnrollment(t, db, course.GetID(), admin.GetID())
+	if got, want := enrollment.RemainingSlipDays(course), int32(course.GetSlipDays()-1); got != want {
+		t.Errorf("slip days after rebuild = %d, want %d", got, want)
 	}
 
 	// The submission fetched from the database must match what was recorded.
@@ -678,9 +707,9 @@ func TestRecordResultsFailedRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	qtest.Diff(t, "stored scores mismatch", goodSubmission.GetScores(), gotSubmission.GetScores(),
-		protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret"))
-	if gotSubmission.GetBuildInfo().GetStatus() != score.RunStatus_NO_SCORES {
-		t.Errorf("stored status = %s, want NO_SCORES", gotSubmission.GetBuildInfo().GetStatus())
+		protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID", "Secret"))
+	if gotSubmission.Failed() {
+		t.Errorf("stored rebuilt submission status = %s, want SUCCESS", gotSubmission.GetBuildInfo().GetStatus())
 	}
 }
 
@@ -694,15 +723,17 @@ func TestRecordResultsFailedFirstRun(t *testing.T) {
 		Name:              "Test",
 		Code:              "DAT320",
 		ScmOrganizationID: 1,
+		SlipDays:          5,
 	}
 	admin := qtest.CreateFakeUser(t, db)
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		CourseID: course.GetID(),
-		Name:     "lab1",
-		Deadline: qtest.Timestamp(t, "2022-11-11T13:00:00"),
-		Order:    1,
+		CourseID:   course.GetID(),
+		Name:       "lab1",
+		Deadline:   qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		Order:      1,
+		ScoreLimit: 70,
 	}
 	qtest.CreateAssignment(t, db, assignment)
 	runData := &ci.RunData{
@@ -717,8 +748,8 @@ func TestRecordResultsFailedFirstRun(t *testing.T) {
 	}
 	failedResults := &score.Results{
 		BuildInfo: &score.BuildInfo{
-			SubmissionDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
-			BuildDate:      qtest.Timestamp(t, "2022-11-10T13:00:00"),
+			SubmissionDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+			BuildDate:      qtest.Timestamp(t, "2022-11-12T13:00:00"),
 			BuildLog:       "The test environment failed before your code could be tested.",
 			ExecTime:       1000,
 			Status:         score.RunStatus_BUILD_FAILURE,
@@ -733,5 +764,9 @@ func TestRecordResultsFailedFirstRun(t *testing.T) {
 	}
 	if len(submission.GetGrades()) == 0 {
 		t.Error("failed first run must initialize grades")
+	}
+	enrollment := qtest.GetEnrollment(t, db, course.GetID(), admin.GetID())
+	if got, want := enrollment.RemainingSlipDays(course), int32(course.GetSlipDays()-1); got != want {
+		t.Errorf("slip days after failed first run = %d, want %d", got, want)
 	}
 }
