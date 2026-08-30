@@ -513,7 +513,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 	testsCtx := qlog.With(ctx, label.Repository, qf.TestsRepo, label.RepositoryType, qf.Repository_TESTS.String())
 	issues, err := assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
 	if err != nil {
-		// already logged with the course scope inside UpdateFromTestsRepo
+		qlog.FromContext(testsCtx).Error("failed to update assignments from tests repository", label.Error, err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to update assignments from tests repository"))
 	}
 
