@@ -117,7 +117,7 @@ export type BuildInfo = Message<"score.BuildInfo"> & {
   SubmissionDate?: Timestamp | undefined;
 
   /**
-   * outcome of the test run; non-SUCCESS runs keep the previous submission's scores
+   * outcome of the test run
    *
    * @generated from field: score.RunStatus Status = 7;
    */
@@ -132,9 +132,8 @@ export const BuildInfoSchema: GenMessage<BuildInfo> = /*@__PURE__*/
   messageDesc(file_kit_score_score, 1);
 
 /**
- * RunStatus classifies the outcome of a test run. Values other than SUCCESS
- * mean the run failed to produce a trustworthy result, typically because of
- * a problem with the test environment rather than the submitted code.
+ * RunStatus classifies the outcome of a test run. BUILD_FAILURE records
+ * trustworthy zero scores; the other failure statuses keep previous scores.
  *
  * @generated from enum score.RunStatus
  */
@@ -147,7 +146,7 @@ export enum RunStatus {
   SUCCESS = 0,
 
   /**
-   * the container could not be created or started, or produced no output
+   * the submitted code failed to compile or build
    *
    * @generated from enum value: BUILD_FAILURE = 1;
    */
@@ -161,7 +160,7 @@ export enum RunStatus {
   TIMEOUT = 2,
 
   /**
-   * the run produced output, but no parsable test scores
+   * the run produced no parsable test scores
    *
    * @generated from enum value: NO_SCORES = 3;
    */

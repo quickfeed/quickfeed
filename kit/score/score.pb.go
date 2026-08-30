@@ -23,16 +23,15 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// RunStatus classifies the outcome of a test run. Values other than SUCCESS
-// mean the run failed to produce a trustworthy result, typically because of
-// a problem with the test environment rather than the submitted code.
+// RunStatus classifies the outcome of a test run. BUILD_FAILURE records
+// trustworthy zero scores; the other failure statuses keep previous scores.
 type RunStatus int32
 
 const (
 	RunStatus_SUCCESS       RunStatus = 0 // the run produced test results
-	RunStatus_BUILD_FAILURE RunStatus = 1 // the container could not be created or started, or produced no output
+	RunStatus_BUILD_FAILURE RunStatus = 1 // the submitted code failed to compile or build
 	RunStatus_TIMEOUT       RunStatus = 2 // the run exceeded the assignment's container timeout
-	RunStatus_NO_SCORES     RunStatus = 3 // the run produced output, but no parsable test scores
+	RunStatus_NO_SCORES     RunStatus = 3 // the run produced no parsable test scores
 	RunStatus_TEST_PANIC    RunStatus = 4 // the test execution panicked before producing test scores
 )
 
@@ -191,7 +190,7 @@ type BuildInfo struct {
 	ExecTime       int64                  `protobuf:"varint,4,opt,name=ExecTime,proto3" json:"ExecTime,omitempty"`
 	BuildDate      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=BuildDate,proto3" json:"BuildDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	SubmissionDate *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=SubmissionDate,proto3" json:"SubmissionDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
-	Status         RunStatus              `protobuf:"varint,7,opt,name=Status,proto3,enum=score.RunStatus" json:"Status,omitempty"` // outcome of the test run; non-SUCCESS runs keep the previous submission's scores
+	Status         RunStatus              `protobuf:"varint,7,opt,name=Status,proto3,enum=score.RunStatus" json:"Status,omitempty"` // outcome of the test run
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }

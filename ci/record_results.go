@@ -45,10 +45,10 @@ func (r *RunData) RecordResults(ctx context.Context, db database.Database, resul
 	}
 	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
-	// A failed run keeps the previous submission's scores and must not
-	// consume slip days.
-	failedRun := newSubmission.GetBuildInfo().GetStatus() != score.RunStatus_SUCCESS
-	if !r.Rebuild && !failedRun {
+	// Every new student submission participates in slip-day accounting,
+	// including a submission whose test run failed. A rebuild keeps the
+	// original submission date and must not account for the same push twice.
+	if !r.Rebuild {
 		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
 			return nil, fmt.Errorf("updating slip days for %s: %w", r, err)
 		}
@@ -96,7 +96,7 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
-	if results.GetBuildInfo().GetStatus() != score.RunStatus_SUCCESS {
+	if !results.ScoresValid() {
 		return r.newFailedRunSubmission(previous, results)
 	}
 	score := results.Sum()
@@ -115,15 +115,10 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 }
 
 // newFailedRunSubmission records a failed run without overwriting the previous
-// submission's result: the score, grades, scores, and submission date are kept,
-// while the build info carries the failure status and log, and the commit hash
-// names the failed commit so a rebuild retries it.
+// submission's score, grades, and scores. The build info carries the failed
+// attempt's status, log, and submission date, while the commit hash names the
+// failed commit so a rebuild retries it.
 func (r *RunData) newFailedRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
-	buildInfo := results.GetBuildInfo()
-	if previous.GetBuildInfo() != nil {
-		// A failed run is not a delivery; keep the previous submission date.
-		buildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
-	}
 	return &qf.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
@@ -132,7 +127,7 @@ func (r *RunData) newFailedRunSubmission(previous *qf.Submission, results *score
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
 		Grades:       previous.GetGrades(),
-		BuildInfo:    buildInfo,
+		BuildInfo:    results.GetBuildInfo(),
 		Scores:       previous.GetScores(),
 	}
 }

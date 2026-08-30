@@ -281,7 +281,7 @@ export const assignmentStatusText = (assignment: Assignment, submission: Submiss
 export const runFailureText = (status: RunStatus): string => {
     switch (status) {
         case RunStatus.BUILD_FAILURE:
-            return "The test environment failed before the code could be tested."
+            return "The submitted code did not compile."
         case RunStatus.TIMEOUT:
             return "The test run timed out."
         case RunStatus.NO_SCORES:
@@ -291,6 +291,13 @@ export const runFailureText = (status: RunStatus): string => {
         default:
             return ""
     }
+}
+
+/** runFailureScoreText explains how a failed run affected the displayed score. */
+export const runFailureScoreText = (status: RunStatus): string => {
+    return status === RunStatus.BUILD_FAILURE
+        ? "The score was recorded as zero."
+        : "This run did not update the score."
 }
 
 // Helper functions for default values for new courses
