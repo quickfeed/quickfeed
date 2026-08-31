@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf"
-import { Context } from '../..'
+import type { Context } from '../..'
 import { CourseRequestSchema } from "../../../../proto/qf/requests_pb"
-import { AssignmentFeedback, AssignmentFeedbacks } from '../../../../proto/qf/types_pb'
+import type { AssignmentFeedback, AssignmentFeedbacks } from '../../../../proto/qf/types_pb'
 
 export const createAssignmentFeedback = async (
     { effects }: Context,
@@ -33,11 +33,13 @@ export const getAssignmentFeedback = async (
         byAssignment.get(feedback.AssignmentID)?.push(feedback)
     })
 
-    // Store in state organized by course
-    state.feedback.feedback.set(courseID, {
+    // Replace map reference to ensure reactivity for consumers reading this map.
+    const feedbackMap = new Map(state.feedback.feedback)
+    feedbackMap.set(courseID, {
         byAssignment,
         all: response.message.feedbacks
     })
+    state.feedback.feedback = feedbackMap
 
     return response.message
 }

@@ -12,11 +12,12 @@ type FormProps = {
 
 const FormInput = ({ prepend, name, placeholder, defaultValue, onChange, type, children }: FormProps) => {
     return (
-        <div className={"input-group mb-3"}>
-            <div className="input-group-prepend">
-                <div className="input-group-text">{prepend}</div>
-            </div>
-            <input className="form-control"
+        <div className="form-control w-full">
+            <label className="label">
+                <span className="label-text font-semibold">{prepend}</span>
+            </label>
+            <input
+                className="input input-bordered w-full focus:input-primary"
                 name={name}
                 type={type ?? "text"}
                 placeholder={placeholder}

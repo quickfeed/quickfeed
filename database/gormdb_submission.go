@@ -17,7 +17,7 @@ var (
 	ErrInvalidAssignmentID = errors.New("cannot create submission without an associated assignment")
 	// ErrAllReviewsCreated is returned if all reviews for a submission have already been created.
 	ErrAllReviewsCreated = func(submissionID uint64, assignmentName string, reviewers uint32) error {
-		return fmt.Errorf("failed to create a new review for submission %d to %s: all %d reviews already created", submissionID, assignmentName, reviewers)
+		return fmt.Errorf("all %d reviews already created for submission %d to %s", reviewers, submissionID, assignmentName)
 	}
 	ErrEmptyReviewID = errors.New("cannot update review with empty ID")
 )
@@ -137,9 +137,8 @@ func (db *GormDB) check(submission *qf.Submission) error {
 	if err := m.Count(&idCount).Error; err != nil {
 		if submission.GetUserID() > 0 {
 			return fmt.Errorf("user %d not found for submission: %+v: %w", submission.GetUserID(), submission, err)
-		} else {
-			return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GetGroupID(), submission, err)
 		}
+		return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GetGroupID(), submission, err)
 	}
 
 	// Checks that the assignment exists.
@@ -229,45 +228,6 @@ func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
 	// We need to use FullSaveAssociations to save the nested grades
 	// and select to update zero value fields.
 	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Model(query).Select("*").Updates(query).Error
-}
-
-// UpdateSubmissions approves and/or releases all submissions that have score
-// equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(query *qf.Submission, approve bool) error {
-	return db.conn.Transaction(func(tx *gorm.DB) error {
-		var submissionIDs []*uint64
-		if err := tx.Model(&qf.Submission{}).
-			Where("assignment_id = ? AND score >= ?", query.GetAssignmentID(), query.GetScore()).
-			Pluck("id", &submissionIDs).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(query).
-			// Update the released status of all submissions that have score equal or above the provided score
-			Where("id IN (?)", submissionIDs).
-			Updates(&qf.Submission{
-				Released: query.GetReleased(),
-			}).Error; err != nil {
-			return err
-		}
-
-		status := qf.Submission_APPROVED
-		if !approve {
-			status = qf.Submission_REJECTED
-		}
-
-		// Approve all Grades for the submissions
-		err := tx.Model(&qf.Grade{}).
-			Where("submission_id IN (?)", submissionIDs).
-			Updates(&qf.Grade{
-				Status: status,
-			}).Error
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
 }
 
 // GetReview fetches a review

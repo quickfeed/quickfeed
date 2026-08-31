@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 )
 
 // CreateIssue implements the SCM interface
@@ -22,9 +24,9 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 	}
 	issue, _, err := s.client.Issues.Create(ctx, opt.Organization, opt.Repository, newIssue)
 	if err != nil {
-		return nil, E(op, m, fmt.Errorf("%s: %w", m, err))
+		return nil, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
-	s.logger.Debugf("Created issue %q on %s/%s", opt.Title, opt.Organization, opt.Repository)
+	qlog.FromContext(ctx).Debug("created issue", label.Repository, opt.Repository, label.Organization, opt.Organization, "title", opt.Title)
 	return toIssue(issue), nil
 }
 
@@ -44,9 +46,9 @@ func (s *GithubSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue,
 	}
 	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, opt.Number, issueReq)
 	if err != nil {
-		return nil, E(op, m, fmt.Errorf("%s: %w", m, err))
+		return nil, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
-	s.logger.Debugf("Updated issue number %d on %s/%s", opt.Number, opt.Organization, opt.Repository)
+	qlog.FromContext(ctx).Debug("updated issue", label.Repository, opt.Repository, label.Organization, opt.Organization, "issue", opt.Number)
 	return toIssue(issue), nil
 }
 
@@ -59,7 +61,7 @@ func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number
 	}
 	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Repo, number)
 	if err != nil {
-		return nil, E(op, m, fmt.Errorf("%s: %w", m, err))
+		return nil, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
 	return toIssue(issue), nil
 }
@@ -73,7 +75,7 @@ func (s *GithubSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*I
 	}
 	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Repo, &github.IssueListByRepoOptions{})
 	if err != nil {
-		return nil, E(op, m, fmt.Errorf("%s: %w", m, err))
+		return nil, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
 	var issues []*Issue
 	for _, issue := range issueList {
@@ -91,7 +93,7 @@ func (s *GithubSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOpt
 	}
 	createdComment, _, err := s.client.Issues.CreateComment(ctx, opt.Organization, opt.Repository, opt.Number, &github.IssueComment{Body: &opt.Body})
 	if err != nil {
-		return 0, E(op, m, fmt.Errorf("%s: %w", m, err))
+		return 0, E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
 	return createdComment.GetID(), nil
 }
@@ -104,7 +106,7 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 		return E(op, m, fmt.Errorf("missing fields: %+v", opt))
 	}
 	if _, _, err := s.client.Issues.EditComment(ctx, opt.Organization, opt.Repository, opt.CommentID, &github.IssueComment{Body: &opt.Body}); err != nil {
-		return E(op, m, fmt.Errorf("%s: %w", m, err))
+		return E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
 	return nil
 }
@@ -120,7 +122,7 @@ func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersO
 		Reviewers: opt.Reviewers,
 	}
 	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.Number, reviewersRequest); err != nil {
-		return E(op, m, fmt.Errorf("%s: %w", m, err))
+		return E(op, m, fmt.Errorf("%w: %w", m, err))
 	}
 	return nil
 }

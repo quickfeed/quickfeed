@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -179,6 +180,64 @@ func TestDBCreateEnrollment(t *testing.T) {
 		CourseID: course.GetID(),
 	}); err == nil {
 		t.Fatal("expected duplicate enrollment creation to fail")
+	}
+}
+
+func TestDBCreateEnrollmentIncompleteUser(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
+	tests := []struct {
+		name        string
+		user        *qf.User
+		errContains string
+	}{
+		{
+			name: "user without name",
+			user: &qf.User{
+				Email:     "test@example.com",
+				StudentID: "12345",
+			},
+			errContains: "user must have name, email, and student ID set before enrolling",
+		},
+		{
+			name: "user without email",
+			user: &qf.User{
+				Name:      "Test User",
+				StudentID: "12345",
+			},
+			errContains: "user must have name, email, and student ID set before enrolling",
+		},
+		{
+			name: "user without student ID",
+			user: &qf.User{
+				Name:  "Test User",
+				Email: "test@example.com",
+			},
+			errContains: "user must have name, email, and student ID set before enrolling",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := db.CreateUser(tt.user); err != nil {
+				t.Fatal(err)
+			}
+			err := db.CreateEnrollment(&qf.Enrollment{
+				UserID:   tt.user.GetID(),
+				CourseID: course.GetID(),
+			})
+			if err == nil {
+				t.Errorf("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
+			}
+		})
 	}
 }
 

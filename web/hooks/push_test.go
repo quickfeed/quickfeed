@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"context"
 	"sort"
 	"testing"
 
@@ -84,7 +85,7 @@ func TestExtractAssignments(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := wh.extractAssignments(&github.PushEvent{
+		got := wh.extractAssignments(context.Background(), &github.PushEvent{
 			Commits: []*github.HeadCommit{
 				{
 					Modified: tt.modified,
@@ -132,7 +133,7 @@ func TestLastActivityDate(t *testing.T) {
 
 	for _, tt := range tests {
 		date := timestamppb.Now()
-		wh.updateLastActivityDate(course, tt.repo, admin.GetLogin())
+		wh.updateLastActivityDate(context.Background(), course, tt.repo, admin.GetLogin())
 		enrol, err := db.GetEnrollmentByCourseAndUser(course.GetID(), admin.GetID())
 		if err != nil {
 			t.Fatal(err)
@@ -235,9 +236,9 @@ func TestIgnorePush(t *testing.T) {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: "dat520-2024"}
 	usrRepo := &qf.Repository{RepoType: qf.Repository_USER, HTMLURL: repo.StudentRepoURL("user")}
 	grpRepo := &qf.Repository{RepoType: qf.Repository_GROUP, HTMLURL: repo.GroupRepoURL("group")}
-	pushEventRepo := &github.PushEventRepository{DefaultBranch: github.String("main")}
-	pushMain := &github.PushEvent{Ref: github.String("refs/heads/main"), Repo: pushEventRepo}
-	pushFeat := &github.PushEvent{Ref: github.String("refs/heads/feat-branch"), Repo: pushEventRepo}
+	pushEventRepo := &github.PushEventRepository{DefaultBranch: new("main")}
+	pushMain := &github.PushEvent{Ref: new("refs/heads/main"), Repo: pushEventRepo}
+	pushFeat := &github.PushEvent{Ref: new("refs/heads/feat-branch"), Repo: pushEventRepo}
 	pullFeat := &qf.PullRequest{ScmRepositoryID: 1, TaskID: 1, IssueID: 1, UserID: 1, Number: 1, SourceBranch: "feat-branch"}
 
 	const ignore bool = true
@@ -271,7 +272,7 @@ func TestIgnorePush(t *testing.T) {
 					}
 				})
 			}
-			if got := wh.ignorePush(tt.pushEvent, tt.repo); got != tt.want {
+			if got := wh.ignorePush(context.Background(), tt.pushEvent, tt.repo); got != tt.want {
 				t.Errorf("ignorePush(%s, %s) = %t, want %t", branchName(tt.pushEvent.GetRef()), tt.repo.Name(), got, tt.want)
 			}
 		})

@@ -1,12 +1,10 @@
-import React, { useCallback } from "react"
-import { Review, Submission, Submission_Status } from "../../../proto/qf/types_pb"
+import React from "react"
+import type { Review, Submission } from "../../../proto/qf/types_pb"
+import { Submission_Status } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
-import { Color, getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
-import { useActions, useAppState } from "../../overmind"
-import { ButtonType } from "../admin/Button"
-import DynamicButton from "../DynamicButton"
+import { getFormattedTime, getStatusByUser, SubmissionStatus } from "../../Helpers"
+import { useAppState } from "../../overmind"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
-import MarkReadyButton from "./MarkReadyButton"
 
 interface ReviewInfoProps {
     courseID: string
@@ -16,82 +14,53 @@ interface ReviewInfoProps {
     review: Review
 }
 
+const InfoRow = ({ label, value, badge }: { label: string, value: React.ReactNode, badge?: React.ReactNode }) => (
+    <div className="flex items-center justify-between py-3 px-4 hover:bg-base-200 transition-colors">
+        <span className="text-sm font-semibold text-base-content/70 min-w-[140px]">{label}:</span>
+        <div className="flex items-center gap-2 flex-1 justify-end">
+            <span className="font-medium">{value}</span>
+            {badge}
+        </div>
+    </div>
+)
+
 const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
-    const actions = useActions()
-    const handleRelease = useCallback(() => actions.review.release({ submission, owner: state.submissionOwner }), [actions, submission, state.submissionOwner])
-    const ready = review.ready
-
-    const markReadyButton = <MarkReadyButton review={review} />
 
     const user = state.selectedEnrollment?.user
     let status = Submission_Status.NONE
-    let userLi = null
     if (user) {
         status = getStatusByUser(submission, user.ID)
-        // List item for the user that submitted the selected submission
-        userLi = (
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">User: </span>
-                {user.Name}
-            </li>
-        )
     }
 
-    const setReadyOrGradeButton = ready
-        ? <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
-        : markReadyButton
-    const buttonText = submission.released ? "Released" : "Release"
-    const buttonColor = submission.released ? Color.WHITE : Color.YELLOW
-    const releaseButton = (
-        <DynamicButton
-            text={buttonText}
-            color={buttonColor}
-            type={ButtonType.BUTTON}
-            className={`float-right ${!state.isCourseCreator && "disabled"} `}
-            onClick={handleRelease}
-        />
-    )
     const submissionStatus = submission ? SubmissionStatus[status] : NoSubmission
-    const reviewStatus = ready ? "Ready" : "In progress"
+
     return (
-        <ul className="list-group">
-            <li className="list-group-item active">
-                <span className="align-middle">
-                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignmentName}</span>
-                    {releaseButton}
-                </span>
-            </li>
-            {userLi}
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Reviewer: </span>
-                {state.review.reviewer?.Name}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submissionStatus}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Review Status: </span>
-                <span>{reviewStatus}</span>
-                {ready && markReadyButton}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Score: </span>
-                {review.score}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Updated: </span>
-                {getFormattedTime(review.edited)}
-            </li>
-            <li className="list-group-item">
-                <span className="w-25 mr-5 float-left">Graded: </span>
-                {state.review.graded}/{state.review.criteriaTotal}
-            </li>
-            <li className="list-group-item">
-                {setReadyOrGradeButton}
-            </li>
-        </ul>
+        <div className="card bg-base-100 shadow-xl">
+            <div className="card-body p-0">
+                <div className="flex items-center justify-between bg-primary text-primary-content px-6 py-4 rounded-t-2xl">
+                    <div className="flex items-center gap-2">
+                        <i className="fas fa-clipboard-check text-xl" />
+                        <h3 className="text-lg font-bold">{assignmentName}</h3>
+                    </div>
+                </div>
+
+                <div className="divide-y divide-base-300">
+                    {user && <InfoRow label="User" value={user.Name} />}
+                    <InfoRow label="Reviewer" value={state.review.reviewer?.Name} />
+                    <InfoRow label="Submission Status" value={submissionStatus} />
+                    <InfoRow label="Score" value={review.score} />
+                    <InfoRow label="Updated" value={getFormattedTime(review.edited)} />
+                    <InfoRow label="Graded" value={`${state.review.graded}/${state.review.criteriaTotal}`} />
+                </div>
+
+                <div className="px-4 pb-4 pt-2">
+                    {state.review.graded === state.review.criteriaTotal && (
+                        <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
+                    )}
+                </div>
+            </div>
+        </div>
     )
 }
 

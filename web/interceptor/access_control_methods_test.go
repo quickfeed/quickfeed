@@ -11,10 +11,10 @@ import (
 // TestAccessControlMethods checks that all QuickFeedService methods have an entry
 // in the access control list.
 func TestAccessControlQuickFeedServiceMethods(t *testing.T) {
-	service := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
+	service := reflect.TypeFor[qfconnect.UnimplementedQuickFeedServiceHandler]()
 	serviceMethods := make(map[string]bool)
-	for i := 0; i < service.NumMethod(); i++ {
-		serviceMethods[service.Method(i).Name] = true
+	for method := range service.Methods() {
+		serviceMethods[method.Name] = true
 	}
 	if err := checkAccessControlMethods(serviceMethods); err != nil {
 		t.Error(err)
@@ -42,18 +42,12 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"UpdateEnrollments":        true,
 		"UpdateAssignments":        true,
 		"UpdateSubmission":         true,
-		"UpdateSubmissions":        true,
 		"RebuildSubmissions":       true,
-		"CreateBenchmark":          true,
-		"UpdateBenchmark":          true,
-		"DeleteBenchmark":          true,
-		"CreateCriterion":          true,
-		"UpdateCriterion":          true,
-		"DeleteCriterion":          true,
 		"CreateReview":             true,
 		"UpdateReview":             true,
 		"IsEmptyRepo":              true,
 		"GetSubmissionsByCourse":   true,
+		"GetCourseLog":             true,
 		"GetUsers":                 true,
 		"GetSubmission":            true,
 		"SubmissionStream":         true,
@@ -90,7 +84,7 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 }
 
 func has(method string) bool {
-	_, ok := accessRolesFor[method]
+	_, ok := methodCheckers[method]
 	return ok
 }
 
@@ -102,7 +96,7 @@ func checkAccessControlMethods(expectedMethodNames map[string]bool) error {
 			missingMethods = append(missingMethods, method)
 		}
 	}
-	for method := range accessRolesFor {
+	for method := range methodCheckers {
 		if !expectedMethodNames[method] {
 			superfluousMethods = append(superfluousMethods, method)
 		}

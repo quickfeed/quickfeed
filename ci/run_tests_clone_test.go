@@ -66,9 +66,14 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	for _, s := range []string{qf.TestsRepo, qf.AssignmentsRepo, qf.StudentRepoName(qfUserName)} {
-		if !strings.Contains(out, s) {
-			t.Errorf("expected %q to contain %q", out, s)
+	// After clone(), only the student repo is present in dstDir.
+	// The tests and assignments repos are mounted directly into the container as read-only bind mounts.
+	if !strings.Contains(out, qf.StudentRepoName(qfUserName)) {
+		t.Errorf("expected %q to contain %q", out, qf.StudentRepoName(qfUserName))
+	}
+	for _, s := range []string{qf.TestsRepo, qf.AssignmentsRepo} {
+		if strings.Contains(out, s) {
+			t.Errorf("expected %q not to contain %q (should be a read-only mount, not a copy)", out, s)
 		}
 	}
 }

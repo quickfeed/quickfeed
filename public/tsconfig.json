@@ -7,15 +7,15 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": false,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "newLine": "LF",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
     "allowJs": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["vitest/globals"]
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"]
 }

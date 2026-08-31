@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -16,16 +17,16 @@ import (
 )
 
 func TestRegisterRouter(t *testing.T) {
-	logger := qtest.Logger(t).Desugar()
+	logger := qtest.Logger(t)
 	db, stop := qtest.TestDB(t)
 	defer stop()
 
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
-	qf := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, nil)
+	qf := web.NewQuickFeedService(logger, db, mgr, nil, &auth.TokenManager{}, nil)
 
-	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	public := createTempPublicDir(t)
-	mux := qf.RegisterRouter(&auth.TokenManager{}, authConfig, public)
+	webHookSecret := ""
+	mux := qf.RegisterRouter(webHookSecret, public)
 
 	apitest.New("Index").
 		Handler(mux).
@@ -44,22 +45,21 @@ func TestRegisterRouter(t *testing.T) {
 		End()
 
 	partialUrl := "/" + qfconnect.QuickFeedServiceName + "/"
-	qfType := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
-	for i := 0; i < qfType.NumMethod(); i++ {
-		method := qfType.Method(i)
+	qfType := reflect.TypeFor[qfconnect.UnimplementedQuickFeedServiceHandler]()
+	for method := range qfType.Methods() {
 		apitest.New(method.Name).
 			Handler(mux).
 			Post(partialUrl+method.Name).
 			Header("Content-Type", "application/json").
 			Body("{}").
-			Expect(t).Assert(func(resp *http.Response, req *http.Request) error {
+			Expect(t).Assert(func(resp *http.Response, _ *http.Request) error {
 			// 415 (Unsupported Media Type) is returned for requests with unsupported content type
 			// 		- this applies to all streaming methods
 			// 400 (Bad Request) is returned if the request is malformed, e.g. missing required fields
 			// 		- for a majority of the unary methods, "{}" is considered a malformed request
 			// 401 (Unauthorized) is returned if the user is not authenticated
 			// 		- this applies to all methods where "{}" is a valid request, but the user is not authenticated
-			if !(resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnsupportedMediaType) {
+			if !wantStatus(resp, http.StatusUnauthorized, http.StatusBadRequest, http.StatusUnsupportedMediaType) {
 				return fmt.Errorf("%s: expected status code 401, 400 or 415, got %d", method.Name, resp.StatusCode)
 			}
 			return nil
@@ -75,6 +75,10 @@ func TestRegisterRouter(t *testing.T) {
 		Expect(t).
 		Status(http.StatusNotFound).
 		End()
+}
+
+func wantStatus(resp *http.Response, wantStatus ...int) bool {
+	return slices.Contains(wantStatus, resp.StatusCode)
 }
 
 func createTempPublicDir(t *testing.T) string {

@@ -1,12 +1,10 @@
-import React from "react"
-import { Review } from "../../proto/qf/types_pb"
+import type { Review } from "../../proto/qf/types_pb"
 import { hasBenchmarks } from "../Helpers"
+import { useAppState } from "../overmind"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"
-import MarkReadyButton from "./manual-grading/MarkReadyButton"
-import SummaryFeedback from "./manual-grading/SummaryFeedback"
-import { useAppState } from "../overmind"
 import GradeAllCriteria from "./manual-grading/GradeAllCriteria"
+import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
 const ReviewResult = ({ review }: { review: Review }) => {
@@ -21,8 +19,8 @@ const ReviewResult = ({ review }: { review: Review }) => {
 
     return (
         <table className="table">
-            <thead className="thead-dark">
-                <tr className="table-primary">
+            <thead>
+                <tr>
                     <th>Score:</th>
                     <th>{review.score}</th>
                     <th />
@@ -43,13 +41,6 @@ const ReviewResult = ({ review }: { review: Review }) => {
             </tbody>
             <tfoot>
                 <SummaryFeedback review={review} />
-                {!review.ready && state.isTeacher
-                    ?
-                    <tr>
-                        <MarkReadyButton review={review} />
-                    </tr>
-                    : null
-                }
             </tfoot>
         </table>
     )

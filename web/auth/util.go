@@ -22,8 +22,8 @@ func getURL(baseURL, route string) string {
 	return "https://" + baseURL + route
 }
 
-// externalUser is used to decode user authentication JSON sent as response by OAuth providers.
-type externalUser struct {
+// ExternalUser is used to decode user authentication JSON sent as response by OAuth providers.
+type ExternalUser struct {
 	ID        uint64 `json:"id"`
 	Email     string `json:"email"`
 	Name      string `json:"name"`

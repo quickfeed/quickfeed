@@ -1,11 +1,11 @@
-import { createStateHook, createActionsHook, createEffectsHook } from 'overmind-react'
+import { createActionsHook, createEffectsHook, createStateHook } from 'overmind-react'
 import { state } from './state'
 // review, feedback and global does not expose themselves as an ES Module.
-import * as review from './namespaces/review' // skipcq: JS-C1003
+import type { IContext } from 'overmind'
+import { merge, namespaced } from 'overmind/config'
 import * as feedback from './namespaces/feedback' // skipcq: JS-C1003
 import * as global from './namespaces/global' // skipcq: JS-C1003
-import { IContext } from 'overmind'
-import { merge, namespaced } from 'overmind/config'
+import * as review from './namespaces/review' // skipcq: JS-C1003
 
 /* This is the main overmind configuration. */
 

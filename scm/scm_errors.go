@@ -6,12 +6,14 @@ import (
 )
 
 var (
-	// ErrNotFound indicates that the user is not member of the organization.
+	// ErrNotMember indicates that the user is not member of the organization.
 	ErrNotMember = errors.New("not a member of organization")
 	// ErrNotOwner indicates that the user is not an owner of the organization.
 	ErrNotOwner = errors.New("not an owner of organization")
 	// ErrAlreadyExists indicates that a repository already exist in the organization.
 	ErrAlreadyExists = errors.New("already exist")
+	// ErrNotFound indicates that a repository does not exist in the organization.
+	ErrNotFound = errors.New("not found")
 )
 
 // SCMError holds the operation, user error message and the original error.
@@ -46,7 +48,7 @@ func (e *UserError) Unwrap() error {
 }
 
 // M creates a new user error with the given format string.
-func M(format string, a ...interface{}) error {
+func M(format string, a ...any) error {
 	return &UserError{fmt.Errorf(format, a...)}
 }
 
@@ -55,7 +57,7 @@ func M(format string, a ...interface{}) error {
 // The user error can be constructed with the M function.
 // If more than one errors are passed, these are chained.
 // If no arguments are passed, E panics.
-func E(args ...interface{}) error {
+func E(args ...any) error {
 	if len(args) == 0 {
 		panic("call to scm.E with no arguments")
 	}

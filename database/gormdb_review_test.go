@@ -54,8 +54,8 @@ func TestCreateReview(t *testing.T) {
 			name:       "Create review, calculate score and copy benchmark",
 			submission: submissionWithReviewers,
 			assignment: assignmentWithReviewers,
-			review:     &qf.Review{SubmissionID: submissionWithReviewers.GetID(), ReviewerID: 1, Feedback: "my very good feedback", Ready: false, Score: 95, GradingBenchmarks: []*qf.GradingBenchmark{benchmark}},
-			wantReview: &qf.Review{ID: 1, Edited: timestamppb.Now(), SubmissionID: submissionWithReviewers.GetID(), ReviewerID: 1, Feedback: "my very good feedback", Ready: false, Score: 30, GradingBenchmarks: []*qf.GradingBenchmark{newBenchmark}},
+			review:     &qf.Review{SubmissionID: submissionWithReviewers.GetID(), ReviewerID: 1, Feedback: "my very good feedback", Score: 95, GradingBenchmarks: []*qf.GradingBenchmark{benchmark}},
+			wantReview: &qf.Review{ID: 1, Edited: timestamppb.Now(), SubmissionID: submissionWithReviewers.GetID(), ReviewerID: 1, Feedback: "my very good feedback", Score: 30, GradingBenchmarks: []*qf.GradingBenchmark{newBenchmark}},
 		},
 	}
 

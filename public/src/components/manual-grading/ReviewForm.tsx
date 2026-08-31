@@ -1,11 +1,11 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
-import { isManuallyGraded, Color } from "../../Helpers"
+import type { Review } from "../../../proto/qf/types_pb"
+import { Color, isManuallyGraded } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType } from "../admin/Button"
-import ReviewInfo from "./ReviewInfo"
-import ReviewResult from "../ReviewResult"
+import Button from "../admin/Button"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
+import ReviewResult from "../ReviewResult"
+import ReviewInfo from "./ReviewInfo"
 
 
 const ReviewForm = () => {
@@ -30,14 +30,12 @@ const ReviewForm = () => {
     const selectReviewButton: React.JSX.Element[] = []
 
     reviews.forEach((review, index) => {
-        const buttonText = review.ready ? "Ready" : "In Progress"
-        const buttonColor = review.ready ? Color.GREEN : Color.YELLOW
-        const className = state.review.selectedReview === index ? "active border border-dark" : ""
+        const isSelected = state.review.selectedReview === index
+        const className = isSelected ? "active border border-dark" : ""
         selectReviewButton.push(
             <Button key={review.ID.toString()}
-                text={buttonText}
-                color={buttonColor}
-                type={ButtonType.BUTTON}
+                text={`Review ${index + 1}`}
+                color={isSelected ? Color.BLUE : Color.GRAY}
                 className={`mr-1 ${className}`}
                 onClick={() => { actions.review.setSelectedReview(index) }}
             />
@@ -51,7 +49,6 @@ const ReviewForm = () => {
             <Button key="add"
                 text="Add Review"
                 color={Color.BLUE}
-                type={ButtonType.BUTTON}
                 className="mr-1"
                 onClick={() => { actions.review.createReview() }}
             />

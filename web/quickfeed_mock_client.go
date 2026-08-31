@@ -1,6 +1,8 @@
 package web
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,13 +10,13 @@ import (
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"go.uber.org/zap"
 )
 
 // MockClient is a mock QuickFeed client.
@@ -33,6 +35,14 @@ func (m *MockClient) Cookie(t *testing.T, user *qf.User) string {
 	return cookie.String()
 }
 
+// Context returns a context with the authentication cookie set for the given user.
+func (m *MockClient) Context(t *testing.T, user *qf.User) context.Context {
+	t.Helper()
+	ctx, info := connect.NewClientContext(t.Context())
+	info.RequestHeader().Set("cookie", m.Cookie(t, user))
+	return ctx
+}
+
 // TokenManager returns the underlying TokenManager for advanced test scenarios.
 // This is primarily used by tests that need direct access to the token manager,
 // such as the token refresh tests.
@@ -43,11 +53,13 @@ func (m *MockClient) TokenManager() *auth.TokenManager {
 type MockClientOptions struct {
 	clientOptions    []connect.ClientOption
 	interceptorFuncs []InterceptorFunc
+	logger           *slog.Logger
+	courseLogs       *courselog.Store
 }
 
 // InterceptorFunc is a function that creates an interceptor.
 // It receives logger, token manager, and database, but can ignore unused parameters with _.
-type InterceptorFunc func(logger *zap.SugaredLogger, tm *auth.TokenManager, db database.Database) connect.Interceptor
+type InterceptorFunc func(logger *slog.Logger, tm *auth.TokenManager, db database.Database) connect.Interceptor
 
 type MockClientOption func(*MockClientOptions)
 
@@ -55,6 +67,22 @@ type MockClientOption func(*MockClientOptions)
 func WithClientOptions(opts ...connect.ClientOption) MockClientOption {
 	return func(o *MockClientOptions) {
 		o.clientOptions = opts
+	}
+}
+
+// WithLogger sets the logger used by the mock service and its interceptors.
+func WithLogger(logger *slog.Logger) MockClientOption {
+	return func(o *MockClientOptions) {
+		o.logger = logger
+	}
+}
+
+// WithCourseLogStore sets the course log store GetCourseLog queries. When not
+// set, NewMockClient creates one rooted at t.TempDir() and closes it during
+// test cleanup; pass this to seed records for a test to query.
+func WithCourseLogStore(store *courselog.Store) MockClientOption {
+	return func(o *MockClientOptions) {
+		o.courseLogs = store
 	}
 }
 
@@ -92,34 +120,48 @@ func WithInterceptors(funcs ...InterceptorFunc) MockClientOption {
 			o.interceptorFuncs = funcs
 		} else {
 			o.interceptorFuncs = []InterceptorFunc{
+				RPCLoggingInterceptorFunc,
 				ValidationInterceptorFunc,
 				TokenAuthInterceptorFunc,
 				UserInterceptorFunc,
 				AccessControlInterceptorFunc,
+				ContextLoggingInterceptorFunc,
 			}
 		}
 	}
 }
 
+func RPCLoggingInterceptorFunc(logger *slog.Logger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
+	return interceptor.NewRPCLoggingInterceptor(logger)
+}
+
 // Individual interceptor functions that match InterceptorFunc signature
-func ValidationInterceptorFunc(logger *zap.SugaredLogger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
-	return interceptor.NewValidationInterceptor(logger)
+func ValidationInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
+	return interceptor.NewValidationInterceptor()
 }
 
-func TokenAuthInterceptorFunc(logger *zap.SugaredLogger, tm *auth.TokenManager, db database.Database) connect.Interceptor {
-	return interceptor.NewTokenAuthInterceptor(logger, tm, db)
+func TokenAuthInterceptorFunc(_ *slog.Logger, tm *auth.TokenManager, db database.Database) connect.Interceptor {
+	return interceptor.NewTokenAuthInterceptor(tm, db)
 }
 
-func UserInterceptorFunc(logger *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
-	return interceptor.NewUserInterceptor(logger, tm)
+func UserInterceptorFunc(_ *slog.Logger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
+	return interceptor.NewUserInterceptor(tm)
 }
 
-func AccessControlInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
-	return interceptor.NewAccessControlInterceptor(tm)
+func AccessControlInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, db database.Database) connect.Interceptor {
+	return interceptor.NewAccessControlInterceptor(db)
 }
 
-func TokenInterceptorFunc(_ *zap.SugaredLogger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
+func ContextLoggingInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
+	return interceptor.NewContextLoggingInterceptor()
+}
+
+func TokenInterceptorFunc(_ *slog.Logger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
 	return interceptor.NewTokenInterceptor(tm)
+}
+
+func DetachInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
+	return interceptor.NewDetachInterceptor()
 }
 
 // NewMockClient returns a QuickFeed client for invoking RPCs.
@@ -131,8 +173,10 @@ func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, op
 	}
 
 	mgr := scm.MockManager(t, scmOpt)
-	logger := qtest.Logger(t)
-	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, BaseHookOptions{}, &ci.Local{})
+	logger := options.logger
+	if logger == nil {
+		logger = qtest.Logger(t)
+	}
 
 	// Create token manager when needed
 	var tm *auth.TokenManager
@@ -148,6 +192,20 @@ func NewMockClient(t *testing.T, db database.Database, scmOpt scm.MockOption, op
 			interceptors = append(interceptors, createInterceptor(logger, tm, db))
 		}
 	}
+	courseLogs := options.courseLogs
+	if courseLogs == nil {
+		var err error
+		courseLogs, err = courselog.NewStore(t.TempDir(), logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			if err := courseLogs.Close(); err != nil {
+				t.Errorf("Close() error = %v", err)
+			}
+		})
+	}
+	qfService := NewQuickFeedService(logger, db, mgr, &ci.Local{}, tm, courseLogs)
 
 	router := http.NewServeMux()
 	router.Handle(qfconnect.NewQuickFeedServiceHandler(qfService, connect.WithInterceptors(interceptors...)))

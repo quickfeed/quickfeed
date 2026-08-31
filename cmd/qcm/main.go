@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 var cli struct {
@@ -58,7 +58,7 @@ func main() {
 	}
 }
 
-func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
+func runTests(logger *slog.Logger, client scm.SCM, destDir string) {
 	fmt.Printf("Running tests for %s\n", cli.Clone.Lab)
 	dockerfile := readFile(destDir, "Dockerfile")
 
@@ -88,7 +88,8 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
-	results, err := runData.RunTests(ctx, logger, client, runner(logger))
+	ctx = qlog.NewContext(ctx, logger)
+	results, err := runData.RunTests(ctx, client, runner())
 	check(err)
 
 	fmt.Println("***********************")
@@ -101,22 +102,21 @@ func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	fmt.Printf("Score sum: %d\n", results.Sum())
 }
 
-func runner(logger *zap.SugaredLogger) ci.Runner {
+func runner() ci.Runner {
 	if cli.Clone.Docker {
-		runner, err := ci.NewDockerCI(logger)
+		runner, err := ci.NewDockerCI()
 		check(err)
 		return runner
 	}
 	return &ci.Local{}
 }
 
-func getSCMClient() (*zap.SugaredLogger, scm.SCM) {
-	logger, err := qlog.Zap()
+func getSCMClient() (*slog.Logger, scm.SCM) {
+	logger := qlog.New(os.Stderr)
+	qlog.SetDefault(logger)
+	client, err := scm.NewSCMClient(logger, cli.Clone.Token)
 	check(err)
-	sugar := logger.Sugar()
-	client, err := scm.NewSCMClient(sugar, cli.Clone.Token)
-	check(err)
-	return sugar, client
+	return logger, client
 }
 
 func studentRepo() string {

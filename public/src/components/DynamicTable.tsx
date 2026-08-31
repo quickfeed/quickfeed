@@ -2,6 +2,12 @@ import React, { memo } from "react"
 import { isHidden } from "../Helpers"
 import { useAppState } from "../overmind"
 
+/**
+ * Wrap a JSX cell in SearchableCell to enable search in DynamicTable.
+ * Pass `hidden={!isHidden(value, query)}` so the table knows when the cell matches.
+ */
+export const SearchableCell = ({ children }: { hidden: boolean; children: React.ReactNode }): React.ReactNode => children
+
 export type CellElement = {
     value: string,
     iconTitle?: string,
@@ -20,6 +26,20 @@ const isCellElement = (element: RowElement): element is CellElement => {
 
 const isJSXElement = (element: RowElement): element is React.JSX.Element => {
     return (element as React.JSX.Element).type !== undefined
+}
+
+// Derive a stable row key from cell content instead of the row's array index,
+// so sorting/filtering does not reassign component state to the wrong row.
+const rowKey = (row: Row): string => {
+    return row.map(cell => {
+        if (isCellElement(cell)) {
+            return cell.value
+        }
+        if (isJSXElement(cell)) {
+            return String(cell.key ?? "")
+        }
+        return cell
+    }).join("|")
 }
 
 const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
@@ -61,10 +81,10 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     const rowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
-            const element = cell.link ? <a href={cell.link} target={"_blank"} rel="noopener noreferrer">{cell.value}</a> : cell.value
+            const element = cell.link ? <a href={cell.link} target="_blank" rel="noopener noreferrer">{cell.value}</a> : cell.value
             return <td key={index} className={cell.className} onClick={cell.onClick}>{element} {icon(cell)}</td>
         }
-        return index == 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
+        return index === 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
     }
 
     const headerRowCell = (cell: RowElement, index: number) => {
@@ -78,11 +98,11 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     const head = header.map((cell, index) => { return headerRowCell(cell, index) })
 
-    const rows = data.map((row, index) => {
+    const rows = data.map((row) => {
         const generatedRow = row.map((cell, index) => {
             return rowCell(cell, index)
         })
-        return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr> // skipcq: JS-0437
+        return <tr hidden={isRowHidden(row)} key={rowKey(row)}>{generatedRow}</tr>
     })
 
     const onMouseDown = () => {
@@ -105,8 +125,8 @@ const DynamicTable = memo(({ header, data }: { header: Row, data: Row[] }) => {
 
     return (
         <div className="table-overflow" ref={container} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} role="button" aria-hidden="true">
-            <table className="table table-striped table-grp">
-                <thead className="thead-dark">
+            <table className="table table-zebra table-grp">
+                <thead className="bg-base-300">
                     <tr>
                         {head}
                     </tr>

@@ -3,6 +3,7 @@ package qf;
 option go_package   = "github.com/quickfeed/quickfeed/qf";
 option swift_prefix = "";
 
+import "google/protobuf/timestamp.proto";
 import "qf/types.proto";
 
 // Message types that are used as requests and responses in API calls.
@@ -55,22 +56,6 @@ message SubmissionRequest {
     }
 }
 
-message UpdateSubmissionRequest {
-    uint64 submissionID      = 1;
-    uint64 courseID          = 2;
-    uint32 score             = 3;
-    bool released            = 4;
-    repeated qf.Grade grades = 5;
-}
-
-message UpdateSubmissionsRequest {
-    uint64 courseID     = 1;
-    uint64 assignmentID = 2;
-    uint32 scoreLimit   = 3;
-    bool release        = 4;
-    bool approve        = 5;
-}
-
 // used to check whether student/group submission repo is empty
 message RepositoryRequest {
     uint64 userID   = 1;
@@ -86,6 +71,38 @@ message RebuildRequest {
     uint64 courseID     = 1;
     uint64 assignmentID = 2;
     uint64 submissionID = 3;
+}
+
+message CourseLogRequest {
+    uint64 courseID                  = 1;
+    google.protobuf.Timestamp from   = 2;  // default: 24 hours before to
+    google.protobuf.Timestamp to     = 3;  // default: now
+    string repository                = 4;  // exact match; unset selects every repository
+    CourseLogEntry.Level level       = 5;  // minimum level to include
+    uint32 limit                     = 6;  // default 2000, server maximum 5000
+}
+
+message CourseLogEntry {
+    enum Level {
+        DEBUG = 0;
+        INFO  = 1;
+        WARN  = 2;
+        ERROR = 3;
+    }
+    google.protobuf.Timestamp time = 1;
+    Level level                    = 2;
+    string message                 = 3;
+    string source                  = 4;  // repository-relative file:line
+    string repository              = 5;
+    string repositoryType          = 6;
+    map<string, string> fields     = 7;  // remaining structured attributes
+    bool truncated                 = 8;
+}
+
+message CourseLog {
+    repeated CourseLogEntry entries = 1;  // chronological order
+    repeated string repositories    = 2;  // repositories with entries in the selected interval
+    bool truncated                  = 3;  // set when entries were cut off by the limit
 }
 
 message Void {}

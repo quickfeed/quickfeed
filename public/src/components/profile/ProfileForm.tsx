@@ -1,10 +1,11 @@
-import React, { Dispatch, SetStateAction, useCallback, useState } from "react"
+import { clone } from "@bufbuild/protobuf"
+import type { Dispatch, SetStateAction } from "react"
+import React, { useCallback, useState } from "react"
+import { useNavigate } from "react-router"
+import { UserSchema } from "../../../proto/qf/types_pb"
 import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
-import { useNavigate } from "react-router"
-import { clone } from "@bufbuild/protobuf"
-import { UserSchema } from "../../../proto/qf/types_pb"
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }) => {
     const state = useAppState()
@@ -18,23 +19,20 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     // Update the user object when user input changes, and update the state.
     const handleChange = useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
+        const updatedUser = clone(UserSchema, user)
         switch (name) {
             case "name":
-                user.Name = value
+                updatedUser.Name = value
                 break
             case "email":
-                user.Email = value
+                updatedUser.Email = value
                 break
             case "studentid":
-                user.StudentID = value
+                updatedUser.StudentID = value
                 break
         }
-        setUser(user)
-        if (user.Name !== "" && user.Email !== "" && user.StudentID !== "") {
-            setIsValid(true)
-        } else {
-            setIsValid(false)
-        }
+        setUser(updatedUser)
+        setIsValid(updatedUser.Name !== "" && updatedUser.Email !== "" && updatedUser.StudentID !== "")
     }, [user])
 
 
@@ -50,14 +48,30 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     }
 
     return (
-        <div>
+        <div className="w-full">
             {!isValid ? children : null}
-            <form className="form-group" onSubmit={submitHandler}>
+            <form className="space-y-4" onSubmit={submitHandler}>
                 <FormInput prepend="Name" name="name" defaultValue={user.Name} onChange={handleChange} />
                 <FormInput prepend="Email" name="email" defaultValue={user.Email} onChange={handleChange} type="email" />
                 <FormInput prepend="Student ID" name="studentid" defaultValue={user.StudentID} onChange={handleChange} type="number" />
-                <div className="col input-group mb-3">
-                    <input className="btn btn-primary" disabled={!isValid} type="submit" value="Save" style={{ marginTop: "20px" }} />
+                <div className="flex gap-3 mt-6 pt-4 border-t border-base-300">
+                    <button
+                        className="btn btn-primary flex-1 gap-2"
+                        disabled={!isValid}
+                        type="submit"
+                    >
+                        <i className="fas fa-floppy-disk" />
+                        Save Changes
+                    </button>
+                    {state.isValid && (
+                        <button
+                            className="btn btn-ghost"
+                            type="button"
+                            onClick={() => setEditing(false)}
+                        >
+                            Cancel
+                        </button>
+                    )}
                 </div>
             </form>
         </div>

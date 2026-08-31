@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -16,7 +18,7 @@ var ErrContextCanceled = errors.New("context canceled because the github interac
 
 // GetSCM returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
-	return q.scmMgr.GetOrCreateSCM(ctx, q.logger, organization)
+	return q.scmMgr.GetOrCreateSCM(ctx, organization)
 }
 
 // getSCMForCourse returns an SCM client for the course organization.
@@ -62,11 +64,17 @@ func updateGroupMembers(ctx context.Context, sc scm.SCM, group *qf.Group, orgNam
 	return sc.UpdateGroupMembers(ctx, opt)
 }
 
-// isEmpty ensured that all of the provided repositories are empty
-func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
+// CommitsAhead ensures that all provided repositories have zero commits ahead.
+func CommitsAhead(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
-		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetScmRepositoryID()}) {
-			return fmt.Errorf("repository %s is not empty", r.Name())
+		ahead, err := sc.CommitsAhead(ctx, &scm.RepositoryOptions{ID: r.GetScmRepositoryID()})
+		if err != nil {
+			// if we cannot determine whether the repository is ahead,
+			// treat it as ahead so we don't delete a repository that may contain work.
+			return fmt.Errorf("determining if repository %s is ahead of assignments: %w", r.Name(), err)
+		}
+		if ahead > 0 {
+			return fmt.Errorf("repository %s is %d commits ahead", r.Name(), ahead)
 		}
 	}
 	return nil
@@ -85,6 +93,17 @@ func ctxErr(ctx context.Context) error {
 		return connect.NewError(connect.CodeDeadlineExceeded, ctx.Err())
 	}
 	return nil
+}
+
+// logCtxErr logs and returns the context error, if any; see ctxErr.
+// A failed SCM interaction is reported as a context error when the request
+// context ended, since that explains the failure better than the SCM error.
+func logCtxErr(ctx context.Context) error {
+	err := ctxErr(ctx)
+	if err != nil {
+		qlog.FromContext(ctx).Error("request context ended", label.Error, err)
+	}
+	return err
 }
 
 // userSCMError returns a user-facing error if the error is an SCM error.

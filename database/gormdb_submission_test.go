@@ -98,19 +98,18 @@ func TestGormDBCreateSubmissionWithAutoApprove(t *testing.T) {
 	}
 }
 
-func TestGormDBUpdateSubmissionReleaseToFalse(t *testing.T) {
+func TestGormDBUpdateSubmissionScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, _, assignment := qtest.SetupCourseAssignment(t, db)
 	submission := &qf.Submission{
 		AssignmentID: assignment.GetID(),
 		UserID:       user.GetID(),
-		Released:     true,
 	}
 	if err := db.CreateSubmission(submission); err != nil {
 		t.Fatal(err)
 	}
-	submission.Released = false
+	submission.Score = 100
 	if err := db.UpdateSubmission(submission); err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +117,7 @@ func TestGormDBUpdateSubmissionReleaseToFalse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	qtest.Diff(t, "Expected release to be false", gotSubmission, submission, protocmp.Transform())
+	qtest.Diff(t, "Expected score to be 100", gotSubmission, submission, protocmp.Transform())
 }
 
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
@@ -235,7 +234,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if submissions[0].GetStatusByUser(want.GetUserID()) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].SetGrade(user.GetID(), qf.Submission_APPROVED)
+	submissions[0].SetGradeByUser(user.GetID(), qf.Submission_APPROVED)
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
@@ -692,5 +691,136 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	}
 	if gotSubmission != nil {
 		t.Errorf("Expected nil submission, got: %v", gotSubmission)
+	}
+}
+
+func TestSubmissionGradesAfterGroupUpdate(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// Setup: Create a course with a group assignment
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{
+		Name: "Test Course",
+	}
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		t.Fatal(err)
+	}
+
+	assignment := &qf.Assignment{
+		CourseID:    course.ID,
+		Name:        "Lab 1",
+		ScoreLimit:  80,
+		AutoApprove: true,
+		Order:       1,
+		IsGroupLab:  true,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	student1 := qtest.CreateFakeUser(t, db)
+	student2 := qtest.CreateFakeUser(t, db)
+	student3 := qtest.CreateFakeUser(t, db)
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
+
+	// Create initial group with 2 students
+	group := &qf.Group{
+		Name:     "Test Group",
+		CourseID: course.ID,
+		Users:    []*qf.User{student1, student2},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// Students push code -> CreateSubmission (no existing submission)
+	submission := &qf.Submission{
+		AssignmentID: assignment.ID,
+		GroupID:      group.ID,
+		Score:        75,
+	}
+	if err := db.CreateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify initial state: 2 grades created
+	fetchedSubmission, err := db.GetSubmission(&qf.Submission{ID: submission.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(fetchedSubmission.Grades) != 2 {
+		t.Errorf("expected 2 initial grades, got %d", len(fetchedSubmission.Grades))
+	}
+
+	// Teacher approves student1's grade via UpdateSubmission
+	fetchedSubmission.SetGradeByUser(student1.ID, qf.Submission_APPROVED)
+	if err := db.UpdateSubmission(fetchedSubmission); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name         string
+		groupUsers   []*qf.User
+		wantUserIDs  []uint64
+		wantStatuses map[uint64]qf.Submission_Status
+	}{
+		{
+			name:        "add student3",
+			groupUsers:  []*qf.User{student1, student2, student3},
+			wantUserIDs: []uint64{student1.ID, student2.ID, student3.ID},
+			wantStatuses: map[uint64]qf.Submission_Status{
+				student1.ID: qf.Submission_APPROVED,
+				student2.ID: qf.Submission_NONE,
+				student3.ID: qf.Submission_NONE,
+			},
+		},
+		{
+			name:        "remove student2",
+			groupUsers:  []*qf.User{student1, student3},
+			wantUserIDs: []uint64{student1.ID, student3.ID},
+			wantStatuses: map[uint64]qf.Submission_Status{
+				student1.ID: qf.Submission_APPROVED,
+				student3.ID: qf.Submission_NONE,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			group.Users = test.groupUsers
+			if err := db.UpdateGroup(group); err != nil {
+				t.Fatal(err)
+			}
+
+			gotSubmission, err := db.GetSubmission(&qf.Submission{ID: submission.ID})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(gotSubmission.Grades) != len(test.wantUserIDs) {
+				t.Errorf("expected %d grades, got %d", len(test.wantUserIDs), len(gotSubmission.Grades))
+			}
+
+			gradesByUser := make(map[uint64]*qf.Grade)
+			for _, grade := range gotSubmission.Grades {
+				gradesByUser[grade.UserID] = grade
+			}
+
+			for _, userID := range test.wantUserIDs {
+				if _, found := gradesByUser[userID]; !found {
+					t.Errorf("missing grade for user %d", userID)
+				}
+			}
+
+			for userID, wantStatus := range test.wantStatuses {
+				if gotStatus := gotSubmission.GetStatusByUser(userID); gotStatus != wantStatus {
+					t.Errorf("user %d: expected status %v, got %v", userID, wantStatus, gotStatus)
+				}
+			}
+		})
 	}
 }

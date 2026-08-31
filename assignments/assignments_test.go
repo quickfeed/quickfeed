@@ -16,7 +16,7 @@ import (
 
 func dockerClient(t *testing.T) (*ci.Docker, func()) {
 	t.Helper()
-	docker, err := ci.NewDockerCI(qtest.Logger(t))
+	docker, err := ci.NewDockerCI()
 	if err != nil {
 		t.Fatalf("Failed to set up docker client: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Fatal(err)
 	}
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
+	assignments, gotBuildContext, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,10 +52,10 @@ func TestFetchAssignments(t *testing.T) {
 	}
 
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
-	course.UpdateDockerfile(dockerfile)
+	course.UpdateDockerfile(gotBuildContext[ci.Dockerfile])
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
-	if err := buildDockerImage(context.Background(), qtest.Logger(t), docker, course); err != nil {
+	if err := buildDockerImage(context.Background(), docker, course, gotBuildContext); err != nil {
 		t.Fatal(err)
 	}
 }

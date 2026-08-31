@@ -4,6 +4,9 @@ coverage:
       default:
         target: 30%
         threshold: 10%
+    patch:
+      default:
+        informational: true
 ignore:
   - "**/*.connect.go" # ignore generated protobuf files
   - "**/*.pb.go" # ignore generated protobuf files

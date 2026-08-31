@@ -1,12 +1,11 @@
-import React from "react"
-import { useAppState } from "../../overmind"
-import { Assignment, Submission } from "../../../proto/qf/types_pb"
-import ProgressBar, { Progress } from "../ProgressBar"
-import NavBarLink, { NavLink } from "./NavBarLink"
-import { useNavigate, useLocation } from "react-router"
-import { Status } from "../../consts"
+import { useLocation, useNavigate } from "react-router"
+import type { Assignment, Submission } from "../../../proto/qf/types_pb"
 import { getStatusByUser, isApproved, isGroupSubmission, isValidSubmissionForAssignment } from "../../Helpers"
+import { useAppState } from "../../overmind"
+import ProgressIndicator from "../ProgressIndicator"
 import SubmissionTypeIcon from "../student/SubmissionTypeIcon"
+import type { NavLink } from "./NavBarLink"
+import NavBarLink from "./NavBarLink"
 
 
 const NavBarLabs = () => {
@@ -14,70 +13,73 @@ const NavBarLabs = () => {
     const navigate = useNavigate()
     const location = useLocation()
 
-    if (!state.assignments[state.activeCourse.toString()]) {
-        return null
-    }
+    const assignments = state.assignments[state.activeCourse.toString()] ?? []
 
     const submissionIcon = (submission: Submission) => {
         return (
             <>
                 <SubmissionTypeIcon solo={!isGroupSubmission(submission)} />
-                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fa fa-check ml-2" />}
+                {isApproved(getStatusByUser(submission, state.self.ID)) && <i className="fas fa-check ml-2" />}
             </>
         )
     }
 
-    const highlightSubmission = (submission: Submission, assignment: Assignment) => {
+    const isHighlighted = (submission: Submission, assignment: Assignment): boolean => {
         // The submission should be highlighted if:
         // - the assignment ID is equal to the selected assignment ID
         //  AND ONE OF THE FOLLOWING:
         // - the location contains `group-lab` and the submission is a group submission
         // - the location contains `lab` and the submission is not a group submission
-        // Otherwise, return an empty string
-        // This way we can highlight the correct lab link in the navbar
-        let linkClass = ""
         if (BigInt(state.selectedAssignmentID) === assignment.ID) {
             const groupPath = location.pathname.includes("group-lab")
             if (groupPath && isGroupSubmission(submission)) {
-                linkClass = Status.Active
+                return true
             } else if (!groupPath && !isGroupSubmission(submission)) {
-                linkClass = Status.Active
+                return true
             }
         }
-        return linkClass
+        return false
     }
 
-    const labLinks = state.assignments[state.activeCourse.toString()]?.map(assignment => {
-        const submissions = state.submissions.ForAssignment(assignment)
-        if (!submissions) {
-            return null
-        }
-        return submissions.map(submission => {
-            if (!isValidSubmissionForAssignment(submission, assignment)) {
-                return null
-            }
-            const link: NavLink = {
-                text: assignment.name,
-                to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}`,
-                jsx: submissionIcon(submission)
-            }
-            return (
-                <div
-                    className={highlightSubmission(submission, assignment)}
-                    style={{ position: "relative" }}
-                    key={submission.ID.toString()}
-                    onClick={() => { navigate(link.to) }}
-                    role="button"
-                    aria-hidden="true"
-                >
-                    <NavBarLink link={link} />
-                    <ProgressBar courseID={state.activeCourse.toString()} submission={submission} type={Progress.NAV} />
-                </div>
-            )
-        })
-    })
-
-    return <>{labLinks}</>
+    return (
+        <>
+            <div className={location.pathname.endsWith("/submission-guide") ? "bg-base-100" : ""}>
+                <NavBarLink link={{
+                    text: "Submission Guide",
+                    to: `/course/${state.activeCourse}/submission-guide`
+                }} />
+            </div>
+            {assignments.map(assignment => {
+                const submissions = state.submissions.ForAssignment(assignment)
+                if (!submissions) {
+                    return null
+                }
+                return submissions.map(submission => {
+                    if (!isValidSubmissionForAssignment(submission, assignment)) {
+                        return null
+                    }
+                    const link: NavLink = {
+                        text: assignment.name,
+                        to: `/course/${state.activeCourse}/${isGroupSubmission(submission) ? "group-lab" : "lab"}/${assignment.ID}`,
+                        jsx: submissionIcon(submission)
+                    }
+                    const highlighted = isHighlighted(submission, assignment)
+                    return (
+                        <div
+                            className={`relative ${highlighted ? "bg-base-100" : ""}`}
+                            key={submission.ID.toString()}
+                            onClick={() => { navigate(link.to) }}
+                            role="button"
+                            aria-hidden="true"
+                        >
+                            <NavBarLink link={link} />
+                            <ProgressIndicator courseID={state.activeCourse.toString()} submission={submission} />
+                        </div>
+                    )
+                })
+            })}
+        </>
+    )
 }
 
 export default NavBarLabs

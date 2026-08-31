@@ -17,6 +17,7 @@ type UpdateEnrollmentOptions struct {
 	Organization string
 	User         string
 	Status       qf.Enrollment_UserStatus
+	AccessToken  string // User's access token for accepting invitations
 }
 
 func (opt UpdateEnrollmentOptions) valid() bool {
@@ -60,9 +61,10 @@ func (opt RepositoryOptions) valid() bool {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Owner   string
-	Repo    string
-	Private bool
+	Owner    string
+	Repo     string
+	Private  bool
+	AutoInit bool
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
@@ -120,4 +122,16 @@ type RequestReviewersOptions struct {
 
 func (opt RequestReviewersOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Number > 0 && len(opt.Reviewers) != 0
+}
+
+// SyncForkOptions contains information for syncing a forked repository with its upstream.
+type SyncForkOptions struct {
+	Organization string
+	Repository   string
+	Branch       string
+	MaxRetries   int
+}
+
+func (opt SyncForkOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" && opt.Branch != "" && opt.MaxRetries > 0
 }

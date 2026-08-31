@@ -3,16 +3,19 @@ package web
 import (
 	"context"
 	"errors"
-
-	"go.uber.org/zap"
+	"log/slog"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/courselog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
 
@@ -21,85 +24,87 @@ var scmConnectErr = connect.NewError(connect.CodeNotFound, errors.New("unable to
 // QuickFeedService holds references to the database and
 // other shared data structures.
 type QuickFeedService struct {
-	logger *zap.SugaredLogger
-	db     database.Database
-	scmMgr *scm.Manager
-	bh     BaseHookOptions
-	runner ci.Runner
+	logger     *slog.Logger
+	db         database.Database
+	scmMgr     *scm.Manager
+	runner     ci.Runner
+	tm         *auth.TokenManager
+	courseLogs *courselog.Store
 	qfconnect.UnimplementedQuickFeedServiceHandler
 	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *slog.Logger, db database.Database, mgr *scm.Manager, runner ci.Runner, tm *auth.TokenManager, courseLogs *courselog.Store) *QuickFeedService {
 	return &QuickFeedService{
-		logger:  logger.Sugar(),
-		db:      db,
-		scmMgr:  mgr,
-		bh:      bh,
-		runner:  runner,
-		streams: stream.NewStreamServices(),
+		logger:     logger,
+		db:         db,
+		scmMgr:     mgr,
+		runner:     runner,
+		tm:         tm,
+		courseLogs: courseLogs,
+		streams:    stream.NewStreamServices(),
 	}
 }
 
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
-func (s *QuickFeedService) GetUser(ctx context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.User], error) {
+func (s *QuickFeedService) GetUser(ctx context.Context, _ *qf.Void) (*qf.User, error) {
 	userInfo, err := s.db.GetUserWithEnrollments(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetUser(%d) failed: %v", userID(ctx), err)
+		qlog.FromContext(ctx).Error("failed to get user with enrollments", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
-	return connect.NewResponse(userInfo), nil
+	return userInfo, nil
 }
 
 // GetUsers returns a list of all users.
 // Frontend note: This method is called from AdminPage.
-func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.Users], error) {
+func (s *QuickFeedService) GetUsers(ctx context.Context, _ *qf.Void) (*qf.Users, error) {
 	users, err := s.db.GetUsers()
 	if err != nil {
-		s.logger.Errorf("GetUsers failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get users", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get users"))
 	}
-	return connect.NewResponse(&qf.Users{
+	return &qf.Users{
 		Users: users,
-	}), nil
+	}, nil
 }
 
 // UpdateUser updates the current users's information and returns the updated user.
 // This function can also promote a user to admin or demote a user.
-func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Void, error) {
 	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateUser(userID=%d) failed: %v", userID(ctx), err)
+		qlog.FromContext(ctx).Error("failed to get current user", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
-	if err = s.editUserProfile(usr, in.Msg); err != nil {
-		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
+	if err = s.editUserProfile(ctx, usr, in); err != nil {
+		qlog.FromContext(ctx).Error("failed to update user profile", label.TargetUserID, in.GetID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update user"))
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // UpdateCourse changes the course information details.
-func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.GetScmOrganizationName())
+func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf.Void, error) {
+	ctx, logger := qlog.WithLogger(ctx, label.Organization, in.GetScmOrganizationName())
+	scmClient, err := s.getSCM(ctx, in.GetScmOrganizationName())
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.GetScmOrganizationName(), err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
 	// ensure the course exists
-	_, err = s.db.GetCourse(in.Msg.GetID())
+	_, err = s.db.GetCourse(in.GetID())
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: course %d not found: %v", in.Msg.GetID(), err)
+		logger.Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get course"))
 	}
 	// ensure the organization exists
-	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{ID: in.Msg.GetScmOrganizationID()})
+	org, err := scmClient.GetOrganization(ctx, &scm.OrganizationOptions{ID: in.GetScmOrganizationID()})
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: to get organization %s: %v", in.Msg.GetScmOrganizationName(), in.Msg.GetID(), err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
+		logger.Error("failed to get SCM organization", label.Error, err)
+		if ctxErr := logCtxErr(ctx); ctxErr != nil {
 			return nil, ctxErr
 		}
 		if scmErr := userSCMError(err); scmErr != nil {
@@ -107,93 +112,95 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 		}
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get organization"))
 	}
-	in.Msg.ScmOrganizationName = org.GetScmOrganizationName()
+	in.ScmOrganizationName = org.GetScmOrganizationName()
 
-	if err = s.db.UpdateCourse(in.Msg); err != nil {
-		s.logger.Errorf("UpdateCourse failed: %v", err)
+	if err = s.db.UpdateCourse(in); err != nil {
+		logger.Error("failed to update course", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course"))
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // GetCourse returns course information for the given course.
-func (s *QuickFeedService) GetCourse(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
-	status := courseStatus(ctx, in.Msg.GetCourseID())
-	course, err := s.db.GetCourseByStatus(in.Msg.GetCourseID(), status)
+func (s *QuickFeedService) GetCourse(ctx context.Context, in *qf.CourseRequest) (*qf.Course, error) {
+	status := courseStatus(ctx, in.GetCourseID())
+	course, err := s.db.GetCourseByStatus(in.GetCourseID(), status)
 	if err != nil {
-		s.logger.Errorf("GetCourse failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get course by enrollment status", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	if isTeacher(ctx, in.Msg.GetCourseID()) {
-		course.Enrollments, err = s.getEnrollmentsWithActivity(in.Msg.GetCourseID())
+	if isTeacher(ctx, in.GetCourseID()) {
+		course.Enrollments, err = s.getEnrollmentsWithActivity(in.GetCourseID())
 		if err != nil {
-			s.logger.Errorf("GetCourse failed: %v", err)
+			qlog.FromContext(ctx).Error("failed to get course enrollments with activity", label.Error, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get course enrollments"))
 		}
 	}
 
-	return connect.NewResponse(course), nil
+	return course, nil
 }
 
 // GetCourses returns a list of all courses.
-func (s *QuickFeedService) GetCourses(_ context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error) {
+func (s *QuickFeedService) GetCourses(ctx context.Context, _ *qf.Void) (*qf.Courses, error) {
 	courses, err := s.db.GetCourses()
 	if err != nil {
-		s.logger.Errorf("GetCourses failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get courses", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no courses found"))
 	}
-	return connect.NewResponse(&qf.Courses{
+	return &qf.Courses{
 		Courses: courses,
-	}), nil
+	}, nil
 }
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
-func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	enrollment, err := s.db.GetEnrollmentByCourseAndUser(in.Msg.GetCourseID(), userID(ctx))
+func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *qf.Enrollment) (*qf.Void, error) {
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(in.GetCourseID(), userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateCourseVisibility failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get enrollment", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollment"))
 	}
 
-	enrollment.State = in.Msg.GetState()
+	enrollment.State = in.GetState()
 	if err := s.db.UpdateEnrollment(enrollment); err != nil {
-		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to update enrollment visibility", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course visibility"))
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
-func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	if err := s.db.CreateEnrollment(in.Msg); err != nil {
-		s.logger.Errorf("CreateEnrollment failed: %v", err)
+func (s *QuickFeedService) CreateEnrollment(ctx context.Context, in *qf.Enrollment) (*qf.Void, error) {
+	if err := s.db.CreateEnrollment(in); err != nil {
+		qlog.FromContext(ctx).Error("failed to create enrollment", label.Error, err)
+		if errors.Is(err, database.ErrIncompleteProfile) {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create enrollment"))
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
-func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollments) (*qf.Void, error) {
 	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments(userID=%d) failed: %v", userID(ctx), err)
+		qlog.FromContext(ctx).Error("failed to get current user", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
-	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
+	scmClient, err := s.getSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
+		qlog.FromContext(ctx).Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	for _, enrollment := range in.Msg.GetEnrollments() {
+	for _, enrollment := range in.GetEnrollments() {
 		if s.isCourseCreator(enrollment.GetCourseID(), enrollment.GetUserID()) {
-			s.logger.Errorf("UpdateEnrollments failed: user %s attempted to demote course creator", usr.GetName())
+			qlog.FromContext(ctx).Error("course creator demotion rejected", label.User, usr.GetLogin())
 			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("course creator cannot be demoted"))
 		}
 		if err = s.updateEnrollment(ctx, scmClient, usr.GetLogin(), enrollment); err != nil {
-			s.logger.Errorf("UpdateEnrollments failed: %v", err)
-			if ctxErr := ctxErr(ctx); ctxErr != nil {
-				s.logger.Error(ctxErr)
+			qlog.FromContext(ctx).Error("failed to update enrollment", label.Error, err)
+			if ctxErr := logCtxErr(ctx); ctxErr != nil {
 				return nil, ctxErr
 			}
 			if scmErr := userSCMError(err); scmErr != nil {
@@ -202,69 +209,69 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update enrollments"))
 		}
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // GetEnrollments returns all enrollments for the given course ID or user ID and enrollment status.
-func (s *QuickFeedService) GetEnrollments(ctx context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+func (s *QuickFeedService) GetEnrollments(ctx context.Context, in *qf.EnrollmentRequest) (*qf.Enrollments, error) {
 	var enrollments []*qf.Enrollment
 	var err error
-	statuses := in.Msg.GetStatuses()
-	switch in.Msg.GetFetchMode().(type) {
+	statuses := in.GetStatuses()
+	switch in.GetFetchMode().(type) {
 	case *qf.EnrollmentRequest_UserID:
-		userID := in.Msg.GetUserID()
+		userID := in.GetUserID()
 		enrollments, err = s.db.GetEnrollmentsByUser(userID, statuses...)
 		if err != nil {
-			s.logger.Errorf("GetEnrollments failed: user %d: %v", userID, err)
+			qlog.FromContext(ctx).Error("failed to get enrollments for user", label.TargetUserID, userID, label.Error, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
 		}
 	case *qf.EnrollmentRequest_CourseID:
-		courseID := in.Msg.GetCourseID()
+		courseID := in.GetCourseID()
 		if isTeacher(ctx, courseID) {
 			enrollments, err = s.getEnrollmentsWithActivity(courseID)
 		} else {
 			enrollments, err = s.db.GetEnrollmentsByCourse(courseID, statuses...)
 		}
 		if err != nil {
-			s.logger.Errorf("GetEnrollments failed: course %d: %v", courseID, err)
+			qlog.FromContext(ctx).Error("failed to get enrollments for course", label.Error, err)
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get enrollments for course"))
 		}
 	default:
-		s.logger.Errorf("GetEnrollments failed: unknown message type: %v", in.Msg.GetFetchMode())
+		qlog.FromContext(ctx).Error("unknown enrollment fetch mode", "fetch_mode", in.GetFetchMode())
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get enrollments"))
 	}
-	return connect.NewResponse(&qf.Enrollments{
+	return &qf.Enrollments{
 		Enrollments: enrollments,
-	}), nil
+	}, nil
 }
 
 // GetGroup returns information about the given group ID, or the given user's course group if group ID is 0.
-func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Group], error) {
+func (s *QuickFeedService) GetGroup(ctx context.Context, in *qf.GroupRequest) (*qf.Group, error) {
 	var (
 		group   *qf.Group
 		err     error
-		groupID = in.Msg.GetGroupID()
+		groupID = in.GetGroupID()
 	)
 	if groupID > 0 {
 		group, err = s.db.GetGroup(groupID)
 	} else {
-		group, err = s.getGroupByUserAndCourse(in.Msg)
+		group, err = s.getGroupByUserAndCourse(in)
 	}
 	if err != nil {
-		s.logger.Errorf("GetGroup failed: group %d: %v", in.Msg, err)
+		qlog.FromContext(ctx).Error("failed to get group", label.GroupID, groupID, label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group"))
 	}
-	return connect.NewResponse(group), nil
+	return group, nil
 }
 
 // GetGroupsByCourse returns groups created for the given course.
-func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error) {
-	groups, err := s.db.GetGroupsByCourse(in.Msg.GetCourseID())
+func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *qf.CourseRequest) (*qf.Groups, error) {
+	groups, err := s.db.GetGroupsByCourse(in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("GetGroups failed: course %d: %v", in.Msg.GetCourseID(), err)
+		qlog.FromContext(ctx).Error("failed to get groups for course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get groups"))
 	}
-	return connect.NewResponse(&qf.Groups{Groups: groups}), nil
+	return &qf.Groups{Groups: groups}, nil
 }
 
 // CreateGroup creates a new group for the given course and users.
@@ -272,42 +279,44 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
-func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
-	group := in.Msg
+func (s *QuickFeedService) CreateGroup(ctx context.Context, group *qf.Group) (*qf.Group, error) {
+	logger := qlog.FromContext(ctx).With(label.Group, group.GetName())
 	if err := s.checkGroupName(group.GetCourseID(), group.GetName()); err != nil {
-		s.logger.Errorf("CreateGroup: failed to validate group %s: %v", group.GetName(), err)
+		logger.Error("failed to validate group name", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(group); err != nil {
-		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %v", group.GetName(), err)
+		logger.Error("failed to get group members", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
 	// create new group and update groupID in enrollment table
 	if err := s.db.CreateGroup(group); err != nil {
-		s.logger.Errorf("CreateGroup failed: %v", err)
+		logger.Error("failed to create group", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
-	group, err := s.db.GetGroup(group.GetID())
+	// CreateGroup assigns the group ID; keep it since GetGroup returns nil on failure.
+	groupID := group.GetID()
+	group, err := s.db.GetGroup(groupID)
 	if err != nil {
-		s.logger.Errorf("CreateGroup failed to get group %d: %v", group.GetID(), err)
+		logger.Error("failed to reload created group", label.GroupID, groupID, label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
-	return connect.NewResponse(group), nil
+	return group, nil
 }
 
 // UpdateGroup updates group information, and returns the updated group.
-func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
-	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
+func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *qf.Group) (*qf.Group, error) {
+	ctx, logger := qlog.WithLogger(ctx, label.Group, in.GetName(), label.GroupID, in.GetID())
+	scmClient, err := s.getSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	err = s.internalUpdateGroup(ctx, scmClient, in.Msg)
+	err = s.internalUpdateGroup(ctx, scmClient, in)
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
+		logger.Error("failed to update group", label.Error, err)
+		if ctxErr := logCtxErr(ctx); ctxErr != nil {
 			return nil, ctxErr
 		}
 		if scmErr := userSCMError(err); scmErr != nil {
@@ -315,25 +324,25 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update group"))
 	}
-	group, err := s.db.GetGroup(in.Msg.GetID())
+	group, err := s.db.GetGroup(in.GetID())
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed to get group: %d: %v", in.Msg.GetID(), err)
+		logger.Error("failed to reload updated group", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get group"))
 	}
-	return connect.NewResponse(group), nil
+	return group, nil
 }
 
 // DeleteGroup removes group record from the database.
-func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[qf.GroupRequest]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
+func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *qf.GroupRequest) (*qf.Void, error) {
+	ctx, logger := qlog.WithLogger(ctx, label.GroupID, in.GetGroupID())
+	scmClient, err := s.getSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.Msg.GetGroupID(), in.Msg.GetCourseID(), err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	if err = s.internalDeleteGroup(ctx, scmClient, in.Msg); err != nil {
-		s.logger.Errorf("DeleteGroup failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
+	if err = s.internalDeleteGroup(ctx, scmClient, in); err != nil {
+		logger.Error("failed to delete group", label.Error, err)
+		if ctxErr := logCtxErr(ctx); ctxErr != nil {
 			return nil, ctxErr
 		}
 		if scmErr := userSCMError(err); scmErr != nil {
@@ -341,39 +350,39 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 		}
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete group"))
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // GetSubmission returns a fully populated submission matching the given submission ID if it exists for the given course ID.
 // Used in the frontend to fetch a full submission for a given submission ID and course ID.
-func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submission], error) {
-	submission, err := s.db.GetLastSubmission(in.Msg.GetCourseID(), &qf.Submission{ID: in.Msg.GetSubmissionID()})
+func (s *QuickFeedService) GetSubmission(ctx context.Context, in *qf.SubmissionRequest) (*qf.Submission, error) {
+	submission, err := s.db.GetLastSubmission(in.GetCourseID(), &qf.Submission{ID: in.GetSubmissionID()})
 	if err != nil {
-		s.logger.Errorf("GetSubmission failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get submission", label.SubmissionID, in.GetSubmissionID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get submission"))
 	}
-	return connect.NewResponse(submission), nil
+	return submission, nil
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
-func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error) {
-	s.logger.Debugf("GetSubmissions: %v", in.Msg)
+func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.SubmissionRequest) (*qf.Submissions, error) {
+	qlog.FromContext(ctx).Debug("fetching submissions", label.TargetUserID, in.GetUserID(), label.GroupID, in.GetGroupID())
 	query := &qf.Submission{
-		UserID:  in.Msg.GetUserID(),
-		GroupID: in.Msg.GetGroupID(),
+		UserID:  in.GetUserID(),
+		GroupID: in.GetGroupID(),
 	}
-	subs, err := s.db.GetLastSubmissions(in.Msg.GetCourseID(), query)
+	subs, err := s.db.GetLastSubmissions(in.GetCourseID(), query)
 	if err != nil {
-		s.logger.Errorf("GetSubmissions failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get last submissions", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
 	}
 	submissions := &qf.Submissions{Submissions: subs}
 	id := userID(ctx)
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
-	if !s.isTeacher(id, in.Msg.GetCourseID()) {
+	if !s.isTeacher(ctx, id, in.GetCourseID()) {
 		submissions.Clean(id)
 	}
-	return connect.NewResponse(submissions), nil
+	return submissions, nil
 }
 
 // GetSubmissionsByCourse returns a map of submissions for the given course ID.
@@ -381,217 +390,154 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 // SubmissionRequest_GROUP returns a map keyed by group ID.
 // SubmissionRequest_ALL and SubmissionRequest_USER return a map keyed by enrollment ID.
 // The map values are lists of all submissions for the given group or enrollment.
-func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.CourseSubmissions], error) {
-	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
-	courseLinks, err := s.db.GetCourseSubmissions(in.Msg)
+func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.SubmissionRequest) (*qf.CourseSubmissions, error) {
+	qlog.FromContext(ctx).Debug("fetching course submissions")
+	courseLinks, err := s.db.GetCourseSubmissions(in)
 	if err != nil {
-		s.logger.Errorf("GetSubmissionsByCourse failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get course submissions", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
 	}
-	return connect.NewResponse(courseLinks), nil
+	return courseLinks, nil
 }
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
-func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.Msg.GetSubmissionID()})
+func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.Grade) (*qf.Void, error) {
+	logger := qlog.FromContext(ctx).With(label.SubmissionID, in.GetSubmissionID())
+	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.GetSubmissionID()})
 	if err != nil {
-		s.logger.Errorf("UpdateSubmission failed to get submission: %v", err)
+		logger.Error("failed to get submission", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
-	submission.SetGradesAndRelease(in.Msg)
+	submission.SetGrade(in)
 	err = s.db.UpdateSubmission(submission)
 	if err != nil {
-		s.logger.Errorf("UpdateSubmission failed: %v", err)
+		logger.Error("failed to update submission grade", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // RebuildSubmissions re-runs the tests for the given assignment and course.
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if no submission ID is specified.
-func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
-	if in.Msg.GetSubmissionID() > 0 {
+func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.RebuildRequest) (*qf.Void, error) {
+	if in.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
-		if err := s.internalRebuildSubmission(in.Msg); err != nil {
-			s.logger.Errorf("RebuildSubmission failed: %v", err)
+		if err := s.internalRebuildSubmission(ctx, in); err != nil {
+			qlog.FromContext(ctx).Error("failed to rebuild submission", label.Error, err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submission"))
 		}
 	} else {
 		// Submission ID == 0 ==> rebuild all for given CourseID and AssignmentID
-		if err := s.internalRebuildAllSubmissions(in.Msg); err != nil {
-			s.logger.Errorf("RebuildSubmissions failed: %v", err)
+		if err := s.internalRebuildAllSubmissions(ctx, in); err != nil {
+			qlog.FromContext(ctx).Error("failed to rebuild all submissions for assignment", label.Error, err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions"))
 		}
 	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// CreateBenchmark adds a new grading benchmark for an assignment.
-func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.GradingBenchmark], error) {
-	benchmark := in.Msg
-	if err := s.db.CreateBenchmark(benchmark); err != nil {
-		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create benchmark"))
-	}
-	return connect.NewResponse(benchmark), nil
-}
-
-// UpdateBenchmark edits a grading benchmark for an assignment.
-func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateBenchmark(in.Msg); err != nil {
-		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update benchmark"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// DeleteBenchmark removes a grading benchmark.
-func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	if err := s.db.DeleteBenchmark(in.Msg); err != nil {
-		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete benchmark"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// CreateCriterion adds a new grading criterion for an assignment.
-func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	criterion := in.Msg
-	if err := s.db.CreateCriterion(criterion); err != nil {
-		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add criterion"))
-	}
-	return connect.NewResponse(criterion), nil
-}
-
-// UpdateCriterion edits a grading criterion for an assignment.
-func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	if err := s.db.UpdateCriterion(in.Msg); err != nil {
-		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update criterion"))
-	}
-	return &connect.Response[qf.Void]{}, nil
-}
-
-// DeleteCriterion removes a grading criterion for an assignment.
-func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	if err := s.db.DeleteCriterion(in.Msg); err != nil {
-		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete criterion"))
-	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // CreateReview adds a new submission review.
-func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review := in.Msg.GetReview()
+func (s *QuickFeedService) CreateReview(ctx context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
+	review := in.GetReview()
 	if err := s.db.CreateReview(review); err != nil {
-		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
+		qlog.FromContext(ctx).Error("failed to create review", label.SubmissionID, review.GetSubmissionID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
 	}
-	return connect.NewResponse(review), nil
+	return review, nil
 }
 
 // UpdateReview updates a submission review.
-func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
-	review := in.Msg.GetReview()
+func (s *QuickFeedService) UpdateReview(ctx context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
+	review := in.GetReview()
 	if err := s.db.UpdateReview(review); err != nil {
-		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
+		qlog.FromContext(ctx).Error("failed to update review", label.SubmissionID, review.GetSubmissionID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
 	}
-	return connect.NewResponse(review), nil
+	return review, nil
 }
 
 // CreateAssignmentFeedback creates a new assignment feedback.
-func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, in *connect.Request[qf.AssignmentFeedback]) (*connect.Response[qf.Void], error) {
-	feedback := in.Msg
+func (s *QuickFeedService) CreateAssignmentFeedback(ctx context.Context, feedback *qf.AssignmentFeedback) (*qf.Void, error) {
 	if err := s.db.CreateAssignmentFeedback(feedback, userID(ctx)); err != nil {
-		s.logger.Errorf("CreateAssignmentFeedback failed for feedback %+v: %v", in, err)
+		qlog.FromContext(ctx).Error("failed to create assignment feedback", label.AssignmentID, feedback.GetAssignmentID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create assignment feedback"))
 	}
-	return connect.NewResponse(&qf.Void{}), nil
+	return &qf.Void{}, nil
 }
 
 // GetAssignmentFeedback returns assignment feedback for the given request.
-func (s *QuickFeedService) GetAssignmentFeedback(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.AssignmentFeedbacks], error) {
-	feedback, err := s.db.GetAssignmentFeedback(in.Msg)
+func (s *QuickFeedService) GetAssignmentFeedback(ctx context.Context, in *qf.CourseRequest) (*qf.AssignmentFeedbacks, error) {
+	feedback, err := s.db.GetAssignmentFeedback(in)
 	if err != nil {
-		s.logger.Errorf("GetAssignmentFeedback failed for request %+v: %v", in, err)
+		qlog.FromContext(ctx).Error("failed to get assignment feedback", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
 	}
 	if len(feedback.GetFeedbacks()) == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("assignment feedback not found"))
 	}
-	return connect.NewResponse(feedback), nil
-}
-
-// UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
-// with the given score.
-func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Request[qf.UpdateSubmissionsRequest]) (*connect.Response[qf.Void], error) {
-	query := &qf.Submission{
-		AssignmentID: in.Msg.GetAssignmentID(),
-		Score:        in.Msg.GetScoreLimit(),
-		Released:     in.Msg.GetRelease(),
-	}
-	err := s.db.UpdateSubmissions(query, true)
-	if err != nil {
-		s.logger.Errorf("UpdateSubmissions failed for request %+v: %v", in, err)
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
-	}
-	return &connect.Response[qf.Void]{}, nil
+	return feedback, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.
-func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error) {
-	assignments, err := s.db.GetAssignmentsByCourse(in.Msg.GetCourseID())
+func (s *QuickFeedService) GetAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.Assignments, error) {
+	assignments, err := s.db.GetAssignmentsByCourse(in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("GetAssignments failed: %v", err)
+		qlog.FromContext(ctx).Error("failed to get assignments for course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no assignments found for course"))
 	}
-	return connect.NewResponse(&qf.Assignments{Assignments: assignments}), nil
+	return &qf.Assignments{Assignments: assignments}, nil
 }
 
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
-func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID())
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.Void, error) {
+	course, err := s.db.GetCourse(in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
+		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
+	// Scope the remainder of the method to the course; UpdateFromTestsRepo and
+	// the clone below add only their own repository scope on top of this.
+	// The course ID comes from the request logger; see enrichRequestLogger.
+	ctx, logger := qlog.WithCourseLog(ctx, course)
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetScmOrganizationName(), err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.runner, s.db, scmClient, course)
+	// Scope the logger with the tests repository separately, so that it does not
+	// carry over to the assignments repository scope below.
+	testsCtx := qlog.With(ctx, label.Repository, qf.TestsRepo, label.RepositoryType, qf.Repository_TESTS.String())
+	assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
 
+	// Scope the remaining log calls with the assignments repository
+	ctx, logger = qlog.WithLogger(ctx, label.Repository, qf.AssignmentsRepo, label.RepositoryType, qf.Repository_ASSIGNMENTS.String())
 	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetScmOrganizationName(),
 		Repository:   qf.AssignmentsRepo,
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: to clone '%s' repository: %v", qf.AssignmentsRepo, err)
+		logger.Error("failed to clone assignments repository", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to clone assignments repository"))
 	}
-	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+	logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
 
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
-func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Repositories], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID())
+func (s *QuickFeedService) GetRepositories(ctx context.Context, in *qf.CourseRequest) (*qf.Repositories, error) {
+	course, err := s.db.GetCourse(in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
+		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	usrID := userID(ctx)
 	enrol, err := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
 	if err != nil {
-		s.logger.Error("GetRepositories failed: enrollment for user %d and course %d not found: v", usrID, course.GetID(), err)
+		qlog.FromContext(ctx).Error("failed to get enrollment", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("enrollment not found"))
 	}
 
@@ -608,51 +554,51 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		// for repo == nil: will result in an empty URL string, which will be ignored by the frontend
 		urls[uint32(repoType)] = repo.GetHTMLURL()
 	}
-	return connect.NewResponse(&qf.Repositories{URLs: urls}), nil
+	return &qf.Repositories{URLs: urls}, nil
 }
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted.
-func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[qf.RepositoryRequest]) (*connect.Response[qf.Void], error) {
-	course, err := s.db.GetCourse(in.Msg.GetCourseID())
+func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *qf.RepositoryRequest) (*qf.Void, error) {
+	ctx, logger := qlog.WithLogger(ctx, label.TargetUserID, in.GetUserID(), label.GroupID, in.GetGroupID())
+	course, err := s.db.GetCourse(in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("IsEmptyRepo failed: course %d not found: %v", in.Msg.GetCourseID(), err)
+		logger.Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	repos, err := s.db.GetRepositories(&qf.Repository{
 		ScmOrganizationID: course.GetScmOrganizationID(),
-		UserID:            in.Msg.GetUserID(),
-		GroupID:           in.Msg.GetGroupID(),
+		UserID:            in.GetUserID(),
+		GroupID:           in.GetGroupID(),
 	})
 	if err != nil {
-		s.logger.Errorf("IsEmptyRepo failed: could not get repositories for course %d, user %d, group %d: %v", in.Msg.GetCourseID(), in.Msg.GetUserID(), in.Msg.GetGroupID(), err)
+		logger.Error("failed to get repositories", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("repositories not found"))
 	}
 	if len(repos) < 1 {
-		s.logger.Debugf("IsEmptyRepo: no repositories found for course %d, user %d, group %d", in.Msg.GetCourseID(), in.Msg.GetUserID(), in.Msg.GetGroupID())
+		logger.Debug("no repositories found; nothing to delete")
 		// No repository found, nothing to delete
-		return &connect.Response[qf.Void]{}, nil
+		return &qf.Void{}, nil
 	}
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {
-		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
+		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
 
-	if err := isEmpty(ctx, scmClient, repos); err != nil {
-		s.logger.Errorf("IsEmptyRepo failed: %v", err)
-		if ctxErr := ctxErr(ctx); ctxErr != nil {
-			s.logger.Error(ctxErr)
+	if err := CommitsAhead(ctx, scmClient, repos); err != nil {
+		logger.Error("failed to verify that repositories are empty", label.Error, err)
+		if ctxErr := logCtxErr(ctx); ctxErr != nil {
 			return nil, ctxErr
 		}
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository is not empty"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 	}
-	return &connect.Response[qf.Void]{}, nil
+	return &qf.Void{}, nil
 }
 
 // SubmissionStream adds the the created stream to the stream service.
 // The stream may be used to send the submission results to the frontend.
 // The stream is closed when the client disconnects.
-func (s *QuickFeedService) SubmissionStream(ctx context.Context, _ *connect.Request[qf.Void], st *connect.ServerStream[qf.Submission]) error {
+func (s *QuickFeedService) SubmissionStream(ctx context.Context, _ *qf.Void, st *connect.ServerStream[qf.Submission]) error {
 	stream := stream.NewStream(ctx, st)
 	s.streams.Submission.Add(stream, userID(ctx))
 	return stream.Run()

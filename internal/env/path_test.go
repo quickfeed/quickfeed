@@ -4,8 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/go-git/go-git/v5"
 )
 
 func TestRoot(t *testing.T) {
@@ -71,30 +69,24 @@ func TestSetRootWorkingDirOutside(t *testing.T) {
 	setRoot()
 }
 
-func TestSetRootWrongGitRepo(t *testing.T) {
+func TestSetRootWrongModulePath(t *testing.T) {
 	// reset quickfeedRoot to empty string; to circumvent the init() function
 	quickfeedRoot = ""
 
-	// set working directory to be inside a git repository that is not the quickfeed repository
+	// set working directory to be inside a module that is not the quickfeed module
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	gitRepo := t.TempDir()
-	err = os.Chdir(gitRepo)
+	otherModule := t.TempDir()
+	err = os.Chdir(otherModule)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() { _ = os.Chdir(wd) }()
 
-	// create a git repository
-	_, err = git.PlainInit(gitRepo, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// create go.mod file with a different module name than the quickfeed module
-	modFile := filepath.Join(gitRepo, "go.mod")
+	modFile := filepath.Join(otherModule, "go.mod")
 	f, err := os.Create(modFile)
 	if err != nil {
 		t.Fatal(err)

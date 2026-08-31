@@ -145,22 +145,22 @@ func TestConversion(t *testing.T) {
 	config := map[string]github.AppConfig{
 		"1": {},
 		"2": {
-			Name:          qtest.Ptr("test"),
-			ID:            qtest.Ptr(int64(1)),
-			ClientID:      qtest.Ptr("client"),
-			ClientSecret:  qtest.Ptr("secret"),
-			HTMLURL:       qtest.Ptr("https://example.com"),
-			PEM:           qtest.Ptr("secret"),
-			WebhookSecret: qtest.Ptr("webhook-secret"),
+			Name:          new("test"),
+			ID:            new(int64(1)),
+			ClientID:      new("client"),
+			ClientSecret:  new("secret"),
+			HTMLURL:       new("https://example.com"),
+			PEM:           new("secret"),
+			WebhookSecret: new("webhook-secret"),
 		},
 		"3": {
-			Name:          qtest.Ptr("test"),
-			ID:            qtest.Ptr(int64(123)),
-			ClientID:      qtest.Ptr("some-id"),
-			ClientSecret:  qtest.Ptr("some-other-secret"),
-			HTMLURL:       qtest.Ptr("https://another-example.com"),
-			PEM:           qtest.Ptr("super-secret"),
-			WebhookSecret: qtest.Ptr("some-webhook-secret"),
+			Name:          new("test"),
+			ID:            new(int64(123)),
+			ClientID:      new("some-id"),
+			ClientSecret:  new("some-other-secret"),
+			HTMLURL:       new("https://another-example.com"),
+			PEM:           new("super-secret"),
+			WebhookSecret: new("some-webhook-secret"),
 		},
 		// TODO: Test with webhook config (manifest with non-private address)
 	}
@@ -248,7 +248,7 @@ func TestBuildUI(t *testing.T) {
 	m := Manifest{
 		build: func() error { return ui.Build(t.TempDir(), true) },
 	}
-	if err := m.buildUI(); err != nil {
+	if err := m.build(); err != nil {
 		t.Errorf("buildUI() failed with error: %v", err)
 	}
 }

@@ -3,20 +3,23 @@ package scm
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 )
 
 // SCM is the source code management interface for managing courses and users.
 type SCM interface {
+	// GetUserByID fetches a user by their SCM user ID.
+	GetUserByID(context.Context, uint64) (*qf.User, error)
+
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, string) ([]*Repository, error)
-	// Returns true if there are no commits in the given repository
-	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
+	// Returns the number of commits the repository is ahead of assignments.
+	CommitsAhead(context.Context, *RepositoryOptions) (int, error)
 
 	// CreateCourse creates repositories for a new course.
 	CreateCourse(context.Context, *CourseOptions) ([]*Repository, error)
@@ -32,15 +35,13 @@ type SCM interface {
 	UpdateGroupMembers(context.Context, *GroupOptions) error
 	// DeleteGroup deletes group's repository.
 	DeleteGroup(context.Context, uint64) error
+	// SyncFork syncs a forked repository's branch with its upstream repository.
+	SyncFork(context.Context, *SyncForkOptions) error
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
 	// repository type, e.g., "assignments" or "tests".
 	Clone(context.Context, *CloneOptions) (string, error)
-
-	// AcceptInvitations accepts course invites on behalf of the user.
-	// A new refresh token for the user is returned, which may be used in subsequent requests.
-	AcceptInvitations(context.Context, *InvitationOptions) (string, error)
 
 	// CreateIssue creates an issue.
 	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
@@ -62,25 +63,33 @@ type SCM interface {
 	RequestReviewers(context.Context, *RequestReviewersOptions) error
 }
 
+// TokenManager manages the access token for the SCM.
+type TokenManager interface {
+	Token(context.Context) (string, error)
+}
+
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
+// The logger is only used by the mocked provider, which captures it for its lifetime.
+func NewSCMClient(logger *slog.Logger, token string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
-		return NewGithubSCMClient(logger, token), nil
+		return NewGithubUserClient(token), nil
 	case "fake":
 		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (SCM, error) {
+func newSCMAppClient(ctx context.Context, config *Config, organization string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
-		return newGithubAppClient(ctx, logger, config, organization)
+		return newGithubAppClient(ctx, config, organization)
 	case "fake":
-		return NewMockedGithubSCMClient(logger, WithMockOrgs()), nil
+		// The mocked client is cached for the SCM manager's lifetime, so it should not
+		// use the request-scoped logger from ctx; use the default process logger.
+		return NewMockedGithubSCMClient(slog.Default(), WithMockOrgs()), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }

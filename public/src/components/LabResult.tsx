@@ -1,8 +1,7 @@
-import React from "react"
 import { useAppState } from "../overmind"
+import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 import Lab from "./Lab"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
-import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 
 const LabResult = () => {
     const state = useAppState()

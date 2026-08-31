@@ -1,10 +1,10 @@
-import React, { useLayoutEffect } from "react"
-import { Navigate } from "react-router"
+import { useLayoutEffect } from "react"
+import { Enroll } from "../components/Enroll"
 import { isEnrolled, isTeacher } from "../Helpers"
+import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
-import { useCourseID } from "../hooks/useCourseID"
 
 
 /** The CoursePage component renders a Student or Teacher view
@@ -30,7 +30,7 @@ const CoursePage = () => {
         }
         return <StudentPage />
     } else {
-        return <Navigate to="/" replace />
+        return <Enroll courseID={courseID} />
     }
 }
 

@@ -126,7 +126,7 @@ Application errors can be classified into several groups and handled in differen
 - Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 
   **Examples**:
-  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub application on the organization.
+  - If a GitHub organization cannot be found, one of the possible issues causing this behavior is not having installed the GitHub App on the organization.
   As a result, the requested organization cannot be seen by QuickFeed.
   - If a GitHub repository cannot be found, they could have been manually deleted from GitHub.
   Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
@@ -150,11 +150,64 @@ In these cases the error is usually ephemeral in nature, and the action should b
 
 [Connect Error Codes](https://connectrpc.com/docs/protocol#error-codes) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
 
+### Error strings
+
+Phrase an error string as the operation that was attempted, not as an announcement that something failed.
+The error itself already conveys the failure, and prefixes such as `failed to`, `could not`, `unable to`, and `error` accumulate as the error is wrapped on its way up the stack.
+
+```go
+// Good:
+return fmt.Errorf("creating SCM client: %w", err)
+// Bad:
+return fmt.Errorf("failed to create SCM client: %w", err)
+```
+
+An unwound chain then reads as prose: `enrolling user: creating SCM client: 401 Unauthorized`.
+
+An error that wraps nothing names the condition instead, since the operation form would describe an attempt rather than what the error means: `no owners for %s`, not `failed to get owners for %s`.
+Preconditions keep the `cannot X without Y` form.
+Do not annotate an error when the annotation only says that something failed; return the error unchanged instead.
+
+Errors that reach the user are the exception, and keep an explicit failure wording, since the message is the only signal the user gets that something went wrong.
+This covers the `connect.NewError` messages returned by the `QuickFeed Service` handlers, and the user errors built with `scm.M`, both of which the frontend renders in an alert.
+
 ### Backend
 
-Errors are logged at the `QuickFeed Service` level.
-All other methods called from there (including database and SCM methods) will just wrap and return all error messages directly.
-Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
+The backend uses `log/slog` for structured logging.
+Use a stable, concise message and attach variable data as attributes instead of formatting data into the message.
+Do not prefix the message with the RPC or function name: the procedure is already recorded in `rpc_method` and the call site in `source`.
+Say what failed rather than that something failed, e.g., `failed to get course enrollments with activity`, not `GetCourse failed`.
+Use the canonical attribute names from `internal/qlog/label` for stable fields that are queried or shared across backend packages.
+Keep component-specific or one-off attribute names local to the component.
+Functions that accept a context should obtain their logger with `qlog.FromContext(ctx)` so request and course attributes survive calls into SCM, CI, and background work.
+Do not pass a logger alongside a context; derive it from the context instead.
+A constructor that needs a logger for the lifetime of the object it returns is the exception: it takes the logger directly, since a context cannot be stored.
+`qlog.FromContext` safely falls back to the process logger when no logger has been attached.
+
+When a function logs the same attributes more than once, or passes them to functions that log them again, derive the scope once with `qlog.WithLogger`, and pass the returned context downstream:
+
+```go
+ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode(), label.Repository, repo.Name())
+logger.Debug("resolved push repository")
+```
+
+Use `qlog.With` when only the context is needed.
+Do not repeat an attribute that an enclosing scope already carries: slog records duplicate keys as-is, so a repeated attribute appears twice in the same record.
+`web.TestRPCLoggingNoDuplicateScope` guards the RPC scope against this.
+
+RPC completion logging records the procedure, Connect code, and duration without request or response bodies.
+The logging interceptors attach `rpc_method`, and, once authentication and access control have accepted the request, `user_id` for the calling user and `course_id` for the requested course.
+RPC handlers must not add those attributes themselves.
+When a handler acts on some other user than the caller, use `label.TargetUser` and `label.TargetUserID` to keep the two apart.
+
+Some records also belong in a course's teacher-visible log: webhook processing, CI and Docker output, and course operations a teacher triggers themselves, such as a rebuild or an assignment sync.
+Use `qlog.WithCourse(ctx, course, attrs...)` to scope a fresh context to a course, or `qlog.WithCourseLog(ctx, course, attrs...)` where the RPC interceptors already attached `course_id` from the caller's claims and only `course_code` and the marker are needed.
+Both take the course from the database, never from request data: the marker they attach is what a downstream handler keys the course's on-disk log file on, so anything reaching a scope carrying it becomes visible to that course's teachers.
+Ordinary RPC completion records, and everything else that is not explicitly scoped this way, stay operator-only.
+
+Never log cookies, authorization headers, environment variables, private keys, access tokens, refresh tokens, or session secrets.
+Redact generated per-run secrets from captured command output before logging it.
+The GORM logger enabled by `LOGDB` traces full SQL statements, including bound column values; keep it for local debugging only.
 
 Errors returned to a user should be few and informative.
 They should not reveal internal details of the application.

@@ -1,16 +1,18 @@
-import React, { useCallback } from "react"
+import { useCallback } from "react"
 import { Route, Routes, useLocation } from "react-router"
-import { Color, isManuallyGraded } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
 import Card from "../components/Card"
-import GroupPage from "./GroupPage"
-import Members from "../components/Members"
-import RedirectButton from "../components/RedirectButton"
-import Results from "../components/Results"
-import Assignments from "../components/teacher/Assignments"
-import Alerts from "../components/alerts/Alerts"
-import { useCourseID } from "../hooks/useCourseID"
+import { CourseLinks } from "../components/CourseLinks"
 import AssignmentFeedbackView from "../components/feedback/AssignmentFeedbackView"
+import Members from "../components/Members"
+import Results from "../components/Results"
+import SubmissionGuide from "../components/student/SubmissionGuide"
+import Assignments from "../components/teacher/Assignments"
+import CourseLogs from "../components/teacher/CourseLogs"
+import { Color, isManuallyGraded } from "../Helpers"
+import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { useCourseID } from "../hooks/useCourseID"
+import { useActions, useAppState } from "../overmind"
+import GroupPage from "./GroupPage"
 
 const ReviewResults = () => <Results review />
 const RegularResults = () => <Results review={false} />
@@ -23,6 +25,9 @@ const TeacherPage = () => {
     const location = useLocation()
     const root = `/course/${courseID}`
     const courseHasManualGrading = state.assignments[courseID.toString()]?.some(assignment => isManuallyGraded(assignment.reviewers))
+
+    // Enable Backspace keyboard shortcut to navigate back to root
+    useBackspaceNavigation(root)
 
     const members = {
         title: "View Members",
@@ -47,12 +52,12 @@ const TeacherPage = () => {
     }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
     const feedback = { title: "View Assignment Feedback", text: "View feedback provided by students on assignments.", buttonText: "Feedback", to: `${root}/feedback` }
+    const logs = { title: "Course Logs", text: "View webhook, CI, and rebuild activity for this course.", buttonText: "Logs", to: `${root}/logs` }
 
     return (
-        <div className="box">
-            <RedirectButton to={root} />
-            <Alerts />
-            <div className="row" hidden={location.pathname !== root}>
+        <>
+            <CourseLinks />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 {courseHasManualGrading && <Card {...review} />}
                 <Card {...results} />
                 <Card {...groups} />
@@ -60,17 +65,20 @@ const TeacherPage = () => {
                 <Card {...assignments} />
                 <Card {...updateAssignments} />
                 <Card {...feedback} />
+                <Card {...logs} />
             </div>
             <Routes>
-                <Route path={"/groups"} element={<GroupPage />} />
-                <Route path={"/members"} element={<Members />} />
-                <Route path={"/review"} element={<ReviewResults />} />
-                <Route path={"/results"} element={<RegularResults />} />
-                <Route path={"/assignments"} element={<Assignments />} />
-                <Route path={"/feedback"} element={<AssignmentFeedbackView />} />
-                <Route path={"/feedback/:assignmentID"} element={<AssignmentFeedbackView />} />
+                <Route path="/groups" element={<GroupPage />} />
+                <Route path="/members" element={<Members />} />
+                <Route path="/review" element={<ReviewResults />} />
+                <Route path="/results" element={<RegularResults />} />
+                <Route path="/assignments" element={<Assignments />} />
+                <Route path="/feedback" element={<AssignmentFeedbackView />} />
+                <Route path="/feedback/:assignmentID" element={<AssignmentFeedbackView />} />
+                <Route path="/logs" element={<CourseLogs />} />
+                <Route path="/submission-guide" element={<SubmissionGuide />} />
             </Routes>
-        </div>
+        </>
     )
 }
 

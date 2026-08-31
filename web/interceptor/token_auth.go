@@ -8,8 +8,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
@@ -17,16 +18,14 @@ const tokenHeader = "Authorization"
 
 type TokenAuthInterceptor struct {
 	tm       *auth.TokenManager
-	logger   *zap.SugaredLogger
 	db       database.Database
 	tokenMap map[string]string
 	mu       sync.Mutex
 }
 
-func NewTokenAuthInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager, db database.Database) *TokenAuthInterceptor {
+func NewTokenAuthInterceptor(tm *auth.TokenManager, db database.Database) *TokenAuthInterceptor {
 	return &TokenAuthInterceptor{
 		tm:       tm,
-		logger:   logger,
 		db:       db,
 		tokenMap: make(map[string]string),
 	}
@@ -35,11 +34,11 @@ func NewTokenAuthInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager, d
 func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		token := conn.RequestHeader().Get(tokenHeader)
-		if len(token) == 0 {
+		if token == "" {
 			return next(ctx, conn)
 		}
 
-		cookie, err := t.lookupToken(token)
+		cookie, err := t.lookupToken(ctx, token)
 		if err != nil {
 			return err
 		}
@@ -49,7 +48,7 @@ func (t *TokenAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandle
 			return err
 		}
 		updatedCookie := conn.ResponseHeader().Get(auth.SetCookie)
-		if len(updatedCookie) != 0 && updatedCookie != cookie {
+		if updatedCookie != "" && updatedCookie != cookie {
 			t.update(token, updatedCookie)
 		}
 		return nil
@@ -65,11 +64,11 @@ func (*TokenAuthInterceptor) WrapStreamingClient(next connect.StreamingClientFun
 func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		token := request.Header().Get(tokenHeader)
-		if len(token) == 0 {
+		if token == "" {
 			return next(ctx, request)
 		}
 
-		cookie, err := t.lookupToken(token)
+		cookie, err := t.lookupToken(ctx, token)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +77,7 @@ func (t *TokenAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFu
 		response, err := next(ctx, request)
 		if response != nil {
 			updatedCookie := response.Header().Get(auth.SetCookie)
-			if len(updatedCookie) != 0 && updatedCookie != cookie {
+			if updatedCookie != "" && updatedCookie != cookie {
 				t.update(token, updatedCookie)
 			}
 		}
@@ -99,19 +98,27 @@ func (t *TokenAuthInterceptor) update(token, cookie string) {
 	t.mu.Unlock()
 }
 
+func validTokenPrefixes(token string) bool {
+	for _, prefix := range []string{"ghp_", "github_pat_", "gho_"} {
+		if strings.HasPrefix(token, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // lookupToken checks if a given token exists in the tokenMap. If it does
 // not, it will attempt to query GitHub for user information associated
 // with the token. If a user exists for the token, we verify that the user
 // exists in our database, and create a cookie with claims for the user.
-func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
+func (t *TokenAuthInterceptor) lookupToken(ctx context.Context, token string) (string, error) {
 	if cookie, exists := t.lookup(token); exists {
 		return cookie, nil
 	}
 
 	// Verify that token has correct prefixes before continuing
-	if !(strings.HasPrefix(token, "ghp_") || strings.HasPrefix(token, "github_pat_")) {
-		// could also pass through for next interceptor to determine if the request
-		// has a valid cookie
+	if !validTokenPrefixes(token) {
+		// could also pass through for next interceptor to determine if the request has a valid cookie
 		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("invalid token"))
 	}
 
@@ -122,7 +129,7 @@ func (t *TokenAuthInterceptor) lookupToken(token string) (string, error) {
 	if err != nil {
 		return "", connect.NewError(connect.CodeUnauthenticated, err)
 	}
-	t.logger.Debug("Retrieved user", externalUser)
+	qlog.FromContext(ctx).Debug("retrieved external user", label.RemoteID, externalUser.ID, label.User, externalUser.Login)
 	// Fetch user from database using the remote identity received from GitHub.
 	user, err := t.db.GetUserByRemoteIdentity(externalUser.ID)
 	if err != nil {

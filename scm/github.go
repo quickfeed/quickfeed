@@ -2,42 +2,84 @@ package scm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
+	"time"
 
-	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/v62/github"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/shurcooL/githubv4"
-	"golang.org/x/oauth2"
+)
+
+const (
+	// statusLabel is the attribute holding an HTTP response status code.
+	statusLabel = "status"
+	// baseRepositoryLabel is the attribute holding the repository compared against.
+	baseRepositoryLabel = "base_repository"
 )
 
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
-	logger      *zap.SugaredLogger
-	client      *github.Client
-	clientV4    *githubv4.Client
-	config      *Config
-	token       string
-	providerURL string
-	tokenURL    string
+	client       *github.Client
+	clientV4     *githubv4.Client
+	tokenManager TokenManager
+	providerURL  string
+	// createUserClientFn creates a GitHub client using the provided access token.
+	// This client is used to accept organization invitations on behalf of a user.
+	createUserClientFn func(token string) *github.Client
 }
 
-// NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
+// staticTokenManager implements TokenManager for a static token used by user-based GitHub clients.
+type staticTokenManager struct {
+	token string
+}
+
+// Token returns the static token used by user-based GitHub clients.
+func (s *staticTokenManager) Token(_ context.Context) (string, error) {
+	return s.token, nil
+}
+
+// NewGithubUserClient returns a new Github client implementing the SCM interface.
+func NewGithubUserClient(token string) *GithubSCM {
+	client := newGithubUserClient(token)
+	return &GithubSCM{
+		client:             client,
+		clientV4:           githubv4.NewClient(client.Client()),
+		tokenManager:       &staticTokenManager{token: token},
+		providerURL:        "https://github.com",
+		createUserClientFn: newGithubUserClient,
+	}
+}
+
+// newGithubUserClient creates a GitHub client using the provided user access token.
+// This client is used to perform actions on behalf of the user, such as accepting invitations.
+func newGithubUserClient(token string) *github.Client {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
-	return &GithubSCM{
-		logger:      logger,
-		client:      github.NewClient(httpClient),
-		clientV4:    githubv4.NewClient(httpClient),
-		token:       token,
-		providerURL: "https://github.com",
+	return github.NewClient(httpClient)
+}
+
+// GetUserByID fetches a user by their SCM remote ID.
+func (s *GithubSCM) GetUserByID(ctx context.Context, id uint64) (*qf.User, error) {
+	const op Op = "GetUserByID"
+	ghUser, _, err := s.client.Users.GetByID(ctx, int64(id))
+	if err != nil {
+		return nil, E(op, M("failed to get user with ID %d", id), err)
 	}
+
+	return &qf.User{
+		Login:       ghUser.GetLogin(),
+		AvatarURL:   ghUser.GetAvatarURL(),
+		ScmRemoteID: id,
+	}, nil
 }
 
 // GetOrganization returns the organization specified by the options; if ID is provided,
@@ -86,7 +128,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 		m := M("%s: permission denied", orgName)
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, orgName)
 		if err != nil {
-			return nil, E(op, m, fmt.Errorf("failed to get membership: %w", err))
+			return nil, E(op, m, fmt.Errorf("getting membership: %w", err))
 		}
 		// membership role must be "admin"
 		if membership.GetRole() != OrgOwner {
@@ -116,24 +158,57 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Reposit
 	return repositories, nil
 }
 
-// RepositoryIsEmpty implements the SCM interface
-func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
+// CommitsAhead implements the SCM interface.
+// It returns the number of commits a repository is ahead of the assignments repository.
+// A return value of 0 with a nil error means no commits ahead; a non-nil error means
+// the comparison could not be performed, and the count is meaningless.
+func (s *GithubSCM) CommitsAhead(ctx context.Context, opt *RepositoryOptions) (int, error) {
 	repo, err := s.getRepository(ctx, opt)
 	if err != nil {
-		s.logger.Error(err)
-		return true
+		return 0, err
 	}
 	opt.ID, opt.Owner, opt.Repo = repo.ID, repo.Owner, repo.Repo
+	return s.commitsAhead(ctx, opt)
+}
 
-	_, contents, resp, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Repo, "", &github.RepositoryContentGetOptions{})
-	s.logger.Debugf("RepositoryIsEmpty: %+v", *opt)
-	s.logger.Debugf("RepositoryIsEmpty: err=%v", err)
-	s.logger.Debugf("RepositoryIsEmpty: (err != nil && %d == 404) || (err == nil && %d == 0) == %t", resp.StatusCode, len(contents), (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0))
+// commitsAhead returns how many commits the repository is ahead of assignments.
+// This function is only meaningful for repositories that are forks of the assignments repo.
+func (s *GithubSCM) commitsAhead(ctx context.Context, opt *RepositoryOptions) (int, error) {
+	// Don't compare course repositories (assignments, tests, info) with themselves.
+	// Only compare user/group repositories with the assignments repository.
+	repoType := qf.RepoType(opt.Repo)
+	if repoType.IsCourseRepo() {
+		return 0, fmt.Errorf("%s is a course repository, not a user or group fork", opt.Repo)
+	}
 
-	// GitHub returns 404 both when repository does not exist and when it is empty with no commits.
-	// If there are commits but no contents, GitHub returns no error and an empty slice for directory contents.
-	// We want to return true if error is 404 or there is no error and no contents, otherwise false.
-	return (err != nil && resp.StatusCode == 404) || (err == nil && len(contents) == 0)
+	logger := qlog.FromContext(ctx).With(label.Repository, opt.Repo, label.Owner, opt.Owner)
+	headCommit, resp, err := s.client.Repositories.GetCommit(ctx, opt.Owner, opt.Repo, "main", nil)
+	logger.Debug("got repository head commit", label.Branch, "main", statusLabel, statusCode(resp), label.Error, err)
+	if err != nil {
+		return 0, fmt.Errorf("getting head commit for %s/%s: %w", opt.Owner, opt.Repo, err)
+	}
+	headSHA := headCommit.GetSHA()
+	if headSHA == "" {
+		return 0, fmt.Errorf("no head commit SHA for %s/%s", opt.Owner, opt.Repo)
+	}
+
+	comparison, resp, err := s.client.Repositories.CompareCommits(ctx, opt.Owner, qf.AssignmentsRepo, "main", headSHA, nil)
+
+	logger.Debug("compared repository commits", baseRepositoryLabel, qf.AssignmentsRepo, "head", headSHA, statusLabel, statusCode(resp), label.Error, err)
+
+	// A comparison may fail because the repo is not a fork, the branches don't exist,
+	// or other transient errors; in all cases we cannot determine the count, so we
+	// return the error and let the caller decide how to handle it.
+	if err != nil {
+		return 0, fmt.Errorf("comparing %s/%s with assignments: %w", opt.Owner, opt.Repo, err)
+	}
+	if comparison == nil || comparison.AheadBy == nil {
+		return 0, fmt.Errorf("missing comparison result for %s/%s", opt.Owner, opt.Repo)
+	}
+
+	aheadBy := *comparison.AheadBy
+	logger.Debug("repository commits ahead of assignments", "commits", aheadBy)
+	return aheadBy, nil
 }
 
 // CreateCourse creates repositories for a new course.
@@ -152,21 +227,23 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 	// Set restrictions to prevent students from creating new repositories and prevent access
 	// to organization repositories. This will not affect organization owners (teachers).
 	if _, _, err = s.client.Organizations.Edit(ctx, org.GetScmOrganizationName(), &github.Organization{
-		DefaultRepoPermission: github.String("none"),
-		MembersCanCreateRepos: github.Bool(false),
+		DefaultRepoPermission: new("none"),
+		MembersCanCreateRepos: new(false),
+		// required to allow forking the assignments repository
+		MembersCanForkPrivateRepos: new(true),
 	}); err != nil {
-		return nil, E(op, m, fmt.Errorf("failed to update permissions for %s: %w", org.GetScmOrganizationName(), err))
+		return nil, E(op, m, fmt.Errorf("updating permissions for %s: %w", org.GetScmOrganizationName(), err))
 	}
 
 	// Create course repositories
 	repositories := make([]*Repository, 0, len(RepoPaths)+1)
 	for path, private := range RepoPaths {
-		repoOptions := &CreateRepositoryOptions{
-			Repo:    path,
-			Owner:   org.GetScmOrganizationName(),
-			Private: private,
-		}
-		repo, err := s.createRepository(ctx, repoOptions)
+		repo, err := s.createCourseRepo(ctx, &CreateRepositoryOptions{
+			Repo:     path,
+			Owner:    org.GetScmOrganizationName(),
+			Private:  private,
+			AutoInit: path == qf.AssignmentsRepo, // only assignments repo is auto-initialized
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -183,6 +260,7 @@ func (s *GithubSCM) CreateCourse(ctx context.Context, opt *CourseOptions) ([]*Re
 }
 
 // UpdateEnrollment updates organization membership and creates user repositories.
+// For student enrollments.
 func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentOptions) (*Repository, error) {
 	const op Op = "UpdateEnrollment"
 	m := M("failed to update enrollment")
@@ -196,15 +274,35 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	switch opt.Status {
 	case qf.Enrollment_STUDENT:
 		m = M("failed to enroll %s as student in %s", opt.User, org.GetScmOrganizationName())
+
+		// Step 1: Add user to org as member (creates org invitation)
+		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
+			return nil, E(op, m, err)
+		}
+
+		// Step 2: Accept the org invitation so user becomes an org member.
+		// Once they are an org member, adding them as collaborator to org-owned
+		// repos grants access immediately without requiring further invitations.
+		// GitHub creates the invitation asynchronously; acceptOrgInvitation
+		// retries if the accept call returns "job scheduled on GitHub side".
+		if err := s.acceptOrgInvitation(ctx, &InvitationOptions{
+			Login:       opt.User,
+			Owner:       org.GetScmOrganizationName(),
+			AccessToken: opt.AccessToken,
+		}); err != nil {
+			return nil, E(op, m, err)
+		}
+
+		// Step 3: Add user to assignments repo with read access.
+		// Since user is now an org member, this grants access immediately.
 		if err := s.addUser(ctx, org.GetScmOrganizationName(), qf.AssignmentsRepo, opt.User, pullAccess); err != nil {
 			return nil, E(op, m, err)
 		}
+
+		// Step 4: Create student repo (fork) and add user as collaborator with write access.
+		// Forking works because the user now has read access to the upstream assignments repo.
 		repo, err := s.createStudentRepo(ctx, org.GetScmOrganizationName(), opt.User)
 		if err != nil {
-			return nil, E(op, m, err)
-		}
-		// Promote user to organization member
-		if err := s.updatePermission(ctx, opt.User, org.GetScmOrganizationName(), member); err != nil {
 			return nil, E(op, m, err)
 		}
 		return repo, nil
@@ -222,8 +320,9 @@ func (s *GithubSCM) UpdateEnrollment(ctx context.Context, opt *UpdateEnrollmentO
 	return nil, E(op, m, fmt.Errorf("invalid enrollment status: %s", opt.Status))
 }
 
-// RejectEnrollment removes user's repository and revokes user's membership in the course organization.
-// If the user was already removed from the organization an error is returned, and the repository deletion is skipped.
+// RejectEnrollment deletes the user's course repository and revokes their
+// organization membership. Revoking the membership (not just removing a member)
+// also cancels a pending invitation. Both steps are idempotent and retry-safe.
 func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentOptions) error {
 	const op Op = "RejectEnrollment"
 	m := M("failed to reject enrollment")
@@ -235,12 +334,13 @@ func (s *GithubSCM) RejectEnrollment(ctx context.Context, opt *RejectEnrollmentO
 	if err != nil {
 		return E(op, m, err)
 	}
-	// If user was already removed we report the error and skip the repository deletion
-	if _, err := s.client.Organizations.RemoveMember(ctx, org.GetScmOrganizationName(), opt.User); err != nil {
-		return E(op, m, fmt.Errorf("failed to remove user: %w", err))
-	}
-	if err := s.deleteRepository(ctx, opt.RepositoryID); err != nil {
+	// tolerate an already-deleted repository so reject is idempotent
+	if err := s.deleteRepository(ctx, opt.RepositoryID); err != nil && !errors.Is(err, ErrNotFound) {
 		return E(op, m, err)
+	}
+	// tolerate 404 (no such membership) so reject is idempotent
+	if resp, err := s.client.Organizations.RemoveOrgMembership(ctx, opt.User, org.GetScmOrganizationName()); err != nil && !hasStatus(resp, http.StatusNotFound) {
+		return E(op, m, fmt.Errorf("removing user: %w", err))
 	}
 	return nil
 }
@@ -274,7 +374,11 @@ func (s *GithubSCM) CreateGroup(ctx context.Context, opt *GroupOptions) (*Reposi
 		// repository must not exist
 		return nil, E(op, M("%s: repository %s %w", opt.Organization, opt.GroupName, ErrAlreadyExists))
 	}
-	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{Owner: opt.Organization, Repo: opt.GroupName, Private: true})
+	repo, err := s.createForkedRepo(ctx, &CreateRepositoryOptions{
+		Owner:   opt.Organization,
+		Repo:    opt.GroupName,
+		Private: true,
+	})
 	if err != nil {
 		return nil, E(op, m, err)
 	}
@@ -297,7 +401,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	// find current group members
 	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
 	if err != nil {
-		return E(op, m, fmt.Errorf("failed to get members: %w", err))
+		return E(op, m, fmt.Errorf("getting members: %w", err))
 	}
 
 	// add members that are not already in the group
@@ -313,7 +417,7 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 		if !slices.Contains(opt.Users, user) {
 			_, err = s.client.Repositories.RemoveCollaborator(ctx, opt.Organization, opt.GroupName, user)
 			if err != nil {
-				return E(op, m, fmt.Errorf("failed to remove %s: %w", user, err))
+				return E(op, m, fmt.Errorf("removing %s: %w", user, err))
 			}
 		}
 	}
@@ -329,6 +433,75 @@ func (s *GithubSCM) DeleteGroup(ctx context.Context, id uint64) error {
 		return E(op, M("failed to delete group repository"), err)
 	}
 	return nil
+}
+
+// SyncFork syncs a forked repository's branch with its upstream repository.
+// If the upstream changes cannot be applied cleanly (for example, due to merge
+// conflicts), SyncFork returns a non-nil error and does not push conflicting
+// changes to the fork.
+//
+// Implementations are expected to handle transient SCM errors, including
+// provider rate limiting, by retrying the sync operation internally until the
+// operation succeeds or the provided context is canceled or times out.
+//
+// The call is blocking: it waits for the synchronization to complete, fail,
+// or be aborted by the context before returning.
+func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err error) {
+	const op Op = "SyncFork"
+	m := M("failed to sync fork")
+	if !opt.valid() {
+		return E(op, m, fmt.Errorf("missing fields: %+v", *opt))
+	}
+
+	// Use a context timeout if not already set, to avoid hanging indefinitely
+	if _, ok := ctx.Deadline(); !ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+	}
+
+	for attempt := range opt.MaxRetries {
+		var resp *github.Response
+		_, resp, err = s.client.Repositories.MergeUpstream(ctx, opt.Organization, opt.Repository, &github.RepoMergeUpstreamRequest{
+			Branch: new(opt.Branch),
+		})
+		if err == nil {
+			return nil
+		}
+		if hasStatus(resp, http.StatusConflict) {
+			return E(op, M("merge conflict for %s/%s", opt.Organization, opt.Repository), err)
+		}
+
+		// Check if this is a rate limit error that we should retry
+		retryDelay, err := rateLimitDelay(err)
+		if err != nil {
+			// Non-rate-limit error, don't retry; return the original error passed through rateLimitDelay
+			return E(op, M("failed to sync fork %s/%s", opt.Organization, opt.Repository), err)
+		}
+
+		qlog.FromContext(ctx).Debug("retrying repository sync", label.Repository, opt.Repository, label.Organization, opt.Organization, "attempt", attempt+1, "max_attempts", opt.MaxRetries, "delay", retryDelay)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(retryDelay):
+		}
+	}
+
+	return E(op, M("failed to sync fork %s/%s after %d retries", opt.Organization, opt.Repository, opt.MaxRetries), err)
+}
+
+// rateLimitDelay returns the duration to wait before retrying if the error is
+// a rate limit or abuse limit error. Otherwise, it returns the original error.
+func rateLimitDelay(err error) (time.Duration, error) {
+	var rateLimitErr *github.RateLimitError
+	if errors.As(err, &rateLimitErr) {
+		return max(time.Second, time.Until(*rateLimitErr.Rate.Reset.GetTime())+time.Second), nil
+	}
+	var abuseErr *github.AbuseRateLimitError
+	if errors.As(err, &abuseErr) {
+		return max(time.Second, abuseErr.GetRetryAfter()), nil
+	}
+	return 0, err
 }
 
 // getRepository fetches a repository by ID or name.
@@ -355,39 +528,73 @@ func (s *GithubSCM) getRepository(ctx context.Context, opt *RepositoryOptions) (
 	return toRepository(repo), nil
 }
 
-// createRepository creates a new repository or returns an existing repository with the given name.
-func (s *GithubSCM) createRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	const op Op = "createRepository"
-	m := M("failed to create repository")
+// createCourseRepo creates a new course repository.
+func (s *GithubSCM) createCourseRepo(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	const op Op = "createCourseRepo"
+	m := M("failed to create course repository")
 	if !opt.valid() {
 		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
 	}
 
-	// check that repo does not already exist for this user or group
+	logger := qlog.FromContext(ctx).With(label.Repository, opt.Repo, label.Owner, opt.Owner)
 	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
-	if repo != nil {
-		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Repo, repo)
+	if err == nil {
+		logger.Debug("course repository already exists", "url", repo.GetHTMLURL())
 		return toRepository(repo), nil
 	}
-	// error expected with response status code to be 404 Not Found
-	if resp != nil && resp.StatusCode != http.StatusNotFound {
-		s.logger.Errorf("CreateRepository: get repository %s returned unexpected status %d: %v", opt.Repo, resp.StatusCode, err)
+	if !hasStatus(resp, http.StatusNotFound) {
+		return nil, E(op, m, err)
 	}
 
-	// repo does not exist, create it
-	s.logger.Debugf("CreateRepository: creating %s", opt.Repo)
+	logger.Debug("creating course repository")
 	repo, _, err = s.client.Repositories.Create(ctx, opt.Owner, &github.Repository{
-		Name:    github.String(opt.Repo),
-		Private: github.Bool(opt.Private),
+		Name:     new(opt.Repo),
+		Private:  new(opt.Private),
+		AutoInit: new(opt.AutoInit),
 	})
 	if err != nil {
 		return nil, E(op, M("failed to create repository %s/%s", opt.Owner, opt.Repo), err)
 	}
-	s.logger.Debugf("CreateRepository: successfully created %s/%s", opt.Owner, opt.Repo)
+	logger.Debug("created course repository")
 	return toRepository(repo), nil
 }
 
-// deleteRepository deletes repository by name or ID.
+// createForkedRepo creates a forked repository from the assignments repository.
+func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	const op Op = "createForkedRepo"
+	m := M("failed to create forked repository")
+	if !opt.valid() {
+		return nil, E(op, m, fmt.Errorf("missing fields: %+v", *opt))
+	}
+
+	logger := qlog.FromContext(ctx).With(label.Repository, opt.Repo, label.Owner, opt.Owner)
+	repo, resp, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Repo)
+	if err == nil {
+		logger.Debug("forked repository already exists", "url", repo.GetHTMLURL())
+		return toRepository(repo), nil
+	}
+	if !hasStatus(resp, http.StatusNotFound) {
+		return nil, E(op, m, err)
+	}
+
+	logger.Debug("forking repository", "source_repository", qf.AssignmentsRepo)
+	_, resp, forkErr := s.client.Repositories.CreateFork(ctx, opt.Owner, qf.AssignmentsRepo, &github.RepositoryCreateForkOptions{
+		Organization: opt.Owner,
+		Name:         opt.Repo,
+	})
+	if forkErr != nil && !hasStatus(resp, http.StatusAccepted) {
+		return nil, E(op, M("failed to create fork %s/%s", opt.Owner, opt.Repo), forkErr)
+	}
+
+	repo, err = s.waitForRepository(ctx, opt.Owner, opt.Repo)
+	if err != nil {
+		return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
+	}
+	logger.Debug("created repository fork")
+	return toRepository(repo), nil
+}
+
+// deleteRepository deletes repository by ID.
 func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 	const op Op = "deleteRepository"
 	m := M("failed to delete repository")
@@ -395,12 +602,22 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 		return E(op, m, fmt.Errorf("missing ID"))
 	}
 
-	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
+	repo, resp, err := s.client.Repositories.GetByID(ctx, int64(id))
 	if err != nil {
-		return E(op, m, fmt.Errorf("failed to get repository %d: %w", id, err))
+		if hasStatus(resp, http.StatusNotFound) {
+			// wrap ErrNotFound to allow callers to detect that the repository
+			// is already gone, e.g., from a previously interrupted delete
+			return E(op, m, fmt.Errorf("repository %d: %w", id, ErrNotFound))
+		}
+		return E(op, m, fmt.Errorf("getting repository %d: %w", id, err))
 	}
 
-	if _, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+	if deleteResp, err := s.client.Repositories.Delete(ctx, repo.GetOwner().GetLogin(), repo.GetName()); err != nil {
+		if hasStatus(deleteResp, http.StatusNotFound) {
+			// The repository was deleted after GetByID succeeded.
+			// Treat this as success so delete remains idempotent.
+			return nil
+		}
 		return E(op, M("failed to delete repository %s/%s", repo.GetOwner().GetLogin(), repo.GetName()), err)
 	}
 
@@ -411,7 +628,7 @@ func (s *GithubSCM) deleteRepository(ctx context.Context, id uint64) error {
 func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user string) (*Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
-	repo, err := s.createRepository(ctx, &CreateRepositoryOptions{
+	repo, err := s.createForkedRepo(ctx, &CreateRepositoryOptions{
 		Owner:   organization,
 		Repo:    qf.StudentRepoName(user),
 		Private: true,
@@ -427,7 +644,7 @@ func (s *GithubSCM) createStudentRepo(ctx context.Context, organization, user st
 
 func (s *GithubSCM) updatePermission(ctx context.Context, user, org string, role *github.Membership) error {
 	if _, _, err := s.client.Organizations.EditOrgMembership(ctx, user, org, role); err != nil {
-		return fmt.Errorf("failed to update to %q: %w", *role.Role, err)
+		return fmt.Errorf("updating to %q: %w", *role.Role, err)
 	}
 	return nil
 }
@@ -435,9 +652,53 @@ func (s *GithubSCM) updatePermission(ctx context.Context, user, org string, role
 // addUser adds user to the repository with the specified access level (pull or push).
 func (s *GithubSCM) addUser(ctx context.Context, org, repo, user string, access *github.RepositoryAddCollaboratorOptions) error {
 	if _, _, err := s.client.Repositories.AddCollaborator(ctx, org, repo, user, access); err != nil {
-		return fmt.Errorf("failed to add with %q access: %w", access.Permission, err)
+		return fmt.Errorf("adding with %q access: %w", access.Permission, err)
 	}
 	return nil
+}
+
+const (
+	// waitForRepoMaxAttempts is the maximum number of attempts to wait for a repository to be ready.
+	waitForRepoMaxAttempts = 10
+	// waitForRepoInitialDelay is the initial delay between attempts.
+	waitForRepoInitialDelay = 1 * time.Second
+	// waitForRepoMaxDelay is the maximum delay between attempts.
+	waitForRepoMaxDelay = 5 * time.Second
+)
+
+// waitForRepository polls until the repository is accessible or max attempts is reached.
+// This is necessary because GitHub creates forks asynchronously.
+// Returns the repository once it's ready.
+func (s *GithubSCM) waitForRepository(ctx context.Context, owner, repo string) (*github.Repository, error) {
+	logger := qlog.FromContext(ctx).With(label.Repository, repo, label.Owner, owner)
+	delay := waitForRepoInitialDelay
+	for attempt := range waitForRepoMaxAttempts {
+		gotRepo, resp, err := s.client.Repositories.Get(ctx, owner, repo)
+		// Repository is ready when we get a 200 OK response and the repo is not nil
+		if err == nil && gotRepo != nil {
+			logger.Debug("repository ready", "attempts", attempt+1)
+			return gotRepo, nil
+		}
+		// 202 Accepted means fork is still being created - continue waiting
+		// 404 Not Found also means fork is not ready yet
+		if hasStatus(resp, http.StatusAccepted) || hasStatus(resp, http.StatusNotFound) {
+			logger.Debug("repository not ready", "attempt", attempt+1, "max_attempts", waitForRepoMaxAttempts, statusLabel, statusCode(resp), "delay", delay)
+		} else {
+			// For any other status, treat this as a real error and stop retrying.
+			if err != nil {
+				return nil, fmt.Errorf("waitForRepository: %s/%s unexpected status %d: %w", owner, repo, statusCode(resp), err)
+			}
+			return nil, fmt.Errorf("waitForRepository: %s/%s unexpected status %d", owner, repo, statusCode(resp))
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(delay):
+		}
+		// Exponential backoff with max delay
+		delay = min(delay*2, waitForRepoMaxDelay)
+	}
+	return nil, fmt.Errorf("repository %s/%s not ready after %d attempts", owner, repo, waitForRepoMaxAttempts)
 }
 
 // Client returns GitHub client.
@@ -452,4 +713,20 @@ func toRepository(repo *github.Repository) *Repository {
 		Owner:   repo.Owner.GetLogin(),
 		HTMLURL: repo.GetHTMLURL(),
 	}
+}
+
+// statusCode returns the HTTP status code from the response.
+func statusCode(resp *github.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
+}
+
+// hasStatus returns true if the response has the specified status code.
+func hasStatus(resp *github.Response, code int) bool {
+	if resp == nil {
+		return false
+	}
+	return resp.StatusCode == code
 }

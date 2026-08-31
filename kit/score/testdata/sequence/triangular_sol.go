@@ -5,10 +5,11 @@ package sequence
 //
 // Visualization of numbers:
 // n = 1:    n = 2:     n = 3:      n = 4:    etc...
-//   o         o          o           o
-//            o o        o o         o o
-//                      o o o       o o o
-//                                 o o o o
+//
+//	o         o          o           o
+//	         o o        o o         o o
+//	                   o o o       o o o
+//	                              o o o o
 func triangularRecurrence(n uint) uint {
 	if n == 0 {
 		return 0

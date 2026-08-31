@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -67,7 +68,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 }
 
 func TestOAuth2Callback(t *testing.T) {
-	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
+	userJSON := `{"id": 1, "email": "test@example.com", "name": "No name Last name", "login": "test"}`
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
@@ -107,6 +108,58 @@ func TestOAuth2Callback(t *testing.T) {
 	if user.GetLogin() != "test" {
 		t.Fatalf("incorrect user login: expected 'test', got %s", user.GetName())
 	}
+}
+
+func TestOAuth2CallbackWithIncompleteUser(t *testing.T) {
+	logger := qtest.Logger(t)
+	authConfig := auth.NewGitHubConfig(&scm.Config{})
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name        string
+		userJSON    string
+		description string
+	}{
+		{
+			name:        "missing login",
+			userJSON:    `{"id": 5, "email": "test@example.com", "name": "Test User", "login": ""}`,
+			description: "user with empty login should be rejected",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockTokenExchange := apitest.NewMock().
+				Post(loginToken).
+				RespondWith().
+				Body(`{"access_token": "test_token"}`).
+				Status(http.StatusOK).
+				End()
+			mockUserExchange := apitest.NewMock().
+				Get(user).
+				RespondWith().
+				Body(tt.userJSON).
+				Status(http.StatusOK).
+				End()
+
+			apitest.New().Mocks(mockTokenExchange, mockUserExchange).
+				HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+				Get(callbackGithub).
+				Query("state", testSecret).
+				Query("code", "test code").
+				Expect(t).
+				Status(http.StatusUnauthorized).
+				HeaderNotPresent(auth.SetCookie).
+				End()
+		})
+	}
+
+	checkNoUsersInDB(db, t)
 }
 
 func TestOAuth2CallbackUserExchange(t *testing.T) {
@@ -277,6 +330,48 @@ func TestOAuth2Logout(t *testing.T) {
 		End()
 }
 
+func TestSanitizeNext(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty string", "", "/"},
+		{"whitespace only", "   ", "/"},
+		{"root path", "/", "/"},
+		{"simple path", "/dashboard", "/dashboard"},
+		{"path with trailing slash", "/dashboard/", "/dashboard"},
+		{"path with dot", "/./dashboard", "/dashboard"},
+		{"path with double slash", "//dashboard", "/"},
+		{"path with backslash", `/dash\board`, "/"},
+		{"absolute URL http", "http://example.com", "/"},
+		{"absolute URL https", "https://example.com/path", "/"},
+		{"absolute URL with path", "https://example.com/dashboard", "/"},
+		{"relative path", "dashboard", "/"},
+		{"path with ..", "/foo/../bar", "/bar"},
+		{"path with multiple ..", "/foo/../../bar", "/bar"},
+		{"path with spaces", "   /foo/bar   ", "/foo/bar"},
+		{"path with query", "/foo/bar?baz=1", "/foo/bar?baz=1"},
+		{"path with fragment", "/foo/bar#section", "/foo/bar#section"},
+		{"dot only", ".", "/"},
+		{"slash dot", "/.", "/"},
+		{"empty after clean", "", "/"},
+		{"path with encoded slash", "/foo%2Fbar", "/foo%2Fbar"},
+		{"path with backslash", "/foo\\bar", "/"},
+		{"protocol relative URL", "//example.com", "/"},
+		{"protocol backslash URL", "\\example.com", "/"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := auth.SanitizeNext(tt.in)
+			if got != tt.want {
+				t.Errorf("SanitizeNext(%q) = %q; want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
 func checkNoUsersInDB(db database.Database, t *testing.T) {
 	users, err := db.GetUsers()
 	if err != nil {
@@ -284,5 +379,53 @@ func checkNoUsersInDB(db database.Database, t *testing.T) {
 	}
 	if len(users) > 0 {
 		t.Fatalf("Expected empty database, got %d users", len(users))
+	}
+}
+
+func TestCheckExternalUser(t *testing.T) {
+	tests := []struct {
+		name        string
+		user        *auth.ExternalUser
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "valid user with complete information",
+			user: &auth.ExternalUser{
+				ID:    1,
+				Login: "testuser",
+				Name:  "Test User",
+				Email: "test@example.com",
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing login",
+			user: &auth.ExternalUser{
+				ID:    3,
+				Login: "",
+				Name:  "Test User",
+				Email: "test@example.com",
+			},
+			wantErr:     true,
+			errContains: "missing login",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := auth.CheckExternalUser(tt.user)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("checkExternalUser() expected error containing %q, got nil", tt.errContains)
+				} else if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("checkExternalUser() error = %v, want error containing %q", err, tt.errContains)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("checkExternalUser() unexpected error = %v", err)
+				}
+			}
+		})
 	}
 }

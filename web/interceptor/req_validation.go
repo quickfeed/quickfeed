@@ -3,10 +3,11 @@ package interceptor
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"connectrpc.com/connect"
-	"go.uber.org/zap"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 )
 
 // MaxWait is the maximum time a request is allowed to stay open before aborting.
@@ -22,12 +23,10 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
-type ValidationInterceptor struct {
-	logger *zap.SugaredLogger
-}
+type ValidationInterceptor struct{}
 
-func NewValidationInterceptor(logger *zap.SugaredLogger) *ValidationInterceptor {
-	return &ValidationInterceptor{logger: logger}
+func NewValidationInterceptor() *ValidationInterceptor {
+	return &ValidationInterceptor{}
 }
 
 func (*ValidationInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
@@ -48,20 +47,16 @@ func (*ValidationInterceptor) WrapStreamingClient(next connect.StreamingClientFu
 // user-level code and returns an illegal argument to the client.
 // Further, the response values are cleaned of any remote IDs.
 // In addition, the interceptor also implements a cancellation mechanism.
-func (v *ValidationInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (*ValidationInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		if request.Any() != nil {
-			if err := validate(v.logger, request.Any()); err != nil {
+			if err := validate(ctx, request.Any()); err != nil {
 				// Reject the request if it is invalid.
 				return nil, err
 			}
 		}
 		resp, err := next(ctx, request)
 		if err != nil {
-			// Do not return the message to the client if an error occurs.
-			// We log the error and return an empty response.
-			v.logger.Errorf("Method '%s' failed: %v", request.Spec().Procedure, err)
-			v.logger.Errorf("Request Message: %T: %v", request.Any(), request.Any())
 			return nil, err
 		}
 		clean(resp.Any())
@@ -69,19 +64,19 @@ func (v *ValidationInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryF
 	})
 }
 
-func validate(logger *zap.SugaredLogger, req interface{}) error {
+func validate(ctx context.Context, req any) error {
 	if v, ok := req.(validator); ok {
 		if !v.IsValid() {
 			return connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload"))
 		}
 	} else {
 		// just logging, but still handling the call
-		logger.Debugf("message type %T does not implement validator interface", req)
+		qlog.FromContext(ctx).Debug("message does not implement validator interface", "type", fmt.Sprintf("%T", req))
 	}
 	return nil
 }
 
-func clean(resp interface{}) {
+func clean(resp any) {
 	if resp != nil {
 		if v, ok := resp.(idCleaner); ok {
 			v.RemoveRemoteID()

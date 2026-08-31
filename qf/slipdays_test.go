@@ -82,49 +82,65 @@ var slipTests = []struct {
 	},
 }
 
+// slipDayHolder is the consumer-side interface satisfied by both *qf.Enrollment
+// and *qf.Group, letting the shared accrual table below run against both.
+type slipDayHolder interface {
+	UpdateSlipDays(*qf.Assignment, *qf.Submission) error
+	RemainingSlipDays(*qf.Course) int32
+}
+
+// slipDayHolders constructs a fresh *Enrollment and *Group for the shared course.
+// The table's submissions carry no UserID/GroupID and are never approved (grades
+// stay NONE), so both holders take the identical accrual path — the accrual logic
+// does not distinguish a group submission from an enrollment submission.
+var slipDayHolders = map[string]func() slipDayHolder{
+	"Enrollment": func() slipDayHolder {
+		return &qf.Enrollment{CourseID: course.GetID(), UsedSlipDays: make([]*qf.UsedSlipDays, 0)}
+	},
+	"Group": func() slipDayHolder { return newGroup() },
+}
+
 func TestSlipDays(t *testing.T) {
-	for _, sd := range slipTests {
-		testNow = time.Now()
-		enrol := &qf.Enrollment{
-			Course:       course,
-			CourseID:     course.GetID(),
-			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
-		}
+	for name, newHolder := range slipDayHolders {
+		for _, sd := range slipTests {
+			testNow = time.Now()
+			holder := newHolder()
 
-		for i := range sd.labs {
-			t.Run(fmt.Sprintf("%s#%d", sd.name, i), func(t *testing.T) {
-				if len(sd.submissions) != len(sd.remaining) {
-					t.Fatalf("faulty test case: len(sd.submissions)=%d != len(sd.remaining)=%d", len(sd.submissions), len(sd.remaining))
-				}
-				sd.labs[i].ID = uint64(i + 1)
-				for j := range sd.submissions[i] {
-					if len(sd.submissions[i]) != len(sd.remaining[i]) {
-						t.Fatalf("faulty test case: len(sd.submissions[%d])=%d != len(sd.remaining[%d])=%d", i, len(sd.submissions[i]), i, len(sd.remaining[i]))
+			for i := range sd.labs {
+				t.Run(fmt.Sprintf("%s/%s#%d", name, sd.name, i), func(t *testing.T) {
+					if len(sd.submissions) != len(sd.remaining) {
+						t.Fatalf("faulty test case: len(sd.submissions)=%d != len(sd.remaining)=%d", len(sd.submissions), len(sd.remaining))
 					}
+					sd.labs[i].ID = uint64(i + 1)
+					for j := range sd.submissions[i] {
+						if len(sd.submissions[i]) != len(sd.remaining[i]) {
+							t.Fatalf("faulty test case: len(sd.submissions[%d])=%d != len(sd.remaining[%d])=%d", i, len(sd.submissions[i]), i, len(sd.remaining[i]))
+						}
 
-					// emulate advancing time for this submission
-					testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
-					submission := &qf.Submission{
-						AssignmentID: sd.labs[i].GetID(),
-						Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
-						Score:        50,
-						BuildInfo: &score.BuildInfo{
-							BuildDate:      timestamppb.New(testNow),
-							SubmissionDate: timestamppb.New(testNow),
-						},
-					}
+						// emulate advancing time for this submission
+						testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
+						submission := &qf.Submission{
+							AssignmentID: sd.labs[i].GetID(),
+							Grades:       []*qf.Grade{{UserID: 1, Status: qf.Submission_NONE}},
+							Score:        50,
+							BuildInfo: &score.BuildInfo{
+								BuildDate:      timestamppb.New(testNow),
+								SubmissionDate: timestamppb.New(testNow),
+							},
+						}
 
-					// functions to test
-					err := enrol.UpdateSlipDays(sd.labs[i], submission)
-					if err != nil {
-						t.Fatal(err)
+						// functions to test
+						err := holder.UpdateSlipDays(sd.labs[i], submission)
+						if err != nil {
+							t.Fatal(err)
+						}
+						remaining := holder.RemainingSlipDays(course)
+						if remaining != sd.remaining[i][j] {
+							t.Errorf("[%s] UpdateSlipDays(%q, %q, %q) = %d, want %d", name, testNow.Format(qf.TimeLayout), sd.labs[i], submission, remaining, sd.remaining[i][j])
+						}
 					}
-					remaining := enrol.RemainingSlipDays(course)
-					if remaining != sd.remaining[i][j] {
-						t.Errorf("UpdateSlipDays(%q, %q, %q, %q) == %d, want %d", testNow.Format(qf.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
-					}
-				}
-			})
+				})
+			}
 		}
 	}
 }

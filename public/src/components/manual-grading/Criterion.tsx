@@ -1,10 +1,11 @@
 import React, { useState } from "react"
-import { GradingCriterion, GradingCriterion_Grade } from "../../../proto/qf/types_pb"
+import type { GradingCriterion } from "../../../proto/qf/types_pb"
+import { GradingCriterion_Grade } from "../../../proto/qf/types_pb"
 import { useAppState } from "../../overmind"
-import GradeComment from "./GradeComment"
-import CriteriaStatus from "./CriteriaStatus"
-import CriterionComment from "./Comment"
 import UnstyledButton from "../UnstyledButton"
+import CriterionComment from "./Comment"
+import CriteriaStatus from "./CriteriaStatus"
+import GradeComment from "./GradeComment"
 
 
 /* Criteria component for the manual grading page */
@@ -30,11 +31,11 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
             break
     }
 
-    const passed = criteria.grade == GradingCriterion_Grade.PASSED
+    const passed = criteria.grade === GradingCriterion_Grade.PASSED
     // manageOrShowPassed renders the ManageCriteriaStatus component if the user is a teacher, otherwise it renders a passed/failed icon
     const criteriaStatusOrPassFailIcon = isTeacher
         ? <CriteriaStatus criterion={criteria} />
-        : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
+        : <i className={passed ? "fas fa-check text-success" : "fas fa-circle-exclamation text-error"} />
 
 
     let comment: React.JSX.Element | null = null
@@ -42,13 +43,13 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     if (isTeacher) {
         // Display edit icon if comment is empty
         // If comment is not empty, display the comment
-        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fa fa-pencil-square-o" aria-hidden="true" /></UnstyledButton>
+        button = <UnstyledButton onClick={() => setEditing(true)}><i className="fas fa-pen-to-square text-base-content/70 hover:text-base-content" aria-hidden="true" /></UnstyledButton>
         if (criteria.comment.length > 0) {
             comment = <CriterionComment comment={criteria.comment} />
         }
     } else {
         comment = <CriterionComment comment={criteria.comment} />
-        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`fa fa-comment${!showComment ? "-o" : ""}`} /></UnstyledButton>
+        button = <UnstyledButton onClick={() => setShowComment(!showComment)}><i className={`${!showComment ? "far" : "fas"} fa-comment text-base-content/70 hover:text-base-content`} /></UnstyledButton>
     }
 
     // Only display the comment if the comment is not empty
@@ -56,7 +57,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }) => {
     return (
         <>
             <tr className="align-items-center">
-                <td className={className}>{criteria.description}</td>
+                <td className={`${className} pl-3! criteria-description`}>{criteria.description}</td>
                 <td>
                     {criteriaStatusOrPassFailIcon}
                 </td>

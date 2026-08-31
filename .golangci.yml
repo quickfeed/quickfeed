@@ -1,0 +1,70 @@
+version: "2"
+
+linters:
+  # Supplement the default set of linters (errcheck, govet, ineffassign, staticcheck,
+  # unused). These should cover the issue classes that DeepSource reports, so that a
+  # failing DeepSource checks can be reproduced and fixed locally with
+  # `golangci-lint run` instead of discovering it on a pull request.
+  enable:
+    - predeclared
+    - errorlint
+    - gocritic
+    - gocyclo
+    - revive
+
+  settings:
+    errcheck:
+      # Functions whose error return is routinely safe to ignore:
+      # closing something we only ever read from, setting/unsetting env
+      # vars, best-effort directory cleanup, and writing to a
+      # ResponseWriter/stdout/tabwriter where the write itself can't
+      # meaningfully fail in a way we'd act on.
+      exclude-functions:
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (*github.com/fsnotify/fsnotify.Watcher).Close
+        - os.Setenv
+        - os.Unsetenv
+        - os.Remove
+        - os.RemoveAll
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - (*text/tabwriter.Writer).Flush
+
+    errorlint:
+      # Require %w when formatting an error into another error.
+      errorf: true
+      # Leave type assertions and == comparisons on errors off for now.
+      asserts: false
+      comparison: false
+
+    gocyclo:
+      min-complexity: 15
+
+    gocritic:
+      enabled-checks:
+        - httpNoBody
+        - paramTypeCombine
+
+    revive:
+      rules:
+        - name: unused-parameter
+        - name: indent-error-flow
+        - name: unused-receiver
+
+  exclusions:
+    paths:
+      # Third-party Go code in node_modules should be ignored.
+      - public/node_modules/
+
+    rules:
+      # Ignore cyclomatic complexity for tests and test helper functions.
+      - path: (_test\.go|scm/github_mock.*\.go)
+        linters:
+          - gocyclo
+
+issues:
+  # Report everything.
+  max-issues-per-linter: 0
+  max-same-issues: 0

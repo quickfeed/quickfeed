@@ -17,28 +17,28 @@ func Name(name string, fields []string, values ...any) string {
 		switch x := v.(type) {
 		case []string:
 			if x == nil {
-				b.WriteString(fmt.Sprintf("/%s=<nil>", f))
+				fmt.Fprintf(&b, "/%s=<nil>", f)
 			} else {
-				b.WriteString(fmt.Sprintf("/%s=%v", f, x))
+				fmt.Fprintf(&b, "/%s=%v", f, x)
 			}
 		case string:
 			if x != "" {
-				b.WriteString(fmt.Sprintf("/%s=%s", f, v))
+				fmt.Fprintf(&b, "/%s=%s", f, v)
 			}
 		case uint64:
 			if x != 0 {
-				b.WriteString(fmt.Sprintf("/%s=%d", f, v))
+				fmt.Fprintf(&b, "/%s=%d", f, v)
 			}
 		case int:
 			if x != 0 {
-				b.WriteString(fmt.Sprintf("/%s=%d", f, v))
+				fmt.Fprintf(&b, "/%s=%d", f, v)
 			}
 		case bool:
 			if x {
-				b.WriteString(fmt.Sprintf("/%s", f))
+				fmt.Fprintf(&b, "/%s", f)
 			}
 		default:
-			b.WriteString(fmt.Sprintf("/%s=%v", f, v))
+			fmt.Fprintf(&b, "/%s=%v", f, v)
 		}
 	}
 	return b.String()

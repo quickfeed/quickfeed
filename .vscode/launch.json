@@ -30,7 +30,7 @@
             "webRoot": "${workspaceFolder}/public",
         },
         {
-            // Launches Quickfeed in dev and watch mode
+            // Launches Quickfeed in dev mode
             "name": "Launch Quickfeed Backend",
             "type": "go",
             "request": "launch",
@@ -38,8 +38,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}/main.go",
             "args": [
-                "-dev",
-                "-watch"
+                "-dev"
             ]
         }
     ]

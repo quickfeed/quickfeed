@@ -1,33 +1,34 @@
-import { Code, ConnectError } from "@connectrpc/connect"
-import { Context } from "../.."
+import { clone, create, isMessage } from "@bufbuild/protobuf"
+import type { ConnectError } from "@connectrpc/connect"
+import { Code } from "@connectrpc/connect"
+import type { Context } from "../.."
 import { RepositoryRequestSchema, SubmissionRequest_SubmissionType, } from "../../../../proto/qf/requests_pb"
-import {
-    Assignment,
+import type {
     Course,
     Enrollment,
+    Grade,
+    Group,
+    Group_GroupStatus,
+    Submission,
+    Submission_Status,
+    User
+} from "../../../../proto/qf/types_pb"
+import {
     Enrollment_DisplayState,
     Enrollment_UserStatus,
     EnrollmentSchema,
-    Grade,
-    GradingBenchmark,
-    GradingCriterion,
-    Group,
-    Group_GroupStatus,
     GroupSchema,
-    Submission,
-    Submission_Status,
     SubmissionSchema,
-    User,
     UserSchema
 } from "../../../../proto/qf/types_pb"
-import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionSort, SubmissionStatus, validateGroup } from "../../../Helpers"
+import type { SubmissionSort } from "../../../Helpers"
+import { Color, ConnStatus, getStatusByUser, hasAllStatus, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, newID, setStatusAll, setStatusByUser, SubmissionStatus, validateGroup } from "../../../Helpers"
+import type { Alert, CourseGroup, SubmissionOwner } from "../../state"
 import { isEmptyRepo } from "./internalActions"
-import { Alert, CourseGroup, SubmissionOwner } from "../../state"
-import { clone, create, isMessage } from "@bufbuild/protobuf"
 
 export const internal = { isEmptyRepo }
 
-export const onInitializeOvermind = async ({ actions, effects }: Context) => {
+export const onInitializeOvermind = async ({ state, actions, effects }: Context) => {
     // Initialize the API client. *Must* be done before accessing the client.
     effects.global.api.init(actions.global.errorHandler)
     await actions.global.fetchUserData()
@@ -36,6 +37,24 @@ export const onInitializeOvermind = async ({ actions, effects }: Context) => {
     if (alert) {
         actions.global.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
+    }
+
+    // If user has a stored theme preference, use that,
+    // otherwise check for system preference
+    const storedTheme = localStorage.getItem("theme")
+    if (storedTheme !== null) {
+        state.theme = storedTheme as typeof state.theme
+        document.documentElement.setAttribute("data-theme", storedTheme)
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // User prefers dark theme
+        state.theme = "dark"
+        // set the HTML attribute to dark
+        document.documentElement.setAttribute("data-theme", "dark")
+    } else {
+        // User prefers light theme (or no specific preference)
+        state.theme = "light"
+        // set the HTML attribute to light
+        document.documentElement.setAttribute("data-theme", "light")
     }
 }
 
@@ -194,19 +213,17 @@ export const updateSubmission = async ({ state, effects }: Context, { owner, sub
             clonedSubmission = setStatusAll(clonedSubmission, status)
             break
     }
-    /* Update the submission status */
-    const response = await effects.global.api.client.updateSubmission({
-        courseID: state.activeCourse,
-        submissionID: submission.ID,
-        grades: clonedSubmission.Grades,
-        released: submission.released,
-        score: submission.score,
-    })
-    if (response.error) {
-        return
+    /* Update the submission status by sending each grade to the server */
+    for (let i = 0; i < clonedSubmission.Grades.length; i++) {
+        const grade = clonedSubmission.Grades[i]
+        const response = await effects.global.api.client.updateSubmission(grade)
+        if (response.error) {
+            return
+        }
+        /* Keep local state in sync with successfully updated grades */
+        submission.Grades[i] = grade
+        state.submissionsForCourse.update(owner, submission)
     }
-    submission.Grades = clonedSubmission.Grades
-    state.submissionsForCourse.update(owner, submission)
 }
 
 export const updateGrade = async ({ state, effects }: Context, { grade, status }: { grade: Grade, status: Submission_Status }): Promise<void> => {
@@ -219,19 +236,13 @@ export const updateGrade = async ({ state, effects }: Context, { grade, status }
     }
 
     const clonedSubmission = clone(SubmissionSchema, state.selectedSubmission)
-    clonedSubmission.Grades = clonedSubmission.Grades.map(g => {
-        if (g.UserID === grade.UserID) {
-            g.Status = status
-        }
-        return g
-    })
-    const response = await effects.global.api.client.updateSubmission({
-        courseID: state.activeCourse,
-        submissionID: state.selectedSubmission.ID,
-        grades: clonedSubmission.Grades,
-        released: state.selectedSubmission.released,
-        score: state.selectedSubmission.score,
-    })
+    const updatedGrade = clonedSubmission.Grades.find(g => g.UserID === grade.UserID)
+    if (!updatedGrade) {
+        return
+    }
+    updatedGrade.Status = status
+
+    const response = await effects.global.api.client.updateSubmission(updatedGrade)
     if (response.error) {
         return
     }
@@ -408,7 +419,9 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
 export const loadCourseSubmissions = async ({ state, actions }: Context, courseID: bigint): Promise<void> => {
     state.isLoading = true
     await actions.global.refreshCourseSubmissions(courseID)
-    state.loadedCourse[courseID.toString()] = true
+    // submissionsForCourse only holds data for one course at a time, so clear all
+    // other courses' flags so that navigating back to them triggers a fresh load.
+    state.loadedCourse = { [courseID.toString()]: true }
     state.isLoading = false
 }
 
@@ -617,108 +630,6 @@ export const updateGroup = async ({ state, actions, effects }: Context, group: G
     }
 }
 
-export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<boolean> => {
-    const benchmark = assignment.gradingBenchmarks.find(bm => bm.ID === criterion.BenchmarkID)
-    if (!benchmark) {
-        // If a benchmark is not found, the criterion is invalid.
-        return false
-    }
-
-    // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
-    if (criterion.ID) {
-        const response = await effects.global.api.client.updateCriterion(criterion)
-        if (response.error) {
-            return false
-        }
-        const index = benchmark.criteria.findIndex(c => c.ID === criterion.ID)
-        if (index > -1) {
-            benchmark.criteria[index] = criterion
-        }
-    } else {
-        criterion.CourseID = assignment.CourseID // Needed for access control
-        const response = await effects.global.api.client.createCriterion(criterion)
-        if (response.error) {
-            return false
-        }
-        benchmark.criteria.push(response.message)
-    }
-    return true
-}
-
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<boolean> => {
-    if (benchmark.ID) {
-        const response = await effects.global.api.client.updateBenchmark(benchmark)
-        if (response.error) {
-            return false
-        }
-        const index = assignment.gradingBenchmarks.findIndex(b => b.ID === benchmark.ID)
-        if (index > -1) {
-            assignment.gradingBenchmarks[index] = benchmark
-        }
-    } else {
-        benchmark.CourseID = assignment.CourseID // Needed for access control
-        const response = await effects.global.api.client.createBenchmark(benchmark)
-        if (response.error) {
-            return false
-        }
-        assignment.gradingBenchmarks.push(response.message)
-    }
-    return true
-}
-
-export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    benchmark.AssignmentID = assignment.ID
-    const response = await effects.global.api.client.createBenchmark(benchmark)
-    if (response.error) {
-        return
-    }
-    assignment.gradingBenchmarks.push(benchmark)
-}
-
-export const deleteCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    if (!criterion) {
-        // Criterion is invalid
-        return
-    }
-
-    const benchmarks = assignment.gradingBenchmarks
-    const benchmark = benchmarks.find(bm => bm.ID === criterion?.BenchmarkID)
-    if (!benchmark) {
-        // Criterion has no parent benchmark
-        return
-    }
-
-    if (!confirm("Do you really want to delete this criterion?")) {
-        // Do nothing if user cancels
-        return
-    }
-
-    // Delete criterion
-    const response = await effects.global.api.client.deleteCriterion(criterion)
-    if (response.error) {
-        return
-    }
-
-    // Remove criterion from benchmark in state if request was successful
-    const index = benchmarks.indexOf(benchmark)
-    if (index > -1) {
-        benchmarks[index].criteria = benchmarks[index].criteria.filter(c => c.ID !== criterion.ID)
-    }
-}
-
-export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    if (benchmark && confirm("Do you really want to delete this benchmark?")) {
-        const response = await effects.global.api.client.deleteBenchmark(benchmark)
-        if (response.error) {
-            return
-        }
-        const index = assignment.gradingBenchmarks.indexOf(benchmark)
-        if (index > -1) {
-            assignment.gradingBenchmarks.splice(index, 1)
-        }
-    }
-}
-
 export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment | null): void => {
     state.selectedEnrollment = enrollment
 }
@@ -896,8 +807,8 @@ export const setActiveGroup = ({ state }: Context, group: Group | null): void =>
     }
 }
 
-export const updateGroupUsers = ({ state }: Context, user: User): void => {
-    if (!state.activeGroup) {
+export const updateGroupUsers = ({ state }: Context, user?: User): void => {
+    if (!state.activeGroup || !user) {
         return
     }
     const group = state.activeGroup
@@ -938,4 +849,17 @@ export const setSubmissionOwner = ({ state }: Context, owner: Enrollment | Group
 
 export const updateSubmissionOwner = ({ state }: Context, owner: SubmissionOwner) => {
     state.submissionOwner = owner
+}
+
+export const setTheme = ({ state }: Context, theme?: string) => {
+    if (theme) {
+        // Set to specific theme
+        state.theme = theme as typeof state.theme
+    } else {
+        // Toggle between light and dark
+        state.theme = state.theme === "dark" ? "light" : "dark"
+    }
+    document.documentElement.setAttribute("data-theme", state.theme)
+    // also store theme preference in localStorage
+    localStorage.setItem("theme", state.theme)
 }

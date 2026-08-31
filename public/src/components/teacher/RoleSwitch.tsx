@@ -1,5 +1,4 @@
-import React from "react"
-import { Enrollment } from "../../../proto/qf/types_pb"
+import type { Enrollment } from "../../../proto/qf/types_pb"
 import { hasTeacher, isTeacher } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 

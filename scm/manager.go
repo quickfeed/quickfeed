@@ -8,7 +8,7 @@ import (
 	"github.com/beatlabs/github-auth/app"
 	"github.com/beatlabs/github-auth/key"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"go.uber.org/zap"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // Manager keeps provider-specific configs (currently only for GitHub)
@@ -18,6 +18,18 @@ type Manager struct {
 	scms map[string]SCM
 	mu   sync.Mutex
 	*Config
+	exchangeTokenFn func(refreshToken string) (*ExchangeToken, error)
+}
+
+// ExchangeAndUpdateToken returns a new access token for the given user.
+// It also updates the user's refresh token in the user object.
+func (m *Manager) ExchangeAndUpdateToken(user *qf.User) (string, error) {
+	exchangeToken, err := m.exchangeTokenFn(user.GetRefreshToken())
+	if err != nil {
+		return "", fmt.Errorf("exchanging token for user %s: %w", user.GetLogin(), err)
+	}
+	user.UpdateRefreshToken(exchangeToken.RefreshToken)
+	return exchangeToken.AccessToken, nil
 }
 
 // Config stores SCM variables.
@@ -41,14 +53,13 @@ func NewSCMConfig() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	appKey := env.AppKey()
-	createAppKey, err := key.FromFile(appKey)
+	createAppKey, err := key.FromFile(env.AppPrivKeyFile())
 	if err != nil {
-		return nil, fmt.Errorf("error reading key from file: %w", err)
+		return nil, fmt.Errorf("reading key from file: %w", err)
 	}
 	appConfig, err := app.NewConfig(appID, createAppKey)
 	if err != nil {
-		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
+		return nil, fmt.Errorf("creating GitHub App client: %w", err)
 	}
 	return &Config{
 		ClientID:     clientID,
@@ -59,24 +70,29 @@ func NewSCMConfig() (*Config, error) {
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *Config) *Manager {
-	return &Manager{
-		scms:   make(map[string]SCM),
-		Config: c,
+func NewSCMManager() (*Manager, error) {
+	c, err := NewSCMConfig()
+	if err != nil {
+		return nil, err
 	}
+	return &Manager{
+		scms:            make(map[string]SCM),
+		Config:          c,
+		exchangeTokenFn: c.ExchangeToken,
+	}, nil
 }
 
 // GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.
-func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
+func (s *Manager) GetOrCreateSCM(ctx context.Context, organization string) (SCM, error) {
 	s.mu.Lock()
 	client, ok := s.scms[organization]
 	s.mu.Unlock()
 	if ok {
 		return client, nil
 	}
-	client, err := newSCMAppClient(ctx, logger, s.Config, organization)
+	client, err := newSCMAppClient(ctx, s.Config, organization)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create github application for %s: %w", organization, err)
+		return nil, fmt.Errorf("creating GitHub App client for %s: %w", organization, err)
 	}
 	s.mu.Lock()
 	s.scms[organization] = client
@@ -91,4 +107,11 @@ func (s *Manager) GetSCM(organization string) (sc SCM, ok bool) {
 	defer s.mu.Unlock()
 	sc, ok = s.scms[organization]
 	return
+}
+
+// DeleteSCM deletes the SCM client for the given organization from the manager's map.
+func (s *Manager) DeleteSCM(organization string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.scms, organization)
 }

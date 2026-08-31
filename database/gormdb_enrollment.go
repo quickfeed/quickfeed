@@ -7,20 +7,27 @@ import (
 	"gorm.io/gorm"
 )
 
+// ErrIncompleteProfile is returned when a user tries to enroll without complete profile information.
+var ErrIncompleteProfile = errors.New("user must have name, email, and student ID set before enrolling")
+
 // CreateEnrollment creates a new pending enrollment.
 func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
-	var user, course int64
-	if err := db.conn.Model(&qf.User{}).Where(&qf.User{
-		ID: enrollment.GetUserID(),
-	}).Count(&user).Error; err != nil {
+	var user qf.User
+	if err := db.conn.First(&user, enrollment.GetUserID()).Error; err != nil {
 		return err
 	}
+	// Validate that user has complete profile information before allowing enrollment
+	if err := user.ValidateProfile(); err != nil {
+		return errors.Join(ErrIncompleteProfile, err)
+	}
+
+	var courseCount int64
 	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
 		ID: enrollment.GetCourseID(),
-	}).Count(&course).Error; err != nil {
+	}).Count(&courseCount).Error; err != nil {
 		return err
 	}
-	if user+course != 2 {
+	if courseCount != 1 {
 		return gorm.ErrRecordNotFound
 	}
 
@@ -79,7 +86,7 @@ func (db *GormDB) GetEnrollmentsByUser(userID uint64, statuses ...qf.Enrollment_
 }
 
 // getEnrollments is generic helper function that return enrollments for either course and user.
-func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error) {
+func (db *GormDB) getEnrollments(model any, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error) {
 	if len(statuses) == 0 {
 		statuses = []qf.Enrollment_UserStatus{
 			qf.Enrollment_PENDING,
@@ -92,6 +99,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 		Preload("Course").
 		Preload("Group").
 		Preload("Group.Users").
+		Preload("Group.UsedSlipDays").
 		Preload("UsedSlipDays").
 		Model(model).
 		Where("status in (?)", statuses).
@@ -101,6 +109,9 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 	}
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.GetCourse())
+		if enrollment.GetGroup() != nil {
+			enrollment.Group.SetSlipDays(enrollment.GetCourse())
+		}
 	}
 	return enrollments, nil
 }

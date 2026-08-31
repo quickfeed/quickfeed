@@ -1,0 +1,30 @@
+name: Vitest
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'public/src/**'
+  pull_request:
+    paths:
+      - 'public/src/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 26.4.0
+          cache: 'npm'
+          cache-dependency-path: ./public/package-lock.json
+
+      - name: Install modules
+        working-directory: ./public
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./public
+        run: npm run test:ci

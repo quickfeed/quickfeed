@@ -22,7 +22,12 @@ func TestGetUserByCourse(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := &qf.User{Login: username}
+	user := &qf.User{
+		Login:     username,
+		Name:      "Test User",
+		Email:     "test@example.com",
+		StudentID: "12345",
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Error(err)
 	}

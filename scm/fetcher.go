@@ -8,6 +8,8 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 )
 
 const authUserName = "quickfeed" // can be anything except an empty string
@@ -16,21 +18,18 @@ const authUserName = "quickfeed" // can be anything except an empty string
 // If the repository already exists, it is updated using git pull.
 // The returned path is the provided destination directory joined with the repository.
 func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
-	if s.config != nil {
-		// GitHubSCM is being used as a GitHub App, and since the go-git library requires
-		// token-based authentication, we first refresh the token since it may have expired.
-		if err := s.refreshToken(opt.Organization); err != nil {
-			return "", err
-		}
+	token, err := s.tokenManager.Token(ctx)
+	if err != nil {
+		return "", err
 	}
 
-	authInfo := &http.BasicAuth{Username: authUserName, Password: s.token}
+	authInfo := &http.BasicAuth{Username: authUserName, Password: token}
 
 	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	r, err := git.PlainOpen(cloneDir)
 	if err == nil {
 		// Repository already exists, pull the latest changes
-		s.logger.Debugf("Pulling(%s)", s.cloneURL(opt))
+		qlog.FromContext(ctx).Debug("pulling repository", "url", s.cloneURL(opt))
 		w, err := r.Worktree()
 		if err != nil {
 			return "", err
@@ -47,7 +46,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 		return "", err
 	}
 
-	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
+	qlog.FromContext(ctx).Debug("cloning repository", "url", s.cloneURL(opt))
 	var branch plumbing.ReferenceName
 	if opt.Branch != "" {
 		branch = plumbing.NewBranchReferenceName(opt.Branch)
@@ -60,7 +59,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 	if err != nil {
 		return "", err
 	}
-	s.logger.Debugf("CloneDir = %s", cloneDir)
+	qlog.FromContext(ctx).Debug("repository clone directory", label.Path, cloneDir)
 	return cloneDir, nil
 }
 

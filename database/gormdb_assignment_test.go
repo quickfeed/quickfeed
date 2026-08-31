@@ -119,7 +119,7 @@ func TestUpdateAssignments(t *testing.T) {
 		a.Reviewers = 0
 		a.AutoApprove = !a.GetAutoApprove()
 		a.IsGroupLab = !a.GetIsGroupLab()
-		wantAssignments[i] = (proto.Clone(assignments[i])).(*qf.Assignment)
+		wantAssignments[i] = proto.CloneOf(assignments[i])
 	}
 
 	err = db.UpdateAssignments(assignments)

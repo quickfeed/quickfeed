@@ -1,46 +1,55 @@
 package ci
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
+	"runtime/debug"
 
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
-func (r *RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
+func (r *RunData) RecordResults(ctx context.Context, db database.Database, results *score.Results) (*qf.Submission, error) {
+	// The run identifies the course, assignment, and job owner for every record below.
+	logger := qlog.FromContext(ctx).With(runLabel, r.String())
 	defer func() {
 		if m := recover(); m != nil {
-			logger.Errorf("Recovered from panic: %v", m)
+			// A panic here is rare and leaves the submission unrecorded, so keep
+			// the stack: the recover swallows it, and the run attributes alone are
+			// not enough to locate the cause.
+			logger.Error("recovered while recording results", "panic", m, "stack", string(debug.Stack()))
 		}
 	}()
-	logger.Debugf("Fetching (if any) previous submission for %s", r)
+	logger.Debug("fetching previous submission")
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("failed to get previous submission: %w", err)
+		return nil, fmt.Errorf("getting previous submission: %w", err)
 	}
 	if previous == nil {
-		logger.Debugf("Recording new submission for %s", r)
+		logger.Debug("recording new submission")
 	} else {
-		logger.Debugf("Updating submission %d for %s", previous.GetID(), r)
+		logger.Debug("updating submission", label.SubmissionID, previous.GetID())
 	}
 
 	resType, newSubmission := r.newSubmission(previous, results)
 	if err = db.CreateSubmission(newSubmission); err != nil {
-		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
+		return nil, fmt.Errorf("recording submission %d for %s: %w", previous.GetID(), r, err)
 	}
-	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatuses(), newSubmission.GetScore())
+	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
 	if !r.Rebuild {
-		if err := r.updateSlipDays(db, newSubmission); err != nil {
-			return nil, fmt.Errorf("failed to update slip days for %s: %w", r, err)
+		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
+			return nil, fmt.Errorf("updating slip days for %s: %w", r, err)
 		}
-		logger.Debugf("Updated slip days for %s", r)
+		logger.Debug("updated slip days")
 	}
 	return newSubmission, nil
 }
@@ -70,11 +79,10 @@ func (r *RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submiss
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
 		Grades:       previous.GetGrades(),
-		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
 			SubmissionDate: timestamppb.Now(),
 			BuildDate:      timestamppb.Now(),
-			BuildLog:       "No automated tests for this assignment",
+			BuildLog:       "",
 			ExecTime:       1,
 		},
 	}
@@ -100,30 +108,37 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 	}
 }
 
-func (r *RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	enrollments := make([]*qf.Enrollment, 0)
+// slipDayUpdater is satisfied by both *qf.Group and *qf.Enrollment, letting the
+// group and individual submission paths share the same slip-day update logic in RunData.updateSlipDays.
+type slipDayUpdater interface {
+	GetID() uint64
+	GetUsedSlipDays() []*qf.UsedSlipDays
+	UpdateSlipDays(assignment *qf.Assignment, submission *qf.Submission) error
+}
 
+func (r *RunData) updateSlipDays(logger *slog.Logger, db database.Database, submission *qf.Submission) (err error) {
+	var holder slipDayUpdater
 	if submission.GetGroupID() > 0 {
-		group, err := db.GetGroup(submission.GetGroupID())
-		if err != nil {
-			return fmt.Errorf("failed to get group %d: %w", submission.GetGroupID(), err)
+		if !r.Assignment.GetIsGroupLab() {
+			// A group submission to a non-group lab should not update slip days.
+			logger.Debug("skipping slip-day update for group submission to individual assignment", label.GroupID, submission.GetGroupID(), label.AssignmentID, r.Assignment.GetID())
+			return nil
 		}
-		enrollments = append(enrollments, group.GetEnrollments()...)
+		holder, err = db.GetGroup(submission.GetGroupID())
+		if err != nil {
+			return fmt.Errorf("getting group %d: %w", submission.GetGroupID(), err)
+		}
 	} else {
-		enroll, err := db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
+		holder, err = db.GetEnrollmentByCourseAndUser(r.Assignment.GetCourseID(), submission.GetUserID())
 		if err != nil {
-			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
+			return fmt.Errorf("getting enrollment for user %d in course %d: %w", submission.GetUserID(), r.Assignment.GetCourseID(), err)
 		}
-		enrollments = append(enrollments, enroll)
 	}
-
-	for _, enroll := range enrollments {
-		if err := enroll.UpdateSlipDays(r.Assignment, submission); err != nil {
-			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enroll.GetUserID(), r.Assignment.GetCourseID(), err)
-		}
-		if err := db.UpdateSlipDays(enroll.GetUsedSlipDays()); err != nil {
-			return fmt.Errorf("failed to update slip days for enrollment %d (user %d) (course %d): %w", enroll.GetID(), enroll.GetUserID(), enroll.GetCourseID(), err)
-		}
+	if err := holder.UpdateSlipDays(r.Assignment, submission); err != nil {
+		return fmt.Errorf("updating slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
+	}
+	if err := db.UpdateSlipDays(holder.GetUsedSlipDays()); err != nil {
+		return fmt.Errorf("updating slip days for %s (id %d) in course %d: %w", r, holder.GetID(), r.Assignment.GetCourseID(), err)
 	}
 	return nil
 }
@@ -143,7 +158,7 @@ func (r *RunData) GetOwners(db database.Database) ([]uint64, error) {
 		}
 	}
 	if len(owners) == 0 {
-		return nil, fmt.Errorf("failed to get owners for %s", r)
+		return nil, fmt.Errorf("no owners for %s", r)
 	}
 	return owners, nil
 }

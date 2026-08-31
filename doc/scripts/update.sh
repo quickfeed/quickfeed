@@ -50,8 +50,8 @@ if ! git pull; then
 	exit 1
 fi
 
-echo "Running webpack"
-if ! make ui-update; then
+echo "Running esbuild"
+if ! make ui; then
 	echo "Failed to compile the client"
 	exit 1
 fi

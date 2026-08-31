@@ -1,25 +1,26 @@
 package qtest
 
 import (
+	"context"
+	"log/slog"
 	"os"
 	"testing"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 )
 
-func Logger(t *testing.T) *zap.SugaredLogger {
+// Context returns the test's context containing the test logger.
+func Context(t *testing.T) context.Context {
+	t.Helper()
+	return qlog.NewContext(t.Context(), Logger(t))
+}
+
+// Logger returns a logger that discards its output, unless the LOG environment
+// variable is set, in which case it writes to stderr; see doc/gorm-issues.md.
+func Logger(t *testing.T) *slog.Logger {
 	t.Helper()
 	if os.Getenv("LOG") == "" {
-		return zap.NewNop().Sugar()
+		return slog.New(slog.DiscardHandler)
 	}
-	cfg := zap.NewDevelopmentConfig()
-	// add colorization
-	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	// we only want stack trace enabled for panic level and above
-	logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
-	if err != nil {
-		t.Fatalf("cannot initialize logger: %v", err)
-	}
-	return logger.Sugar()
+	return qlog.New(os.Stderr)
 }

@@ -13,7 +13,7 @@ func (tm *TokenManager) UpdateCookie(claims *Claims) (*http.Cookie, error) {
 	}
 	updatedCookie, err := tm.NewAuthCookie(claims.UserID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update cookie for user %d: %w", claims.UserID, err)
+		return nil, fmt.Errorf("updating cookie for user %d: %w", claims.UserID, err)
 	}
 	if err := tm.Remove(claims.UserID); err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (tm *TokenManager) updateRequired(claims *Claims) bool {
 func (tm *TokenManager) updateTokenList() error {
 	users, err := tm.db.GetUsers()
 	if err != nil {
-		return fmt.Errorf("failed to update JWT tokens from database: %w", err)
+		return fmt.Errorf("updating JWT token list from database: %w", err)
 	}
 	var tokens []uint64
 	for _, user := range users {
@@ -88,10 +88,5 @@ func (tm *TokenManager) update(userID uint64, updateToken bool) error {
 
 // exists checks if the ID is in the list.
 func (tm *TokenManager) exists(id uint64) bool {
-	for _, token := range tm.tokensToUpdate {
-		if id == token {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(tm.tokensToUpdate, id)
 }

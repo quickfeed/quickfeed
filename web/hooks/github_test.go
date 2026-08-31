@@ -74,16 +74,14 @@ func TestConcurrentHandlePush(t *testing.T) {
 	handlerFunc := wh.Handle()
 
 	var wg sync.WaitGroup
-	wg.Add(concurrentPushEvents)
-	for i := 0; i < concurrentPushEvents; i++ {
-		i := i
-		go func() {
+	for i := range concurrentPushEvents {
+		wg.Go(func() {
 			myPushEvent := &github.PushEvent{
 				Repo: &github.PushEventRepository{
-					Name: github.String(fmt.Sprintf("repo-%02d", i)),
+					Name: new(fmt.Sprintf("repo-%02d", i)),
 				},
 				HeadCommit: &github.HeadCommit{
-					ID: github.String(fmt.Sprintf("%04d", i)),
+					ID: new(fmt.Sprintf("%04d", i)),
 				},
 			}
 			pushPayload := qlog.IndentJson(&myPushEvent)
@@ -101,9 +99,7 @@ func TestConcurrentHandlePush(t *testing.T) {
 				Expect(t).
 				Status(http.StatusOK).
 				End()
-
-			wg.Done()
-		}()
+		})
 	}
 	wg.Wait()
 	wh.wg.Wait()
@@ -125,16 +121,16 @@ func TestFilterDuplicatePushEvents(t *testing.T) {
 
 	pushEventToSendTwice := &github.PushEvent{
 		Repo: &github.PushEventRepository{
-			Name: github.String("repo-1"),
+			Name: new("repo-1"),
 		},
 		HeadCommit: &github.HeadCommit{
-			ID: github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+			ID: new("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
 		},
 	}
 	pushPayload := qlog.IndentJson(pushEventToSendTwice)
 	signature := hMAC([]byte(pushPayload), []byte(secret))
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		apitest.New().
 			HandlerFunc(handlerFunc).
 			Post(auth.Hook).
@@ -155,27 +151,27 @@ func TestFilterDuplicatePushEvents(t *testing.T) {
 }
 
 var pushEvent = &github.PushEvent{
-	Ref: github.String("refs/heads/master"),
+	Ref: new("refs/heads/master"),
 	Repo: &github.PushEventRepository{
 		ID:            github.Int64(1),
-		Name:          github.String("meling-labs"),
-		FullName:      github.String("qf104-2022/meling-labs"),
-		DefaultBranch: github.String("master"),
+		Name:          new("meling-labs"),
+		FullName:      new("qf104-2022/meling-labs"),
+		DefaultBranch: new("master"),
 	},
 	Sender: &github.User{
-		Login: github.String("meling"),
+		Login: new("meling"),
 	},
 	HeadCommit: &github.HeadCommit{
-		ID:       github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
-		Message:  github.String("Add a README.md"),
+		ID:       new("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+		Message:  new("Add a README.md"),
 		Added:    []string{"lab1/README.md"},
 		Removed:  []string{},
 		Modified: []string{"lab2/README.md"},
 	},
 	Commits: []*github.HeadCommit{
 		{
-			ID:       github.String("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
-			Message:  github.String("Add a README.md"),
+			ID:       new("c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"),
+			Message:  new("Add a README.md"),
 			Added:    []string{"lab1/README.md"},
 			Removed:  []string{},
 			Modified: []string{"lab2/README.md"},

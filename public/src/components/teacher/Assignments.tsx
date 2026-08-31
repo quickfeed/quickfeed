@@ -1,81 +1,134 @@
-import React, { useState } from "react"
-import { Assignment } from "../../../proto/qf/types_pb"
-import { isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
+// ...existing code...
+import { useState } from "react"
+import { useNavigate } from "react-router"
+import type { Assignment } from "../../../proto/qf/types_pb"
+import { Color, getFormattedTime, hasBenchmarks, isManuallyGraded } from "../../Helpers"
+import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
-import EditBenchmark from "./EditBenchmark"
-import EditCriterion from "./EditCriterion"
-import { useCourseID } from "../../hooks/useCourseID"
+import RubricDisplay from "./RubricDisplay"
 
-
-/** This component displays all assignments for the active course and:
- *  for assignments that are not manually graded, allows teachers to rebuild all submissions.
- *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
 const Assignments = () => {
     const courseID = useCourseID()
     const actions = useActions().global
+    const reviewActions = useActions().review
     const state = useAppState()
+    const navigate = useNavigate()
 
     const AssignmentElement = ({ assignment }: { assignment: Assignment }) => {
-        const [hidden, setHidden] = useState<boolean>(false)
+        const [open, setOpen] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
+        const [isRebuilding, setIsRebuilding] = useState<boolean>(false)
 
-        /* rebuild all tests for this assignment */
+        const manually = isManuallyGraded(assignment.reviewers)
+
         const rebuild = async () => {
-            if (confirm(`Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`)) {
+            if (
+                confirm(
+                    `Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`,
+                )
+            ) {
                 setButtonText("Rebuilding...")
-                const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.ID, courseID: courseID })
+                setIsRebuilding(true)
+                const success = await actions.rebuildAllSubmissions({
+                    assignmentID: assignment.ID,
+                    courseID,
+                })
+                setIsRebuilding(false)
                 if (success) {
-                    setButtonText("Finished rebuilding")
+                    setButtonText("Rebuild Successful ✓")
+                    setTimeout(() => setButtonText("Rebuild All Tests"), 3000)
                 } else {
-                    setButtonText("Failed to rebuild")
+                    setButtonText("Rebuild Failed ✗")
+                    setTimeout(() => setButtonText("Rebuild All Tests"), 3000)
                 }
             }
         }
 
-        const assignmentForm = hasBenchmarks(assignment) ? assignment.gradingBenchmarks.map((bm) => (
-            <EditBenchmark key={bm.ID.toString()}
-                benchmark={bm}
-                assignment={assignment}
-            >
-                {/* Show all criteria for this benchmark */}
-                {hasCriteria(bm) && bm.criteria?.map((crit) => (
-                    <EditCriterion key={crit.ID.toString()}
-                        originalCriterion={crit}
-                        assignment={assignment}
-                        benchmarkID={bm.ID}
-                    />
-                ))}
-                {/* Always show one criterion form in case of benchmarks without any */}
-                <EditCriterion key={bm.criteria.length}
-                    assignment={assignment}
-                    benchmarkID={bm.ID}
-                />
-            </EditBenchmark>
-        )) : null
+        const handleViewSubmissions = () => {
+            reviewActions.setAssignmentID(assignment.ID)
+            navigate(`/course/${courseID}/results`)
+        }
 
         return (
-            <ul key={assignment.ID.toString()} className="list-group">
-                <div onClick={() => setHidden(!hidden)} role="button" aria-hidden="true">
-                    <li key="assignment" className="list-group-item">
-                        {assignment.name}
-                    </li>
+            <div key={assignment.ID.toString()} className="card bg-base-200 shadow-md rounded-lg overflow-hidden">
+                <div
+                    className="flex items-center justify-between px-4 py-3 bg-base-300 hover:bg-base-200 transition-colors cursor-pointer"
+                    onClick={() => setOpen(!open)}
+                    role="button"
+                    aria-expanded={open}
+                >
+                    <div className="flex items-start gap-3">
+                        <div className="flex flex-col">
+                            <div className="text-lg font-semibold text-base-content">{assignment.name}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm text-base-content/70 flex items-center gap-1">
+                                    <i className="fas fa-calendar" />
+                                    {getFormattedTime(assignment.deadline, true)}
+                                </span>
+                                {manually && (
+                                    <span className="badge badge-warning badge-sm">Manual</span>
+                                )}
+                                {/* show score limit if available */}
+                                <span className="badge badge-outline text-sm">{`Pass: ${assignment.scoreLimit}%`}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="text-sm text-base-content/70 hidden md:block">
+                            {/* short description or hint */}
+                            Rebuild tests or manage grading
+                        </div>
+                        <i className={`fas fa-chevron-down transition-transform ${open ? "rotate-180" : ""}`} />
+                    </div>
                 </div>
-                {hidden && (
-                    <li key="form" className="list-group-item">
-                        {/* Only show the rebuild button if the assignment is not manually graded */}
-                        {isManuallyGraded(assignment.reviewers)
-                            ? <> {assignmentForm} <EditBenchmark key={assignment.gradingBenchmarks.length} assignment={assignment} /></>
-                            : <Button text={buttonText} color={Color.BLUE} type={ButtonType.BUTTON} onClick={rebuild} />
-                        }
-                    </li>
+
+                {open && (
+                    <div className="p-4 border-t border-base-content/10">
+                        {!manually ? (
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        text={buttonText}
+                                        color={Color.BLUE}
+                                        onClick={rebuild}
+                                        disabled={isRebuilding}
+                                    />
+                                    <div className="text-sm text-base-content/70">
+                                        Rebuilds all submissions for this assignment.
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        text="View submissions"
+                                        color={Color.GREEN}
+                                        type={ButtonType.OUTLINE}
+                                        onClick={handleViewSubmissions}
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-sm text-base-content/70">
+                                This assignment is manually graded. Manage criteria and benchmarks in the assignment <code className="px-1 rounded bg-base-100 text-error">criteria.json</code> file.
+                                {hasBenchmarks(assignment) &&
+                                    <div className="mt-3">
+                                        {assignment.gradingBenchmarks.map((bm) => (
+                                            <RubricDisplay key={bm.ID.toString()} benchmark={bm} />
+                                        ))}
+                                    </div>
+                                }
+                            </div>
+                        )}
+                    </div>
                 )}
-            </ul>
+            </div>
         )
     }
 
     return (
-        <div className="column">
+        <div className="space-y-4">
             {state.assignments[courseID.toString()]?.map(assignment =>
                 <AssignmentElement key={assignment.ID} assignment={assignment} />
             )}

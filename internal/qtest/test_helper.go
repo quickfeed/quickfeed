@@ -16,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 // TestDB returns a test database and close function.
@@ -32,7 +33,7 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(), Logger(t).Desugar())
+	db, err := database.NewGormDB(f.Name(), Logger(t))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -111,7 +112,11 @@ func PrepareGitRepo(t *testing.T, src, dst, repo string) {
 // CreateFakeUser is a test helper to create a user in the database.
 func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 	t.Helper()
-	user := &qf.User{}
+	user := &qf.User{
+		Name:      "Test User",
+		Email:     "test@example.com",
+		StudentID: "12345",
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
@@ -120,6 +125,16 @@ func CreateFakeUser(t *testing.T, db database.Database) *qf.User {
 
 func CreateFakeCustomUser(t *testing.T, db database.Database, user *qf.User) *qf.User {
 	t.Helper()
+	// Ensure user has required fields for enrollment
+	if user.Name == "" {
+		user.Name = "Test User"
+	}
+	if user.Email == "" {
+		user.Email = "test@example.com"
+	}
+	if user.StudentID == "" {
+		user.StudentID = "12345"
+	}
 	if err := db.CreateUser(user); err != nil {
 		t.Fatal(err)
 	}
@@ -376,36 +391,22 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-func RequestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
-	request := connect.NewRequest(message)
-	request.Header().Set("cookie", cookie)
-	return request
-}
-
-// Ptr returns a pointer to the given value.
-//
-// How to use:
-//   - Use this function to create a pointer to a value.
-//   - This function is useful when initializing a struct with a pointer field.
-//
-// Example:
-//
-//	type MyStruct struct {
-//		Field *int
-//	    Src   *string
-//	}
-//	myStruct := MyStruct{
-//		Field: Ptr(10),
-//		Src:   Ptr("hello"),
-//	}
-func Ptr[T any](t T) *T {
-	return &t
-}
-
 // Diff compares the got and want values and prints a diff with the given message.
 func Diff(t *testing.T, msg string, got, want any, opts ...cmp.Option) {
 	if diff := cmp.Diff(got, want, opts...); diff != "" {
 		t.Errorf("%s: (-got +want)\n%s", msg, diff)
+	}
+}
+
+// UserDiffOptions returns the cmp options for comparing users.
+// It ignores the ScmRemoteID field, which is intentionally cleared
+// by the QuickFeed service before returning data to the client.
+// It also ignores the RefreshToken field, which may be updated
+// during operations like enrollment.
+func UserDiffOptions() cmp.Option {
+	return cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.User{}, "ScmRemoteID", "RefreshToken"),
 	}
 }
 

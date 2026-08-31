@@ -1,12 +1,10 @@
-import React from "react"
-import { Route, Routes, useNavigate, useLocation } from "react-router"
-import { useAppState } from "../overmind"
+import { Route, Routes, useLocation, useNavigate } from "react-router"
+import CreateCourse from "../components/admin/CreateCourse"
 import EditCourse from "../components/admin/EditCourse"
 import Users from "../components/admin/Users"
 import Card from "../components/Card"
-import RedirectButton from "../components/RedirectButton"
-import Alerts from "../components/alerts/Alerts"
-import CreateCourse from "../components/admin/CreateCourse"
+import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
+import { useAppState } from "../overmind"
 
 
 // AdminPage is the page containing the admin-only components.
@@ -27,11 +25,12 @@ const AdminPage = () => {
     }
 
     const root = "/admin"
+    // Enable Backspace keyboard shortcut to navigate back to root
+    useBackspaceNavigation(root)
+
     return (
-        <div className="box">
-            <RedirectButton to={root} />
-            <Alerts />
-            <div className="row" hidden={location.pathname !== root}>
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" hidden={location.pathname !== root}>
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
                 <Card {...editCourse} />
@@ -42,7 +41,7 @@ const AdminPage = () => {
                 <Route path="/create" element={<CreateCourse />} />
                 <Route path="/edit" element={<EditCourse />} />
             </Routes>
-        </div>
+        </>
     )
 }
 

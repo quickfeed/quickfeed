@@ -1,14 +1,13 @@
-import React from "react"
 import ReactMarkdown from "react-markdown"
 
 
 const CriterionComment = ({ comment }: { comment: string }) => {
-  if (comment == "" || comment.length == 0) {
+  if (comment === "" || comment.length === 0) {
     return null
   }
 
   return (
-    <div className="comment-md">
+    <div className="comment-md text-base-content">
       <ReactMarkdown
         // eslint-disable-next-line react/no-children-prop
         children={comment}

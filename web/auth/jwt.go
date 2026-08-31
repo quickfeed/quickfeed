@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -13,10 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 )
-
-type requestID interface {
-	IDFor(string) uint64
-}
 
 // Claims contain the bearer information.
 type Claims struct {
@@ -56,7 +53,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	}
 	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(tm.secret))
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign token: %s", err)
+		return nil, fmt.Errorf("signing token: %w", err)
 	}
 	return &http.Cookie{
 		Name:     CookieName,
@@ -91,7 +88,7 @@ func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
 	}
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return nil, fmt.Errorf("failed to parse token: validation error")
+		return nil, errors.New("invalid token claims")
 	}
 	return claims, nil
 }
@@ -147,7 +144,7 @@ func extractToken(cookieString string) (string, error) {
 			return strings.TrimSpace(cookieValue), nil
 		}
 	}
-	return "", errors.New("failed to extract authentication cookie from request header")
+	return "", errors.New("no authentication cookie in request header")
 }
 
 // Context returns a new context with the claims as value.
@@ -161,15 +158,51 @@ func ClaimsFromContext(ctx context.Context) (*Claims, bool) {
 	return claims, ok
 }
 
-// HasCourseStatus returns true if user has enrollment with given status in the course.
-func (c *Claims) HasCourseStatus(req requestID, status qf.Enrollment_UserStatus) bool {
-	courseID := req.IDFor("course")
-	return c.Courses[courseID] == status
+type (
+	userIDProvider  interface{ GetUserID() uint64 }
+	groupIDProvider interface{ GetGroupID() uint64 }
+)
+
+// IsCourseStudent returns true if the user is a student in the course.
+func (c *Claims) IsCourseStudent(courseID uint64) bool {
+	return c.Courses[courseID] == qf.Enrollment_STUDENT
+}
+
+// IsCourseTeacher returns true if the user is a teacher in the course.
+func (c *Claims) IsCourseTeacher(courseID uint64) bool {
+	return c.Courses[courseID] == qf.Enrollment_TEACHER
 }
 
 // SameUser returns true if user ID in request is the same as in claims.
-func (c *Claims) SameUser(req requestID) bool {
-	return req.IDFor("user") == c.UserID
+func (c *Claims) SameUser(req any) bool {
+	if uid, ok := req.(userIDProvider); ok {
+		return uid.GetUserID() == c.UserID
+	}
+	return false
+}
+
+// IsGroupMember returns true if the request is a group and the claim's user is a member of that group.
+func (c *Claims) IsGroupMember(req any) bool {
+	if group, ok := req.(*qf.Group); ok {
+		return group.Contains(&qf.User{ID: c.UserID})
+	}
+	return false
+}
+
+// IsInGroup returns true if the group ID in the request is in the claims' groups.
+func (c *Claims) IsInGroup(req any) bool {
+	if gid, ok := req.(groupIDProvider); ok {
+		return slices.Contains(c.Groups, gid.GetGroupID())
+	}
+	return false
+}
+
+// UnauthorizedAdminChange returns true if an unauthorized admin change is attempted.
+func (c *Claims) UnauthorizedAdminChange(req any) bool {
+	if user, ok := req.(*qf.User); ok {
+		return user.GetIsAdmin() && !c.Admin
+	}
+	return false
 }
 
 func (c *Claims) String() string {

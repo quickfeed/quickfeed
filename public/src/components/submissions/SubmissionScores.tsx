@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react'
-import { Submission } from "../../../proto/qf/types_pb"
-import SubmissionScore from "./SubmissionScore"
-import { ScoreSchema } from "../../../proto/kit/score/score_pb"
 import { clone } from "@bufbuild/protobuf"
+import React, { useCallback } from 'react'
+import { ScoreSchema } from "../../../proto/kit/score/score_pb"
+import type { Submission } from "../../../proto/qf/types_pb"
+import SubmissionScore from "./SubmissionScore"
 
 type ScoreSort = "name" | "score" | "weight" | "percentage"
 
@@ -10,7 +10,17 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
     const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
     const [sortAscending, setSortAscending] = React.useState<boolean>(true)
 
-    const sortScores = () => {
+    const handleSort = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
+        const key = event.currentTarget.dataset.key as ScoreSort
+        if (sortKey === key) {
+            setSortAscending(prev => !prev)
+        } else {
+            setSortKey(key)
+            setSortAscending(true)
+        }
+    }, [sortKey])
+
+    const sortedScores = React.useMemo(() => {
         const sortBy = sortAscending ? 1 : -1
         const scores = submission.Scores.map(score => clone(ScoreSchema, score))
         const totalWeight = scores.reduce((acc, score) => acc + score.Weight, 0)
@@ -28,28 +38,16 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
                     return 0
             }
         })
-    }
-
-    const handleSort = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
-        const key = event.currentTarget.dataset.key as ScoreSort
-        if (sortKey === key) {
-            setSortAscending(!sortAscending)
-        } else {
-            setSortKey(key)
-            setSortAscending(true)
-        }
-    }, [sortKey, sortAscending])
-
-    const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
+    }, [submission, sortKey, sortAscending])
     const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
     return (
-        <table className="table table-curved table-striped table-hover">
-            <thead className="thead-dark">
-                <tr>
-                    <th colSpan={1} className="col-md-8" data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
-                    <th colSpan={1} className="fixed-width-percent" data-key={"score"} role="button" onClick={handleSort}>Score</th>
-                    <th colSpan={1} className="fixed-width-percent" data-key={"percentage"} role="button" onClick={handleSort}>%</th>
-                    <th colSpan={1} className="fixed-width-percent" data-key={"weight"} data-toggle="tooltip" title={"Maximum % contribution to total score"} role="button" onClick={handleSort}>Max</th>
+        <table className="table table-zebra">
+            <thead className="bg-base-300 text-base-content">
+                <tr className="text-lg">
+                    <th colSpan={1} data-key="name" role="button" onClick={handleSort}>Test Name</th>
+                    <th colSpan={1} className="fixed-width-percent text-right" data-key="score" role="button" onClick={handleSort}>Score</th>
+                    <th colSpan={1} className="fixed-width-percent text-right" data-key="percentage" role="button" onClick={handleSort}>%</th>
+                    <th colSpan={1} className="fixed-width-percent text-right" data-key="weight" data-toggle="tooltip" title="Maximum % contribution to total score" role="button" onClick={handleSort}>Max</th>
                 </tr>
             </thead>
             <tbody>

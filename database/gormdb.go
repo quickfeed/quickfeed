@@ -2,10 +2,10 @@ package database
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -21,7 +21,7 @@ var (
 	// name as a previously registered group.
 	ErrDuplicateGroup = errors.New("group with this name already registered")
 	// ErrUpdateGroup is returned when updating a group's enrollment fails.
-	ErrUpdateGroup = errors.New("failed to update group enrollment")
+	ErrUpdateGroup = errors.New("group members not enrolled in the course")
 	// ErrCourseExists is returned when trying to create an association in
 	// the database for a DirectoryId that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")
@@ -29,7 +29,7 @@ var (
 	// with insufficient access privileges.
 	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
 	// ErrCreateRepo is returned when trying to create repository with wrong argument.
-	ErrCreateRepo = errors.New("failed to create repository; invalid arguments")
+	ErrCreateRepo = errors.New("invalid arguments for repository creation")
 	// ErrNotEnrolled is returned when the requested user or group do not have
 	// the expected association with the given course
 	ErrNotEnrolled = errors.New("user or group not enrolled in the course")
@@ -41,7 +41,7 @@ type GormDB struct {
 }
 
 // NewGormDB creates a new gorm database using the provided driver.
-func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
+func NewGormDB(path string, logger *slog.Logger) (*GormDB, error) {
 	// We are conservative and use transactions for create/update/delete operations.
 	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{ // skipcq: GO-W1004
 		Logger:                 NewGORMLogger(logger),

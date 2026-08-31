@@ -84,6 +84,8 @@ Logrotate will keep the two latest log files in compressed form and will delete 
 
 For additional information, see the [logrotate manual](https://www.digitalocean.com/community/tutorials/how-to-manage-logfiles-with-logrotate-on-ubuntu-16-04).
 
+Logrotate governs `qf.log` only. Course-scoped records — webhook processing, CI and Docker output, and teacher-triggered rebuilds and assignment syncs — are additionally written to `$QUICKFEED/logs/courses/<organization>/<date>.jsonl`, one file per course per UTC day, so teachers can view their own course's activity through the "Course Logs" tile without operator access to `qf.log`. QuickFeed creates this directory itself and manages its own retention: date files older than 14 days are removed at startup, at daily rollover, and require no logrotate configuration.
+
 ## Cron Jobs
 
 TODO(meling) We have not prepared any cron jobs.

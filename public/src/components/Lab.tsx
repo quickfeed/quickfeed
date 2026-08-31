@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
-import { Assignment, Submission } from '../../proto/qf/types_pb'
+import type { Assignment, Submission } from '../../proto/qf/types_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
-import CourseLinks from "./CourseLinks"
 import LabResultTable from "./LabResultTable"
+import LogOutput from './LogOutput'
 import ReviewResult from './ReviewResult'
 import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
 
@@ -28,7 +28,7 @@ const Lab = () => {
         }
     }, [actions, lab, state.isTeacher])
 
-    const InternalLab = () => {
+    const renderLab = () => {
         let submission: Submission | null
         let assignment: Assignment | null
 
@@ -63,6 +63,7 @@ const Lab = () => {
                 // using the index as the key is not ideal, but in this case it is acceptable
                 // because the log lines are not expected to change unless a new submission is made
                 // in which case the component will be re-rendered anyways
+                // eslint-disable-next-line react/no-array-index-key
                 buildLog = buildLogRaw.split("\n").map((logLine: string, idx: number) => <span key={idx}>{logLine}<br /></span>) // skipcq: JS-0437
             }
 
@@ -73,11 +74,9 @@ const Lab = () => {
                     )}
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment.reviewers) && submission.released ? <ReviewResult review={review[0]} /> : null}
+                    {isManuallyGraded(assignment.reviewers) && review.length > 0 ? <ReviewResult review={review[0]} /> : null}
 
-                    <div className="card bg-light">
-                        <code className="card-body" style={{ color: "#c7254e", wordBreak: "break-word" }}>{buildLog}</code>
-                    </div>
+                    <LogOutput>{buildLog}</LogOutput>
                 </div>
             )
         }
@@ -87,9 +86,8 @@ const Lab = () => {
     return (
         <div className={state.isTeacher ? "" : "row"}>
             <div className={state.isTeacher ? "" : "col-md-9"}>
-                <InternalLab />
+                {renderLab()}
             </div>
-            {state.isTeacher ? null : <CourseLinks />}
         </div>
     )
 }

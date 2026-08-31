@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
@@ -37,34 +39,39 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 }
 
 // DeleteGroup deletes group with the provided ID.
+// The group's GitHub repository is deleted before the database records, so that
+// an interrupted delete leaves the database still referencing the repository,
+// allowing the delete operation to be retried.
 func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
 	}
-	if err := s.db.DeleteGroup(request.GetGroupID()); err != nil {
-		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.GetCode(), group.GetName(), err)
-		// continue with other delete operations
-	}
+	// Scope the delete once; the statements below do not repeat course and group.
+	ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode(), label.Group, group.GetName())
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
+		return fmt.Errorf("getting %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
 	}
 	if repo == nil {
-		s.logger.Debugf("No %s repository found for group %q: %v", course.GetCode(), group.GetName(), err)
-		// cannot continue without repository information
-		return nil
+		logger.Debug("group repository not found", label.Error, err)
+		// no repository to delete; only remove the group from the database
+		return s.db.DeleteGroup(request.GetGroupID())
 	}
 
 	// when deleting an approved group, remove github repository as well
-	if err = s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.GetCode(), group.GetName(), err)
+	if err := sc.DeleteGroup(ctx, repo.GetScmRepositoryID()); err != nil {
+		if !errors.Is(err, scm.ErrNotFound) {
+			return fmt.Errorf("deleting %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
+		}
+		// repository already deleted on GitHub, e.g., by a previously interrupted delete
+		logger.Debug("group repository not found on SCM", label.Error, err)
+	}
+	if err := s.db.DeleteRepository(repo.GetScmRepositoryID()); err != nil {
+		logger.Debug("failed to delete group repository from database", label.Error, err)
 		// continue with other delete operations
 	}
-	opt := &scm.RepositoryOptions{
-		ID: repo.GetScmRepositoryID(),
-	}
-	return sc.DeleteGroup(ctx, opt.ID)
+	return s.db.DeleteGroup(request.GetGroupID())
 }
 
 // updateGroup updates the group for the given group request.
@@ -80,10 +87,19 @@ func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, 
 		return err
 	}
 
+	ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode())
+
 	// get users of group, check consistency of group request
 	users, err := s.getGroupUsers(request)
 	if err != nil {
 		return err
+	}
+
+	for _, user := range users {
+		// check and update user SCM info before updating group
+		if err := s.updateUserFromSCM(ctx, sc, user); err != nil {
+			return fmt.Errorf("updating SCM info for user %d: %w", user.GetID(), err)
+		}
 	}
 
 	// allow changing the name of the group only if the group
@@ -95,18 +111,18 @@ func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, 
 
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to get %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
+		return fmt.Errorf("getting %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
 	}
 	if repo == nil {
 		repo, err := createRepo(ctx, sc, course, newGroup)
 		if err != nil {
 			return err
 		}
-		s.logger.Debugf("Created group repo on SCM: %+v", repo)
+		logger.Debug("created group repository on SCM", label.Repository, repo.Name())
 		if err := s.db.CreateRepository(repo); err != nil {
 			return err
 		}
-		s.logger.Debugf("Created group repo in database: %+v", repo)
+		logger.Debug("created group repository in database", label.Repository, repo.Name())
 	}
 
 	// if there are changes in group membership, update group repository
@@ -166,7 +182,7 @@ func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) 
 
 	users, err := s.db.GetUsers(userIds...)
 	if err != nil {
-		return nil, errors.New("failed to get users")
+		return nil, fmt.Errorf("getting users: %w", err)
 	}
 	if len(request.GetUsers()) != len(users) || len(users) != len(userIds) {
 		return nil, fmt.Errorf("invariant violation (request.Users=%d, users=%d, userIds=%d)",

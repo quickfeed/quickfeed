@@ -95,6 +95,8 @@ func (course *Course) PopulateSlipDays() {
 		enrollment.SetSlipDays(course)
 	}
 	for _, group := range course.GetGroups() {
+		// Set number of remaining slip days for the group itself
+		group.SetSlipDays(course)
 		// Set number of remaining slip days for each group enrollment
 		for _, enrollment := range group.GetEnrollments() {
 			enrollment.SetSlipDays(course)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -51,7 +52,7 @@ func TestErrorGetOrganization(t *testing.T) {
 		wantUserErrAlreadyExist     = "foo: course repositories (info, assignments, tests): already exist"
 		wantErrAlreadyExist         = "scm.GetOrganization: " + wantUserErrAlreadyExist
 		wantErrPermission           = "scm.GetOrganization: bar: permission denied: meling: not an owner of organization"
-		wantErrPermissionMembership = "scm.GetOrganization: bar: permission denied: failed to get membership: GET http://127.0.0.1/orgs/bar/memberships/jostein: 404  []"
+		wantErrPermissionMembership = "scm.GetOrganization: bar: permission denied: getting membership: GET http://127.0.0.1/orgs/bar/memberships/jostein: 404  []"
 		wantUserErrPermission       = "bar: permission denied"
 		wantUserErrPrefix           = "failed to get organization"
 	)
@@ -186,12 +187,37 @@ func TestErrorGetOrganization(t *testing.T) {
 	}
 }
 
+func TestDeleteRepositoryTreatsDelete404AsSuccess(t *testing.T) {
+	calls := 0
+	s := NewGithubUserClient("token")
+	s.client = github.NewClient(&http.Client{
+		Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+			calls++
+			switch r.Method + " " + r.URL.Path {
+			case http.MethodGet + " /repositories/1":
+				return githubResponse(http.StatusOK, `{"id":1,"name":"groupX","owner":{"login":"foo"}}`, nil), nil
+			case http.MethodDelete + " /repos/foo/groupX":
+				return githubResponse(http.StatusNotFound, "", nil), nil
+			default:
+				return nil, fmt.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			}
+		}),
+	})
+
+	if err := s.deleteRepository(context.Background(), 1); err != nil {
+		t.Fatalf("deleteRepository() error = %v, want nil", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected 2 requests, got %d", calls)
+	}
+}
+
 func TestErrorCreateCourse(t *testing.T) {
 	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgBar, User: &jostein, Role: github.String(OrgMember)}, // not allowed to create course
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgBar, User: &jostein, Role: new(OrgMember)}, // not allowed to create course
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -227,7 +253,7 @@ func TestErrorCreateCourse(t *testing.T) {
 		{
 			name:        "CompleteRequest/NotMember",
 			opt:         &CourseOptions{OrganizationID: 456, CourseCreator: "lamport"},
-			wantErr:     "scm.GetOrganization: bar: permission denied: failed to get membership: GET http://127.0.0.1/orgs/bar/memberships/lamport: 404  []",
+			wantErr:     "scm.GetOrganization: bar: permission denied: getting membership: GET http://127.0.0.1/orgs/bar/memberships/lamport: 404  []",
 			wantUserErr: "bar: permission denied",
 		},
 		{
@@ -275,12 +301,12 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE}",
+			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: missing fields: {Organization: User: Status:NONE AccessToken:}",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
-			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling", AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: scm.GetOrganization: failed to get organization fuzz: GET http://127.0.0.1/orgs/fuzz: 404  []",
 			wantUserErr: wantUserErr,
 		},
@@ -288,58 +314,59 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		// user frank does not exist, but is added to s.members in github_mock.go
 		{
 			name:        "CompleteRequest/IgnoredStatus",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: NONE",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/IgnoredStatus",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: PENDING",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/CreateStudRepo",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT},
-			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/frank: 404  []`,
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
+			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as student in bar: adding with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/frank: 404  []`,
 			wantUserErr: "failed to enroll frank as student in bar",
 		},
 		{
+			// This will work since frank is now a member of the bar organization after the previous test, even though the enrollment failed.
 			name:        "CompleteRequest/UpdateToTeacher",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER},
-			wantErr:     `scm.UpdateEnrollment: failed to enroll frank as teacher in bar: failed to update to "admin": PUT http://127.0.0.1/orgs/bar/memberships/frank: 404  []`,
-			wantUserErr: "failed to enroll frank as teacher in bar",
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER, AccessToken: "string"},
+			wantErr:     "",
+			wantUserErr: "",
 		},
 
 		// user meling already exists in s.members in github_mock.go
 		{
 			name:        "CompleteRequest/None",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: NONE",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/Pending",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING, AccessToken: "string"},
 			wantErr:     "scm.UpdateEnrollment: failed to update enrollment: invalid enrollment status: PENDING",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/Student/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
 			wantErr:     "",
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/Teacher/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "string"},
 			wantErr:     "",
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/Student/Fail",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT},
-			wantErr:     `scm.UpdateEnrollment: failed to enroll meling as student in bar: failed to add with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/meling: 404  []`,
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "string"},
+			wantErr:     `scm.UpdateEnrollment: failed to enroll meling as student in bar: adding with "pull" access: PUT http://127.0.0.1/repos/bar/assignments/collaborators/meling: 404  []`,
 			wantUserErr: "failed to enroll meling as student in bar",
 		},
 
@@ -347,7 +374,7 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 		// On GitHub, only organization owners can update roles, but we do not enforce this in the mock.
 		{
 			name:        "CompleteRequest/Teacher/TODO",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_TEACHER},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "string"},
 			wantErr:     "",
 			wantUserErr: "",
 		},
@@ -363,13 +390,10 @@ func TestErrorUpdateEnrollment(t *testing.T) {
 }
 
 func TestErrorRejectEnrollment(t *testing.T) {
-	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling},
-		{Organization: &ghOrgFoo, User: &jostein},
-		{Organization: &ghOrgBar, User: &meling},
-	}
 	const userErrPrefix = "failed to reject enrollment"
 
+	// Only error cases belong here; idempotency-success cases are covered by
+	// TestMockRejectEnrollment.
 	tests := []struct {
 		name        string
 		opt         *RejectEnrollmentOptions // cannot be nil
@@ -388,32 +412,8 @@ func TestErrorRejectEnrollment(t *testing.T) {
 			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for meling: scm.GetOrganization: failed to get organization by ID: 789: GET http://127.0.0.1/organizations/789: 404  []",
 			wantUserErr: userErrPrefix + " for meling",
 		},
-		{
-			name:        "CompleteRequest/RepoNotFound",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: scm.deleteRepository: failed to delete repository: failed to get repository 999: GET http://127.0.0.1/repositories/999: 404  []",
-			wantUserErr: userErrPrefix + " for jostein",
-		},
-		{
-			name:        "CompleteRequest/UserNotFound",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for frank: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/frank: 404  []",
-			wantUserErr: userErrPrefix + " for frank",
-		},
-		{
-			name:        "CompleteRequest/UserAlreadyRemoved",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"},
-			wantErr:     "scm.RejectEnrollment: failed to reject enrollment for jostein: failed to remove user: DELETE http://127.0.0.1/orgs/foo/members/jostein: 404  []",
-			wantUserErr: userErrPrefix + " for jostein",
-		},
-		{
-			name:        "CompleteRequest/Success",
-			opt:         &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "meling"},
-			wantErr:     "",
-			wantUserErr: "",
-		},
 	}
-	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"OrganizationID", "RepositoryID", "User"}, tt.opt.OrganizationID, tt.opt.RepositoryID, tt.opt.User)
 		t.Run(name, func(t *testing.T) {
@@ -425,9 +425,9 @@ func TestErrorRejectEnrollment(t *testing.T) {
 
 func TestErrorDemoteTeacherToStudent(t *testing.T) {
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgFoo, User: &jostein, Role: github.String(OrgMember)},
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &jostein, Role: new(OrgMember)},
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -439,37 +439,38 @@ func TestErrorDemoteTeacherToStudent(t *testing.T) {
 		{
 			name:        "IncompleteRequest",
 			opt:         &UpdateEnrollmentOptions{},
-			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE}",
+			wantErr:     "scm.DemoteTeacherToStudent: failed to demote teacher to student: missing fields: {Organization: User: Status:NONE AccessToken:}",
 			wantUserErr: "failed to demote teacher to student",
 		},
 
 		{
 			name:        "CompleteRequest/OrgNotFound",
-			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"},
-			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher meling to student in fuzz: failed to update to "member": PUT http://127.0.0.1/orgs/fuzz/memberships/meling: 404  []`,
+			opt:         &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling", AccessToken: "string"},
+			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher meling to student in fuzz: updating to "member": PUT http://127.0.0.1/orgs/fuzz/memberships/meling: 404  []`,
 			wantUserErr: "failed to demote teacher meling to student in fuzz",
 		},
+		// Note: User not found in org will create a new membership with member role (GitHub API behavior)
 		{
 			name:        "CompleteRequest/UserNotFound",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank"},
-			wantErr:     `scm.DemoteTeacherToStudent: failed to demote teacher frank to student in bar: failed to update to "member": PUT http://127.0.0.1/orgs/bar/memberships/frank: 404  []`,
-			wantUserErr: "failed to demote teacher frank to student in bar",
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "frank", AccessToken: "string"},
+			wantErr:     "",
+			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/FooStudent/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "jostein", AccessToken: "string"},
 			wantErr:     ``,
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/FooTeacher/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "foo", User: "meling", AccessToken: "string"},
 			wantErr:     ``,
 			wantUserErr: "",
 		},
 		{
 			name:        "CompleteRequest/BarTeacher/Success",
-			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling"},
+			opt:         &UpdateEnrollmentOptions{Organization: "bar", User: "meling", AccessToken: "string"},
 			wantErr:     ``,
 			wantUserErr: "",
 		},
@@ -548,13 +549,13 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &GroupOptions{Organization: "foo", GroupName: "a"},
-			wantErr:     "scm.UpdateGroupMembers: failed to update group members: failed to get members: GET http://127.0.0.1/repos/foo/a/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: getting members: GET http://127.0.0.1/repos/foo/a/collaborators: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &GroupOptions{Organization: "x", GroupName: "info"},
-			wantErr:     "scm.UpdateGroupMembers: failed to update group members: failed to get members: GET http://127.0.0.1/repos/x/info/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: getting members: GET http://127.0.0.1/repos/x/info/collaborators: 404  []",
 			wantUserErr: wantUserErr,
 		},
 		// TODO: Add more tests to check error handling when updating group members.
@@ -597,10 +598,8 @@ func chkErrMsg(t *testing.T, m string, gotErr error, wantErr, wantUserErr string
 			t.Log("want user error:", wantUserErr)
 			t.Errorf("%s user error mismatch (-want +got):\n%s", m, diff)
 		}
-	} else {
-		if wantUserErr != "" {
-			t.Errorf("%s() user error = nil, want %q", m, wantUserErr)
-		}
+	} else if wantUserErr != "" {
+		t.Errorf("%s() user error = nil, want %q", m, wantUserErr)
 	}
 }
 
@@ -678,10 +677,8 @@ func TestErrorE(t *testing.T) {
 					t.Logf("want user error: %s", tt.wantUserErr)
 					t.Errorf("%s() user error mismatch (-want +got):\n%s", tt.name, diff)
 				}
-			} else {
-				if tt.wantUserErr != "" {
-					t.Errorf("%s() user error = nil, want %q", tt.name, tt.wantUserErr)
-				}
+			} else if tt.wantUserErr != "" {
+				t.Errorf("%s() user error = nil, want %q", tt.name, tt.wantUserErr)
 			}
 		})
 	}

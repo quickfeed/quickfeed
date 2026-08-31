@@ -1,11 +1,13 @@
-import React from "react"
-import { Assignment, AssignmentSchema, Submission, SubmissionSchema } from "../../proto/qf/types_pb"
-import ProgressBar, { Progress } from "../components/ProgressBar"
-import { initializeOvermind } from "./TestHelpers"
-import { Provider } from "overmind-react"
-import { render } from "@testing-library/react"
 import { create } from "@bufbuild/protobuf"
+import { render } from "@testing-library/react"
+import { Provider } from "overmind-react"
+import React from "react"
+import type { Assignment, Submission } from "../../proto/qf/types_pb"
+import { AssignmentSchema, GradeSchema, SubmissionSchema, Submission_Status, UserSchema } from "../../proto/qf/types_pb"
+import ProgressBar from "../components/ProgressBar"
+import ProgressIndicator from "../components/ProgressIndicator"
 import { SubmissionsForUser } from "../Helpers"
+import { initializeOvermind } from "./TestHelpers"
 
 type ProgressBarTest = {
     desc: string,
@@ -78,28 +80,108 @@ describe("ProgressBar", () => {
         },
     ]
 
-    test.each(progressBarTests)(`[Progress.LAB] $desc`, (test) => {
+    test.each(progressBarTests)("[ProgressBar] $desc", (test) => {
         labTest(test)
     })
 
 
-    test.each(progressBarTests)(`[Progress.NAV] $desc`, (test) => {
+    type ColorTest = {
+        desc: string,
+        viewerID: bigint,
+        grades: { userID: bigint, status: Submission_Status }[],
+        wantColor: string,
+    }
+
+    // Regression for #1271: teachers viewing a submission they are not a
+    // participant of were getting the default "bg-primary" color because
+    // getStatusByUser returned NONE for their userID.
+    const colorTests: ColorTest[] = [
+        {
+            desc: "student viewing own approved submission → success",
+            viewerID: 1n,
+            grades: [{ userID: 1n, status: Submission_Status.APPROVED }],
+            wantColor: "bg-success",
+        },
+        {
+            desc: "teacher viewing student's approved submission → success",
+            viewerID: 999n,
+            grades: [{ userID: 1n, status: Submission_Status.APPROVED }],
+            wantColor: "bg-success",
+        },
+        {
+            desc: "teacher viewing student's rejected submission → error",
+            viewerID: 999n,
+            grades: [{ userID: 1n, status: Submission_Status.REJECTED }],
+            wantColor: "bg-error",
+        },
+        {
+            desc: "teacher viewing student's revision submission → warning",
+            viewerID: 999n,
+            grades: [{ userID: 1n, status: Submission_Status.REVISION }],
+            wantColor: "bg-warning",
+        },
+        {
+            desc: "teacher viewing group submission with all approved → success",
+            viewerID: 999n,
+            grades: [
+                { userID: 1n, status: Submission_Status.APPROVED },
+                { userID: 2n, status: Submission_Status.APPROVED },
+            ],
+            wantColor: "bg-success",
+        },
+        {
+            desc: "teacher viewing group submission with mixed grades → primary (no consensus)",
+            viewerID: 999n,
+            grades: [
+                { userID: 1n, status: Submission_Status.APPROVED },
+                { userID: 2n, status: Submission_Status.REJECTED },
+            ],
+            wantColor: "bg-primary",
+        },
+    ]
+
+    test.each(colorTests)("[ProgressBar color] $desc", (t) => {
+        const submission = create(SubmissionSchema, {
+            score: 50,
+            Grades: t.grades.map(g => create(GradeSchema, { UserID: g.userID, Status: g.status })),
+        })
+        const assignment = create(AssignmentSchema, { scoreLimit: 100 })
+        const submissions = new SubmissionsForUser()
+        submissions.setSubmissions(1n, "USER", [submission])
+        const overmind = initializeOvermind({
+            assignments: { "1": [assignment] },
+            submissions,
+            self: create(UserSchema, { ID: t.viewerID }),
+        })
+
+        const { container } = render(
+            <Provider value={overmind}>
+                <ProgressBar courseID="1" submission={submission} />
+            </Provider>
+        )
+
+        const primary = container.querySelector('[role="progressbar"]')
+        expect(primary?.className).toContain(t.wantColor)
+    })
+
+    test.each(progressBarTests)("[ProgressIndicator] $desc", (test) => {
         const submissions = new SubmissionsForUser()
         submissions.setSubmissions(1n, "USER", [test.submission])
         const overmind = initializeOvermind({ assignments: { "1": [test.assignment] }, submissions })
         const { container } = render(
             <Provider value={overmind}>
-                <ProgressBar courseID={"1"} submission={test.submission} type={Progress.NAV} />
+                <ProgressIndicator courseID="1" submission={test.submission} />
             </Provider>
         )
 
         const bar = container.getElementsByTagName("div").item(0)
         expect(bar?.style).toHaveProperty("right", `${100 - test.submission.score}%`)
 
-        const color = test.submission.score >= test.assignment.scoreLimit
-            ? "2px solid green"
-            : "2px solid yellow"
-        expect(bar?.style).toHaveProperty("border-bottom", color)
+        // Check for the appropriate Tailwind class based on status and score
+        const expectedClassSuffix = test.submission.score >= test.assignment.scoreLimit
+            ? "border-b-success"
+            : "border-b-primary"
+        expect(bar?.className).toContain(expectedClassSuffix)
     })
 })
 
@@ -110,27 +192,30 @@ const labTest = (test: ProgressBarTest) => {
 
     const { container } = render(
         <Provider value={overmind}>
-            <ProgressBar courseID={"1"} submission={test.submission} type={Progress.LAB} />
+            <ProgressBar courseID="1" submission={test.submission} />
         </Provider>
     )
 
-    // Incorrect assignment index should not have a secondary bar
+    // Check if there should be a secondary progress bar
     const hasSecondary = test.submission.score < test.assignment.scoreLimit
-    // Given an invalid assignment index, we expect the bar to be empty
-    // However, if we pass a submission, we expect the bar to be filled to the correct percentage
     const score = test.submission.score
 
-    const bars = container.getElementsByClassName("progress-bar")
+    const bars = container.querySelectorAll('[role="progressbar"]')
     expect(bars).toHaveLength(hasSecondary ? 2 : 1)
-    if (hasSecondary) {
-        const secondary = container.getElementsByClassName("progressbar-secondary").item(0)
-        if (!secondary) {
-            fail()
-        }
-        expect(secondary.getAttribute("style")).toContain(`width: ${test.assignment.scoreLimit - test.submission.score}%`)
-        expect(secondary.textContent).toEqual(`${test.assignment.scoreLimit - test.submission.score} %`)
+
+    // Check primary progress bar
+    const primary = bars[0]
+    expect(primary.getAttribute("style")).toContain(`width: ${score}%`)
+
+    // Only expect text to be shown when score > 10 (UI constraint for small bars)
+    if (score > 10) {
+        expect(primary.textContent).toContain(test.want)
     }
 
-    expect(container.getElementsByClassName("progress-bar bg-primary").item(0)?.getAttribute("style")).toContain(`width: ${score}%`)
-    expect(bars[0].textContent).toContain(test.want)
+    if (hasSecondary) {
+        const secondary = bars[1]
+        const expectedWidth = test.assignment.scoreLimit - test.submission.score
+        expect(secondary.getAttribute("style")).toContain(`width: ${expectedWidth}%`)
+        expect(secondary.getAttribute("style")).toContain(`left: ${test.submission.score}%`)
+    }
 }

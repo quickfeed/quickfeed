@@ -10,19 +10,27 @@ import (
 )
 
 type mockOptions struct {
-	orgs       []github.Organization
-	repos      []github.Repository
-	members    []github.Membership
-	groups     map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
-	issues     map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
-	comments   map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
-	reviewers  map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
-	appConfigs map[string]github.AppConfig                           // map: code -> app config
+	orgs                  []github.Organization
+	repos                 []github.Repository
+	members               []github.Membership
+	groups                map[string]map[string][]github.User                   // map: owner -> repo -> collaborators
+	issues                map[string]map[string][]github.Issue                  // map: owner -> repo -> issues
+	comments              map[string]map[string]map[int64][]github.IssueComment // map: owner -> repo -> issue ID -> comments
+	reviewers             map[string]map[string]map[int]github.ReviewersRequest // map: owner -> repo -> pull requests ID -> reviewers
+	appConfigs            map[string]github.AppConfig                           // map: code -> app config
+	aheadBy               map[string]int                                        // map: "owner/repo" -> commits ahead of the upstream assignments repo
+	userID                int64                                                 // counter for generating unique user IDs
+	invitationNotReadyFor int                                                   // remaining 202 responses before PATCH /user/memberships/orgs/{org} succeeds
+}
+
+// repoKey is the key used to track per-repository mock state keyed by owner and repository name.
+func repoKey(owner, repo string) string {
+	return owner + "/" + repo
 }
 
 // DumpState returns a string representation of the mock state.
 // This is used for debugging and testing purposes.
-func (s mockOptions) DumpState() string {
+func (s *mockOptions) DumpState() string {
 	b := new(strings.Builder)
 	fmt.Fprintln(b, "Mock state:")
 	for i, org := range s.orgs {
@@ -66,18 +74,36 @@ func (s mockOptions) DumpState() string {
 }
 
 // hasOrgRepo returns true if the given organization and repository exists in the mock data.
-func (s mockOptions) hasOrgRepo(orgName, repoName string) bool {
+func (s *mockOptions) hasOrgRepo(orgName, repoName string) bool {
+	return s.findOrgRepo(orgName, repoName) != nil
+}
+
+func (s *mockOptions) findOrgRepo(orgName, repoName string) *github.Repository {
 	for i := range s.repos {
 		repo := &s.repos[i]
 		if repo.GetOrganization().GetLogin() == orgName && repo.GetName() == repoName {
-			return true
+			return repo
 		}
 	}
-	return false
+	return nil
+}
+
+func (s *mockOptions) findRepoByHeadSHA(headSHA string) *github.Repository {
+	for i := range s.repos {
+		repo := &s.repos[i]
+		if mockRepoHeadSHA(repo) == headSHA {
+			return repo
+		}
+	}
+	return nil
+}
+
+func mockRepoHeadSHA(repo *github.Repository) string {
+	return fmt.Sprintf("%040x", repo.GetID())
 }
 
 // matchOrgFunc calls f with the organization that matches orgName and returns true if found.
-func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) bool {
+func (s *mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) bool {
 	for _, org := range s.orgs {
 		if org.GetLogin() == orgName {
 			f(org)
@@ -89,7 +115,7 @@ func (s mockOptions) matchOrgFunc(orgName string, f func(github.Organization)) b
 
 // GetComment returns the comment for the given organization, repository, and matching comment ID.
 // This is used to inspect the comments created/updated during testing; not part of the SCM interface.
-func (s mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
+func (s *mockOptions) GetComment(orgName, repoName string, commentID int64) *github.IssueComment {
 	if s.comments[orgName] == nil || s.comments[orgName][repoName] == nil {
 		return nil
 	}
@@ -112,7 +138,25 @@ func newMockOptions() *mockOptions {
 		issues:    map[string]map[string][]github.Issue{},
 		comments:  map[string]map[string]map[int64][]github.IssueComment{},
 		reviewers: map[string]map[string]map[int]github.ReviewersRequest{},
+		aheadBy:   map[string]int{},
+		userID:    0,
 	}
+}
+
+// nextUserID returns the next unique user ID and increments the counter.
+func (s *mockOptions) nextUserID() int64 {
+	s.userID++
+	return s.userID
+}
+
+// getUserID returns the user ID for the given login, or assigns a new one if not found.
+func (s *mockOptions) getUserID(login string) int64 {
+	for _, member := range s.members {
+		if member.GetUser().GetLogin() == login {
+			return member.GetUser().GetID()
+		}
+	}
+	return s.nextUserID()
 }
 
 type MockOption func(*mockOptions)
@@ -129,9 +173,27 @@ func WithRepos(repos ...github.Repository) MockOption {
 	}
 }
 
+// WithCommitsAhead seeds the given repository as n commits ahead of the upstream
+// assignments repository it was forked from. Use this when the repository is created
+// during the test (e.g. via an RPC) and the mock instance is not directly reachable;
+// tests that hold the mock can call SimulateCommit instead.
+func WithCommitsAhead(owner, repo string, n int) MockOption {
+	return func(opts *mockOptions) {
+		opts.aheadBy[repoKey(owner, repo)] = n
+	}
+}
+
 func WithMembers(members ...github.Membership) MockOption {
 	return func(opts *mockOptions) {
 		opts.members = append(opts.members, members...)
+	}
+}
+
+// WithInvitationNotReady makes the next n attempts to accept an organization
+// invitation return HTTP 202, matching GitHub's asynchronous invitation job.
+func WithInvitationNotReady(n int) MockOption {
+	return func(opts *mockOptions) {
+		opts.invitationNotReadyFor = n
 	}
 }
 
@@ -172,10 +234,11 @@ func WithMockOrgs(members ...string) MockOption {
 			ghOrg := toOrg(course)
 			opts.orgs = append(opts.orgs, ghOrg)
 			for i, member := range members {
+				userID := opts.getUserID(member)
 				if i == 0 {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgOwner), User: &github.User{Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: new(OrgOwner), User: &github.User{ID: new(userID), Login: new(member)}})
 				} else {
-					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: github.String(OrgMember), User: &github.User{Login: github.String(member)}})
+					opts.members = append(opts.members, github.Membership{Organization: &ghOrg, Role: new(OrgMember), User: &github.User{ID: new(userID), Login: new(member)}})
 				}
 			}
 		}
@@ -202,16 +265,25 @@ func WithMockAppConfig(configs map[string]github.AppConfig) MockOption {
 	}
 }
 
+// WithMockOptions combines multiple mock options into one.
+func WithMockOptions(mockOpts ...MockOption) MockOption {
+	return func(opts *mockOptions) {
+		for _, mockOpt := range mockOpts {
+			mockOpt(opts)
+		}
+	}
+}
+
 var toOrg = func(course *qf.Course) github.Organization {
 	return github.Organization{
-		ID:    github.Int64(int64(course.GetScmOrganizationID())),
-		Login: github.String(course.GetScmOrganizationName()),
+		ID:    new(int64(course.GetScmOrganizationID())),
+		Login: new(course.GetScmOrganizationName()),
 	}
 }
 
 var toRepo = func(org *github.Organization, name string) github.Repository {
 	return github.Repository{
 		Organization: org,
-		Name:         github.String(name),
+		Name:         new(name),
 	}
 }

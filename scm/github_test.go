@@ -11,6 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 const (
@@ -48,7 +49,7 @@ func TestCreateIssue(t *testing.T) {
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
 
-	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
+	if issue.Title != "Test Issue" || issue.Body != "Test Body" {
 		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
 	}
 }
@@ -140,10 +141,10 @@ func TestRequestReviewers(t *testing.T) {
 
 	ctx := context.Background()
 	pullReq, _, err := s.Client().PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
-		Title: github.String("Test Request Reviewers"),
-		Body:  github.String("Test Request Reviewers Body"),
-		Head:  github.String(testReqReviewersBranch),
-		Base:  github.String("master"),
+		Title: new("Test Request Reviewers"),
+		Body:  new("Test Request Reviewers Body"),
+		Head:  new(testReqReviewersBranch),
+		Base:  new("master"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +172,7 @@ func TestRequestReviewers(t *testing.T) {
 	t.Logf("PullRequest %d created with reviewer %v", *pullReq.Number, reviewer)
 
 	_, _, err = s.Client().PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
-		State: github.String("closed"),
+		State: new("closed"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -245,30 +246,82 @@ func TestFeedbackCommentFormat(t *testing.T) {
 	}
 }
 
-// This test assumes that the test organization has an empty "info" repository
-// and non-empty "tests" repository.
-func TestEmptyRepo(t *testing.T) {
+// This test assumes the repositories are compared against assignments, and that
+// user/group forks may be ahead by zero or more commits.
+func TestCommitsAhead(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s, _ := scm.GetTestSCM(t)
 
 	tests := []struct {
 		name      string
 		opt       *scm.RepositoryOptions
-		wantEmpty bool
+		wantAhead int
+		wantErr   bool
 	}{
-		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{Repo: "tests", Owner: qfTestOrg}, wantEmpty: false},
-		{name: "NonEmptyRepo", opt: &scm.RepositoryOptions{ID: 328688692}, wantEmpty: false},
-		{name: "EmptyRepo", opt: &scm.RepositoryOptions{Repo: "info", Owner: qfTestOrg}, wantEmpty: true},
-		{name: "EmptyRepo", opt: &scm.RepositoryOptions{ID: 328688666}, wantEmpty: true},
-		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Repo: "some-other-repo", Owner: qfTestOrg}, wantEmpty: true}, // treat non-existent repo as empty
+		{name: "CourseRepo", opt: &scm.RepositoryOptions{Repo: "tests", Owner: qfTestOrg}, wantErr: true},
+		{name: "CourseRepoByID", opt: &scm.RepositoryOptions{ID: 328688692}, wantErr: true},
+		{name: "CourseRepoInfo", opt: &scm.RepositoryOptions{Repo: "info", Owner: qfTestOrg}, wantErr: true},
+		{name: "CourseRepoInfoByID", opt: &scm.RepositoryOptions{ID: 328688666}, wantErr: true},
+		{name: "NonExistentRepo", opt: &scm.RepositoryOptions{Repo: "some-other-repo", Owner: qfTestOrg}, wantErr: true},
 	}
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"ID", "Owner", "Repo"}, tt.opt.ID, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
-				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			ahead, err := s.CommitsAhead(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CommitsAhead(%+v) error = %v, wantErr %v", *tt.opt, err, tt.wantErr)
+			}
+			if ahead != tt.wantAhead {
+				t.Errorf("CommitsAhead(%+v) = %d, want %d", *tt.opt, ahead, tt.wantAhead)
 			}
 		})
+	}
+}
+
+func TestGetUserByID(t *testing.T) {
+	s := scm.NewMockedGithubSCMClient(qtest.Logger(t),
+		scm.WithMockOrgs("meling"), // user "meling" with ID 1
+		scm.WithMembers(github.Membership{
+			User: &github.User{
+				ID:        github.Int64(2),
+				Login:     new("avatar_user"),
+				AvatarURL: new("https://avatar.com"),
+			},
+		}),
+	)
+	ctx := t.Context()
+
+	// Test successfully fetching a user
+	gotUser, err := s.GetUserByID(ctx, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantUser := &qf.User{
+		Login:       "meling",
+		ScmRemoteID: 1,
+	}
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUserByID() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Test successfully fetching a user with AvatarURL
+	gotUser, err = s.GetUserByID(ctx, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantUser = &qf.User{
+		Login:       "avatar_user",
+		AvatarURL:   "https://avatar.com",
+		ScmRemoteID: 2,
+	}
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUserByID() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Test handling errors when the user doesn't exist
+	_, err = s.GetUserByID(ctx, 999)
+	if err == nil {
+		t.Error("expected error for non-existent user ID 999")
 	}
 }
 

@@ -1,7 +1,6 @@
 package web_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -32,11 +31,9 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 					sem := make(chan struct{}, maxContainers)
 					errCnt := int32(0)
 					var wg sync.WaitGroup
-					wg.Add(len(submissions))
 					for _, submission := range submissions {
-						submission := submission
 						// the counting semaphore limits concurrency to maxContainers
-						go func() {
+						wg.Go(func() {
 							sem <- struct{}{} // acquire semaphore
 							// here we are rebuilding submission
 							if submission%errRate == 0 { // simulate error every errRate submission
@@ -44,8 +41,7 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 								atomic.AddInt32(&errCnt, 1)
 							}
 							<-sem // release semaphore
-							wg.Done()
-						}()
+						})
 					}
 					// wait for all submissions to finish rebuilding
 					wg.Wait()
@@ -74,8 +70,8 @@ func TestRebuildSubmissions(t *testing.T) {
 	mgr := scm.MockManager(t, scm.WithMockOrgs())
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qtest.Logger(t).Desugar()
-	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
+	logger := qtest.Logger(t)
+	q := web.NewQuickFeedService(logger, db, mgr, &ci.Local{}, nil, nil)
 	teacher := qtest.CreateFakeUser(t, db)
 	qtest.UpdateUser(t, db, &qf.User{ID: teacher.GetID(), IsAdmin: true})
 
@@ -102,7 +98,6 @@ func TestRebuildSubmissions(t *testing.T) {
 		RepoType:          qf.Repository_USER,
 	})
 
-	ctx := context.Background()
 	assignment := &qf.Assignment{
 		CourseID:         course.GetID(),
 		Name:             "lab1",
@@ -130,49 +125,49 @@ func TestRebuildSubmissions(t *testing.T) {
 	errFailedRebuildSubmission := connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submission"))
 	tests := []struct {
 		name    string
-		request *connect.Request[qf.RebuildRequest]
+		request *qf.RebuildRequest
 		wantErr error
 	}{
 		{
 			name: "Rebuild non-existing submission",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: assignment.GetID(),
 				SubmissionID: 123,
-			}},
+			},
 			wantErr: errFailedRebuildSubmission,
 		},
 		{
 			name: "Wrong assignment ID",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: 1337,
 				SubmissionID: 1,
-			}},
+			},
 			wantErr: errFailedRebuildSubmission,
 		},
 		{
 			name: "Rebuild all submissions with invalid assignment ID",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: 111,
-			}},
+			},
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions")),
 		},
 		{
 			name: "Rebuild existing submission",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: assignment.GetID(),
 				SubmissionID: 1,
-			}},
+			},
 		},
 		{
 			name: "Rebuild all submissions",
-			request: &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
+			request: &qf.RebuildRequest{
 				AssignmentID: assignment.GetID(),
-			}},
+			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := q.RebuildSubmissions(ctx, test.request)
+			_, err := q.RebuildSubmissions(t.Context(), test.request)
 			qtest.CheckError(t, err, test.wantErr)
 		})
 	}

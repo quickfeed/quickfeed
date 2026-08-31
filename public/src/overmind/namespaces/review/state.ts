@@ -1,6 +1,7 @@
 import { derived } from "overmind"
-import { Context } from "../.."
-import { GradingCriterion_Grade, Review, User } from "../../../../proto/qf/types_pb"
+import type { Context } from "../.."
+import type { Review, User } from "../../../../proto/qf/types_pb"
+import { GradingCriterion_Grade } from "../../../../proto/qf/types_pb"
 
 export type ReviewState = {
     /* The index of the selected review */
@@ -26,12 +27,8 @@ export type ReviewState = {
     /* The amount of criteria that have been graded for the current review */
     graded: number
 
-    /* The ID of the assignment selected. Used to determine which assignment to release */
+    /* The ID of the assignment selected. Used for filtering */
     assignmentID: bigint
-
-    /* The minimum score submissions must have to be released or approved */
-    /* Sent as argument to updateSubmissions */
-    minimumScore: number
 }
 
 export const state: ReviewState = {
@@ -86,5 +83,4 @@ export const state: ReviewState = {
     }),
 
     assignmentID: BigInt(-1),
-    minimumScore: 0,
 }

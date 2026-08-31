@@ -1,12 +1,12 @@
-import { Code } from "@connectrpc/connect"
-import { Message } from "@bufbuild/protobuf"
-import { Response } from "../../client"
+import type { Message } from "@bufbuild/protobuf"
+import type { Code } from "@connectrpc/connect"
+import type { Response } from "../../client"
 
 /** Prompt contains the messages to display to the user when prompting for confirmation. */
 export namespace Prompt {
     export const GroupDelete = "Are you sure you want to delete this group?"
-    export const GroupRepoNotEmpty = "Warning: The group repository is not empty. Do you still want to delete the group and its corresponding GitHub repository?"
-    export const EnrollmentRepoNotEmpty = "Warning: The enrollment repository is not empty. Do you still want to delete the enrollment and enrollment repository?"
+    export const GroupRepoNotEmpty = (reason: string) => `Warning: ${reason}. Do you still want to delete the group and its corresponding GitHub repository?`
+    export const EnrollmentRepoNotEmpty = (reason: string) => `Warning: ${reason}. Do you still want to delete the enrollment and enrollment repository?`
 }
 
 /** promptOnErrorResponse prompts the user with a warning if the response contains an error with the given code.

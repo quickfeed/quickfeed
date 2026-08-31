@@ -22,11 +22,11 @@ func taskName(filename string) string {
 // starting with the "# " character sequence, followed by two new line characters.
 func newTask(contents []byte, assignmentOrder uint32, name string) (*qf.Task, error) {
 	if !bytes.HasPrefix(contents, []byte("# ")) {
-		return nil, fmt.Errorf("task with name: %s, does not start with a # title marker", name)
+		return nil, fmt.Errorf("task %q does not start with a # title marker", name)
 	}
 	bodyIndex := bytes.Index(contents, []byte("\n\n"))
 	if bodyIndex == -1 {
-		return nil, fmt.Errorf("failed to find task body in task: %s", name)
+		return nil, fmt.Errorf("task %q does not have a body", name)
 	}
 
 	return &qf.Task{

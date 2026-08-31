@@ -19,35 +19,35 @@ var (
 	ghOrgFoo    = github.Organization{ID: github.Int64(123), Login: foo.Login}
 	ghOrgBar    = github.Organization{ID: github.Int64(456), Login: bar.Login}
 	ghOrgBuz    = github.Organization{ID: github.Int64(678), Login: buz.Login}
-	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: github.String("dat320")}
+	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: new("dat320")}
 )
 
 // mock repositories for organization foo; bar has no repositories
 var repos = []github.Repository{
-	{ID: github.Int64(1), Organization: &ghOrgFoo, Name: github.String("info")},
-	{ID: github.Int64(2), Organization: &ghOrgFoo, Name: github.String("assignments")},
-	{ID: github.Int64(3), Organization: &ghOrgFoo, Name: github.String("tests")},
-	{ID: github.Int64(4), Organization: &ghOrgFoo, Name: github.String("meling-labs")},
-	{ID: github.Int64(5), Organization: &ghOrgFoo, Name: github.String("josie-labs")},
-	{ID: github.Int64(6), Organization: &ghOrgFoo, Name: github.String("groupX")},
-	{ID: github.Int64(7), Organization: &ghOrgBar, Name: github.String("groupY")},
-	{ID: github.Int64(8), Organization: &ghOrgBar, Name: github.String("groupZ")},
+	{ID: github.Int64(1), Organization: &ghOrgFoo, Name: new("info")},
+	{ID: github.Int64(2), Organization: &ghOrgFoo, Name: new("assignments")},
+	{ID: github.Int64(3), Organization: &ghOrgFoo, Name: new("tests")},
+	{ID: github.Int64(4), Organization: &ghOrgFoo, Name: new("meling-labs")},
+	{ID: github.Int64(5), Organization: &ghOrgFoo, Name: new("josie-labs")},
+	{ID: github.Int64(6), Organization: &ghOrgFoo, Name: new("groupX")},
+	{ID: github.Int64(7), Organization: &ghOrgBar, Name: new("groupY")},
+	{ID: github.Int64(8), Organization: &ghOrgBar, Name: new("groupZ")},
 }
 
 var (
-	meling  = github.User{Login: github.String("meling")}
-	leslie  = github.User{Login: github.String("leslie")}
-	lamport = github.User{Login: github.String("lamport")}
-	jostein = github.User{Login: github.String("jostein")}
-	foo     = github.User{Login: github.String("foo")} // organization (user/owner)
-	bar     = github.User{Login: github.String("bar")} // organization (user/owner)
-	buz     = github.User{Login: github.String("buz")} // organization (user/owner)
+	meling  = github.User{Login: new("meling")}
+	leslie  = github.User{Login: new("leslie")}
+	lamport = github.User{Login: new("lamport")}
+	jostein = github.User{Login: new("jostein")}
+	foo     = github.User{Login: new("foo")} // organization (user/owner)
+	bar     = github.User{Login: new("bar")} // organization (user/owner)
+	buz     = github.User{Login: new("buz")} // organization (user/owner)
 )
 
 // memberships: user -> role; two members; one owner, one member
 var members = []github.Membership{
-	{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-	{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgMember)},
+	{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+	{Organization: &ghOrgBar, User: &meling, Role: new(OrgMember)},
 }
 
 // groups map: owner -> repo -> collaborators (only group repos should have collaborators)
@@ -220,32 +220,95 @@ func TestMockGetRepositories(t *testing.T) {
 	}
 }
 
-func TestMockRepositoryIsEmpty(t *testing.T) {
+func TestMockCommitsAhead(t *testing.T) {
 	tests := []struct {
 		name      string
 		opt       *RepositoryOptions
-		wantEmpty bool
+		wantAhead int
+		wantErr   bool
 	}{
-		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantEmpty: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantEmpty: true},
-		{name: "IncompleteRequest", opt: &RepositoryOptions{Repo: "info"}, wantEmpty: true},
+		// Invalid options cannot be resolved to a repository and must return an error.
+		{name: "IncompleteRequest", opt: &RepositoryOptions{}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Owner: "foo"}, wantErr: true},
+		{name: "IncompleteRequest", opt: &RepositoryOptions{Repo: "info"}, wantErr: true},
 
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "info"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "assignments"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "tests"}, wantEmpty: true},
-		{name: "CompleteRequest/Empty", opt: &RepositoryOptions{Owner: "bar", Repo: "meling-labs"}, wantEmpty: true},
+		// The "bar" org has no such repositories, so the comparison cannot be performed.
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "info"}, wantErr: true},
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "assignments"}, wantErr: true},
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "tests"}, wantErr: true},
+		{name: "RepoNotFound", opt: &RepositoryOptions{Owner: "bar", Repo: "meling-labs"}, wantErr: true},
 
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "info"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "assignments"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "tests"}, wantEmpty: false},
-		{name: "CompleteRequest/NonEmpty", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantEmpty: false},
+		// Course repositories are not forks and must never be reported as empty, so they error.
+		{name: "CourseRepo", opt: &RepositoryOptions{Owner: "foo", Repo: "info"}, wantErr: true},
+		{name: "CourseRepo", opt: &RepositoryOptions{Owner: "foo", Repo: "assignments"}, wantErr: true},
+		{name: "CourseRepo", opt: &RepositoryOptions{Owner: "foo", Repo: "tests"}, wantErr: true},
+		// foo/meling-labs has three commits beyond the assignments repo it was forked from.
+		{name: "CompleteRequest/Ahead", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantAhead: 3},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
 		t.Run(name, func(t *testing.T) {
-			if empty := s.RepositoryIsEmpty(context.Background(), tt.opt); empty != tt.wantEmpty {
-				t.Errorf("RepositoryIsEmpty(%+v) = %t, want %t", *tt.opt, empty, tt.wantEmpty)
+			// Simulate the commits this repo is expected to be ahead by, then assert
+			// CommitsAhead reports exactly that. A no-op for the zero/error cases.
+			for range tt.wantAhead {
+				if err := s.SimulateCommit(tt.opt.Owner, tt.opt.Repo); err != nil {
+					t.Fatal(err)
+				}
+			}
+			ahead, err := s.CommitsAhead(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CommitsAhead(%+v) error = %v, wantErr %v", *tt.opt, err, tt.wantErr)
+			}
+			if ahead != tt.wantAhead {
+				t.Errorf("CommitsAhead(%+v) = %d, want %d", *tt.opt, ahead, tt.wantAhead)
+			}
+		})
+	}
+}
+
+// TestMockCommitsAheadForkedRepo tests commit-ahead counts for forked repositories.
+func TestMockCommitsAheadForkedRepo(t *testing.T) {
+	// student-labs represents a freshly forked student repo with no commits of its own.
+	studentRepo := github.Repository{
+		ID:           github.Int64(10),
+		Organization: &ghOrgFoo,
+		Name:         new("student-labs"),
+	}
+	// Clone before appending; appending to the shared repos slice directly would
+	// write into its backing array as soon as it has spare capacity, leaking
+	// student-labs into every other test that reads repos.
+	allRepos := append(slices.Clone(repos), studentRepo)
+
+	tests := []struct {
+		name      string
+		opt       *RepositoryOptions
+		wantAhead int
+		wantErr   bool
+	}{
+		// A fork with no commits of its own is identical to assignments: 0 commits ahead.
+		{name: "ForkedRepoNoChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "student-labs"}, wantAhead: 0},
+		// Forks with simulated commits report exactly how many commits they are ahead.
+		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "meling-labs"}, wantAhead: 2},
+		{name: "ForkedRepoWithChanges", opt: &RepositoryOptions{Owner: "foo", Repo: "josie-labs"}, wantAhead: 1},
+	}
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(allRepos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Owner", "Path"}, tt.opt.Owner, tt.opt.Repo)
+		t.Run(name, func(t *testing.T) {
+			// Simulate the commits this repo is expected to be ahead by, then assert
+			// CommitsAhead reports exactly that. A no-op for the zero/error cases.
+			for range tt.wantAhead {
+				if err := s.SimulateCommit(tt.opt.Owner, tt.opt.Repo); err != nil {
+					t.Fatal(err)
+				}
+			}
+			ahead, err := s.CommitsAhead(context.Background(), tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CommitsAhead(%+v) error = %v, wantErr %v", *tt.opt, err, tt.wantErr)
+			}
+			if ahead != tt.wantAhead {
+				t.Errorf("CommitsAhead(%+v) = %d, want %d", *tt.opt, ahead, tt.wantAhead)
 			}
 		})
 	}
@@ -261,9 +324,9 @@ func TestMockCreateCourse(t *testing.T) {
 	}
 	// we need to members (collaborators) with owner role to allow creating a course with meling as course creator
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgBar, User: &jostein, Role: github.String(OrgMember)}, // not allowed to create course
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgBar, User: &jostein, Role: new(OrgMember)}, // not allowed to create course
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -345,17 +408,17 @@ func TestMockUpdateEnrollment(t *testing.T) {
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantRepo: nil, wantErr: true},
 
 		// user frank does not exist, but is added to s.members in github_mock.go
-		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                   // ignored
-		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                // ignored
-		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
-		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                                         // ignored
+		{name: "CompleteRequest/IgnoredStatus", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},                                      // ignored
+		{name: "CompleteRequest/CreateStudRepo", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantBarFrankRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/UpdateToTeacher", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank", Status: qf.Enrollment_TEACHER, AccessToken: "dummy"}, wantRepo: nil, wantErr: false},             // does not return a repo since repo is not created
 
 		// user meling already exists in s.members in github_mock.go
-		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE}, wantRepo: nil, wantErr: true},                // ignored
-		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING}, wantRepo: nil, wantErr: true},          // ignored
-		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
-		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
-		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
+		{name: "CompleteRequest/None", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_NONE, AccessToken: "dummy"}, wantRepo: nil, wantErr: true},                // ignored
+		{name: "CompleteRequest/Pending", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_PENDING, AccessToken: "dummy"}, wantRepo: nil, wantErr: true},          // ignored
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantFooRepo, wantErr: false}, // allowed; returns already created repo (skip creation)
+		{name: "CompleteRequest/Teacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling", Status: qf.Enrollment_TEACHER, AccessToken: "dummy"}, wantRepo: nil, wantErr: false},         // does not return a repo since repo is not created
+		{name: "CompleteRequest/Student", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "meling", Status: qf.Enrollment_STUDENT, AccessToken: "dummy"}, wantRepo: wantBarRepo, wantErr: false}, // allowed; returns newly created repo (actual creation)
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...), WithGroups(g))
 	for _, tt := range tests {
@@ -393,12 +456,14 @@ func TestMockRejectEnrollment(t *testing.T) {
 		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{OrganizationID: 123, User: "meling"}, wantErr: true},
 		{name: "IncompleteRequest", opt: &RejectEnrollmentOptions{RepositoryID: 1, User: "meling"}, wantErr: true},
 
-		{name: "CompleteRequest/OrgNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 1, User: "meling"}, wantErr: true},     // 789 does not exist
-		{name: "CompleteRequest/RepoNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"}, wantErr: true}, // 999 does not exist; note that jostein will be removed from foo
-		{name: "CompleteRequest/UserNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 1, User: "frank"}, wantErr: true},     // frank is not a member of foo
+		{name: "CompleteRequest/OrgNotFound", opt: &RejectEnrollmentOptions{OrganizationID: 789, RepositoryID: 4, User: "meling"}, wantErr: true}, // 789 does not exist
 
+		// happy path: member and their repo both exist and are removed
 		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 4, User: "meling"}, wantErr: false},
-		{name: "CompleteRequest/SuccessfullyRejected", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"}, wantErr: true}, // jostein was already removed
+		// repo already gone (404) is tolerated; jostein is still a member and is removed
+		{name: "CompleteRequest/RepoAlreadyDeleted", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 999, User: "jostein"}, wantErr: false},
+		// membership already gone (404) is tolerated; jostein was removed above, repo 5 still exists
+		{name: "CompleteRequest/MembershipAlreadyGone", opt: &RejectEnrollmentOptions{OrganizationID: 123, RepositoryID: 5, User: "jostein"}, wantErr: false},
 	}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...), WithMembers(members...))
 	for _, tt := range tests {
@@ -413,9 +478,9 @@ func TestMockRejectEnrollment(t *testing.T) {
 
 func TestMockDemoteTeacherToStudent(t *testing.T) {
 	members := []github.Membership{
-		{Organization: &ghOrgFoo, User: &meling, Role: github.String(OrgOwner)},
-		{Organization: &ghOrgFoo, User: &jostein, Role: github.String(OrgMember)},
-		{Organization: &ghOrgBar, User: &meling, Role: github.String(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &meling, Role: new(OrgOwner)},
+		{Organization: &ghOrgFoo, User: &jostein, Role: new(OrgMember)},
+		{Organization: &ghOrgBar, User: &meling, Role: new(OrgOwner)},
 	}
 
 	tests := []struct {
@@ -428,7 +493,8 @@ func TestMockDemoteTeacherToStudent(t *testing.T) {
 		{name: "IncompleteRequest", opt: &UpdateEnrollmentOptions{User: "meling"}, wantErr: true},
 
 		{name: "CompleteRequest/OrgNotFound", opt: &UpdateEnrollmentOptions{Organization: "fuzz", User: "meling"}, wantErr: true},
-		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: true},
+		// Note: User not found in org will create a new membership with member role (GitHub API behavior)
+		{name: "CompleteRequest/UserNotFound", opt: &UpdateEnrollmentOptions{Organization: "bar", User: "frank"}, wantErr: false},
 
 		{name: "CompleteRequest/FooStudent", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "jostein"}, wantErr: false}, // jostein is already a student
 		{name: "CompleteRequest/FooTeacher", opt: &UpdateEnrollmentOptions{Organization: "foo", User: "meling"}, wantErr: false},  // meling is demoted from teacher to student
@@ -495,10 +561,10 @@ func TestMockCreateGroup(t *testing.T) {
 func TestMockUpdateGroupMembers(t *testing.T) {
 	push := map[string]bool{"push": true}
 	var (
-		meling  = github.User{Login: github.String("meling"), Permissions: push}
-		leslie  = github.User{Login: github.String("leslie"), Permissions: push}
-		lamport = github.User{Login: github.String("lamport"), Permissions: push}
-		jostein = github.User{Login: github.String("jostein"), Permissions: push}
+		meling  = github.User{Login: new("meling"), Permissions: push}
+		leslie  = github.User{Login: new("leslie"), Permissions: push}
+		lamport = github.User{Login: new("lamport"), Permissions: push}
+		jostein = github.User{Login: new("jostein"), Permissions: push}
 	)
 	tests := []struct {
 		name      string
@@ -532,6 +598,10 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 	}
 	groups["bar"]["groupY"] = []github.User{leslie}
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithGroups(groups))
+	// Ignore the ID field in comparisons since the mock now assigns unique IDs
+	ignoreUserID := cmp.FilterPath(func(p cmp.Path) bool {
+		return p.Last().String() == ".ID"
+	}, cmp.Ignore())
 	for _, tt := range tests {
 		name := qtest.Name(tt.name, []string{"Organization", "GroupName", "Users"}, tt.opt.Organization, tt.opt.GroupName, tt.opt.Users)
 		t.Run(name, func(t *testing.T) {
@@ -542,7 +612,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 				return
 			}
 			// verify the state of the groups after the test
-			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName]); diff != "" {
+			if diff := cmp.Diff(tt.wantUsers, s.groups[tt.opt.Organization][tt.opt.GroupName], ignoreUserID); diff != "" {
 				t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -564,7 +634,7 @@ func TestMockUpdateGroupMembers(t *testing.T) {
 		},
 	}
 	// verify the state of the groups after the sequence of UpdateGroupMembers
-	if diff := cmp.Diff(wantGroups, s.groups); diff != "" {
+	if diff := cmp.Diff(wantGroups, s.groups, ignoreUserID); diff != "" {
 		t.Errorf("UpdateGroupMembers() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -602,6 +672,32 @@ func TestMockDeleteGroup(t *testing.T) {
 			// verify the state of the groups after the test
 			if _, ok := s.groups[tt.opt.Owner][tt.opt.Repo]; ok {
 				t.Errorf("DeleteGroup() group not deleted")
+			}
+		})
+	}
+}
+
+func TestMockSyncFork(t *testing.T) {
+	tests := []struct {
+		name    string
+		opt     *SyncForkOptions
+		wantErr bool
+	}{
+		{name: "IncompleteRequest/MissingAllFields", opt: &SyncForkOptions{}, wantErr: true},
+		{name: "IncompleteRequest/MissingRepositoryAndBranch", opt: &SyncForkOptions{Organization: "foo"}, wantErr: true},
+		{name: "IncompleteRequest/MissingBranch", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs"}, wantErr: true},
+		{name: "IncompleteRequest/MissingMaxRetries", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main"}, wantErr: true},
+		{name: "CompleteRequest/ForkMelingLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "meling-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkJosieLabs", opt: &SyncForkOptions{Organization: "foo", Repository: "josie-labs", Branch: "main", MaxRetries: 1}, wantErr: false},
+		{name: "CompleteRequest/ForkGroupY", opt: &SyncForkOptions{Organization: "bar", Repository: "groupY", Branch: "master", MaxRetries: 1}, wantErr: false},
+	}
+
+	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar), WithRepos(repos...))
+	for _, tt := range tests {
+		name := qtest.Name(tt.name, []string{"Organization", "Repository", "Branch"}, tt.opt.Organization, tt.opt.Repository, tt.opt.Branch)
+		t.Run(name, func(t *testing.T) {
+			if err := s.SyncFork(context.Background(), tt.opt); (err != nil) != tt.wantErr {
+				t.Errorf("SyncFork() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

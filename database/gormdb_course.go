@@ -92,7 +92,8 @@ func (db *GormDB) GetCourseByStatus(courseID uint64, status qf.Enrollment_UserSt
 			Preload("Enrollments.Group").
 			Preload("Enrollments.UsedSlipDays").
 			Preload("Groups", modelGroup).
-			Preload("Groups.Users")
+			Preload("Groups.Users").
+			Preload("Groups.UsedSlipDays")
 	default:
 		return nil, errors.New("invalid enrollment status")
 	}

@@ -10,6 +10,7 @@ plugins:
   out: ./
   opt:
   - paths=source_relative
+  - simple
 - remote: buf.build/bufbuild/es
   out: public/proto
   opt: target=ts

@@ -58,8 +58,10 @@ message Group {
     uint64 courseID    = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:group"' }];
     GroupStatus status = 5;
 
-    repeated User users             = 6 [(go.field) = { tags: 'gorm:"many2many:group_users;"' }];
-    repeated Enrollment enrollments = 7;
+    repeated User users                   = 6 [(go.field) = { tags: 'gorm:"many2many:group_users;"' }];
+    repeated Enrollment enrollments       = 7;
+    repeated UsedSlipDays usedSlipDays    = 8;
+    uint32 slipDaysRemaining              = 9 [(go.field) = { tags: 'gorm:"-"' }];
 }
 
 message Groups {
@@ -142,6 +144,7 @@ message UsedSlipDays {
     uint64 enrollmentID = 2;
     uint64 assignmentID = 3;
     uint32 usedDays     = 4;
+    uint64 groupID      = 5;
 }
 
 message Enrollments {
@@ -228,12 +231,11 @@ message Submission {
     uint64 groupID                         = 4;
     uint32 score                           = 5;
     string commitHash                      = 6;
-    bool released                          = 7;  // true => feedback is visible to the student or group members
-    repeated Grade Grades                  = 8;
-    google.protobuf.Timestamp approvedDate = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
-    repeated Review reviews                = 10;  // reviews produced for this submission
-    score.BuildInfo BuildInfo              = 11;  // build info for tests
-    repeated score.Score Scores            = 12;  // list of scores for different tests
+    repeated Grade Grades                  = 7;
+    google.protobuf.Timestamp approvedDate = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    repeated Review reviews                = 9;   // reviews produced for this submission
+    score.BuildInfo BuildInfo              = 10;  // build info for tests
+    repeated score.Score Scores            = 11;  // list of scores for different tests
 }
 
 message Submissions {
@@ -282,10 +284,9 @@ message Review {
     uint64 SubmissionID                         = 2;  // foreign key
     uint64 ReviewerID                           = 3;  // UserID of the reviewer
     string feedback                             = 4;
-    bool ready                                  = 5;
-    uint32 score                                = 6;
-    repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
-    google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+    uint32 score                                = 5;
+    repeated GradingBenchmark gradingBenchmarks = 6 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
+    google.protobuf.Timestamp edited            = 7 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
 }
 
 message AssignmentFeedback {

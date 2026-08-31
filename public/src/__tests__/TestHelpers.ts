@@ -1,11 +1,13 @@
-import { createOvermindMock } from "overmind"
-import { config } from "../overmind"
-import { State } from "../overmind/state"
-import { SubType } from "overmind/lib/internalTypes"
-import { ReviewState } from "../overmind/namespaces/review/state"
-import { ApiClient } from "../overmind/namespaces/global/effects"
 import { create } from "@bufbuild/protobuf"
 import { TimestampSchema } from "@bufbuild/protobuf/wkt"
+import { createOvermindMock } from "overmind"
+import { config } from "../overmind"
+import type { ApiClient } from "../overmind/namespaces/global/effects"
+import type { ReviewState } from "../overmind/namespaces/review/state"
+import type { State } from "../overmind/state"
+
+// Mirrors overmind's internal `SubType` (overmind/lib/internalTypes), which isn't part of its public API surface.
+type SubType<Base, Condition> = Pick<Base, { [Key in keyof Base]: Base[Key] extends Condition | undefined ? Key : never }[keyof Base]>
 
 /** initializeOvermind creates a mock Overmind instance with the given state, reviewState, and mockedEffects.
  * @param state the state to initialize the mock with
@@ -40,11 +42,9 @@ type Methods = UnaryApiClient["client"]
 */
 export function mock<T extends keyof Methods>(
     _method: T,
-    mockFn: (...req: Parameters<Methods[T]>) => ReturnType<Methods[T]>
+    mockFn: Methods[T]
 ): Methods[T] {
-    return async function (...args: Parameters<Methods[T]>): Promise<ReturnType<Methods[T]>> { // skipcq: JS-0116
-        return mockFn(...args) as ReturnType<Methods[T]>
-    } as Methods[T]
+    return mockFn
 }
 
 const toTimestamp = (date: Date) => {

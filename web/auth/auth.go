@@ -6,14 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
@@ -22,8 +25,8 @@ var httpClient = &http.Client{
 	Timeout: time.Second * 30,
 }
 
-func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err error) {
-	logger.Error(err)
+func authenticationError(logger *slog.Logger, w http.ResponseWriter, err error) {
+	logger.Error("authentication failed", label.Error, err)
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
@@ -47,23 +50,43 @@ func OAuth2Logout() http.HandlerFunc {
 
 // OAuth2Login redirects user to the provider's sign in page or, if user is already signed in with provider,
 // authenticates the user in the background.
-func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret string) http.HandlerFunc {
+func OAuth2Login(logger *slog.Logger, authConfig *oauth2.Config, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("OAuth2Login: started")
+		logger.Debug("handling OAuth2 login request")
 		if r.Method != "GET" {
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
 		}
+
+		// If no next URL is provided, next will be the root path ("/").
+		// This is used to redirect the user back to the page they were on after logging in.
+		// The next URL is sanitized to ensure it is a valid path.
+		rawNext := r.URL.Query().Get("next")
+		nextURL := SanitizeNext(rawNext)
+
+		// Store the next URL in a (short-lived) cookie so we can redirect the user back to it in the callback handler.
+		http.SetCookie(w, &http.Cookie{
+			Name:     nextCookieName,
+			Value:    url.QueryEscape(nextURL),
+			Domain:   env.Domain(),
+			Path:     "/",
+			MaxAge:   300,
+			Expires:  time.Now().Add(5 * time.Minute),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		redirectURL := authConfig.AuthCodeURL(secret)
-		logger.Debugf("Redirecting to AuthURL: %v", redirectURL)
+		logger.Debug("redirecting to OAuth provider", "next_url", nextURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *slog.Logger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("OAuth2Callback: started")
+		logger.Debug("handling OAuth2 callback request")
 		if r.Method != "GET" {
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
@@ -78,23 +101,45 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 			authenticationError(logger, w, err)
 			return
 		}
-		logger.Debugf("ExternalUser: %v", qlog.IndentJson(externalUser))
+		// Scope the remaining records to the authenticating user.
+		logger := logger.With(label.User, externalUser.Login, label.RemoteID, externalUser.ID)
+		logger.Debug("fetched external user")
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err := fetchUser(logger, db, token, externalUser)
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err))
+			authenticationError(logger, w, fmt.Errorf("fetching user %q for remote identity: %w", externalUser.Login, err))
 			return
 		}
-		logger.Debugf("Fetched full user info for user: %v", user)
+		logger.Debug("fetched user", label.UserID, user.GetID())
 
 		cookie, err := tm.NewAuthCookie(user.GetID())
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to create authentication cookie for user %q: %w", externalUser.Login, err))
+			authenticationError(logger, w, fmt.Errorf("creating authentication cookie for user %q: %w", externalUser.Login, err))
 			return
 		}
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusFound)
+
+		// pull the redirect URL from the cookie (if any) and delete it
+		redirectURL := "/"
+		if c, err := r.Cookie(nextCookieName); err == nil {
+			if v, e := url.QueryUnescape(c.Value); e == nil {
+				redirectURL = SanitizeNext(v)
+			}
+			// delete cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     nextCookieName,
+				Value:    "",
+				Domain:   env.Domain(),
+				Path:     "/",
+				MaxAge:   -1,
+				Expires:  time.Unix(0, 0),
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+			})
+		}
+		http.Redirect(w, r, redirectURL, http.StatusFound)
 	}
 }
 
@@ -113,22 +158,22 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 	}
 	token, err := authConfig.Exchange(r.Context(), code)
 	if err != nil {
-		return nil, fmt.Errorf("failed to exchange access token: %w", err)
+		return nil, fmt.Errorf("exchanging access token: %w", err)
 	}
 	return token, nil
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
-	req, err := http.NewRequest("GET", githubUserAPI, nil)
+func FetchExternalUser(token *oauth2.Token) (user *ExternalUser, err error) {
+	req, err := http.NewRequest("GET", githubUserAPI, http.NoBody)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create user request: %w", err)
+		return nil, fmt.Errorf("creating user request: %w", err)
 	}
 	token.SetAuthHeader(req)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send user request: %w", err)
+		return nil, fmt.Errorf("sending user request: %w", err)
 	}
 	defer func() {
 		closeErr := resp.Body.Close()
@@ -143,30 +188,46 @@ func FetchExternalUser(token *oauth2.Token) (user *externalUser, err error) {
 	}
 	responseBody, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
-		err = fmt.Errorf("failed to read authentication response: %w", readErr)
+		err = fmt.Errorf("reading authentication response: %w", readErr)
 		return
 	}
 	if jsonErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&user); jsonErr != nil {
-		err = fmt.Errorf("failed to decode user information: %w", jsonErr)
+		err = fmt.Errorf("decoding user information: %w", jsonErr)
 	}
 	return
 }
 
+// CheckExternalUser validates that the external user has the login field populated.
+// The login (GitHub username) is the only required field from GitHub, as it's always
+// available. Name and email may be private on GitHub, so we allow sign-in without them
+// and require users to complete their profile in QuickFeed before enrolling in courses.
+func CheckExternalUser(externalUser *ExternalUser) error {
+	if externalUser.Login == "" {
+		return errors.New("missing login")
+	}
+	return nil
+}
+
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
-func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.Token, externalUser *externalUser) (*qf.User, error) {
-	logger.Debugf("Lookup user: %q in database with SCM remote ID: %d", externalUser.Login, externalUser.ID)
+// The logger is expected to carry the external user's login and remote ID.
+func fetchUser(logger *slog.Logger, db database.Database, token *oauth2.Token, externalUser *ExternalUser) (*qf.User, error) {
+	logger.Debug("looking up user")
 	user, err := db.GetUserByRemoteIdentity(externalUser.ID)
-	switch {
-	case err == nil:
-		logger.Debugf("Found user: %v in database", user)
+	switch err {
+	case nil:
+		logger.Debug("found user", label.UserID, user.GetID())
 		user.RefreshToken = token.RefreshToken
 		if err = db.UpdateUser(user); err != nil {
-			return nil, fmt.Errorf("failed to update access token for user %q: %w", externalUser.Login, err)
+			return nil, fmt.Errorf("updating access token for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("Refresh token updated: %v", token.RefreshToken)
+		logger.Debug("refresh token updated", label.UserID, user.GetID())
 
-	case err == gorm.ErrRecordNotFound:
-		logger.Debugf("User %q not found in database; creating new user", externalUser.Login)
+	case gorm.ErrRecordNotFound:
+		// Validate external user information before creating account
+		if err := CheckExternalUser(externalUser); err != nil {
+			return nil, fmt.Errorf("creating account for user %q: %w", externalUser.Login, err)
+		}
+		logger.Debug("creating user")
 		user = &qf.User{
 			Name:         externalUser.Name,
 			Email:        externalUser.Email,
@@ -176,13 +237,46 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, token *oauth2.To
 			RefreshToken: token.RefreshToken,
 		}
 		if err = db.CreateUser(user); err != nil {
-			return nil, fmt.Errorf("failed to create remote identity for user %q: %w", externalUser.Login, err)
+			return nil, fmt.Errorf("creating remote identity for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("New user created: %v", user)
+		logger.Debug("created user", label.UserID, user.GetID())
 
 	default:
-		return nil, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err)
+		return nil, fmt.Errorf("fetching user %q for remote identity: %w", externalUser.Login, err)
 	}
-	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
+	logger.Debug("reloading user")
 	return db.GetUserByRemoteIdentity(externalUser.ID)
+}
+
+// SanitizeNext sanitizes the next URL to ensure it is a valid path.
+// It removes leading/trailing whitespace, checks for absolute URLs, and cleans the path.
+// If the next URL is invalid or otherwise unsafe, it returns the root path "/".
+func SanitizeNext(next string) string {
+	next = strings.TrimSpace(next)
+	if next == "" {
+		return "/"
+	}
+
+	u, err := url.Parse(next)
+	if err != nil {
+		return "/"
+	}
+	// Check if the URL is absolute and has a scheme (e.g., http, https)
+	// If it starts with // or contains a backslash, treat it as invalid.
+	if u.IsAbs() || strings.HasPrefix(next, "//") || strings.Contains(next, `\`) {
+		return "/"
+	}
+
+	// If the path is empty or does not start with a slash, return the root path.
+	if u.Path == "" || !strings.HasPrefix(u.Path, "/") {
+		return "/"
+	}
+
+	// clean removes .., duplicate slashes, etc.
+	cleaned := path.Clean(u.Path)
+	if cleaned == "." { // path.Clean("/") == "/"; path.Clean("") == "."
+		return "/"
+	}
+	u.Path = cleaned
+	return u.String()
 }
