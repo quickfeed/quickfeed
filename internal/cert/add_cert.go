@@ -12,3 +12,9 @@ func AddTrustedCert(_ string) error {
 	log.Printf("Adding self-signed certificate to keychain on %s currently not supported", os.Getenv("OS"))
 	return nil
 }
+
+// RemoveTrustedCert removes the certificate from the user's keychain.
+func RemoveTrustedCert(_ string) error {
+	log.Printf("Removing self-signed certificate from keychain on %s currently not supported", os.Getenv("OS"))
+	return nil
+}
