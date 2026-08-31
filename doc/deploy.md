@@ -250,22 +250,19 @@ The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding
 
 **Prerequisites:**
 
-1. Install GitHub CLI and authenticate:
+1. Install the GitHub CLI, if you do not already have it.
+   On macOS, `make brew` installs it along with the other development tools;
+   otherwise follow the instructions at <https://cli.github.com/>.
+
+2. Authenticate and install the webhook extension:
 
    ```sh
-   # Install gh (if not already installed)
-   brew install gh  # macOS
-   # or follow instructions at https://cli.github.com/
-
-   # Authenticate with GitHub with admin:org scope
-   gh auth refresh --scopes admin:org_hook
+   make webhook-setup
    ```
 
-2. Install the webhook extension:
-
-   ```sh
-   gh extension install cli/gh-webhook
-   ```
+   This refreshes your `gh` authentication with the `admin:org_hook` scope, which the
+   extension needs to create the organization webhook it forwards from, and installs
+   the extension itself.
 
 3. Generate self-signed certificates (if not already generated):
 
