@@ -16,7 +16,7 @@ const Notes = () => {
     const state = useAppState()
     const actions = useActions().notes
     const submission = state.selectedSubmission
-    const [open, setOpen] = useState(true)
+    const [open, setOpen] = useState(false)
 
     useEffect(() => {
         actions.getNotes()
