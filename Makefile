@@ -11,7 +11,7 @@ protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check dev-db install ui proto test qcm
+.PHONY: download brew version-check dev-db install ui proto test qcm webhook-setup
 
 download:
 	@echo "Download go.mod dependencies"
@@ -51,6 +51,22 @@ ui: version-check
 overmind:
 	@echo "Running Overmind Devtools"
 	@cd public; npm run overmind
+
+# Prerequisites for forwarding GitHub webhook events to a local server; see doc/deploy.md.
+# The admin:org_hook scope is what lets the gh-webhook extension create the organization
+# webhook it forwards from.
+webhook-setup:
+ifeq (, $(shell which gh))
+	$(error "No gh command in $(PATH); install the GitHub CLI: https://cli.github.com/")
+endif
+	@echo "Refreshing gh authentication with the admin:org_hook scope"
+	@gh auth refresh --scopes admin:org_hook
+	@if gh extension list | grep -q gh-webhook; then \
+		echo "The gh-webhook extension is already installed"; \
+	else \
+		echo "Installing the gh-webhook extension"; \
+		gh extension install cli/gh-webhook; \
+	fi
 
 proto:
 	buf dep update
