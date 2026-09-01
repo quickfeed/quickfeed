@@ -222,18 +222,28 @@ The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding
    However, you can also generate them explicitly without starting the server:
 
    ```sh
-   go run ./cmd/gencert
+   go run ./cmd/gencert -gencert
    ```
 
    This will:
-   - Generate self-signed certificates at `$QUICKFEED/internal/config/certs/`
+   - Generate self-signed certificates at `~/.config/quickfeed/certs/`
    - Automatically add the CA certificate to your system trust store (requires sudo)
 
-   To remove the certificate from the system trust store later:
+   The same command manages the trust store entry afterwards, on any platform:
 
    ```sh
-   sudo rm /usr/local/share/ca-certificates/quickfeed-ca.crt
-   sudo update-ca-certificates --fresh
+   go run ./cmd/gencert -addcert     # trust the existing CA, without regenerating
+   go run ./cmd/gencert -removecert  # stop trusting the CA
+   ```
+
+   `gencert` requires one of these actions explicitly; it does nothing by default,
+   since each one either writes a new private key or changes the system trust store.
+   To avoid silently invalidating anything that already trusts the current CA,
+   `-gencert` refuses to overwrite existing certificates. Pass `-force` to replace
+   them, which first removes the CA being replaced from the trust store:
+
+   ```sh
+   go run ./cmd/gencert -gencert -force
    ```
 
 **Forward webhook events:**
