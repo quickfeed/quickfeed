@@ -147,11 +147,11 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 				errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
 				continue
 			}
-			parsedScores++
 			// only add the score if it's in the expected tests
 			if slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
 				return expected.GetTestName() == sc.GetTestName()
 			}) {
+				parsedScores++
 				results.addScore(sc)
 			}
 		} else if line != "" { // include only non-empty lines
