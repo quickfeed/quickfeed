@@ -194,17 +194,86 @@ Without `-secret`, the existing secret is reused, preserving user sessions acros
 ### Using GitHub Webhooks When Running Server On Localhost
 
 GitHub webhooks cannot send events directly to your server if it runs on localhost.
-However, it is possible to setup a tunneling service that will be listening to the events coming from webhooks and redirecting them to the locally deployed server.
+However, there are several options to receive webhook events during local development.
 
-One of the many options is [ngrok](https://ngrok.com/). To use ngrok you have to create a free account and download ngrok.
-After that it will be possible to receive webhook events on QuickFeed server running on localhost by performing a few steps.
+#### Option 1: Using GitHub CLI (Recommended for Development)
 
-1. Start ngrok: `ngrok http 443` - assuming the server runs on port `:443`.
-2. ngrok will generate a new endpoint URL.
-   Copy the urls an update webhook callback information in your GitHub App to point to this URL.
+The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding feature that is ideal for local development.
+
+**Prerequisites:**
+
+1. Install the GitHub CLI, if you do not already have it.
+   On macOS, `make brew` installs it along with the other development tools;
+   otherwise follow the instructions at <https://cli.github.com/>.
+
+2. Authenticate and install the webhook extension:
+
+   ```sh
+   make webhook-setup
+   ```
+
+   This refreshes your `gh` authentication with the `admin:org_hook` scope, which the
+   extension needs to create the organization webhook it forwards from, and installs
+   the extension itself.
+
+3. Generate self-signed certificates (if not already generated):
+
+   QuickFeed automatically generates self-signed certificates when starting in dev mode for the first time.
+   However, you can also generate them explicitly without starting the server:
+
+   ```sh
+   go run ./cmd/gencert -gencert
+   ```
+
+   This will:
+   - Generate self-signed certificates at `~/.config/quickfeed/certs/`
+   - Automatically add the CA certificate to your system trust store (requires sudo)
+
+   The same command manages the trust store entry afterwards, on any platform:
+
+   ```sh
+   go run ./cmd/gencert -addcert     # trust the existing CA, without regenerating
+   go run ./cmd/gencert -removecert  # stop trusting the CA
+   ```
+
+   `gencert` requires one of these actions explicitly; it does nothing by default,
+   since each one either writes a new private key or changes the system trust store.
+   To avoid silently invalidating anything that already trusts the current CA,
+   `-gencert` refuses to overwrite existing certificates. Pass `-force` to replace
+   them, which first removes the CA being replaced from the trust store:
+
+   ```sh
+   go run ./cmd/gencert -gencert -force
+   ```
+
+**Forward webhook events:**
+
+```sh
+gh webhook forward --org=your-org-name --events=push,pull_request,pull_request_review --url=https://127.0.0.1/hook/
+```
+
+**Important:** The webhook URL **must** include the trailing slash (`/hook/`).
+If you omit it (`/hook`), the POST request will be redirected (301) to `/hook/`, and the redirect will convert it to a GET request, losing the webhook payload.
+
+The `gh webhook forward` command will:
+
+- Listen for webhook events from your GitHub organization
+- Forward them to your local QuickFeed server
+- Display events as they are received
+
+Press `Ctrl+C` to stop forwarding.
+
+#### Option 2: Using ngrok
+
+[ngrok](https://ngrok.com/) is a tunneling service that provides a public URL for your localhost server.
+
+1. Create a free account and download ngrok.
+2. Start ngrok: `ngrok http 443` - assuming the server runs on port `:443`.
+3. ngrok will generate a new endpoint URL.
+   Copy the URL and update webhook callback information in your GitHub app to point to this URL.
    E.g., `https://de08-2a01-799-4df-d900-b5af-5adc-a42a-bcf.eu.ngrok.io/hook/`.
 
-After that any webhook events your GitHub App is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
+After that any webhook events your GitHub app is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hook/` endpoint of the QuickFeed server running on the given port number.
 
 Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
 
