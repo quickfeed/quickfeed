@@ -207,6 +207,7 @@ qfconnect
 qlog
 qtest
 quickfeed
+quickfeedignore
 Radagast
 rankdir
 Repos
@@ -264,6 +265,7 @@ testpackage
 timestamppb
 tmpl
 Typeflag
+unconfigured
 Unexported
 unittests
 unmarshalled
