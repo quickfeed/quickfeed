@@ -3,11 +3,8 @@
 package cert
 
 import (
-	"crypto/sha1"
-	"encoding/pem"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/quickfeed/quickfeed/kit/sh"
 )
@@ -25,10 +22,17 @@ func AddTrustedCert(caFile string) error {
 }
 
 // RemoveTrustedCert removes the CA certificate from the system trust store.
+// It is a no-op if the certificate is not installed.
 func RemoveTrustedCert(caFile string) error {
 	thumbprint, err := caCertThumbprint(caFile)
 	if err != nil {
 		return err
+	}
+	// certutil -verifystore exits non-zero when the store holds no certificate
+	// with this thumbprint, which is not an error here.
+	if _, err := sh.OutputA("certutil", "-verifystore", "ROOT", thumbprint); err != nil {
+		log.Print("No QuickFeed CA certificate found in the ROOT store")
+		return nil
 	}
 	out, err := sh.OutputA("certutil", "-delstore", "ROOT", thumbprint)
 	if out != "" {
@@ -38,19 +42,4 @@ func RemoveTrustedCert(caFile string) error {
 		return fmt.Errorf("removing CA certificate from ROOT store: %w", err)
 	}
 	return nil
-}
-
-// caCertThumbprint returns the SHA-1 thumbprint of the certificate in caFile.
-// certutil identifies a certificate in the store by this thumbprint; SHA-1 is
-// used here only as the store's identifier, not as a security primitive.
-func caCertThumbprint(caFile string) (string, error) {
-	pemBytes, err := os.ReadFile(caFile)
-	if err != nil {
-		return "", fmt.Errorf("reading CA certificate: %w", err)
-	}
-	block, _ := pem.Decode(pemBytes)
-	if block == nil || block.Type != "CERTIFICATE" {
-		return "", fmt.Errorf("no certificate found in %s", caFile)
-	}
-	return fmt.Sprintf("%x", sha1.Sum(block.Bytes)), nil
 }
