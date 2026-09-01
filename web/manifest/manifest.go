@@ -258,7 +258,8 @@ func form(w http.ResponseWriter) error {
 			},
 {{- if .WebhookActive}}
 			"default_events": [
-				"push"
+				"push",
+				"pull_request"
 			]
 {{- end}}
 		})
