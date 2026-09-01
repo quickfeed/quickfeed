@@ -45,6 +45,9 @@ func CallerName() string {
 }
 
 // ErrMsg returns an error message with the file name and line number of the calling function.
+//
+// Must only be called from test code: it panics via [CallFrame] if no test
+// function is found on the call stack.
 func ErrMsg(testFn any, msg string) error {
 	frame := CallFrame()
 	return fmt.Errorf("%s:%d: %s: %v", filepath.Base(frame.File), frame.Line, msg, testFn)
