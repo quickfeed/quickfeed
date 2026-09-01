@@ -322,11 +322,12 @@ func TestExtractResultsParsedScores(t *testing.T) {
 			wantParsedScores: 1,
 		},
 		{
-			// A valid score line counts as parsed even when its test is not
-			// among the expected tests; the run itself clearly produced scores.
+			// A valid score line for a test that is not among the expected
+			// tests must not count as parsed; otherwise the run would appear
+			// successful even though none of the expected tests reported a score.
 			name:             "UnexpectedScoreLine",
 			out:              `{"Secret":"` + secret + `","TestName":"TestUnknown","Score":50,"MaxScore":100,"Weight":1}`,
-			wantParsedScores: 1,
+			wantParsedScores: 0,
 		},
 		{
 			// A score line with the wrong secret must not count as parsed.
