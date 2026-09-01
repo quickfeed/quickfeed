@@ -14,6 +14,11 @@ const (
 
 // CallFrame returns the call frame of the Test function that
 // called one of the registry functions.
+//
+// It panics if the call stack holds a function that is neither a test function
+// nor part of the kit/score and kit/internal/test packages. Hence, functions
+// that may run outside a test binary, such as the score extraction performed
+// by the QuickFeed server, must not call this function.
 func CallFrame() (frame runtime.Frame) {
 	frames := unwindCallFrames()
 	for _, f := range frames {

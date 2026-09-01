@@ -2,6 +2,7 @@ package score
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -445,7 +446,7 @@ func TestValidate(t *testing.T) {
 	}
 	for _, s := range validateScores {
 		results := newResults(s.in...)
-		if err := results.validate(""); err != s.wantErr {
+		if err := results.validate(""); !errors.Is(err, s.wantErr) {
 			var e, se string
 			if err != nil {
 				e = err.Error()
