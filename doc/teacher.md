@@ -70,7 +70,7 @@ QuickFeed uses the following repository structure.
 These will be created automatically when a course is created.
 
 | Repository name | Description                                                                    | Access                        |
-|-----------------|--------------------------------------------------------------------------------|-------------------------------|
+| --------------- | ------------------------------------------------------------------------------ | ----------------------------- |
 | info            | Holds information about the course.                                            | Public                        |
 | assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed |
 | username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed  |
@@ -163,6 +163,7 @@ The file system layout of the `tests` repository must match that of the `assignm
 Every top-level assignment folder must occur in both repositories.
 Each assignment folder in the `tests` repository must contain `assignment.json` and at least one of `tests.json` or `criteria.json`.
 QuickFeed checks these requirements whenever either repository is updated and reports problems in the course log.
+See [Folders That Are Not Assignments](#folders-that-are-not-assignments) for top-level folders that are exempt.
 The `assignment.json` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
 If the assignment has tests that should be run by QuickFeed, the the tests should be listed in the `tests.json` file.
@@ -175,6 +176,7 @@ Otherwise, the [test runner](#test-runners) for each assignment specifies which 
 
 ```text
 tests┐
+     ├── .quickfeedignore
      ├── lab1
      │   ├── assignment.json
      │   ├── tests.json
@@ -188,10 +190,30 @@ tests┐
      ├── lab4
      │   ├── assignment.json
      │   └── criteria.json
+     ├── internal
+     │   └── grading.go
      └── scripts
          ├── Dockerfile
          └── run.sh
 ```
+
+#### Folders That Are Not Assignments
+
+QuickFeed treats every top-level folder in either repository as an assignment folder, so that a folder missing its `assignment.json` is reported rather than silently skipped.
+The `scripts` folder and folders whose name begins with a dot are the only built-in exceptions.
+
+Courses that keep shared code, handout material, or tooling in a top-level folder should list those folders in an optional `.quickfeedignore` file in the root of the `tests` repository.
+Each line names one top-level folder, in either repository; blank lines and lines starting with `#` are skipped.
+Only exact folder names are supported; entries containing path separators or glob characters are reported as invalid and have no effect.
+
+```text
+# folders that are not assignments
+internal
+resources
+```
+
+Listing a folder is optional.
+An unlisted folder is reported once per update with a message naming both remedies; adding it to `.quickfeedignore` silences the message.
 
 ### Assignment Information
 
@@ -217,7 +239,7 @@ QuickFeed only use the fields in the table below.
 The `title` and `effort` are used by other tooling to create a README.md file for an assignment.
 
 | Field              | Description                                                                                    |
-|--------------------|------------------------------------------------------------------------------------------------|
+| ------------------ | ---------------------------------------------------------------------------------------------- |
 | `order`            | Assignment's sequence number; used to order the assignments in the frontend.                   |
 | `deadline`         | Submission deadline for the assignment.                                                        |
 | `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment. |

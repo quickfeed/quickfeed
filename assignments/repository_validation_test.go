@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -34,8 +35,15 @@ func TestCourseRepositoryIssues(t *testing.T) {
 	writeRepoFile(t, testsDir, "lab5", assignmentFile)
 	makeRepoDir(t, assignmentsDir, "lab5")
 
-	// Shared packages and repository metadata are not assignment folders.
+	// Test code pushed without assignment.json and without the counterpart
+	// folder in the assignments repository; QuickFeed cannot tell this apart
+	// from shared course code, so it reports the folder once.
+	writeRepoFile(t, testsDir, "lab6", "lab6_test.go")
+
+	// A shared package is reported the same way until it is listed in the
+	// ignore file; see TestCourseRepositoryIssuesIgnoreFile.
 	writeRepoFile(t, testsDir, "internal/pkg", testsFile)
+	// Repository metadata is never an assignment folder.
 	makeRepoDir(t, testsDir, scriptsDir)
 	makeRepoDir(t, testsDir, ".github")
 
@@ -49,11 +57,64 @@ func TestCourseRepositoryIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []RepoIssue{
+		{Assignment: "internal", File: "internal", Problem: `no assignment configuration found; add "internal/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
 		{Assignment: "lab2", File: "lab2", Problem: `assignment folder is missing from "assignments" repository`},
-		{Assignment: "lab3", File: "lab3", Problem: `assignment folder is missing from "tests" repository`},
-		{Assignment: "lab4", File: "lab4/assignment.json", Problem: `missing "lab4/assignment.json"`},
-		{Assignment: "lab4", File: "lab4", Problem: "missing tests.json or criteria.json"},
+		{Assignment: "lab3", File: "lab3", Problem: `assignment folder is missing from "tests" repository; add it or list the folder in .quickfeedignore`},
+		{Assignment: "lab4", File: "lab4", Problem: `no assignment configuration found; add "lab4/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
 		{Assignment: "lab5", File: "lab5", Problem: "missing tests.json or criteria.json"},
+		{Assignment: "lab6", File: "lab6", Problem: `no assignment configuration found; add "lab6/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("courseRepositoryIssues() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestCourseRepositoryIssuesIgnoreFile(t *testing.T) {
+	testsDir := t.TempDir()
+	assignmentsDir := t.TempDir()
+
+	writeRepoFile(t, testsDir, "lab1", assignmentFile)
+	writeRepoFile(t, testsDir, "lab1", testsFile)
+	makeRepoDir(t, assignmentsDir, "lab1")
+
+	// Shared course code in the tests repository, and handout material that
+	// students receive but that has no tests; neither is an assignment.
+	writeRepoFile(t, testsDir, "internal", "helper.go")
+	makeRepoDir(t, assignmentsDir, "internal")
+	makeRepoDir(t, assignmentsDir, "resources")
+
+	writeIgnoreFile(
+		t, testsDir,
+		"# folders that are not assignments",
+		"internal",
+		"",
+		"resources",
+	)
+
+	got, err := courseRepositoryIssues(testsDir, assignmentsDir, []*qf.Assignment{{Name: "lab1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 0 {
+		t.Errorf("courseRepositoryIssues() = %+v, want no issues", got)
+	}
+}
+
+func TestCourseRepositoryIssuesInvalidIgnoreEntry(t *testing.T) {
+	testsDir := t.TempDir()
+	assignmentsDir := t.TempDir()
+
+	writeRepoFile(t, testsDir, "internal", "helper.go")
+	writeIgnoreFile(t, testsDir, "internal/*")
+
+	got, err := courseRepositoryIssues(testsDir, assignmentsDir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []RepoIssue{
+		{File: ".quickfeedignore", Problem: `invalid entry "internal/*": only top-level folder names are supported`},
+		// The invalid entry does not hide the folder it was meant to exclude.
+		{Assignment: "internal", File: "internal", Problem: `no assignment configuration found; add "internal/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("courseRepositoryIssues() mismatch (-want +got):\n%s", diff)
@@ -179,6 +240,14 @@ func (s *cloneOnlySCM) Clone(_ context.Context, options *scm.CloneOptions) (stri
 func makeRepoDir(t *testing.T, root string, elements ...string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Join(append([]string{root}, elements...)...), 0o750); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeIgnoreFile(t *testing.T, root string, lines ...string) {
+	t.Helper()
+	contents := strings.Join(lines, "\n") + "\n"
+	if err := os.WriteFile(filepath.Join(root, ignoreFile), []byte(contents), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
