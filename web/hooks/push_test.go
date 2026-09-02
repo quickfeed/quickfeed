@@ -2,15 +2,12 @@ package hooks
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -18,44 +15,6 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-func TestValidateAssignmentsPushRefreshesBothRepositories(t *testing.T) {
-	testsDir := filepath.Join(t.TempDir(), qf.TestsRepo)
-	assignmentsDir := filepath.Join(t.TempDir(), qf.AssignmentsRepo)
-	for _, dir := range []string{filepath.Join(testsDir, "lab1"), filepath.Join(assignmentsDir, "lab1")} {
-		if err := os.MkdirAll(dir, 0o750); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.json"), []byte("{}"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	scmClient := &cloningSCM{directories: map[string]string{
-		qf.TestsRepo:       testsDir,
-		qf.AssignmentsRepo: assignmentsDir,
-	}}
-	course := &qf.Course{ID: 42, ScmOrganizationName: "course-2026"}
-	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
-	if err := validateAssignmentsPush(ctx, scmClient, course); err != nil {
-		t.Fatal(err)
-	}
-	wantCalls := []string{qf.AssignmentsRepo, qf.TestsRepo}
-	if diff := cmp.Diff(wantCalls, scmClient.calls); diff != "" {
-		t.Errorf("Clone() calls mismatch (-want +got):\n%s", diff)
-	}
-}
-
-type cloningSCM struct {
-	scm.SCM
-	directories map[string]string
-	calls       []string
-}
-
-func (s *cloningSCM) Clone(_ context.Context, options *scm.CloneOptions) (string, error) {
-	s.calls = append(s.calls, options.Repository)
-	return s.directories[options.Repository], nil
-}
 
 func TestExtractAssignments(t *testing.T) {
 	course := qtest.MockCourses[0]

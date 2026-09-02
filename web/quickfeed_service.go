@@ -490,17 +490,17 @@ func (s *QuickFeedService) GetAssignments(ctx context.Context, in *qf.CourseRequ
 }
 
 // UpdateAssignments updates the course's assignments record in the database
-// by fetching assignment information from the course's test repository.
-// The response reports the number of content issues found; details are written
-// to the course log so that the teaching staff can fix them.
+// by fetching assignment information from the course's tests repository, and
+// comparing it with the assignments repository. The response reports the
+// number of issues found; details are written to the course log so that the
+// teaching staff can fix them.
 func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.RepositoryIssues, error) {
 	course, err := s.db.GetCourse(in.GetCourseID())
 	if err != nil {
 		qlog.FromContext(ctx).Error("failed to get course", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	// Scope the remainder of the method to the course; the update below uses a
-	// tests-repository scope on top of this.
+	// Scope the remainder of the method to the course.
 	// The course ID comes from the request logger; see enrichRequestLogger.
 	ctx, logger := qlog.WithCourseLog(ctx, course)
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
@@ -508,10 +508,9 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	testsCtx := qlog.With(ctx, label.Repository, qf.TestsRepo, label.RepositoryType, qf.Repository_TESTS.String())
-	issueCount, err := assignments.UpdateFromTestsRepo(testsCtx, s.runner, s.db, scmClient, course)
+	issueCount, err := assignments.UpdateFromCourseRepositories(ctx, s.runner, s.db, scmClient, course)
 	if err != nil {
-		qlog.FromContext(testsCtx).Error("failed to update assignments from tests repository", label.Error, err)
+		logger.Error("failed to update from course repositories", label.Error, err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to update assignments from tests repository"))
 	}
 	return &qf.RepositoryIssues{Count: uint32(issueCount)}, nil

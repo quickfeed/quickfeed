@@ -44,7 +44,7 @@ var (
 // Lock locks the course to prevent concurrent updates to the course.
 // It returns a corresponding unlock function which must be called when the update is done.
 // Specifically, this method is used to prevent concurrent database updates
-// derived from the test repository. See [assignments.UpdateFromTestsRepo].
+// derived from the course repositories. See [assignments.UpdateFromCourseRepositories].
 func (course *Course) Lock() func() {
 	mapMutex.Lock()
 	if _, ok := courseMutexMap[course.GetID()]; !ok {

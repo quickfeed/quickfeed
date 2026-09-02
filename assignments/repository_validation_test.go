@@ -5,11 +5,14 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -58,8 +61,8 @@ func TestCourseRepositoryIssues(t *testing.T) {
 	}
 	want := []RepoIssue{
 		{Assignment: "internal", File: "internal", Problem: `no assignment configuration found; add "internal/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
-		{Assignment: "lab2", File: "lab2", Problem: `assignment folder is missing from "assignments" repository`},
-		{Assignment: "lab3", File: "lab3", Problem: `assignment folder is missing from "tests" repository; add it or list the folder in .quickfeedignore`},
+		{Assignment: "lab2", File: "lab2", Problem: `assignment folder is missing from "assignments" repository`, Transient: true},
+		{Assignment: "lab3", File: "lab3", Problem: `assignment folder is missing from "tests" repository; add it or list the folder in .quickfeedignore`, Transient: true},
 		{Assignment: "lab4", File: "lab4", Problem: `no assignment configuration found; add "lab4/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
 		{Assignment: "lab5", File: "lab5", Problem: "missing tests.json or criteria.json"},
 		{Assignment: "lab6", File: "lab6", Problem: `no assignment configuration found; add "lab6/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
@@ -121,40 +124,6 @@ func TestCourseRepositoryIssuesInvalidIgnoreEntry(t *testing.T) {
 	}
 }
 
-func TestValidateCourseRepositoriesCountsAllIssues(t *testing.T) {
-	testsDir := t.TempDir()
-	assignmentsDir := t.TempDir()
-	writeFile(t, testsDir, "lab1", assignmentFile, j1)
-	makeRepoDir(t, assignmentsDir, "lab1")
-
-	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
-	got, err := ValidateCourseRepositories(ctx, testsDir, assignmentsDir, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// The tests repository content check reports the missing tests.json. The
-	// cross-repository check finds no additional problem for the aligned folders.
-	if got != 1 {
-		t.Errorf("ValidateCourseRepositories() = %d, want 1", got)
-	}
-}
-
-func TestValidateCourseRepositoriesDoesNotDuplicateMissingAssignment(t *testing.T) {
-	testsDir := t.TempDir()
-	assignmentsDir := t.TempDir()
-	writeFile(t, testsDir, "lab1", testsFile, testJson)
-	makeRepoDir(t, assignmentsDir, "lab1")
-
-	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
-	got, err := ValidateCourseRepositories(ctx, testsDir, assignmentsDir, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != 1 {
-		t.Errorf("ValidateCourseRepositories() = %d, want one missing-assignment issue", got)
-	}
-}
-
 func TestCourseRepositoryIssuesMissingRoot(t *testing.T) {
 	_, err := courseRepositoryIssues(filepath.Join(t.TempDir(), "missing"), t.TempDir(), nil)
 	if err == nil {
@@ -162,65 +131,171 @@ func TestCourseRepositoryIssuesMissingRoot(t *testing.T) {
 	}
 }
 
-func TestUpdateFromTestsRepoReportsAlignmentIssues(t *testing.T) {
+// newCourse returns a course backed by a fresh test database, ready to be
+// updated from a pair of local directories standing in for the two course
+// repositories.
+func newCourse(t *testing.T) (database.Database, *qf.Course) {
+	t.Helper()
 	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	admin := qtest.CreateFakeUser(t, db)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
+	return db, course
+}
 
-	testsDir := t.TempDir()
-	assignmentsDir := t.TempDir()
-	writeFile(t, testsDir, "lab1", assignmentFile, j1)
-	writeFile(t, testsDir, "lab1", testsFile, testJson)
-	scmClient := &cloneOnlySCM{directories: map[string]string{
-		qf.TestsRepo:       testsDir,
-		qf.AssignmentsRepo: assignmentsDir,
-	}}
+// TestUpdateFromCourseRepositoriesIssueCount checks that the returned count
+// covers both the tests repository's content problems and the alignment of the
+// two repositories, without reporting the same folder twice.
+func TestUpdateFromCourseRepositoriesIssueCount(t *testing.T) {
+	tests := []struct {
+		name            string
+		writeRepo       func(t *testing.T, testsDir, assignmentsDir string)
+		wantCount       int
+		wantAssignments []string
+	}{
+		{
+			// The content check reports the missing tests.json; the aligned
+			// folders add nothing to it.
+			name: "MissingTestsFile",
+			writeRepo: func(t *testing.T, testsDir, assignmentsDir string) {
+				writeFile(t, testsDir, "lab1", assignmentFile, j1)
+				makeRepoDir(t, assignmentsDir, "lab1")
+			},
+			wantCount:       1,
+			wantAssignments: []string{"lab1"},
+		},
+		{
+			// A folder configured by tests.json alone is missing its
+			// assignment.json; it must be reported once, not once per check.
+			name: "MissingAssignmentFile",
+			writeRepo: func(t *testing.T, testsDir, assignmentsDir string) {
+				writeFile(t, testsDir, "lab1", testsFile, testJson)
+				makeRepoDir(t, assignmentsDir, "lab1")
+			},
+			// The folder holds no parsable assignment, so nothing is stored.
+			wantCount: 1,
+		},
+		{
+			// An assignment folder that has not reached the assignments
+			// repository yet: one alignment issue, no content issue.
+			name: "MissingFromAssignmentsRepository",
+			writeRepo: func(t *testing.T, testsDir, _ string) {
+				writeFile(t, testsDir, "lab1", assignmentFile, j1)
+				writeFile(t, testsDir, "lab1", testsFile, testJson)
+			},
+			wantCount:       1,
+			wantAssignments: []string{"lab1"},
+		},
+		{
+			name: "AlignedRepositories",
+			writeRepo: func(t *testing.T, testsDir, assignmentsDir string) {
+				writeFile(t, testsDir, "lab1", assignmentFile, j1)
+				writeFile(t, testsDir, "lab1", testsFile, testJson)
+				makeRepoDir(t, assignmentsDir, "lab1")
+			},
+			wantCount:       0,
+			wantAssignments: []string{"lab1"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, course := newCourse(t)
+			testsDir, assignmentsDir := t.TempDir(), t.TempDir()
+			tt.writeRepo(t, testsDir, assignmentsDir)
+			scmClient := &cloneOnlySCM{directories: map[string]string{
+				qf.TestsRepo:       testsDir,
+				qf.AssignmentsRepo: assignmentsDir,
+			}}
 
-	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
-	got, err := UpdateFromTestsRepo(ctx, &ci.Local{}, db, scmClient, course)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != 1 {
-		t.Errorf("UpdateFromTestsRepo() issue count = %d, want 1", got)
-	}
-	stored, err := db.GetAssignmentsByCourse(course.GetID())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(stored) != 1 || stored[0].GetName() != "lab1" {
-		t.Errorf("stored assignments = %+v, want lab1", stored)
+			ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
+			got, err := UpdateFromCourseRepositories(ctx, &ci.Local{}, db, scmClient, course)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tt.wantCount {
+				t.Errorf("UpdateFromCourseRepositories() issue count = %d, want %d", got, tt.wantCount)
+			}
+			assertStoredAssignments(t, db, course, tt.wantAssignments)
+		})
 	}
 }
 
-func TestUpdateFromTestsRepoPersistsBeforeAlignmentFailure(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	admin := qtest.CreateFakeUser(t, db)
-	course := &qf.Course{}
-	qtest.CreateCourse(t, db, admin, course)
-
+// TestUpdateFromCourseRepositoriesAssignmentsCloneFailure checks the failure
+// policy for the assignments repository: the update itself still completes, and
+// only the cross-repository comparison is skipped.
+func TestUpdateFromCourseRepositoriesAssignmentsCloneFailure(t *testing.T) {
+	db, course := newCourse(t)
 	testsDir := t.TempDir()
 	writeFile(t, testsDir, "lab1", assignmentFile, j1)
-	writeFile(t, testsDir, "lab1", testsFile, testJson)
 	scmClient := &cloneOnlySCM{
 		directories: map[string]string{qf.TestsRepo: testsDir},
 		errors:      map[string]error{qf.AssignmentsRepo: errors.New("clone failed")},
 	}
 
 	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
-	_, err := UpdateFromTestsRepo(ctx, &ci.Local{}, db, scmClient, course)
-	if err == nil {
-		t.Fatal("UpdateFromTestsRepo() error = nil, want assignments clone error")
+	got, err := UpdateFromCourseRepositories(ctx, &ci.Local{}, db, scmClient, course)
+	if err != nil {
+		t.Fatalf("UpdateFromCourseRepositories() error = %v, want nil despite the assignments clone failure", err)
 	}
-	stored, dbErr := db.GetAssignmentsByCourse(course.GetID())
-	if dbErr != nil {
-		t.Fatal(dbErr)
+	// The missing tests.json is still reported; the alignment issue that the
+	// empty assignments repository would have produced is not.
+	if got != 1 {
+		t.Errorf("UpdateFromCourseRepositories() issue count = %d, want 1", got)
 	}
-	if len(stored) != 1 || stored[0].GetName() != "lab1" {
-		t.Errorf("stored assignments = %+v, want lab1 despite validation failure", stored)
+	assertStoredAssignments(t, db, course, []string{"lab1"})
+}
+
+// TestUpdateFromCourseRepositoriesTestsCloneFailure checks that a failure to
+// clone the tests repository aborts the update: nothing can be done without it.
+func TestUpdateFromCourseRepositoriesTestsCloneFailure(t *testing.T) {
+	db, course := newCourse(t)
+	scmClient := &cloneOnlySCM{errors: map[string]error{qf.TestsRepo: errors.New("clone failed")}}
+
+	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
+	if _, err := UpdateFromCourseRepositories(ctx, &ci.Local{}, db, scmClient, course); err == nil {
+		t.Fatal("UpdateFromCourseRepositories() error = nil, want tests clone error")
+	}
+	if calls := scmClient.calls; !slices.Equal(calls, []string{qf.TestsRepo}) {
+		t.Errorf("Clone() calls = %v, want only %q", calls, qf.TestsRepo)
+	}
+}
+
+// TestUpdateFromCourseRepositoriesClonesBothRepositories checks that the update
+// refreshes both local clones, whichever repository the push came from.
+func TestUpdateFromCourseRepositoriesClonesBothRepositories(t *testing.T) {
+	db, course := newCourse(t)
+	testsDir, assignmentsDir := t.TempDir(), t.TempDir()
+	writeFile(t, testsDir, "lab1", assignmentFile, j1)
+	writeFile(t, testsDir, "lab1", testsFile, testJson)
+	makeRepoDir(t, assignmentsDir, "lab1")
+	scmClient := &cloneOnlySCM{directories: map[string]string{
+		qf.TestsRepo:       testsDir,
+		qf.AssignmentsRepo: assignmentsDir,
+	}}
+
+	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
+	if _, err := UpdateFromCourseRepositories(ctx, &ci.Local{}, db, scmClient, course); err != nil {
+		t.Fatal(err)
+	}
+	wantCalls := []string{qf.TestsRepo, qf.AssignmentsRepo}
+	if diff := cmp.Diff(wantCalls, scmClient.calls); diff != "" {
+		t.Errorf("Clone() calls mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func assertStoredAssignments(t *testing.T, db database.Database, course *qf.Course, want []string) {
+	t.Helper()
+	stored, err := db.GetAssignmentsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := make([]string, 0, len(stored))
+	for _, assignment := range stored {
+		got = append(got, assignment.GetName())
+	}
+	if diff := cmp.Diff(want, got, cmpopts.EquateEmpty()); diff != "" {
+		t.Errorf("stored assignments mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -228,9 +303,11 @@ type cloneOnlySCM struct {
 	scm.SCM
 	directories map[string]string
 	errors      map[string]error
+	calls       []string // repositories passed to Clone, in order
 }
 
 func (s *cloneOnlySCM) Clone(_ context.Context, options *scm.CloneOptions) (string, error) {
+	s.calls = append(s.calls, options.Repository)
 	if err := s.errors[options.Repository]; err != nil {
 		return "", err
 	}

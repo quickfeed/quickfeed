@@ -22,14 +22,18 @@ const (
 	scriptsDir     = "scripts"
 )
 
-// RepoIssue describes a content problem detected in the tests repository,
-// such as a malformed json file or a missing assignment.json. Issues are
-// reported to the teaching staff via the course log; they do not abort the
-// assignment update.
+// RepoIssue describes a problem detected in the course repositories, such as
+// a malformed json file, a missing assignment.json, or an assignment folder
+// present in only one of the two repositories. Issues are reported to the
+// teaching staff via the course log; they do not abort the assignment update.
 type RepoIssue struct {
 	Assignment string // assignment folder name; empty for repository-level issues
 	File       string // repository-relative path, e.g., "lab1/tests.json"
 	Problem    string
+	// Transient marks an issue that depends on both course repositories and
+	// that resolves itself once the teaching staff has pushed to both. Such
+	// issues are reported less prominently; see logRepositoryIssues.
+	Transient bool
 }
 
 // filesForBuildContext specifies files for the Docker build context.

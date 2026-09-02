@@ -49,7 +49,7 @@ func setupRunData(t *testing.T, runner ci.Runner) *ci.RunData {
 	}
 	course.UpdateDockerfile(dockerfile)
 
-	// Emulate running UpdateFromTestsRepo to ensure the docker image is built before running tests.
+	// Emulate running UpdateFromCourseRepositories to ensure the docker image is built before running tests.
 	t.Logf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
 	out, err := runner.Run(context.Background(), &ci.Job{
 		Name:  course.JobName(),

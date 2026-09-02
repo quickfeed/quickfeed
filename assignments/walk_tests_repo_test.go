@@ -227,7 +227,7 @@ func TestReadTestsRepositoryContentBadContent(t *testing.T) {
 			if !slices.ContainsFunc(issues, func(issue RepoIssue) bool {
 				return strings.Contains(issue.Problem, tc.wantProblem)
 			}) {
-				t.Errorf("issues %q do not mention %q", issues, tc.wantProblem)
+				t.Errorf("issues %+v do not mention %q", issues, tc.wantProblem)
 			}
 		})
 	}
