@@ -36,8 +36,8 @@ func TestUpdateAssignments(t *testing.T) {
 		},
 		{
 			// The mock's tests repository is empty, so the clone inside
-			// UpdateFromTestsRepo fails; previously this failure was silently
-			// ignored and the RPC continued to the assignments repository.
+			// UpdateFromCourseRepositories fails; previously this failure was
+			// silently ignored and the RPC continued to the assignments repository.
 			name: "Valid course ID but failed to clone tests repository",
 			request: &qf.CourseRequest{
 				CourseID: course.GetID(),

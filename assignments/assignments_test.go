@@ -51,7 +51,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Logf("%+v", assignment)
 	}
 
-	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
+	// This just to simulate the behavior of UpdateFromCourseRepositories to confirm that the Dockerfile is built
 	course.UpdateDockerfile(gotBuildContext[ci.Dockerfile])
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -60,9 +60,9 @@ func TestFetchAssignments(t *testing.T) {
 	}
 }
 
-// TestUpdateCriteria simulates the behavior of UpdateFromTestsRepo
+// TestUpdateCriteria simulates the behavior of UpdateFromCourseRepositories
 // where we update the criteria for an assignment.
-// Benchmarks and criteria specifically related to a review should not be affected by UpdateFromTestsRepo.
+// Benchmarks and criteria specifically related to a review should not be affected by UpdateFromCourseRepositories.
 // Neither should reviews
 func TestUpdateCriteria(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)

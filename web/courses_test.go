@@ -83,7 +83,7 @@ func TestGetCourseWithoutDockerfileDigest(t *testing.T) {
 		t.Errorf("UpdateDockerfile(%q) = %t, want %t", dockerfile, got, want)
 	}
 	// Update the course's DockerfileDigest in the database
-	// To simulate the behavior in assignments.UpdateFromTestsRepo()
+	// To simulate the behavior in assignments.UpdateFromCourseRepositories()
 	if err := db.UpdateCourse(course); err != nil {
 		t.Error(err)
 	}

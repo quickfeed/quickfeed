@@ -3,6 +3,7 @@ package assignments
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -16,25 +17,6 @@ import (
 // ignoreFile is an optional file in the tests repository root listing top-level
 // folders, in either repository, that are not assignments.
 const ignoreFile = ".quickfeedignore"
-
-// ValidateCourseRepositories checks the tests repository's content and verifies
-// that the tests and assignments repositories contain the same assignment folders.
-// Problems are written to the course log and returned as a count; content problems
-// do not make validation fail.
-func ValidateCourseRepositories(ctx context.Context, testsDir, assignmentsDir string, courseID uint64) (int, error) {
-	assignments, _, testsIssues, err := readTestsRepositoryContent(testsDir, courseID)
-	if err != nil {
-		return 0, fmt.Errorf("reading tests repository content: %w", err)
-	}
-	logRepositoryIssues(ctx, "tests repository issue", testsIssues)
-
-	repositoryIssues, err := courseRepositoryIssues(testsDir, assignmentsDir, assignments)
-	if err != nil {
-		return len(testsIssues), err
-	}
-	logRepositoryIssues(ctx, "course repository issue", repositoryIssues)
-	return len(testsIssues) + len(repositoryIssues), nil
-}
 
 // courseRepositoryIssues reports assignment folders that are not aligned across
 // the two course repositories. Every top-level folder in either repository is an
@@ -85,6 +67,7 @@ func assignmentFolderIssues(testsDir, name string, inTests, inAssignments bool, 
 			File:       name,
 			Problem: fmt.Sprintf("assignment folder is missing from %q repository; add it or list the folder in %s",
 				qf.TestsRepo, ignoreFile),
+			Transient: true,
 		}}, nil
 	}
 	files, err := readAssignmentFiles(testsDir, name)
@@ -108,6 +91,7 @@ func assignmentFolderIssues(testsDir, name string, inTests, inAssignments bool, 
 			Assignment: name,
 			File:       name,
 			Problem:    fmt.Sprintf("assignment folder is missing from %q repository", qf.AssignmentsRepo),
+			Transient:  true,
 		})
 	}
 	// Auto-graded assignments get the more specific missing-tests issue from
@@ -232,10 +216,19 @@ func regularFile(path string) (bool, error) {
 	return false, fmt.Errorf("checking %q: %w", path, err)
 }
 
+// logRepositoryIssues writes issues to the course log. Most issues are warnings,
+// but transient issues are logged at info level because they only reflect the
+// temporary mismatch between the two pushes needed to add an assignment.
+// The frontend issue count reports the state after the latest push.
 func logRepositoryIssues(ctx context.Context, message string, issues []RepoIssue) {
 	logger := qlog.FromContext(ctx)
 	for _, issue := range issues {
-		logger.Warn(
+		level := slog.LevelWarn
+		if issue.Transient {
+			level = slog.LevelInfo
+		}
+		logger.Log(
+			ctx, level,
 			message,
 			label.Assignment, issue.Assignment,
 			label.Path, issue.File,
