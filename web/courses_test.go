@@ -612,6 +612,164 @@ func TestRejectEnrollmentRepoAlreadyDeleted(t *testing.T) {
 	}
 }
 
+// TestRejectEnrollmentRemovesGroupMembership verifies that rejecting the enrollment
+// of a group member removes the user from the group, and that the group's remaining
+// members are unaffected.
+func TestRejectEnrollmentRemovesGroupMembership(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	leaving := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "leaving", ScmRemoteID: 2})
+	staying := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "staying", ScmRemoteID: 3})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockCourses(),
+		scm.WithMockOrgs("admin", "leaving", "staying"),
+	), web.WithInterceptors())
+
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	qtest.EnrollStudent(t, db, leaving, course)
+	qtest.EnrollStudent(t, db, staying, course)
+
+	leavingCtx := client.Context(t, leaving)
+	createdGroup, err := client.CreateGroup(leavingCtx, &qf.Group{
+		CourseID: course.GetID(),
+		Name:     "TestGroup",
+		Users:    []*qf.User{leaving, staying},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	adminCtx := client.Context(t, admin)
+	// Approve the group so that its repository is created on the SCM; otherwise
+	// the reject below would take the early return for groups without a
+	// repository, and never exercise the SCM member-removal path this test
+	// is meant to cover.
+	createdGroup.Status = qf.Group_APPROVED
+	if _, err := client.UpdateGroup(adminCtx, createdGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := client.UpdateEnrollments(adminCtx, &qf.Enrollments{
+		Enrollments: []*qf.Enrollment{{
+			CourseID: course.GetID(),
+			UserID:   leaving.GetID(),
+			Status:   qf.Enrollment_NONE,
+		}},
+	}); err != nil {
+		t.Fatalf("UpdateEnrollments() failed for group member: %v", err)
+	}
+
+	gotGroup, err := db.GetGroup(createdGroup.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotGroup.Contains(leaving) {
+		t.Error("GetGroup() returned the rejected user as a group member")
+	}
+	if !gotGroup.Contains(staying) {
+		t.Error("GetGroup() did not return the remaining group member")
+	}
+
+	// GetGroupsByCourse reads the group's user association directly,
+	// and must agree with GetGroup about the group's members.
+	groups, err := db.GetGroupsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(groups) != 1 {
+		t.Fatalf("GetGroupsByCourse() returned %d groups, want 1", len(groups))
+	}
+	if groups[0].Contains(leaving) {
+		t.Error("GetGroupsByCourse() returned the rejected user as a group member")
+	}
+	if !groups[0].Contains(staying) {
+		t.Error("GetGroupsByCourse() did not return the remaining group member")
+	}
+
+	// The group still has a member, so its repository must not have been removed.
+	repos, err := db.GetRepositories(&qf.Repository{GroupID: createdGroup.GetID(), RepoType: qf.Repository_GROUP})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repos) != 1 {
+		t.Errorf("expected 1 group repository, got %d", len(repos))
+	}
+}
+
+// TestRejectEnrollmentDeletesEmptyGroup verifies that rejecting the enrollment of a
+// group's only member deletes the group, instead of leaving behind a group that can
+// neither be read nor deleted.
+func TestRejectEnrollmentDeletesEmptyGroup(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 2})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockCourses(),
+		scm.WithMockOrgs("admin", "student"),
+	), web.WithInterceptors())
+
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	qtest.EnrollStudent(t, db, student, course)
+
+	studentCtx := client.Context(t, student)
+	createdGroup, err := client.CreateGroup(studentCtx, &qf.Group{
+		CourseID: course.GetID(),
+		Name:     "TestGroup",
+		Users:    []*qf.User{student},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	adminCtx := client.Context(t, admin)
+	// Approve the group so that its repository is created on the SCM; otherwise
+	// the reject below would take the early return for groups without a
+	// repository, and never exercise deletion of the singleton group's SCM
+	// repository, which is the key behavior this test is meant to cover.
+	createdGroup.Status = qf.Group_APPROVED
+	if _, err := client.UpdateGroup(adminCtx, createdGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := client.UpdateEnrollments(adminCtx, &qf.Enrollments{
+		Enrollments: []*qf.Enrollment{{
+			CourseID: course.GetID(),
+			UserID:   student.GetID(),
+			Status:   qf.Enrollment_NONE,
+		}},
+	}); err != nil {
+		t.Fatalf("UpdateEnrollments() failed for the group's only member: %v", err)
+	}
+
+	if _, err := db.GetGroup(createdGroup.GetID()); err == nil {
+		t.Error("group still exists after its only member was removed from the course")
+	}
+	groups, err := db.GetGroupsByCourse(course.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(groups) > 0 {
+		t.Errorf("GetGroupsByCourse() returned %d groups, want 0", len(groups))
+	}
+
+	// The group's repository must have been deleted along with the group.
+	repos, err := db.GetRepositories(&qf.Repository{GroupID: createdGroup.GetID(), RepoType: qf.Repository_GROUP})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repos) > 0 {
+		t.Errorf("expected 0 group repositories, got %d", len(repos))
+	}
+}
+
 // TestRejectEnrollmentDeletedSCMUser verifies that an enrollment can be removed
 // even when the user has deleted their SCM account, and thus can no longer be
 // looked up on the SCM.

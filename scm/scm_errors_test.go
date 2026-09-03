@@ -549,13 +549,13 @@ func TestErrorUpdateGroupMembers(t *testing.T) {
 		{
 			name:        "CompleteRequest/RepoNotFound",
 			opt:         &GroupOptions{Organization: "foo", GroupName: "a"},
-			wantErr:     "scm.UpdateGroupMembers: failed to update group members: getting members: GET http://127.0.0.1/repos/foo/a/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: repository a: not found",
 			wantUserErr: wantUserErr,
 		},
 		{
 			name:        "CompleteRequest/OrgNotFound",
 			opt:         &GroupOptions{Organization: "x", GroupName: "info"},
-			wantErr:     "scm.UpdateGroupMembers: failed to update group members: getting members: GET http://127.0.0.1/repos/x/info/collaborators: 404  []",
+			wantErr:     "scm.UpdateGroupMembers: failed to update group members: repository info: not found",
 			wantUserErr: wantUserErr,
 		},
 		// TODO: Add more tests to check error handling when updating group members.

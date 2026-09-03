@@ -37,7 +37,8 @@ func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 }
 
 // RejectEnrollment removes the user enrollment from the database, along with any
-// internal notes attached to that enrollment.
+// internal notes attached to that enrollment. If the user is a member of a group,
+// the user is also removed from that group.
 func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
@@ -48,6 +49,13 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 		// remove them here so they do not outlive their target.
 		if err := tx.Where("enrollment_id = ?", enrol.GetID()).Delete(&qf.Note{}).Error; err != nil {
 			return err
+		}
+		// Group membership is derived from the enrollment's group ID; the user must
+		// be removed from the group before the enrollment is deleted.
+		if enrol.GetGroupID() > 0 {
+			if err := removeGroupMember(tx, enrol.GetGroupID(), userID); err != nil {
+				return err
+			}
 		}
 		return tx.Delete(enrol).Error
 	})
