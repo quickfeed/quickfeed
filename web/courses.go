@@ -20,7 +20,8 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 	}
 	// Scope the enrollment change once; the helpers called below log the same
 	// course and user, and therefore do not repeat these attributes.
-	ctx, logger := qlog.WithLogger(ctx,
+	ctx, logger := qlog.WithLogger(
+		ctx,
 		label.CourseCode, enrollment.GetCourse().GetCode(),
 		label.TargetUser, enrollment.GetUser().GetLogin(),
 	)
@@ -58,6 +59,13 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
+	// The user's group membership is derived from the enrollment, and must therefore
+	// be resolved before the enrollment is removed from the database.
+	if enrolled.GetGroupID() > 0 {
+		if err := s.removeFromGroup(ctx, sc, enrolled); err != nil {
+			return err
+		}
+	}
 	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("getting %s repository for %q: %w", course.GetCode(), user.GetLogin(), err)
@@ -86,6 +94,41 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 		// continue with other delete operations
 	}
 	return s.db.RejectEnrollment(user.GetID(), course.GetID())
+}
+
+// removeFromGroup removes the user of the given enrollment from their group on the SCM.
+// If the user is the group's only member, the group and its repository are deleted;
+// otherwise the group repository's collaborators are updated to the remaining members.
+// The group's database records are updated by db.RejectEnrollment when the enrollment
+// is removed. This must be called before the enrollment is deleted, since the group
+// members are derived from the enrollments referring to the group.
+func (s *QuickFeedService) removeFromGroup(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+	course, user := enrolled.GetCourse(), enrolled.GetUser()
+	group, err := s.db.GetGroup(enrolled.GetGroupID())
+	if err != nil {
+		return fmt.Errorf("getting group %d for %q: %w", enrolled.GetGroupID(), user.GetLogin(), err)
+	}
+	remaining := group.GetUsersExcept(user.GetID())
+	logger := qlog.FromContext(ctx)
+	if len(remaining) == 0 {
+		// the user is the group's only member; delete the group and its repository
+		logger.Debug("deleting group with no remaining members", label.Group, group.GetName())
+		return s.internalDeleteGroup(ctx, sc, &qf.GroupRequest{
+			CourseID: course.GetID(),
+			GroupID:  group.GetID(),
+		})
+	}
+	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("getting %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
+	}
+	if repo == nil {
+		// no group repository to update; the database records are updated with the enrollment
+		logger.Debug("group repository not found", label.Group, group.GetName(), label.Error, err)
+		return nil
+	}
+	group.Users = remaining
+	return updateGroupMembers(ctx, sc, group, course.GetScmOrganizationName())
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
@@ -189,7 +232,8 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 			FetchMode: &qf.SubmissionRequest_Type{
 				Type: qf.SubmissionRequest_ALL,
 			},
-		})
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
