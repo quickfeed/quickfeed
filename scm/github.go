@@ -401,8 +401,13 @@ func (s *GithubSCM) UpdateGroupMembers(ctx context.Context, opt *GroupOptions) e
 	}
 
 	// find current group members
-	oldUsers, _, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
+	oldUsers, resp, err := s.client.Repositories.ListCollaborators(ctx, opt.Organization, opt.GroupName, nil)
 	if err != nil {
+		if hasStatus(resp, http.StatusNotFound) {
+			// wrap ErrNotFound to allow callers to detect that the group repository
+			// no longer exists, e.g., already deleted by a previously interrupted operation
+			return E(op, m, fmt.Errorf("repository %s: %w", opt.GroupName, ErrNotFound))
+		}
 		return E(op, m, fmt.Errorf("getting members: %w", err))
 	}
 
