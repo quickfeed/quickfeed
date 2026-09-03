@@ -37,12 +37,22 @@ func (db *GormDB) CreateEnrollment(enrollment *qf.Enrollment) error {
 }
 
 // RejectEnrollment removes the user enrollment from the database.
+// If the user is a member of a group, the user is also removed from that group.
 func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		return err
 	}
-	return db.conn.Delete(enrol).Error
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// Group membership is derived from the enrollment's group ID; the user must
+		// be removed from the group before the enrollment is deleted.
+		if enrol.GetGroupID() > 0 {
+			if err := removeGroupMember(tx, enrol.GetGroupID(), userID); err != nil {
+				return err
+			}
+		}
+		return tx.Delete(enrol).Error
+	})
 }
 
 // UpdateEnrollment changes status and display state of the given enrollment.

@@ -209,6 +209,23 @@ func (db *GormDB) setGroupSlipDays(courseID uint64, groups ...*qf.Group) error {
 	return nil
 }
 
+// removeGroupMember removes the given user from the group's user association and
+// synchronizes the grades of the group's submissions to the remaining members.
+// The user's enrollment must still reference the group when this is called, since
+// the remaining members are derived from the group's enrollments.
+func removeGroupMember(tx *gorm.DB, groupID, userID uint64) error {
+	if err := tx.Model(&qf.Group{ID: groupID}).Association("Users").Delete(&qf.User{ID: userID}); err != nil {
+		return err
+	}
+	remaining := make([]uint64, 0)
+	if err := tx.Model(&qf.Enrollment{}).
+		Where("group_id = ? AND user_id <> ?", groupID, userID).
+		Pluck("user_id", &remaining).Error; err != nil {
+		return err
+	}
+	return syncGroupGrades(tx, groupID, remaining)
+}
+
 // syncGroupGrades synchronizes grade records for all group submissions to match current group membership.
 // Creates new grades for newly added members and removes grades for users no longer in the group.
 // Existing grades are preserved with their current status (e.g., APPROVED).
