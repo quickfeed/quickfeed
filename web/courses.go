@@ -31,7 +31,12 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 
 	// check and update user SCM info before updating enrollment status
 	if err := s.updateUserFromSCM(ctx, sc, enrollment.GetUser()); err != nil {
-		return fmt.Errorf("updating SCM info for user %d: %w", enrollment.GetUserID(), err)
+		// A user that has deleted their SCM account can no longer be looked up;
+		// their enrollment must still be removable.
+		if !(errors.Is(err, scm.ErrNotFound) && request.IsNone()) {
+			return fmt.Errorf("updating SCM info for user %d: %w", enrollment.GetUserID(), err)
+		}
+		logger.Debug("SCM user not found; removing enrollment anyway", label.Error, err)
 	}
 	switch {
 	case (enrollment.IsPending() || enrollment.IsStudent()) && request.IsNone(): // pending or student -> none

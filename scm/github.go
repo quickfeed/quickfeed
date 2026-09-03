@@ -70,8 +70,13 @@ func newGithubUserClient(token string) *github.Client {
 // GetUserByID fetches a user by their SCM remote ID.
 func (s *GithubSCM) GetUserByID(ctx context.Context, id uint64) (*qf.User, error) {
 	const op Op = "GetUserByID"
-	ghUser, _, err := s.client.Users.GetByID(ctx, int64(id))
+	ghUser, resp, err := s.client.Users.GetByID(ctx, int64(id))
 	if err != nil {
+		if hasStatus(resp, http.StatusNotFound) {
+			// wrap ErrNotFound to allow callers to detect that the user no
+			// longer exists on the SCM, e.g., a deleted GitHub account
+			return nil, E(op, M("failed to get user with ID %d", id), fmt.Errorf("user %d: %w", id, ErrNotFound))
+		}
 		return nil, E(op, M("failed to get user with ID %d", id), err)
 	}
 
