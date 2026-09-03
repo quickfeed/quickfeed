@@ -12,7 +12,8 @@ var (
 	ErrNotOwner = errors.New("not an owner of organization")
 	// ErrAlreadyExists indicates that a repository already exist in the organization.
 	ErrAlreadyExists = errors.New("already exist")
-	// ErrNotFound indicates that a repository does not exist in the organization.
+	// ErrNotFound indicates that an SCM resource does not exist, e.g., a repository
+	// in the organization, or a user that has deleted their SCM account.
 	ErrNotFound = errors.New("not found")
 )
 
