@@ -612,6 +612,71 @@ func TestRejectEnrollmentRepoAlreadyDeleted(t *testing.T) {
 	}
 }
 
+// TestRejectEnrollmentDeletedSCMUser verifies that an enrollment can be removed
+// even when the user has deleted their SCM account, and thus can no longer be
+// looked up on the SCM.
+func TestRejectEnrollmentDeletedSCMUser(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	// The student's SCM account is deleted; their remote ID is unknown to the SCM.
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 999})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("admin"),
+	), web.WithInterceptors())
+
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	qtest.EnrollStudent(t, db, student, course)
+
+	adminCtx := client.Context(t, admin)
+	if _, err := client.UpdateEnrollments(adminCtx, &qf.Enrollments{
+		Enrollments: []*qf.Enrollment{{
+			CourseID: course.GetID(),
+			UserID:   student.GetID(),
+			Status:   qf.Enrollment_NONE,
+		}},
+	}); err != nil {
+		t.Errorf("UpdateEnrollments() failed for deleted SCM user: %v", err)
+	}
+
+	if _, err := db.GetEnrollmentByCourseAndUser(course.GetID(), student.GetID()); err == nil {
+		t.Error("enrollment still exists in database after reject")
+	}
+}
+
+// TestApproveEnrollmentDeletedSCMUser verifies that approving an enrollment still
+// fails when the user has deleted their SCM account, since the user cannot be
+// added to the course organization.
+func TestApproveEnrollmentDeletedSCMUser(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "admin", ScmRemoteID: 1})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 999})
+
+	client := web.NewMockClient(t, db, scm.WithMockOptions(
+		scm.WithMockOrgs("admin"),
+	), web.WithInterceptors())
+
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	qtest.EnrollStudent(t, db, student, course)
+
+	adminCtx := client.Context(t, admin)
+	if _, err := client.UpdateEnrollments(adminCtx, &qf.Enrollments{
+		Enrollments: []*qf.Enrollment{{
+			CourseID: course.GetID(),
+			UserID:   student.GetID(),
+			Status:   qf.Enrollment_STUDENT,
+		}},
+	}); err == nil {
+		t.Error("UpdateEnrollments() unexpectedly succeeded for deleted SCM user")
+	}
+}
+
 func TestUpdateCourseVisibility(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

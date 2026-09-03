@@ -2,6 +2,7 @@ package scm_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
@@ -322,6 +323,9 @@ func TestGetUserByID(t *testing.T) {
 	_, err = s.GetUserByID(ctx, 999)
 	if err == nil {
 		t.Error("expected error for non-existent user ID 999")
+	}
+	if !errors.Is(err, scm.ErrNotFound) {
+		t.Errorf("GetUserByID(999) error = %v, want %v", err, scm.ErrNotFound)
 	}
 }
 
