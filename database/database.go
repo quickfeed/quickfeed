@@ -141,23 +141,6 @@ type Database interface {
 	GetRepositories(query *qf.Repository) ([]*qf.Repository, error)
 	// DeleteRepository deletes the repository for the given remote provider's repository ID.
 	DeleteRepository(scmRepositoryID uint64) error
-	// GetRepositoriesWithIssues gets repositories with issues
-	GetRepositoriesWithIssues(query *qf.Repository) ([]*qf.Repository, error)
-
-	// GetTasks returns tasks that match the given query.
-	GetTasks(query *qf.Task) ([]*qf.Task, error)
-	// CreateIssues creates a batch of issues
-	CreateIssues(issues []*qf.Issue) error
-	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
-	SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint32]map[string]*qf.Task) ([]*qf.Task, []*qf.Task, error)
-	// CreatePullRequest creates a pull request
-	CreatePullRequest(pullRequest *qf.PullRequest) error
-	// GetPullRequest returns the pull request matching the given query
-	GetPullRequest(query *qf.PullRequest) (*qf.PullRequest, error)
-	// HandleMergingPR handles merging a pull request
-	HandleMergingPR(query *qf.PullRequest) error
-	// UpdatePullRequest updates the pull request matching the given query
-	UpdatePullRequest(pullRequest *qf.PullRequest) error
 
 	// UpdateSlipDays updates used slip days for the given course enrollment
 	UpdateSlipDays([]*qf.UsedSlipDays) error

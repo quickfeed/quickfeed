@@ -57,26 +57,18 @@ The `assignments` package contains functionality triggered by push events from t
   - `criteria.json`
   - `tests.json`
   - `Dockerfile`
-  - `tasks-*.md` files
 - parsing assignment information from `assignment.json` files
 - triggering rebuild of the course's docker image
 - creating and updating assignments in the database
 
-The package also contains methods executed on pull requests on student repositories.
-It automates processes like assigning reviewers for pull requests and synchronizing tasks by creating or updating issues.
-See the related documentation: [pr-feedback](design-docs/pr-feedback.md), [github-enhancement](design-docs/github-enhancement.md).
-Currently, no courses are using the pull request and review assignment functionality.
-
 ### Methods used in web folder
 
-- [AssignReviewers()](assignments/pull_requests.go#L30)
-  - Called from [handlePullRequestPush()](web/hooks/pull_request.go#L47)
 - [UpdateFromTestsRepo()](assignments/assignments.go#L32)
   - Called from:
     - [handlePush()](web/hooks/push.go#L55)
     - [UpdateAssignments()](web/quickfeed_service.go#L491)
 
-The rest of the methods in the `assignments` folder are dependencies of either or both of the previously mentioned methods.
+The rest of the methods in the `assignments` folder are dependencies of the previously mentioned method.
 
 ## ci - Continuous Integration
 
@@ -133,7 +125,7 @@ They are defined using protobuf; see the [documentation](https://protobuf.dev/ge
 
 ## scm - Source code management
 
-The `scm` folder contains methods that perform CRUD operations on GitHub, from creating repositories and managing roles, to managing issues, groups, and enrollments.
+The `scm` folder contains methods that perform CRUD operations on GitHub, from creating repositories and managing roles, to managing groups and enrollments.
 See the [SCM interface](/scm/scm.go#L13).
 
 ## testdata

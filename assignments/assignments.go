@@ -24,12 +24,18 @@ const MaxWait = 15 * time.Minute
 // the frontend.
 //
 // Note that calling this function concurrently is safe, but it may block the
-// caller for an extended period, since it may involve cloning the tests repository,
-// scanning the repository for assignments, building the Docker image, updating the
-// database and synchronizing tasks to issues on the students' group repositories.
+// caller for an extended period, since it may involve cloning the tests and
+// assignments repositories, scanning the repositories for assignments, building
+// the Docker image and updating the database.
 // The ctx is expected to carry a logger scoped with the course and the tests
 // repository, so that the statements below do not repeat those attributes.
-func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) {
+//
+// The returned count reports content problems in the tests repository and
+// alignment problems between the tests and assignments repositories that did not
+// abort the update. Issue details are logged here so webhook updates reach the
+// course log.
+// Callers are responsible for logging returned errors.
+func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Database, sc scm.SCM, course *qf.Course) (int, error) {
 	unlock := course.Lock()
 	defer unlock()
 
@@ -44,45 +50,53 @@ func UpdateFromTestsRepo(ctx context.Context, runner ci.Runner, db database.Data
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		logger.Error("failed to clone tests repository", label.Error, err)
-		return
+		return 0, fmt.Errorf("cloning tests repository: %w", err)
 	}
 	logger.Debug("cloned tests repository", label.Path, clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, buildContext, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
+	assignments, buildContext, issues, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
 	if err != nil {
-		logger.Error("failed to parse assignments", label.Error, err)
-		return
+		return 0, fmt.Errorf("reading tests repository content: %w", err)
 	}
+	issueCount := len(issues)
+	logRepositoryIssues(ctx, "tests repository issue", issues)
 
 	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
 		if err = buildDockerImage(ctx, runner, course, buildContext); err != nil {
-			logger.Error("failed to build course image", label.Error, err)
-			return
+			return issueCount, fmt.Errorf("building course image: %w", err)
 		}
 		// Update the course's DockerfileDigest in the database
 		if err := db.UpdateCourse(course); err != nil {
-			logger.Error("failed to store course Dockerfile digest", label.Error, err)
-			return
+			return issueCount, fmt.Errorf("storing course Dockerfile digest: %w", err)
 		}
 	}
 
-	// Does not store tasks associated with assignments; tasks are handled separately by synchronizeTasksWithIssues below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debug("assignment not updated in database", label.Assignment, assignment.GetName())
 		}
-		logger.Error("failed to update assignments in database", label.Error, err)
-		return
+		return issueCount, fmt.Errorf("updating assignments in database: %w", err)
 	}
 	logger.Debug("assignments successfully updated from tests repository")
 
-	if err = synchronizeTasksWithIssues(ctx, db, sc, course, assignments); err != nil {
-		logger.Error("failed to synchronize assignment tasks", label.Error, err)
-		return
+	clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetScmOrganizationName(),
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		return issueCount, fmt.Errorf("cloning assignments repository: %w", err)
 	}
+	logger.Debug("cloned assignments repository", label.Path, clonedAssignmentsRepo)
+
+	alignmentIssues, err := courseRepositoryIssues(clonedTestsRepo, clonedAssignmentsRepo, assignments)
+	if err != nil {
+		return issueCount, fmt.Errorf("validating course repositories: %w", err)
+	}
+	logRepositoryIssues(ctx, "course repository issue", alignmentIssues)
+	return issueCount + len(alignmentIssues), nil
 }
 
 // buildDockerImage builds the Docker image for the given course.

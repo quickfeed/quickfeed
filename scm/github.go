@@ -14,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/shurcooL/githubv4"
 )
 
 const (
@@ -27,7 +26,6 @@ const (
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
 	client       *github.Client
-	clientV4     *githubv4.Client
 	tokenManager TokenManager
 	providerURL  string
 	// createUserClientFn creates a GitHub client using the provided access token.
@@ -50,7 +48,6 @@ func NewGithubUserClient(token string) *GithubSCM {
 	client := newGithubUserClient(token)
 	return &GithubSCM{
 		client:             client,
-		clientV4:           githubv4.NewClient(client.Client()),
 		tokenManager:       &staticTokenManager{token: token},
 		providerURL:        "https://github.com",
 		createUserClientFn: newGithubUserClient,
@@ -493,12 +490,10 @@ func (s *GithubSCM) SyncFork(ctx context.Context, opt *SyncForkOptions) (err err
 // rateLimitDelay returns the duration to wait before retrying if the error is
 // a rate limit or abuse limit error. Otherwise, it returns the original error.
 func rateLimitDelay(err error) (time.Duration, error) {
-	var rateLimitErr *github.RateLimitError
-	if errors.As(err, &rateLimitErr) {
+	if rateLimitErr, ok := errors.AsType[*github.RateLimitError](err); ok {
 		return max(time.Second, time.Until(*rateLimitErr.Rate.Reset.GetTime())+time.Second), nil
 	}
-	var abuseErr *github.AbuseRateLimitError
-	if errors.As(err, &abuseErr) {
+	if abuseErr, ok := errors.AsType[*github.AbuseRateLimitError](err); ok {
 		return max(time.Second, abuseErr.GetRetryAfter()), nil
 	}
 	return 0, err

@@ -24,6 +24,7 @@ Follow the standard Go formatting conventions.
 
 Follow [Google Go style guidelines](https://google.github.io/styleguide/go/index) for writing clear and maintainable code.
 Use idiomatic Go practices and conventions to ensure consistency across the codebase.
+Add helper methods to protocol buffer message types in the `qf` and `score` packages to make code more readable and maintainable.
 
 When writing Go tests, use the `testing` package and follow the standard Go testing conventions, including table-driven tests where appropriate.
 
@@ -194,14 +195,15 @@ When modifying database models or queries:
 
 ## Code Quality Standards
 
-### Before Committing
+### Before Finishing a Change
 
-Always run these commands before committing:
+Always run these commands before finishing a change:
 
-1. `gofumpt -w .` - Format Go code consistently
-2. `cd public && npm run lint` - Check frontend code style
-3. `make test` - Run complete test suite to ensure nothing is broken
-4. `git diff` - Review your changes carefully before committing
+1. `go fix ./...` - Apply recommended Go fixes
+2. `gofumpt -w .` - Format Go code consistently
+3. `cd public && npm run lint` - Check frontend code style
+4. `make test` - Run complete test suite to ensure nothing is broken
+5. `git diff` - Review your changes carefully before committing
 
 ### Error Handling
 

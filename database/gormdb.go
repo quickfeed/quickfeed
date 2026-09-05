@@ -45,12 +45,13 @@ func NewGormDB(path string, logger *slog.Logger) (*GormDB, error) {
 		&qf.Note{},
 		&qf.AssignmentFeedback{},
 		&qf.FeedbackReceipt{},
-		&qf.Issue{},
-		&qf.Task{},
-		&qf.PullRequest{},
 		&score.BuildInfo{},
 		&score.Score{},
 	); err != nil {
+		return nil, err
+	}
+
+	if err := dropRetired(conn); err != nil {
 		return nil, err
 	}
 

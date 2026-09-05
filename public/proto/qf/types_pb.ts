@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file qf/types.proto.
  */
 export const file_qf_types: GenFile = /*@__PURE__*/
-  fileDesc("Cg5xZi90eXBlcy5wcm90bxICcWYiiQIKBFVzZXISCgoCSUQYASABKAQSDwoHSXNBZG1pbhgCIAEoCBIMCgROYW1lGAMgASgJEhEKCVN0dWRlbnRJRBgEIAEoCRINCgVFbWFpbBgFIAEoCRIRCglBdmF0YXJVUkwYBiABKAkSDQoFTG9naW4YByABKAkSEwoLVXBkYXRlVG9rZW4YCCABKAgSEwoLU2NtUmVtb3RlSUQYCSABKAQSFAoMUmVmcmVzaFRva2VuGAogASgJEiMKC0Vucm9sbG1lbnRzGAsgAygLMg4ucWYuRW5yb2xsbWVudBItChBGZWVkYmFja1JlY2VpcHRzGAwgAygLMhMucWYuRmVlZGJhY2tSZWNlaXB0IiAKBVVzZXJzEhcKBXVzZXJzGAEgAygLMggucWYuVXNlciKFAgoFR3JvdXASCgoCSUQYASABKAQSDAoEbmFtZRgCIAEoCRIQCghjb3Vyc2VJRBgDIAEoBBIlCgZzdGF0dXMYBSABKA4yFS5xZi5Hcm91cC5Hcm91cFN0YXR1cxIXCgV1c2VycxgGIAMoCzIILnFmLlVzZXISIwoLZW5yb2xsbWVudHMYByADKAsyDi5xZi5FbnJvbGxtZW50EiYKDHVzZWRTbGlwRGF5cxgIIAMoCzIQLnFmLlVzZWRTbGlwRGF5cxIZChFzbGlwRGF5c1JlbWFpbmluZxgJIAEoDSIoCgtHcm91cFN0YXR1cxILCgdQRU5ESU5HEAASDAoIQVBQUk9WRUQQASIjCgZHcm91cHMSGQoGZ3JvdXBzGAEgAygLMgkucWYuR3JvdXAi2gIKBkNvdXJzZRIKCgJJRBgBIAEoBBIXCg9jb3Vyc2VDcmVhdG9ySUQYAiABKAQSDAoEbmFtZRgDIAEoCRIMCgRjb2RlGAQgASgJEgwKBHllYXIYBSABKA0SCwoDdGFnGAYgASgJEhkKEVNjbU9yZ2FuaXphdGlvbklEGAggASgEEhsKE1NjbU9yZ2FuaXphdGlvbk5hbWUYCSABKAkSEAoIc2xpcERheXMYCiABKA0SGAoQRG9ja2VyZmlsZURpZ2VzdBgLIAEoCRIrCghlbnJvbGxlZBgMIAEoDjIZLnFmLkVucm9sbG1lbnQuVXNlclN0YXR1cxIjCgtlbnJvbGxtZW50cxgNIAMoCzIOLnFmLkVucm9sbG1lbnQSIwoLYXNzaWdubWVudHMYDiADKAsyDi5xZi5Bc3NpZ25tZW50EhkKBmdyb3VwcxgPIAMoCzIJLnFmLkdyb3VwIiYKB0NvdXJzZXMSGwoHY291cnNlcxgBIAMoCzIKLnFmLkNvdXJzZSKNAgoKUmVwb3NpdG9yeRIKCgJJRBgBIAEoBBIZChFTY21Pcmdhbml6YXRpb25JRBgCIAEoBBIXCg9TY21SZXBvc2l0b3J5SUQYAyABKAQSDgoGdXNlcklEGAQgASgEEg8KB2dyb3VwSUQYBSABKAQSDwoHSFRNTFVSTBgGIAEoCRIlCghyZXBvVHlwZRgHIAEoDjITLnFmLlJlcG9zaXRvcnkuVHlwZRIZCgZpc3N1ZXMYCCADKAsyCS5xZi5Jc3N1ZSJLCgRUeXBlEggKBE5PTkUQABIICgRJTkZPEAESDwoLQVNTSUdOTUVOVFMQAhIJCgVURVNUUxADEggKBFVTRVIQBBIJCgVHUk9VUBAFIoEECgpFbnJvbGxtZW50EgoKAklEGAEgASgEEhAKCGNvdXJzZUlEGAIgASgEEg4KBnVzZXJJRBgDIAEoBBIPCgdncm91cElEGAQgASgEEhYKBHVzZXIYBSABKAsyCC5xZi5Vc2VyEhoKBmNvdXJzZRgGIAEoCzIKLnFmLkNvdXJzZRIYCgVncm91cBgHIAEoCzIJLnFmLkdyb3VwEikKBnN0YXR1cxgIIAEoDjIZLnFmLkVucm9sbG1lbnQuVXNlclN0YXR1cxIqCgVzdGF0ZRgJIAEoDjIbLnFmLkVucm9sbG1lbnQuRGlzcGxheVN0YXRlEhkKEXNsaXBEYXlzUmVtYWluaW5nGAogASgNEjQKEGxhc3RBY3Rpdml0eURhdGUYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhUKDXRvdGFsQXBwcm92ZWQYDCABKAQSJgoMdXNlZFNsaXBEYXlzGA0gAygLMhAucWYuVXNlZFNsaXBEYXlzIj0KClVzZXJTdGF0dXMSCAoETk9ORRAAEgsKB1BFTkRJTkcQARILCgdTVFVERU5UEAISCwoHVEVBQ0hFUhADIkAKDERpc3BsYXlTdGF0ZRIJCgVVTlNFVBAAEgoKBkhJRERFThABEgsKB1ZJU0lCTEUQAhIMCghGQVZPUklURRADImkKDFVzZWRTbGlwRGF5cxIKCgJJRBgBIAEoBBIUCgxlbnJvbGxtZW50SUQYAiABKAQSFAoMYXNzaWdubWVudElEGAMgASgEEhAKCHVzZWREYXlzGAQgASgNEg8KB2dyb3VwSUQYBSABKAQiMgoLRW5yb2xsbWVudHMSIwoLZW5yb2xsbWVudHMYASADKAsyDi5xZi5FbnJvbGxtZW50IvMCCgpBc3NpZ25tZW50EgoKAklEGAEgASgEEhAKCENvdXJzZUlEGAIgASgEEgwKBG5hbWUYAyABKAkSLAoIZGVhZGxpbmUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2F1dG9BcHByb3ZlGAUgASgIEg0KBW9yZGVyGAYgASgNEhIKCmlzR3JvdXBMYWIYByABKAgSEgoKc2NvcmVMaW1pdBgIIAEoDRIRCglyZXZpZXdlcnMYCSABKA0SGAoQY29udGFpbmVyVGltZW91dBgKIAEoDRIjCgtzdWJtaXNzaW9ucxgLIAMoCzIOLnFmLlN1Ym1pc3Npb24SFwoFdGFza3MYDCADKAsyCC5xZi5UYXNrEi8KEWdyYWRpbmdCZW5jaG1hcmtzGA0gAygLMhQucWYuR3JhZGluZ0JlbmNobWFyaxIjCg1FeHBlY3RlZFRlc3RzGA4gAygLMgwucWYuVGVzdEluZm8icQoIVGVzdEluZm8SCgoCSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKCFRlc3ROYW1lGAMgASgJEhAKCE1heFNjb3JlGAQgASgFEg4KBldlaWdodBgFIAEoBRIPCgdEZXRhaWxzGAYgASgJIocBCgRUYXNrEgoKAklEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIXCg9hc3NpZ25tZW50T3JkZXIYAyABKA0SDQoFdGl0bGUYBCABKAkSDAoEYm9keRgFIAEoCRIMCgRuYW1lGAYgASgJEhkKBmlzc3VlcxgHIAMoCzIJLnFmLklzc3VlIlEKBUlzc3VlEgoKAklEGAEgASgEEhQKDHJlcG9zaXRvcnlJRBgCIAEoBBIOCgZ0YXNrSUQYAyABKAQSFgoOU2NtSXNzdWVOdW1iZXIYBCABKAQi/QEKC1B1bGxSZXF1ZXN0EgoKAklEGAEgASgEEhcKD1NjbVJlcG9zaXRvcnlJRBgCIAEoBBIOCgZ0YXNrSUQYAyABKAQSDwoHaXNzdWVJRBgEIAEoBBIOCgZ1c2VySUQYBSABKAQSFAoMU2NtQ29tbWVudElEGAYgASgEEhQKDHNvdXJjZUJyYW5jaBgHIAEoCRIOCgZudW1iZXIYCCABKAQSJAoFc3RhZ2UYCSABKA4yFS5xZi5QdWxsUmVxdWVzdC5TdGFnZSI2CgVTdGFnZRIICgROT05FEAASCQoFRFJBRlQQARIKCgZSRVZJRVcQAhIMCghBUFBST1ZFRBADIjIKC0Fzc2lnbm1lbnRzEiMKC2Fzc2lnbm1lbnRzGAEgAygLMg4ucWYuQXNzaWdubWVudCLdAgoKU3VibWlzc2lvbhIKCgJJRBgBIAEoBBIUCgxBc3NpZ25tZW50SUQYAiABKAQSDgoGdXNlcklEGAMgASgEEg8KB2dyb3VwSUQYBCABKAQSDQoFc2NvcmUYBSABKA0SEgoKY29tbWl0SGFzaBgGIAEoCRIZCgZHcmFkZXMYByADKAsyCS5xZi5HcmFkZRIwCgxhcHByb3ZlZERhdGUYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhsKB3Jldmlld3MYCSADKAsyCi5xZi5SZXZpZXcSIwoJQnVpbGRJbmZvGAogASgLMhAuc2NvcmUuQnVpbGRJbmZvEhwKBlNjb3JlcxgLIAMoCzIMLnNjb3JlLlNjb3JlIjwKBlN0YXR1cxIICgROT05FEAASDAoIQVBQUk9WRUQQARIMCghSRUpFQ1RFRBACEgwKCFJFVklTSU9OEAMiMgoLU3VibWlzc2lvbnMSIwoLc3VibWlzc2lvbnMYASADKAsyDi5xZi5TdWJtaXNzaW9uIlQKBUdyYWRlEhQKDFN1Ym1pc3Npb25JRBgBIAEoBBIOCgZVc2VySUQYAiABKAQSJQoGU3RhdHVzGAMgASgOMhUucWYuU3VibWlzc2lvbi5TdGF0dXMiogEKEEdyYWRpbmdCZW5jaG1hcmsSCgoCSUQYASABKAQSEAoIQ291cnNlSUQYAiABKAQSFAoMQXNzaWdubWVudElEGAMgASgEEhAKCFJldmlld0lEGAQgASgEEg8KB2hlYWRpbmcYBSABKAkSDwoHY29tbWVudBgGIAEoCRImCghjcml0ZXJpYRgHIAMoCzIULnFmLkdyYWRpbmdDcml0ZXJpb24iNgoKQmVuY2htYXJrcxIoCgpiZW5jaG1hcmtzGAEgAygLMhQucWYuR3JhZGluZ0JlbmNobWFyayLRAQoQR3JhZGluZ0NyaXRlcmlvbhIKCgJJRBgBIAEoBBITCgtCZW5jaG1hcmtJRBgCIAEoBBIQCghDb3Vyc2VJRBgDIAEoBBIOCgZwb2ludHMYBCABKAQSEwoLZGVzY3JpcHRpb24YBSABKAkSKQoFZ3JhZGUYBiABKA4yGi5xZi5HcmFkaW5nQ3JpdGVyaW9uLkdyYWRlEg8KB2NvbW1lbnQYByABKAkiKQoFR3JhZGUSCAoETk9ORRAAEgoKBkZBSUxFRBABEgoKBlBBU1NFRBACIrwBCgZSZXZpZXcSCgoCSUQYASABKAQSFAoMU3VibWlzc2lvbklEGAIgASgEEhIKClJldmlld2VySUQYAyABKAQSEAoIZmVlZGJhY2sYBCABKAkSDQoFc2NvcmUYBSABKA0SLwoRZ3JhZGluZ0JlbmNobWFya3MYBiADKAsyFC5xZi5HcmFkaW5nQmVuY2htYXJrEioKBmVkaXRlZBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiwAEKEkFzc2lnbm1lbnRGZWVkYmFjaxIKCgJJRBgBIAEoBBIQCghDb3Vyc2VJRBgCIAEoBBIUCgxBc3NpZ25tZW50SUQYAyABKAQSFAoMTGlrZWRDb250ZW50GAQgASgJEh4KFkltcHJvdmVtZW50U3VnZ2VzdGlvbnMYBSABKAkSEQoJVGltZVNwZW50GAYgASgNEi0KCUNyZWF0ZWRBdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiNwoPRmVlZGJhY2tSZWNlaXB0EhQKDEFzc2lnbm1lbnRJRBgBIAEoBBIOCgZVc2VySUQYAiABKAQiQAoTQXNzaWdubWVudEZlZWRiYWNrcxIpCglmZWVkYmFja3MYASADKAsyFi5xZi5Bc3NpZ25tZW50RmVlZGJhY2si3gEKBE5vdGUSCgoCSUQYASABKAQSEAoIQ291cnNlSUQYAiABKAQSEAoIQXV0aG9ySUQYAyABKAQSDAoEYm9keRgEIAEoCRIUCgxTdWJtaXNzaW9uSUQYBSABKAQSDwoHR3JvdXBJRBgGIAEoBBIUCgxFbnJvbGxtZW50SUQYByABKAQSLQoJY3JlYXRlZEF0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIsCghlZGl0ZWRBdBgJIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiIAoFTm90ZXMSFwoFbm90ZXMYASADKAsyCC5xZi5Ob3RlQiZaIWdpdGh1Yi5jb20vcXVpY2tmZWVkL3F1aWNrZmVlZC9xZroCAGIGcHJvdG8z", [file_google_protobuf_timestamp, file_kit_score_score]);
+  fileDesc("Cg5xZi90eXBlcy5wcm90bxICcWYiiQIKBFVzZXISCgoCSUQYASABKAQSDwoHSXNBZG1pbhgCIAEoCBIMCgROYW1lGAMgASgJEhEKCVN0dWRlbnRJRBgEIAEoCRINCgVFbWFpbBgFIAEoCRIRCglBdmF0YXJVUkwYBiABKAkSDQoFTG9naW4YByABKAkSEwoLVXBkYXRlVG9rZW4YCCABKAgSEwoLU2NtUmVtb3RlSUQYCSABKAQSFAoMUmVmcmVzaFRva2VuGAogASgJEiMKC0Vucm9sbG1lbnRzGAsgAygLMg4ucWYuRW5yb2xsbWVudBItChBGZWVkYmFja1JlY2VpcHRzGAwgAygLMhMucWYuRmVlZGJhY2tSZWNlaXB0IiAKBVVzZXJzEhcKBXVzZXJzGAEgAygLMggucWYuVXNlciKFAgoFR3JvdXASCgoCSUQYASABKAQSDAoEbmFtZRgCIAEoCRIQCghjb3Vyc2VJRBgDIAEoBBIlCgZzdGF0dXMYBSABKA4yFS5xZi5Hcm91cC5Hcm91cFN0YXR1cxIXCgV1c2VycxgGIAMoCzIILnFmLlVzZXISIwoLZW5yb2xsbWVudHMYByADKAsyDi5xZi5FbnJvbGxtZW50EiYKDHVzZWRTbGlwRGF5cxgIIAMoCzIQLnFmLlVzZWRTbGlwRGF5cxIZChFzbGlwRGF5c1JlbWFpbmluZxgJIAEoDSIoCgtHcm91cFN0YXR1cxILCgdQRU5ESU5HEAASDAoIQVBQUk9WRUQQASIjCgZHcm91cHMSGQoGZ3JvdXBzGAEgAygLMgkucWYuR3JvdXAi2gIKBkNvdXJzZRIKCgJJRBgBIAEoBBIXCg9jb3Vyc2VDcmVhdG9ySUQYAiABKAQSDAoEbmFtZRgDIAEoCRIMCgRjb2RlGAQgASgJEgwKBHllYXIYBSABKA0SCwoDdGFnGAYgASgJEhkKEVNjbU9yZ2FuaXphdGlvbklEGAggASgEEhsKE1NjbU9yZ2FuaXphdGlvbk5hbWUYCSABKAkSEAoIc2xpcERheXMYCiABKA0SGAoQRG9ja2VyZmlsZURpZ2VzdBgLIAEoCRIrCghlbnJvbGxlZBgMIAEoDjIZLnFmLkVucm9sbG1lbnQuVXNlclN0YXR1cxIjCgtlbnJvbGxtZW50cxgNIAMoCzIOLnFmLkVucm9sbG1lbnQSIwoLYXNzaWdubWVudHMYDiADKAsyDi5xZi5Bc3NpZ25tZW50EhkKBmdyb3VwcxgPIAMoCzIJLnFmLkdyb3VwIiYKB0NvdXJzZXMSGwoHY291cnNlcxgBIAMoCzIKLnFmLkNvdXJzZSLyAQoKUmVwb3NpdG9yeRIKCgJJRBgBIAEoBBIZChFTY21Pcmdhbml6YXRpb25JRBgCIAEoBBIXCg9TY21SZXBvc2l0b3J5SUQYAyABKAQSDgoGdXNlcklEGAQgASgEEg8KB2dyb3VwSUQYBSABKAQSDwoHSFRNTFVSTBgGIAEoCRIlCghyZXBvVHlwZRgHIAEoDjITLnFmLlJlcG9zaXRvcnkuVHlwZSJLCgRUeXBlEggKBE5PTkUQABIICgRJTkZPEAESDwoLQVNTSUdOTUVOVFMQAhIJCgVURVNUUxADEggKBFVTRVIQBBIJCgVHUk9VUBAFIoEECgpFbnJvbGxtZW50EgoKAklEGAEgASgEEhAKCGNvdXJzZUlEGAIgASgEEg4KBnVzZXJJRBgDIAEoBBIPCgdncm91cElEGAQgASgEEhYKBHVzZXIYBSABKAsyCC5xZi5Vc2VyEhoKBmNvdXJzZRgGIAEoCzIKLnFmLkNvdXJzZRIYCgVncm91cBgHIAEoCzIJLnFmLkdyb3VwEikKBnN0YXR1cxgIIAEoDjIZLnFmLkVucm9sbG1lbnQuVXNlclN0YXR1cxIqCgVzdGF0ZRgJIAEoDjIbLnFmLkVucm9sbG1lbnQuRGlzcGxheVN0YXRlEhkKEXNsaXBEYXlzUmVtYWluaW5nGAogASgNEjQKEGxhc3RBY3Rpdml0eURhdGUYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhUKDXRvdGFsQXBwcm92ZWQYDCABKAQSJgoMdXNlZFNsaXBEYXlzGA0gAygLMhAucWYuVXNlZFNsaXBEYXlzIj0KClVzZXJTdGF0dXMSCAoETk9ORRAAEgsKB1BFTkRJTkcQARILCgdTVFVERU5UEAISCwoHVEVBQ0hFUhADIkAKDERpc3BsYXlTdGF0ZRIJCgVVTlNFVBAAEgoKBkhJRERFThABEgsKB1ZJU0lCTEUQAhIMCghGQVZPUklURRADImkKDFVzZWRTbGlwRGF5cxIKCgJJRBgBIAEoBBIUCgxlbnJvbGxtZW50SUQYAiABKAQSFAoMYXNzaWdubWVudElEGAMgASgEEhAKCHVzZWREYXlzGAQgASgNEg8KB2dyb3VwSUQYBSABKAQiMgoLRW5yb2xsbWVudHMSIwoLZW5yb2xsbWVudHMYASADKAsyDi5xZi5FbnJvbGxtZW50ItoCCgpBc3NpZ25tZW50EgoKAklEGAEgASgEEhAKCENvdXJzZUlEGAIgASgEEgwKBG5hbWUYAyABKAkSLAoIZGVhZGxpbmUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2F1dG9BcHByb3ZlGAUgASgIEg0KBW9yZGVyGAYgASgNEhIKCmlzR3JvdXBMYWIYByABKAgSEgoKc2NvcmVMaW1pdBgIIAEoDRIRCglyZXZpZXdlcnMYCSABKA0SGAoQY29udGFpbmVyVGltZW91dBgKIAEoDRIjCgtzdWJtaXNzaW9ucxgLIAMoCzIOLnFmLlN1Ym1pc3Npb24SLwoRZ3JhZGluZ0JlbmNobWFya3MYDCADKAsyFC5xZi5HcmFkaW5nQmVuY2htYXJrEiMKDUV4cGVjdGVkVGVzdHMYDSADKAsyDC5xZi5UZXN0SW5mbyJxCghUZXN0SW5mbxIKCgJJRBgBIAEoBBIUCgxBc3NpZ25tZW50SUQYAiABKAQSEAoIVGVzdE5hbWUYAyABKAkSEAoITWF4U2NvcmUYBCABKAUSDgoGV2VpZ2h0GAUgASgFEg8KB0RldGFpbHMYBiABKAkiMgoLQXNzaWdubWVudHMSIwoLYXNzaWdubWVudHMYASADKAsyDi5xZi5Bc3NpZ25tZW50It0CCgpTdWJtaXNzaW9uEgoKAklEGAEgASgEEhQKDEFzc2lnbm1lbnRJRBgCIAEoBBIOCgZ1c2VySUQYAyABKAQSDwoHZ3JvdXBJRBgEIAEoBBINCgVzY29yZRgFIAEoDRISCgpjb21taXRIYXNoGAYgASgJEhkKBkdyYWRlcxgHIAMoCzIJLnFmLkdyYWRlEjAKDGFwcHJvdmVkRGF0ZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGwoHcmV2aWV3cxgJIAMoCzIKLnFmLlJldmlldxIjCglCdWlsZEluZm8YCiABKAsyEC5zY29yZS5CdWlsZEluZm8SHAoGU2NvcmVzGAsgAygLMgwuc2NvcmUuU2NvcmUiPAoGU3RhdHVzEggKBE5PTkUQABIMCghBUFBST1ZFRBABEgwKCFJFSkVDVEVEEAISDAoIUkVWSVNJT04QAyIyCgtTdWJtaXNzaW9ucxIjCgtzdWJtaXNzaW9ucxgBIAMoCzIOLnFmLlN1Ym1pc3Npb24iVAoFR3JhZGUSFAoMU3VibWlzc2lvbklEGAEgASgEEg4KBlVzZXJJRBgCIAEoBBIlCgZTdGF0dXMYAyABKA4yFS5xZi5TdWJtaXNzaW9uLlN0YXR1cyKiAQoQR3JhZGluZ0JlbmNobWFyaxIKCgJJRBgBIAEoBBIQCghDb3Vyc2VJRBgCIAEoBBIUCgxBc3NpZ25tZW50SUQYAyABKAQSEAoIUmV2aWV3SUQYBCABKAQSDwoHaGVhZGluZxgFIAEoCRIPCgdjb21tZW50GAYgASgJEiYKCGNyaXRlcmlhGAcgAygLMhQucWYuR3JhZGluZ0NyaXRlcmlvbiI2CgpCZW5jaG1hcmtzEigKCmJlbmNobWFya3MYASADKAsyFC5xZi5HcmFkaW5nQmVuY2htYXJrItEBChBHcmFkaW5nQ3JpdGVyaW9uEgoKAklEGAEgASgEEhMKC0JlbmNobWFya0lEGAIgASgEEhAKCENvdXJzZUlEGAMgASgEEg4KBnBvaW50cxgEIAEoBBITCgtkZXNjcmlwdGlvbhgFIAEoCRIpCgVncmFkZRgGIAEoDjIaLnFmLkdyYWRpbmdDcml0ZXJpb24uR3JhZGUSDwoHY29tbWVudBgHIAEoCSIpCgVHcmFkZRIICgROT05FEAASCgoGRkFJTEVEEAESCgoGUEFTU0VEEAIivAEKBlJldmlldxIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSEgoKUmV2aWV3ZXJJRBgDIAEoBBIQCghmZWVkYmFjaxgEIAEoCRINCgVzY29yZRgFIAEoDRIvChFncmFkaW5nQmVuY2htYXJrcxgGIAMoCzIULnFmLkdyYWRpbmdCZW5jaG1hcmsSKgoGZWRpdGVkGAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCLAAQoSQXNzaWdubWVudEZlZWRiYWNrEgoKAklEGAEgASgEEhAKCENvdXJzZUlEGAIgASgEEhQKDEFzc2lnbm1lbnRJRBgDIAEoBBIUCgxMaWtlZENvbnRlbnQYBCABKAkSHgoWSW1wcm92ZW1lbnRTdWdnZXN0aW9ucxgFIAEoCRIRCglUaW1lU3BlbnQYBiABKA0SLQoJQ3JlYXRlZEF0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCI3Cg9GZWVkYmFja1JlY2VpcHQSFAoMQXNzaWdubWVudElEGAEgASgEEg4KBlVzZXJJRBgCIAEoBCJAChNBc3NpZ25tZW50RmVlZGJhY2tzEikKCWZlZWRiYWNrcxgBIAMoCzIWLnFmLkFzc2lnbm1lbnRGZWVkYmFjayLeAQoETm90ZRIKCgJJRBgBIAEoBBIQCghDb3Vyc2VJRBgCIAEoBBIQCghBdXRob3JJRBgDIAEoBBIMCgRib2R5GAQgASgJEhQKDFN1Ym1pc3Npb25JRBgFIAEoBBIPCgdHcm91cElEGAYgASgEEhQKDEVucm9sbG1lbnRJRBgHIAEoBBItCgljcmVhdGVkQXQYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCGVkaXRlZEF0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIgCgVOb3RlcxIXCgVub3RlcxgBIAMoCzIILnFmLk5vdGVCJlohZ2l0aHViLmNvbS9xdWlja2ZlZWQvcXVpY2tmZWVkL3FmugIAYgZwcm90bzM", [file_google_protobuf_timestamp, file_kit_score_score]);
 
 /**
  * @generated from message qf.User
@@ -344,13 +344,6 @@ export type Repository = Message<"qf.Repository"> & {
    * @generated from field: qf.Repository.Type repoType = 7;
    */
   repoType: Repository_Type;
-
-  /**
-   * Issues associated with this repository
-   *
-   * @generated from field: repeated qf.Issue issues = 8;
-   */
-  issues: Issue[];
 };
 
 /**
@@ -664,23 +657,16 @@ export type Assignment = Message<"qf.Assignment"> & {
   submissions: Submission[];
 
   /**
-   * tasks associated with this assignment
-   *
-   * @generated from field: repeated qf.Task tasks = 12;
-   */
-  tasks: Task[];
-
-  /**
    * grading benchmarks for this assignment
    *
-   * @generated from field: repeated qf.GradingBenchmark gradingBenchmarks = 13;
+   * @generated from field: repeated qf.GradingBenchmark gradingBenchmarks = 12;
    */
   gradingBenchmarks: GradingBenchmark[];
 
   /**
    * list of expected tests for this assignment
    *
-   * @generated from field: repeated qf.TestInfo ExpectedTests = 14;
+   * @generated from field: repeated qf.TestInfo ExpectedTests = 13;
    */
   ExpectedTests: TestInfo[];
 };
@@ -745,197 +731,6 @@ export const TestInfoSchema: GenMessage<TestInfo> = /*@__PURE__*/
   messageDesc(file_qf_types, 11);
 
 /**
- * @generated from message qf.Task
- */
-export type Task = Message<"qf.Task"> & {
-  /**
-   * @generated from field: uint64 ID = 1;
-   */
-  ID: bigint;
-
-  /**
-   * foreign key
-   *
-   * @generated from field: uint64 assignmentID = 2;
-   */
-  assignmentID: bigint;
-
-  /**
-   * @generated from field: uint32 assignmentOrder = 3;
-   */
-  assignmentOrder: number;
-
-  /**
-   * @generated from field: string title = 4;
-   */
-  title: string;
-
-  /**
-   * @generated from field: string body = 5;
-   */
-  body: string;
-
-  /**
-   * @generated from field: string name = 6;
-   */
-  name: string;
-
-  /**
-   * Issues that use this task as a benchmark
-   *
-   * @generated from field: repeated qf.Issue issues = 7;
-   */
-  issues: Issue[];
-};
-
-/**
- * Describes the message qf.Task.
- * Use `create(TaskSchema)` to create a new message.
- */
-export const TaskSchema: GenMessage<Task> = /*@__PURE__*/
-  messageDesc(file_qf_types, 12);
-
-/**
- * @generated from message qf.Issue
- */
-export type Issue = Message<"qf.Issue"> & {
-  /**
-   * @generated from field: uint64 ID = 1;
-   */
-  ID: bigint;
-
-  /**
-   * Represents the internal ID of a repository
-   *
-   * @generated from field: uint64 repositoryID = 2;
-   */
-  repositoryID: bigint;
-
-  /**
-   * Task that this issue draws its content from
-   *
-   * @generated from field: uint64 taskID = 3;
-   */
-  taskID: bigint;
-
-  /**
-   * Issue number on scm. Needed for associating db issue with scm issue
-   *
-   * @generated from field: uint64 ScmIssueNumber = 4;
-   */
-  ScmIssueNumber: bigint;
-};
-
-/**
- * Describes the message qf.Issue.
- * Use `create(IssueSchema)` to create a new message.
- */
-export const IssueSchema: GenMessage<Issue> = /*@__PURE__*/
-  messageDesc(file_qf_types, 13);
-
-/**
- * @generated from message qf.PullRequest
- */
-export type PullRequest = Message<"qf.PullRequest"> & {
-  /**
-   * @generated from field: uint64 ID = 1;
-   */
-  ID: bigint;
-
-  /**
-   * Represents the scm repository ID
-   *
-   * @generated from field: uint64 ScmRepositoryID = 2;
-   */
-  ScmRepositoryID: bigint;
-
-  /**
-   * Foreign key
-   *
-   * @generated from field: uint64 taskID = 3;
-   */
-  taskID: bigint;
-
-  /**
-   * Foreign key
-   *
-   * @generated from field: uint64 issueID = 4;
-   */
-  issueID: bigint;
-
-  /**
-   * The user who owns this PR
-   *
-   * @generated from field: uint64 userID = 5;
-   */
-  userID: bigint;
-
-  /**
-   * Scm ID of the comment used for automatic feedback
-   *
-   * @generated from field: uint64 ScmCommentID = 6;
-   */
-  ScmCommentID: bigint;
-
-  /**
-   * The source branch for this pull request
-   *
-   * @generated from field: string sourceBranch = 7;
-   */
-  sourceBranch: string;
-
-  /**
-   * Pull request number
-   *
-   * @generated from field: uint64 number = 8;
-   */
-  number: bigint;
-
-  /**
-   * @generated from field: qf.PullRequest.Stage stage = 9;
-   */
-  stage: PullRequest_Stage;
-};
-
-/**
- * Describes the message qf.PullRequest.
- * Use `create(PullRequestSchema)` to create a new message.
- */
-export const PullRequestSchema: GenMessage<PullRequest> = /*@__PURE__*/
-  messageDesc(file_qf_types, 14);
-
-/**
- * @generated from enum qf.PullRequest.Stage
- */
-export enum PullRequest_Stage {
-  /**
-   * @generated from enum value: NONE = 0;
-   */
-  NONE = 0,
-
-  /**
-   * @generated from enum value: DRAFT = 1;
-   */
-  DRAFT = 1,
-
-  /**
-   * @generated from enum value: REVIEW = 2;
-   */
-  REVIEW = 2,
-
-  /**
-   * @generated from enum value: APPROVED = 3;
-   */
-  APPROVED = 3,
-}
-
-/**
- * Describes the enum qf.PullRequest.Stage.
- */
-export const PullRequest_StageSchema: GenEnum<PullRequest_Stage> = /*@__PURE__*/
-  enumDesc(file_qf_types, 14, 0);
-
-/**
  * @generated from message qf.Assignments
  */
 export type Assignments = Message<"qf.Assignments"> & {
@@ -950,7 +745,7 @@ export type Assignments = Message<"qf.Assignments"> & {
  * Use `create(AssignmentsSchema)` to create a new message.
  */
 export const AssignmentsSchema: GenMessage<Assignments> = /*@__PURE__*/
-  messageDesc(file_qf_types, 15);
+  messageDesc(file_qf_types, 12);
 
 /**
  * @generated from message qf.Submission
@@ -1025,7 +820,7 @@ export type Submission = Message<"qf.Submission"> & {
  * Use `create(SubmissionSchema)` to create a new message.
  */
 export const SubmissionSchema: GenMessage<Submission> = /*@__PURE__*/
-  messageDesc(file_qf_types, 16);
+  messageDesc(file_qf_types, 13);
 
 /**
  * @generated from enum qf.Submission.Status
@@ -1056,7 +851,7 @@ export enum Submission_Status {
  * Describes the enum qf.Submission.Status.
  */
 export const Submission_StatusSchema: GenEnum<Submission_Status> = /*@__PURE__*/
-  enumDesc(file_qf_types, 16, 0);
+  enumDesc(file_qf_types, 13, 0);
 
 /**
  * @generated from message qf.Submissions
@@ -1073,7 +868,7 @@ export type Submissions = Message<"qf.Submissions"> & {
  * Use `create(SubmissionsSchema)` to create a new message.
  */
 export const SubmissionsSchema: GenMessage<Submissions> = /*@__PURE__*/
-  messageDesc(file_qf_types, 17);
+  messageDesc(file_qf_types, 14);
 
 /**
  * @generated from message qf.Grade
@@ -1100,7 +895,7 @@ export type Grade = Message<"qf.Grade"> & {
  * Use `create(GradeSchema)` to create a new message.
  */
 export const GradeSchema: GenMessage<Grade> = /*@__PURE__*/
-  messageDesc(file_qf_types, 18);
+  messageDesc(file_qf_types, 15);
 
 /**
  * @generated from message qf.GradingBenchmark
@@ -1153,7 +948,7 @@ export type GradingBenchmark = Message<"qf.GradingBenchmark"> & {
  * Use `create(GradingBenchmarkSchema)` to create a new message.
  */
 export const GradingBenchmarkSchema: GenMessage<GradingBenchmark> = /*@__PURE__*/
-  messageDesc(file_qf_types, 19);
+  messageDesc(file_qf_types, 16);
 
 /**
  * @generated from message qf.Benchmarks
@@ -1170,7 +965,7 @@ export type Benchmarks = Message<"qf.Benchmarks"> & {
  * Use `create(BenchmarksSchema)` to create a new message.
  */
 export const BenchmarksSchema: GenMessage<Benchmarks> = /*@__PURE__*/
-  messageDesc(file_qf_types, 20);
+  messageDesc(file_qf_types, 17);
 
 /**
  * @generated from message qf.GradingCriterion
@@ -1221,7 +1016,7 @@ export type GradingCriterion = Message<"qf.GradingCriterion"> & {
  * Use `create(GradingCriterionSchema)` to create a new message.
  */
 export const GradingCriterionSchema: GenMessage<GradingCriterion> = /*@__PURE__*/
-  messageDesc(file_qf_types, 21);
+  messageDesc(file_qf_types, 18);
 
 /**
  * @generated from enum qf.GradingCriterion.Grade
@@ -1247,7 +1042,7 @@ export enum GradingCriterion_Grade {
  * Describes the enum qf.GradingCriterion.Grade.
  */
 export const GradingCriterion_GradeSchema: GenEnum<GradingCriterion_Grade> = /*@__PURE__*/
-  enumDesc(file_qf_types, 21, 0);
+  enumDesc(file_qf_types, 18, 0);
 
 /**
  * @generated from message qf.Review
@@ -1298,7 +1093,7 @@ export type Review = Message<"qf.Review"> & {
  * Use `create(ReviewSchema)` to create a new message.
  */
 export const ReviewSchema: GenMessage<Review> = /*@__PURE__*/
-  messageDesc(file_qf_types, 22);
+  messageDesc(file_qf_types, 19);
 
 /**
  * @generated from message qf.AssignmentFeedback
@@ -1355,7 +1150,7 @@ export type AssignmentFeedback = Message<"qf.AssignmentFeedback"> & {
  * Use `create(AssignmentFeedbackSchema)` to create a new message.
  */
 export const AssignmentFeedbackSchema: GenMessage<AssignmentFeedback> = /*@__PURE__*/
-  messageDesc(file_qf_types, 23);
+  messageDesc(file_qf_types, 20);
 
 /**
  * @generated from message qf.FeedbackReceipt
@@ -1377,7 +1172,7 @@ export type FeedbackReceipt = Message<"qf.FeedbackReceipt"> & {
  * Use `create(FeedbackReceiptSchema)` to create a new message.
  */
 export const FeedbackReceiptSchema: GenMessage<FeedbackReceipt> = /*@__PURE__*/
-  messageDesc(file_qf_types, 24);
+  messageDesc(file_qf_types, 21);
 
 /**
  * @generated from message qf.AssignmentFeedbacks
@@ -1394,7 +1189,7 @@ export type AssignmentFeedbacks = Message<"qf.AssignmentFeedbacks"> & {
  * Use `create(AssignmentFeedbacksSchema)` to create a new message.
  */
 export const AssignmentFeedbacksSchema: GenMessage<AssignmentFeedbacks> = /*@__PURE__*/
-  messageDesc(file_qf_types, 25);
+  messageDesc(file_qf_types, 22);
 
 /**
  * Note is an internal note written by teaching staff.
@@ -1468,7 +1263,7 @@ export type Note = Message<"qf.Note"> & {
  * Use `create(NoteSchema)` to create a new message.
  */
 export const NoteSchema: GenMessage<Note> = /*@__PURE__*/
-  messageDesc(file_qf_types, 26);
+  messageDesc(file_qf_types, 23);
 
 /**
  * @generated from message qf.Notes
@@ -1485,5 +1280,5 @@ export type Notes = Message<"qf.Notes"> & {
  * Use `create(NotesSchema)` to create a new message.
  */
 export const NotesSchema: GenMessage<Notes> = /*@__PURE__*/
-  messageDesc(file_qf_types, 27);
+  messageDesc(file_qf_types, 24);
 

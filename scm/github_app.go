@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/shurcooL/githubv4"
 )
 
 func newGithubAppClient(ctx context.Context, cfg *Config, organization string) (*GithubSCM, error) {
@@ -28,7 +27,6 @@ func newGithubAppClient(ctx context.Context, cfg *Config, organization string) (
 	httpClient := installCfg.Client(ctx)
 	return &GithubSCM{
 		client:             github.NewClient(httpClient),
-		clientV4:           githubv4.NewClient(httpClient),
 		tokenManager:       newAppTokenManager(cfg, inst.GetID()),
 		providerURL:        "https://github.com",
 		createUserClientFn: newGithubUserClient,

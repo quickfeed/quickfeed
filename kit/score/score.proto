@@ -22,11 +22,20 @@ message Score {
     string Secret       = 3 [(go.field) = { tags: 'gorm:"-"' }];  // the unique identifier for a scoring session
 
     string TestName    = 4;  // name of the test
-    string TaskName    = 5;  // name of task this score belongs to
-    int32 Score        = 6;  // the score obtained
-    int32 MaxScore     = 7;  // max score possible to get on this specific test
-    int32 Weight       = 8;  // the weight of this test; used to compute final grade
-    string TestDetails = 9;  // if populated, the frontend may display these details
+    int32 Score        = 5;  // the score obtained
+    int32 MaxScore     = 6;  // max score possible to get on this specific test
+    int32 Weight       = 7;  // the weight of this test; used to compute final grade
+    string TestDetails = 8;  // if populated, the frontend may display these details
+}
+
+// RunStatus classifies the outcome of a test run. BUILD_FAILURE records
+// trustworthy zero scores; the other failure statuses keep previous scores.
+enum RunStatus {
+    SUCCESS       = 0;  // the run produced test results
+    BUILD_FAILURE = 1;  // the submitted code failed to compile or build
+    TIMEOUT       = 2;  // the run exceeded the assignment's container timeout
+    NO_SCORES     = 3;  // the run produced no parsable test scores
+    TEST_PANIC    = 4;  // the test execution panicked before producing test scores
 }
 
 // BuildInfo holds build data for an assignment's test execution.
@@ -38,4 +47,6 @@ message BuildInfo {
 
     google.protobuf.Timestamp BuildDate      = 5 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     google.protobuf.Timestamp SubmissionDate = 6 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
+
+    RunStatus Status = 7;  // outcome of the test run
 }

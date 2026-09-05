@@ -23,6 +23,63 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// RunStatus classifies the outcome of a test run. BUILD_FAILURE records
+// trustworthy zero scores; the other failure statuses keep previous scores.
+type RunStatus int32
+
+const (
+	RunStatus_SUCCESS       RunStatus = 0 // the run produced test results
+	RunStatus_BUILD_FAILURE RunStatus = 1 // the submitted code failed to compile or build
+	RunStatus_TIMEOUT       RunStatus = 2 // the run exceeded the assignment's container timeout
+	RunStatus_NO_SCORES     RunStatus = 3 // the run produced no parsable test scores
+	RunStatus_TEST_PANIC    RunStatus = 4 // the test execution panicked before producing test scores
+)
+
+// Enum value maps for RunStatus.
+var (
+	RunStatus_name = map[int32]string{
+		0: "SUCCESS",
+		1: "BUILD_FAILURE",
+		2: "TIMEOUT",
+		3: "NO_SCORES",
+		4: "TEST_PANIC",
+	}
+	RunStatus_value = map[string]int32{
+		"SUCCESS":       0,
+		"BUILD_FAILURE": 1,
+		"TIMEOUT":       2,
+		"NO_SCORES":     3,
+		"TEST_PANIC":    4,
+	}
+)
+
+func (x RunStatus) Enum() *RunStatus {
+	p := new(RunStatus)
+	*p = x
+	return p
+}
+
+func (x RunStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RunStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_kit_score_score_proto_enumTypes[0].Descriptor()
+}
+
+func (RunStatus) Type() protoreflect.EnumType {
+	return &file_kit_score_score_proto_enumTypes[0]
+}
+
+func (x RunStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RunStatus.Descriptor instead.
+func (RunStatus) EnumDescriptor() ([]byte, []int) {
+	return file_kit_score_score_proto_rawDescGZIP(), []int{0}
+}
+
 // Score give the score for a single test named TestName.
 type Score struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -30,11 +87,10 @@ type Score struct {
 	SubmissionID  uint64                 `protobuf:"varint,2,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"foreignKey:ID"`
 	Secret        string                 `protobuf:"bytes,3,opt,name=Secret,proto3" json:"Secret,omitempty" gorm:"-"`  // the unique identifier for a scoring session
 	TestName      string                 `protobuf:"bytes,4,opt,name=TestName,proto3" json:"TestName,omitempty"`       // name of the test
-	TaskName      string                 `protobuf:"bytes,5,opt,name=TaskName,proto3" json:"TaskName,omitempty"`       // name of task this score belongs to
-	Score         int32                  `protobuf:"varint,6,opt,name=Score,proto3" json:"Score,omitempty"`            // the score obtained
-	MaxScore      int32                  `protobuf:"varint,7,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`      // max score possible to get on this specific test
-	Weight        int32                  `protobuf:"varint,8,opt,name=Weight,proto3" json:"Weight,omitempty"`          // the weight of this test; used to compute final grade
-	TestDetails   string                 `protobuf:"bytes,9,opt,name=TestDetails,proto3" json:"TestDetails,omitempty"` // if populated, the frontend may display these details
+	Score         int32                  `protobuf:"varint,5,opt,name=Score,proto3" json:"Score,omitempty"`            // the score obtained
+	MaxScore      int32                  `protobuf:"varint,6,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`      // max score possible to get on this specific test
+	Weight        int32                  `protobuf:"varint,7,opt,name=Weight,proto3" json:"Weight,omitempty"`          // the weight of this test; used to compute final grade
+	TestDetails   string                 `protobuf:"bytes,8,opt,name=TestDetails,proto3" json:"TestDetails,omitempty"` // if populated, the frontend may display these details
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -97,13 +153,6 @@ func (x *Score) GetTestName() string {
 	return ""
 }
 
-func (x *Score) GetTaskName() string {
-	if x != nil {
-		return x.TaskName
-	}
-	return ""
-}
-
 func (x *Score) GetScore() int32 {
 	if x != nil {
 		return x.Score
@@ -141,6 +190,7 @@ type BuildInfo struct {
 	ExecTime       int64                  `protobuf:"varint,4,opt,name=ExecTime,proto3" json:"ExecTime,omitempty"`
 	BuildDate      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=BuildDate,proto3" json:"BuildDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
 	SubmissionDate *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=SubmissionDate,proto3" json:"SubmissionDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
+	Status         RunStatus              `protobuf:"varint,7,opt,name=Status,proto3,enum=score.RunStatus" json:"Status,omitempty"` // outcome of the test run
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -217,28 +267,42 @@ func (x *BuildInfo) GetSubmissionDate() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *BuildInfo) GetStatus() RunStatus {
+	if x != nil {
+		return x.Status
+	}
+	return RunStatus_SUCCESS
+}
+
 var File_kit_score_score_proto protoreflect.FileDescriptor
 
 const file_kit_score_score_proto_rawDesc = "" +
 	"\n" +
-	"\x15kit/score/score.proto\x12\x05score\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0epatch/go.proto\"\xa5\x02\n" +
+	"\x15kit/score/score.proto\x12\x05score\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0epatch/go.proto\"\x89\x02\n" +
 	"\x05Score\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12?\n" +
 	"\fSubmissionID\x18\x02 \x01(\x04B\x1bʵ\x03\x17\xa2\x01\x14gorm:\"foreignKey:ID\"R\fSubmissionID\x12'\n" +
 	"\x06Secret\x18\x03 \x01(\tB\x0fʵ\x03\v\xa2\x01\bgorm:\"-\"R\x06Secret\x12\x1a\n" +
-	"\bTestName\x18\x04 \x01(\tR\bTestName\x12\x1a\n" +
-	"\bTaskName\x18\x05 \x01(\tR\bTaskName\x12\x14\n" +
-	"\x05Score\x18\x06 \x01(\x05R\x05Score\x12\x1a\n" +
-	"\bMaxScore\x18\a \x01(\x05R\bMaxScore\x12\x16\n" +
-	"\x06Weight\x18\b \x01(\x05R\x06Weight\x12 \n" +
-	"\vTestDetails\x18\t \x01(\tR\vTestDetails\"\xf6\x02\n" +
+	"\bTestName\x18\x04 \x01(\tR\bTestName\x12\x14\n" +
+	"\x05Score\x18\x05 \x01(\x05R\x05Score\x12\x1a\n" +
+	"\bMaxScore\x18\x06 \x01(\x05R\bMaxScore\x12\x16\n" +
+	"\x06Weight\x18\a \x01(\x05R\x06Weight\x12 \n" +
+	"\vTestDetails\x18\b \x01(\tR\vTestDetails\"\xa0\x03\n" +
 	"\tBuildInfo\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12?\n" +
 	"\fSubmissionID\x18\x02 \x01(\x04B\x1bʵ\x03\x17\xa2\x01\x14gorm:\"foreignKey:ID\"R\fSubmissionID\x12\x1a\n" +
 	"\bBuildLog\x18\x03 \x01(\tR\bBuildLog\x12\x1a\n" +
 	"\bExecTime\x18\x04 \x01(\x03R\bExecTime\x12j\n" +
 	"\tBuildDate\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\tBuildDate\x12t\n" +
-	"\x0eSubmissionDate\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x0eSubmissionDateB*Z(github.com/quickfeed/quickfeed/kit/scoreb\x06proto3"
+	"\x0eSubmissionDate\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB0ʵ\x03,\xa2\x01)gorm:\"serializer:timestamp;type:datetime\"R\x0eSubmissionDate\x12(\n" +
+	"\x06Status\x18\a \x01(\x0e2\x10.score.RunStatusR\x06Status*W\n" +
+	"\tRunStatus\x12\v\n" +
+	"\aSUCCESS\x10\x00\x12\x11\n" +
+	"\rBUILD_FAILURE\x10\x01\x12\v\n" +
+	"\aTIMEOUT\x10\x02\x12\r\n" +
+	"\tNO_SCORES\x10\x03\x12\x0e\n" +
+	"\n" +
+	"TEST_PANIC\x10\x04B*Z(github.com/quickfeed/quickfeed/kit/scoreb\x06proto3"
 
 var (
 	file_kit_score_score_proto_rawDescOnce sync.Once
@@ -252,20 +316,23 @@ func file_kit_score_score_proto_rawDescGZIP() []byte {
 	return file_kit_score_score_proto_rawDescData
 }
 
+var file_kit_score_score_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_kit_score_score_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_kit_score_score_proto_goTypes = []any{
-	(*Score)(nil),                 // 0: score.Score
-	(*BuildInfo)(nil),             // 1: score.BuildInfo
-	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
+	(RunStatus)(0),                // 0: score.RunStatus
+	(*Score)(nil),                 // 1: score.Score
+	(*BuildInfo)(nil),             // 2: score.BuildInfo
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_kit_score_score_proto_depIdxs = []int32{
-	2, // 0: score.BuildInfo.BuildDate:type_name -> google.protobuf.Timestamp
-	2, // 1: score.BuildInfo.SubmissionDate:type_name -> google.protobuf.Timestamp
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 0: score.BuildInfo.BuildDate:type_name -> google.protobuf.Timestamp
+	3, // 1: score.BuildInfo.SubmissionDate:type_name -> google.protobuf.Timestamp
+	0, // 2: score.BuildInfo.Status:type_name -> score.RunStatus
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_kit_score_score_proto_init() }
@@ -278,13 +345,14 @@ func file_kit_score_score_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kit_score_score_proto_rawDesc), len(file_kit_score_score_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_kit_score_score_proto_goTypes,
 		DependencyIndexes: file_kit_score_score_proto_depIdxs,
+		EnumInfos:         file_kit_score_score_proto_enumTypes,
 		MessageInfos:      file_kit_score_score_proto_msgTypes,
 	}.Build()
 	File_kit_score_score_proto = out.File

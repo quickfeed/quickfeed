@@ -43,8 +43,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 			"is_group_lab":      assignment.GetIsGroupLab(),
 			"reviewers":         assignment.GetReviewers(),
 			"container_timeout": assignment.GetContainerTimeout(),
-			"tasks":             assignment.GetTasks(),
-		}).Omit("Tasks").FirstOrCreate(assignment).Error
+		}).FirstOrCreate(assignment).Error
 }
 
 // GetAssignment returns assignment with the given ID.
@@ -122,7 +121,6 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				Reviewers:        v.GetReviewers(),
 				ContainerTimeout: v.GetContainerTimeout(),
 				// Submissions:       v.GetSubmissions(),
-				Tasks:             v.GetTasks(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),
 				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {
@@ -155,64 +153,52 @@ func check(tx *gorm.DB, assignment *qf.Assignment) error {
 }
 
 func updateExpectedTests(tx *gorm.DB, assignment *qf.Assignment) error {
-	if len(assignment.GetExpectedTests()) > 0 {
-		var expectedTests []*qf.TestInfo
-		err := tx.Model(&qf.TestInfo{}).Where(&qf.TestInfo{
-			AssignmentID: assignment.GetID(),
-		}).Find(&expectedTests).Error
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// a new assignment, no actions required
-				return nil
-			}
-			return fmt.Errorf("fetching assignment %s from database: %w", assignment.GetName(), err)
-		}
-		if len(expectedTests) > 0 {
-			// expected tests changed for this assignment, remove old tests
-			for _, test := range expectedTests {
-				if err := tx.Delete(test).Error; err != nil {
-					return fmt.Errorf("deleting expected test %d: %w", test.GetID(), err)
-				}
-			}
-		}
+	// Always remove the existing expected tests; the incoming (possibly empty)
+	// ExpectedTests are re-inserted by the subsequent Updates call. An empty
+	// incoming list means tests.json was removed or emptied, and keeping the
+	// old rows would zero-score tests that no longer exist (issue #1439).
+	if err := tx.Where(&qf.TestInfo{
+		AssignmentID: assignment.GetID(),
+	}).Delete(&qf.TestInfo{}).Error; err != nil {
+		return fmt.Errorf("deleting expected tests for assignment %s: %w", assignment.GetName(), err)
 	}
 	return nil
 }
 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated.
 func (db *GormDB) updateGradingCriteria(tx *gorm.DB, assignment *qf.Assignment) error {
-	if len(assignment.GetGradingBenchmarks()) > 0 {
-		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
-			ID: assignment.GetID(),
-		})
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// a new assignment, no actions required
-				return nil
-			}
-			return fmt.Errorf("fetching assignment %s from database: %w", assignment.GetName(), err)
+	// An empty incoming GradingBenchmarks list means criteria.json was removed
+	// or emptied; the existing benchmarks must then be deleted (issue #1439).
+	gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
+		ID: assignment.GetID(),
+	})
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// a new assignment, no actions required
+			return nil
 		}
-		if len(gradingBenchmarks) > 0 {
-			if cmp.Equal(assignment.GetGradingBenchmarks(), gradingBenchmarks, cmp.Options{
-				protocmp.Transform(),
-				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
-				protocmp.IgnoreEnums(),
-			}) {
-				// no changes in the grading criteria for this assignment (from the tests repository)
-				// we set this to nil to avoid duplicates in the database
-				assignment.GradingBenchmarks = nil
-			} else {
-				// grading criteria changed for this assignment, remove old criteria and reviews
-				for _, bm := range gradingBenchmarks {
-					for _, c := range bm.GetCriteria() {
-						if err := tx.Delete(c).Error; err != nil {
-							return fmt.Errorf("deleting criterion %d: %w", c.GetID(), err)
-						}
+		return fmt.Errorf("fetching assignment %s from database: %w", assignment.GetName(), err)
+	}
+	if len(gradingBenchmarks) > 0 {
+		if cmp.Equal(assignment.GetGradingBenchmarks(), gradingBenchmarks, cmp.Options{
+			protocmp.Transform(),
+			protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+			protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
+			protocmp.IgnoreEnums(),
+		}) {
+			// no changes in the grading criteria for this assignment (from the tests repository)
+			// we set this to nil to avoid duplicates in the database
+			assignment.GradingBenchmarks = nil
+		} else {
+			// grading criteria changed for this assignment, remove old criteria and reviews
+			for _, bm := range gradingBenchmarks {
+				for _, c := range bm.GetCriteria() {
+					if err := tx.Delete(c).Error; err != nil {
+						return fmt.Errorf("deleting criterion %d: %w", c.GetID(), err)
 					}
-					if err := tx.Delete(bm).Error; err != nil {
-						return fmt.Errorf("deleting benchmark %d: %w", bm.GetID(), err)
-					}
+				}
+				if err := tx.Delete(bm).Error; err != nil {
+					return fmt.Errorf("deleting benchmark %d: %w", bm.GetID(), err)
 				}
 			}
 		}

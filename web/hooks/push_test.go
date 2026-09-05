@@ -2,12 +2,15 @@ package hooks
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -15,6 +18,44 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func TestValidateAssignmentsPushRefreshesBothRepositories(t *testing.T) {
+	testsDir := filepath.Join(t.TempDir(), qf.TestsRepo)
+	assignmentsDir := filepath.Join(t.TempDir(), qf.AssignmentsRepo)
+	for _, dir := range []string{filepath.Join(testsDir, "lab1"), filepath.Join(assignmentsDir, "lab1")} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	scmClient := &cloningSCM{directories: map[string]string{
+		qf.TestsRepo:       testsDir,
+		qf.AssignmentsRepo: assignmentsDir,
+	}}
+	course := &qf.Course{ID: 42, ScmOrganizationName: "course-2026"}
+	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
+	if err := validateAssignmentsPush(ctx, scmClient, course); err != nil {
+		t.Fatal(err)
+	}
+	wantCalls := []string{qf.AssignmentsRepo, qf.TestsRepo}
+	if diff := cmp.Diff(wantCalls, scmClient.calls); diff != "" {
+		t.Errorf("Clone() calls mismatch (-want +got):\n%s", diff)
+	}
+}
+
+type cloningSCM struct {
+	scm.SCM
+	directories map[string]string
+	calls       []string
+}
+
+func (s *cloningSCM) Clone(_ context.Context, options *scm.CloneOptions) (string, error) {
+	s.calls = append(s.calls, options.Repository)
+	return s.directories[options.Repository], nil
+}
 
 func TestExtractAssignments(t *testing.T) {
 	course := qtest.MockCourses[0]
@@ -229,50 +270,28 @@ func TestDefaultBranch(t *testing.T) {
 }
 
 func TestIgnorePush(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	wh := NewGitHubWebHook(qtest.Logger(t), db, &scm.Manager{}, &ci.Local{}, "secret", stream.NewStreamServices(), nil)
-
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: "dat520-2024"}
 	usrRepo := &qf.Repository{RepoType: qf.Repository_USER, HTMLURL: repo.StudentRepoURL("user")}
 	grpRepo := &qf.Repository{RepoType: qf.Repository_GROUP, HTMLURL: repo.GroupRepoURL("group")}
 	pushEventRepo := &github.PushEventRepository{DefaultBranch: new("main")}
 	pushMain := &github.PushEvent{Ref: new("refs/heads/main"), Repo: pushEventRepo}
 	pushFeat := &github.PushEvent{Ref: new("refs/heads/feat-branch"), Repo: pushEventRepo}
-	pullFeat := &qf.PullRequest{ScmRepositoryID: 1, TaskID: 1, IssueID: 1, UserID: 1, Number: 1, SourceBranch: "feat-branch"}
 
 	const ignore bool = true
 	tests := []struct {
-		name        string
-		repo        *qf.Repository
-		pushEvent   *github.PushEvent
-		pullRequest *qf.PullRequest
-		want        bool // true = ignore, false = process
+		name      string
+		repo      *qf.Repository
+		pushEvent *github.PushEvent
+		want      bool // true = ignore, false = process
 	}{
 		{name: "DefaultBranch/UsrRepo", repo: usrRepo, pushEvent: pushMain, want: !ignore},
 		{name: "DefaultBranch/GrpRepo", repo: grpRepo, pushEvent: pushMain, want: !ignore},
-		{name: "DefaultBranch/UsrRepo/WithPullRequest", repo: usrRepo, pushEvent: pushMain, pullRequest: pullFeat, want: !ignore},
-		{name: "DefaultBranch/GrpRepo/WithPullRequest", repo: grpRepo, pushEvent: pushMain, pullRequest: pullFeat, want: !ignore},
 		{name: "FeatureBranch/UsrRepo", repo: usrRepo, pushEvent: pushFeat, want: ignore},
 		{name: "FeatureBranch/GrpRepo", repo: grpRepo, pushEvent: pushFeat, want: ignore},
-		{name: "FeatureBranch/UsrRepo/WithPullRequest", repo: usrRepo, pushEvent: pushFeat, pullRequest: pullFeat, want: ignore},
-		{name: "FeatureBranch/GrpRepo/WithPullRequest", repo: grpRepo, pushEvent: pushFeat, pullRequest: pullFeat, want: !ignore},
 	}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.pullRequest != nil {
-				tt.pullRequest.ID = uint64(i)
-				if err := db.CreatePullRequest(tt.pullRequest); err != nil {
-					t.Fatal(err)
-				}
-				// Clean up between subtests to avoid pull requests being processed in other subtests.
-				t.Cleanup(func() {
-					if err := db.UpdatePullRequest(&qf.PullRequest{ID: tt.pullRequest.GetID()}); err != nil {
-						t.Fatal(err)
-					}
-				})
-			}
-			if got := wh.ignorePush(context.Background(), tt.pushEvent, tt.repo); got != tt.want {
+			if got := ignorePush(tt.pushEvent); got != tt.want {
 				t.Errorf("ignorePush(%s, %s) = %t, want %t", branchName(tt.pushEvent.GetRef()), tt.repo.Name(), got, tt.want)
 			}
 		})

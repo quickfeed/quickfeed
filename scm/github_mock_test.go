@@ -16,10 +16,9 @@ import (
 
 // mock organizations foo and bar
 var (
-	ghOrgFoo    = github.Organization{ID: github.Int64(123), Login: foo.Login}
-	ghOrgBar    = github.Organization{ID: github.Int64(456), Login: bar.Login}
-	ghOrgBuz    = github.Organization{ID: github.Int64(678), Login: buz.Login}
-	ghOrgDat320 = github.Organization{ID: github.Int64(789), Login: new("dat320")}
+	ghOrgFoo = github.Organization{ID: github.Int64(123), Login: foo.Login}
+	ghOrgBar = github.Organization{ID: github.Int64(456), Login: bar.Login}
+	ghOrgBuz = github.Organization{ID: github.Int64(678), Login: buz.Login}
 )
 
 // mock repositories for organization foo; bar has no repositories
@@ -62,20 +61,6 @@ var groups = map[string]map[string][]github.User{
 	"bar": {
 		"groupY": {leslie},
 		"groupZ": {},
-	},
-}
-
-// reviewers map: owner -> repo -> pull requests ID -> reviewers
-var reviewers = map[string]map[string]map[int]github.ReviewersRequest{
-	"foo": {
-		"meling-labs": {
-			1: {Reviewers: []string{"meling", "leslie"}},
-			2: {Reviewers: []string{"lamport", "jostein"}},
-		},
-		"josie-labs": {
-			1: {Reviewers: []string{"meling", "leslie"}},
-			2: {Reviewers: []string{"lamport", "jostein"}},
-		},
 	},
 }
 

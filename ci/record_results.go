@@ -45,6 +45,9 @@ func (r *RunData) RecordResults(ctx context.Context, db database.Database, resul
 	}
 	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
+	// Every new student submission participates in slip-day accounting,
+	// including a submission whose test run failed. A rebuild keeps the
+	// original submission date and must not account for the same push twice.
 	if !r.Rebuild {
 		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
 			return nil, fmt.Errorf("updating slip days for %s: %w", r, err)
@@ -93,6 +96,9 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.SubmissionDate = previous.GetBuildInfo().GetSubmissionDate()
 	}
+	if !results.ScoresValid() {
+		return r.newFailedRunSubmission(previous, results)
+	}
 	score := results.Sum()
 	previous.SetGradesIfApproved(r.Assignment, score)
 	return &qf.Submission{
@@ -105,6 +111,24 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		Grades:       previous.GetGrades(),
 		BuildInfo:    results.GetBuildInfo(),
 		Scores:       results.Scores,
+	}
+}
+
+// newFailedRunSubmission records a failed run without overwriting the previous
+// submission's score, grades, and scores. The build info carries the failed
+// attempt's status, log, and submission date, while the commit hash names the
+// failed commit so a rebuild retries it.
+func (r *RunData) newFailedRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
+	return &qf.Submission{
+		ID:           previous.GetID(),
+		AssignmentID: r.Assignment.GetID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
+		CommitHash:   r.CommitID,
+		Score:        previous.GetScore(),
+		Grades:       previous.GetGrades(),
+		BuildInfo:    results.GetBuildInfo(),
+		Scores:       previous.GetScores(),
 	}
 }
 

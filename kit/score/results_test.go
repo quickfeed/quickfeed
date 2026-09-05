@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score/testdata/server"
 )
 
 func TestExtractResults(t *testing.T) {
@@ -299,6 +300,81 @@ func TestExtractResultsWithExpectedTests(t *testing.T) {
 				if gotScore != test.wantScores[i] {
 					t.Errorf("Test %s: expected score %d, got %d", wantTestName, test.wantScores[i], gotScore)
 				}
+			}
+		})
+	}
+}
+
+func TestExtractResultsParsedScores(t *testing.T) {
+	const secret = "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
+	expectedTests := []*score.Score{
+		{TestName: "TestA", Score: 0, MaxScore: 100, Weight: 1},
+	}
+	tests := []struct {
+		name             string
+		out              string
+		wantParsedScores int
+	}{
+		{name: "NoOutput", out: "", wantParsedScores: 0},
+		{name: "NoScoreLines", out: "compile error\nsome log", wantParsedScores: 0},
+		{
+			name:             "OneScoreLine",
+			out:              `{"Secret":"` + secret + `","TestName":"TestA","Score":50,"MaxScore":100,"Weight":1}`,
+			wantParsedScores: 1,
+		},
+		{
+			// A valid score line for a test that is not among the expected
+			// tests must not count as parsed; otherwise the run would appear
+			// successful even though none of the expected tests reported a score.
+			name:             "UnexpectedScoreLine",
+			out:              `{"Secret":"` + secret + `","TestName":"TestUnknown","Score":50,"MaxScore":100,"Weight":1}`,
+			wantParsedScores: 0,
+		},
+		{
+			// A score line with the wrong secret must not count as parsed.
+			name:             "WrongSecret",
+			out:              `{"Secret":"wrong","TestName":"TestA","Score":50,"MaxScore":100,"Weight":1}`,
+			wantParsedScores: 0,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res, _ := score.ExtractResults(tc.out, secret, 10, expectedTests)
+			if res.ParsedScores != tc.wantParsedScores {
+				t.Errorf("ExtractResults() ParsedScores = %d, want %d", res.ParsedScores, tc.wantParsedScores)
+			}
+		})
+	}
+}
+
+// TestExtractResultsFromNonTestCaller checks that extraction of invalid score
+// lines does not panic when called from outside a test function, which is how
+// the QuickFeed server calls it. Calling ExtractResults directly from a test
+// would not catch this, since the call frame lookup in kit/internal/test finds
+// the test function on the stack and returns without panicking.
+func TestExtractResultsFromNonTestCaller(t *testing.T) {
+	const secret = "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
+	expectedTests := []*score.Score{
+		{TestName: "TestA", Score: 0, MaxScore: 100, Weight: 1},
+	}
+	tests := []struct {
+		name string
+		out  string
+	}{
+		{name: "EmptyTestName", out: `{"Secret":"` + secret + `","TestName":"","Score":50,"MaxScore":100,"Weight":1}`},
+		{name: "ZeroMaxScore", out: `{"Secret":"` + secret + `","TestName":"TestA","Score":50,"MaxScore":0,"Weight":1}`},
+		{name: "ZeroWeight", out: `{"Secret":"` + secret + `","TestName":"TestA","Score":50,"MaxScore":100,"Weight":0}`},
+		{name: "ScoreAboveMaxScore", out: `{"Secret":"` + secret + `","TestName":"TestA","Score":500,"MaxScore":100,"Weight":1}`},
+		{name: "NegativeScore", out: `{"Secret":"` + secret + `","TestName":"TestA","Score":-1,"MaxScore":100,"Weight":1}`},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := server.ExtractResults(tc.out, secret, expectedTests)
+			if err == nil {
+				t.Errorf("ExtractResults(%s) = nil error, want parse error", tc.out)
+			}
+			if res.ParsedScores != 0 {
+				t.Errorf("ExtractResults(%s) ParsedScores = %d, want 0", tc.out, res.ParsedScores)
 			}
 		})
 	}

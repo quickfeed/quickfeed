@@ -116,4 +116,10 @@ message CourseLog {
     bool truncated                  = 3;  // set when entries were cut off by the limit
 }
 
+// RepositoryIssues reports the number of content problems found in a repository.
+// Details are available in the course log.
+message RepositoryIssues {
+    uint32 count = 1;
+}
+
 message Void {}

@@ -12,10 +12,11 @@ import (
 
 // Results contains the score objects, build info, and errors.
 type Results struct {
-	BuildInfo *BuildInfo // build info for tests
-	Scores    []*Score   // list of scores for different tests
-	testNames []string   // defines the order
-	scoreMap  map[string]*Score
+	BuildInfo    *BuildInfo // build info for tests
+	Scores       []*Score   // list of scores for different tests
+	ParsedScores int        // number of valid score lines parsed from the test output
+	testNames    []string   // defines the order
+	scoreMap     map[string]*Score
 }
 
 func newResults(scores ...*Score) *Results {
@@ -79,26 +80,9 @@ func (r *Results) validate(secret string) error {
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
 func (r *Results) Sum() uint32 {
-	return r.TaskSum("")
-}
-
-// TaskSum returns the total score the recorded scores for the given task.
-// The total is a grade in the range 0-100.
-// This method must only be called after Validate has returned nil.
-func (r *Results) TaskSum(taskName string) uint32 {
-	total, _ := r.internalSum(taskName)
-	return uint32(math.Round(total * 100))
-}
-
-// internalSum returns the total score and total weight of the recorded scores for the given task.
-// The values are in the range 0-1.
-func (r *Results) internalSum(taskName string) (float64, float64) {
 	totalWeight := float64(0)
 	var maxScore, score, weight []float64
 	for _, ts := range r.Scores {
-		if taskName != "" && taskName != ts.GetTaskName() {
-			continue
-		}
 		// If the score is negative, it means that the test is faulty (e.g. duplicate).
 		// We need to set the score to zero to avoid certain edge cases where
 		// the total score would end up being -1 or lower. If not, the total score
@@ -116,7 +100,7 @@ func (r *Results) internalSum(taskName string) (float64, float64) {
 		}
 		total += weightedScore(score[i], maxScore[i], weight[i], totalWeight)
 	}
-	return total, totalWeight
+	return uint32(math.Round(total * 100))
 }
 
 // weightedScore returns the weighted score of a given test.
@@ -147,6 +131,7 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 	var filteredLog []string
 	errs := make(parseErrors, 0)
 	results := newResults()
+	parsedScores := 0
 
 	// first, add all expected tests (assumed to already have zero scores)
 	for _, expectedTest := range zeroScoreTests {
@@ -166,6 +151,7 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 			if slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
 				return expected.GetTestName() == sc.GetTestName()
 			}) {
+				parsedScores++
 				results.addScore(sc)
 			}
 		} else if line != "" { // include only non-empty lines
@@ -180,7 +166,8 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 			BuildLog:       strings.Join(filteredLog, "\n"),
 			ExecTime:       execTime.Milliseconds(),
 		},
-		Scores: results.toScoreSlice(),
+		Scores:       results.toScoreSlice(),
+		ParsedScores: parsedScores,
 	}
 	if len(errs) > 0 {
 		return res, errs

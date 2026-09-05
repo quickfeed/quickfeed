@@ -222,6 +222,9 @@ body {
 }
 
 func form(w http.ResponseWriter) error {
+	// The manifest requests the pull_requests permission even though QuickFeed does not
+	// use it yet; adding a permission later requires every organization owner to
+	// re-approve the app.
 	const tpl = `
 	<html>
 		<form id="create" action="https://github.com/settings/apps/new" method="post">
@@ -249,7 +252,6 @@ func form(w http.ResponseWriter) error {
 			"default_permissions": {
 				"administration": "write",
 				"contents": "write",
-				"issues": "write",
 				"members": "write",
 				"organization_administration": "write",
 				"pull_requests": "write",
@@ -257,8 +259,7 @@ func form(w http.ResponseWriter) error {
 {{- if .WebhookActive}}
 			"default_events": [
 				"push",
-				"pull_request",
-				"pull_request_review"
+				"pull_request"
 			]
 {{- end}}
 		})

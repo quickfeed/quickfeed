@@ -74,16 +74,8 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 // Add test with given max score and weight to the registry.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) Add(testFn any, max, weight int) {
-	s.internalAdd(test.Name(testFn), "", max, weight)
-}
-
-// AddWithTask test with given taskName, max score and weight to the registry.
-// This function is identical to Add, with the addition of assigning a task name.
-//
-// Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddWithTask(testFn any, taskName string, max, weight int) {
-	s.internalAdd(test.Name(testFn), taskName, max, weight)
+func (s *registry) Add(testFn any, maxScore, weight int) {
+	s.internalAdd(test.Name(testFn), maxScore, weight)
 }
 
 // AddSub test with given max score and weight to the registry.
@@ -91,20 +83,9 @@ func (s *registry) AddWithTask(testFn any, taskName string, max, weight int) {
 // conjunction with MaxByName and MinByName called from within a subtest.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSub(testFn any, subTestName string, max, weight int) {
+func (s *registry) AddSub(testFn any, subTestName string, maxScore, weight int) {
 	tstName := fmt.Sprintf("%s/%s", test.Name(testFn), subTestName)
-	s.internalAdd(tstName, "", max, weight)
-}
-
-// AddSubWithTask test with given taskName, max score and weight to the registry.
-// This function should be used to register subtests, and should be used in
-// conjunction with MaxByName and MinByName called from within a subtest.
-// This function is identical to AddSub, with the addition of assigning a task name.
-//
-// Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSubWithTask(testFn any, subTestName, taskName string, max, weight int) {
-	tstName := fmt.Sprintf("%s/%s", test.Name(testFn), subTestName)
-	s.internalAdd(tstName, taskName, max, weight)
+	s.internalAdd(tstName, maxScore, weight)
 }
 
 // Max returns a score object with Score equal to MaxScore.
@@ -153,11 +134,11 @@ var (
 	ErrUnknownScoreTest   = errors.New("unknown score test")
 )
 
-func (s *registry) internalAdd(testName, taskName string, max, weight int) {
+func (s *registry) internalAdd(testName string, maxScore, weight int) {
 	if _, found := s.scores[testName]; found {
 		panic(test.ErrMsg(testName, ErrDuplicateScoreTest.Error()))
 	}
-	if max < 1 {
+	if maxScore < 1 {
 		panic(test.ErrMsg(testName, ErrMaxScore.Error()))
 	}
 	if weight < 1 {
@@ -166,8 +147,7 @@ func (s *registry) internalAdd(testName, taskName string, max, weight int) {
 	sc := &Score{
 		Secret:   sessionSecret,
 		TestName: testName,
-		TaskName: taskName,
-		MaxScore: int32(max),
+		MaxScore: int32(maxScore),
 		Weight:   int32(weight),
 	}
 	// record the TestName in separate slice to preserve registration order

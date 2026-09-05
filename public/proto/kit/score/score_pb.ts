@@ -2,8 +2,8 @@
 // @generated from file kit/score/score.proto (package score, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kit/score/score.proto.
  */
 export const file_kit_score_score: GenFile = /*@__PURE__*/
-  fileDesc("ChVraXQvc2NvcmUvc2NvcmUucHJvdG8SBXNjb3JlIqMBCgVTY29yZRIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSDgoGU2VjcmV0GAMgASgJEhAKCFRlc3ROYW1lGAQgASgJEhAKCFRhc2tOYW1lGAUgASgJEg0KBVNjb3JlGAYgASgFEhAKCE1heFNjb3JlGAcgASgFEg4KBldlaWdodBgIIAEoBRITCgtUZXN0RGV0YWlscxgJIAEoCSK0AQoJQnVpbGRJbmZvEgoKAklEGAEgASgEEhQKDFN1Ym1pc3Npb25JRBgCIAEoBBIQCghCdWlsZExvZxgDIAEoCRIQCghFeGVjVGltZRgEIAEoAxItCglCdWlsZERhdGUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjIKDlN1Ym1pc3Npb25EYXRlGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIqWihnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQva2l0L3Njb3JlYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("ChVraXQvc2NvcmUvc2NvcmUucHJvdG8SBXNjb3JlIpEBCgVTY29yZRIKCgJJRBgBIAEoBBIUCgxTdWJtaXNzaW9uSUQYAiABKAQSDgoGU2VjcmV0GAMgASgJEhAKCFRlc3ROYW1lGAQgASgJEg0KBVNjb3JlGAUgASgFEhAKCE1heFNjb3JlGAYgASgFEg4KBldlaWdodBgHIAEoBRITCgtUZXN0RGV0YWlscxgIIAEoCSLWAQoJQnVpbGRJbmZvEgoKAklEGAEgASgEEhQKDFN1Ym1pc3Npb25JRBgCIAEoBBIQCghCdWlsZExvZxgDIAEoCRIQCghFeGVjVGltZRgEIAEoAxItCglCdWlsZERhdGUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjIKDlN1Ym1pc3Npb25EYXRlGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIgCgZTdGF0dXMYByABKA4yEC5zY29yZS5SdW5TdGF0dXMqVwoJUnVuU3RhdHVzEgsKB1NVQ0NFU1MQABIRCg1CVUlMRF9GQUlMVVJFEAESCwoHVElNRU9VVBACEg0KCU5PX1NDT1JFUxADEg4KClRFU1RfUEFOSUMQBEIqWihnaXRodWIuY29tL3F1aWNrZmVlZC9xdWlja2ZlZWQva2l0L3Njb3JlYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * Score give the score for a single test named TestName.
@@ -45,37 +45,30 @@ export type Score = Message<"score.Score"> & {
   TestName: string;
 
   /**
-   * name of task this score belongs to
-   *
-   * @generated from field: string TaskName = 5;
-   */
-  TaskName: string;
-
-  /**
    * the score obtained
    *
-   * @generated from field: int32 Score = 6;
+   * @generated from field: int32 Score = 5;
    */
   Score: number;
 
   /**
    * max score possible to get on this specific test
    *
-   * @generated from field: int32 MaxScore = 7;
+   * @generated from field: int32 MaxScore = 6;
    */
   MaxScore: number;
 
   /**
    * the weight of this test; used to compute final grade
    *
-   * @generated from field: int32 Weight = 8;
+   * @generated from field: int32 Weight = 7;
    */
   Weight: number;
 
   /**
    * if populated, the frontend may display these details
    *
-   * @generated from field: string TestDetails = 9;
+   * @generated from field: string TestDetails = 8;
    */
   TestDetails: string;
 };
@@ -122,6 +115,13 @@ export type BuildInfo = Message<"score.BuildInfo"> & {
    * @generated from field: google.protobuf.Timestamp SubmissionDate = 6;
    */
   SubmissionDate?: Timestamp | undefined;
+
+  /**
+   * outcome of the test run
+   *
+   * @generated from field: score.RunStatus Status = 7;
+   */
+  Status: RunStatus;
 };
 
 /**
@@ -130,4 +130,53 @@ export type BuildInfo = Message<"score.BuildInfo"> & {
  */
 export const BuildInfoSchema: GenMessage<BuildInfo> = /*@__PURE__*/
   messageDesc(file_kit_score_score, 1);
+
+/**
+ * RunStatus classifies the outcome of a test run. BUILD_FAILURE records
+ * trustworthy zero scores; the other failure statuses keep previous scores.
+ *
+ * @generated from enum score.RunStatus
+ */
+export enum RunStatus {
+  /**
+   * the run produced test results
+   *
+   * @generated from enum value: SUCCESS = 0;
+   */
+  SUCCESS = 0,
+
+  /**
+   * the submitted code failed to compile or build
+   *
+   * @generated from enum value: BUILD_FAILURE = 1;
+   */
+  BUILD_FAILURE = 1,
+
+  /**
+   * the run exceeded the assignment's container timeout
+   *
+   * @generated from enum value: TIMEOUT = 2;
+   */
+  TIMEOUT = 2,
+
+  /**
+   * the run produced no parsable test scores
+   *
+   * @generated from enum value: NO_SCORES = 3;
+   */
+  NO_SCORES = 3,
+
+  /**
+   * the test execution panicked before producing test scores
+   *
+   * @generated from enum value: TEST_PANIC = 4;
+   */
+  TEST_PANIC = 4,
+}
+
+/**
+ * Describes the enum score.RunStatus.
+ */
+export const RunStatusSchema: GenEnum<RunStatus> = /*@__PURE__*/
+  enumDesc(file_kit_score_score, 0);
 

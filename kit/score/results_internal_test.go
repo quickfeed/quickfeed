@@ -2,6 +2,7 @@ package score
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -302,74 +303,6 @@ func TestSumGrade(t *testing.T) {
 	}
 }
 
-func TestTaskSum(t *testing.T) {
-	tests := []struct {
-		scores   []*Score
-		wantSums map[string]uint32
-	}{
-		{
-			scores: []*Score{
-				{TestName: "A", TaskName: "task-1", Score: 12, MaxScore: 12, Weight: 1},
-				{TestName: "B", TaskName: "task-1", Score: 12, MaxScore: 12, Weight: 1},
-				{TestName: "C", TaskName: "task-1", Score: 6, MaxScore: 12, Weight: 1},
-				{TestName: "D", TaskName: "task-1", Score: 6, MaxScore: 12, Weight: 1},
-				{TestName: "E", TaskName: "task-2", Score: 10, MaxScore: 10, Weight: 1},
-				{TestName: "F", TaskName: "task-2", Score: 3, MaxScore: 12, Weight: 1},
-				{TestName: "G", TaskName: "", Score: 10, MaxScore: 10, Weight: 1},
-				{TestName: "H", TaskName: "", Score: 0, MaxScore: 10, Weight: 1},
-				{TestName: "I", TaskName: "", Score: 0, MaxScore: 10, Weight: 1},
-				{TestName: "J", TaskName: "", Score: 0, MaxScore: 10, Weight: 1},
-			},
-			wantSums: map[string]uint32{
-				"task-1": 75,
-				"task-2": 63,
-				"":       53,
-			},
-		},
-		{
-			scores: []*Score{
-				{TestName: "A", TaskName: "task-1", Score: 3, MaxScore: 12, Weight: 1},
-				{TestName: "B", TaskName: "task-2", Score: 4, MaxScore: 12, Weight: 1},
-				{TestName: "C", TaskName: "task-3", Score: 9, MaxScore: 12, Weight: 1},
-				{TestName: "D", TaskName: "task-4", Score: 6, MaxScore: 12, Weight: 7},
-			},
-			wantSums: map[string]uint32{
-				"task-1": 25,
-				"task-2": 33,
-				"task-3": 75,
-				"task-4": 50,
-				"":       48,
-			},
-		},
-		{
-			scores: []*Score{
-				{TestName: "A", TaskName: "task-1", Score: 6, MaxScore: 12, Weight: 1},
-				{TestName: "A", TaskName: "task-1", Score: 6, MaxScore: 12, Weight: 1},
-				{TestName: "B", TaskName: "task-2", Score: 0, MaxScore: 12, Weight: 1},
-				{TestName: "C", TaskName: "task-3", Score: 0, MaxScore: 12, Weight: 1},
-				{TestName: "D", TaskName: "task-4", Score: 0, MaxScore: 12, Weight: 7},
-			},
-			wantSums: map[string]uint32{
-				"task-1": 0, // duplicate test, should be ignored
-				"task-2": 0,
-				"task-3": 0,
-				"task-4": 0,
-				"":       0,
-			},
-		},
-	}
-	for _, tt := range tests {
-		results := newResults(tt.scores...)
-		// results may contain negative scores so we do not validate here
-		for taskName, wantSum := range tt.wantSums {
-			taskSum := results.TaskSum(taskName)
-			if taskSum != wantSum {
-				t.Errorf("TaskSum(%s) = %d, expected %d", taskName, taskSum, wantSum)
-			}
-		}
-	}
-}
-
 func TestValidate(t *testing.T) {
 	validateScores := []struct {
 		desc    string
@@ -513,7 +446,7 @@ func TestValidate(t *testing.T) {
 	}
 	for _, s := range validateScores {
 		results := newResults(s.in...)
-		if err := results.validate(""); err != s.wantErr {
+		if err := results.validate(""); !errors.Is(err, s.wantErr) {
 			var e, se string
 			if err != nil {
 				e = err.Error()

@@ -92,26 +92,37 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 	logger.Debug("running assignment tests")
 	start := time.Now()
 	out, err := runner.Run(ctx, job)
-	if err != nil && out == "" {
+	if errors.Is(err, ErrConflict) {
+		// The same commit is already being tested; record nothing.
 		testsFailedCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
-		if errors.Is(err, ErrConflict) {
-			return nil, err
-		}
-		return nil, fmt.Errorf("test execution failed without output: %w", err)
-	}
-	if err != nil {
-		// We may reach here with a timeout error and a non-empty output
-		testsFailedWithOutputCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
-		safeOutput := redactOutput(out, randomSecret)
-		logger.Error("test execution failed", label.Error, err, "output", safeOutput)
+		return nil, err
 	}
 
-	results, err := score.ExtractResults(out, randomSecret, time.Since(start), r.Assignment.ZeroScoreTests())
-	if err != nil {
+	results, extractErr := score.ExtractResults(out, randomSecret, time.Since(start), r.Assignment.ZeroScoreTests())
+	if extractErr != nil {
 		// Log the errors from the extraction process
 		testsFailedExtractResultsCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
-		logger.Error("failed to extract some test results", label.Error, err)
+		logger.Error("failed to extract some test results", label.Error, extractErr)
 		// don't return here; we still want partial results!
+	}
+
+	status := classifyRun(err, out, results.ParsedScores)
+	if status.Failed() {
+		// Record the failure status and student-facing explanation. A compilation
+		// failure has valid zero scores; other failures keep the previous scores.
+		if out == "" {
+			testsFailedCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
+		} else {
+			testsFailedWithOutputCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
+		}
+		logger.Error("test run failed", "run_status", status.String(), label.Error, err,
+			"output", redactOutput(out, randomSecret))
+		return failedRunResults(status, results), nil
+	}
+	if exitErr, ok := errors.AsType[*ContainerExitError](err); ok {
+		// A non-zero exit with parsed scores is normal for run scripts that
+		// end with the test command; note the exit status and continue.
+		logger.Debug("container exited with non-zero status", "exit_status", exitErr.Code)
 	}
 
 	testsSucceededCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
