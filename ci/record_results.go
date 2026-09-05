@@ -45,9 +45,11 @@ func (r *RunData) RecordResults(ctx context.Context, db database.Database, resul
 	}
 	logger.Debug("recorded submission", "result_type", resType, "status", newSubmission.GetStatuses(), "score", newSubmission.GetScore())
 
-	// Every new student submission participates in slip-day accounting,
-	// including a submission whose test run failed. A rebuild keeps the
-	// original submission date and must not account for the same push twice.
+	// Only a student push updates slip-day accounting, independent of whether
+	// the test run failed; a failed run still delivers the push, and its date
+	// is the date the student submitted. A rebuild is triggered from the
+	// frontend, keeps the original submission date, and must never account for
+	// the same push a second time.
 	if !r.Rebuild {
 		if err := r.updateSlipDays(logger, db, newSubmission); err != nil {
 			return nil, fmt.Errorf("updating slip days for %s: %w", r, err)
@@ -118,6 +120,10 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 // submission's score, grades, and scores. The build info carries the failed
 // attempt's status, log, and submission date, while the commit hash names the
 // failed commit so a rebuild retries it.
+//
+// The failed attempt's submission date is the date the student pushed, and is
+// therefore the date that RecordResults accounts for slip days; a rebuild of
+// the failed commit keeps the original date, set by newTestRunSubmission.
 func (r *RunData) newFailedRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
 	return &qf.Submission{
 		ID:           previous.GetID(),
