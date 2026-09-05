@@ -117,6 +117,46 @@ echo "$QUICKFEED_SESSION_SECRET"
 	}
 }
 
+// TestParseTestRunnerScriptBuildCheck checks that a run script declaring a
+// language with a build check phase runs that phase before the script's own
+// commands, and that a script without a language declaration is left alone.
+func TestParseTestRunnerScriptBuildCheck(t *testing.T) {
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
+
+	const qfTestOrg = "qf104-2022"
+	runData := testRunData(qfTestOrg)
+	runData.Assignment = &qf.Assignment{Name: "lab6-go"}
+	job, err := runData.parseTestRunnerScript(rand.String(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if job.Language != languageGo {
+		t.Errorf("job.Language = %q, want %q", job.Language, languageGo)
+	}
+	if len(job.Commands) < 2 {
+		t.Fatalf("job.Commands = %q, want the build check and the script's commands", job.Commands)
+	}
+	if job.Commands[0] != goBuildCheck {
+		t.Errorf("job.Commands[0] = %q, want the build check %q", job.Commands[0], goBuildCheck)
+	}
+	if job.Commands[1] != `echo "$TESTS"` {
+		t.Errorf("job.Commands[1] = %q, want the script's first command", job.Commands[1])
+	}
+
+	// The lab3 run script does not declare a language; it must run unchanged.
+	runData.Assignment = &qf.Assignment{Name: "lab3"}
+	job, err = runData.parseTestRunnerScript(rand.String(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if job.Language != "" {
+		t.Errorf("job.Language = %q, want empty", job.Language)
+	}
+	if job.Commands[0] == goBuildCheck {
+		t.Error("job.Commands[0] is the build check, want the script's first command")
+	}
+}
+
 func TestParseBadTestRunnerScript(t *testing.T) {
 	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 
