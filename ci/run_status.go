@@ -13,16 +13,17 @@ import (
 //
 // A non-zero container exit status alone does not classify as a failure:
 // a course's run script may end with the test command, which exits non-zero
-// when the submitted code fails tests. A compilation failure is also a
-// trustworthy zero-score result even though the test binary never started
-// and therefore could not print its zero-score initialization lines.
+// when the submitted code fails tests. A compilation failure that the build
+// check attributed to the submitted code is also a trustworthy zero-score
+// result, even though the test binary never started and therefore could not
+// print its zero-score initialization lines; see buildCheckCommands.
 func classifyRun(runErr error, out string, parsedScores int) score.RunStatus {
 	switch {
 	case runErr != nil && errors.Is(runErr, context.DeadlineExceeded):
 		return score.RunStatus_TIMEOUT
 	case parsedScores > 0:
 		return score.RunStatus_SUCCESS
-	case compilationFailed(out):
+	case buildCheckFailed(out):
 		return score.RunStatus_BUILD_FAILURE
 	case runErr != nil && out == "":
 		return score.RunStatus_NO_SCORES
@@ -31,17 +32,6 @@ func classifyRun(runErr error, out string, parsedScores int) score.RunStatus {
 	default:
 		return score.RunStatus_NO_SCORES
 	}
-}
-
-// compilationFailed recognizes the compiler summaries emitted by the Go and
-// .NET test commands used by the bundled course templates. These failures are
-// attributable to the submitted code and produce a trustworthy zero score.
-func compilationFailed(out string) bool {
-	lower := strings.ToLower(out)
-	if strings.Contains(lower, "[build failed]") {
-		return true
-	}
-	return strings.Contains(lower, "build failed.") && strings.Contains(lower, ": error ")
 }
 
 // studentFailureMessage returns the first line of the build log shown to the

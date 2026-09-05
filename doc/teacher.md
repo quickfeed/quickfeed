@@ -253,6 +253,15 @@ In this case, the test runner should specify the course code as the image to use
 The example below is for our QF101 test course.
 Note that the image will only be built/downloaded once, and will be cached for subsequent test runs.
 
+The second line of the script may declare the assignment's programming language, e.g., `#language/go`.
+The language declaration enables language-specific support in QuickFeed:
+
+- The compiler and package caches are shared between test runs, e.g., the Go module cache.
+- For Go, QuickFeed compiles the submitted code on its own, before running the script, and records the result in the build log.
+  This build check lets QuickFeed tell a submission that does not compile from a test environment failure, such as an unavailable dependency or a broken test file.
+  Only the former is recorded as a zero score; the latter keeps the student's previous score.
+  The build check never aborts the run: if the tests run and produce scores, those scores decide the outcome.
+
 QuickFeed will clone a student's repository or a group repository, and make them available via the `/quickfeed/assignments` folder inside the docker image.
 Similarly, QuickFeed will also clone the `tests` repository and make it available via the `/quickfeed/tests` folder.
 
@@ -292,6 +301,7 @@ Note that QuickFeed performs a lightweight sanity check of the cloned student re
 
 ```shell
 #image/qf101
+#language/go
 
 # The script may use the following environment variables:
 #

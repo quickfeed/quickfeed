@@ -52,8 +52,10 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 			testsDir:      filepath.Join(QuickFeedPath, qf.TestsRepo),
 			assignmentDir: filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
 		},
-		Env:      r.EnvVarsFn(secret, destDir),
-		Commands: commands,
+		Env: r.EnvVarsFn(secret, destDir),
+		// The build check runs before the course's run script, so that a
+		// compilation failure can be attributed to the submitted code.
+		Commands: append(buildCheckCommands(language), commands...),
 	}, nil
 }
 

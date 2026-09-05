@@ -1,4 +1,5 @@
 #image/qf101
+#language/go
 
 start=$SECONDS
 printf "*** Preparing Test Execution for %s ***\n" "$CURRENT"
