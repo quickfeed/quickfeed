@@ -626,3 +626,35 @@ exit 3`
 		t.Errorf("docker.Run(%#v) = %#v, want it to contain stderr %#v", script, out, "some error")
 	}
 }
+
+// TestDockerStderrOnSuccess checks that stderr is preserved even when the run
+// script masks a failing setup command's exit status: the bundled run scripts
+// continue past a failed setup command, print their completion text, and exit
+// zero, so the cause of the failure is only on stderr.
+func TestDockerStderrOnSuccess(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script = `echo "go: module lookup disabled" >&2
+echo "*** Finished Test Setup ***"`
+		image = "golang:latest"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
+	})
+	if err != nil {
+		t.Fatalf("docker.Run(%#v) error = %v, want nil", script, err)
+	}
+	for _, want := range []string{"*** Finished Test Setup ***", "go: module lookup disabled"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("docker.Run(%#v) = %#v, want it to contain %#v", script, out, want)
+		}
+	}
+}

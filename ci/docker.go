@@ -116,10 +116,12 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	if _, err := stdcopy.StdCopy(&stdout, &stderr, logReader); err != nil {
 		return "", err
 	}
-	// Include stderr when the run failed or produced no regular output;
-	// run scripts do not usually redirect stderr, so environment failures
-	// during setup commands would otherwise be invisible.
-	if stderr.Len() > 0 && (waitErr != nil || stdout.Len() == 0) {
+	// Always include stderr; run scripts do not usually redirect stderr, and
+	// they continue past a failing setup command, printing their completion
+	// text and exiting zero. Keying on the exit status or on empty stdout
+	// would therefore drop the cause of the failures this output is used to
+	// classify, so append whatever stderr the run produced.
+	if stderr.Len() > 0 {
 		stdout.WriteString("\nstderr:\n")
 		stdout.Write(stderr.Bytes())
 	}
