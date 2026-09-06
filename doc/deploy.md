@@ -222,7 +222,7 @@ The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding
    However, you can also generate them explicitly without starting the server:
 
    ```sh
-   go run ./cmd/gencert -gencert
+   go run ./cmd/cert -gen
    ```
 
    This will:
@@ -232,18 +232,18 @@ The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding
    The same command manages the trust store entry afterwards, on any platform:
 
    ```sh
-   go run ./cmd/gencert -addcert     # trust the existing CA, without regenerating
-   go run ./cmd/gencert -removecert  # stop trusting the CA
+   go run ./cmd/cert -add     # trust the existing CA, without regenerating
+   go run ./cmd/cert -remove  # stop trusting the CA
    ```
 
-   `gencert` requires one of these actions explicitly; it does nothing by default,
+   `cert` requires one of these actions explicitly; it does nothing by default,
    since each one either writes a new private key or changes the system trust store.
    To avoid silently invalidating anything that already trusts the current CA,
-   `-gencert` refuses to overwrite existing certificates. Pass `-force` to replace
+   `-gen` refuses to overwrite existing certificates. Pass `-force` to replace
    them, which first removes the CA being replaced from the trust store:
 
    ```sh
-   go run ./cmd/gencert -gencert -force
+   go run ./cmd/cert -gen -force
    ```
 
 **Forward webhook events:**
