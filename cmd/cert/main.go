@@ -1,13 +1,13 @@
-// Command gencert generates self-signed certificates for local development and
+// Command cert generates self-signed certificates for local development and
 // manages the CA certificate in the system trust store.
 //
 // Exactly one action is required; there is no default, because every action either
 // writes a new private key or changes the system trust store:
 //
-//	gencert -gencert         generate certificates and trust the CA
-//	gencert -gencert -force  replace existing certificates, untrusting the CA they replace
-//	gencert -addcert         trust the existing CA, without regenerating
-//	gencert -removecert      stop trusting the CA
+//	cert -gen         generate certificates and trust the CA
+//	cert -gen -force  replace existing certificates, untrusting the CA they replace
+//	cert -add         trust the existing CA, without regenerating
+//	cert -remove      stop trusting the CA
 package main
 
 import (
@@ -24,20 +24,20 @@ import (
 
 func main() {
 	var (
-		genCert    = flag.Bool("gencert", false, "generate certificates and add the CA certificate to the system trust store")
-		addCert    = flag.Bool("addcert", false, "add the existing CA certificate to the system trust store")
-		removeCert = flag.Bool("removecert", false, "remove the CA certificate from the system trust store")
-		force      = flag.Bool("force", false, "with -gencert: replace existing certificates, untrusting the CA they replace")
+		gen    = flag.Bool("gen", false, "generate certificates and add the CA certificate to the system trust store")
+		add    = flag.Bool("add", false, "add the existing CA certificate to the system trust store")
+		remove = flag.Bool("remove", false, "remove the CA certificate from the system trust store")
+		force  = flag.Bool("force", false, "with -gen: replace existing certificates, untrusting the CA they replace")
 	)
 	flag.Parse()
 
-	if actions(*genCert, *addCert, *removeCert) != 1 {
-		fmt.Fprintln(os.Stderr, "gencert: exactly one of -gencert, -addcert or -removecert is required")
+	if actions(*gen, *add, *remove) != 1 {
+		fmt.Fprintln(os.Stderr, "cert: exactly one of -gen, -add or -remove is required")
 		flag.Usage()
 		os.Exit(2)
 	}
-	if *force && !*genCert {
-		log.Fatal("-force can only be used together with -gencert")
+	if *force && !*gen {
+		log.Fatal("-force can only be used together with -gen")
 	}
 
 	// Load environment variables from $QUICKFEED/.env.
@@ -47,12 +47,12 @@ func main() {
 	}
 
 	switch {
-	case *genCert:
+	case *gen:
 		generateCerts(*force)
 		addTrustedCert()
-	case *addCert:
+	case *add:
 		addTrustedCert()
-	case *removeCert:
+	case *remove:
 		removeTrustedCert()
 	}
 }
@@ -74,7 +74,7 @@ func generateCerts(force bool) {
 	caFile := env.CAFile()
 	if existing := existingFiles(env.FullchainFile(), caFile, env.PrivKeyFile()); len(existing) > 0 {
 		if !force {
-			log.Fatalf("Certificates already exist at %s (%s); use -gencert -force to replace them, or -addcert to trust the existing CA",
+			log.Fatalf("Certificates already exist at %s (%s); use -gen -force to replace them, or -add to trust the existing CA",
 				env.CertPath(), strings.Join(existing, ", "))
 		}
 		// Untrust the CA that is about to be overwritten while its file is still on
@@ -104,7 +104,7 @@ func generateCerts(force bool) {
 func addTrustedCert() {
 	caFile := env.CAFile()
 	if !fileExists(caFile) {
-		log.Fatalf("No CA certificate found at %s; run gencert -gencert to generate one", caFile)
+		log.Fatalf("No CA certificate found at %s; run cert -gen to generate one", caFile)
 	}
 	log.Println("Adding certificate to system trust store (requires sudo access)...")
 	if err := cert.AddTrustedCert(caFile); err != nil {
