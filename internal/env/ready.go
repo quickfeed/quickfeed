@@ -65,6 +65,17 @@ func ensureCertificates() error {
 	if exists(FullchainFile()) && exists(PrivKeyFile()) && exists(CAFile()) {
 		return nil
 	}
+	// Some, but not all, certificate files are present, so a new CA certificate is
+	// about to replace the one on disk. Untrust that CA while its file is still
+	// there: macOS and Windows identify a trusted certificate by the file's
+	// contents, so once it is overwritten the old CA can no longer be removed and
+	// would stay trusted indefinitely.
+	if exists(CAFile()) {
+		log.Print("Removing the CA certificate being replaced from the local trust store")
+		if err := cert.RemoveTrustedCert(CAFile()); err != nil {
+			return fmt.Errorf("removing the CA certificate being replaced: %w", err)
+		}
+	}
 
 	log.Printf("Generating self-signed certificates for domain: %s", Domain())
 	if err := cert.GenerateSelfSignedCert(cert.Options{
