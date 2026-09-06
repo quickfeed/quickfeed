@@ -28,9 +28,11 @@ func RemoveTrustedCert(caFile string) error {
 	if err != nil {
 		return err
 	}
-	// certutil -verifystore exits non-zero when the store holds no certificate
-	// with this thumbprint, which is not an error here.
-	if _, err := sh.OutputA("certutil", "-verifystore", "ROOT", thumbprint); err != nil {
+	// certutil -store exits non-zero when the store holds no certificate with this
+	// thumbprint, which is not an error here. -verifystore is not used for this
+	// check: it also validates the certificate, so an expired CA that is present
+	// and still needs removing would be reported as absent.
+	if _, err := sh.OutputA("certutil", "-store", "ROOT", thumbprint); err != nil {
 		log.Print("No QuickFeed CA certificate found in the ROOT store")
 		return nil
 	}
