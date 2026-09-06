@@ -4,17 +4,17 @@ package cert
 
 import (
 	"log"
-	"os"
+	"runtime"
 )
 
 // AddTrustedCert prints not supported message for unsupported OS.
 func AddTrustedCert(_ string) error {
-	log.Printf("Adding self-signed certificate to keychain on %s currently not supported", os.Getenv("OS"))
+	log.Printf("Adding self-signed certificate to the system trust store on %s currently not supported", runtime.GOOS)
 	return nil
 }
 
-// RemoveTrustedCert removes the certificate from the user's keychain.
+// RemoveTrustedCert prints not supported message for unsupported OS.
 func RemoveTrustedCert(_ string) error {
-	log.Printf("Removing self-signed certificate from keychain on %s currently not supported", os.Getenv("OS"))
+	log.Printf("Removing self-signed certificate from the system trust store on %s currently not supported", runtime.GOOS)
 	return nil
 }
