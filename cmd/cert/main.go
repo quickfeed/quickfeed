@@ -11,6 +11,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -22,6 +23,10 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
+// errUsage marks an invalid flag combination, which is reported with the usage
+// message rather than as a plain failure.
+var errUsage = errors.New("invalid flags")
+
 func main() {
 	var (
 		gen    = flag.Bool("gen", false, "generate certificates and add the CA certificate to the system trust store")
@@ -31,32 +36,44 @@ func main() {
 	)
 	flag.Parse()
 
-	if actions(*gen, *add, *remove) != 1 {
-		fmt.Fprintln(os.Stderr, "cert: exactly one of -gen, -add or -remove is required")
-		flag.Usage()
-		os.Exit(2)
+	if err := run(*gen, *add, *remove, *force); err != nil {
+		if errors.Is(err, errUsage) {
+			fmt.Fprintln(os.Stderr, "cert:", err)
+			flag.Usage()
+			os.Exit(2)
+		}
+		log.Fatal(err)
 	}
-	if *force && !*gen {
-		log.Fatal("-force can only be used together with -gen")
+}
+
+func run(gen, add, remove, force bool) error {
+	switch {
+	case actions(gen, add, remove) != 1:
+		return fmt.Errorf("%w: exactly one of -gen, -add or -remove is required", errUsage)
+	case force && !gen:
+		return fmt.Errorf("%w: -force can only be used together with -gen", errUsage)
 	}
 
 	// Load environment variables from $QUICKFEED/.env.
 	const envFile = ".env"
 	if err := env.Load(env.RootEnv(envFile)); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	switch {
-	case *gen:
-		generateCerts(*force)
-		addTrustedCert()
-	case *add:
-		addTrustedCert()
-	case *remove:
-		removeTrustedCert()
+	case gen:
+		if err := generateCerts(force); err != nil {
+			return err
+		}
+		return addTrustedCert()
+	case add:
+		return addTrustedCert()
+	default:
+		return removeTrustedCert()
 	}
 }
 
+// actions returns the number of the given action flags that are set.
 func actions(flags ...bool) int {
 	n := 0
 	for _, f := range flags {
@@ -70,11 +87,11 @@ func actions(flags ...bool) int {
 // generateCerts generates a new certificate chain. Existing certificates are only
 // replaced when force is set, since generating always mints a new private key and
 // CA certificate; anything already trusting the old CA stops working.
-func generateCerts(force bool) {
+func generateCerts(force bool) error {
 	caFile := env.CAFile()
 	if existing := existingFiles(env.FullchainFile(), caFile, env.PrivKeyFile()); len(existing) > 0 {
 		if !force {
-			log.Fatalf("Certificates already exist at %s (%s); use -gen -force to replace them, or -add to trust the existing CA",
+			return fmt.Errorf("certificates already exist at %s (%s); use -gen -force to replace them, or -add to trust the existing CA",
 				env.CertPath(), strings.Join(existing, ", "))
 		}
 		// Untrust the CA that is about to be overwritten while its file is still on
@@ -84,7 +101,7 @@ func generateCerts(force bool) {
 		if fileExists(caFile) {
 			log.Println("Removing the CA certificate being replaced from the system trust store...")
 			if err := cert.RemoveTrustedCert(caFile); err != nil {
-				log.Fatalf("Failed to remove the CA certificate being replaced: %v", err)
+				return fmt.Errorf("removing the CA certificate being replaced: %w", err)
 			}
 		}
 	}
@@ -96,32 +113,35 @@ func generateCerts(force bool) {
 		PrivKeyFile:   env.PrivKeyFile(),
 		Hosts:         env.Domain(),
 	}); err != nil {
-		log.Fatalf("Failed to generate certificates: %v", err)
+		return fmt.Errorf("generating certificates: %w", err)
 	}
 	log.Printf("Certificates successfully generated at: %s", env.CertPath())
+	return nil
 }
 
-func addTrustedCert() {
+func addTrustedCert() error {
 	caFile := env.CAFile()
 	if !fileExists(caFile) {
-		log.Fatalf("No CA certificate found at %s; run cert -gen to generate one", caFile)
+		return fmt.Errorf("no CA certificate found at %s; run cert -gen to generate one", caFile)
 	}
 	log.Println("Adding certificate to system trust store (requires sudo access)...")
 	if err := cert.AddTrustedCert(caFile); err != nil {
-		log.Fatalf("Failed to add certificate to trust store: %v", err)
+		return fmt.Errorf("adding certificate to trust store: %w", err)
 	}
 	log.Println("Certificate successfully added to system trust store")
+	return nil
 }
 
 // removeTrustedCert does not require the CA certificate to still exist on disk;
 // on Linux the trust store entry is identified by its installed path, so it can be
 // removed even after the generated certificates have been deleted.
-func removeTrustedCert() {
+func removeTrustedCert() error {
 	log.Println("Removing certificate from system trust store (requires sudo access)...")
 	if err := cert.RemoveTrustedCert(env.CAFile()); err != nil {
-		log.Fatalf("Failed to remove certificate from trust store: %v", err)
+		return fmt.Errorf("removing certificate from trust store: %w", err)
 	}
 	log.Println("Certificate successfully removed from system trust store")
+	return nil
 }
 
 // existingFiles returns the base names of those paths that already exist.
