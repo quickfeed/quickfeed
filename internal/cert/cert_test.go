@@ -88,7 +88,12 @@ func TestServerCertVerifiesAgainstCA(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := serverCert.Verify(x509.VerifyOptions{Roots: roots, DNSName: "127.0.0.1"}); err != nil {
+	// Verify does not consult revocation state, which DeepSource flags as
+	// GO-S1031. There is none to consult here: both certificates were minted by
+	// this test moments ago, and a self-signed development CA has neither a CRL
+	// distribution point nor an OCSP responder.
+	opts := x509.VerifyOptions{Roots: roots, DNSName: "127.0.0.1"}
+	if _, err := serverCert.Verify(opts); err != nil { // skipcq: GO-S1031
 		t.Errorf("server certificate does not verify against the CA: %v", err)
 	}
 }
