@@ -36,11 +36,14 @@ func AddTrustedCert(caFile string) error {
 }
 
 // RemoveTrustedCert removes the CA certificate from the system trust store.
-// It is a no-op if the certificate is not installed.
+// It succeeds if the certificate is not installed, refreshing the trust store
+// regardless so that a bundle left over from an interrupted removal is rebuilt.
 func RemoveTrustedCert(_ string) error {
+	// An absent file is reported but not returned on: a previous run may have removed
+	// the certificate and then failed to refresh the bundle, which still trusts it.
+	// Both steps below are idempotent, so run them either way to recover from that.
 	if _, err := os.Stat(caCertPath); errors.Is(err, os.ErrNotExist) {
-		log.Printf("No QuickFeed CA certificate found at %s", caCertPath)
-		return nil
+		log.Printf("No QuickFeed CA certificate found at %s; refreshing the trust store anyway", caCertPath)
 	}
 	out, err := sh.OutputA("sudo", "rm", "-f", caCertPath)
 	if out != "" {
