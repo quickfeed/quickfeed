@@ -248,8 +248,10 @@ The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding
 
 **Forward webhook events:**
 
+Run this from the QuickFeed repository, so that `.env` is found:
+
 ```sh
-gh webhook forward --org=your-org-name --events=push,pull_request,pull_request_review --url=https://127.0.0.1/hook/
+gh webhook forward --org=your-org-name --events=push,pull_request,pull_request_review --url=https://localhost/hook/ --secret=your-webhook-secret
 ```
 
 **Important:** The webhook URL **must** include the trailing slash (`/hook/`).
