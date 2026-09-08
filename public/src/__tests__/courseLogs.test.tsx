@@ -88,7 +88,72 @@ describe("CourseLogs", () => {
         // The CI output a teacher needs lives in fields; it must be on screen,
         // not only in the copied and downloaded text.
         expect(await screen.findByText(/--- FAIL: TestFoo/)).toBeTruthy()
-        expect(screen.getByText(/assignment=lab1/)).toBeTruthy()
+        // Fields render as their own column, headed by the key, with only the
+        // value in each row.
+        expect(screen.getByRole("columnheader", { name: "assignment" })).toBeTruthy()
+        expect(screen.getByText("lab1")).toBeTruthy()
+        expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
+    })
+
+    test("renders entry timestamps in 24-hour, yyyy-mm-dd order rather than the locale's", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
+                message: create(CourseLogSchema, {
+                    entries: [entry({ message: "resolved push repository" })],
+                    repositories: ["student-a"],
+                }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+
+        // entry() fixes the time at 2026-03-10 12:00:00 local, so the rendered
+        // text is deterministic regardless of the machine's own time zone.
+        expect(await screen.findByText("2026-03-10 12:00:00")).toBeTruthy()
+    })
+
+    test("shows the Debug badge for a Debug-level entry", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
+                message: create(CourseLogSchema, {
+                    entries: [entry({ message: "verbose detail", level: CourseLogEntry_Level.DEBUG })],
+                    repositories: ["student-a"],
+                }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+
+        expect(await screen.findByText("verbose detail")).toBeTruthy()
+        // "Debug" also names an option in the "Minimum level" select; scope to the badge.
+        expect(screen.getByText("Debug", { selector: "span.badge" })).toBeTruthy()
+    })
+
+    test("hides and reshows a column from the Columns menu", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
+                message: create(CourseLogSchema, {
+                    entries: [entry({ message: "resolved push repository", source: "ci/run_tests.go:120" })],
+                    repositories: ["student-a"],
+                }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+        expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
+
+        fireEvent.click(screen.getByLabelText("Show Source"))
+        expect(screen.queryByText("ci/run_tests.go:120")).toBeFalsy()
+        expect(screen.queryByRole("columnheader", { name: "Source" })).toBeFalsy()
+
+        fireEvent.click(screen.getByLabelText("Show Source"))
         expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
     })
 
