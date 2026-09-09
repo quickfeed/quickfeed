@@ -23,11 +23,12 @@ describe("course log text", () => {
             time: timestampFromDate(new Date(2026, 2, 10, 12, 0, 1)),
             level: CourseLogEntry_Level.ERROR,
             repository: "student-a",
+            repositoryType: "USER",
             message: "test run failed",
             fields: { output: "--- FAIL: TestFoo\n    want 1, got 2", message: "details", assignment: "lab1" },
             source: "ci/run_tests.go:120",
         })
-        expect(entryText(entry)).toBe("2026-03-10 12:00:01 Error [student-a] test run failed assignment=lab1 message=details output=--- FAIL: TestFoo\n    want 1, got 2 ci/run_tests.go:120")
+        expect(entryText(entry)).toBe("2026-03-10 12:00:01 Error [student-a USER] test run failed assignment=lab1 message=details output=--- FAIL: TestFoo\n    want 1, got 2 ci/run_tests.go:120")
         const reordered = create(CourseLogEntrySchema, {
             ...entry,
             fields: { assignment: "lab1", message: "details", output: "--- FAIL: TestFoo\n    want 1, got 2" },

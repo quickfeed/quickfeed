@@ -27,6 +27,7 @@ const columns: Column[] = [
         ),
     },
     { id: "repository", label: "Repository", render: entry => entry.repository },
+    { id: "repositoryType", label: "Repository type", render: entry => entry.repositoryType },
     {
         id: "message", label: "Message", render: entry => (
             <span className="flex flex-wrap items-center gap-2">

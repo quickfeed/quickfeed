@@ -41,7 +41,10 @@ const entryFields = (entry: CourseLogEntry): string =>
 // columns are currently hidden, so hiding a column never hides what it filters,
 // copies, or downloads.
 export const entryText = (entry: CourseLogEntry): string => {
-    const repository = entry.repository ? `[${entry.repository}]` : ""
+    // A repository and its type share one bracketed token, so that the type does
+    // not read as a word of the message when the line is copied or downloaded.
+    const repo = [entry.repository, entry.repositoryType].filter(Boolean).join(" ")
+    const repository = repo ? `[${repo}]` : ""
     const parts = [entryTime(entry), LEVEL_NAMES[entry.level], repository, entry.message, entryFields(entry), entry.source]
     return parts.filter(Boolean).join(" ")
 }
