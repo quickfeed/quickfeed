@@ -4,9 +4,9 @@ import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useCourseLogs } from "../../hooks/useCourseLogs"
 import { CenteredMessage } from "../CenteredMessage"
+import Search from "../Search"
 import CourseLogTable from "./CourseLogTable"
 import { entryText, LEVEL_NAMES, logText, toLocalDatetimeInput } from "./courseLogFormatting"
-import Search from "../Search"
 
 const EMPTY_ENTRIES: CourseLogEntry[] = []
 
@@ -91,12 +91,13 @@ const CourseLogs = () => {
                             <span className="label-text font-semibold">From</span>
                             <input
                                 type="datetime-local"
-                                // A locale like en-US would otherwise render this in
-                                // 12-hour AM/PM time with a mm/dd/yyyy field order; sv-SE
-                                // renders 24-hour time in yyyy-mm-dd order in Chromium-based
-                                // browsers regardless of the browser's own locale. Firefox
-                                // does not honor lang here and keeps its own OS-locale format.
-                                lang="sv-SE"
+                                // The native picker follows a locale, and en-US would render
+                                // it in 12-hour AM/PM time with a mm/dd/yyyy field order.
+                                // nb-NO gives 24-hour time and day-month-year in Chromium-based
+                                // browsers whatever the browser's own locale; the rendered log
+                                // timestamps are ours to format, and stay yyyy-mm-dd. Firefox
+                                // does not honor lang here and keeps its OS-locale format.
+                                lang="nb-NO"
                                 className="input input-bordered w-full"
                                 value={from}
                                 onChange={e => setDraft({ ...draft, from: e.target.value })}
@@ -106,7 +107,7 @@ const CourseLogs = () => {
                             <span className="label-text font-semibold">To</span>
                             <input
                                 type="datetime-local"
-                                lang="sv-SE"
+                                lang="nb-NO"
                                 className="input input-bordered w-full"
                                 value={to}
                                 onChange={e => setDraft({ ...draft, toEdited: true, to: e.target.value })}

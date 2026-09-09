@@ -95,6 +95,39 @@ describe("CourseLogs", () => {
         expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
     })
 
+    test("gives repositoryType its own column, and a colliding field key its own", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({ // skipcq: JS-0116
+                message: create(CourseLogSchema, {
+                    entries: [entry({
+                        message: "resolved push repository",
+                        // "message" collides with a fixed column: the server keys the
+                        // log message as "msg", so an attribute named "message" does
+                        // reach the fields map.
+                        fields: { commit: "abc123", message: "shadowed" },
+                    })],
+                    repositories: ["student-a"],
+                }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+
+        // repositoryType is promoted out of fields by the server, so it needs a
+        // column of its own or it is not on screen at all.
+        expect(screen.getByRole("columnheader", { name: "Repository type" })).toBeTruthy()
+        expect(screen.getByText("USER")).toBeTruthy()
+        expect(screen.getByRole("columnheader", { name: "commit" })).toBeTruthy()
+        // The colliding key gets a column of its own, suffixed so it reads apart
+        // from the fixed Message column, which it neither claims nor displaces.
+        expect(screen.getAllByRole("columnheader", { name: "Message" })).toHaveLength(1)
+        expect(screen.getByRole("columnheader", { name: "message (field)" })).toBeTruthy()
+        expect(screen.getByText("shadowed")).toBeTruthy()
+    })
+
     test("renders entry timestamps in 24-hour, yyyy-mm-dd order rather than the locale's", async () => {
         const api = new ApiClient()
         api.client = {
