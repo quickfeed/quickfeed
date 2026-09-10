@@ -45,6 +45,6 @@
     "sass": "^1.56.1",
     "tailwindcss": "^4.1.4",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
