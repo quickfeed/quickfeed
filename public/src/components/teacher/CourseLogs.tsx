@@ -83,8 +83,8 @@ const CourseLogs = () => {
     }
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="card bg-base-200 shadow-sm">
+        <div className="flex flex-col gap-4 h-[calc(100dvh_-_var(--navbar-height)_-_3rem)]">
+            <div className="card bg-base-200 shadow-sm shrink-0">
                 <div className="card-body gap-3">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <label className="form-control w-full">
@@ -137,7 +137,7 @@ const CourseLogs = () => {
                         </label>
                     </div>
                     {invalidInterval && (
-                        <div className="alert alert-error">
+                        <div className="alert alert-error shrink-0">
                             <span>From is after To; pick a From that precedes the end of the interval.</span>
                         </div>
                     )}
@@ -150,7 +150,7 @@ const CourseLogs = () => {
                 </div>
             </div>
 
-            {notice && <div className="alert alert-error"><span>{notice}</span></div>}
+            {notice && <div className="alert alert-error shrink-0"><span>{notice}</span></div>}
             {error && <CenteredMessage message={`Failed to load course logs: ${error}`} />}
             {!error && loading && <CenteredMessage message="Loading course logs…" />}
             {/* truncated reports that the server cut its own result at the limit,
@@ -158,7 +158,7 @@ const CourseLogs = () => {
                 therefore the server's, and the warning stands even when the filter
                 leaves nothing on screen. */}
             {!error && !loading && result?.truncated && (
-                <div className="alert alert-warning">
+                <div className="alert alert-warning shrink-0">
                     <span>
                         Result limited to the newest {entries.length} entries.
                         Narrow the interval or the filters and click Refresh to see the rest.

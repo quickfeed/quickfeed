@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react"
 import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
-import LogOutput from "../LogOutput"
+import LogCard from "../LogCard"
 import { entryTime, LEVEL_NAMES } from "./courseLogFormatting"
 
 interface Column {
@@ -74,10 +74,9 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
     }
 
     return (
-        <LogOutput
+        <LogCard
             title="Course Logs"
-            variant="table"
-            fill
+            className="flex-1 min-h-48"
             controls={
                 <div className="flex items-center gap-2">
                     <div className="dropdown dropdown-end">
@@ -105,28 +104,30 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
                 </div>
             }
         >
-            <table className="table table-zebra table-xs">
-                <thead className="sticky top-0 z-10 bg-base-300">
-                    <tr>
-                        {visible.map(column => (
-                            <th key={column.id} className="whitespace-nowrap">{column.label}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows.map((entry, idx) => (
-                        // eslint-disable-next-line react/no-array-index-key
-                        <tr key={idx}>
+            <div className="flex-1 min-h-0 overflow-auto rounded-b-2xl">
+                <table className="table table-zebra table-xs">
+                    <thead className="sticky top-0 z-10 bg-base-300">
+                        <tr>
                             {visible.map(column => (
-                                <td key={column.id} className="align-top whitespace-pre-wrap break-words">
-                                    {column.render(entry)}
-                                </td>
+                                <th key={column.id} className="whitespace-nowrap">{column.label}</th>
                             ))}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-        </LogOutput>
+                    </thead>
+                    <tbody>
+                        {rows.map((entry, idx) => (
+                            // eslint-disable-next-line react/no-array-index-key
+                            <tr key={idx}>
+                                {visible.map(column => (
+                                    <td key={column.id} className="align-top whitespace-pre-wrap break-words">
+                                        {column.render(entry)}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </LogCard>
     )
 }
 
