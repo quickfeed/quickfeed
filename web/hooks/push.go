@@ -59,9 +59,14 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 	switch {
 	case repo.IsTestsRepo():
 		// The push event is for the tests repository, so update the course
-		// assignments in the database.
+		// assignments in the database. The test environment canary runs last,
+		// after the database has been updated, so that a broken test
+		// environment can never prevent or delay that update. The canary needs
+		// the updated assignments, so it is skipped when the update failed.
 		if _, err := assignments.UpdateFromCourseRepositories(ctx, wh.runner, wh.db, scmClient, course); err != nil {
 			logger.Error("failed to update from course repositories", label.Error, err)
+		} else {
+			wh.runCanary(ctx, scmClient, course, payload)
 		}
 
 	case repo.IsAssignmentsRepo():
@@ -70,12 +75,20 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 		// alignment of the two. A failure must not prevent the sync below:
 		// syncStudentRepos works against the SCM's fork API, not the local
 		// clones, and is unaffected by whatever failed here.
-		if _, err := assignments.UpdateFromCourseRepositories(ctx, wh.runner, wh.db, scmClient, course); err != nil {
-			logger.Error("failed to update from course repositories", label.Error, err)
+		_, updateErr := assignments.UpdateFromCourseRepositories(ctx, wh.runner, wh.db, scmClient, course)
+		if updateErr != nil {
+			logger.Error("failed to update from course repositories", label.Error, updateErr)
 		}
 		if isDefaultBranch(payload) {
 			// Sync all student repositories (forks) with the updated assignments repo
 			wh.syncStudentRepos(ctx, scmClient, course, payload.GetRepo().GetDefaultBranch())
+		}
+		// The test environment canary runs last, after the database update and
+		// the fork sync, so that a broken test environment can never prevent or
+		// delay either of them. The canary needs the updated assignments, so it
+		// is skipped when the update failed.
+		if updateErr == nil {
+			wh.runCanary(ctx, scmClient, course, payload)
 		}
 
 	case repo.IsStudentRepo():
