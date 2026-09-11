@@ -1,58 +1,14 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt"
-import { useMemo, useState, type ReactNode } from "react"
+import { useState } from "react"
 import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useCourseLogs } from "../../hooks/useCourseLogs"
 import { CenteredMessage } from "../CenteredMessage"
-import LogOutput from "../LogOutput"
+import CourseLogTable from "./CourseLogTable"
+import { entryTime, LEVEL_NAMES, toLocalDatetimeInput } from "./courseLogFormatting"
 import Search from "../Search"
 
-const LEVEL_NAMES: Record<CourseLogEntry_Level, string> = {
-    [CourseLogEntry_Level.DEBUG]: "Debug",
-    [CourseLogEntry_Level.INFO]: "Info",
-    [CourseLogEntry_Level.WARN]: "Warn",
-    [CourseLogEntry_Level.ERROR]: "Error",
-}
-
-const LEVEL_BADGE_COLOR: Record<CourseLogEntry_Level, string> = {
-    [CourseLogEntry_Level.DEBUG]: "badge-ghost",
-    [CourseLogEntry_Level.INFO]: "badge-info",
-    [CourseLogEntry_Level.WARN]: "badge-warning",
-    [CourseLogEntry_Level.ERROR]: "badge-error",
-}
-
-// The fixed columns shown for every entry, in display order; a column per
-// distinct key found across the loaded entries' fields is appended after
-// these. Order here also drives the order of the toggle menu.
-const FIXED_COLUMNS = ["time", "level", "repository", "message", "source"] as const
-type FixedColumn = typeof FIXED_COLUMNS[number]
-
-const COLUMN_LABELS: Record<FixedColumn, string> = {
-    time: "Time",
-    level: "Level",
-    repository: "Repository",
-    message: "Message",
-    source: "Source",
-}
-
-const pad = (n: number): string => n.toString().padStart(2, "0")
-
-// toLocalDatetimeInput formats date for a <input type="datetime-local"> value, in the
-// browser's local time zone; Date#toISOString is always UTC, so it cannot be reused here.
-const toLocalDatetimeInput = (date: Date): string =>
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-
-// entryTime renders an entry's timestamp in a fixed 24-hour, year-month-day
-// order (e.g. "2024-02-08 23:59:00"), rather than the browser locale's, which
-// could show AM/PM and a locale-dependent date order such as mm/dd/yyyy.
-const entryTime = (entry: CourseLogEntry): string => {
-    if (!entry.time) {
-        return ""
-    }
-    const d = timestampDate(entry.time)
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-}
+const EMPTY_ENTRIES: CourseLogEntry[] = []
 
 // entryFields renders an entry's remaining structured attributes, sorted by
 // key because a protobuf map has no order of its own and an entry's fields
@@ -72,71 +28,6 @@ const entryText = (entry: CourseLogEntry): string => {
     const parts = [entryTime(entry), LEVEL_NAMES[entry.level], repository, entry.message, entryFields(entry), entry.source]
     return parts.filter(Boolean).join(" ")
 }
-
-// renderCell renders one entry's value for a given column: the fixed columns
-// read their own field, and anything else is looked up in the entry's fields
-// map, where a value not present in this particular entry renders as nothing.
-const renderCell = (entry: CourseLogEntry, column: string): ReactNode => {
-    switch (column) {
-        case "time":
-            return entryTime(entry) || "N/A"
-        case "level":
-            return (
-                <span className={`badge badge-xs ${LEVEL_BADGE_COLOR[entry.level]}`}>
-                    {LEVEL_NAMES[entry.level]}
-                </span>
-            )
-        case "repository":
-            return entry.repository
-        case "message":
-            return (
-                <span className="flex flex-wrap items-center gap-2">
-                    <span>{entry.message}</span>
-                    {entry.truncated && <span className="badge badge-xs badge-warning">truncated</span>}
-                </span>
-            )
-        case "source":
-            return entry.source
-        default:
-            return entry.fields[column] ?? ""
-    }
-}
-
-/** ColumnsMenu is a checklist dropdown for showing or hiding individual columns
- *  of the log table, e.g. to deactivate a field like branch_ref that is not
- *  relevant right now. Hidden columns are keyed by name, so a column keeps
- *  its shown/hidden state across a Refresh even if it briefly disappears
- *  because no loaded entry currently carries it. */
-const ColumnsMenu = ({ columns, hidden, onToggle }: { columns: string[]; hidden: Set<string>; onToggle: (column: string) => void }) => (
-    <div className="dropdown dropdown-end">
-        <div tabIndex={0} role="button" className="btn btn-sm">
-            <i className="fas fa-table-columns" />
-            Columns
-        </div>
-        <ul tabIndex={0} className="dropdown-content menu z-10 mt-2 w-56 max-h-80 overflow-y-auto rounded-box bg-base-100 p-2 shadow">
-            {columns.map(column => {
-                const label = COLUMN_LABELS[column as FixedColumn] ?? column
-                return (
-                    <li key={column}>
-                        {/* The visible (and so implicit-label) text reads "Show <column>"
-                            rather than the bare column name, so it never collides with an
-                            identically-named filter above (e.g. the "Repository" select)
-                            for anyone finding controls by label text, sighted or not. */}
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                className="checkbox checkbox-xs"
-                                checked={!hidden.has(column)}
-                                onChange={() => onToggle(column)}
-                            />
-                            <span>Show {label}</span>
-                        </label>
-                    </li>
-                )
-            })}
-        </ul>
-    </div>
-)
 
 /** CourseLogs is the teacher-only "Course Logs" page at /course/:id/logs.
  *  It queries GetCourseLog for the current course and lets a teacher narrow
@@ -161,7 +52,6 @@ const CourseLogs = () => {
     const { from, to, toEdited, repository, level } = draft
     const { result, loading, error, refresh } = useCourseLogs(courseID, { from, to: "", repository, level })
     const [search, setSearch] = useState("")
-    const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set())
 
     const invalidInterval = Boolean(from) && new Date(from) > (toEdited && to ? new Date(to) : new Date())
     const handleRefresh = () => {
@@ -184,34 +74,10 @@ const CourseLogs = () => {
         ? [...repositories, repository].sort((a, b) => a.localeCompare(b))
         : repositories
 
-    // Memoized because it feeds the fieldColumns memo below; without this, a
-    // fresh array each render would defeat that memo and recompute the column
-    // set on every keystroke in the free-text filter.
-    const entries = useMemo(() => result?.entries ?? [], [result])
+    const entries = result?.entries ?? EMPTY_ENTRIES
     const filtered = search
         ? entries.filter(entry => entryText(entry).toLowerCase().includes(search))
         : entries
-
-    // The field columns are derived from every loaded entry, not just the
-    // filtered ones, so typing into the free-text filter never makes a column
-    // appear or disappear on its own.
-    const fieldColumns = useMemo(
-        () => Array.from(new Set(entries.flatMap(entry => Object.keys(entry.fields)))).sort((a, b) => a.localeCompare(b)),
-        [entries]
-    )
-    const columns = useMemo(() => [...FIXED_COLUMNS, ...fieldColumns], [fieldColumns])
-    const visibleColumns = columns.filter(column => !hiddenColumns.has(column))
-    const toggleColumn = (column: string) => {
-        setHiddenColumns(prev => {
-            const next = new Set(prev)
-            if (next.has(column)) {
-                next.delete(column)
-            } else {
-                next.add(column)
-            }
-            return next
-        })
-    }
 
     const logText = () => filtered.map(entryText).join("\n")
 
@@ -323,44 +189,16 @@ const CourseLogs = () => {
             {!error && !loading && result && filtered.length === 0 && (
                 <CenteredMessage message="No log entries match the current filters" />
             )}
-            {!error && !loading && result && filtered.length > 0 && (
-                <LogOutput
-                    title="Course Logs"
-                    variant="table"
-                    fill
-                    controls={
-                        <div className="flex items-center gap-2">
-                            <ColumnsMenu columns={columns} hidden={hiddenColumns} onToggle={toggleColumn} />
-                            <button type="button" className="btn btn-sm" onClick={() => void handleCopy()}>Copy</button>
-                            <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
-                        </div>
-                    }
-                >
-                    <table className="table table-zebra table-xs">
-                        <thead className="sticky top-0 z-10 bg-base-300">
-                            <tr>
-                                {visibleColumns.map(column => (
-                                    <th key={column} className="whitespace-nowrap">
-                                        {COLUMN_LABELS[column as FixedColumn] ?? column}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filtered.map((entry, idx) => (
-                                // eslint-disable-next-line react/no-array-index-key
-                                <tr key={idx}>
-                                    {visibleColumns.map(column => (
-                                        <td key={column} className="align-top whitespace-pre-wrap break-words">
-                                            {renderCell(entry, column)}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </LogOutput>
-            )}
+            <CourseLogTable
+                entries={entries}
+                rows={filtered}
+                controls={
+                    <>
+                        <button type="button" className="btn btn-sm" onClick={() => void handleCopy()}>Copy</button>
+                        <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
+                    </>
+                }
+            />
         </div>
     )
 }
