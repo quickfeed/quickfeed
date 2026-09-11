@@ -65,7 +65,7 @@ func UpdateFromCourseRepositories(ctx context.Context, runner ci.Runner, db data
 	}
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, buildContext, issues, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
+	assignments, buildContext, issues, err := ReadTestsRepository(clonedTestsRepo, course.GetID())
 	if err != nil {
 		return 0, fmt.Errorf("reading tests repository content: %w", err)
 	}
@@ -74,7 +74,7 @@ func UpdateFromCourseRepositories(ctx context.Context, runner ci.Runner, db data
 
 	if course.UpdateDockerfile(buildContext[ci.Dockerfile]) {
 		// Rebuild the Docker image for the course tagged with the course code
-		if err = buildDockerImage(ctx, runner, course, buildContext); err != nil {
+		if err = BuildDockerImage(ctx, runner, course, buildContext); err != nil {
 			return issueCount, fmt.Errorf("building course image: %w", err)
 		}
 		// Update the course's DockerfileDigest in the database
@@ -96,7 +96,7 @@ func UpdateFromCourseRepositories(ctx context.Context, runner ci.Runner, db data
 		// cloneCourseRepositories has logged why; the update itself is complete.
 		return issueCount, nil
 	}
-	alignmentIssues, err := courseRepositoryIssues(clonedTestsRepo, clonedAssignmentsRepo, assignments)
+	alignmentIssues, err := CourseRepositoryIssues(clonedTestsRepo, clonedAssignmentsRepo, assignments)
 	if err != nil {
 		logger.Error("failed to compare course repositories", label.Error, err)
 		return issueCount, nil
@@ -139,8 +139,10 @@ func cloneCourseRepositories(ctx context.Context, sc scm.SCM, course *qf.Course)
 	return testsDir, assignmentsDir, nil
 }
 
-// buildDockerImage builds the Docker image for the given course.
-func buildDockerImage(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string) error {
+// BuildDockerImage builds the Docker image for the given course, tagged with
+// the course code. The image is rebuilt from the Dockerfile in the given build
+// context; see ci.Docker.createImage.
+func BuildDockerImage(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string) error {
 	logger := qlog.FromContext(ctx)
 	logger.Debug("building course Dockerfile", "dockerfile", course.GetDockerfile())
 	out, err := runner.Run(ctx, &ci.Job{

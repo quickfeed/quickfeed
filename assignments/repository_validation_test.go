@@ -55,7 +55,7 @@ func TestCourseRepositoryIssues(t *testing.T) {
 		{Name: "lab2", Reviewers: 1},
 		{Name: "lab5", Reviewers: 1},
 	}
-	got, err := courseRepositoryIssues(testsDir, assignmentsDir, parsed)
+	got, err := CourseRepositoryIssues(testsDir, assignmentsDir, parsed)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestCourseRepositoryIssues(t *testing.T) {
 		{Assignment: "lab6", File: "lab6", Problem: `no assignment configuration found; add "lab6/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("courseRepositoryIssues() mismatch (-want +got):\n%s", diff)
+		t.Errorf("CourseRepositoryIssues() mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -94,12 +94,12 @@ func TestCourseRepositoryIssuesIgnoreFile(t *testing.T) {
 		"resources",
 	)
 
-	got, err := courseRepositoryIssues(testsDir, assignmentsDir, []*qf.Assignment{{Name: "lab1"}})
+	got, err := CourseRepositoryIssues(testsDir, assignmentsDir, []*qf.Assignment{{Name: "lab1"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(got) != 0 {
-		t.Errorf("courseRepositoryIssues() = %+v, want no issues", got)
+		t.Errorf("CourseRepositoryIssues() = %+v, want no issues", got)
 	}
 }
 
@@ -110,7 +110,7 @@ func TestCourseRepositoryIssuesInvalidIgnoreEntry(t *testing.T) {
 	writeRepoFile(t, testsDir, "internal", "helper.go")
 	writeIgnoreFile(t, testsDir, "internal/*")
 
-	got, err := courseRepositoryIssues(testsDir, assignmentsDir, nil)
+	got, err := CourseRepositoryIssues(testsDir, assignmentsDir, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,14 +120,14 @@ func TestCourseRepositoryIssuesInvalidIgnoreEntry(t *testing.T) {
 		{Assignment: "internal", File: "internal", Problem: `no assignment configuration found; add "internal/assignment.json" if this is an assignment, or list the folder in .quickfeedignore`},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("courseRepositoryIssues() mismatch (-want +got):\n%s", diff)
+		t.Errorf("CourseRepositoryIssues() mismatch (-want +got):\n%s", diff)
 	}
 }
 
 func TestCourseRepositoryIssuesMissingRoot(t *testing.T) {
-	_, err := courseRepositoryIssues(filepath.Join(t.TempDir(), "missing"), t.TempDir(), nil)
+	_, err := CourseRepositoryIssues(filepath.Join(t.TempDir(), "missing"), t.TempDir(), nil)
 	if err == nil {
-		t.Fatal("courseRepositoryIssues() error = nil, want missing repository error")
+		t.Fatal("CourseRepositoryIssues() error = nil, want missing repository error")
 	}
 }
 
