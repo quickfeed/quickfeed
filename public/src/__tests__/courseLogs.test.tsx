@@ -157,6 +157,38 @@ describe("CourseLogs", () => {
         expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
     })
 
+    test("applies draft filters only on Refresh, including repeated refreshes", async () => {
+        const requests: Parameters<ApiClient["client"]["getCourseLog"]>[0][] = []
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async request => {
+                requests.push(request)
+                return { message: create(CourseLogSchema, { entries: [entry()], repositories: ["student-a"] }), error: null }
+            }),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+        fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-03-09T12:00" } })
+        fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-03-10T12:00" } })
+        fireEvent.change(screen.getByLabelText("Repository"), { target: { value: "student-a" } })
+        fireEvent.change(screen.getByLabelText("Minimum level"), { target: { value: CourseLogEntry_Level.ERROR } })
+        expect(requests).toHaveLength(1)
+
+        fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
+        await screen.findByText("resolved push repository")
+        expect(requests).toHaveLength(2)
+        expect(requests[1]).toMatchObject({
+            from: timestampFromDate(new Date(2026, 2, 9, 12)),
+            to: timestampFromDate(new Date(2026, 2, 10, 12)),
+            repository: "student-a",
+            level: CourseLogEntry_Level.ERROR,
+        })
+        fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
+        await waitFor(() => expect(requests).toHaveLength(3))
+        expect(requests[2]).toEqual(requests[1])
+    })
+
     test("shows an error state when the request fails", async () => {
         const api = new ApiClient()
         api.client = {
@@ -317,7 +349,7 @@ describe("CourseLogs", () => {
     })
 
     test("clears the repository selection when the route names another course", async () => {
-        const requests: { courseID?: unknown; repository?: unknown }[] = []
+        const requests: Parameters<ApiClient["client"]["getCourseLog"]>[0][] = []
         const api = new ApiClient()
         api.client = {
             ...api.client,
@@ -346,12 +378,16 @@ describe("CourseLogs", () => {
         await screen.findByText("resolved push repository")
         fireEvent.change(screen.getByLabelText("Repository"), { target: { value: "student-a" } })
 
+        fireEvent.change(screen.getByLabelText("From"), { target: { value: "2999-01-01T12:00" } })
+        expect(screen.getByText(/From is after To/)).toBeTruthy()
         screen.getByRole("button", { name: "Course 2" }).click()
 
         // A repository belongs to one course; it must not filter another's log.
         await waitFor(() => expect(requests).toHaveLength(2))
         expect(requests[1].courseID).toBe(BigInt(2))
         expect(requests[1].repository).toBe("")
+        expect(requests[1].from).toEqual(requests[0].from)
+        expect((screen.getByLabelText("From") as HTMLInputElement).value).toBe("2999-01-01T12:00")
         expect((screen.getByLabelText("Repository") as HTMLSelectElement).value).toBe("")
     })
 

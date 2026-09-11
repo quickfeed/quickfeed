@@ -1,9 +1,9 @@
-import { timestampDate, timestampFromDate } from "@bufbuild/protobuf/wkt"
-import { useEffect, useMemo, useState, type ReactNode } from "react"
-import type { CourseLog, CourseLogEntry } from "../../../proto/qf/requests_pb"
+import { timestampDate } from "@bufbuild/protobuf/wkt"
+import { useMemo, useState, type ReactNode } from "react"
+import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
 import { useCourseID } from "../../hooks/useCourseID"
-import { useGrpc } from "../../overmind"
+import { useCourseLogs } from "../../hooks/useCourseLogs"
 import { CenteredMessage } from "../CenteredMessage"
 import LogOutput from "../LogOutput"
 import Search from "../Search"
@@ -145,74 +145,35 @@ const ColumnsMenu = ({ columns, hidden, onToggle }: { columns: string[]; hidden:
  *  free-text one take effect only on Refresh. */
 const CourseLogs = () => {
     const courseID = useCourseID()
-    const { api } = useGrpc().global
-
-    const [from, setFrom] = useState(() => toLocalDatetimeInput(new Date(Date.now() - 24 * 60 * 60 * 1000)))
-    const [to, setTo] = useState(() => toLocalDatetimeInput(new Date()))
-    const [toEdited, setToEdited] = useState(false)
-    const [repository, setRepository] = useState("")
-    const [level, setLevel] = useState(CourseLogEntry_Level.DEBUG)
+    const [notice, setNotice] = useState<string | null>(null)
+    const [draft, setDraft] = useState(() => ({
+        courseID,
+        from: toLocalDatetimeInput(new Date(Date.now() - 24 * 60 * 60 * 1000)),
+        to: toLocalDatetimeInput(new Date()),
+        toEdited: false,
+        repository: "",
+        level: CourseLogEntry_Level.DEBUG,
+    }))
+    if (draft.courseID !== courseID) {
+        setDraft({ ...draft, courseID, repository: "", to: draft.toEdited ? draft.to : toLocalDatetimeInput(new Date()) })
+        setNotice(null)
+    }
+    const { from, to, toEdited, repository, level } = draft
+    const { result, loading, error, refresh } = useCourseLogs(courseID, { from, to: "", repository, level })
     const [search, setSearch] = useState("")
     const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set())
 
-    const [result, setResult] = useState<CourseLog | null>(null)
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [notice, setNotice] = useState<string | null>(null)
-
-    // From must not run past the end of the interval. An unedited To means "now",
-    // which keeps moving, so compare against the clock rather than against the
-    // value still shown in the field, which only advances on Refresh.
     const invalidInterval = Boolean(from) && new Date(from) > (toEdited && to ? new Date(to) : new Date())
-
-    // repo is passed explicitly so that a course change can clear the selection
-    // and query without it in the same pass, before the state update lands.
-    const fetchLogs = async (repo = repository) => {
+    const handleRefresh = () => {
         if (invalidInterval) {
             return
         }
-        setLoading(true)
-        setError(null)
         setNotice(null)
-        // A To the teacher has not set means "up to now", so leave it out and let
-        // the server bound the interval by its own clock; a page left open would
-        // otherwise keep querying the interval that ended when it mounted, and
-        // Refresh could never show anything logged since. The field is advanced
-        // to match, since it stays pre-filled on screen.
         if (!toEdited) {
-            setTo(toLocalDatetimeInput(new Date()))
+            setDraft({ ...draft, to: toLocalDatetimeInput(new Date()) })
         }
-        const response = await api.client.getCourseLog({
-            courseID,
-            from: from ? timestampFromDate(new Date(from)) : undefined,
-            to: toEdited && to ? timestampFromDate(new Date(to)) : undefined,
-            repository: repo,
-            level,
-        })
-        setLoading(false)
-        if (response.error) {
-            setError(response.error.message)
-            return
-        }
-        setResult(response.message)
+        refresh({ from, to: toEdited ? to : "", repository, level })
     }
-
-    useEffect(() => {
-        // set-state-in-effect guards against effects that mirror derived state.
-        // This one starts a request instead, which is what an effect is for, and
-        // reporting that it is in flight is unavoidably a state update. Escaping
-        // the rule would take a data-fetching layer this page does not have.
-        /* eslint-disable react-hooks/set-state-in-effect */
-        // A repository belongs to a single course, so the selection cannot carry
-        // over to another one.
-        setRepository("")
-        void fetchLogs("")
-        /* eslint-enable react-hooks/set-state-in-effect */
-        // Fetch on mount and whenever the route names another course, since the
-        // router keeps this page mounted across that change. The remaining
-        // filters are deliberately left out, so that they apply only on Refresh.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [courseID])
 
     // The response lists every repository with an entry in the interval, whatever
     // the repository filter, but a selection whose repository fell silent must
@@ -293,7 +254,7 @@ const CourseLogs = () => {
                                 lang="sv-SE"
                                 className="input input-bordered w-full"
                                 value={from}
-                                onChange={e => setFrom(e.target.value)}
+                                onChange={e => setDraft({ ...draft, from: e.target.value })}
                             />
                         </label>
                         <label className="form-control w-full">
@@ -303,7 +264,7 @@ const CourseLogs = () => {
                                 lang="sv-SE"
                                 className="input input-bordered w-full"
                                 value={to}
-                                onChange={e => { setToEdited(true); setTo(e.target.value) }}
+                                onChange={e => setDraft({ ...draft, toEdited: true, to: e.target.value })}
                             />
                         </label>
                         <label className="form-control w-full">
@@ -311,7 +272,7 @@ const CourseLogs = () => {
                             <select
                                 className="select select-bordered w-full"
                                 value={repository}
-                                onChange={e => setRepository(e.target.value)}
+                                onChange={e => setDraft({ ...draft, repository: e.target.value })}
                             >
                                 <option value="">All repositories</option>
                                 {repositoryOptions.map(repo => <option key={repo} value={repo}>{repo}</option>)}
@@ -322,7 +283,7 @@ const CourseLogs = () => {
                             <select
                                 className="select select-bordered w-full"
                                 value={level}
-                                onChange={e => setLevel(Number(e.target.value))}
+                                onChange={e => setDraft({ ...draft, level: Number(e.target.value) })}
                             >
                                 {Object.values(CourseLogEntry_Level).filter((v): v is CourseLogEntry_Level => typeof v === "number").map(value => (
                                     <option key={value} value={value}>{LEVEL_NAMES[value]}</option>
@@ -336,7 +297,7 @@ const CourseLogs = () => {
                         </div>
                     )}
                     <div className="flex items-center gap-2">
-                        <button type="button" className="btn btn-primary" onClick={() => void fetchLogs()} disabled={loading || invalidInterval}>
+                        <button type="button" className="btn btn-primary" onClick={handleRefresh} disabled={loading || invalidInterval}>
                             {loading ? "Refreshing…" : "Refresh"}
                         </button>
                         <Search placeholder="Filter loaded entries" setQuery={setSearch} className="flex-1" />
