@@ -6,7 +6,7 @@ import { ApiClient } from "../overmind/namespaces/global/effects"
 import { initializeOvermind, mock } from "./TestHelpers"
 
 describe("updateAssignments alerts on the outcome reported by the server", () => {
-    const updateAssignmentsTests: { desc: string, count: number, wantAlert: { text: string, color: Color } | null }[] = [
+    const updateAssignmentsTests: { desc: string, count: number, wantAlert: { text: string, color: Color } }[] = [
         {
             desc: "No issues found, shows green success alert",
             count: 0,
