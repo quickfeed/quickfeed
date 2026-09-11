@@ -14,9 +14,16 @@ type contextKey struct{}
 
 // New returns a structured logger that writes debug and higher-level records to w.
 func New(w io.Writer) *slog.Logger {
+	return NewLevel(w, slog.LevelDebug)
+}
+
+// NewLevel returns a structured logger that writes records at or above the
+// given level to w. Use it for command line tools, where the server's debug
+// records are noise unless the user asks for them.
+func NewLevel(w io.Writer, level slog.Leveler) *slog.Logger {
 	handler := slog.NewTextHandler(w, &slog.HandlerOptions{
 		AddSource:   true,
-		Level:       slog.LevelDebug,
+		Level:       level,
 		ReplaceAttr: RelativeSource(env.Root()),
 	})
 	return slog.New(handler)
