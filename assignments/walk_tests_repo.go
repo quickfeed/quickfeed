@@ -36,6 +36,24 @@ type RepoIssue struct {
 	Transient bool
 }
 
+// String returns a one-line description of the issue for command line output,
+// e.g.:
+//
+//	lab1/tests.json: duplicate test name "TestX"
+//
+// The file locates the issue when it is known; otherwise the assignment folder
+// is named, and a repository-level issue is only its problem text.
+func (i RepoIssue) String() string {
+	location := i.File
+	if location == "" {
+		location = i.Assignment
+	}
+	if location == "" {
+		return i.Problem
+	}
+	return location + ": " + i.Problem
+}
+
 // filesForBuildContext specifies files for the Docker build context.
 // Add more files to support more dependencies for different courses.
 var filesForBuildContext = map[string]bool{
@@ -158,14 +176,15 @@ func processTestsFile(contents []byte, assignment *qf.Assignment, _ uint64) ([]s
 	return problems, nil
 }
 
-// readTestsRepositoryContent reads dir and returns a sorted list of assignments,
-// a map with the docker build context as defined by the filesForBuildContext
-// variable, and a list of content issues found in the repository.
+// ReadTestsRepository reads dir, which must be a local clone of the course's
+// tests repository, and returns a sorted list of assignments, a map with the
+// docker build context as defined by the filesForBuildContext variable, and a
+// list of content issues found in the repository.
 // Assignments are extracted from 'assignment.json' files, one for each assignment.
 // An assignment whose json files cannot be parsed is excluded from the returned
 // list (and reported as an issue), so that a typo in a file is not interpreted
 // as removal of the assignment's tests or criteria.
-func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, map[string]string, []RepoIssue, error) {
+func ReadTestsRepository(dir string, courseID uint64) ([]*qf.Assignment, map[string]string, []RepoIssue, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
 		return nil, nil, nil, err
@@ -322,7 +341,7 @@ func processAssignmentFiles(files map[string][]byte, courseID uint64) (map[strin
 		}
 		parts := strings.Split(filepath.ToSlash(path), "/")
 		if len(parts) != 2 || parts[0] == scriptsDir {
-			continue // handled by the main loop in readTestsRepositoryContent
+			continue // handled by the main loop in ReadTestsRepository
 		}
 		assignmentName := parts[0]
 		assignment, err := newAssignmentFromFile(files[path], assignmentName, courseID)
