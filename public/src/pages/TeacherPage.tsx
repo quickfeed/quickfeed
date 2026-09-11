@@ -9,6 +9,7 @@ import StudentDetails from "../components/StudentDetails"
 import SubmissionGuide from "../components/student/SubmissionGuide"
 import Assignments from "../components/teacher/Assignments"
 import CourseLogs from "../components/teacher/CourseLogs"
+import EditCourse from "../components/teacher/EditCourse"
 import { Color, isManuallyGraded } from "../Helpers"
 import { useBackspaceNavigation } from "../hooks/useBackspaceNavigation"
 import { useCourseID } from "../hooks/useCourseID"
@@ -51,6 +52,12 @@ const TeacherPage = () => {
         buttonText: "Update Assignments",
         onclick: handleUpdateAssignments
     }
+    const editCourse = {
+        title: "Edit Course",
+        text: "Edit the course name, code, term, year, and slip days.",
+        buttonText: "Edit Course",
+        to: `${root}/edit`
+    }
     const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
     const feedback = { title: "View Assignment Feedback", text: "View feedback provided by students on assignments.", buttonText: "Feedback", to: `${root}/feedback` }
     const logs = { title: "Course Logs", text: "View webhook, CI, and rebuild activity for this course.", buttonText: "Logs", to: `${root}/logs` }
@@ -65,6 +72,7 @@ const TeacherPage = () => {
                 <Card {...members} />
                 <Card {...assignments} />
                 <Card {...updateAssignments} />
+                <Card {...editCourse} />
                 <Card {...feedback} />
                 <Card {...logs} />
             </div>
@@ -78,6 +86,7 @@ const TeacherPage = () => {
                 <Route path="/feedback" element={<AssignmentFeedbackView />} />
                 <Route path="/feedback/:assignmentID" element={<AssignmentFeedbackView />} />
                 <Route path="/logs" element={<CourseLogs />} />
+                <Route path="/edit" element={<EditCourse />} />
                 <Route path="/submission-guide" element={<SubmissionGuide />} />
             </Routes>
         </>
