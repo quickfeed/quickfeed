@@ -1,173 +1,97 @@
+// Command qcm is QuickFeed's course manager: a command line tool for teachers
+// to clone their course repositories and run and check their course's tests
+// locally, with the same test runner the QuickFeed server uses.
+//
+// The tests are always executed in Docker, exactly as on the server, so a
+// working Docker installation is required for the run and check subcommands.
 package main
 
 import (
-	"context"
+	"errors"
+	"flag"
 	"fmt"
-	"log/slog"
+	"io"
 	"os"
-	"path/filepath"
-	"time"
-
-	"github.com/alecthomas/kong"
-	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/qlog"
-	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 )
 
-var cli struct {
-	Clone struct {
-		Course string `help:"Course organization." default:"dat320-2022"`
-		User   string `help:"GitHub user name for student in course." xor:"repo" required:""`
-		Group  string `help:"GitHub group name for course." xor:"repo" required:""`
-		Token  string `help:"GitHub personal access token." env:"GITHUB_ACCESS_TOKEN"`
-		Dir    string `help:"Destination directory for cloned repositories." env:"QUICKFEED_REPOSITORY_PATH"`
-		Docker bool   `help:"Run tests using Docker." default:"false"`
-		Lab    string `help:"Assignment to test."`
-	} `cmd:"" help:"Clone repositories for local test execution."`
-}
+const (
+	// localCommitID names the containers of the test runs this command starts.
+	// Two concurrent runs of the same assignment for the same owner therefore
+	// conflict, which is what we want: they would test the same code twice.
+	localCommitID = "local"
+	// localOwner is the job owner, and thereby the repository name, of a run
+	// against a local submission directory. The name must not collide with the
+	// tests and assignments mounts; see ci.RunData.SubmissionDir.
+	localOwner = "local"
+)
 
 func main() {
-	ctx := kong.Parse(&cli,
-		kong.Name("qcm"),
-		kong.Description("QuickFeed course manager."),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact: true,
-			Summary: true,
-		}))
+	if err := run(os.Args[1:], os.Stdout, os.Stderr); err != nil {
+		fmt.Fprintf(os.Stderr, "qcm: %v\n", err)
+		os.Exit(1)
+	}
+}
 
-	switch ctx.Command() {
+// run dispatches to the subcommand named by the first argument. It returns an
+// error for anything that should make the tool exit non-zero; a request for
+// help is not such an error.
+func run(args []string, stdout, stderr io.Writer) error {
+	if len(args) == 0 {
+		usage(stderr)
+		return errors.New("no subcommand given")
+	}
+	var err error
+	switch args[0] {
 	case "clone":
-		logger, client := getSCMClient()
-		// Default repository path is $HOME/courses
-		destDir := filepath.Join(env.RepositoryPath(), cli.Clone.Course)
-		fmt.Printf("Repository path: %s\n", destDir)
-		if !exists(destDir) {
-			// Only clone if destination directory does not exist
-			clone(client, destDir)
-		}
-		if cli.Clone.Lab != "" {
-			// Only run tests if lab is specified
-			runTests(logger, client, destDir)
-		}
-
+		err = cloneCmd(args[1:], stdout, stderr)
+	case "run":
+		err = runCmd(args[1:], stdout, stderr)
+	case "check":
+		err = checkCmd(args[1:], stdout, stderr)
+	case "help", "-h", "-help", "--help":
+		usage(stdout)
+		return nil
 	default:
-		panic(ctx.Command())
+		usage(stderr)
+		return fmt.Errorf("unknown subcommand %q", args[0])
 	}
+	if errors.Is(err, flag.ErrHelp) {
+		// The subcommand's flag set has already printed its usage text.
+		return nil
+	}
+	return err
 }
 
-func runTests(logger *slog.Logger, client scm.SCM, destDir string) {
-	fmt.Printf("Running tests for %s\n", cli.Clone.Lab)
-	dockerfile := readFile(destDir, "Dockerfile")
+func usage(w io.Writer) {
+	fmt.Fprint(w, `qcm is QuickFeed's course manager.
 
-	courseCode := cli.Clone.Course[:len(cli.Clone.Course)-5] // assume course has four digit year (-YYYY)
-	course := &qf.Course{
-		Code:                courseCode,
-		ScmOrganizationName: cli.Clone.Course,
-	}
-	course.UpdateDockerfile(dockerfile)
+Usage:
 
-	runData := &ci.RunData{
-		Course: course,
-		Assignment: &qf.Assignment{
-			Name:             cli.Clone.Lab,
-			ContainerTimeout: 1, // minutes
-		},
-		Repo: &qf.Repository{
-			HTMLURL: studentRepoURL(),
-		},
-		JobOwner: studentRepo(),
-		CommitID: "dummy",
-	}
-	if !cli.Clone.Docker {
-		runData.EnvVarsFn = func(secret, home string) []string {
-			return ci.EnvVars(secret, home, runData.Repo.Name(), runData.Assignment.GetName())
-		}
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-	ctx = qlog.NewContext(ctx, logger)
-	results, err := runData.RunTests(ctx, client, runner())
-	check(err)
+	qcm <command> [flags]
 
-	fmt.Println("***********************")
-	fmt.Println(results.GetBuildInfo().GetBuildLog())
-	fmt.Println("***********************")
-	// TODO print with tab writer
-	for _, score := range results.Scores {
-		fmt.Printf("%s: %d/%d (%d)\n", score.GetTestName(), score.GetScore(), score.GetMaxScore(), score.GetWeight())
-	}
-	fmt.Printf("Score sum: %d\n", results.Sum())
+The commands are:
+
+	clone   clone the course's tests and assignments repositories
+	run     run a course's tests for one assignment
+	check   check that the course's test environment is working
+
+Every command takes -course ORG, naming the course's GitHub organization,
+e.g., dat320-2025. Run 'qcm <command> -help' for the command's own flags.
+
+The run and check commands execute the tests in Docker, just like the
+QuickFeed server does, and therefore require a working Docker installation.
+`)
 }
 
-func runner() ci.Runner {
-	if cli.Clone.Docker {
-		runner, err := ci.NewDockerCI()
-		check(err)
-		return runner
+// newFlagSet returns a flag set for the given subcommand that reports parse
+// errors and prints its usage text to stderr, as the flag package does by
+// default for the command line.
+func newFlagSet(name string, stderr io.Writer, synopsis string) *flag.FlagSet {
+	fs := flag.NewFlagSet(name, flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	fs.Usage = func() {
+		fmt.Fprintf(stderr, "%s\n\nFlags:\n", synopsis)
+		fs.PrintDefaults()
 	}
-	return &ci.Local{}
-}
-
-func getSCMClient() (*slog.Logger, scm.SCM) {
-	logger := qlog.New(os.Stderr)
-	qlog.SetDefault(logger)
-	client, err := scm.NewSCMClient(logger, cli.Clone.Token)
-	check(err)
-	return logger, client
-}
-
-func studentRepo() string {
-	studRepo := cli.Clone.Group
-	if studRepo == "" {
-		studRepo = cli.Clone.User
-	}
-	return studRepo
-}
-
-func studentRepoURL() string {
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: cli.Clone.Course}
-	return repo.StudentRepoURL(studentRepo())
-}
-
-func clone(client scm.SCM, dstDir string) {
-	fmt.Printf("Cloning tests and assignments into %s", dstDir)
-	ctx := context.Background()
-	clonedAssignmentsRepo, err := client.Clone(ctx, &scm.CloneOptions{
-		Organization: cli.Clone.Course,
-		Repository:   qf.AssignmentsRepo,
-		DestDir:      dstDir,
-	})
-	check(err)
-	fmt.Printf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
-
-	clonedTestsRepo, err := client.Clone(ctx, &scm.CloneOptions{
-		Organization: cli.Clone.Course,
-		Repository:   qf.TestsRepo,
-		DestDir:      dstDir,
-	})
-	check(err)
-	fmt.Printf("Successfully cloned tests repository to: %s", clonedTestsRepo)
-}
-
-func readFile(destDir, filename string) string {
-	path := filepath.Join(destDir, qf.TestsRepo, "scripts", filename)
-	b, err := os.ReadFile(path)
-	check(err)
-	return string(b)
-}
-
-func exists(filePath string) bool {
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
+	return fs
 }
