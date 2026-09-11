@@ -93,7 +93,7 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
                     <label
                         key={column.id}
                         // chips have a tint when selected, gray with an outline when not
-                        className={`btn btn-xs font-normal has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${hidden.has(column.id) ? "btn-outline opacity-50" : "btn-soft btn-primary"}`}
+                        className={`btn btn-xs h-auto py-1 leading-none font-normal has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${hidden.has(column.id) ? "btn-outline opacity-50" : "btn-soft btn-primary"}`}
                     >
                         <input
                             type="checkbox"
