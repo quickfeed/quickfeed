@@ -5,7 +5,6 @@ go 1.26.6
 require (
 	connectrpc.com/connect v1.20.0
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
-	github.com/alecthomas/kong v1.16.1
 	github.com/alta/protopatch v0.5.3
 	github.com/beatlabs/github-auth v0.0.0-20260412075256-8918d55aa6b8
 	github.com/containerd/errdefs v1.0.0
