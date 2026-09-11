@@ -157,6 +157,31 @@ describe("CourseLogs", () => {
         expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
     })
 
+    test("keeps column choices through Refresh and an empty search", async () => {
+        const api = new ApiClient()
+        api.client = {
+            ...api.client,
+            getCourseLog: mock("getCourseLog", async () => ({
+                message: create(CourseLogSchema, { entries: [entry({ fields: { message: "structured detail" } })] }),
+                error: null,
+            })),
+        }
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+        fireEvent.click(screen.getByLabelText("Show Message"))
+        fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
+        await screen.findByText("structured detail")
+        expect(screen.queryByRole("columnheader", { name: "Message" })).toBeNull()
+        const search = screen.getByPlaceholderText("Filter loaded entries")
+        fireEvent.keyUp(search, { target: { value: "no match" } })
+        expect(screen.queryByRole("table")).toBeNull()
+        fireEvent.keyUp(search, { target: { value: "resolved push" } })
+        expect(screen.getByText("structured detail")).toBeTruthy()
+        expect(screen.queryByRole("columnheader", { name: "Message" })).toBeNull()
+        fireEvent.click(screen.getByLabelText("Show Message"))
+        expect(screen.getByText("resolved push repository")).toBeTruthy()
+    })
+
     test("applies draft filters only on Refresh, including repeated refreshes", async () => {
         const requests: Parameters<ApiClient["client"]["getCourseLog"]>[0][] = []
         const api = new ApiClient()
