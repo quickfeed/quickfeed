@@ -36,6 +36,12 @@ type RunData struct {
 	CommitID   string
 	JobOwner   string
 	Rebuild    bool
+	// SubmissionDir, if set, is a local directory holding the code to test.
+	// RunTests then copies it, skipping any .git directory, into the job's
+	// temporary directory under Repo.Name() instead of cloning Repo from the
+	// SCM. This supports test runs for code that has not been pushed, such as
+	// the course's own skeleton and solution code; see NewSkeletonRun.
+	SubmissionDir string
 }
 
 // String returns a string representation of the run data structure.
@@ -145,14 +151,25 @@ func redactOutput(output string, secrets ...string) string {
 func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	defer timer(r.JobOwner, r.Course.GetCode(), cloneTimeGauge)()
 
-	clonedStudentRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetScmOrganizationName(),
-		Repository:   r.Repo.Name(),
-		DestDir:      dstDir,
-		Branch:       r.BranchName,
-	})
-	if err != nil {
-		return fmt.Errorf("cloning %s/%s repository: %w", r.Course.GetScmOrganizationName(), r.Repo.Name(), err)
+	var clonedStudentRepo string
+	if r.SubmissionDir != "" {
+		// The code to test is already on this machine; copy it in place of the
+		// clone, so that the run is identical from here on.
+		clonedStudentRepo = filepath.Join(dstDir, r.Repo.Name())
+		if err := copyDir(r.SubmissionDir, clonedStudentRepo); err != nil {
+			return fmt.Errorf("copying submission directory %q: %w", r.SubmissionDir, err)
+		}
+	} else {
+		var err error
+		clonedStudentRepo, err = sc.Clone(ctx, &scm.CloneOptions{
+			Organization: r.Course.GetScmOrganizationName(),
+			Repository:   r.Repo.Name(),
+			DestDir:      dstDir,
+			Branch:       r.BranchName,
+		})
+		if err != nil {
+			return fmt.Errorf("cloning %s/%s repository: %w", r.Course.GetScmOrganizationName(), r.Repo.Name(), err)
+		}
 	}
 
 	// Clone the course's tests and assignments repositories if they are missing.
