@@ -157,6 +157,74 @@ func TestParseTestRunnerScriptBuildCheck(t *testing.T) {
 	}
 }
 
+func TestParseRunScript(t *testing.T) {
+	tests := []struct {
+		name         string
+		script       string
+		wantImage    string
+		wantLanguage string
+		wantCommands []string
+		wantErr      string
+	}{
+		{
+			name:         "ImageAndCommands",
+			script:       "#image/quickfeed:go\necho hello\necho world\n",
+			wantImage:    "quickfeed:go",
+			wantCommands: []string{"echo hello", "echo world", ""},
+		},
+		{
+			name:         "LanguageDirective",
+			script:       "#image/qf101\n#language/Go\n\necho hello\n",
+			wantImage:    "qf101",
+			wantLanguage: "go",
+			wantCommands: []string{"", "echo hello", ""},
+		},
+		{
+			name:    "TooShort",
+			script:  "#image/qf101\n",
+			wantErr: "empty run script",
+		},
+		{
+			name:    "NoImage",
+			script:  "#language/go\necho hello\n",
+			wantErr: "no docker image specified in run script",
+		},
+		{
+			name:    "NoCommands",
+			script:  "#image/qf101\n\n   \n\n",
+			wantErr: "no commands in run script",
+		},
+		{
+			name:    "DirectivesOnly",
+			script:  "#image/qf101\n#language/go\n\n",
+			wantErr: "no commands in run script",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			image, language, commands, err := ParseRunScript(tc.script)
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("ParseRunScript() error = %v, want %q", err, tc.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("ParseRunScript() error = %v, want nil", err)
+			}
+			if image != tc.wantImage {
+				t.Errorf("ParseRunScript() image = %q, want %q", image, tc.wantImage)
+			}
+			if language != tc.wantLanguage {
+				t.Errorf("ParseRunScript() language = %q, want %q", language, tc.wantLanguage)
+			}
+			if diff := cmp.Diff(tc.wantCommands, commands); diff != "" {
+				t.Errorf("ParseRunScript() commands mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestParseBadTestRunnerScript(t *testing.T) {
 	t.Setenv("QUICKFEED_REPOSITORY_PATH", env.TestdataPath())
 
