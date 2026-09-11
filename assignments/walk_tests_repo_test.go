@@ -140,7 +140,7 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 		},
 	}
 
-	gotAssignments, gotBuildContext, gotIssues, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotBuildContext, gotIssues, err := ReadTestsRepository(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 		t.Errorf("got Dockerfile %q, want %q", gotBuildContext[ci.Dockerfile], wantDockerfile)
 	}
 	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
 	// lab5's criteria.json has an empty heading and an empty description.
 	// Labs 3-5 are auto-graded without a tests.json; criteria alone does not
@@ -161,12 +161,12 @@ func TestReadTestsRepositoryContent(t *testing.T) {
 		{Assignment: "lab5", File: "lab5/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
 	}
 	if diff := cmp.Diff(wantIssues, gotIssues); diff != "" {
-		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() issue mismatch (-want +got):\n%s", diff)
 	}
 }
 
 func TestBuildContextContainsModuleFiles(t *testing.T) {
-	_, gotBuildContext, _, err := readTestsRepositoryContent(testsFolder, 1)
+	_, gotBuildContext, _, err := ReadTestsRepository(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func TestBuildContextContainsModuleFiles(t *testing.T) {
 }
 
 func TestReadTestsRepositoryContentBadContent(t *testing.T) {
-	// Check that readTestsRepositoryContent reports bad content as issues
+	// Check that ReadTestsRepository reports bad content as issues
 	// instead of aborting, and excludes the affected assignments.
 	tests := []struct {
 		name        string
@@ -214,7 +214,7 @@ func TestReadTestsRepositoryContentBadContent(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assignments, _, issues, err := readTestsRepositoryContent(tc.folder, 1)
+			assignments, _, issues, err := ReadTestsRepository(tc.folder, 1)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -259,7 +259,7 @@ func TestReadTestsRepositoryContentIssues(t *testing.T) {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
 
-	assignments, gotBuildContext, issues, err := readTestsRepositoryContent(testsDir, 1)
+	assignments, gotBuildContext, issues, err := ReadTestsRepository(testsDir, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,7 +287,7 @@ func TestReadTestsRepositoryContentIssues(t *testing.T) {
 		{Assignment: "lab3", File: "lab3/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
 	}
 	if diff := cmp.Diff(wantIssues, issues); diff != "" {
-		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() issue mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -328,7 +328,7 @@ func TestReadTestsRepositoryContentCollectsIssuesForBrokenAssignment(t *testing.
 		writeFile(t, testsDir, "lab1", filename, "{")
 	}
 
-	assignments, _, issues, err := readTestsRepositoryContent(testsDir, 1)
+	assignments, _, issues, err := ReadTestsRepository(testsDir, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -366,5 +366,36 @@ func TestMissingTestsIssuesWithCriteria(t *testing.T) {
 	}}
 	if diff := cmp.Diff(want, missingTestsIssues(assignments)); diff != "" {
 		t.Errorf("missingTestsIssues() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestRepoIssueString(t *testing.T) {
+	tests := []struct {
+		name  string
+		issue RepoIssue
+		want  string
+	}{
+		{
+			name:  "AssignmentAndFile",
+			issue: RepoIssue{Assignment: "lab1", File: "lab1/tests.json", Problem: `duplicate test name "TestX"`},
+			want:  `lab1/tests.json: duplicate test name "TestX"`,
+		},
+		{
+			name:  "AssignmentOnly",
+			issue: RepoIssue{Assignment: "lab1", Problem: "assignment folder is missing"},
+			want:  "lab1: assignment folder is missing",
+		},
+		{
+			name:  "RepositoryLevel",
+			issue: RepoIssue{Problem: "invalid entry"},
+			want:  "invalid entry",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.issue.String(); got != tc.want {
+				t.Errorf("RepoIssue.String() = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

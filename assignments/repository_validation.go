@@ -18,11 +18,11 @@ import (
 // folders, in either repository, that are not assignments.
 const ignoreFile = ".quickfeedignore"
 
-// courseRepositoryIssues reports assignment folders that are not aligned across
+// CourseRepositoryIssues reports assignment folders that are not aligned across
 // the two course repositories. Every top-level folder in either repository is an
 // assignment candidate, except repository metadata, the reserved scripts folder,
 // and the folders listed in the tests repository's ignore file.
-func courseRepositoryIssues(testsDir, assignmentsDir string, parsedAssignments []*qf.Assignment) ([]RepoIssue, error) {
+func CourseRepositoryIssues(testsDir, assignmentsDir string, parsedAssignments []*qf.Assignment) ([]RepoIssue, error) {
 	ignored, issues, err := readIgnoreFile(testsDir)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func assignmentFolderIssues(testsDir, name string, inTests, inAssignments bool, 
 		return nil, err
 	}
 	if !files.configured() {
-		// readTestsRepositoryContent cannot discover this folder, since its
+		// ReadTestsRepository cannot discover this folder, since its
 		// file-oriented walk only sees the configuration files that are absent here.
 		return []RepoIssue{{
 			Assignment: name,
