@@ -26,3 +26,24 @@ export const entryTime = (entry: CourseLogEntry): string => {
     const d = timestampDate(entry.time)
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
+
+// entryFields renders an entry's remaining structured attributes, sorted by
+// key because a protobuf map has no order of its own and an entry's fields
+// would otherwise move around between requests.
+const entryFields = (entry: CourseLogEntry): string =>
+    Object.entries(entry.fields)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => `${key}=${value}`)
+        .join(" ")
+
+// entryText renders one entry as plain text for the copy and download actions,
+// and for the free-text filter; it lists every part regardless of which
+// columns are currently hidden, so hiding a column never hides what it filters,
+// copies, or downloads.
+export const entryText = (entry: CourseLogEntry): string => {
+    const repository = entry.repository ? `[${entry.repository}]` : ""
+    const parts = [entryTime(entry), LEVEL_NAMES[entry.level], repository, entry.message, entryFields(entry), entry.source]
+    return parts.filter(Boolean).join(" ")
+}
+
+export const logText = (entries: readonly CourseLogEntry[]): string => entries.map(entryText).join("\n")

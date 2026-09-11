@@ -5,29 +5,10 @@ import { useCourseID } from "../../hooks/useCourseID"
 import { useCourseLogs } from "../../hooks/useCourseLogs"
 import { CenteredMessage } from "../CenteredMessage"
 import CourseLogTable from "./CourseLogTable"
-import { entryTime, LEVEL_NAMES, toLocalDatetimeInput } from "./courseLogFormatting"
+import { entryText, LEVEL_NAMES, logText, toLocalDatetimeInput } from "./courseLogFormatting"
 import Search from "../Search"
 
 const EMPTY_ENTRIES: CourseLogEntry[] = []
-
-// entryFields renders an entry's remaining structured attributes, sorted by
-// key because a protobuf map has no order of its own and an entry's fields
-// would otherwise move around between requests.
-const entryFields = (entry: CourseLogEntry): string =>
-    Object.entries(entry.fields)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, value]) => `${key}=${value}`)
-        .join(" ")
-
-// entryText renders one entry as plain text for the copy and download actions,
-// and for the free-text filter; it lists every part regardless of which
-// columns are currently hidden, so hiding a column never hides what it filters,
-// copies, or downloads.
-const entryText = (entry: CourseLogEntry): string => {
-    const repository = entry.repository ? `[${entry.repository}]` : ""
-    const parts = [entryTime(entry), LEVEL_NAMES[entry.level], repository, entry.message, entryFields(entry), entry.source]
-    return parts.filter(Boolean).join(" ")
-}
 
 /** CourseLogs is the teacher-only "Course Logs" page at /course/:id/logs.
  *  It queries GetCourseLog for the current course and lets a teacher narrow
@@ -79,13 +60,11 @@ const CourseLogs = () => {
         ? entries.filter(entry => entryText(entry).toLowerCase().includes(search))
         : entries
 
-    const logText = () => filtered.map(entryText).join("\n")
-
     const handleCopy = async () => {
         try {
             // navigator.clipboard is undefined outside a secure context, and
             // writeText rejects when the browser denies clipboard access.
-            await navigator.clipboard.writeText(logText())
+            await navigator.clipboard.writeText(logText(filtered))
             setNotice(null)
         } catch {
             setNotice("Could not copy the log; the browser denied access to the clipboard")
@@ -93,7 +72,7 @@ const CourseLogs = () => {
     }
 
     const handleDownload = () => {
-        const url = URL.createObjectURL(new Blob([logText()], { type: "text/plain" }))
+        const url = URL.createObjectURL(new Blob([logText(filtered)], { type: "text/plain" }))
         const link = document.createElement("a")
         link.href = url
         link.download = `course-${courseID}-log.txt`
