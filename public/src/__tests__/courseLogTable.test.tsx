@@ -26,6 +26,23 @@ describe("CourseLogTable", () => {
         expect(screen.getByText("log message")).toBeTruthy()
     })
 
+    test("toggles columns inline, with no menu to open first", () => {
+        const entries = [create(CourseLogEntrySchema, { message: "log message", fields: { commit: "abc123" } })]
+        render(<CourseLogTable entries={entries} rows={entries} />)
+
+        // Every chip is reachable without opening anything, and a hidden column
+        // keeps its chip, so showing it again is a single click.
+        const group = screen.getByRole("group", { name: "Columns" })
+        expect(screen.queryByRole("button", { name: "Columns" })).toBeNull()
+        const commit = screen.getByLabelText("Show commit") as HTMLInputElement
+        expect(group.contains(commit)).toBe(true)
+        expect(commit.checked).toBe(true)
+        fireEvent.click(commit)
+        expect(screen.queryByRole("columnheader", { name: "commit" })).toBeNull()
+        expect((screen.getByLabelText("Show commit") as HTMLInputElement).checked).toBe(false)
+        expect(group.contains(screen.getByLabelText("Show commit"))).toBe(true)
+    })
+
     test("keeps columns from entries excluded by search", () => {
         const entries = [
             create(CourseLogEntrySchema, { message: "first", fields: { assignment: "lab1" } }),

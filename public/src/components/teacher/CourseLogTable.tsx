@@ -47,7 +47,7 @@ interface CourseLogTableProps {
 
 const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
     const [hidden, setHidden] = useState<Set<string>>(new Set())
-    // Derive columns from all loaded entries so searching doesn't change the menu.
+    // Derive columns from all loaded entries so searching doesn't change the chips.
     const available = useMemo(() => [
         ...columns,
         ...Array.from(new Set(entries.flatMap(entry => Object.keys(entry.fields))))
@@ -78,33 +78,35 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
         <LogCard
             title="Course Logs"
             className="flex-1 min-h-48"
-            controls={
-                <div className="flex items-center gap-2">
-                    <div className="dropdown dropdown-end">
-                        <div tabIndex={0} role="button" className="btn btn-sm">
-                            <i className="fas fa-table-columns" />
-                            Columns
-                        </div>
-                        <ul tabIndex={0} className="dropdown-content menu z-10 mt-2 w-56 max-h-80 overflow-y-auto rounded-box bg-base-100 p-2 shadow">
-                            {available.map(column => (
-                                <li key={column.id}>
-                                    <label className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            className="checkbox checkbox-xs"
-                                            checked={!hidden.has(column.id)}
-                                            onChange={() => toggleColumn(column.id)}
-                                        />
-                                        <span>Show {column.label}</span>
-                                    </label>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    {controls}
-                </div>
-            }
+            controls={<div className="flex items-center gap-2">{controls}</div>}
         >
+            <div
+                role="group"
+                aria-label="Columns"
+                className="flex flex-wrap items-center gap-1.5 shrink-0 max-h-24 overflow-y-auto border-b border-base-content/10 px-4 py-2"
+            >
+                <span aria-hidden="true" className="text-xs font-semibold opacity-60 mr-1">
+                    <i className="fas fa-table-columns mr-1.5" />
+                    Columns
+                </span>
+                {available.map(column => (
+                    <label
+                        key={column.id}
+                        // chips have a tint when selected, gray with an outline when not
+                        className={`btn btn-xs font-normal has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${hidden.has(column.id) ? "btn-outline opacity-50" : "btn-soft btn-primary"}`}
+                    >
+                        <input
+                            type="checkbox"
+                            className="sr-only"
+                            checked={!hidden.has(column.id)}
+                            onChange={() => toggleColumn(column.id)}
+                        />
+                        {/* The accessible name reads "Show <column>" rather than the bare column name. */}
+                        <span className="sr-only">Show </span>
+                        {column.label}
+                    </label>
+                ))}
+            </div>
             <div className="flex-1 min-h-0 overflow-auto rounded-b-2xl">
                 <table className="table table-zebra table-xs">
                     <thead className="sticky top-0 z-10 bg-base-300">
