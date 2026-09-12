@@ -1,10 +1,17 @@
 import { Navigate, useParams } from "react-router"
 import { useAppState } from "../overmind"
+import Loading from "./Loading"
 
 
 export const CourseCodeRedirect = () => {
     const { code = "" } = useParams()
     const state = useAppState()
+
+    // The route tree mounts as soon as the user is known, before the course list has
+    // loaded. Redirecting on an empty list would discard the course code, so wait.
+    if (state.isLoading) {
+        return <Loading />
+    }
 
     // find course with the given code
     // multiple courses can have the same code, so we take the one with the highest year
