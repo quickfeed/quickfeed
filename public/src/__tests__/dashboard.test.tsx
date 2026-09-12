@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { Provider } from "overmind-react"
-import { MemoryRouter, Route, Routes, useParams } from "react-router"
+import { MemoryRouter, Route, Routes, useNavigate, useParams } from "react-router"
 import type { Course, Enrollment } from "../../proto/qf/types_pb"
 import { CourseSchema, Enrollment_DisplayState, Enrollment_UserStatus, EnrollmentSchema, UserSchema } from "../../proto/qf/types_pb"
 import Dashboard from "../components/Dashboard"
@@ -31,18 +31,26 @@ const enrollment = (ID: number, courseID: number, status: Enrollment_UserStatus,
         state,
     })
 
-/** CourseStub stands in for the course page, so that a redirect to /course/:id is observable. */
+/** CourseStub stands in for the course page, so that a redirect to /course/:id is observable.
+ *  Its Back button lets a test observe what the redirect left behind in the history. */
 const CourseStub = () => {
     const { id } = useParams()
-    return <div>Course page for {id}</div>
+    const navigate = useNavigate()
+    return (
+        <div>
+            <div>Course page for {id}</div>
+            <button onClick={() => navigate(-1)}>Back</button>
+        </div>
+    )
 }
 
-const renderDashboard = (courses: Course[], enrollments: Enrollment[]) => {
+const renderDashboard = (courses: Course[], enrollments: Enrollment[], initialEntries = ["/"]) => {
     const mockedOvermind = initializeOvermind({ self, courses, enrollments, isLoading: false })
     render(
         <Provider value={mockedOvermind}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={initialEntries} initialIndex={initialEntries.length - 1}>
                 <Routes>
+                    <Route path="/previous" element={<div>Previous page</div>} />
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/course/:id" element={<CourseStub />} />
                     <Route path="/courses" element={<div>All courses page</div>} />
@@ -91,5 +99,30 @@ describe("Dashboard", () => {
     it("redirects to the course list when the user has no enrollments", () => {
         renderDashboard([course(1, "DAT100")], [])
         expect(screen.getByText("All courses page")).toBeDefined()
+    })
+
+    it("does not redirect when the favorite course has not been loaded", () => {
+        // Only DAT200 is loaded; the single favorite refers to course 1, which is not.
+        const courses = [course(2, "DAT200")]
+        const enrollments = [
+            enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.VISIBLE),
+        ]
+        renderDashboard(courses, enrollments)
+        expect(screen.queryByText(/Course page for/)).toBeNull()
+        expect(screen.queryByText("All courses page")).toBeNull()
+    })
+
+    it("replaces the dashboard in history, so that going back skips the redirect", () => {
+        const courses = [course(1, "DAT100")]
+        const enrollments = [
+            enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.VISIBLE),
+        ]
+        renderDashboard(courses, enrollments, ["/previous", "/"])
+        expect(screen.getByText("Course page for 1")).toBeDefined()
+
+        fireEvent.click(screen.getByRole("button", { name: "Back" }))
+
+        expect(screen.getByText("Previous page")).toBeDefined()
+        expect(screen.queryByText(/Course page for/)).toBeNull()
     })
 })
