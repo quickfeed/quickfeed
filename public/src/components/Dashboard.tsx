@@ -14,10 +14,15 @@ const Dashboard = () => {
 
     // With only one favorite course, the dashboard would show a single course card;
     // go straight to that course instead, whether the user is a teacher or a student.
+    // The shortcut requires the course itself to be loaded, so that a stale enrollment
+    // or a failed course fetch cannot send the user to a page that bounces back here.
     // The sidebar's "View all courses" link (/courses) remains the way to see every course.
     const favorites = state.enrollments.filter(enrollment => isEnrolled(enrollment) && isVisible(enrollment))
     if (!state.isLoading && favorites.length === 1) {
-        return <Navigate to={`/course/${favorites[0].courseID}`} replace />
+        const favorite = favorites[0]
+        if (state.courses.some(course => course.ID === favorite.courseID)) {
+            return <Navigate to={`/course/${favorite.courseID}`} replace />
+        }
     }
 
     return (
