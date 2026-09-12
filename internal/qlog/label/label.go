@@ -22,6 +22,7 @@ const (
 	Branch         = "branch"
 	Code           = "code" // Connect error code of a completed RPC.
 	Commit         = "commit"
+	Component      = "component" // Server component a record comes from, for records outside the RPC scopes; set to "tls" on TLS handshake failures.
 	CourseCode     = "course_code"
 	CourseID       = "course_id"
 	CourseLog      = "course_log" // Marks a scope whose records are copied to the named course's log; value is the course's SCM organization name.
