@@ -45,6 +45,7 @@ describe("EditCourse", () => {
         expect(screen.getByDisplayValue(course.code)).toBeTruthy()
         expect(screen.getByDisplayValue(course.tag)).toBeTruthy()
         expect(screen.getByDisplayValue(course.year.toString())).toBeTruthy()
+        expect(screen.getByDisplayValue(course.slipDays.toString())).toBeTruthy()
         expect(screen.getByRole("button", { name: /Save Changes/ })).toBeTruthy()
     })
 
