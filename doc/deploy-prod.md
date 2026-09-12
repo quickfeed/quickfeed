@@ -84,6 +84,11 @@ Logrotate will keep the two latest log files in compressed form and will delete 
 
 For additional information, see the [logrotate manual](https://www.digitalocean.com/community/tutorials/how-to-manage-logfiles-with-logrotate-on-ubuntu-16-04).
 
+The production server classifies the TLS handshake failures that Go's HTTP server would otherwise log one line at a time, since scanners and clients with obsolete TLS settings produce a steady trickle of them.
+Expected failures are counted in `quickfeed_tls_handshake_failures_total`, described in [metrics.md](metrics.md); one representative message per reason is logged every ten minutes, followed by a summary such as `TLS handshake failures in last 10m: unauthorized_sni=34 protocol_probe=12`.
+These records carry the `component=tls` attribute, so they can be filtered out of `qf.log`.
+A handshake failure that matches no expected reason is logged in full at warning level, and everything else the HTTP server reports, such as accept failures and handler panics, is passed through unchanged at error level.
+
 Logrotate governs `qf.log` only. Course-scoped records — webhook processing, CI and Docker output, and teacher-triggered rebuilds and assignment syncs — are additionally written to `$QUICKFEED/logs/courses/<organization>/<date>.jsonl`, one file per course per UTC day, so teachers can view their own course's activity through the "Course Logs" tile without operator access to `qf.log`. QuickFeed creates this directory itself and manages its own retention: date files older than 14 days are removed at startup, at daily rollover, and require no logrotate configuration.
 
 ## Cron Jobs

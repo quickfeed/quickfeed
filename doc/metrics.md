@@ -74,7 +74,24 @@ quickfeed_test_execution_failed
 quickfeed_test_execution_failed_with_output
 quickfeed_test_execution_failed_to_extract_results
 quickfeed_test_execution_succeeded
+quickfeed_tls_handshake_failures_total
 ```
+
+## TLS Handshake Failures
+
+The public server sees a steady trickle of failed TLS handshakes from internet scanners, from clients using obsolete TLS settings, and from connections carrying an arbitrary server name.
+These connections never reach QuickFeed, so instead of logging one error per connection, the server counts them in `quickfeed_tls_handshake_failures_total{reason}`.
+The `reason` label is one of `unauthorized_sni` (a host name that is not in the certificate whitelist, or none at all), `protocol_probe` (an unsupported application protocol, TLS version or cipher suite, or a non-TLS record on port 443), `disconnected` (the client went away mid-handshake), `timeout`, and `unexpected` (anything else).
+The label set is fixed on purpose: client addresses, ports, and requested host names are unbounded and must never become label values.
+
+The first four reasons are background noise; graph their rate rather than alerting on it.
+The `unexpected` reason is worth an alert, since it means a handshake failed for a reason QuickFeed does not recognize:
+
+```promql
+increase(quickfeed_tls_handshake_failures_total{reason="unexpected"}[10m]) > 0
+```
+
+The corresponding log message is written in full; see the "Server Logs" section of [deploy-prod.md](deploy-prod.md).
 
 You can also query the current aggregate statistics directly:
 
