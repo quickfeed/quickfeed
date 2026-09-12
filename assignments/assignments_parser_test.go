@@ -15,7 +15,7 @@ import (
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, _, _, err := readTestsRepositoryContent(dir, 0)
+	_, _, _, err := ReadTestsRepository(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -158,7 +158,7 @@ func TestParse(t *testing.T) {
 		GradingBenchmarks: wantCriteria,
 	}
 
-	assignments, gotBuildContext, issues, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, gotBuildContext, issues, err := ReadTestsRepository(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,19 +172,19 @@ func TestParse(t *testing.T) {
 		{Assignment: "lab2", File: "lab2/tests.json", Problem: "missing or empty tests.json: all submissions will score zero"},
 	}
 	if diff := cmp.Diff(wantIssues, issues); diff != "" {
-		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() issue mismatch (-want +got):\n%s", diff)
 	}
 	if gotBuildContext[ci.Dockerfile] != df {
 		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, gotBuildContext[ci.Dockerfile])
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(assignments[1].GetGradingBenchmarks(), wantCriteria, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch when parsing criteria (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch when parsing criteria (-want +got):\n%s", diff)
 	}
 }
 
@@ -199,7 +199,7 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 	} {
 		writeFile(t, testsDir, c.path, c.filename, c.content)
 	}
-	assignments, _, issues, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, _, issues, err := ReadTestsRepository(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func TestParseOldAssignmentIDField(t *testing.T) {
 		{Assignment: "lab3", File: "lab3/assignment.json", Problem: "assignment order must be greater than 0"},
 	}
 	if diff := cmp.Diff(wantIssues, issues); diff != "" {
-		t.Errorf("readTestsRepositoryContent() issue mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() issue mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -231,7 +231,7 @@ func TestParseOneBadAssignmentAmongCorrectOnes(t *testing.T) {
 
 	// Since lab3 contains an old assignmentid field, it is excluded from the
 	// returned assignments and reported as an issue; lab1 and lab2 are kept.
-	assignments, _, issues, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, _, issues, err := ReadTestsRepository(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +265,7 @@ func TestParseUnknownFields(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, _, _, err := readTestsRepositoryContent(testsDir, 0)
+	assignments, _, _, err := ReadTestsRepository(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +273,7 @@ func TestParseUnknownFields(t *testing.T) {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -300,7 +300,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "admin", Login: "admin"})
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignments, _, _, err := readTestsRepositoryContent(testsDir, course.GetID())
+	assignments, _, _, err := ReadTestsRepository(testsDir, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -320,14 +320,14 @@ func TestParseAndSaveAssignment(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(assignments, gotAssignments, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Add a new assignment to the list of assignments we expect to get from the database
 	writeFile(t, testsDir, "lab3", "assignment.json", j3)
 
 	// Parse the new assignment
-	newAssignments, _, _, err := readTestsRepositoryContent(testsDir, course.GetID())
+	newAssignments, _, _, err := ReadTestsRepository(testsDir, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -355,7 +355,7 @@ func TestParseAndSaveAssignment(t *testing.T) {
 
 	// Check that the new assignments are the same as the ones we parsed
 	if diff := cmp.Diff(newAssignments, gotNewAssignments, protocmp.Transform()); diff != "" {
-		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
+		t.Errorf("ReadTestsRepository() mismatch (-want +got):\n%s", diff)
 	}
 }
 
