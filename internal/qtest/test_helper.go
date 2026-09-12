@@ -412,6 +412,7 @@ func UserDiffOptions() cmp.Option {
 
 // CheckError checks if the got error matches the want error and fails the test if not.
 func CheckError(t *testing.T, got, want error) {
+	t.Helper()
 	if got != nil {
 		if want == nil {
 			t.Fatalf("Expected no error, got: %v", got)
@@ -424,21 +425,19 @@ func CheckError(t *testing.T, got, want error) {
 	}
 }
 
-// CheckCode checks if the got error matches the want error, and its code, and fails the test if not.
-// It returns true if got is an error, which indicates that the test should stop.
-func CheckCode(t *testing.T, got, want error) bool {
-	if got != nil {
-		if want == nil {
-			t.Fatalf("Expected no error, got: %v", got)
-		}
-		if got.Error() != want.Error() {
-			t.Errorf("Expected error: %v, got: %v", want, got)
-		}
-	} else if want != nil {
-		t.Errorf("Expected error: %v, got: nil", want)
-	}
+// CheckCode checks if the got error matches the want error, and its connect
+// code, and fails the test if not. Since it fails fatally, statements after the
+// call may assume that got matches want. A test that must skip its response
+// assertions when an error was expected should say so directly:
+//
+//	qtest.CheckCode(t, err, test.wantErr)
+//	if test.wantErr != nil {
+//		return // the response is invalid when an error was expected
+//	}
+func CheckCode(t *testing.T, got, want error) {
+	t.Helper()
+	CheckError(t, got, want)
 	if connect.CodeOf(got) != connect.CodeOf(want) {
-		t.Errorf("Expected error code: %v, got: %v", connect.CodeOf(want), connect.CodeOf(got))
+		t.Fatalf("Expected error code: %v, got: %v", connect.CodeOf(want), connect.CodeOf(got))
 	}
-	return got != nil
 }
