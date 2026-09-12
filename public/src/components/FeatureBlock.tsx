@@ -14,7 +14,9 @@ interface FeatureBlockProps {
 * @param heading The main heading of the feature block.
 * @param subheading The subheading of the feature block.
 * @param content The content of the feature block.
-* @param imageSrc The source URL of the image to be displayed.
+* @param imageSrc The source URL of the image to be displayed. The image is
+* marked with the `about-screenshot` class, which tailwind.css uses to adapt
+* the light-theme UI screenshots to the dark themes.
 * @param reverse A boolean indicating whether to reverse the order of the image and text.
 */
 
@@ -36,7 +38,7 @@ const FeatureBlock: React.FC<FeatureBlockProps> = ({ heading, subheading, conten
                 <img
                     src={imageSrc}
                     alt={heading}
-                    className="w-full h-auto rounded-lg shadow-xl"
+                    className="about-screenshot w-full h-auto rounded-lg border border-base-300 shadow-xl"
                 />
             </div>
         </div>
