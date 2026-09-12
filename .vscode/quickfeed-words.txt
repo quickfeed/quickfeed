@@ -5,6 +5,7 @@ alecthomas
 Alloc
 allstudents
 allteachers
+ALPN
 apitest
 approvelist
 ASSIGNDIR
@@ -187,6 +188,7 @@ ovigner
 oving
 paxos
 pbgo
+pedersen
 pgrep
 pkgs
 predeclared
@@ -235,6 +237,7 @@ Slowloris
 slugified
 smap
 sourcegraph
+spdy
 sqlite
 staticcheck
 Stavnes
@@ -262,7 +265,9 @@ testjavafile
 testmod
 testorg
 testpackage
+testutil
 timestamppb
+tlslog
 tmpl
 Typeflag
 unconfigured
