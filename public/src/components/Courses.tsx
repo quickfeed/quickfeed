@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf"
 import type { ComponentProps } from "react"
 import React from "react"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 import type { Course } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus, EnrollmentSchema } from "../../proto/qf/types_pb"
 import { Color, isVisible } from "../Helpers"
@@ -124,13 +124,33 @@ const Courses = (overview: overview) => {
     }
 
     if (overview.home) {
-        // Render only favorite courses.
+        // The dashboard shows the favorites and the courses open for enrollment, so that
+        // a student can enroll without first finding the full course list. Pending and
+        // unavailable courses, and enrollments the user has hidden, stay on /courses;
+        // the hint below links there whenever the dashboard leaves something out.
+        const hasHiddenCourses = student.length > 0 || teacher.length > 0 || pending.length > 0
+        if (favorite.length === 0 && availableCourses.length === 0 && !hasHiddenCourses) {
+            return false
+        }
         return (
-            favorite.length > 0 &&
-            <div className="container">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {favorite}
-                </div>
+            <div className="container mx-auto px-4">
+                {favorite.length > 0 && (
+                    // Separate the favorites from whatever follows, but leave no trailing
+                    // gap when they are the only thing on the dashboard.
+                    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${availableCourses.length > 0 || hasHiddenCourses ? "mb-10" : ""}`}>
+                        {favorite}
+                    </div>
+                )}
+
+                {availableCourses.length > 0 && (
+                    <CourseSection icon="fa-book" title="Available Courses">
+                        {availableCourses.sort(sortByYearTerm)}
+                    </CourseSection>
+                )}
+
+                {hasHiddenCourses && (
+                    <Link to="/courses" className="link link-hover text-primary">See all your courses</Link>
+                )}
             </div>
         )
     }
