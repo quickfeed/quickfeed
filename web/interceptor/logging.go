@@ -9,6 +9,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
@@ -18,7 +19,8 @@ import (
 // chain. Both run in the handler's goroutine, and the enrichment happens-before
 // the completion record, so the field needs no synchronization.
 type requestLog struct {
-	logger *slog.Logger
+	logger    *slog.Logger
+	procedure string
 }
 
 type requestLogKey struct{}
@@ -33,18 +35,31 @@ func NewRPCLoggingInterceptor(logger *slog.Logger) *RPCLoggingInterceptor {
 }
 
 func (i *RPCLoggingInterceptor) requestContext(ctx context.Context, procedure string) (context.Context, *requestLog) {
-	state := &requestLog{logger: i.logger.With(label.RPCMethod, procedure)}
+	state := &requestLog{logger: i.logger.With(label.RPCMethod, procedure), procedure: procedure}
 	ctx = context.WithValue(ctx, requestLogKey{}, state)
 	return qlog.NewContext(ctx, state.logger), state
 }
 
 func (*RPCLoggingInterceptor) logCompletion(state *requestLog, started time.Time, err error) {
 	duration := time.Since(started)
-	if err != nil {
-		state.logger.Error("RPC completed", label.Code, connect.CodeOf(err).String(), label.Duration, duration, label.Error, err)
+	if err == nil {
+		state.logger.Debug("RPC completed", label.Duration, duration)
 		return
 	}
-	state.logger.Debug("RPC completed", label.Duration, duration)
+	code := connect.CodeOf(err)
+	if isAnonymousSessionCheck(state.procedure, code) {
+		state.logger.Debug("RPC completed", label.Code, code.String(), label.Duration, duration, label.Error, err)
+		return
+	}
+	state.logger.Error("RPC completed", label.Code, code.String(), label.Duration, duration, label.Error, err)
+}
+
+// isAnonymousSessionCheck reports whether the failed RPC is the frontend's
+// GetUser call made without a session cookie. The frontend issues it on every
+// page load to find out whether someone is logged in, so an unauthenticated
+// answer is the expected outcome for a visitor and not a server error.
+func isAnonymousSessionCheck(procedure string, code connect.Code) bool {
+	return code == connect.CodeUnauthenticated && procedure == qfconnect.QuickFeedServiceGetUserProcedure
 }
 
 func (i *RPCLoggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {

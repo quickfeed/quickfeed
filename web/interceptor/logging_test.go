@@ -3,6 +3,7 @@ package interceptor
 import (
 	"bytes"
 	"context"
+	"errors"
 	"log/slog"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
@@ -57,17 +59,50 @@ func TestEnrichRequestLoggerWithoutClaims(t *testing.T) {
 }
 
 func TestRPCCompletionLogging(t *testing.T) {
-	var output bytes.Buffer
-	logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	interceptor := NewRPCLoggingInterceptor(logger)
-	state := &requestLog{logger: logger.With(label.RPCMethod, "/qf.QuickFeedService/GetCourse")}
-	interceptor.logCompletion(state, time.Now(), connect.NewError(connect.CodePermissionDenied, context.Canceled))
+	tests := []struct {
+		name      string
+		procedure string
+		err       error
+		wantLevel string
+		wantCode  string
+	}{
+		{
+			name:      "permission denied is an error",
+			procedure: qfconnect.QuickFeedServiceGetCourseProcedure,
+			err:       connect.NewError(connect.CodePermissionDenied, context.Canceled),
+			wantLevel: "ERROR",
+			wantCode:  "permission_denied",
+		},
+		{
+			name:      "unauthenticated GetUser is the anonymous session check",
+			procedure: qfconnect.QuickFeedServiceGetUserProcedure,
+			err:       connect.NewError(connect.CodeUnauthenticated, errors.New("failed to extract authentication cookie from request header")),
+			wantLevel: "DEBUG",
+			wantCode:  "unauthenticated",
+		},
+		{
+			name:      "unauthenticated other method is still an error",
+			procedure: qfconnect.QuickFeedServiceGetCourseProcedure,
+			err:       connect.NewError(connect.CodeUnauthenticated, errors.New("failed to extract authentication cookie from request header")),
+			wantLevel: "ERROR",
+			wantCode:  "unauthenticated",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var output bytes.Buffer
+			logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
+			interceptor := NewRPCLoggingInterceptor(logger)
+			state := &requestLog{logger: logger.With(label.RPCMethod, test.procedure), procedure: test.procedure}
+			interceptor.logCompletion(state, time.Now(), test.err)
 
-	got := output.String()
-	for _, want := range []string{`"level":"ERROR"`, `"rpc_method":"/qf.QuickFeedService/GetCourse"`, `"code":"permission_denied"`, `"duration":`} {
-		if !strings.Contains(got, want) {
-			t.Errorf("log output %q does not contain %q", got, want)
-		}
+			got := output.String()
+			for _, want := range []string{`"level":"` + test.wantLevel + `"`, `"rpc_method":"` + test.procedure + `"`, `"code":"` + test.wantCode + `"`, `"duration":`} {
+				if !strings.Contains(got, want) {
+					t.Errorf("log output %q does not contain %q", got, want)
+				}
+			}
+		})
 	}
 }
 
