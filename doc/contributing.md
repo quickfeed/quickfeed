@@ -96,3 +96,10 @@ For Go, we expect code to follow these style guidelines and list of common mista
 
 For Typescript, we think these [style guidelines](https://github.com/basarat/typescript-book/blob/master/docs/styleguide/styleguide.md) look reasonable.
 Moreover, the `formatOnSave` and `tslint.run` options in VSCode should help maintain reasonable style.
+
+## Reviewing Pull Requests
+
+Here are some helpful guidelines for reviewing code.
+
+- [How to Make Your Code Reviewer Fall in Love with You](https://mtlynch.io/code-review-love/)
+- [How to Write a Git Commit Message](https://chris.beams.io/git-commit)
