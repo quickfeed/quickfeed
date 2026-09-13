@@ -75,6 +75,13 @@ func checkCmd(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("reading tests repository %s: %w", c.testsDir(), err)
 	}
+	if *lab != "" {
+		// A misspelled assignment name would otherwise only skip the test runs,
+		// and the command would report success without having checked anything.
+		if _, err := findAssignment(parsed, *lab); err != nil {
+			return err
+		}
+	}
 	course.UpdateDockerfile(buildContext[ci.Dockerfile])
 	scripts, err := parseRunScripts(c.testsDir(), parsed)
 	if err != nil {
@@ -194,10 +201,15 @@ func checkRunScripts(scripts *runScripts) checkResult {
 }
 
 // checkDockerfile builds the course's own Docker image, if it has one. A course
-// whose run scripts name only prebuilt images needs no Dockerfile.
+// whose run scripts name only prebuilt images needs no Dockerfile, but an empty
+// one is a mistake; see courseDockerfile.
 func checkDockerfile(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string, scripts *runScripts, build bool) checkResult {
 	const name = "dockerfile"
-	if buildContext[ci.Dockerfile] == "" {
+	dockerfile, err := courseDockerfile(buildContext)
+	if err != nil {
+		return checkResult{name: name, result: fail, details: err.Error()}
+	}
+	if dockerfile == "" {
 		if users := scripts.usersOf(course.DockerImage()); len(users) > 0 {
 			return checkResult{name: name, result: fail, details: fmt.Sprintf(
 				"%s name the course image %q, but the tests repository has no %s/%s to build it",
