@@ -199,6 +199,33 @@ func TestParseRunScript(t *testing.T) {
 			script:  "#image/qf101\n#language/go\n\n",
 			wantErr: "no commands in run script",
 		},
+		{
+			name:    "CommentsOnly",
+			script:  "#image/qf101\n# the tests are run by the CI server\n#\n",
+			wantErr: "no commands in run script",
+		},
+		{
+			name:         "CommentAndCommand",
+			script:       "#image/qf101\n# run the tests\n  # indented comment\necho hello\n",
+			wantImage:    "qf101",
+			wantCommands: []string{"# run the tests", "  # indented comment", "echo hello", ""},
+		},
+		{
+			name:    "EmptyImage",
+			script:  "#image/\necho hello\n",
+			wantErr: "empty docker image in run script",
+		},
+		{
+			name:    "BlankImage",
+			script:  "#image/   \necho hello\n",
+			wantErr: "empty docker image in run script",
+		},
+		{
+			name:         "ImageWithSurroundingSpace",
+			script:       "#image/ QuickFeed:Go \necho hello\n",
+			wantImage:    "quickfeed:go",
+			wantCommands: []string{"echo hello", ""},
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
