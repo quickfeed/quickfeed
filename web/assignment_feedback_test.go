@@ -145,12 +145,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := client.Context(t, test.user)
 			_, err := client.CreateAssignmentFeedback(ctx, test.feedback)
-			if err == nil && test.wantErr == nil {
-				return // both nil, all good
-			}
-			if !qtest.CheckCode(t, err, test.wantErr) {
-				t.Errorf("CreateAssignmentFeedback() unexpected error: %v, %T, want: %v, %T", err, err, test.wantErr, test.wantErr)
-			}
+			qtest.CheckCode(t, err, test.wantErr)
 		})
 	}
 }
@@ -229,7 +224,8 @@ func TestGetAssignmentFeedback(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := client.Context(t, test.user)
 			resp, err := client.GetAssignmentFeedback(ctx, test.request)
-			if qtest.CheckCode(t, err, test.wantErr) {
+			qtest.CheckCode(t, err, test.wantErr)
+			if test.wantErr != nil {
 				return // cannot continue since resp is invalid
 			}
 			got := resp
