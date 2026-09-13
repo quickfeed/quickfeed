@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/tlslog"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 )
 
@@ -15,6 +16,7 @@ func init() {
 	metricsCollectorsSets := [][]prometheus.Collector{
 		interceptor.RPCMetricsCollectors(),
 		ci.TestExecutionMetricsCollectors(),
+		tlslog.Collectors(),
 	}
 	for _, collectors := range metricsCollectorsSets {
 		reg.MustRegister(collectors...)

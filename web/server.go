@@ -12,6 +12,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/reload"
+	"github.com/quickfeed/quickfeed/internal/tlslog"
 	"github.com/quickfeed/quickfeed/internal/ui"
 	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
@@ -41,6 +42,10 @@ func NewProductionServer(handler http.Handler) (*Server, error) {
 		),
 	}
 
+	// Both public listeners share one error logger, so that the summary counts
+	// and samples cover the server's handshake failures as a whole.
+	errorLog := tlslog.New()
+
 	httpServer := &http.Server{
 		Handler:           handler,
 		Addr:              env.HttpAddr(),
@@ -48,12 +53,14 @@ func NewProductionServer(handler http.Handler) (*Server, error) {
 		WriteTimeout:      2 * time.Minute,
 		ReadTimeout:       2 * time.Minute,
 		TLSConfig:         certManager.TLSConfig(),
+		ErrorLog:          errorLog,
 	}
 
 	redirectServer := &http.Server{
 		Handler:           certManager.HTTPHandler(nil),
 		Addr:              ":http",
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		ErrorLog:          errorLog,
 	}
 
 	return &Server{
