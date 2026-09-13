@@ -1,4 +1,4 @@
-package ci
+package fileop_test
 
 import (
 	"os"
@@ -6,7 +6,12 @@ import (
 	"runtime"
 	"slices"
 	"testing"
+
+	"github.com/quickfeed/quickfeed/internal/fileop"
 )
+
+// tempPrefix stands in for the temporary directory a test run is copied into.
+const tempPrefix = "quickfeed-tests"
 
 func TestCopyDir(t *testing.T) {
 	src := t.TempDir()
@@ -15,6 +20,7 @@ func TestCopyDir(t *testing.T) {
 		filepath.Join("lab1", "internal", "helper.go"):  "package internal\n",
 		filepath.Join("lab2", "lab2.go"):                "package lab2\n",
 		"go.mod":                                        "module example\n",
+		".gitignore":                                    "bin/\n",
 		filepath.Join(".git", "config"):                 "[core]\n",
 		filepath.Join(".git", "refs", "heads", "main"):  "deadbeef\n",
 		filepath.Join("lab1", ".git", "unexpected.txt"): "nested git dir\n",
@@ -33,13 +39,20 @@ func TestCopyDir(t *testing.T) {
 	if err := os.WriteFile(script, []byte("#!/bin/bash\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-
-	dst := filepath.Join(t.TempDir(), "submitted")
-	if err := copyDir(src, dst); err != nil {
+	// An empty directory is part of the tree and must be copied too.
+	if err := os.Mkdir(filepath.Join(src, "lab3"), 0o700); err != nil {
 		t.Fatal(err)
 	}
 
+	// The destination's parent does not exist yet; CopyDir must create it.
+	dst := filepath.Join(t.TempDir(), tempPrefix, "submitted")
+	if err := fileop.CopyDir(src, dst); err != nil {
+		t.Fatal(err)
+	}
+
+	// Only .git directories are skipped; a .gitignore file is a regular file.
 	wantFiles := []string{
+		".gitignore",
 		"go.mod",
 		filepath.Join("lab1", "internal", "helper.go"),
 		filepath.Join("lab1", "lab1.go"),
@@ -65,7 +78,7 @@ func TestCopyDir(t *testing.T) {
 	}
 	slices.Sort(gotFiles)
 	if !slices.Equal(wantFiles, gotFiles) {
-		t.Errorf("copyDir() copied %q, want %q", gotFiles, wantFiles)
+		t.Errorf("CopyDir() copied %q, want %q", gotFiles, wantFiles)
 	}
 
 	for _, name := range wantFiles {
@@ -78,8 +91,12 @@ func TestCopyDir(t *testing.T) {
 			t.Fatal(err)
 		}
 		if string(got) != want {
-			t.Errorf("copyDir() content of %q = %q, want %q", name, got, want)
+			t.Errorf("CopyDir() content of %q = %q, want %q", name, got, want)
 		}
+	}
+
+	if info, err := os.Stat(filepath.Join(dst, "lab3")); err != nil || !info.IsDir() {
+		t.Errorf("CopyDir() did not copy the empty directory lab3: %v", err)
 	}
 
 	if runtime.GOOS != "windows" {
@@ -89,20 +106,20 @@ func TestCopyDir(t *testing.T) {
 			t.Fatal(err)
 		}
 		if got := info.Mode().Perm(); got != 0o755 {
-			t.Errorf("copyDir() mode of lab1/run.sh = %o, want %o", got, 0o755)
+			t.Errorf("CopyDir() mode of lab1/run.sh = %o, want %o", got, 0o755)
 		}
 	}
 }
 
 func TestCopyDirMissingSource(t *testing.T) {
 	src := filepath.Join(t.TempDir(), "missing")
-	if err := copyDir(src, t.TempDir()); err == nil {
-		t.Error("copyDir() error = nil, want an error for a missing source directory")
+	if err := fileop.CopyDir(src, t.TempDir()); err == nil {
+		t.Error("CopyDir() error = nil, want an error for a missing source directory")
 	}
 }
 
 // TestCopyDirOverlappingPaths checks that a copy that would descend into its
-// own destination, or copy the destination into itself, is refused. RunTests
+// own destination, or copy the destination into itself, is refused. A test run
 // creates its destination under os.TempDir(), so a submission directory that
 // names a temporary directory is all it takes.
 func TestCopyDirOverlappingPaths(t *testing.T) {
@@ -117,14 +134,14 @@ func TestCopyDirOverlappingPaths(t *testing.T) {
 		dst  string
 	}{
 		{name: "SameDirectory", src: src, dst: src},
-		{name: "DestinationInsideSource", src: src, dst: filepath.Join(src, quickfeedTestsPath, "user-labs")},
+		{name: "DestinationInsideSource", src: src, dst: filepath.Join(src, tempPrefix, "user-labs")},
 		{name: "DestinationIsExistingSubdirectory", src: src, dst: filepath.Join(src, "lab1")},
 		{name: "SourceInsideDestination", src: src, dst: root},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := copyDir(tc.src, tc.dst); err == nil {
-				t.Errorf("copyDir(%q, %q) error = nil, want an overlap error", tc.src, tc.dst)
+			if err := fileop.CopyDir(tc.src, tc.dst); err == nil {
+				t.Errorf("CopyDir(%q, %q) error = nil, want an overlap error", tc.src, tc.dst)
 			}
 		})
 	}
@@ -142,8 +159,8 @@ func TestCopyDirSiblingPaths(t *testing.T) {
 		t.Fatal(err)
 	}
 	dst := filepath.Join(root, "lab-copy")
-	if err := copyDir(src, dst); err != nil {
-		t.Errorf("copyDir(%q, %q) error = %v, want nil", src, dst, err)
+	if err := fileop.CopyDir(src, dst); err != nil {
+		t.Errorf("CopyDir(%q, %q) error = %v, want nil", src, dst, err)
 	}
 	if _, err := os.Stat(filepath.Join(dst, "lab.go")); err != nil {
 		t.Error(err)
@@ -167,13 +184,13 @@ func TestCopyDirSymlinkedPaths(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The destination is created under the link, and thereby inside the source.
-	dst := filepath.Join(link, quickfeedTestsPath)
-	if err := copyDir(src, dst); err == nil {
-		t.Errorf("copyDir(%q, %q) error = nil, want an overlap error through the link", src, dst)
+	dst := filepath.Join(link, tempPrefix)
+	if err := fileop.CopyDir(src, dst); err == nil {
+		t.Errorf("CopyDir(%q, %q) error = nil, want an overlap error through the link", src, dst)
 	}
 	// The same, with the roles of the link and the resolved path exchanged.
-	dst = filepath.Join(src, quickfeedTestsPath)
-	if err := copyDir(link, dst); err == nil {
-		t.Errorf("copyDir(%q, %q) error = nil, want an overlap error through the link", link, dst)
+	dst = filepath.Join(src, tempPrefix)
+	if err := fileop.CopyDir(link, dst); err == nil {
+		t.Errorf("CopyDir(%q, %q) error = nil, want an overlap error through the link", link, dst)
 	}
 }
