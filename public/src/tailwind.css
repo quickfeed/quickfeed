@@ -4,6 +4,22 @@
   themes: light --default, dark, cupcake, synthwave, cyberpunk, forest, aqua;
 }
 
+/* The About page screenshots (assets/img/intro*.png) were captured from the
+   light QuickFeed UI, so they glare on a dark ground. Rather than maintaining a
+   second set of binaries that would drift from the first, adapt them in CSS:
+   invert() turns the white ground dark, and the 180deg hue rotation undoes the
+   hue flip that inversion causes, so the green/blue/red status colors stay
+   recognizable. The 0.9 amount keeps the result just short of pure black, and
+   brightness() compensates for the darkening that the rotation introduces.
+   Applied per dark theme; the theme is always stamped on the root element by
+   onInitializeOvermind, including when it resolves the system preference. */
+[data-theme="dark"] .about-screenshot,
+[data-theme="synthwave"] .about-screenshot,
+[data-theme="forest"] .about-screenshot,
+[data-theme="aqua"] .about-screenshot {
+  filter: invert(0.9) hue-rotate(180deg) brightness(1.05);
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar {
