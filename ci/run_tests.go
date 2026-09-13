@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/internal/rand"
@@ -37,10 +38,10 @@ type RunData struct {
 	JobOwner   string
 	Rebuild    bool
 	// SubmissionDir, if set, is a local directory holding the code to test.
-	// RunTests then copies it, skipping any .git directory, into the job's
-	// temporary directory under Repo.Name() instead of cloning Repo from the
-	// SCM. This supports test runs for code that has not been pushed, such as
-	// the course's own skeleton and solution code; see NewSkeletonRun.
+	// RunTests then copies it with fileop.CopyDir into the job's temporary
+	// directory under Repo.Name() instead of cloning Repo from the SCM. This
+	// supports test runs for code that has not been pushed, such as the
+	// course's own skeleton and solution code; see NewSkeletonRun.
 	SubmissionDir string
 }
 
@@ -156,7 +157,7 @@ func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 		// The code to test is already on this machine; copy it in place of the
 		// clone, so that the run is identical from here on.
 		clonedStudentRepo = filepath.Join(dstDir, r.Repo.Name())
-		if err := copyDir(r.SubmissionDir, clonedStudentRepo); err != nil {
+		if err := fileop.CopyDir(r.SubmissionDir, clonedStudentRepo); err != nil {
 			return fmt.Errorf("copying submission directory %q: %w", r.SubmissionDir, err)
 		}
 	} else {
