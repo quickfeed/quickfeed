@@ -64,6 +64,11 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
+	dockerfile, err := courseDockerfile(buildContext)
+	if err != nil {
+		return err
+	}
+	course.UpdateDockerfile(dockerfile)
 
 	runner, err := ci.NewDockerCI()
 	if err != nil {
@@ -72,8 +77,7 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 	defer func() { _ = runner.Close() }()
 
 	ctx := qlog.NewContext(context.Background(), logger)
-	course.UpdateDockerfile(buildContext[ci.Dockerfile])
-	if buildContext[ci.Dockerfile] != "" && *build {
+	if dockerfile != "" && *build {
 		fmt.Fprintf(stdout, "Building the %s image from the course's Dockerfile\n", course.DockerImage())
 		if err := assignments.BuildDockerImage(ctx, runner, course, buildContext); err != nil {
 			return fmt.Errorf("building course image: %w", err)
@@ -86,13 +90,18 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 	}
 	ctx, cancel := withTimeout(ctx, assignment, *timeout)
 	defer cancel()
+	return runAndReport(ctx, runData, sc, runner, stdout)
+}
 
+// runAndReport runs one test job and prints the resulting scores. A test run
+// that failed is reported as an error, so that the command exits non-zero.
+func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner ci.Runner, stdout io.Writer) error {
 	results, err := runData.RunTests(ctx, sc, runner)
 	if err != nil {
 		if errors.Is(err, ci.ErrConflict) {
 			return fmt.Errorf("%w; wait for the running job %s to finish", err, runData)
 		}
-		return fmt.Errorf("running tests for %s: %w", assignment.GetName(), err)
+		return fmt.Errorf("running tests for %s: %w", runData.Assignment.GetName(), err)
 	}
 	printResults(stdout, results)
 	if results.Failed() {

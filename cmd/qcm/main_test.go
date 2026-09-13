@@ -117,6 +117,53 @@ func TestCheckMissingTestsRepository(t *testing.T) {
 	}
 }
 
+// assignmentJSON is a minimal assignment.json for an auto-graded assignment.
+const assignmentJSON = `{"order": 1, "deadline": "01-12-2025T23:59"}`
+
+// TestCheckUnknownLab checks that a misspelled -lab is reported as an error
+// naming the course's assignments. Without the check, every test run would be
+// skipped and the command would report success without checking anything.
+func TestCheckUnknownLab(t *testing.T) {
+	const org = "dat320-2025"
+	dir := writeTestsRepo(t, org, map[string]string{
+		filepath.Join("lab1", "assignment.json"): assignmentJSON,
+		filepath.Join(scriptsDir, runScriptFile): "#image/dat320\necho hello\n",
+	})
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"check", "-course", org, "-dir", dir, "-lab", "lab9"}, &stdout, &stderr)
+	if err == nil {
+		t.Fatal("run(check -lab lab9) error = nil, want an error for the unknown assignment")
+	}
+	for _, want := range []string{`assignment "lab9" not found`, "lab1"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("run(check -lab lab9) error = %q, want it to contain %q", err, want)
+		}
+	}
+	if out := stdout.String(); out != "" {
+		t.Errorf("run(check -lab lab9) printed %q, want no checks to have run", out)
+	}
+}
+
+// TestRunEmptyDockerfile checks that a course whose scripts/Dockerfile is
+// present but empty is reported, rather than silently treated as a course
+// without a Dockerfile, whose image would then never be built.
+func TestRunEmptyDockerfile(t *testing.T) {
+	const org = "dat320-2025"
+	dir := writeTestsRepo(t, org, map[string]string{
+		filepath.Join("lab1", "assignment.json"): assignmentJSON,
+		filepath.Join(scriptsDir, runScriptFile): "#image/dat320\necho hello\n",
+		filepath.Join(scriptsDir, ci.Dockerfile): "\n\n",
+	})
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"run", "-course", org, "-dir", dir, "-lab", "lab1", "-submission", t.TempDir()}, &stdout, &stderr)
+	if err == nil {
+		t.Fatal("run(run) error = nil, want an error for the empty Dockerfile")
+	}
+	if want := "scripts/Dockerfile is empty"; !strings.Contains(err.Error(), want) {
+		t.Errorf("run(run) error = %q, want it to contain %q", err, want)
+	}
+}
+
 // TestValidateSetsRepositoryPath pins that -dir is what the ci package resolves
 // a course's clone directory from; the flag was previously declared but unused.
 func TestValidateSetsRepositoryPath(t *testing.T) {
@@ -142,9 +189,9 @@ func TestValidateSetsRepositoryPath(t *testing.T) {
 
 func TestParseRunScripts(t *testing.T) {
 	testsDir := t.TempDir()
-	writeScript(t, testsDir, filepath.Join(scriptsDir, runScriptFile), "#image/dat320\necho hello\n")
-	writeScript(t, testsDir, filepath.Join("lab1", runScriptFile), "#image/golang:1.26\necho lab1\n")
-	writeScript(t, testsDir, filepath.Join("lab2", runScriptFile), "#image/dat320\n\n\n")
+	writeRepoFile(t, testsDir, filepath.Join(scriptsDir, runScriptFile), "#image/dat320\necho hello\n")
+	writeRepoFile(t, testsDir, filepath.Join("lab1", runScriptFile), "#image/golang:1.26\necho lab1\n")
+	writeRepoFile(t, testsDir, filepath.Join("lab2", runScriptFile), "#image/dat320\n\n\n")
 	parsed := []*qf.Assignment{{Name: "lab1"}, {Name: "lab2"}, {Name: "lab3"}}
 
 	scripts, err := parseRunScripts(testsDir, parsed)
@@ -226,6 +273,61 @@ func TestCheckDockerfile(t *testing.T) {
 	got = checkDockerfile(t.Context(), nil, course, buildContext, own, false)
 	if got.result != skip {
 		t.Errorf("checkDockerfile(-build=false) = %+v, want %s", got, skip)
+	}
+	// A Dockerfile that is present but empty is a mistake, not an absent one.
+	empty := map[string]string{ci.Dockerfile: "\n  \n"}
+	got = checkDockerfile(t.Context(), nil, course, empty, prebuilt, true)
+	if got.result != fail {
+		t.Errorf("checkDockerfile(empty Dockerfile) = %+v, want %s", got, fail)
+	}
+	if !strings.Contains(got.details, "scripts/Dockerfile is empty") {
+		t.Errorf("checkDockerfile() details = %q, want it to name the empty Dockerfile", got.details)
+	}
+}
+
+func TestCourseDockerfile(t *testing.T) {
+	tests := []struct {
+		name         string
+		buildContext map[string]string
+		want         string
+		wantErr      bool
+	}{
+		{name: "NoDockerfile", buildContext: map[string]string{"go.mod": "module example\n"}},
+		{name: "NoBuildContext", buildContext: nil},
+		{name: "Dockerfile", buildContext: map[string]string{ci.Dockerfile: "FROM golang:1.26\n"}, want: "FROM golang:1.26\n"},
+		{name: "EmptyDockerfile", buildContext: map[string]string{ci.Dockerfile: ""}, wantErr: true},
+		{name: "BlankDockerfile", buildContext: map[string]string{ci.Dockerfile: "\n \t\n"}, wantErr: true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := courseDockerfile(tc.buildContext)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("courseDockerfile(%q) error = nil, want an error", tc.buildContext)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("courseDockerfile(%q) error = %v, want nil", tc.buildContext, err)
+			}
+			if got != tc.want {
+				t.Errorf("courseDockerfile(%q) = %q, want %q", tc.buildContext, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestCheckSkeletonManuallyGraded checks that a manually graded assignment is
+// skipped rather than run: it has no tests to score the handout code with.
+func TestCheckSkeletonManuallyGraded(t *testing.T) {
+	course := &qf.Course{Code: "DAT320", ScmOrganizationName: "dat320-2025"}
+	parsed := []*qf.Assignment{{Name: "lab1", Reviewers: 1}}
+	got := checkSkeleton(t.Context(), nil, course, parsed, "lab1", 0)
+	if len(got) != 1 || got[0].result != skip {
+		t.Fatalf("checkSkeleton(manually graded) = %+v, want a single %s", got, skip)
+	}
+	if !strings.Contains(got[0].details, "not an auto-graded assignment") {
+		t.Errorf("checkSkeleton() details = %q, want it to say why the run was skipped", got[0].details)
 	}
 }
 
@@ -358,7 +460,7 @@ func names(as []*qf.Assignment) []string {
 	return out
 }
 
-func writeScript(t *testing.T, testsDir, rel, content string) {
+func writeRepoFile(t *testing.T, testsDir, rel, content string) {
 	t.Helper()
 	path := filepath.Join(testsDir, rel)
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
@@ -367,4 +469,20 @@ func writeScript(t *testing.T, testsDir, rel, content string) {
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// writeTestsRepo creates the tests repository of the given course organization,
+// holding the given repository-relative files, and returns the root directory
+// to pass as -dir. The repository path in the environment is pointed at the
+// same directory, as the commands themselves do, so that the ci package
+// resolves the course's clone directory to it.
+func writeTestsRepo(t *testing.T, org string, files map[string]string) string {
+	t.Helper()
+	dir := t.TempDir()
+	testsDir := filepath.Join(dir, org, qf.TestsRepo)
+	for rel, content := range files {
+		writeRepoFile(t, testsDir, rel, content)
+	}
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", dir)
+	return dir
 }

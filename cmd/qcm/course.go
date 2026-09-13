@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
@@ -85,6 +87,23 @@ func (c *commonFlags) scmClient(logger *slog.Logger) (scm.SCM, error) {
 		return nil, errors.New("missing GitHub access token; set -token or the GITHUB_ACCESS_TOKEN environment variable")
 	}
 	return scm.NewSCMClient(logger, c.token)
+}
+
+// courseDockerfile returns the content of the course's Dockerfile, taken from
+// the build context of its tests repository, or the empty string for a course
+// without one. A course whose run scripts name only prebuilt images needs no
+// Dockerfile of its own.
+//
+// A Dockerfile that is present but empty is an error rather than an absent
+// one: it builds nothing, and its content is what the build context and the
+// course's Dockerfile digest are keyed on, so leaving it in place would let
+// every later check silently treat the course as having no Dockerfile.
+func courseDockerfile(buildContext map[string]string) (string, error) {
+	dockerfile, ok := buildContext[ci.Dockerfile]
+	if ok && strings.TrimSpace(dockerfile) == "" {
+		return "", fmt.Errorf("%s/%s is empty; add its content or delete the file", scriptsDir, ci.Dockerfile)
+	}
+	return dockerfile, nil
 }
 
 // yearSuffix matches the four-digit year that a course organization is
