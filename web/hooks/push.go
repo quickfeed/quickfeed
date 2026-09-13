@@ -66,7 +66,7 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 		if _, err := assignments.UpdateFromCourseRepositories(ctx, wh.runner, wh.db, scmClient, course); err != nil {
 			logger.Error("failed to update from course repositories", label.Error, err)
 		} else {
-			wh.runCanary(ctx, scmClient, course, payload)
+			wh.runCanary(ctx, scmClient, course, repo.Name(), payload)
 		}
 
 	case repo.IsAssignmentsRepo():
@@ -88,7 +88,7 @@ func (wh GitHubWebHook) handlePush(ctx context.Context, payload *github.PushEven
 		// delay either of them. The canary needs the updated assignments, so it
 		// is skipped when the update failed.
 		if updateErr == nil {
-			wh.runCanary(ctx, scmClient, course, payload)
+			wh.runCanary(ctx, scmClient, course, repo.Name(), payload)
 		}
 
 	case repo.IsStudentRepo():

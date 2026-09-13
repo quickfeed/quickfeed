@@ -2,6 +2,7 @@ package hooks
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -9,13 +10,17 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v62/github"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/stream"
 )
@@ -79,6 +84,13 @@ func TestCanaryTargets(t *testing.T) {
 			wantNames: map[string]bool{},
 		},
 		{
+			// A folder that is not an assignment is returned as a name; only
+			// runCanary knows the course's assignments and widens the run.
+			name:      "SharedCodeFolder",
+			commits:   []*github.HeadCommit{{Modified: []string{"internal/shared.go"}}},
+			wantNames: map[string]bool{"internal": true},
+		},
+		{
 			name: "AcrossChangeKinds",
 			commits: []*github.HeadCommit{{
 				Added:    []string{"lab1/lab1.go"},
@@ -119,7 +131,7 @@ func TestCanaryTargets(t *testing.T) {
 	}
 }
 
-// canaryTestOrg is the course organization used by TestRunCanary. Its
+// canaryTestOrg is the course organization used by the tests below. Its
 // repositories are created below a temporary directory; no network, SCM client,
 // or Docker daemon is involved, since the canary runs the skeleton code from
 // the local clone of the assignments repository with the Local runner.
@@ -137,6 +149,21 @@ const canaryRunScriptFmt = `#image/dummy
 echo "{\"Secret\":\"$QUICKFEED_SESSION_SECRET\",\"TestName\":\"` + canaryTestName + `\",\"Score\":%d,\"MaxScore\":10,\"Weight\":1}"
 `
 
+// canaryNoOutputScript is a course run script that produces no output and no
+// error, which is classified as NO_SCORES; see ci.classifyRun.
+const canaryNoOutputScript = `#image/dummy
+
+:
+`
+
+// canaryRunMessages are the messages reporting that the canary actually ran.
+var canaryRunMessages = []string{
+	"test environment canary failed",
+	"test environment canary passed",
+	"test environment canary could not run",
+	"test environment canary finished",
+}
+
 // canaryRecord is the subset of a JSON log record that the assertions below
 // inspect; the enclosing scope's attributes are ignored.
 type canaryRecord struct {
@@ -145,8 +172,11 @@ type canaryRecord struct {
 	Assignment  string `json:"assignment"`
 	Score       uint32 `json:"score"`
 	Problem     string `json:"problem"`
+	RunStatus   string `json:"run_status"`
+	CloneHead   string `json:"clone_head"`
 	Assignments int    `json:"assignments"`
 	Problems    int    `json:"problems"`
+	Skipped     int    `json:"skipped"`
 }
 
 // canaryRecords parses the JSON log records written to output.
@@ -175,6 +205,33 @@ func recordsWith(records []canaryRecord, msg string) []canaryRecord {
 		}
 	}
 	return matching
+}
+
+// assertNoCanaryRun fails the test if output reports any canary run.
+func assertNoCanaryRun(t *testing.T, output string) {
+	t.Helper()
+	records := canaryRecords(t, output)
+	for _, msg := range canaryRunMessages {
+		if n := len(recordsWith(records, msg)); n != 0 {
+			t.Errorf("runCanary() logged %d %q records, want 0:\n%s", n, msg, output)
+		}
+	}
+}
+
+// setupCanary returns a webhook using the given runner, a course whose run
+// script is the given one, the logging context that handlePush establishes
+// before calling runCanary, and the buffer receiving the JSON log records.
+func setupCanary(t *testing.T, runner ci.Runner, runScript string) (*GitHubWebHook, *qf.Course, context.Context, *bytes.Buffer) {
+	t.Helper()
+	db, cleanup := qtest.TestDB(t)
+	t.Cleanup(cleanup)
+
+	output := new(bytes.Buffer)
+	logger := slog.New(slog.NewJSONHandler(output, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	wh := NewGitHubWebHook(logger, db, nil, runner, "secret", stream.NewStreamServices(), nil)
+	course := setupCanaryCourse(t, db, runScript)
+	ctx, _ := qlog.WithCourse(qlog.NewContext(t.Context(), logger), course)
+	return wh, course, ctx, output
 }
 
 // setupCanaryCourse creates the course's tests and assignments repositories
@@ -233,6 +290,36 @@ func mkdir(t *testing.T, dir string) {
 	}
 }
 
+// initCanaryClone turns dir into a git repository holding a single commit,
+// standing in for the go-git clone that the server keeps of a course
+// repository, and returns the hash of that commit.
+func initCanaryClone(t *testing.T, dir string) string {
+	t.Helper()
+	repo, err := git.PlainInit(dir, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte("# canary\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	worktree, err := repo.Worktree()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := worktree.Add("README.md"); err != nil {
+		t.Fatal(err)
+	}
+	// The author is set explicitly, so that the commit does not depend on the
+	// git configuration of the machine running the test.
+	hash, err := worktree.Commit("add readme", &git.CommitOptions{
+		Author: &object.Signature{Name: "QuickFeed", Email: "quickfeed@example.com", When: time.Now()},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return hash.String()
+}
+
 // canaryPush returns a push event modifying the given files.
 func canaryPush(files ...string) *github.PushEvent {
 	return &github.PushEvent{
@@ -245,52 +332,50 @@ func canaryPush(files ...string) *github.PushEvent {
 // code is taken from the local clone of the assignments repository and scored by
 // the course's run script, so the scores below are those of the skeleton code.
 func TestRunCanary(t *testing.T) {
-	// The messages that report an actual canary run for an assignment.
-	runMessages := []string{
-		"test environment canary failed",
-		"test environment canary passed",
-		"test environment canary could not run",
-		"test environment canary finished",
-	}
 	tests := []struct {
-		name      string
-		points    int    // points awarded to the skeleton code, out of ten
-		wantLevel string // level of the expected per-assignment record
-		wantMsg   string // message of the expected per-assignment record
-		wantScore uint32 // score the record must report
-		wantProbs int    // problems the summary record must report
+		name       string
+		runScript  string // the course's run script
+		wantLevel  string // level of the expected per-assignment record
+		wantMsg    string // message of the expected per-assignment record
+		wantScore  uint32 // score the record must report
+		wantStatus string // run status the record must report, if any
+		wantProbs  int    // problems the summary record must report
 	}{
 		{
-			name:      "SkeletonPassesEveryTest",
-			points:    10,
-			wantLevel: slog.LevelWarn.String(),
-			wantMsg:   "test environment canary failed",
-			wantScore: 100,
-			wantProbs: 1,
+			name:       "SkeletonPassesEveryTest",
+			runScript:  fmt.Sprintf(canaryRunScriptFmt, 10),
+			wantLevel:  slog.LevelWarn.String(),
+			wantMsg:    "test environment canary failed",
+			wantScore:  100,
+			wantStatus: score.RunStatus_SUCCESS.String(),
+			wantProbs:  1,
 		},
 		{
 			name:      "SkeletonScoresZero",
-			points:    0,
+			runScript: fmt.Sprintf(canaryRunScriptFmt, 0),
 			wantLevel: slog.LevelInfo.String(),
 			wantMsg:   "test environment canary passed",
 			wantScore: 0,
 		},
+		{
+			// A run script that prints nothing produces no test results at all,
+			// which is a broken test environment rather than a healthy zero.
+			name:       "RunProducesNoScores",
+			runScript:  canaryNoOutputScript,
+			wantLevel:  slog.LevelWarn.String(),
+			wantMsg:    "test environment canary failed",
+			wantScore:  0,
+			wantStatus: score.RunStatus_NO_SCORES.String(),
+			wantProbs:  1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, cleanup := qtest.TestDB(t)
-			defer cleanup()
-
-			var output bytes.Buffer
-			logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
-			wh := NewGitHubWebHook(logger, db, nil, &ci.Local{}, "secret", stream.NewStreamServices(), nil)
-			course := setupCanaryCourse(t, db, fmt.Sprintf(canaryRunScriptFmt, tt.points))
-			// The scope handlePush establishes before calling runCanary.
-			ctx, _ := qlog.WithCourse(qlog.NewContext(t.Context(), logger), course)
+			wh, course, ctx, output := setupCanary(t, &ci.Local{}, tt.runScript)
 
 			// A push touching lab1 checks lab1, and nothing else. The SCM
 			// client is nil: the skeleton run needs no clone.
-			wh.runCanary(ctx, nil, course, canaryPush("lab1/lab1.go"))
+			wh.runCanary(ctx, nil, course, qf.TestsRepo, canaryPush("lab1/lab1.go"))
 			records := canaryRecords(t, output.String())
 
 			got := recordsWith(records, tt.wantMsg)
@@ -306,6 +391,9 @@ func TestRunCanary(t *testing.T) {
 			if got[0].Score != tt.wantScore {
 				t.Errorf("runCanary() logged score %d for lab1, want %d", got[0].Score, tt.wantScore)
 			}
+			if got[0].RunStatus != tt.wantStatus {
+				t.Errorf("runCanary() logged run status %q for lab1, want %q", got[0].RunStatus, tt.wantStatus)
+			}
 			if (got[0].Problem != "") != (tt.wantProbs > 0) {
 				t.Errorf("runCanary() logged problem %q, want problem: %t", got[0].Problem, tt.wantProbs > 0)
 			}
@@ -314,9 +402,9 @@ func TestRunCanary(t *testing.T) {
 			if len(summary) != 1 {
 				t.Fatalf("runCanary() logged %d summary records, want 1:\n%s", len(summary), output.String())
 			}
-			if summary[0].Assignments != 1 || summary[0].Problems != tt.wantProbs {
-				t.Errorf("runCanary() summary = %d assignments, %d problems; want 1 assignment, %d problems",
-					summary[0].Assignments, summary[0].Problems, tt.wantProbs)
+			if summary[0].Assignments != 1 || summary[0].Problems != tt.wantProbs || summary[0].Skipped != 0 {
+				t.Errorf("runCanary() summary = %d assignments, %d problems, %d skipped; want 1, %d, 0",
+					summary[0].Assignments, summary[0].Problems, summary[0].Skipped, tt.wantProbs)
 			}
 			// The manually graded lab2 has no tests to check.
 			for _, record := range records {
@@ -327,12 +415,132 @@ func TestRunCanary(t *testing.T) {
 
 			// A push touching only the manually graded lab2 runs nothing.
 			output.Reset()
-			wh.runCanary(ctx, nil, course, canaryPush("lab2/lab2.go"))
-			for _, msg := range runMessages {
-				if n := len(recordsWith(canaryRecords(t, output.String()), msg)); n != 0 {
-					t.Errorf("runCanary() logged %d %q records for a lab2-only push, want 0:\n%s", n, msg, output.String())
-				}
-			}
+			wh.runCanary(ctx, nil, course, qf.TestsRepo, canaryPush("lab2/lab2.go"))
+			assertNoCanaryRun(t, output.String())
 		})
+	}
+}
+
+// TestRunCanaryWidensToUnknownFolder checks that a push to a top-level folder
+// that is not an assignment checks every assignment. Such a folder holds code
+// shared by the assignments, and nothing in the push says which of them use it.
+func TestRunCanaryWidensToUnknownFolder(t *testing.T) {
+	const widenMsg = "changed folder is not an assignment; checking every assignment"
+	wh, course, ctx, output := setupCanary(t, &ci.Local{}, fmt.Sprintf(canaryRunScriptFmt, 0))
+
+	// A shared-code folder, such as one listed in .quickfeedignore.
+	wh.runCanary(ctx, nil, course, qf.TestsRepo, canaryPush("internal/shared.go"))
+	records := canaryRecords(t, output.String())
+
+	widened := recordsWith(records, widenMsg)
+	if len(widened) != 1 {
+		t.Fatalf("runCanary() logged %d %q records, want 1:\n%s", len(widened), widenMsg, output.String())
+	}
+	if widened[0].Assignment != "internal" {
+		t.Errorf("runCanary() logged %q for folder %q, want %q", widenMsg, widened[0].Assignment, "internal")
+	}
+	// lab1 is the course's only assignment graded by the tests.
+	if n := len(recordsWith(records, "test environment canary passed")); n != 1 {
+		t.Errorf("runCanary() logged %d passed records for lab1, want 1:\n%s", n, output.String())
+	}
+}
+
+// contextRunner is a ci.Runner recording whether it ran, and the error of the
+// run's context when it did.
+type contextRunner struct {
+	ran    bool
+	ctxErr error
+}
+
+func (r *contextRunner) Run(ctx context.Context, _ *ci.Job) (string, error) {
+	r.ran, r.ctxErr = true, ctx.Err()
+	return "", nil
+}
+
+// TestRunCanaryIgnoresWebhookDeadline checks that the handler's webhook
+// deadline does not reach the canary's runs. A push to the scripts folder or
+// to the repository root selects every auto-graded assignment, and the runs are
+// sequential, so a later run may start after the deadline has passed; it must
+// then still run, bounded only by its own container timeout.
+func TestRunCanaryIgnoresWebhookDeadline(t *testing.T) {
+	runner := &contextRunner{}
+	wh, course, ctx, _ := setupCanary(t, runner, fmt.Sprintf(canaryRunScriptFmt, 0))
+	ctx, cancel := context.WithCancel(ctx)
+	cancel() // the webhook deadline passed before the run started
+
+	wh.runCanary(ctx, nil, course, qf.TestsRepo, canaryPush("lab1/lab1.go"))
+	if !runner.ran {
+		t.Fatal("runCanary() did not run the canary for lab1")
+	}
+	if runner.ctxErr != nil {
+		t.Errorf("runCanary() ran the canary on a done context: %v", runner.ctxErr)
+	}
+}
+
+// conflictRunner is a ci.Runner reporting that the job's container name is
+// taken, which is how a run that is already in progress is reported.
+type conflictRunner struct{}
+
+func (conflictRunner) Run(context.Context, *ci.Job) (string, error) {
+	return "", ci.ErrConflict
+}
+
+// TestRunCanarySkipsDuplicateRun checks that a canary whose run is already in
+// progress is counted as skipped, and not as a healthy test environment.
+func TestRunCanarySkipsDuplicateRun(t *testing.T) {
+	wh, course, ctx, output := setupCanary(t, conflictRunner{}, fmt.Sprintf(canaryRunScriptFmt, 0))
+
+	wh.runCanary(ctx, nil, course, qf.TestsRepo, canaryPush("lab1/lab1.go"))
+	records := canaryRecords(t, output.String())
+
+	summary := recordsWith(records, "test environment canary finished")
+	if len(summary) != 1 {
+		t.Fatalf("runCanary() logged %d summary records, want 1:\n%s", len(summary), output.String())
+	}
+	if summary[0].Assignments != 1 || summary[0].Skipped != 1 || summary[0].Problems != 0 {
+		t.Errorf("runCanary() summary = %d assignments, %d problems, %d skipped; want 1, 0, 1",
+			summary[0].Assignments, summary[0].Problems, summary[0].Skipped)
+	}
+	for _, msg := range []string{"test environment canary failed", "test environment canary passed"} {
+		if n := len(recordsWith(records, msg)); n != 0 {
+			t.Errorf("runCanary() logged %d %q records for a duplicate run, want 0:\n%s", n, msg, output.String())
+		}
+	}
+}
+
+// TestRunCanarySkipsStaleClone checks that the canary runs only when the local
+// clone of the pushed repository is at the pushed commit. The assignments
+// update reports success even when refreshing a clone failed, so the clone may
+// still hold the skeleton code of an earlier push.
+func TestRunCanarySkipsStaleClone(t *testing.T) {
+	const skipMsg = "skipping test environment canary: local clone is not at the pushed commit"
+	wh, course, ctx, output := setupCanary(t, &ci.Local{}, fmt.Sprintf(canaryRunScriptFmt, 0))
+	head := initCanaryClone(t, filepath.Join(course.CloneDir(), qf.TestsRepo))
+
+	// The pushed commit is not the one the clone is at.
+	wh.runCanary(ctx, nil, course, qf.TestsRepo, canaryPush("lab1/lab1.go"))
+	skips := recordsWith(canaryRecords(t, output.String()), skipMsg)
+	if len(skips) != 1 {
+		t.Fatalf("runCanary() logged %d %q records, want 1:\n%s", len(skips), skipMsg, output.String())
+	}
+	if skips[0].Level != slog.LevelWarn.String() {
+		t.Errorf("runCanary() logged %q at level %s, want %s", skipMsg, skips[0].Level, slog.LevelWarn.String())
+	}
+	if skips[0].CloneHead != head {
+		t.Errorf("runCanary() logged clone head %q, want %q", skips[0].CloneHead, head)
+	}
+	assertNoCanaryRun(t, output.String())
+
+	// The clone is at the pushed commit, so the canary runs.
+	output.Reset()
+	push := canaryPush("lab1/lab1.go")
+	push.HeadCommit.ID = new(head)
+	wh.runCanary(ctx, nil, course, qf.TestsRepo, push)
+	records := canaryRecords(t, output.String())
+	if n := len(recordsWith(records, skipMsg)); n != 0 {
+		t.Errorf("runCanary() logged %d %q records for the pushed commit, want 0:\n%s", n, skipMsg, output.String())
+	}
+	if n := len(recordsWith(records, "test environment canary passed")); n != 1 {
+		t.Errorf("runCanary() logged %d passed records for lab1, want 1:\n%s", n, output.String())
 	}
 }
