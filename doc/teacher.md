@@ -360,6 +360,40 @@ go test -v -timeout 240s ./... 2>&1
 printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"
 ```
 
+### Checking the Test Environment Locally
+
+The `qcm` command runs your course's tests on your own machine, in the same Docker image QuickFeed uses, so you can find a broken test environment before your students do.
+Install it with `make qcm` or `go install ./cmd/qcm`, and set `GITHUB_ACCESS_TOKEN` to a personal access token with access to your course organization.
+
+```sh
+% qcm clone -course dat320-2025
+% qcm check -course dat320-2025
+```
+
+The `clone` command fetches the `tests` and `assignments` repositories into `$HOME/courses/dat320-2025`; rerun it to pull the latest changes.
+The `check` command then verifies, and prints one line per check:
+
+- Every `run.sh` parses, and every assignment is covered by one.
+- The course's `scripts/Dockerfile` builds, if the course has one.
+- The two repositories are aligned, and the `json` files in the `tests` repository parse.
+- The **skeleton** code in the `assignments` repository scores at most 5%.
+  This is the check that matters: if the handout code your students start from already scores well, your tests are not exercising the parts they are asked to write.
+  The threshold is not zero because a test may award a point for something the skeleton happens to satisfy.
+- The **solution** code scores exactly 100%, with `qcm check -course dat320-2025 -solution ~/dat320-solutions`.
+  A lower score means your tests cannot be passed as written.
+
+The solution directory must be laid out like a student repository, with one folder per assignment.
+The command exits non-zero if any check fails; use `-lab lab1` to check a single assignment, and `-v` for the details of a failing run.
+
+While writing an assignment, run its tests against a local folder without pushing anything:
+
+```sh
+% qcm run -course dat320-2025 -lab lab1 -submission ~/dat320-solutions
+```
+
+This prints the score of each test and the weighted total, exactly as your students will see them.
+Use `-user <github-login>` or `-group <name>` instead of `-submission` to test what someone has actually pushed.
+
 ## Writing Tests
 
 The test runner script will run the tests for the current assignment.

@@ -26,7 +26,7 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	image, language, commands, err := parseRunScript(scriptContent)
+	image, language, commands, err := ParseRunScript(scriptContent)
 	if err != nil {
 		return nil, fmt.Errorf("parsing run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
@@ -80,7 +80,18 @@ func (r *RunData) loadRunScript() (string, error) {
 	return string(b), nil
 }
 
-func parseRunScript(scriptContent string) (image, language string, commands []string, err error) {
+// ParseRunScript parses the content of a course's test runner script and
+// returns the Docker image named by the script's mandatory #image/ directive,
+// the programming language named by its optional #language/ directive, and the
+// remaining lines as the commands to run.
+//
+// The script must name a non-empty image and must hold at least one command; a
+// script consisting of directives, comments, and blank lines alone cannot
+// produce test results, and is reported here rather than as a mystifying empty
+// test run. Teachers can therefore check their run scripts with this function;
+// see cmd/qcm. Comment lines are returned among the commands, so that the
+// script runs exactly as written, but they do not count as commands.
+func ParseRunScript(scriptContent string) (image, language string, commands []string, err error) {
 	lines := strings.Split(scriptContent, "\n")
 	if len(lines) < 3 {
 		return "", "", nil, errors.New("empty run script")
@@ -89,13 +100,22 @@ func parseRunScript(scriptContent string) (image, language string, commands []st
 	if len(parts) < 2 {
 		return "", "", nil, errors.New("no docker image specified in run script")
 	}
-	image = strings.ToLower(parts[1])
+	image = strings.ToLower(strings.TrimSpace(parts[1]))
+	if image == "" {
+		return "", "", nil, errors.New("empty docker image in run script")
+	}
+	hasCommand := false
 	for _, line := range lines[1:] {
 		if lang, found := strings.CutPrefix(line, "#language/"); found {
 			language = strings.ToLower(strings.TrimSpace(lang))
 			continue
 		}
+		trimmed := strings.TrimSpace(line)
+		hasCommand = hasCommand || (trimmed != "" && !strings.HasPrefix(trimmed, "#"))
 		commands = append(commands, line)
+	}
+	if !hasCommand {
+		return "", "", nil, errors.New("no commands in run script")
 	}
 	return image, language, commands, nil
 }

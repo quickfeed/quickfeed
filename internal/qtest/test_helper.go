@@ -80,10 +80,10 @@ func SetupCourseAssignmentTeacherStudent(t *testing.T, db database.Database) (*q
 	return admin, course, assignment, user
 }
 
-// PrepareGitRepo creates copies src/repo folder to dst and initializes
+// PrepareGitRepo copies the src/repo folder to dst/repo and initializes
 // dst/repo as a git repository and adds a single file lab1/lab1.go.
 func PrepareGitRepo(t *testing.T, src, dst, repo string) {
-	if err := fileop.CopyDir(filepath.Join(src, repo), dst); err != nil {
+	if err := fileop.CopyDir(filepath.Join(src, repo), filepath.Join(dst, repo)); err != nil {
 		t.Fatal(err)
 	}
 	gitRepo := filepath.Join(dst, repo)

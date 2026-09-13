@@ -12,7 +12,7 @@ Teachers create lab assignments and related tests, which gives students rapid re
   - We recommend learning about DevOps.
   See Microsoft's article: [What is DevOps](https://learn.microsoft.com/en-us/devops/what-is-devops).
 - **cmd** - command
-- **qcm** - quickfeed course manager (planning to deprecate this)
+- **qcm** - quickfeed course manager
 - **vercheck** - version check (planning to deprecate this)
 - **doc** - documentation
 - **dev** - developer
@@ -82,7 +82,7 @@ The `cmd` folder contains different executable Go and Python programs:
 
 - **anonymize**: creates a new database which filters out sensitive information
 - **approvelist**: query the QuickFeed's database to retrieve an overview over approved assignments
-- **qcm**: clone repository and run tests locally, `go run qcm clone --help` gives a list of filter values
+- **qcm**: the course manager for teachers; `clone` fetches a course's `tests` and `assignments` repositories, `run` runs one assignment's tests, and `check` verifies that the course's test environment works. Run `go run ./cmd/qcm -help` for the subcommands, and `go run ./cmd/qcm <command> -help` for their flags. See [Checking the Test Environment Locally](teacher.md#checking-the-test-environment-locally)
 - **vercheck**: checks the version of protobuf
 
 ## database

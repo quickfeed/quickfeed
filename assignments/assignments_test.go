@@ -42,7 +42,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Fatal(err)
 	}
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	assignments, gotBuildContext, _, err := readTestsRepositoryContent(clonedTestsRepo, course.GetID())
+	assignments, gotBuildContext, _, err := ReadTestsRepository(clonedTestsRepo, course.GetID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestFetchAssignments(t *testing.T) {
 	course.UpdateDockerfile(gotBuildContext[ci.Dockerfile])
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
-	if err := buildDockerImage(context.Background(), docker, course, gotBuildContext); err != nil {
+	if err := BuildDockerImage(context.Background(), docker, course, gotBuildContext); err != nil {
 		t.Fatal(err)
 	}
 }
