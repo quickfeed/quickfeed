@@ -100,3 +100,80 @@ func TestCopyDirMissingSource(t *testing.T) {
 		t.Error("copyDir() error = nil, want an error for a missing source directory")
 	}
 }
+
+// TestCopyDirOverlappingPaths checks that a copy that would descend into its
+// own destination, or copy the destination into itself, is refused. RunTests
+// creates its destination under os.TempDir(), so a submission directory that
+// names a temporary directory is all it takes.
+func TestCopyDirOverlappingPaths(t *testing.T) {
+	root := t.TempDir()
+	src := filepath.Join(root, "submission")
+	if err := os.MkdirAll(filepath.Join(src, "lab1"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name string
+		src  string
+		dst  string
+	}{
+		{name: "SameDirectory", src: src, dst: src},
+		{name: "DestinationInsideSource", src: src, dst: filepath.Join(src, quickfeedTestsPath, "user-labs")},
+		{name: "DestinationIsExistingSubdirectory", src: src, dst: filepath.Join(src, "lab1")},
+		{name: "SourceInsideDestination", src: src, dst: root},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := copyDir(tc.src, tc.dst); err == nil {
+				t.Errorf("copyDir(%q, %q) error = nil, want an overlap error", tc.src, tc.dst)
+			}
+		})
+	}
+}
+
+// TestCopyDirSiblingPaths checks that the overlap detection does not reject a
+// destination whose path merely starts with the source's path.
+func TestCopyDirSiblingPaths(t *testing.T) {
+	root := t.TempDir()
+	src := filepath.Join(root, "lab")
+	if err := os.MkdirAll(src, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "lab.go"), []byte("package lab\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(root, "lab-copy")
+	if err := copyDir(src, dst); err != nil {
+		t.Errorf("copyDir(%q, %q) error = %v, want nil", src, dst, err)
+	}
+	if _, err := os.Stat(filepath.Join(dst, "lab.go")); err != nil {
+		t.Error(err)
+	}
+}
+
+// TestCopyDirSymlinkedPaths checks that overlapping paths are recognized
+// through a symbolic link, as on macOS, where /tmp links to /private/tmp: the
+// two paths name the same directory only once they are resolved.
+func TestCopyDirSymlinkedPaths(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("creating a symbolic link on Windows requires elevated privileges")
+	}
+	root := t.TempDir()
+	src := filepath.Join(root, "submission")
+	if err := os.MkdirAll(src, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(root, "link")
+	if err := os.Symlink(src, link); err != nil {
+		t.Fatal(err)
+	}
+	// The destination is created under the link, and thereby inside the source.
+	dst := filepath.Join(link, quickfeedTestsPath)
+	if err := copyDir(src, dst); err == nil {
+		t.Errorf("copyDir(%q, %q) error = nil, want an overlap error through the link", src, dst)
+	}
+	// The same, with the roles of the link and the resolved path exchanged.
+	dst = filepath.Join(src, quickfeedTestsPath)
+	if err := copyDir(link, dst); err == nil {
+		t.Errorf("copyDir(%q, %q) error = nil, want an overlap error through the link", link, dst)
+	}
+}
