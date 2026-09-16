@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -254,14 +255,15 @@ func TestCheckRunScripts(t *testing.T) {
 func TestCheckDockerfile(t *testing.T) {
 	course := &qf.Course{Code: "DAT320", ScmOrganizationName: "dat320-2025"}
 	// A course without a Dockerfile whose run scripts name prebuilt images.
+	ck := &checker{progress: io.Discard}
 	prebuilt := &runScripts{images: map[string]string{"scripts/run.sh": "golang:1.26"}}
-	got := checkDockerfile(t.Context(), nil, course, nil, prebuilt, true)
+	got := checkDockerfile(t.Context(), nil, course, nil, prebuilt, true, ck)
 	if got.result != skip {
 		t.Errorf("checkDockerfile(no Dockerfile, prebuilt image) = %+v, want %s", got, skip)
 	}
 	// A course whose run script names the course image, but has no Dockerfile.
 	own := &runScripts{images: map[string]string{"scripts/run.sh": "dat320"}}
-	got = checkDockerfile(t.Context(), nil, course, nil, own, true)
+	got = checkDockerfile(t.Context(), nil, course, nil, own, true, ck)
 	if got.result != fail {
 		t.Errorf("checkDockerfile(no Dockerfile, course image) = %+v, want %s", got, fail)
 	}
@@ -270,13 +272,13 @@ func TestCheckDockerfile(t *testing.T) {
 	}
 	// A Dockerfile that is not built because the user said not to.
 	buildContext := map[string]string{ci.Dockerfile: "FROM golang:1.26\n"}
-	got = checkDockerfile(t.Context(), nil, course, buildContext, own, false)
+	got = checkDockerfile(t.Context(), nil, course, buildContext, own, false, ck)
 	if got.result != skip {
 		t.Errorf("checkDockerfile(-build=false) = %+v, want %s", got, skip)
 	}
 	// A Dockerfile that is present but empty is a mistake, not an absent one.
 	empty := map[string]string{ci.Dockerfile: "\n  \n"}
-	got = checkDockerfile(t.Context(), nil, course, empty, prebuilt, true)
+	got = checkDockerfile(t.Context(), nil, course, empty, prebuilt, true, ck)
 	if got.result != fail {
 		t.Errorf("checkDockerfile(empty Dockerfile) = %+v, want %s", got, fail)
 	}
@@ -322,7 +324,9 @@ func TestCourseDockerfile(t *testing.T) {
 func TestCheckSkeletonManuallyGraded(t *testing.T) {
 	course := &qf.Course{Code: "DAT320", ScmOrganizationName: "dat320-2025"}
 	parsed := []*qf.Assignment{{Name: "lab1", Reviewers: 1}}
-	got := checkSkeleton(t.Context(), nil, course, parsed, "lab1", 0)
+	ck := &checker{progress: io.Discard}
+	checkSkeleton(t.Context(), nil, course, parsed, "lab1", 0, ck)
+	got := ck.results
 	if len(got) != 1 || got[0].result != skip {
 		t.Fatalf("checkSkeleton(manually graded) = %+v, want a single %s", got, skip)
 	}

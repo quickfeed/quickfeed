@@ -55,6 +55,27 @@ type checkResult struct {
 	details string
 }
 
+// checker collects the results of the checks and reports progress as they
+// complete. The Docker-backed checks take minutes each, and the summary table
+// is only printed once all of them are done, so without progress lines the
+// command would appear to hang.
+type checker struct {
+	progress io.Writer
+	results  []checkResult
+}
+
+// start announces a check that is about to do slow work.
+func (ck *checker) start(name, what string) {
+	fmt.Fprintf(ck.progress, "%s: %s...\n", name, what)
+}
+
+// add records a finished check and reports its result at once; the details
+// follow in the summary table.
+func (ck *checker) add(res checkResult) {
+	ck.results = append(ck.results, res)
+	fmt.Fprintf(ck.progress, "%s: %s\n", res.name, res.result)
+}
+
 func checkCmd(args []string, stdout, stderr io.Writer) error {
 	fs := newFlagSet("check", stderr, checkSynopsis)
 	var c commonFlags
@@ -88,23 +109,24 @@ func checkCmd(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	runner, err := ci.NewDockerCI()
+	ctx := qlog.NewContext(context.Background(), c.logger(stderr))
+	runner, err := newDockerRunner(ctx)
 	if err != nil {
-		return fmt.Errorf("creating docker client: %w", err)
+		return err
 	}
 	defer func() { _ = runner.Close() }()
-	ctx := qlog.NewContext(context.Background(), c.logger(stderr))
 
-	results := []checkResult{
-		checkRunScripts(scripts),
-		checkDockerfile(ctx, runner, course, buildContext, scripts, *build),
-		checkContent(&c, parsed, issues),
-	}
-	results = append(results, checkSkeleton(ctx, runner, course, parsed, *lab, uint32(*maxSkeleton))...)
+	// The static checks come first, so that their results are known before the
+	// slow Docker-backed checks start.
+	ck := &checker{progress: stderr}
+	ck.add(checkRunScripts(scripts))
+	ck.add(checkContent(&c, parsed, issues))
+	ck.add(checkDockerfile(ctx, runner, course, buildContext, scripts, *build, ck))
+	checkSkeleton(ctx, runner, course, parsed, *lab, uint32(*maxSkeleton), ck)
 	if *solution != "" {
-		results = append(results, checkSolution(ctx, runner, course, parsed, *lab, *solution)...)
+		checkSolution(ctx, runner, course, parsed, *lab, *solution, ck)
 	}
-	return printChecks(stdout, results)
+	return printChecks(stdout, ck.results)
 }
 
 // runScripts records what the tests repository's run scripts declare.
@@ -202,8 +224,9 @@ func checkRunScripts(scripts *runScripts) checkResult {
 
 // checkDockerfile builds the course's own Docker image, if it has one. A course
 // whose run scripts name only prebuilt images needs no Dockerfile, but an empty
-// one is a mistake; see courseDockerfile.
-func checkDockerfile(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string, scripts *runScripts, build bool) checkResult {
+// one is a mistake; see courseDockerfile. The build is announced through ck,
+// since it can take minutes.
+func checkDockerfile(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string, scripts *runScripts, build bool, ck *checker) checkResult {
 	const name = "dockerfile"
 	dockerfile, err := courseDockerfile(buildContext)
 	if err != nil {
@@ -221,6 +244,7 @@ func checkDockerfile(ctx context.Context, runner ci.Runner, course *qf.Course, b
 	if !build {
 		return checkResult{name: name, result: skip, details: "not built because -build=false"}
 	}
+	ck.start(name, "building the "+course.DockerImage()+" image from "+scriptsDir+"/"+ci.Dockerfile)
 	if err := assignments.BuildDockerImage(ctx, runner, course, buildContext); err != nil {
 		return checkResult{name: name, result: fail, details: err.Error()}
 	}
@@ -255,43 +279,46 @@ func checkContent(c *commonFlags, parsed []*qf.Assignment, issues []assignments.
 }
 
 // checkSkeleton runs the course's tests against the handout code in the
-// assignments repository, once per auto-graded assignment. Tests that actually
-// exercise what the students are asked to write barely score on the skeleton.
-func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab string, maxScore uint32) []checkResult {
+// assignments repository, once per auto-graded assignment, recording a result
+// per assignment through ck. Tests that actually exercise what the students
+// are asked to write barely score on the skeleton.
+func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab string, maxScore uint32, ck *checker) {
 	selected := autoGraded(parsed, lab)
 	if len(selected) == 0 {
-		return []checkResult{{name: "skeleton", result: skip, details: nothingToRun(lab)}}
+		ck.add(checkResult{name: "skeleton", result: skip, details: nothingToRun(lab)})
+		return
 	}
-	results := make([]checkResult, 0, len(selected))
 	for _, assignment := range selected {
 		name := "skeleton " + assignment.GetName()
+		ck.start(name, "running the tests against the skeleton code")
 		res, err := runTests(ctx, ci.NewSkeletonRun(course, assignment, localCommitID), runner)
 		if err != nil {
-			results = append(results, checkResult{name: name, result: fail, details: err.Error()})
+			ck.add(checkResult{name: name, result: fail, details: err.Error()})
 			continue
 		}
 		if problem := ci.SkeletonProblem(res, maxScore); problem != "" {
-			results = append(results, checkResult{name: name, result: fail, details: problem})
+			ck.add(checkResult{name: name, result: fail, details: problem})
 			continue
 		}
-		results = append(results, checkResult{name: name, result: pass,
+		ck.add(checkResult{name: name, result: pass,
 			details: fmt.Sprintf("scored %d%%, at most %d%% allowed", res.Sum(), maxScore)})
 	}
-	return results
 }
 
 // checkSolution runs the course's tests against the solution code in the given
-// directory, once per auto-graded assignment. The solution must score 100%; a
-// lower score means the tests cannot be passed as written.
-func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab, solutionDir string) []checkResult {
+// directory, once per auto-graded assignment, recording a result per assignment
+// through ck. The solution must score 100%; a lower score means the tests
+// cannot be passed as written.
+func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab, solutionDir string, ck *checker) {
 	selected := autoGraded(parsed, lab)
 	if len(selected) == 0 {
-		return []checkResult{{name: "solution", result: skip, details: nothingToRun(lab)}}
+		ck.add(checkResult{name: "solution", result: skip, details: nothingToRun(lab)})
+		return
 	}
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
-	results := make([]checkResult, 0, len(selected))
 	for _, assignment := range selected {
 		name := "solution " + assignment.GetName()
+		ck.start(name, "running the tests against the solution code")
 		res, err := runTests(ctx, &ci.RunData{
 			Course:        course,
 			Assignment:    assignment,
@@ -304,12 +331,11 @@ func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, par
 			CommitID: localCommitID,
 		}, runner)
 		if err != nil {
-			results = append(results, checkResult{name: name, result: fail, details: err.Error()})
+			ck.add(checkResult{name: name, result: fail, details: err.Error()})
 			continue
 		}
-		results = append(results, solutionResult(name, res))
+		ck.add(solutionResult(name, res))
 	}
-	return results
 }
 
 // solutionResult judges a solution run: the solution code must score 100%.
