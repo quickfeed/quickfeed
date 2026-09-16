@@ -2,6 +2,7 @@ package ci_test
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -112,5 +113,42 @@ func TestSkeletonProblem(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestCheckSkeleton checks the structured verdict that cmd/qcm formats one line
+// per passing test, and that its one-line form is what SkeletonProblem returns.
+func TestCheckSkeleton(t *testing.T) {
+	results := &score.Results{Scores: []*score.Score{
+		{TestName: "TestA", Score: 10, MaxScore: 10, Weight: 1},
+		{TestName: "TestB", Score: 0, MaxScore: 10, Weight: 1},
+		{TestName: "TestC", Score: 3, MaxScore: 10, Weight: 1},
+	}}
+	report := ci.CheckSkeleton(results, ci.MaxSkeletonScore)
+	if report.Healthy() {
+		t.Fatalf("CheckSkeleton(43%%) = %+v, want a problem", report)
+	}
+	wantPassing := []string{"TestA (10/10)", "TestC (3/10)"}
+	if !slices.Equal(report.PassingTests, wantPassing) {
+		t.Errorf("CheckSkeleton() passing tests = %q, want %q", report.PassingTests, wantPassing)
+	}
+	if got, want := report.String(), ci.SkeletonProblem(results, ci.MaxSkeletonScore); got != want {
+		t.Errorf("CheckSkeleton().String() = %q, want SkeletonProblem's %q", got, want)
+	}
+	if !strings.HasPrefix(report.String(), report.Problem+"; tests passing on the skeleton code: TestA (10/10), TestC (3/10)") {
+		t.Errorf("CheckSkeleton().String() = %q, want the problem followed by the passing tests", report.String())
+	}
+
+	// A healthy skeleton may still have a passing test; the report names it
+	// without declaring a problem.
+	healthy := ci.CheckSkeleton(&score.Results{Scores: []*score.Score{
+		{TestName: "TestLint", Score: 1, MaxScore: 1, Weight: 1},
+		{TestName: "TestWork", Score: 0, MaxScore: 100, Weight: 30},
+	}}, ci.MaxSkeletonScore)
+	if !healthy.Healthy() || healthy.String() != "" {
+		t.Errorf("CheckSkeleton(healthy) = %+v, want no problem and an empty String()", healthy)
+	}
+	if !slices.Equal(healthy.PassingTests, []string{"TestLint (1/1)"}) {
+		t.Errorf("CheckSkeleton(healthy) passing tests = %q, want TestLint", healthy.PassingTests)
 	}
 }
