@@ -13,7 +13,6 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -73,12 +72,17 @@ func (c *commonFlags) assignmentsDir() string {
 // logger returns the logger for the command. Without -v, only warnings and
 // errors are printed, since the server's debug records would otherwise bury
 // the command's own output.
+//
+// The server's logger, qlog.New, is not used: it annotates records with source
+// positions relative to the repository root, which env.Root resolves from the
+// working directory and panics over when the command is run anywhere else. A
+// teacher runs qcm from a course directory, never from a checkout of QuickFeed.
 func (c *commonFlags) logger(stderr io.Writer) *slog.Logger {
 	level := slog.LevelWarn
 	if c.verbose {
 		level = slog.LevelDebug
 	}
-	return qlog.NewLevel(stderr, level)
+	return slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: level}))
 }
 
 // scmClient returns an SCM client for the course's organization, authenticated
