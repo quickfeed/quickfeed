@@ -255,7 +255,7 @@ func TestCheckRunScripts(t *testing.T) {
 func TestCheckDockerfile(t *testing.T) {
 	course := &qf.Course{Code: "DAT320", ScmOrganizationName: "dat320-2025"}
 	// A course without a Dockerfile whose run scripts name prebuilt images.
-	ck := &checker{progress: io.Discard}
+	ck := newChecker(io.Discard)
 	prebuilt := &runScripts{images: map[string]string{"scripts/run.sh": "golang:1.26"}}
 	got := checkDockerfile(t.Context(), nil, course, nil, prebuilt, true, ck)
 	if got.result != skip {
@@ -324,7 +324,7 @@ func TestCourseDockerfile(t *testing.T) {
 func TestCheckSkeletonManuallyGraded(t *testing.T) {
 	course := &qf.Course{Code: "DAT320", ScmOrganizationName: "dat320-2025"}
 	parsed := []*qf.Assignment{{Name: "lab1", Reviewers: 1}}
-	ck := &checker{progress: io.Discard}
+	ck := newChecker(io.Discard)
 	checkSkeleton(t.Context(), nil, course, parsed, "lab1", 0, ck)
 	got := ck.results
 	if len(got) != 1 || got[0].result != skip {
