@@ -70,13 +70,13 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 	}
 	course.UpdateDockerfile(dockerfile)
 
-	runner, err := ci.NewDockerCI()
+	ctx := qlog.NewContext(context.Background(), logger)
+	runner, err := newDockerRunner(ctx)
 	if err != nil {
-		return fmt.Errorf("creating docker client: %w", err)
+		return err
 	}
 	defer func() { _ = runner.Close() }()
 
-	ctx := qlog.NewContext(context.Background(), logger)
 	if dockerfile != "" && *build {
 		fmt.Fprintf(stdout, "Building the %s image from the course's Dockerfile\n", course.DockerImage())
 		if err := assignments.BuildDockerImage(ctx, runner, course, buildContext); err != nil {
@@ -96,6 +96,7 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 // runAndReport runs one test job and prints the resulting scores. A test run
 // that failed is reported as an error, so that the command exits non-zero.
 func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner ci.Runner, stdout io.Writer) error {
+	fmt.Fprintf(stdout, "Running the tests for %s\n", runData.Assignment.GetName())
 	results, err := runData.RunTests(ctx, sc, runner)
 	if err != nil {
 		if errors.Is(err, ci.ErrConflict) {

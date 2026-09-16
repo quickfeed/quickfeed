@@ -68,6 +68,19 @@ func (d *Docker) Close() error {
 	return d.client.Close()
 }
 
+// Ping reports whether the Docker daemon can be reached. NewDockerCI only
+// configures the client and does not contact the daemon, so without a ping a
+// stopped daemon surfaces as a failure of every job that is attempted; a
+// caller that is about to run several jobs, such as cmd/qcm, can ping first
+// and fail once instead.
+func (d *Docker) Ping(ctx context.Context) error {
+	if d.client == nil {
+		return errors.New("docker client not initialized")
+	}
+	_, err := d.client.Ping(ctx, client.PingOptions{})
+	return err
+}
+
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
 func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
