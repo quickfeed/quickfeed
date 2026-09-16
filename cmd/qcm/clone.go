@@ -13,7 +13,11 @@ import (
 const cloneSynopsis = `Usage: qcm clone -course ORG [flags]
 
 Clone the course's tests and assignments repositories into <dir>/<org>.
-An existing clone is updated with git pull instead of being cloned again.`
+An existing clone is updated with git pull instead of being cloned again.
+
+The repositories are private, so a GitHub access token for a member of the
+course organization is needed: -token, $GITHUB_ACCESS_TOKEN, or the login of
+the GitHub CLI (gh auth login), in that order.`
 
 func cloneCmd(args []string, stdout, stderr io.Writer) error {
 	fs := newFlagSet("clone", stderr, cloneSynopsis)

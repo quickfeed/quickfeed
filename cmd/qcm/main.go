@@ -78,6 +78,11 @@ The commands are:
 Every command takes -course ORG, naming the course's GitHub organization,
 e.g., dat320-2025. Run 'qcm <command> -help' for the command's own flags.
 
+The clone command, and run with -user or -group, need a GitHub access token
+for the course's repositories. qcm uses -token if given, then the
+GITHUB_ACCESS_TOKEN environment variable, and otherwise the login of the
+GitHub CLI (gh auth login). Run 'qcm clone' without any of them for details.
+
 The run and check commands execute the tests in Docker, just like the
 QuickFeed server does, and therefore require a working Docker installation.
 `)
