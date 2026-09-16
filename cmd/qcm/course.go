@@ -31,7 +31,7 @@ func (c *commonFlags) register(fs *flag.FlagSet) {
 	fs.StringVar(&c.org, "course", "", "the course's GitHub `organization`, e.g., dat320-2025 (required)")
 	fs.StringVar(&c.code, "code", "", "the course `code`; derived from -course if not given")
 	fs.StringVar(&c.dir, "dir", env.RepositoryPath(), "root `directory` holding the course repositories")
-	fs.StringVar(&c.token, "token", os.Getenv("GITHUB_ACCESS_TOKEN"), "GitHub personal access `token`; defaults to $GITHUB_ACCESS_TOKEN")
+	fs.StringVar(&c.token, "token", os.Getenv(tokenEnv), "GitHub access `token`; defaults to $"+tokenEnv+", then to the GitHub CLI's login (gh auth token)")
 	fs.BoolVar(&c.verbose, "v", false, "print debug logging to stderr")
 }
 
@@ -81,12 +81,18 @@ func (c *commonFlags) logger(stderr io.Writer) *slog.Logger {
 	return qlog.NewLevel(stderr, level)
 }
 
-// scmClient returns an SCM client for the course's organization.
+// scmClient returns an SCM client for the course's organization, authenticated
+// with the token from -token or the environment, or else with the GitHub CLI's
+// login; see resolveToken.
 func (c *commonFlags) scmClient(logger *slog.Logger) (scm.SCM, error) {
-	if c.token == "" {
-		return nil, errors.New("missing GitHub access token; set -token or the GITHUB_ACCESS_TOKEN environment variable")
+	token, err := resolveToken(c.token, gh)
+	if err != nil {
+		return nil, err
 	}
-	return scm.NewSCMClient(logger, c.token)
+	if c.token == "" {
+		logger.Debug("using the GitHub CLI's access token")
+	}
+	return scm.NewSCMClient(logger, token)
 }
 
 // courseDockerfile returns the content of the course's Dockerfile, taken from

@@ -363,7 +363,11 @@ printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start )
 ### Checking the Test Environment Locally
 
 The `qcm` command runs your course's tests on your own machine, in the same Docker image QuickFeed uses, so you can find a broken test environment before your students do.
-Install it with `make qcm` or `go install ./cmd/qcm`, and set `GITHUB_ACCESS_TOKEN` to a personal access token with access to your course organization.
+Install it with `make qcm` or `go install ./cmd/qcm`.
+Cloning the course repositories requires a GitHub access token for an account that is a member of your course organization.
+If you are signed in with the [GitHub CLI](https://cli.github.com) (`gh auth login`), `qcm` uses that login and no further setup is needed.
+Otherwise, create a [personal access token](https://github.com/settings/tokens) with the `repo` scope, or a fine-grained token with read access to the organization's repositories, and set `GITHUB_ACCESS_TOKEN` to it or pass it with `-token`.
+An organization that enforces SAML single sign-on must also have authorized the token.
 
 ```sh
 % qcm clone -course dat320-2025
