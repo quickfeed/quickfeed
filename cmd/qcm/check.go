@@ -63,20 +63,78 @@ type checkResult struct {
 // is only printed once all of them are done, so without progress lines the
 // command would appear to hang.
 type checker struct {
-	progress io.Writer
+	progress *progressWriter
 	results  []checkResult
 }
 
-// start announces a check that is about to do slow work.
+// newChecker returns a checker reporting progress to w, which must also be the
+// writer the command's logger uses; see progressWriter.
+func newChecker(w io.Writer) *checker {
+	return &checker{progress: &progressWriter{w: w}}
+}
+
+// start announces a check that is about to do slow work; its result completes
+// the line.
 func (ck *checker) start(name, what string) {
-	fmt.Fprintf(ck.progress, "%s: %s...\n", name, what)
+	ck.progress.begin(name, what)
 }
 
 // add records a finished check and reports its result at once; the details
 // follow in the summary table.
 func (ck *checker) add(res checkResult) {
 	ck.results = append(ck.results, res)
-	fmt.Fprintf(ck.progress, "%s: %s\n", res.name, res.result)
+	ck.progress.finish(res.name, res.result)
+}
+
+// progressWriter writes the progress lines of qcm check to stderr, which the
+// command's logger writes to as well. The line announcing a slow check is
+// left open, without its newline, so that the check's result can complete
+// it:
+//
+//	skeleton lab1: running the tests against the skeleton code... PASS
+//
+// A log record written meanwhile would otherwise be glued onto that line, so
+// the writer first ends the open line, and the result is then reported on a
+// line of its own. The command runs its checks one at a time, so there is no
+// concurrent use to guard against.
+type progressWriter struct {
+	w    io.Writer
+	open string // the check whose progress line awaits its result, if any
+}
+
+// Write passes log output through, ending an open progress line first.
+func (p *progressWriter) Write(b []byte) (int, error) {
+	if p.open != "" {
+		p.open = ""
+		if _, err := io.WriteString(p.w, "\n"); err != nil {
+			return 0, err
+		}
+	}
+	return p.w.Write(b)
+}
+
+// begin opens the progress line of the named check.
+func (p *progressWriter) begin(name, what string) {
+	if p.open != "" {
+		fmt.Fprintln(p.w)
+	}
+	fmt.Fprintf(p.w, "%s: %s...", name, what)
+	p.open = name
+}
+
+// finish reports the named check's result, on its open progress line if it
+// has one and otherwise on a line of its own.
+func (p *progressWriter) finish(name, result string) {
+	if p.open == name {
+		p.open = ""
+		fmt.Fprintf(p.w, " %s\n", result)
+		return
+	}
+	if p.open != "" {
+		p.open = ""
+		fmt.Fprintln(p.w)
+	}
+	fmt.Fprintf(p.w, "%s: %s\n", name, result)
 }
 
 func checkCmd(args []string, stdout, stderr io.Writer) error {
@@ -112,7 +170,9 @@ func checkCmd(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	ctx := qlog.NewContext(context.Background(), c.logger(stderr))
+	// The logger shares stderr with the progress lines; see progressWriter.
+	ck := newChecker(stderr)
+	ctx := qlog.NewContext(context.Background(), c.logger(ck.progress))
 	runner, err := newDockerRunner(ctx)
 	if err != nil {
 		return err
@@ -121,7 +181,6 @@ func checkCmd(args []string, stdout, stderr io.Writer) error {
 
 	// The static checks come first, so that their results are known before the
 	// slow Docker-backed checks start.
-	ck := &checker{progress: stderr}
 	ck.add(checkRunScripts(scripts))
 	ck.add(checkContent(&c, parsed, issues))
 	ck.add(checkDockerfile(ctx, runner, course, buildContext, scripts, *build, ck))
