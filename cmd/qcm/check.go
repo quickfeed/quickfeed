@@ -48,11 +48,14 @@ const (
 	solutionOwner = "solution"
 )
 
-// checkResult is one row of the summary table that qcm check prints.
+// checkResult is one row of the summary table that qcm check prints. The
+// details hold one item per entry: the first is printed on the check's own
+// row, and the rest on continuation rows indented to the details column, so
+// that a list of tests or of repository issues reads one per line.
 type checkResult struct {
 	name    string
 	result  string
-	details string
+	details []string
 }
 
 // checker collects the results of the checks and reports progress as they
@@ -213,12 +216,12 @@ func checkRunScripts(scripts *runScripts) checkResult {
 			scriptsDir, runScriptFile, runScriptFile, strings.Join(scripts.missing, ", ")))
 	}
 	if len(problems) > 0 {
-		return checkResult{name: "run scripts", result: fail, details: strings.Join(problems, "; ")}
+		return checkResult{name: "run scripts", result: fail, details: problems}
 	}
 	return checkResult{
 		name:    "run scripts",
 		result:  pass,
-		details: fmt.Sprintf("parsed %s", strings.Join(slices.Sorted(maps.Keys(scripts.images)), ", ")),
+		details: []string{fmt.Sprintf("parsed %s", strings.Join(slices.Sorted(maps.Keys(scripts.images)), ", "))},
 	}
 }
 
@@ -230,25 +233,25 @@ func checkDockerfile(ctx context.Context, runner ci.Runner, course *qf.Course, b
 	const name = "dockerfile"
 	dockerfile, err := courseDockerfile(buildContext)
 	if err != nil {
-		return checkResult{name: name, result: fail, details: err.Error()}
+		return checkResult{name: name, result: fail, details: []string{err.Error()}}
 	}
 	if dockerfile == "" {
 		if users := scripts.usersOf(course.DockerImage()); len(users) > 0 {
-			return checkResult{name: name, result: fail, details: fmt.Sprintf(
+			return checkResult{name: name, result: fail, details: []string{fmt.Sprintf(
 				"%s name the course image %q, but the tests repository has no %s/%s to build it",
-				strings.Join(users, " and "), course.DockerImage(), scriptsDir, ci.Dockerfile)}
+				strings.Join(users, " and "), course.DockerImage(), scriptsDir, ci.Dockerfile)}}
 		}
-		return checkResult{name: name, result: skip, details: fmt.Sprintf(
-			"no %s/%s; the run scripts name prebuilt images", scriptsDir, ci.Dockerfile)}
+		return checkResult{name: name, result: skip, details: []string{fmt.Sprintf(
+			"no %s/%s; the run scripts name prebuilt images", scriptsDir, ci.Dockerfile)}}
 	}
 	if !build {
-		return checkResult{name: name, result: skip, details: "not built because -build=false"}
+		return checkResult{name: name, result: skip, details: []string{"not built because -build=false"}}
 	}
 	ck.start(name, "building the "+course.DockerImage()+" image from "+scriptsDir+"/"+ci.Dockerfile)
 	if err := assignments.BuildDockerImage(ctx, runner, course, buildContext); err != nil {
-		return checkResult{name: name, result: fail, details: err.Error()}
+		return checkResult{name: name, result: fail, details: []string{err.Error()}}
 	}
-	return checkResult{name: name, result: pass, details: "built the " + course.DockerImage() + " image"}
+	return checkResult{name: name, result: pass, details: []string{"built the " + course.DockerImage() + " image"}}
 }
 
 // checkContent reports the content problems in the tests repository and the
@@ -269,13 +272,17 @@ func checkContent(c *commonFlags, parsed []*qf.Assignment, issues []assignments.
 			problems = append(problems, issue.String())
 		}
 	} else {
-		note = fmt.Sprintf(" (no %s repository in %s; skipped the cross-repository comparison)",
+		note = fmt.Sprintf("no %s repository in %s; skipped the cross-repository comparison",
 			qf.AssignmentsRepo, c.course().CloneDir())
 	}
+	result, details := pass, []string{fmt.Sprintf("%d assignments, no issues", len(parsed))}
 	if len(problems) > 0 {
-		return checkResult{name: name, result: fail, details: strings.Join(problems, "; ") + note}
+		result, details = fail, problems
 	}
-	return checkResult{name: name, result: pass, details: fmt.Sprintf("%d assignments, no issues%s", len(parsed), note)}
+	if note != "" {
+		details = append(details, note)
+	}
+	return checkResult{name: name, result: result, details: details}
 }
 
 // checkSkeleton runs the course's tests against the handout code in the
@@ -285,7 +292,7 @@ func checkContent(c *commonFlags, parsed []*qf.Assignment, issues []assignments.
 func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab string, maxScore uint32, ck *checker) {
 	selected := autoGraded(parsed, lab)
 	if len(selected) == 0 {
-		ck.add(checkResult{name: "skeleton", result: skip, details: nothingToRun(lab)})
+		ck.add(checkResult{name: "skeleton", result: skip, details: []string{nothingToRun(lab)}})
 		return
 	}
 	for _, assignment := range selected {
@@ -293,16 +300,30 @@ func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, par
 		ck.start(name, "running the tests against the skeleton code")
 		res, err := runTests(ctx, ci.NewSkeletonRun(course, assignment, localCommitID), runner)
 		if err != nil {
-			ck.add(checkResult{name: name, result: fail, details: err.Error()})
+			ck.add(checkResult{name: name, result: fail, details: []string{err.Error()}})
 			continue
 		}
-		if problem := ci.SkeletonProblem(res, maxScore); problem != "" {
-			ck.add(checkResult{name: name, result: fail, details: problem})
+		report := ci.CheckSkeleton(res, maxScore)
+		if !report.Healthy() {
+			ck.add(checkResult{name: name, result: fail, details: withPassingTests(report.Problem, report.PassingTests)})
 			continue
 		}
-		ck.add(checkResult{name: name, result: pass,
-			details: fmt.Sprintf("scored %d%%, at most %d%% allowed", res.Sum(), maxScore)})
+		summary := fmt.Sprintf("scored %d%%, at most %d%% allowed", res.Sum(), maxScore)
+		ck.add(checkResult{name: name, result: pass, details: withPassingTests(summary, report.PassingTests)})
 	}
+}
+
+// withPassingTests returns the summary followed by the tests that score on the
+// skeleton code, one per line, so that the teaching staff can see which tests
+// to look at. Also for a passing check: the tests that award the skeleton its
+// few percent are worth knowing about.
+func withPassingTests(summary string, passing []string) []string {
+	details := []string{summary}
+	if len(passing) > 0 {
+		details = append(details, "tests passing on the skeleton code:")
+		details = append(details, passing...)
+	}
+	return details
 }
 
 // checkSolution runs the course's tests against the solution code in the given
@@ -312,7 +333,7 @@ func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, par
 func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab, solutionDir string, ck *checker) {
 	selected := autoGraded(parsed, lab)
 	if len(selected) == 0 {
-		ck.add(checkResult{name: "solution", result: skip, details: nothingToRun(lab)})
+		ck.add(checkResult{name: "solution", result: skip, details: []string{nothingToRun(lab)}})
 		return
 	}
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
@@ -331,7 +352,7 @@ func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, par
 			CommitID: localCommitID,
 		}, runner)
 		if err != nil {
-			ck.add(checkResult{name: name, result: fail, details: err.Error()})
+			ck.add(checkResult{name: name, result: fail, details: []string{err.Error()}})
 			continue
 		}
 		ck.add(solutionResult(name, res))
@@ -341,14 +362,14 @@ func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, par
 // solutionResult judges a solution run: the solution code must score 100%.
 func solutionResult(name string, results *score.Results) checkResult {
 	if results.Failed() {
-		return checkResult{name: name, result: fail, details: fmt.Sprintf(
-			"the solution run failed with status %s", results.GetBuildInfo().GetStatus())}
+		return checkResult{name: name, result: fail, details: []string{fmt.Sprintf(
+			"the solution run failed with status %s", results.GetBuildInfo().GetStatus())}}
 	}
 	sum := results.Sum()
 	if sum == 100 {
-		return checkResult{name: name, result: pass, details: "scored 100%"}
+		return checkResult{name: name, result: pass, details: []string{"scored 100%"}}
 	}
-	details := fmt.Sprintf("solution code scored %d%%, expected 100%%", sum)
+	details := []string{fmt.Sprintf("solution code scored %d%%, expected 100%%", sum)}
 	var failing []string
 	for _, sc := range results.Scores {
 		if sc.GetScore() < sc.GetMaxScore() {
@@ -356,7 +377,8 @@ func solutionResult(name string, results *score.Results) checkResult {
 		}
 	}
 	if len(failing) > 0 {
-		details += "; tests below their max score: " + strings.Join(failing, ", ")
+		details = append(details, "tests below their max score:")
+		details = append(details, failing...)
 	}
 	return checkResult{name: name, result: fail, details: details}
 }
@@ -391,6 +413,8 @@ func nothingToRun(lab string) string {
 }
 
 // printChecks prints the summary table and returns an error if any check failed.
+// A check's first detail shares its row; the remaining details follow on rows
+// of their own, indented to the details column.
 func printChecks(w io.Writer, results []checkResult) error {
 	tw := newTabWriter(w)
 	fmt.Fprintln(tw, "CHECK\tRESULT\tDETAILS")
@@ -399,7 +423,15 @@ func printChecks(w io.Writer, results []checkResult) error {
 		if res.result == fail {
 			failed++
 		}
-		fmt.Fprintf(tw, "%s\t%s\t%s\n", res.name, res.result, oneLine(res.details))
+		lines := detailLines(res.details)
+		first := ""
+		if len(lines) > 0 {
+			first, lines = lines[0], lines[1:]
+		}
+		fmt.Fprintf(tw, "%s\t%s\t%s\n", res.name, res.result, first)
+		for _, line := range lines {
+			fmt.Fprintf(tw, "\t\t%s\n", line)
+		}
 	}
 	tw.Flush()
 	if failed > 0 {
@@ -408,16 +440,19 @@ func printChecks(w io.Writer, results []checkResult) error {
 	return nil
 }
 
-// oneLine folds a multi-line detail, such as a Docker build failure, onto the
-// single line the summary table has room for.
-func oneLine(details string) string {
-	var parts []string
-	for line := range strings.Lines(details) {
-		if trimmed := strings.TrimSpace(line); trimmed != "" {
-			parts = append(parts, trimmed)
+// detailLines splits details that span several lines, such as a Docker build
+// failure, into one entry per non-blank line, so that every line of the table
+// is a line of text.
+func detailLines(details []string) []string {
+	var lines []string
+	for _, detail := range details {
+		for line := range strings.Lines(detail) {
+			if trimmed := strings.TrimSpace(line); trimmed != "" {
+				lines = append(lines, trimmed)
+			}
 		}
 	}
-	return strings.Join(parts, " | ")
+	return lines
 }
 
 // isDir reports whether path exists and is a directory.

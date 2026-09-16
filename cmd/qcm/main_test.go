@@ -267,7 +267,7 @@ func TestCheckDockerfile(t *testing.T) {
 	if got.result != fail {
 		t.Errorf("checkDockerfile(no Dockerfile, course image) = %+v, want %s", got, fail)
 	}
-	if !strings.Contains(got.details, "dat320") {
+	if !strings.Contains(strings.Join(got.details, "\n"), "dat320") {
 		t.Errorf("checkDockerfile() details = %q, want it to name the course image", got.details)
 	}
 	// A Dockerfile that is not built because the user said not to.
@@ -282,7 +282,7 @@ func TestCheckDockerfile(t *testing.T) {
 	if got.result != fail {
 		t.Errorf("checkDockerfile(empty Dockerfile) = %+v, want %s", got, fail)
 	}
-	if !strings.Contains(got.details, "scripts/Dockerfile is empty") {
+	if !strings.Contains(strings.Join(got.details, "\n"), "scripts/Dockerfile is empty") {
 		t.Errorf("checkDockerfile() details = %q, want it to name the empty Dockerfile", got.details)
 	}
 }
@@ -330,7 +330,7 @@ func TestCheckSkeletonManuallyGraded(t *testing.T) {
 	if len(got) != 1 || got[0].result != skip {
 		t.Fatalf("checkSkeleton(manually graded) = %+v, want a single %s", got, skip)
 	}
-	if !strings.Contains(got[0].details, "not an auto-graded assignment") {
+	if !strings.Contains(strings.Join(got[0].details, "\n"), "not an auto-graded assignment") {
 		t.Errorf("checkSkeleton() details = %q, want it to say why the run was skipped", got[0].details)
 	}
 }
@@ -346,7 +346,7 @@ func TestCheckContent(t *testing.T) {
 	if got.result != pass {
 		t.Errorf("checkContent(no issues) = %+v, want %s", got, pass)
 	}
-	if !strings.Contains(got.details, "skipped the cross-repository comparison") {
+	if !strings.Contains(strings.Join(got.details, "\n"), "skipped the cross-repository comparison") {
 		t.Errorf("checkContent() details = %q, want the skipped comparison note", got.details)
 	}
 	issues := []assignments.RepoIssue{{Assignment: "lab1", File: "lab1/tests.json", Problem: "duplicate test name"}}
@@ -354,7 +354,7 @@ func TestCheckContent(t *testing.T) {
 	if got.result != fail {
 		t.Errorf("checkContent(issues) = %+v, want %s", got, fail)
 	}
-	if !strings.Contains(got.details, "lab1/tests.json: duplicate test name") {
+	if !strings.Contains(strings.Join(got.details, "\n"), "lab1/tests.json: duplicate test name") {
 		t.Errorf("checkContent() details = %q, want it to list the issue", got.details)
 	}
 }
@@ -389,11 +389,11 @@ func TestSolutionResult(t *testing.T) {
 	if got.result != fail {
 		t.Errorf("solutionResult(70%%) = %+v, want %s", got, fail)
 	}
-	if !strings.Contains(got.details, "TestB (4/10)") {
+	if !strings.Contains(strings.Join(got.details, "\n"), "TestB (4/10)") {
 		t.Errorf("solutionResult() details = %q, want it to list TestB", got.details)
 	}
 	failed := &score.Results{BuildInfo: &score.BuildInfo{Status: score.RunStatus_TIMEOUT}}
-	if got := solutionResult("solution lab1", failed); got.result != fail || !strings.Contains(got.details, "TIMEOUT") {
+	if got := solutionResult("solution lab1", failed); got.result != fail || !strings.Contains(strings.Join(got.details, "\n"), "TIMEOUT") {
 		t.Errorf("solutionResult(timeout) = %+v, want %s naming the status", got, fail)
 	}
 }
@@ -401,24 +401,49 @@ func TestSolutionResult(t *testing.T) {
 func TestPrintChecks(t *testing.T) {
 	var buf bytes.Buffer
 	err := printChecks(&buf, []checkResult{
-		{name: "run scripts", result: pass, details: "parsed scripts/run.sh"},
-		{name: "dockerfile", result: fail, details: "build failed\nline two\n"},
+		{name: "run scripts", result: pass, details: []string{"parsed scripts/run.sh"}},
+		{name: "dockerfile", result: fail, details: []string{"build failed\nline two\n"}},
+		{name: "skeleton lab1", result: fail, details: []string{
+			"skeleton code scored 20%, expected at most 5%",
+			"tests passing on the skeleton code:",
+			"TestA (1/1)",
+			"TestB (9/10)",
+		}},
 	})
 	if err == nil {
-		t.Fatal("printChecks() error = nil, want an error for the failed check")
+		t.Fatal("printChecks() error = nil, want an error for the failed checks")
 	}
-	if !strings.Contains(err.Error(), "1 of 2 checks failed") {
+	if !strings.Contains(err.Error(), "2 of 3 checks failed") {
 		t.Errorf("printChecks() error = %q, want the number of failed checks", err)
 	}
-	out := buf.String()
-	if !strings.HasPrefix(out, "CHECK") {
-		t.Errorf("printChecks() = %q, want a table header", out)
+	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	// Header, three checks, and four continuation lines.
+	if len(lines) != 8 {
+		t.Fatalf("printChecks() printed %d lines, want 8:\n%s", len(lines), buf.String())
 	}
-	if !strings.Contains(out, "build failed | line two") {
-		t.Errorf("printChecks() = %q, want the multi-line details folded onto one line", out)
+	if !strings.HasPrefix(lines[0], "CHECK") {
+		t.Errorf("printChecks() header = %q, want it to start with CHECK", lines[0])
 	}
-	if strings.Count(out, "\n") != 3 {
-		t.Errorf("printChecks() printed %d lines, want 3", strings.Count(out, "\n"))
+	// Every detail is on a line of its own, and continuation lines are indented
+	// to the DETAILS column, where the check's first detail starts.
+	detailsCol := strings.Index(lines[1], "parsed scripts/run.sh")
+	wantContinuations := []string{"line two", "tests passing on the skeleton code:", "TestA (1/1)", "TestB (9/10)"}
+	for _, want := range wantContinuations {
+		found := false
+		for _, line := range lines {
+			if strings.TrimSpace(line) == want {
+				found = true
+				if col := strings.Index(line, want); col != detailsCol {
+					t.Errorf("continuation %q starts at column %d, want the DETAILS column %d", want, col, detailsCol)
+				}
+			}
+		}
+		if !found {
+			t.Errorf("printChecks() has no line holding only %q:\n%s", want, buf.String())
+		}
+	}
+	if !strings.Contains(lines[2], "build failed") || strings.Contains(lines[2], "line two") {
+		t.Errorf("printChecks() dockerfile row = %q, want only the first detail line", lines[2])
 	}
 }
 

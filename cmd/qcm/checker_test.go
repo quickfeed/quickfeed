@@ -11,9 +11,9 @@ import (
 func TestCheckerProgress(t *testing.T) {
 	var progress strings.Builder
 	ck := &checker{progress: &progress}
-	ck.add(checkResult{name: "run scripts", result: pass, details: "parsed scripts/run.sh"})
+	ck.add(checkResult{name: "run scripts", result: pass, details: []string{"parsed scripts/run.sh"}})
 	ck.start("skeleton lab1", "running the tests against the skeleton code")
-	ck.add(checkResult{name: "skeleton lab1", result: fail, details: "skeleton code scored 100%"})
+	ck.add(checkResult{name: "skeleton lab1", result: fail, details: []string{"skeleton code scored 100%"}})
 
 	want := "run scripts: PASS\n" +
 		"skeleton lab1: running the tests against the skeleton code...\n" +
@@ -21,7 +21,7 @@ func TestCheckerProgress(t *testing.T) {
 	if got := progress.String(); got != want {
 		t.Errorf("checker progress =\n%s\nwant\n%s", got, want)
 	}
-	if len(ck.results) != 2 || ck.results[1].details != "skeleton code scored 100%" {
+	if len(ck.results) != 2 || ck.results[1].details[0] != "skeleton code scored 100%" {
 		t.Errorf("checker results = %+v, want both results with their details", ck.results)
 	}
 }

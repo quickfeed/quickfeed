@@ -50,24 +50,53 @@ func NewSkeletonRun(course *qf.Course, assignment *qf.Assignment, commitID strin
 	}
 }
 
-// SkeletonProblem returns the empty string if the given results describe a
-// healthy test environment: the run completed, and the skeleton code scored no
-// more than maxScore. Otherwise it returns a one-line explanation of the
-// problem, addressed to the teaching staff.
-func SkeletonProblem(results *score.Results, maxScore uint32) string {
-	if results.Failed() {
-		return fmt.Sprintf("the skeleton run failed with status %s; the tests never produced a usable result",
+// SkeletonReport is the verdict on a skeleton run; see CheckSkeleton.
+type SkeletonReport struct {
+	// Problem explains, on one line addressed to the teaching staff, why the
+	// test environment is suspect. It is empty for a healthy environment.
+	Problem string
+	// PassingTests names the tests that awarded the skeleton code a non-zero
+	// score, each as "TestName (score/max)". A few may do so on a healthy
+	// skeleton, which is why MaxSkeletonScore is not zero; when there is a
+	// Problem, they are the tests to look at.
+	PassingTests []string
+}
+
+// CheckSkeleton judges the results of a skeleton run: the environment is
+// healthy if the run completed and the skeleton code scored no more than
+// maxScore.
+func CheckSkeleton(results *score.Results, maxScore uint32) SkeletonReport {
+	report := SkeletonReport{PassingTests: passingTests(results)}
+	switch sum := results.Sum(); {
+	case results.Failed():
+		report.Problem = fmt.Sprintf("the skeleton run failed with status %s; the tests never produced a usable result",
 			results.GetBuildInfo().GetStatus())
+	case sum > maxScore:
+		report.Problem = fmt.Sprintf("skeleton code scored %d%%, expected at most %d%%", sum, maxScore)
 	}
-	sum := results.Sum()
-	if sum <= maxScore {
-		return ""
+	return report
+}
+
+// Healthy reports whether the run found nothing wrong with the test environment.
+func (r SkeletonReport) Healthy() bool {
+	return r.Problem == ""
+}
+
+// String returns the report on a single line, as a log record wants it: the
+// problem, followed by the passing tests that explain it. A healthy report is
+// the empty string.
+func (r SkeletonReport) String() string {
+	if r.Problem == "" || len(r.PassingTests) == 0 {
+		return r.Problem
 	}
-	problem := fmt.Sprintf("skeleton code scored %d%%, expected at most %d%%", sum, maxScore)
-	if passing := passingTests(results); len(passing) > 0 {
-		problem += "; tests passing on the skeleton code: " + strings.Join(passing, ", ")
-	}
-	return problem
+	return r.Problem + "; tests passing on the skeleton code: " + strings.Join(r.PassingTests, ", ")
+}
+
+// SkeletonProblem returns the empty string if the given results describe a
+// healthy test environment, and otherwise a one-line explanation of the
+// problem; it is CheckSkeleton(results, maxScore).String().
+func SkeletonProblem(results *score.Results, maxScore uint32) string {
+	return CheckSkeleton(results, maxScore).String()
 }
 
 // passingTests returns the tests that awarded the skeleton code a non-zero
