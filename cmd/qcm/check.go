@@ -395,21 +395,10 @@ func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, par
 		ck.add(checkResult{name: "solution", result: skip, details: []string{nothingToRun(lab)}})
 		return
 	}
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
 	for _, assignment := range selected {
 		name := "solution " + assignment.GetName()
 		ck.start(name, "running the tests against the solution code")
-		res, err := runTests(ctx, &ci.RunData{
-			Course:        course,
-			Assignment:    assignment,
-			SubmissionDir: solutionDir,
-			Repo: &qf.Repository{
-				HTMLURL:  repo.StudentRepoURL(solutionOwner),
-				RepoType: qf.Repository_USER,
-			},
-			JobOwner: solutionOwner,
-			CommitID: localCommitID,
-		}, runner)
+		res, err := runTests(ctx, ci.NewLocalRun(course, assignment, solutionOwner, solutionDir, localCommitID), runner)
 		if err != nil {
 			ck.add(checkResult{name: name, result: fail, details: []string{err.Error()}})
 			continue

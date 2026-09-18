@@ -115,17 +115,14 @@ func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner c
 // with the SCM client needed to fetch it. A local submission directory needs
 // no SCM client, and the returned client is then nil.
 func newRunData(course *qf.Course, assignment *qf.Assignment, submission, user, group string, logger *slog.Logger, c *commonFlags) (*ci.RunData, scm.SCM, error) {
+	if submission != "" {
+		return ci.NewLocalRun(course, assignment, localOwner, submission, localCommitID), nil, nil
+	}
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: c.org}
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
 		CommitID:   localCommitID,
-	}
-	if submission != "" {
-		runData.SubmissionDir = submission
-		runData.Repo = &qf.Repository{HTMLURL: repo.StudentRepoURL(localOwner), RepoType: qf.Repository_USER}
-		runData.JobOwner = localOwner
-		return runData, nil, nil
 	}
 	if user != "" {
 		runData.Repo = &qf.Repository{HTMLURL: repo.StudentRepoURL(user), RepoType: qf.Repository_USER}
