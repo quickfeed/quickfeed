@@ -111,14 +111,14 @@ func (c *commonFlags) scmClient(logger *slog.Logger) (scm.SCM, error) {
 func courseDockerfile(buildContext map[string]string) (string, error) {
 	dockerfile, ok := buildContext[ci.Dockerfile]
 	if ok && strings.TrimSpace(dockerfile) == "" {
-		return "", fmt.Errorf("%s/%s is empty; add its content or delete the file", scriptsDir, ci.Dockerfile)
+		return "", fmt.Errorf("%s/%s is empty; add its content or delete the file", ci.ScriptsDir, ci.Dockerfile)
 	}
 	return dockerfile, nil
 }
 
 // yearSuffix matches the four-digit year that a course organization is
 // conventionally suffixed with, e.g., the -2025 in dat320-2025.
-var yearSuffix = regexp.MustCompile(`-[0-9]{4}$`)
+var yearSuffix = regexp.MustCompile(`-\d{4}$`)
 
 // courseCode derives a course code from the course's GitHub organization by
 // stripping a trailing four-digit year, if present, and upper-casing the rest:

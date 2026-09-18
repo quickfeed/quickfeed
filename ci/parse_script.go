@@ -60,15 +60,11 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 }
 
 func (r *RunData) loadRunScript() (string, error) {
-	const (
-		scriptFile   = "run.sh"
-		scriptFolder = "scripts"
-	)
 	courseTestsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
-	runScript := filepath.Join(courseTestsDir, r.Assignment.GetName(), scriptFile)
+	runScript := filepath.Join(courseTestsDir, r.Assignment.GetName(), RunScriptFile)
 	if _, err := os.Stat(runScript); os.IsNotExist(err) {
 		// If the assignment does not have a run.sh script, use the default run.sh script
-		runScript = filepath.Join(courseTestsDir, scriptFolder, scriptFile)
+		runScript = filepath.Join(courseTestsDir, ScriptsDir, RunScriptFile)
 		if _, err := os.Stat(runScript); os.IsNotExist(err) {
 			return "", fmt.Errorf("run script not found for %s: %w", r.Course.GetCode(), err)
 		}

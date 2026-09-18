@@ -28,8 +28,16 @@ import (
 // DefaultContainerTimeout is the default timeout for running a container.
 var DefaultContainerTimeout = time.Duration(10 * time.Minute)
 
+// Names of the files in a course's tests repository that configure its test
+// runs. The Dockerfile and the course's default run script live in the
+// ScriptsDir folder; an assignment folder may hold a run script of its own.
 const (
-	Dockerfile      = "Dockerfile"
+	Dockerfile    = "Dockerfile"
+	ScriptsDir    = "scripts"
+	RunScriptFile = "run.sh"
+)
+
+const (
 	QuickFeedPath   = "/quickfeed"
 	maxToScan       = 1_000_000 // bytes
 	maxLogSize      = 30_000    // bytes
@@ -351,7 +359,7 @@ type dockerJSON struct {
 }
 
 func (s dockerJSON) String() string {
-	if len(s.Status) > 0 {
+	if s.Status != "" {
 		return s.Status + s.ID
 	}
 	return strings.TrimSpace(s.Stream)

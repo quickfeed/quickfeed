@@ -127,8 +127,8 @@ const assignmentJSON = `{"order": 1, "deadline": "01-12-2025T23:59"}`
 func TestCheckUnknownLab(t *testing.T) {
 	const org = "dat320-2025"
 	dir := writeTestsRepo(t, org, map[string]string{
-		filepath.Join("lab1", "assignment.json"): assignmentJSON,
-		filepath.Join(scriptsDir, runScriptFile): "#image/dat320\necho hello\n",
+		filepath.Join("lab1", "assignment.json"):       assignmentJSON,
+		filepath.Join(ci.ScriptsDir, ci.RunScriptFile): "#image/dat320\necho hello\n",
 	})
 	var stdout, stderr bytes.Buffer
 	err := run([]string{"check", "-course", org, "-dir", dir, "-lab", "lab9"}, &stdout, &stderr)
@@ -151,9 +151,9 @@ func TestCheckUnknownLab(t *testing.T) {
 func TestRunEmptyDockerfile(t *testing.T) {
 	const org = "dat320-2025"
 	dir := writeTestsRepo(t, org, map[string]string{
-		filepath.Join("lab1", "assignment.json"): assignmentJSON,
-		filepath.Join(scriptsDir, runScriptFile): "#image/dat320\necho hello\n",
-		filepath.Join(scriptsDir, ci.Dockerfile): "\n\n",
+		filepath.Join("lab1", "assignment.json"):       assignmentJSON,
+		filepath.Join(ci.ScriptsDir, ci.RunScriptFile): "#image/dat320\necho hello\n",
+		filepath.Join(ci.ScriptsDir, ci.Dockerfile):    "\n\n",
 	})
 	var stdout, stderr bytes.Buffer
 	err := run([]string{"run", "-course", org, "-dir", dir, "-lab", "lab1", "-submission", t.TempDir()}, &stdout, &stderr)
@@ -190,9 +190,9 @@ func TestValidateSetsRepositoryPath(t *testing.T) {
 
 func TestParseRunScripts(t *testing.T) {
 	testsDir := t.TempDir()
-	writeRepoFile(t, testsDir, filepath.Join(scriptsDir, runScriptFile), "#image/dat320\necho hello\n")
-	writeRepoFile(t, testsDir, filepath.Join("lab1", runScriptFile), "#image/golang:1.26\necho lab1\n")
-	writeRepoFile(t, testsDir, filepath.Join("lab2", runScriptFile), "#image/dat320\n\n\n")
+	writeRepoFile(t, testsDir, filepath.Join(ci.ScriptsDir, ci.RunScriptFile), "#image/dat320\necho hello\n")
+	writeRepoFile(t, testsDir, filepath.Join("lab1", ci.RunScriptFile), "#image/golang:1.26\necho lab1\n")
+	writeRepoFile(t, testsDir, filepath.Join("lab2", ci.RunScriptFile), "#image/dat320\n\n\n")
 	parsed := []*qf.Assignment{{Name: "lab1"}, {Name: "lab2"}, {Name: "lab3"}}
 
 	scripts, err := parseRunScripts(testsDir, parsed)
