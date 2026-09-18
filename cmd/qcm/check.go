@@ -41,11 +41,9 @@ const (
 	skip = "SKIP"
 )
 
-const (
-	runScriptFile = "run.sh"
-	scriptsDir    = "scripts"
-	solutionOwner = "solution"
-)
+// solutionOwner is the job owner, and thereby the repository name, of a run
+// against the course's solution code; see ci.NewLocalRun.
+const solutionOwner = "solution"
 
 // checkResult is one row of the summary table that qcm check prints. The
 // details hold one item per entry: the first is printed on the check's own
@@ -206,7 +204,7 @@ type runScripts struct {
 // reported even for a folder whose assignment.json is also broken.
 func parseRunScripts(testsDir string, parsed []*qf.Assignment) (*runScripts, error) {
 	scripts := &runScripts{images: make(map[string]string), found: make(map[string]bool)}
-	hasDefault, err := scripts.parse(testsDir, filepath.Join(scriptsDir, runScriptFile))
+	hasDefault, err := scripts.parse(testsDir, filepath.Join(ci.ScriptsDir, ci.RunScriptFile))
 	if err != nil {
 		return nil, err
 	}
@@ -217,15 +215,15 @@ func parseRunScripts(testsDir string, parsed []*qf.Assignment) (*runScripts, err
 		return nil, fmt.Errorf("reading %s: %w", testsDir, err)
 	}
 	for _, entry := range entries {
-		if !entry.IsDir() || entry.Name() == scriptsDir || strings.HasPrefix(entry.Name(), ".") {
+		if !entry.IsDir() || entry.Name() == ci.ScriptsDir || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
-		if _, err := scripts.parse(testsDir, filepath.Join(entry.Name(), runScriptFile)); err != nil {
+		if _, err := scripts.parse(testsDir, filepath.Join(entry.Name(), ci.RunScriptFile)); err != nil {
 			return nil, err
 		}
 	}
 	for _, assignment := range parsed {
-		if !scripts.found[assignment.GetName()+"/"+runScriptFile] {
+		if !scripts.found[assignment.GetName()+"/"+ci.RunScriptFile] {
 			scripts.missing = append(scripts.missing, assignment.GetName())
 		}
 	}
@@ -271,7 +269,7 @@ func checkRunScripts(scripts *runScripts) checkResult {
 	problems := slices.Clone(scripts.failures)
 	if !scripts.hasDefault && len(scripts.missing) > 0 {
 		problems = append(problems, fmt.Sprintf("no %s/%s, and no %s for %s",
-			scriptsDir, runScriptFile, runScriptFile, strings.Join(scripts.missing, ", ")))
+			ci.ScriptsDir, ci.RunScriptFile, ci.RunScriptFile, strings.Join(scripts.missing, ", ")))
 	}
 	if len(problems) > 0 {
 		return checkResult{name: "run scripts", result: fail, details: problems}
@@ -297,15 +295,15 @@ func checkDockerfile(ctx context.Context, runner ci.Runner, course *qf.Course, b
 		if users := scripts.usersOf(course.DockerImage()); len(users) > 0 {
 			return checkResult{name: name, result: fail, details: []string{fmt.Sprintf(
 				"%s name the course image %q, but the tests repository has no %s/%s to build it",
-				strings.Join(users, " and "), course.DockerImage(), scriptsDir, ci.Dockerfile)}}
+				strings.Join(users, " and "), course.DockerImage(), ci.ScriptsDir, ci.Dockerfile)}}
 		}
 		return checkResult{name: name, result: skip, details: []string{fmt.Sprintf(
-			"no %s/%s; the run scripts name prebuilt images", scriptsDir, ci.Dockerfile)}}
+			"no %s/%s; the run scripts name prebuilt images", ci.ScriptsDir, ci.Dockerfile)}}
 	}
 	if !build {
 		return checkResult{name: name, result: skip, details: []string{"not built because -build=false"}}
 	}
-	ck.start(name, "building the "+course.DockerImage()+" image from "+scriptsDir+"/"+ci.Dockerfile)
+	ck.start(name, "building the "+course.DockerImage()+" image from "+ci.ScriptsDir+"/"+ci.Dockerfile)
 	if err := assignments.BuildDockerImage(ctx, runner, course, buildContext); err != nil {
 		return checkResult{name: name, result: fail, details: []string{err.Error()}}
 	}

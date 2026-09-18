@@ -19,7 +19,7 @@ const (
 	assignmentFile = "assignment.json"
 	criteriaFile   = "criteria.json"
 	testsFile      = "tests.json"
-	scriptsDir     = "scripts"
+	scriptsDir     = ci.ScriptsDir
 )
 
 // RepoIssue describes a problem detected in the course repositories, such as
