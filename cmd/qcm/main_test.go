@@ -376,6 +376,38 @@ func TestAutoGraded(t *testing.T) {
 	}
 }
 
+func TestSkeletonResult(t *testing.T) {
+	healthy := &score.Results{Scores: []*score.Score{
+		{TestName: "TestLint", Score: 1, MaxScore: 1, Weight: 1},
+		{TestName: "TestWork", Score: 0, MaxScore: 100, Weight: 30},
+	}}
+	got := skeletonResult("skeleton lab1", healthy, ci.MaxSkeletonScore)
+	if got.result != pass {
+		t.Errorf("skeletonResult(healthy) = %+v, want %s", got, pass)
+	}
+	// The test that awards the skeleton its few percent is still listed.
+	if !strings.Contains(strings.Join(got.details, "\n"), "TestLint (1/1)") {
+		t.Errorf("skeletonResult(healthy) details = %q, want it to list TestLint", got.details)
+	}
+	leaked := &score.Results{Scores: []*score.Score{
+		{TestName: "TestA", Score: 10, MaxScore: 10, Weight: 1},
+		{TestName: "TestB", Score: 0, MaxScore: 10, Weight: 1},
+	}}
+	got = skeletonResult("skeleton lab1", leaked, ci.MaxSkeletonScore)
+	if got.result != fail {
+		t.Errorf("skeletonResult(50%%) = %+v, want %s", got, fail)
+	}
+	for _, want := range []string{"scored 50%", "TestA (10/10)"} {
+		if !strings.Contains(strings.Join(got.details, "\n"), want) {
+			t.Errorf("skeletonResult(50%%) details = %q, want it to contain %q", got.details, want)
+		}
+	}
+	failed := &score.Results{BuildInfo: &score.BuildInfo{Status: score.RunStatus_BUILD_FAILURE}}
+	if got := skeletonResult("skeleton lab1", failed, ci.MaxSkeletonScore); got.result != fail || !strings.Contains(strings.Join(got.details, "\n"), "BUILD_FAILURE") {
+		t.Errorf("skeletonResult(build failure) = %+v, want %s naming the status", got, fail)
+	}
+}
+
 func TestSolutionResult(t *testing.T) {
 	full := &score.Results{Scores: []*score.Score{{TestName: "TestA", Score: 10, MaxScore: 10, Weight: 1}}}
 	if got := solutionResult("solution lab1", full); got.result != pass {
