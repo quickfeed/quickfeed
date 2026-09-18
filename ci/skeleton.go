@@ -30,24 +30,9 @@ const MaxSkeletonScore uint32 = 5
 
 // NewSkeletonRun returns the run data for testing the course's skeleton
 // (handout) code, taken from the local clone of the assignments repository,
-// against the course's own tests.
-//
-// Callers must pass a commit ID that is unique for the run, because
-// RunData.String names the container, and starting a container whose name is
-// already taken fails with ErrConflict.
+// against the course's own tests; see NewLocalRun for the commit ID.
 func NewSkeletonRun(course *qf.Course, assignment *qf.Assignment, commitID string) *RunData {
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
-	return &RunData{
-		Course:        course,
-		Assignment:    assignment,
-		SubmissionDir: filepath.Join(course.CloneDir(), qf.AssignmentsRepo),
-		Repo: &qf.Repository{
-			HTMLURL:  repo.StudentRepoURL(skeletonOwner),
-			RepoType: qf.Repository_USER,
-		},
-		JobOwner: skeletonOwner,
-		CommitID: commitID,
-	}
+	return NewLocalRun(course, assignment, skeletonOwner, filepath.Join(course.CloneDir(), qf.AssignmentsRepo), commitID)
 }
 
 // SkeletonReport is the verdict on a skeleton run; see CheckSkeleton.

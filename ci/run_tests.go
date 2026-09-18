@@ -54,6 +54,31 @@ func (r *RunData) String() string {
 	return fmt.Sprintf("%s-%s-%s-%s", strings.ToLower(r.Course.GetCode()), r.Assignment.GetName(), r.JobOwner, commitID)
 }
 
+// NewLocalRun returns the run data for testing the code in submissionDir, a
+// local directory laid out like a student repository, against the course's
+// tests. The run is recorded for owner, whose student repository name the code
+// is copied to inside the job's temporary directory; the name must not collide
+// with the "tests" and "assignments" read-only mounts.
+//
+// Together with the owner and assignment, commitID names the run's container;
+// see RunData.String. Starting a run whose container name is taken fails with
+// ErrConflict, so concurrent runs need distinct IDs, whereas runs one after
+// another may reuse one, since a finished run removes its container.
+func NewLocalRun(course *qf.Course, assignment *qf.Assignment, owner, submissionDir, commitID string) *RunData {
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
+	return &RunData{
+		Course:        course,
+		Assignment:    assignment,
+		SubmissionDir: submissionDir,
+		Repo: &qf.Repository{
+			HTMLURL:  repo.StudentRepoURL(owner),
+			RepoType: qf.Repository_USER,
+		},
+		JobOwner: owner,
+		CommitID: commitID,
+	}
+}
+
 // RunTests runs the tests for the assignment specified in the provided RunData structure,
 // and returns the score results or an error.
 // The method is idempotent and can be called concurrently on multiple RunData objects.

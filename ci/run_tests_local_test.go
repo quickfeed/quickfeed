@@ -69,22 +69,13 @@ func TestRunTestsSubmissionDir(t *testing.T) {
 	mkdirAll(t, filepath.Join(submissionDir, "lab1"))
 	writeFile(t, filepath.Join(submissionDir, "lab1", "lab1.go"), "package lab1\n")
 
-	runData := &ci.RunData{
-		Course: course,
-		Assignment: &qf.Assignment{
-			Name: "lab1",
-			ExpectedTests: []*qf.TestInfo{
-				{TestName: "TestLocalRun", MaxScore: 10, Weight: 1},
-			},
+	assignment := &qf.Assignment{
+		Name: "lab1",
+		ExpectedTests: []*qf.TestInfo{
+			{TestName: "TestLocalRun", MaxScore: 10, Weight: 1},
 		},
-		Repo: &qf.Repository{
-			HTMLURL:  qf.RepoURL{ProviderURL: "github.com", Organization: localTestOrg}.StudentRepoURL("local"),
-			RepoType: qf.Repository_USER,
-		},
-		JobOwner:      "local",
-		CommitID:      "deadbeef",
-		SubmissionDir: submissionDir,
 	}
+	runData := ci.NewLocalRun(course, assignment, "local", submissionDir, "deadbeef")
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel()
 
@@ -117,18 +108,34 @@ func TestRunTestsSubmissionDirMissingCourseRepos(t *testing.T) {
 	submissionDir := t.TempDir()
 	mkdirAll(t, filepath.Join(submissionDir, "lab1"))
 
-	runData := &ci.RunData{
-		Course:     course,
-		Assignment: &qf.Assignment{Name: "lab1"},
-		Repo: &qf.Repository{
-			HTMLURL:  qf.RepoURL{ProviderURL: "github.com", Organization: localTestOrg}.StudentRepoURL("local"),
-			RepoType: qf.Repository_USER,
-		},
-		JobOwner:      "local",
-		CommitID:      "deadbeef",
-		SubmissionDir: submissionDir,
-	}
+	runData := ci.NewLocalRun(course, &qf.Assignment{Name: "lab1"}, "local", submissionDir, "deadbeef")
 	if _, err := runData.RunTests(t.Context(), nil, &ci.Local{}); err == nil {
 		t.Fatal("RunTests() error = nil, want an error for the missing course repositories")
+	}
+}
+
+func TestNewLocalRun(t *testing.T) {
+	course := &qf.Course{Code: "QF101", ScmOrganizationName: localTestOrg}
+	assignment := &qf.Assignment{Name: "lab1"}
+	runData := ci.NewLocalRun(course, assignment, "solution", "/course/solutions", "local")
+
+	if runData.SubmissionDir != "/course/solutions" {
+		t.Errorf("NewLocalRun() submission dir = %q, want %q", runData.SubmissionDir, "/course/solutions")
+	}
+	if got, want := runData.Repo.Name(), qf.StudentRepoName("solution"); got != want {
+		t.Errorf("NewLocalRun() repo name = %q, want %q", got, want)
+	}
+	// The repository name must not collide with the read-only mounts.
+	for _, reserved := range []string{qf.TestsRepo, qf.AssignmentsRepo} {
+		if runData.Repo.Name() == reserved {
+			t.Errorf("NewLocalRun() repo name = %q, which collides with the %q mount", reserved, reserved)
+		}
+	}
+	if runData.JobOwner != "solution" {
+		t.Errorf("NewLocalRun() job owner = %q, want %q", runData.JobOwner, "solution")
+	}
+	// A short commit ID, as qcm passes, must name the job without truncation.
+	if got, want := runData.String(), "qf101-lab1-solution-local"; got != want {
+		t.Errorf("NewLocalRun() job name = %q, want %q", got, want)
 	}
 }
