@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -52,6 +53,11 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 	}
 	if err := exactlyOneSource(*submission, *user, *group); err != nil {
 		return err
+	}
+	if *submission != "" {
+		if err := checkSubmissionDir(*submission, *lab); err != nil {
+			return err
+		}
 	}
 
 	logger := c.logger(stderr)
@@ -163,6 +169,19 @@ func exactlyOneSource(submission, user, group string) error {
 		return errors.New("missing the code to test: give one of -submission, -user, or -group")
 	case given > 1:
 		return errors.New("conflicting sources for the code to test: give only one of -submission, -user, or -group")
+	}
+	return nil
+}
+
+// checkSubmissionDir fails if the local directory holding the code to test is
+// missing or has no folder for the assignment. The run would fail on either,
+// but only after the course's image has been built, which can take minutes.
+func checkSubmissionDir(dir, lab string) error {
+	if !isDir(dir) {
+		return fmt.Errorf("submission directory %q does not exist", dir)
+	}
+	if !isDir(filepath.Join(dir, lab)) {
+		return fmt.Errorf("submission directory %q has no %s folder; it must be laid out like a student repository", dir, lab)
 	}
 	return nil
 }

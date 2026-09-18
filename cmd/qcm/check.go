@@ -148,6 +148,11 @@ func checkCmd(args []string, stdout, stderr io.Writer) error {
 	if err := c.validate(); err != nil {
 		return err
 	}
+	if *solution != "" && !isDir(*solution) {
+		// Every solution run would otherwise fail with the same error, after
+		// the course's image has been built.
+		return fmt.Errorf("solution directory %q does not exist", *solution)
+	}
 
 	course := c.course()
 	parsed, buildContext, issues, err := assignments.ReadTestsRepository(c.testsDir(), 0)

@@ -155,13 +155,62 @@ func TestRunEmptyDockerfile(t *testing.T) {
 		filepath.Join(ci.ScriptsDir, ci.RunScriptFile): "#image/dat320\necho hello\n",
 		filepath.Join(ci.ScriptsDir, ci.Dockerfile):    "\n\n",
 	})
+	submission := t.TempDir()
+	writeRepoFile(t, submission, filepath.Join("lab1", "lab1.go"), "package lab1\n")
 	var stdout, stderr bytes.Buffer
-	err := run([]string{"run", "-course", org, "-dir", dir, "-lab", "lab1", "-submission", t.TempDir()}, &stdout, &stderr)
+	err := run([]string{"run", "-course", org, "-dir", dir, "-lab", "lab1", "-submission", submission}, &stdout, &stderr)
 	if err == nil {
 		t.Fatal("run(run) error = nil, want an error for the empty Dockerfile")
 	}
 	if want := "scripts/Dockerfile is empty"; !strings.Contains(err.Error(), want) {
 		t.Errorf("run(run) error = %q, want it to contain %q", err, want)
+	}
+}
+
+// TestRunMissingSubmissionDir checks that a -submission directory that is
+// missing, or that has no folder for the assignment, is reported before any
+// Docker work is started.
+func TestRunMissingSubmissionDir(t *testing.T) {
+	const org = "dat320-2025"
+	dir := writeTestsRepo(t, org, map[string]string{
+		filepath.Join("lab1", "assignment.json"):       assignmentJSON,
+		filepath.Join(ci.ScriptsDir, ci.RunScriptFile): "#image/dat320\necho hello\n",
+	})
+	tests := []struct {
+		name       string
+		submission string
+		want       string
+	}{
+		{name: "Missing", submission: filepath.Join(t.TempDir(), "missing"), want: "does not exist"},
+		{name: "NoAssignmentFolder", submission: t.TempDir(), want: "has no lab1 folder"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			err := run([]string{"run", "-course", org, "-dir", dir, "-lab", "lab1", "-submission", tc.submission}, &stdout, &stderr)
+			if err == nil {
+				t.Fatalf("run(run -submission %q) error = nil, want %q", tc.submission, tc.want)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("run(run -submission %q) error = %q, want it to contain %q", tc.submission, err, tc.want)
+			}
+		})
+	}
+}
+
+// TestCheckMissingSolutionDir checks that a -solution directory that does not
+// exist is reported once, up front, rather than as a failed run per assignment.
+func TestCheckMissingSolutionDir(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", dir)
+	solution := filepath.Join(dir, "missing")
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"check", "-course", "dat320-2025", "-dir", dir, "-solution", solution}, &stdout, &stderr)
+	if err == nil {
+		t.Fatal("run(check -solution missing) error = nil, want an error for the missing directory")
+	}
+	if want := "solution directory"; !strings.Contains(err.Error(), want) || !strings.Contains(err.Error(), "does not exist") {
+		t.Errorf("run(check -solution missing) error = %q, want it to name the missing %s", err, want)
 	}
 }
 
