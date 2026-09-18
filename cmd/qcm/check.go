@@ -17,7 +17,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 )
 
 const checkSynopsis = `Usage: qcm check -course ORG [flags]
@@ -349,40 +348,13 @@ func checkContent(c *commonFlags, parsed []*qf.Assignment, issues []assignments.
 // per assignment through ck. Tests that actually exercise what the students
 // are asked to write barely score on the skeleton.
 func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab string, maxScore uint32, ck *checker) {
-	selected := autoGraded(parsed, lab)
-	if len(selected) == 0 {
-		ck.add(checkResult{name: "skeleton", result: skip, details: []string{nothingToRun(lab)}})
-		return
-	}
-	for _, assignment := range selected {
-		name := "skeleton " + assignment.GetName()
-		ck.start(name, "running the tests against the skeleton code")
-		res, err := runTests(ctx, ci.NewSkeletonRun(course, assignment, localCommitID), runner)
-		if err != nil {
-			ck.add(checkResult{name: name, result: fail, details: []string{err.Error()}})
-			continue
-		}
-		report := ci.CheckSkeleton(res, maxScore)
-		if !report.Healthy() {
-			ck.add(checkResult{name: name, result: fail, details: withPassingTests(report.Problem, report.PassingTests)})
-			continue
-		}
-		summary := fmt.Sprintf("scored %d%%, at most %d%% allowed", res.Sum(), maxScore)
-		ck.add(checkResult{name: name, result: pass, details: withPassingTests(summary, report.PassingTests)})
-	}
-}
-
-// withPassingTests returns the summary followed by the tests that score on the
-// skeleton code, one per line, so that the teaching staff can see which tests
-// to look at. Also for a passing check: the tests that award the skeleton its
-// few percent are worth knowing about.
-func withPassingTests(summary string, passing []string) []string {
-	details := []string{summary}
-	if len(passing) > 0 {
-		details = append(details, "tests passing on the skeleton code:")
-		details = append(details, passing...)
-	}
-	return details
+	checkRuns(ctx, runner, "skeleton", autoGraded(parsed, lab), lab, ck,
+		func(assignment *qf.Assignment) *ci.RunData {
+			return ci.NewSkeletonRun(course, assignment, localCommitID)
+		},
+		func(name string, results *score.Results) checkResult {
+			return skeletonResult(name, results, maxScore)
+		})
 }
 
 // checkSolution runs the course's tests against the solution code in the given
@@ -390,21 +362,60 @@ func withPassingTests(summary string, passing []string) []string {
 // through ck. The solution must score 100%; a lower score means the tests
 // cannot be passed as written.
 func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab, solutionDir string, ck *checker) {
-	selected := autoGraded(parsed, lab)
+	checkRuns(ctx, runner, "solution", autoGraded(parsed, lab), lab, ck,
+		func(assignment *qf.Assignment) *ci.RunData {
+			return ci.NewLocalRun(course, assignment, solutionOwner, solutionDir, localCommitID)
+		},
+		solutionResult)
+}
+
+// checkRuns runs the course's tests against local code, once per selected
+// assignment, and records a result per assignment through ck: newRun sets up
+// the run for an assignment, and judge turns its results into the check's
+// result. Each run is announced first, since it takes minutes. With no
+// assignment selected the check is skipped, and lab explains why.
+func checkRuns(ctx context.Context, runner ci.Runner, check string, selected []*qf.Assignment, lab string, ck *checker,
+	newRun func(*qf.Assignment) *ci.RunData, judge func(name string, results *score.Results) checkResult,
+) {
 	if len(selected) == 0 {
-		ck.add(checkResult{name: "solution", result: skip, details: []string{nothingToRun(lab)}})
+		ck.add(checkResult{name: check, result: skip, details: []string{nothingToRun(lab)}})
 		return
 	}
 	for _, assignment := range selected {
-		name := "solution " + assignment.GetName()
-		ck.start(name, "running the tests against the solution code")
-		res, err := runTests(ctx, ci.NewLocalRun(course, assignment, solutionOwner, solutionDir, localCommitID), runner)
+		name := check + " " + assignment.GetName()
+		ck.start(name, "running the tests against the "+check+" code")
+		// The code to test is on this machine, so no SCM client is needed.
+		results, err := runTests(ctx, newRun(assignment), nil, runner, 0)
 		if err != nil {
 			ck.add(checkResult{name: name, result: fail, details: []string{err.Error()}})
 			continue
 		}
-		ck.add(solutionResult(name, res))
+		ck.add(judge(name, results))
 	}
+}
+
+// skeletonResult judges a skeleton run; see ci.CheckSkeleton. The tests that
+// score on the skeleton code are listed one per line, also for a passing check:
+// the tests that award the skeleton its few percent are worth knowing about.
+func skeletonResult(name string, results *score.Results, maxScore uint32) checkResult {
+	report := ci.CheckSkeleton(results, maxScore)
+	if !report.Healthy() {
+		return checkResult{name: name, result: fail, details: withPassingTests(report.Problem, report.PassingTests)}
+	}
+	summary := fmt.Sprintf("scored %d%%, at most %d%% allowed", results.Sum(), maxScore)
+	return checkResult{name: name, result: pass, details: withPassingTests(summary, report.PassingTests)}
+}
+
+// withPassingTests returns the summary followed by the tests that score on the
+// skeleton code, one per line, so that the teaching staff can see which tests
+// to look at.
+func withPassingTests(summary string, passing []string) []string {
+	details := []string{summary}
+	if len(passing) > 0 {
+		details = append(details, "tests passing on the skeleton code:")
+		details = append(details, passing...)
+	}
+	return details
 }
 
 // solutionResult judges a solution run: the solution code must score 100%.
@@ -429,15 +440,6 @@ func solutionResult(name string, results *score.Results) checkResult {
 		details = append(details, failing...)
 	}
 	return checkResult{name: name, result: fail, details: details}
-}
-
-// runTests runs one test job with its own timeout, taken from the assignment.
-// The local runs started by qcm check never need an SCM client.
-func runTests(ctx context.Context, runData *ci.RunData, runner ci.Runner) (*score.Results, error) {
-	ctx, cancel := runData.Assignment.WithTimeout(ctx, ci.DefaultContainerTimeout)
-	defer cancel()
-	var noSCM scm.SCM
-	return runData.RunTests(ctx, noSCM, runner)
 }
 
 // autoGraded returns the assignments to run tests for: the auto-graded ones, or

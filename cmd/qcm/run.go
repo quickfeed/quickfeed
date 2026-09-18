@@ -12,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qlog"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -88,20 +89,15 @@ func runCmd(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
-	ctx, cancel := withTimeout(ctx, assignment, *timeout)
-	defer cancel()
-	return runAndReport(ctx, runData, sc, runner, stdout)
+	return runAndReport(ctx, runData, sc, runner, *timeout, stdout)
 }
 
 // runAndReport runs one test job and prints the resulting scores. A test run
 // that failed is reported as an error, so that the command exits non-zero.
-func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner ci.Runner, stdout io.Writer) error {
+func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner ci.Runner, timeout time.Duration, stdout io.Writer) error {
 	fmt.Fprintf(stdout, "Running the tests for %s\n", runData.Assignment.GetName())
-	results, err := runData.RunTests(ctx, sc, runner)
+	results, err := runTests(ctx, runData, sc, runner, timeout)
 	if err != nil {
-		if errors.Is(err, ci.ErrConflict) {
-			return fmt.Errorf("%w; wait for the running job %s to finish", err, runData)
-		}
 		return fmt.Errorf("running tests for %s: %w", runData.Assignment.GetName(), err)
 	}
 	printResults(stdout, results)
@@ -109,6 +105,22 @@ func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner c
 		return fmt.Errorf("test run failed with status %s", results.GetBuildInfo().GetStatus())
 	}
 	return nil
+}
+
+// runTests runs one test job, bounded by the given timeout or else by the
+// assignment's own; see withTimeout. sc is only needed when the code to test
+// has to be cloned, and is nil for a run of a local directory. A run cannot
+// start while a container of the same name exists, which is the case when the
+// same code is already being tested, or when an earlier run of it was
+// interrupted before removing its container; the error says so.
+func runTests(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner ci.Runner, timeout time.Duration) (*score.Results, error) {
+	ctx, cancel := withTimeout(ctx, runData.Assignment, timeout)
+	defer cancel()
+	results, err := runData.RunTests(ctx, sc, runner)
+	if errors.Is(err, ci.ErrConflict) {
+		return nil, fmt.Errorf("%w: wait for the running job %s to finish, or remove its container if the job was interrupted", err, runData)
+	}
+	return results, err
 }
 
 // newRunData returns the run data for the requested submission source, along
