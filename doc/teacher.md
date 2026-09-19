@@ -164,6 +164,14 @@ Every top-level assignment folder must occur in both repositories.
 Each assignment folder in the `tests` repository must contain `assignment.json` and at least one of `tests.json` or `criteria.json`.
 QuickFeed checks these requirements whenever either repository is updated and reports problems in the course log.
 See [Folders That Are Not Assignments](#folders-that-are-not-assignments) for top-level folders that are exempt.
+
+After each push to the default branch of the `tests` or `assignments` repository, QuickFeed also runs the affected assignments' tests against the skeleton code in the `assignments` repository.
+Only the assignments whose folders the push touched are checked; a change to the `scripts` folder, a root-level file, or another shared top-level folder checks every assignment, while metadata folders such as `.github` are ignored.
+Skeleton code that scores more than 5%, or a run that does not complete successfully, is reported as a warning in the course log, since your tests may not be exercising the parts the students are asked to write.
+This check never blocks the assignment update: it runs after QuickFeed has updated the database, and, for a push to the `assignments` repository, after the student repositories have been synchronized; a push to the `tests` repository triggers no such synchronization.
+Its only effect is what it writes to the course log.
+Run `qcm check` to find the same problems on your own machine before you push; see [Checking the Test Environment Locally](#checking-the-test-environment-locally).
+
 The `assignment.json` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
 If the assignment has tests that should be run by QuickFeed, the the tests should be listed in the `tests.json` file.
