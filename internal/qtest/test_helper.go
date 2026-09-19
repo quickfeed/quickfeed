@@ -411,6 +411,14 @@ func UserDiffOptions() cmp.Option {
 }
 
 // CheckError checks if the got error matches the want error and fails the test if not.
+// Since it fails fatally, statements after the call may assume that got matches want.
+// A test that must skip its response assertions when an error was expected should say
+// so directly:
+//
+//	qtest.CheckError(t, err, test.wantErr)
+//	if test.wantErr != nil {
+//		return // the response is invalid when an error was expected
+//	}
 func CheckError(t *testing.T, got, want error) {
 	t.Helper()
 	if got != nil {

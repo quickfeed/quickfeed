@@ -223,15 +223,13 @@ func TestGetAssignmentFeedback(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := client.Context(t, test.user)
-			resp, err := client.GetAssignmentFeedback(ctx, test.request)
+			got, err := client.GetAssignmentFeedback(ctx, test.request)
 			qtest.CheckCode(t, err, test.wantErr)
 			if test.wantErr != nil {
-				return // cannot continue since resp is invalid
+				return // Skip comparing the feedback if we expect an error
 			}
-			got := resp
-			want := test.want
 			// UserID is removed in responses, so we ignore it in the comparison
-			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
+			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, test.want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
 		})
 	}
 }
