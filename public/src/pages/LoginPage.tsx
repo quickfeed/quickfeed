@@ -22,6 +22,18 @@ const LoginPage = () => {
                         Sign in
                     </a>
                 </div>
+                <p className="text-sm text-center text-base-content/60 mt-6 max-w-md px-4">
+                    The QuickFeed app can only access repositories associated with the courses you have signed up for.
+                    Nonetheless, we recommend that you do not use a GitHub account that you also use for work.{" "}
+                    <a
+                        href="https://docs.github.com/en/apps/using-github-apps/authorizing-github-apps"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="link link-hover"
+                    >
+                        Learn more
+                    </a>
+                </p>
             </section>
             <AboutPage />
         </div>
