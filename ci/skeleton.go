@@ -9,23 +9,21 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-// skeletonOwner is the job owner recorded for a skeleton run. It also names the
-// repository the skeleton code is copied to inside the job's temporary
-// directory, which must not collide with the "tests" and "assignments"
-// read-only mounts; see RunData.parseTestRunnerScript.
+// skeletonOwner is the job owner of a skeleton run, and thereby the name of the
+// directory the skeleton code is copied to inside the job's temporary
+// directory; it must not collide with the "tests" and "assignments" read-only
+// mounts; see RunData.parseTestRunnerScript.
 const skeletonOwner = "skeleton"
 
 // MaxSkeletonScore is the highest total score the skeleton (handout) code in
 // the course's assignments repository may achieve before the test environment
 // is suspected of being broken.
 //
-// The skeleton code is what students start from, so it should fail nearly every
-// test. A higher score means the tests are not actually exercising the parts
-// the students are asked to write, or that the solution leaked into the
-// handout. The threshold is not zero because an exact zero is hard to reach in
-// practice: a test may award points for compiling, for a case the skeleton
-// happens to satisfy, or for a table entry whose expected value is the zero
-// value. A few percent is therefore expected; more than that is a problem.
+// Students start from the skeleton code, so it should fail nearly every test; a
+// higher score means the tests do not exercise what the students are asked to
+// write, or that the solution leaked into the handout. The threshold is not
+// zero because a test may award points for something the skeleton happens to
+// satisfy, such as compiling or a zero-valued expected result.
 const MaxSkeletonScore uint32 = 5
 
 // NewSkeletonRun returns the run data for testing the course's skeleton
@@ -37,13 +35,12 @@ func NewSkeletonRun(course *qf.Course, assignment *qf.Assignment, commitID strin
 
 // SkeletonReport is the verdict on a skeleton run; see CheckSkeleton.
 type SkeletonReport struct {
-	// Problem explains, on one line addressed to the teaching staff, why the
-	// test environment is suspect. It is empty for a healthy environment.
+	// Problem explains on one line why the test environment is suspect. It is
+	// empty for a healthy environment.
 	Problem string
 	// PassingTests names the tests that awarded the skeleton code a non-zero
 	// score, each as "TestName (score/max)". A few may do so on a healthy
-	// skeleton, which is why MaxSkeletonScore is not zero; when there is a
-	// Problem, they are the tests to look at.
+	// skeleton; when there is a Problem, they are the tests to look at.
 	PassingTests []string
 }
 
@@ -67,9 +64,8 @@ func (r SkeletonReport) Healthy() bool {
 	return r.Problem == ""
 }
 
-// String returns the report on a single line, as a log record wants it: the
-// problem, followed by the passing tests that explain it. A healthy report is
-// the empty string.
+// String returns the report on a single line: the problem, followed by the
+// passing tests that explain it. A healthy report is the empty string.
 func (r SkeletonReport) String() string {
 	if r.Problem == "" || len(r.PassingTests) == 0 {
 		return r.Problem
@@ -77,9 +73,8 @@ func (r SkeletonReport) String() string {
 	return r.Problem + "; tests passing on the skeleton code: " + strings.Join(r.PassingTests, ", ")
 }
 
-// SkeletonProblem returns the empty string if the given results describe a
-// healthy test environment, and otherwise a one-line explanation of the
-// problem; it is CheckSkeleton(results, maxScore).String().
+// SkeletonProblem returns a one-line explanation of the problem found by
+// CheckSkeleton, or the empty string for a healthy test environment.
 func SkeletonProblem(results *score.Results, maxScore uint32) string {
 	return CheckSkeleton(results, maxScore).String()
 }

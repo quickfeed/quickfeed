@@ -116,9 +116,7 @@ func runAndReport(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner c
 // runTests runs one test job, bounded by the given timeout or else by the
 // assignment's own; see withTimeout. sc is only needed when the code to test
 // has to be cloned, and is nil for a run of a local directory. A run cannot
-// start while a container of the same name exists, which is the case when the
-// same code is already being tested, or when an earlier run of it was
-// interrupted before removing its container; the error says so.
+// start while a container of the same name exists; the error says so.
 func runTests(ctx context.Context, runData *ci.RunData, sc scm.SCM, runner ci.Runner, timeout time.Duration) (*score.Results, error) {
 	ctx, cancel := withTimeout(ctx, runData.Assignment, timeout)
 	defer cancel()
@@ -175,7 +173,7 @@ func exactlyOneSource(submission, user, group string) error {
 
 // checkSubmissionDir fails if the local directory holding the code to test is
 // missing or has no folder for the assignment. The run would fail on either,
-// but only after the course's image has been built, which can take minutes.
+// but only after the course's image has been built.
 func checkSubmissionDir(dir, lab string) error {
 	if !isDir(dir) {
 		return fmt.Errorf("submission directory %q does not exist", dir)

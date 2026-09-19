@@ -81,12 +81,10 @@ func (r *RunData) loadRunScript() (string, error) {
 // the programming language named by its optional #language/ directive, and the
 // remaining lines as the commands to run.
 //
-// The script must name a non-empty image and must hold at least one command; a
-// script consisting of directives, comments, and blank lines alone cannot
-// produce test results, and is reported here rather than as a mystifying empty
-// test run. Teachers can therefore check their run scripts with this function;
-// see cmd/qcm. Comment lines are returned among the commands, so that the
-// script runs exactly as written, but they do not count as commands.
+// The image must be non-empty and the script must hold at least one command,
+// since a script of directives, comments, and blank lines alone would produce
+// a mystifying empty test run. Comment lines are returned among the commands,
+// so that the script runs exactly as written, but do not count as commands.
 func ParseRunScript(scriptContent string) (image, language string, commands []string, err error) {
 	lines := strings.Split(scriptContent, "\n")
 	if len(lines) < 3 {

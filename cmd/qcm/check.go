@@ -45,10 +45,9 @@ const (
 // against the course's solution code; see ci.NewLocalRun.
 const solutionOwner = "solution"
 
-// checkResult is one row of the summary table that qcm check prints. The
-// details hold one item per entry: the first is printed on the check's own
-// row, and the rest on continuation rows indented to the details column, so
-// that a list of tests or of repository issues reads one per line.
+// checkResult is one row of the summary table that qcm check prints. The first
+// detail is printed on the check's own row, the rest on continuation rows
+// indented to the details column, one per line.
 type checkResult struct {
 	name    string
 	result  string
@@ -57,7 +56,7 @@ type checkResult struct {
 
 // checker collects the results of the checks and reports progress as they
 // complete. The Docker-backed checks take minutes each, and the summary table
-// is only printed once all of them are done, so without progress lines the
+// is printed only once all of them are done, so without progress lines the
 // command would appear to hang.
 type checker struct {
 	progress *progressWriter
@@ -76,7 +75,7 @@ func (ck *checker) start(name, what string) {
 	ck.progress.begin(name, what)
 }
 
-// add records a finished check and reports its result at once; the details
+// add records a finished check and reports its result at once; its details
 // follow in the summary table.
 func (ck *checker) add(res checkResult) {
 	ck.results = append(ck.results, res)
@@ -84,16 +83,15 @@ func (ck *checker) add(res checkResult) {
 }
 
 // progressWriter writes the progress lines of qcm check to stderr, which the
-// command's logger writes to as well. The line announcing a slow check is
-// left open, without its newline, so that the check's result can complete
-// it:
+// command's logger writes to as well. The line announcing a slow check is left
+// open, without its newline, so that the check's result can complete it:
 //
 //	skeleton lab1: running the tests against the skeleton code... PASS
 //
-// A log record written meanwhile would otherwise be glued onto that line, so
-// the writer first ends the open line, and the result is then reported on a
-// line of its own. The command runs its checks one at a time, so there is no
-// concurrent use to guard against.
+// A log record written meanwhile would be glued onto that line, so the writer
+// ends the open line first, and the result is then reported on a line of its
+// own. The checks run one at a time, so there is no concurrent use to guard
+// against.
 type progressWriter struct {
 	w    io.Writer
 	open string // the check whose progress line awaits its result, if any
@@ -204,9 +202,9 @@ type runScripts struct {
 
 // parseRunScripts parses the course's own run script and the run script of
 // every top-level folder in the tests repository, and records which of the
-// parsed assignments have no run script of their own. Folders are scanned
-// rather than only the parsed assignments, so that a broken run script is
-// reported even for a folder whose assignment.json is also broken.
+// parsed assignments have no run script of their own. All folders are scanned,
+// not only the parsed assignments, so that a broken run script is reported
+// even for a folder whose assignment.json is also broken.
 func parseRunScripts(testsDir string, parsed []*qf.Assignment) (*runScripts, error) {
 	scripts := &runScripts{images: make(map[string]string), found: make(map[string]bool)}
 	hasDefault, err := scripts.parse(testsDir, filepath.Join(ci.ScriptsDir, ci.RunScriptFile))
@@ -348,8 +346,7 @@ func checkContent(c *commonFlags, parsed []*qf.Assignment, issues []assignments.
 
 // checkSkeleton runs the course's tests against the handout code in the
 // assignments repository, once per auto-graded assignment, recording a result
-// per assignment through ck. Tests that actually exercise what the students
-// are asked to write barely score on the skeleton.
+// per assignment through ck; see ci.MaxSkeletonScore.
 func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab string, maxScore uint32, ck *checker) {
 	checkRuns(ctx, runner, "skeleton", autoGraded(parsed, lab), lab, ck,
 		func(assignment *qf.Assignment) *ci.RunData {
@@ -398,8 +395,8 @@ func checkRuns(ctx context.Context, runner ci.Runner, check string, selected []*
 }
 
 // skeletonResult judges a skeleton run; see ci.CheckSkeleton. The tests that
-// score on the skeleton code are listed one per line, also for a passing check:
-// the tests that award the skeleton its few percent are worth knowing about.
+// score on the skeleton code are listed also for a passing check, since the
+// tests that award the skeleton its few percent are worth knowing about.
 func skeletonResult(name string, results *score.Results, maxScore uint32) checkResult {
 	report := ci.CheckSkeleton(results, maxScore)
 	if !report.Healthy() {
@@ -410,8 +407,7 @@ func skeletonResult(name string, results *score.Results, maxScore uint32) checkR
 }
 
 // withPassingTests returns the summary followed by the tests that score on the
-// skeleton code, one per line, so that the teaching staff can see which tests
-// to look at.
+// skeleton code, one per line.
 func withPassingTests(summary string, passing []string) []string {
 	details := []string{summary}
 	if len(passing) > 0 {

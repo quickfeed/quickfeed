@@ -37,11 +37,10 @@ type RunData struct {
 	CommitID   string
 	JobOwner   string
 	Rebuild    bool
-	// SubmissionDir, if set, is a local directory holding the code to test.
-	// RunTests then copies it with fileop.CopyDir into the job's temporary
-	// directory under Repo.Name() instead of cloning Repo from the SCM. This
-	// supports test runs for code that has not been pushed, such as the
-	// course's own skeleton and solution code; see NewSkeletonRun.
+	// SubmissionDir, if set, is a local directory holding the code to test. It
+	// is copied into the job's temporary directory under Repo.Name() instead of
+	// cloning Repo from the SCM, so that code that has not been pushed, such as
+	// the course's skeleton and solution code, can be tested.
 	SubmissionDir string
 }
 
@@ -56,14 +55,14 @@ func (r *RunData) String() string {
 
 // NewLocalRun returns the run data for testing the code in submissionDir, a
 // local directory laid out like a student repository, against the course's
-// tests. The run is recorded for owner, whose student repository name the code
-// is copied to inside the job's temporary directory; the name must not collide
-// with the "tests" and "assignments" read-only mounts.
+// tests. The owner names both the job and the directory the code is copied to
+// inside the job's temporary directory; it must not collide with the "tests"
+// and "assignments" read-only mounts.
 //
 // Together with the owner and assignment, commitID names the run's container;
 // see RunData.String. Starting a run whose container name is taken fails with
-// ErrConflict, so concurrent runs need distinct IDs, whereas runs one after
-// another may reuse one, since a finished run removes its container.
+// ErrConflict, so concurrent runs need distinct IDs, whereas successive runs
+// may reuse one, since a finished run removes its container.
 func NewLocalRun(course *qf.Course, assignment *qf.Assignment, owner, submissionDir, commitID string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.GetScmOrganizationName()}
 	return &RunData{
@@ -180,7 +179,7 @@ func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	var clonedStudentRepo string
 	if r.SubmissionDir != "" {
 		// The code to test is already on this machine; copy it in place of the
-		// clone, so that the run is identical from here on.
+		// clone, so that the rest of the run is identical.
 		clonedStudentRepo = filepath.Join(dstDir, r.Repo.Name())
 		if err := fileop.CopyDir(r.SubmissionDir, clonedStudentRepo); err != nil {
 			return fmt.Errorf("copying submission directory %q: %w", r.SubmissionDir, err)

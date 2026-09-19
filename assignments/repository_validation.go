@@ -75,8 +75,8 @@ func assignmentFolderIssues(testsDir, name string, inTests, inAssignments bool, 
 		return nil, err
 	}
 	if !files.configured() {
-		// ReadTestsRepository cannot discover this folder, since its
-		// file-oriented walk only sees the configuration files that are absent here.
+		// ReadTestsRepository cannot discover this folder, since its file-oriented
+		// walk only sees the configuration files that are absent here.
 		return []RepoIssue{{
 			Assignment: name,
 			File:       name,
