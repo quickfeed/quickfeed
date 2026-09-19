@@ -94,6 +94,61 @@ describe("Dashboard", () => {
         expect(screen.queryByText("All courses page")).toBeNull()
         expect(screen.queryByText("DAT100")).toBeNull()
         expect(screen.queryByText("DAT200")).toBeNull()
+        // The dashboard shows none of the hidden enrollments, so it links to the full list.
+        expect(screen.getByText("See all your courses")).toBeDefined()
+    })
+
+    it("lists courses available for enrollment below the favorites", () => {
+        const courses = [course(1, "DAT100"), course(2, "DAT200"), course(3, "DAT300")]
+        const enrollments = [
+            enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.VISIBLE),
+            enrollment(2, 2, Enrollment_UserStatus.STUDENT, Enrollment_DisplayState.VISIBLE),
+        ]
+        renderDashboard(courses, enrollments)
+        expect(screen.getByText("Available Courses")).toBeDefined()
+        expect(screen.getByText("DAT300")).toBeDefined()
+        expect(screen.getByRole("button", { name: "Enroll" })).toBeDefined()
+        // Nothing is hidden from the user, so no link to the full course list is needed.
+        expect(screen.queryByText("See all your courses")).toBeNull()
+    })
+
+    it("does not show the available courses section when enrolled in every course", () => {
+        const courses = [course(1, "DAT100"), course(2, "DAT200")]
+        const enrollments = [
+            enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.VISIBLE),
+            enrollment(2, 2, Enrollment_UserStatus.STUDENT, Enrollment_DisplayState.VISIBLE),
+        ]
+        renderDashboard(courses, enrollments)
+        expect(screen.getByText("DAT100")).toBeDefined()
+        expect(screen.getByText("DAT200")).toBeDefined()
+        expect(screen.queryByText("Available Courses")).toBeNull()
+    })
+
+    it("shows the available courses section when the user has no favorite courses", () => {
+        const courses = [course(1, "DAT100"), course(2, "DAT200"), course(3, "DAT300")]
+        const enrollments = [
+            enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.HIDDEN),
+            enrollment(2, 2, Enrollment_UserStatus.STUDENT, Enrollment_DisplayState.HIDDEN),
+        ]
+        renderDashboard(courses, enrollments)
+        expect(screen.getByText("Available Courses")).toBeDefined()
+        expect(screen.getByText("DAT300")).toBeDefined()
+        expect(screen.getByText("See all your courses")).toBeDefined()
+    })
+
+    it("does not show pending enrollments on the dashboard", () => {
+        const courses = [course(1, "DAT100"), course(2, "DAT200"), course(3, "DAT300")]
+        const enrollments = [
+            enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.VISIBLE),
+            enrollment(2, 2, Enrollment_UserStatus.STUDENT, Enrollment_DisplayState.VISIBLE),
+            enrollment(3, 3, Enrollment_UserStatus.PENDING, Enrollment_DisplayState.HIDDEN),
+        ]
+        renderDashboard(courses, enrollments)
+        expect(screen.getByText("DAT100")).toBeDefined()
+        expect(screen.getByText("DAT200")).toBeDefined()
+        expect(screen.queryByText("DAT300")).toBeNull()
+        expect(screen.queryByText("Available Courses")).toBeNull()
+        expect(screen.getByText("See all your courses")).toBeDefined()
     })
 
     it("redirects to the course list when the user has no enrollments", () => {
