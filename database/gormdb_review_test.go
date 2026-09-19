@@ -62,12 +62,9 @@ func TestCreateReview(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			qtest.CheckError(t, db.CreateReview(test.review), test.wantErr)
-
-			// Skip comparing the reviews if we expect an error or the wanted review is nil
 			if test.wantErr != nil || test.wantReview == nil {
-				return
+				return // Skip comparing the reviews if we expect an error or wanted a nil review
 			}
-
 			gotReview := qtest.GetReview(t, db, test.review.GetID())
 			qtest.Diff(t, "Expected same review, but got", gotReview, test.wantReview, protocmp.Transform(), protocmp.IgnoreFields(test.wantReview, "edited"))
 		})
@@ -123,16 +120,15 @@ func TestUpdateReview(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			qtest.CheckError(t, db.UpdateReview(test.review), test.wantErr)
-			gotReview := qtest.GetReview(t, db, test.review.GetID())
 			if test.wantErr != nil {
-				return
+				return // Skip comparing the reviews if we expect an error
 			}
-			test.review.Score = test.wantPoints
 
+			gotReview := qtest.GetReview(t, db, test.review.GetID())
 			// Expect the score for a submission to be updated if the review score is different
-			if gotReview.GetScore() != test.review.GetScore() {
+			if gotReview.GetScore() != test.wantPoints {
 				submission := qtest.GetSubmission(t, db, &qf.Submission{ID: gotReview.GetSubmissionID()})
-				if submission.GetScore() != test.review.GetScore() {
+				if submission.GetScore() != test.wantPoints {
 					t.Errorf("Expected score %d, but got %d", gotReview.GetScore(), submission.GetScore())
 				}
 			}
