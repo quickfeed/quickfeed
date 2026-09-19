@@ -215,7 +215,7 @@ func TestCheckMissingSolutionDir(t *testing.T) {
 }
 
 // TestValidateSetsRepositoryPath pins that -dir is what the ci package resolves
-// a course's clone directory from; the flag was previously declared but unused.
+// a course's clone directory from.
 func TestValidateSetsRepositoryPath(t *testing.T) {
 	t.Setenv("QUICKFEED_REPOSITORY_PATH", "unset")
 	dir := t.TempDir()

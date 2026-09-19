@@ -140,8 +140,7 @@ func cloneCourseRepositories(ctx context.Context, sc scm.SCM, course *qf.Course)
 }
 
 // BuildDockerImage builds the Docker image for the given course, tagged with
-// the course code. The image is rebuilt from the Dockerfile in the given build
-// context; see ci.Docker.createImage.
+// the course code, from the Dockerfile in the given build context.
 func BuildDockerImage(ctx context.Context, runner ci.Runner, course *qf.Course, buildContext map[string]string) error {
 	logger := qlog.FromContext(ctx)
 	logger.Debug("building course Dockerfile", "dockerfile", course.GetDockerfile())

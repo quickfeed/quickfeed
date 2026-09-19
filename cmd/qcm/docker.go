@@ -8,9 +8,9 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 )
 
-// dockerPingTimeout bounds the check that the Docker daemon answers. A daemon
-// that is running answers at once; one that is not makes the connection fail
-// at once as well, so the timeout only guards against a hung daemon.
+// dockerPingTimeout bounds the check that the Docker daemon answers. A running
+// daemon answers at once, and a stopped one fails the connection at once, so
+// the timeout only guards against a hung daemon.
 const dockerPingTimeout = 5 * time.Second
 
 // dockerHelp is printed when the Docker daemon cannot be reached.
@@ -24,9 +24,8 @@ type pinger interface {
 }
 
 // newDockerRunner returns a Docker runner after confirming that the daemon
-// answers. Without the confirmation a stopped Docker would be reported as a
-// failure of every check or test run attempted, each with its own error
-// records, instead of once and clearly before any work is started.
+// answers. Without the confirmation, a stopped Docker would be reported as a
+// failure of every check or test run attempted, rather than once up front.
 func newDockerRunner(ctx context.Context) (*ci.Docker, error) {
 	runner, err := ci.NewDockerCI()
 	if err != nil {

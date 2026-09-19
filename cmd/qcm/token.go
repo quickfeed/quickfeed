@@ -10,9 +10,8 @@ import (
 // tokenEnv is the environment variable that may hold the GitHub access token.
 const tokenEnv = "GITHUB_ACCESS_TOKEN"
 
-// tokenHelp explains how to give qcm a GitHub access token. It is printed
-// when none could be found, since the fix is a one-time setup step that a
-// teacher should not have to look up.
+// tokenHelp explains how to give qcm a GitHub access token; it is printed when
+// none could be found.
 const tokenHelp = `qcm needs a GitHub access token to reach the course's repositories. Either
 
   - sign in with the GitHub CLI: gh auth login
@@ -39,9 +38,9 @@ var gh ghRunner = runGh
 
 // resolveToken returns the GitHub access token qcm should use. An explicit
 // token, from -token or the environment, always wins, so that a teacher can
-// act as a different account than the GitHub CLI is signed in with. Otherwise
-// the token of the GitHub CLI's login is used, which is the setup most teachers
-// already have. When neither is available the error explains both options.
+// act as a different account than the GitHub CLI is signed in with; otherwise
+// the token of the GitHub CLI's login is used. When neither is available the
+// error explains both options.
 func resolveToken(explicit string, gh ghRunner) (string, error) {
 	if explicit != "" {
 		return explicit, nil

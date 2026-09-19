@@ -11,17 +11,15 @@ import (
 	"strings"
 )
 
-// CopyDir recursively copies the directory tree rooted at src to dst, so that
-// dst becomes a copy of src. dst and its missing parents are created; an
-// existing dst is written into. File permission bits are preserved, and
-// directories additionally get the owner's read, write, and execute bits so
-// that the copy can proceed into them.
+// CopyDir recursively copies the directory tree rooted at src to dst. dst and
+// its missing parents are created; an existing dst is written into. File
+// permission bits are preserved, and directories additionally get the owner's
+// read, write, and execute bits so that the copy can proceed into them.
 //
-// Any .git directory is skipped, wherever it occurs in the tree: the callers
-// copy repositories whose files are wanted but whose metadata is both large
-// and irrelevant, and a copy is a fresh working tree, not a clone. Irregular
-// files, such as symbolic links and sockets, are skipped as well, so that a
-// copy of untrusted code cannot reach outside the copied tree through a link.
+// Any .git directory is skipped, wherever it occurs in the tree: the copy is a
+// fresh working tree, not a clone. Irregular files, such as symbolic links and
+// sockets, are skipped as well, so that a copy of untrusted code cannot reach
+// outside the copied tree through a link.
 //
 // The source must exist, and the two directories must not overlap; see
 // resolveCopyPaths.
@@ -60,9 +58,7 @@ func CopyDir(src, dst string) error {
 // resolveCopyPaths returns src and dst as absolute paths with their symbolic
 // links resolved, and fails if the two overlap. A destination inside the source
 // would make CopyDir's walk descend into the copy it is writing, and a source
-// inside the destination would be copied into itself. Neither is hypothetical:
-// a test run creates its destination under os.TempDir(), which a submission
-// directory may well contain, as `qcm run -submission /tmp` does.
+// inside the destination would be copied into itself.
 //
 // The source must exist and is resolved as a whole; the destination need not,
 // and is resolved as far as it exists. Resolving is what makes the comparison

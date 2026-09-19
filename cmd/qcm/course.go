@@ -75,8 +75,8 @@ func (c *commonFlags) assignmentsDir() string {
 //
 // The server's logger, qlog.New, is not used: it annotates records with source
 // positions relative to the repository root, which env.Root resolves from the
-// working directory and panics over when the command is run anywhere else. A
-// teacher runs qcm from a course directory, never from a checkout of QuickFeed.
+// working directory and panics over when qcm is run outside a checkout of
+// QuickFeed.
 func (c *commonFlags) logger(stderr io.Writer) *slog.Logger {
 	level := slog.LevelWarn
 	if c.verbose {
@@ -104,10 +104,9 @@ func (c *commonFlags) scmClient(logger *slog.Logger) (scm.SCM, error) {
 // without one. A course whose run scripts name only prebuilt images needs no
 // Dockerfile of its own.
 //
-// A Dockerfile that is present but empty is an error rather than an absent
-// one: it builds nothing, and its content is what the build context and the
-// course's Dockerfile digest are keyed on, so leaving it in place would let
-// every later check silently treat the course as having no Dockerfile.
+// A present but empty Dockerfile is an error rather than an absent one: it
+// builds nothing, and would otherwise be indistinguishable from having no
+// Dockerfile at all in every later check.
 func courseDockerfile(buildContext map[string]string) (string, error) {
 	dockerfile, ok := buildContext[ci.Dockerfile]
 	if ok && strings.TrimSpace(dockerfile) == "" {

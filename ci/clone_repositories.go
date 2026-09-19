@@ -19,8 +19,8 @@ func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf
 		return nil
 	}
 	if scmClient == nil {
-		// Callers that run against a local submission directory need no SCM,
-		// but they do require the course repositories to be present already.
+		// A run against a local submission directory needs no SCM, but it does
+		// require the course repositories to be present already.
 		return fmt.Errorf("missing course repositories in %q and no SCM client to clone them", course.CloneDir())
 	}
 

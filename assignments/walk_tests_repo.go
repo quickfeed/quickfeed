@@ -36,13 +36,12 @@ type RepoIssue struct {
 	Transient bool
 }
 
-// String returns a one-line description of the issue for command line output,
-// e.g.:
+// String returns a one-line description of the issue, e.g.:
 //
 //	lab1/tests.json: duplicate test name "TestX"
 //
-// The file locates the issue when it is known; otherwise the assignment folder
-// is named, and a repository-level issue is only its problem text.
+// The issue is located by its file, or else by its assignment folder; a
+// repository-level issue is only its problem text.
 func (i RepoIssue) String() string {
 	location := i.File
 	if location == "" {
@@ -176,10 +175,10 @@ func processTestsFile(contents []byte, assignment *qf.Assignment, _ uint64) ([]s
 	return problems, nil
 }
 
-// ReadTestsRepository reads dir, which must be a local clone of the course's
-// tests repository, and returns a sorted list of assignments, a map with the
-// docker build context as defined by the filesForBuildContext variable, and a
-// list of content issues found in the repository.
+// ReadTestsRepository reads dir, a local clone of the course's tests repository,
+// and returns a sorted list of assignments, a map with the docker build context
+// as defined by the filesForBuildContext variable, and a list of content issues
+// found in the repository.
 // Assignments are extracted from 'assignment.json' files, one for each assignment.
 // An assignment whose json files cannot be parsed is excluded from the returned
 // list (and reported as an issue), so that a typo in a file is not interpreted

@@ -28,9 +28,9 @@ import (
 // DefaultContainerTimeout is the default timeout for running a container.
 var DefaultContainerTimeout = time.Duration(10 * time.Minute)
 
-// Names of the files in a course's tests repository that configure its test
-// runs. The Dockerfile and the course's default run script live in the
-// ScriptsDir folder; an assignment folder may hold a run script of its own.
+// Names in a course's tests repository that configure its test runs. The
+// Dockerfile and the course's default run script live in ScriptsDir; an
+// assignment folder may hold a run script of its own.
 const (
 	Dockerfile    = "Dockerfile"
 	ScriptsDir    = "scripts"
@@ -77,10 +77,8 @@ func (d *Docker) Close() error {
 }
 
 // Ping reports whether the Docker daemon can be reached. NewDockerCI only
-// configures the client and does not contact the daemon, so without a ping a
-// stopped daemon surfaces as a failure of every job that is attempted; a
-// caller that is about to run several jobs, such as cmd/qcm, can ping first
-// and fail once instead.
+// configures the client without contacting the daemon, so a caller about to
+// run several jobs can ping first and fail once, instead of once per job.
 func (d *Docker) Ping(ctx context.Context) error {
 	if d.client == nil {
 		return errors.New("docker client not initialized")

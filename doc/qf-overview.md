@@ -82,7 +82,7 @@ The `cmd` folder contains different executable Go and Python programs:
 
 - **anonymize**: creates a new database which filters out sensitive information
 - **approvelist**: query the QuickFeed's database to retrieve an overview over approved assignments
-- **qcm**: the course manager for teachers; `clone` fetches a course's `tests` and `assignments` repositories, `run` runs one assignment's tests, and `check` verifies that the course's test environment works. Run `go run ./cmd/qcm -help` for the subcommands, and `go run ./cmd/qcm <command> -help` for their flags. See [Checking the Test Environment Locally](teacher.md#checking-the-test-environment-locally)
+- **qcm**: the course manager for teachers; `clone` fetches a course's `tests` and `assignments` repositories, `run` runs one assignment's tests, and `check` verifies that the course's test environment works. Run `go run ./cmd/qcm -help` for details, and see [Checking the Test Environment Locally](teacher.md#checking-the-test-environment-locally)
 - **vercheck**: checks the version of protobuf
 
 ## database

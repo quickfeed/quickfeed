@@ -375,7 +375,7 @@ An organization that enforces SAML single sign-on must also have authorized the 
 ```
 
 The `clone` command fetches the `tests` and `assignments` repositories into `$HOME/courses/dat320-2025`; rerun it to pull the latest changes.
-The `check` command then verifies, and prints one line per check:
+The `check` command then verifies the following, printing one line per check:
 
 - Every `run.sh` parses, and every assignment is covered by one.
 - The course's `scripts/Dockerfile` builds, if the course has one.
@@ -383,7 +383,7 @@ The `check` command then verifies, and prints one line per check:
 - The **skeleton** code in the `assignments` repository scores at most 5%.
   This is the check that matters: if the handout code your students start from already scores well, your tests are not exercising the parts they are asked to write.
   The threshold is not zero because a test may award a point for something the skeleton happens to satisfy.
-- The **solution** code scores exactly 100%, with `qcm check -course dat320-2025 -solution ~/dat320-solutions`.
+- The **solution** code scores exactly 100%, checked with `qcm check -course dat320-2025 -solution ~/dat320-solutions`.
   A lower score means your tests cannot be passed as written.
 
 The solution directory must be laid out like a student repository, with one folder per assignment.
