@@ -508,12 +508,12 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		logger.Error("failed to create SCM client", label.Error, err)
 		return nil, scmConnectErr
 	}
-	issueCount, err := assignments.UpdateFromCourseRepositories(ctx, s.runner, s.db, scmClient, course)
+	update, err := assignments.UpdateFromCourseRepositories(ctx, s.runner, s.db, scmClient, course)
 	if err != nil {
 		logger.Error("failed to update from course repositories", label.Error, err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to update assignments from tests repository"))
 	}
-	return &qf.RepositoryIssues{Count: uint32(issueCount)}, nil
+	return &qf.RepositoryIssues{Count: uint32(update.IssueCount)}, nil
 }
 
 // GetRepositories returns URL strings for repositories of given type for the given course.

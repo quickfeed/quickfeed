@@ -41,16 +41,14 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 			return vars
 		}
 	}
-	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
-	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentsRepo)
 	return &Job{
 		Name:     r.String(),
 		Image:    image,
 		Language: language,
 		BindDir:  destDir,
 		ReadOnlyMounts: map[string]string{
-			testsDir:      filepath.Join(QuickFeedPath, qf.TestsRepo),
-			assignmentDir: filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
+			r.testsDir():       filepath.Join(QuickFeedPath, qf.TestsRepo),
+			r.assignmentsDir(): filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
 		},
 		Env: r.EnvVarsFn(secret, destDir),
 		// The build check runs before the course's run script, so that a
@@ -60,11 +58,10 @@ func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 }
 
 func (r *RunData) loadRunScript() (string, error) {
-	courseTestsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
-	runScript := filepath.Join(courseTestsDir, r.Assignment.GetName(), RunScriptFile)
+	runScript := filepath.Join(r.testsDir(), r.Assignment.GetName(), RunScriptFile)
 	if _, err := os.Stat(runScript); os.IsNotExist(err) {
 		// If the assignment does not have a run.sh script, use the default run.sh script
-		runScript = filepath.Join(courseTestsDir, ScriptsDir, RunScriptFile)
+		runScript = filepath.Join(r.testsDir(), ScriptsDir, RunScriptFile)
 		if _, err := os.Stat(runScript); os.IsNotExist(err) {
 			return "", fmt.Errorf("run script not found for %s: %w", r.Course.GetCode(), err)
 		}

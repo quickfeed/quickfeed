@@ -42,6 +42,10 @@ type RunData struct {
 	// cloning Repo from the SCM, so that code that has not been pushed, such as
 	// the course's skeleton and solution code, can be tested.
 	SubmissionDir string
+	// snapshotDir, if set, is a copy of the course's tests and assignments
+	// repositories, read in place of Course.CloneDir so that a canary run
+	// is not disturbed by a concurrent refresh of the course's own clones.
+	snapshotDir string
 }
 
 // String returns a string representation of the run data structure.
@@ -83,7 +87,7 @@ func NewLocalRun(course *qf.Course, assignment *qf.Assignment, owner, submission
 // The method is idempotent and can be called concurrently on multiple RunData objects.
 // The method clones the student or group repository from GitHub as specified in RunData,
 // and copies the course's tests and assignment repositories from the host machine's file system.
-// runs the tests and returns the score results.
+// It then runs the tests and returns the score results.
 //
 // The os.MkdirTemp() function ensures that any concurrent calls to this method will always
 // use distinct temp directories. Specifically, the method creates a temporary directory on
@@ -197,21 +201,43 @@ func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 		}
 	}
 
-	// Clone the course's tests and assignments repositories if they are missing.
-	// Cloning is only needed when the quickfeed server has not yet received a push event
-	// for a course's tests or assignments repositories or an UpdateAssignment request.
-	if err := cloneMissingRepositories(ctx, sc, r.Course); err != nil {
-		return err
+	if r.snapshotDir == "" {
+		// Clone the course's tests and assignments repositories if they are missing.
+		// Cloning is only needed when the quickfeed server has not yet received a push event
+		// for a course's tests or assignments repositories or an UpdateAssignment request.
+		// A snapshot is already complete, and cloning would write to the course's shared
+		// clone directory, which the run does not hold the course lock for.
+		if err := cloneMissingRepositories(ctx, sc, r.Course); err != nil {
+			return err
+		}
 	}
 
 	// Check that all repositories contains the current assignment
 	currentAssignment := r.Assignment.GetName()
-	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
-	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentsRepo)
-	for _, repoDir := range []string{clonedStudentRepo, testsDir, assignmentDir} {
+	for _, repoDir := range []string{clonedStudentRepo, r.testsDir(), r.assignmentsDir()} {
 		if err := hasAssignment(repoDir, currentAssignment); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// courseRepositoriesDir returns the directory holding the course's tests and
+// assignments repositories for this run: the run's snapshot, if it has one, and
+// otherwise the course's clone directory.
+func (r *RunData) courseRepositoriesDir() string {
+	if r.snapshotDir != "" {
+		return r.snapshotDir
+	}
+	return r.Course.CloneDir()
+}
+
+// testsDir returns the course's tests repository for this run.
+func (r *RunData) testsDir() string {
+	return filepath.Join(r.courseRepositoriesDir(), qf.TestsRepo)
+}
+
+// assignmentsDir returns the course's assignments repository for this run.
+func (r *RunData) assignmentsDir() string {
+	return filepath.Join(r.courseRepositoriesDir(), qf.AssignmentsRepo)
 }

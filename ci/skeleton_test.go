@@ -39,6 +39,26 @@ func TestNewSkeletonRun(t *testing.T) {
 	}
 }
 
+// TestNewSkeletonRunFromSnapshot checks that a snapshot run reads the skeleton
+// code from the snapshot and never from the course's clone directory.
+func TestNewSkeletonRunFromSnapshot(t *testing.T) {
+	root := t.TempDir()
+	t.Setenv("QUICKFEED_REPOSITORY_PATH", root)
+	course := &qf.Course{Code: "QF101", ScmOrganizationName: "qf101-2025"}
+	assignment := &qf.Assignment{Name: "lab1"}
+	snapshotDir := t.TempDir()
+
+	runData := ci.NewSkeletonRunFromSnapshot(course, assignment, "abc1234", snapshotDir)
+	wantDir := filepath.Join(snapshotDir, qf.AssignmentsRepo)
+	if runData.SubmissionDir != wantDir {
+		t.Errorf("NewSkeletonRunFromSnapshot() submission dir = %q, want %q", runData.SubmissionDir, wantDir)
+	}
+	if strings.HasPrefix(runData.SubmissionDir, course.CloneDir()) {
+		t.Errorf("NewSkeletonRunFromSnapshot() submission dir = %q, want it outside the course clone dir %q",
+			runData.SubmissionDir, course.CloneDir())
+	}
+}
+
 func TestSkeletonProblem(t *testing.T) {
 	scores := func(values ...int32) []*score.Score {
 		out := make([]*score.Score, len(values))

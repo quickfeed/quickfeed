@@ -213,8 +213,8 @@ func TestUpdateFromCourseRepositoriesIssueCount(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if got != tt.wantCount {
-				t.Errorf("UpdateFromCourseRepositories() issue count = %d, want %d", got, tt.wantCount)
+			if got.IssueCount != tt.wantCount {
+				t.Errorf("UpdateFromCourseRepositories() issue count = %d, want %d", got.IssueCount, tt.wantCount)
 			}
 			assertStoredAssignments(t, db, course, tt.wantAssignments)
 		})
@@ -240,8 +240,11 @@ func TestUpdateFromCourseRepositoriesAssignmentsCloneFailure(t *testing.T) {
 	}
 	// The missing tests.json is still reported; the alignment issue that the
 	// empty assignments repository would have produced is not.
-	if got != 1 {
-		t.Errorf("UpdateFromCourseRepositories() issue count = %d, want 1", got)
+	if got.IssueCount != 1 {
+		t.Errorf("UpdateFromCourseRepositories() issue count = %d, want 1", got.IssueCount)
+	}
+	if got.AssignmentsCloneReady {
+		t.Error("UpdateFromCourseRepositories() assignments clone is ready after clone failure")
 	}
 	assertStoredAssignments(t, db, course, []string{"lab1"})
 }
@@ -275,8 +278,12 @@ func TestUpdateFromCourseRepositoriesClonesBothRepositories(t *testing.T) {
 	}}
 
 	ctx := qlog.NewContext(t.Context(), qtest.Logger(t))
-	if _, err := UpdateFromCourseRepositories(ctx, &ci.Local{}, db, scmClient, course); err != nil {
+	got, err := UpdateFromCourseRepositories(ctx, &ci.Local{}, db, scmClient, course)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if !got.AssignmentsCloneReady {
+		t.Error("UpdateFromCourseRepositories() assignments clone is not ready after successful clone")
 	}
 	wantCalls := []string{qf.TestsRepo, qf.AssignmentsRepo}
 	if diff := cmp.Diff(wantCalls, scmClient.calls); diff != "" {

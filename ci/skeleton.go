@@ -2,7 +2,6 @@ package ci
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/quickfeed/quickfeed/kit/score"
@@ -30,7 +29,29 @@ const MaxSkeletonScore uint32 = 5
 // (handout) code, taken from the local clone of the assignments repository,
 // against the course's own tests; see NewLocalRun for the commit ID.
 func NewSkeletonRun(course *qf.Course, assignment *qf.Assignment, commitID string) *RunData {
-	return NewLocalRun(course, assignment, skeletonOwner, filepath.Join(course.CloneDir(), qf.AssignmentsRepo), commitID)
+	return newSkeletonRun(course, assignment, commitID, "")
+}
+
+// NewSkeletonRunFromSnapshot returns the run data for a skeleton run that reads
+// the course's tests and skeleton code from snapshotDir, a private copy of the
+// two course repositories, instead of from the course's clone directory; see
+// RunData.snapshotDir.
+func NewSkeletonRunFromSnapshot(course *qf.Course, assignment *qf.Assignment, commitID, snapshotDir string) *RunData {
+	return newSkeletonRun(course, assignment, commitID, snapshotDir)
+}
+
+// newSkeletonRun returns the run data for a skeleton run against the course
+// repositories in snapshotDir, or against the course's clone directory when
+// snapshotDir is empty.
+//
+// The skeleton code is the assignments repository that the run also mounts, so
+// the submission directory is derived from the run's own course repositories
+// and cannot name a different copy of that repository.
+func newSkeletonRun(course *qf.Course, assignment *qf.Assignment, commitID, snapshotDir string) *RunData {
+	runData := NewLocalRun(course, assignment, skeletonOwner, "", commitID)
+	runData.snapshotDir = snapshotDir
+	runData.SubmissionDir = runData.assignmentsDir()
+	return runData
 }
 
 // SkeletonReport is the verdict on a skeleton run; see CheckSkeleton.
