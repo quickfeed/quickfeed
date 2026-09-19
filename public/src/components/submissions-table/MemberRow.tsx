@@ -82,6 +82,13 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
 
     const repoLink = getRepoLink()
 
+    // The GitHub login is the name of the student's repository, and the group name is
+    // the name of the group repository; showing both saves the teacher from hovering
+    // the name link to find out which repository belongs to which student.
+    // Group rows already show the group (repository) name as their name.
+    const login = isEnrollment ? member.user?.Login : undefined
+    const groupName = isEnrollment ? enrollmentGroupName(member, state.groups[state.activeCourse.toString()]) : undefined
+
     return (
         <tr>
             <th className="font-medium">
@@ -91,6 +98,7 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
                         <span className="badge badge-primary badge-sm">Teacher</span>
                     )}
                 </div>
+                <MemberDetails login={login} groupName={groupName} />
             </th>
             {state.isCourseManuallyGraded && (
                 <td className="text-base-content/70">
@@ -124,6 +132,30 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
 })
 
 MemberRow.displayName = "MemberRow"
+
+/** Returns the name of the group the enrollment belongs to, if any.
+ *  The group is normally preloaded on the enrollment for teachers; the course
+ *  groups are used as a fallback in case it is not. */
+const enrollmentGroupName = (enrollment: Enrollment, groups?: Group[]): string | undefined => {
+    if (enrollment.groupID === 0n) {
+        return undefined
+    }
+    return enrollment.group?.name ?? groups?.find(g => g.ID === enrollment.groupID)?.name
+}
+
+/** Renders the member's GitHub login and group name below the member name */
+const MemberDetails = ({ login, groupName }: { login?: string; groupName?: string }) => {
+    if (!login && !groupName) {
+        return null
+    }
+    return (
+        <div className="text-base-content/60 text-xs font-normal">
+            {login ? <span>@{login}</span> : null}
+            {login && groupName ? <span className="mx-1">·</span> : null}
+            {groupName ? <span>{groupName}</span> : null}
+        </div>
+    )
+}
 
 /** Renders the member name, optionally as a link */
 const MemberName = ({ name, repoLink }: { name: string; repoLink?: string }) => {
