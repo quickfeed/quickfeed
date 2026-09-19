@@ -363,19 +363,28 @@ printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start )
 ### Checking the Test Environment Locally
 
 The `qcm` command runs your course's tests on your own machine, in the same Docker image QuickFeed uses, so you can find a broken test environment before your students do.
-Install it with `make qcm` or `go install ./cmd/qcm`.
-Cloning the course repositories requires a GitHub access token for an account that is a member of your course organization.
-If you are signed in with the [GitHub CLI](https://cli.github.com) (`gh auth login`), `qcm` uses that login and no further setup is needed.
-Otherwise, create a [personal access token](https://github.com/settings/tokens) with the `repo` scope, or a fine-grained token with read access to the organization's repositories, and set `GITHUB_ACCESS_TOKEN` to it or pass it with `-token`.
-An organization that enforces SAML single sign-on must also have authorized the token.
+Install it with
+
+```sh
+go install ./cmd/qcm
+```
+
+Clone your course repositories:
 
 ```sh
 % qcm clone -course dat320-2025
+```
+
+The `clone` command fetches the `tests` and `assignments` repositories into `$HOME/courses/dat320-2025`.
+Rerun the `clone` command to pull the latest changes.
+
+To check that your course's test environment is working, run the `check` command:
+
+```sh
 % qcm check -course dat320-2025
 ```
 
-The `clone` command fetches the `tests` and `assignments` repositories into `$HOME/courses/dat320-2025`; rerun it to pull the latest changes.
-The `check` command then verifies the following, printing one line per check:
+The `check` command verifies the following, printing one line per check:
 
 - Every `run.sh` parses, and every assignment is covered by one.
 - The course's `scripts/Dockerfile` builds, if the course has one.
@@ -383,11 +392,16 @@ The `check` command then verifies the following, printing one line per check:
 - The **skeleton** code in the `assignments` repository scores at most 5%.
   This is the check that matters: if the handout code your students start from already scores well, your tests are not exercising the parts they are asked to write.
   The threshold is not zero because a test may award a point for something the skeleton happens to satisfy.
-- The **solution** code scores exactly 100%, checked with `qcm check -course dat320-2025 -solution ~/dat320-solutions`.
-  A lower score means your tests cannot be passed as written.
 
-The solution directory must be laid out like a student repository, with one folder per assignment.
 The command exits non-zero if any check fails; use `-lab lab1` to check a single assignment, and `-v` for the details of a failing run.
+
+To also check that your solution passes with a full score, point `-solution` at a directory laid out like a student repository, with one folder per assignment:
+
+```sh
+% qcm check -course dat320-2025 -solution ~/dat320-solutions
+```
+
+The **solution** code must score exactly 100%; a lower score means your tests cannot be passed as written.
 
 While writing an assignment, run its tests against a local folder without pushing anything:
 
@@ -396,7 +410,22 @@ While writing an assignment, run its tests against a local folder without pushin
 ```
 
 This prints the score of each test and the weighted total, exactly as your students will see them.
-Use `-user <github-login>` or `-group <name>` instead of `-submission` to test what someone has actually pushed.
+To test what someone has actually pushed, run against their user or group repository instead:
+
+```sh
+% qcm run -course dat320-2025 -lab lab1 -user pink
+% qcm run -course dat320-2025 -lab lab1 -group abba
+```
+
+Cloning the course repositories requires a GitHub access token for an account that is a member of your course organization.
+If you are signed in with the [GitHub CLI](https://cli.github.com) (`gh auth login`), `qcm` uses that login and no further setup is needed.
+Otherwise, create a [personal access token](https://github.com/settings/tokens) with the `repo` scope, or a fine-grained token with read access to the organization's repositories, and pass it with `-token` or set `GITHUB_ACCESS_TOKEN`:
+
+```sh
+% qcm clone -course dat320-2025 -token <your-token>
+```
+
+An organization that enforces SAML single sign-on must also have authorized the token.
 
 ## Writing Tests
 
