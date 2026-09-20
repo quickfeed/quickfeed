@@ -453,7 +453,7 @@ export enum SubmissionSort {
 }
 
 /** Sorting */
-const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean): number => {
+const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean, groups?: Group[]): number => {
     const sortOrder = descending ? -1 : 1
     switch (sortBy) {
         case EnrollmentSort.Name: {
@@ -483,8 +483,8 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
             return sortOrder * Number(aID - bID)
         }
         case EnrollmentSort.Group: {
-            const groupA = a.group?.name ?? ""
-            const groupB = b.group?.name ?? ""
+            const groupA = enrollmentGroup(a, groups)?.name ?? ""
+            const groupB = enrollmentGroup(b, groups)?.name ?? ""
             return sortOrder * (groupA.localeCompare(groupB))
         }
         default:
@@ -492,9 +492,11 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
     }
 }
 
-export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean): Enrollment[] => {
+/** sortEnrollments sorts the given enrollments in place. The course's group list is
+ *  used to sort by group name, so the order follows a rename; see enrollmentGroup. */
+export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean, groups?: Group[]): Enrollment[] => {
     return enrollments.sort((a, b) => {
-        return enrollmentCompare(a, b, sortBy, descending)
+        return enrollmentCompare(a, b, sortBy, descending, groups)
     })
 }
 

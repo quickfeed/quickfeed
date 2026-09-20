@@ -68,7 +68,7 @@ const Members = () => {
     ), [actions])
     const handleApprovePendingEnrollments = useCallback(() => actions.approvePendingEnrollments(), [actions])
 
-    const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
+    const members = sortEnrollments(enrollments, sortBy, descending, groups).map(enrollment => {
         // Button color and text are determined by the enrollment status
         // These are used to determine what action we can take on the enrollment
         // and what the button should say
