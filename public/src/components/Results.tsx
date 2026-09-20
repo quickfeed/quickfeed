@@ -120,7 +120,7 @@ const Results = ({ review }: { review: boolean }) => {
         <>
             <div className={`grid grid-cols-1 ${gridCols} gap-6`}>
                 <div className="space-y-4">
-                    <Search placeholder="Search by name..." className="mb-2">
+                    <Search placeholder="Search by name, GitHub login, or group..." className="mb-2">
                         <Button
                             text={`View by ${displayMode}`}
                             color={buttonColor}

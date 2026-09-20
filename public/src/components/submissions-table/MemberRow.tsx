@@ -1,6 +1,7 @@
 import { isMessage } from "@bufbuild/protobuf"
 import { memo } from "react"
-import type { Assignment, Enrollment, Group, Submission } from "../../../proto/qf/types_pb"
+import { Link } from "react-router"
+import type { Assignment, Course, Enrollment, Group, Submission, User } from "../../../proto/qf/types_pb"
 import { EnrollmentSchema, GroupSchema } from "../../../proto/qf/types_pb"
 import { groupRepoLink, isHidden, isTeacher, userRepoLink } from "../../Helpers"
 import { useAppState } from "../../overmind"
@@ -33,20 +34,13 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
         ? member.user?.Name ?? "Unknown"
         : member.name
 
-    // Filter by search query
-    if (isHidden(name, searchQuery)) {
-        return null
-    }
+    const user = isEnrollment ? member.user : undefined
+    const group = isEnrollment ? enrollmentGroup(member, state.groups[state.activeCourse.toString()]) : undefined
 
-    // Generate the repo link for the name cell
-    const getRepoLink = (): string | undefined => {
-        if (isEnrollment && member.user) {
-            return userRepoLink(member.user, course)
-        }
-        if (isGroup) {
-            return groupRepoLink(member, course)
-        }
-        return undefined
+    // Filter by search query; the name, the GitHub login and the group name all match
+    const searchable = [name, user ? `@${user.Login}` : "", group?.name ?? ""]
+    if (searchable.every(value => isHidden(value, searchQuery))) {
+        return null
     }
 
     // Get both individual and group submissions for a group lab assignment
@@ -80,17 +74,20 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
         return {}
     }
 
-    const repoLink = getRepoLink()
-
     return (
         <tr>
             <th className="font-medium">
                 <div className="flex items-center gap-2">
-                    <MemberName name={name} repoLink={repoLink} />
+                    {isEnrollment ? (
+                        <Link to={`/course/${state.activeCourse}/members/${member.ID}`} className="link link-hover">
+                            {name}
+                        </Link>
+                    ) : <MemberName name={name} repoLink={isGroup ? groupRepoLink(member, course) : undefined} />}
                     {isMemberTeacher && (
                         <span className="badge badge-primary badge-sm">Teacher</span>
                     )}
                 </div>
+                <MemberDetails user={user} group={group} course={course} />
             </th>
             {state.isCourseManuallyGraded && (
                 <td className="text-base-content/70">
@@ -124,6 +121,30 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
 })
 
 MemberRow.displayName = "MemberRow"
+
+/** Use the live group list after edits; fall back only before it has loaded. */
+const enrollmentGroup = (enrollment: Enrollment, groups?: Group[]): Group | undefined => {
+    if (enrollment.groupID === 0n) {
+        return undefined
+    }
+    return groups === undefined ? enrollment.group : groups.find(g => g.ID === enrollment.groupID)
+}
+
+/** Renders the GitHub login and group name below the member name, linking to their repositories */
+const MemberDetails = ({ user, group, course }: { user?: User; group?: Group; course?: Course }) => {
+    if (!user) {
+        return null
+    }
+    return (
+        <div className="text-base-content/60 text-xs font-normal">
+            <MemberName name={`@${user.Login}`} repoLink={userRepoLink(user, course)} />
+            {group ? <>
+                <span className="mx-1">·</span>
+                <MemberName name={group.name} repoLink={groupRepoLink(group, course)} />
+            </> : null}
+        </div>
+    )
+}
 
 /** Renders the member name, optionally as a link */
 const MemberName = ({ name, repoLink }: { name: string; repoLink?: string }) => {
