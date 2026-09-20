@@ -1,5 +1,5 @@
 import { clone, create } from "@bufbuild/protobuf"
-import { act, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import { Enrollment_UserStatus, EnrollmentSchema, GroupSchema, NotesSchema, UserSchema } from "../../proto/qf/types_pb"
@@ -66,5 +66,51 @@ describe("Members group column", () => {
         await act(async () => { await overmind.actions.global.updateGroup(group) })
         expect(screen.getByText("Renamed group")).toBeDefined()
         expect(screen.queryByText("Group 2")).toBeNull()
+    })
+})
+
+/** Two students whose nested group names sort in the opposite order to the live ones:
+    nested "Zebra"/"Alpha" would put Bob first, the live "Group 1"/"Group 2" put Alice first. */
+const staleSortEnrollments = () => [
+    create(EnrollmentSchema, {
+        ID: BigInt(8),
+        courseID: BigInt(1),
+        userID: BigInt(8),
+        status: Enrollment_UserStatus.STUDENT,
+        groupID: BigInt(1),
+        group: create(GroupSchema, { ID: BigInt(1), courseID: BigInt(1), name: "Zebra" }),
+        user: create(UserSchema, { ID: BigInt(8), Name: "Alice", Login: "alice" }),
+    }),
+    create(EnrollmentSchema, {
+        ID: BigInt(9),
+        courseID: BigInt(1),
+        userID: BigInt(9),
+        status: Enrollment_UserStatus.STUDENT,
+        groupID: BigInt(2),
+        group: create(GroupSchema, { ID: BigInt(2), courseID: BigInt(1), name: "Alpha" }),
+        user: create(UserSchema, { ID: BigInt(9), Name: "Bob", Login: "bob" }),
+    }),
+]
+
+/** Names of the table's members, in the order the rows are rendered. The name is the
+    row's first cell. The table is aria-hidden, so it has to be read from the DOM. */
+const memberOrder = () => Array.from(document.querySelectorAll("tbody tr"))
+    .map(row => row.querySelector("th")?.textContent?.trim())
+
+describe("Members group column sorting", () => {
+    test("sorts on the loaded group names, not the nested ones", () => {
+        renderMembers({ courseEnrollments: { "1": staleSortEnrollments() } })
+        fireEvent.click(screen.getByText("Group"))
+        expect(memberOrder()).toEqual(["Alice", "Bob"])
+    })
+
+    test("re-sorts after a rename", async () => {
+        const overmind = renderMembers({ courseEnrollments: { "1": staleSortEnrollments() } })
+        fireEvent.click(screen.getByText("Group"))
+        expect(memberOrder()).toEqual(["Alice", "Bob"])
+        const group = clone(GroupSchema, overmind.state.groups["1"][0])
+        group.name = "Zulu group"
+        await act(async () => { await overmind.actions.global.updateGroup(group) })
+        expect(memberOrder()).toEqual(["Bob", "Alice"])
     })
 })
