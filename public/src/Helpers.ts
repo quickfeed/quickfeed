@@ -333,6 +333,20 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
+/** enrollmentGroup returns the group the given enrollment belongs to, resolved
+ *  against the course's group list. The group message nested on an enrollment is
+ *  only as fresh as the last course load, so edits such as a rename are not
+ *  reflected there; the list is therefore preferred, and the nested group is used
+ *  only as a fallback while the list has not loaded yet.
+ *  Note that the list is only populated for teachers; student views must keep
+ *  reading the nested group. */
+export const enrollmentGroup = (enrollment: Enrollment, groups?: Group[]): Group | undefined => {
+    if (enrollment.groupID === 0n) {
+        return undefined
+    }
+    return groups === undefined ? enrollment.group : groups.find(g => g.ID === enrollment.groupID)
+}
+
 // nextURL returns the current URL path and query parameters.
 // This is used to redirect the user back to the page they were on after logging in.
 export const nextURL = (): string => {

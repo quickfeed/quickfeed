@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router"
 import type { Enrollment } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus } from "../../proto/qf/types_pb"
-import { Color, EnrollmentSort, EnrollmentStatus, getFormattedTime, isHidden, isPending, sortEnrollments, userRepoLink } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, enrollmentGroup, getFormattedTime, isHidden, isPending, sortEnrollments, userRepoLink } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
 import Avatar from "./Avatar"
@@ -37,6 +37,7 @@ const Members = () => {
         setSortBy(sort)
     }
 
+    const groups = state.groups[courseID.toString()]
     const courseEnrollments = state.courseEnrollments[courseID.toString()]
     // Clone the enrollments so we can sort them
     const enrollments: Enrollment[] = courseEnrollments?.slice() ?? []
@@ -171,7 +172,7 @@ const Members = () => {
 
         return [
             nameLink, emailLink, StudentID,
-            enrollment.group?.name || "",
+            enrollmentGroup(enrollment, groups)?.name ?? "",
             getFormattedTime(enrollment.lastActivityDate),
             enrollment.totalApproved.toString(),
             enrollment.slipDaysRemaining.toString(),
