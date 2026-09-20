@@ -193,7 +193,7 @@ func TestMockGetRepositories(t *testing.T) {
 	s := NewMockedGithubSCMClient(qtest.Logger(t), WithOrgs(ghOrgFoo, ghOrgBar, ghOrgBuz), WithRepos(repos...))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := s.GetRepositories(context.Background(), tt.org)
+			got, err := s.getRepositories(context.Background(), tt.org)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetRepositories() error = %v, wantErr %v", err, tt.wantErr)
 				return
