@@ -3,7 +3,7 @@ import { memo } from "react"
 import { Link } from "react-router"
 import type { Assignment, Course, Enrollment, Group, Submission, User } from "../../../proto/qf/types_pb"
 import { EnrollmentSchema, GroupSchema } from "../../../proto/qf/types_pb"
-import { groupRepoLink, isHidden, isTeacher, userRepoLink } from "../../Helpers"
+import { enrollmentGroup, groupRepoLink, isHidden, isTeacher, userRepoLink } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import SubmissionCell from "./SubmissionCell"
 
@@ -121,14 +121,6 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
 })
 
 MemberRow.displayName = "MemberRow"
-
-/** Use the live group list after edits; fall back only before it has loaded. */
-const enrollmentGroup = (enrollment: Enrollment, groups?: Group[]): Group | undefined => {
-    if (enrollment.groupID === 0n) {
-        return undefined
-    }
-    return groups === undefined ? enrollment.group : groups.find(g => g.ID === enrollment.groupID)
-}
 
 /** Renders the GitHub login and group name below the member name, linking to their repositories */
 const MemberDetails = ({ user, group, course }: { user?: User; group?: Group; course?: Course }) => {

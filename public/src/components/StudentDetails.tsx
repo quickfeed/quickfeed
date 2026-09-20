@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { Link } from "react-router"
 import type { Assignment, Note, Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
-import { EnrollmentStatus, getFormattedTime, getStatusByUser, SubmissionStatus, submissionStatusConfig, userRepoLink } from "../Helpers"
+import { enrollmentGroup, EnrollmentStatus, getFormattedTime, getStatusByUser, SubmissionStatus, submissionStatusConfig, userRepoLink } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import { useEnrollmentID } from "../hooks/useEnrollmentID"
 import { useActions, useAppState } from "../overmind"
@@ -45,11 +45,13 @@ const StudentDetails = () => {
     const course = state.courses.find(c => c.ID === courseID)
     const assignments = state.assignments[courseID.toString()] ?? []
     const submissions = state.submissionsForCourse.ForUser(enrollment)
-    const groups = state.groups[courseID.toString()] ?? []
+    // Left undefined while the group list has not loaded, so enrollmentGroup can tell the two apart.
+    const groups = state.groups[courseID.toString()]
+    const group = enrollmentGroup(enrollment, groups)
 
     const notes = notesForEnrollment(state.notes.courseNotes, enrollment)
     const targets = studentNoteTargets(enrollment)
-    const targetInfo = (note: Note) => studentNoteTargetInfo(note, enrollment, groups)
+    const targetInfo = (note: Note) => studentNoteTargetInfo(note, enrollment, groups ?? [])
 
     return (
         <div className="space-y-4">
@@ -68,7 +70,7 @@ const StudentDetails = () => {
                             <div className="text-sm text-base-content/70 flex flex-wrap gap-x-4">
                                 {user.Email && <a href={`mailto:${user.Email}`} className="link link-hover">{user.Email}</a>}
                                 {user.StudentID && <span>ID: {user.StudentID}</span>}
-                                {enrollment.group?.name && <span>Group: {enrollment.group.name}</span>}
+                                {group?.name && <span>Group: {group.name}</span>}
                             </div>
                         </div>
                         <a href={userRepoLink(user, course)} target="_blank" rel="noopener noreferrer"
