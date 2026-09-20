@@ -1,4 +1,5 @@
 import type { Enrollment, Group, Note, Submission } from "../../../proto/qf/types_pb"
+import { enrollmentGroup } from "../../Helpers"
 import type { NoteTarget } from "../../overmind/namespaces/notes/actions"
 
 /** A labelled target the staff member may attach a new note to. */
@@ -56,10 +57,11 @@ export const submissionNoteTargets = (submission: Submission, enrollments: Enrol
     return targets
 }
 
-export const studentNoteTargets = (enrollment: Enrollment): LabelledTarget[] => {
+export const studentNoteTargets = (enrollment: Enrollment, groups?: Group[]): LabelledTarget[] => {
     const targets = [labelledTarget("Student", { EnrollmentID: enrollment.ID })]
     if (enrollment.groupID > 0n) {
-        targets.push(labelledTarget(enrollment.group?.name ? `Group: ${enrollment.group.name}` : "Group", { GroupID: enrollment.groupID }))
+        const group = enrollmentGroup(enrollment, groups)
+        targets.push(labelledTarget(group?.name ? `Group: ${group.name}` : "Group", { GroupID: enrollment.groupID }))
     }
     return targets
 }

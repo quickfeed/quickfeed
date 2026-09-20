@@ -74,3 +74,24 @@ describe("StudentDetails group line", () => {
         expect(groupLine("Group 2")).toBeNull()
     })
 })
+
+/** The note form's target selector labels the group option "Group: <name>". */
+const targetOption = (name: string) => screen.queryByText(`Group: ${name}`, { selector: "option" })
+
+describe("StudentDetails note target", () => {
+    test("labels the group target with the loaded group name", () => {
+        renderDetails()
+        expect(targetOption("Group 2")).not.toBeNull()
+        expect(targetOption("Old group")).toBeNull()
+    })
+
+    test("relabels the group target after a rename", async () => {
+        const overmind = renderDetails()
+        expect(targetOption("Group 2")).not.toBeNull()
+        const group = clone(GroupSchema, overmind.state.groups["1"][1])
+        group.name = "Renamed group"
+        await act(async () => { await overmind.actions.global.updateGroup(group) })
+        expect(targetOption("Renamed group")).not.toBeNull()
+        expect(targetOption("Group 2")).toBeNull()
+    })
+})

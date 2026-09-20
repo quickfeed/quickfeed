@@ -50,7 +50,7 @@ const StudentDetails = () => {
     const group = enrollmentGroup(enrollment, groups)
 
     const notes = notesForEnrollment(state.notes.courseNotes, enrollment)
-    const targets = studentNoteTargets(enrollment)
+    const targets = studentNoteTargets(enrollment, groups)
     const targetInfo = (note: Note) => studentNoteTargetInfo(note, enrollment, groups ?? [])
 
     return (
