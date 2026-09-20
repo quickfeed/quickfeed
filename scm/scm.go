@@ -16,8 +16,6 @@ type SCM interface {
 
 	// Gets an organization.
 	GetOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
-	// Get repositories within organization.
-	GetRepositories(context.Context, string) ([]*Repository, error)
 	// Returns the number of commits the repository is ahead of assignments.
 	CommitsAhead(context.Context, *RepositoryOptions) (int, error)
 

@@ -113,7 +113,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	// If getting organization for the purpose of creating a new course,
 	// ensure that the organization does not already contain any course repositories.
 	if opt.NewCourse {
-		repos, err := s.GetRepositories(ctx, orgName)
+		repos, err := s.getRepositories(ctx, orgName)
 		if err != nil {
 			// this code path can only happen if there is an issue with accessing GitHub since
 			// we already checked that the organization exists; returning the underlying error.
@@ -141,8 +141,8 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *OrganizationOption
 	return &qf.Organization{ScmOrganizationID: uint64(githubOrg.GetID()), ScmOrganizationName: orgName}, nil
 }
 
-// GetRepositories implements the SCM interface.
-func (s *GithubSCM) GetRepositories(ctx context.Context, org string) ([]*Repository, error) {
+// getRepositories returns the repositories for the given organization.
+func (s *GithubSCM) getRepositories(ctx context.Context, org string) ([]*Repository, error) {
 	const op Op = "GetRepositories"
 	if org == "" {
 		return nil, E(op, "organization name must be provided")
