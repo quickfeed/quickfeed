@@ -3,22 +3,13 @@ import { AssignmentsRepo, InfoRepo, TestsRepo, studentRepoName } from "../Helper
 import AboutPage from "../pages/AboutPage"
 
 describe("AboutPage", () => {
-    // The feature blocks used to be screenshots of the light UI, which glared on
-    // a dark page. They now render the application's own components, so they
-    // follow the active daisyUI theme. A preview that regressed to an <img>
-    // would bring the theme mismatch back.
-    test("feature previews are rendered markup, not screenshots", () => {
+    // The page used to carry screenshots of the light UI and flat clipart in
+    // fixed colors, both of which ignored the theme. Everything is markup now,
+    // so an <img> reappearing here would bring the theme mismatch back.
+    test("the page renders no images", () => {
         const { container } = render(<AboutPage />)
 
-        const screenshots = Array.from(container.querySelectorAll("img"))
-            .map((img) => img.getAttribute("src") ?? "")
-
-        // The only remaining raster assets are the two flat webp illustrations in
-        // the mini feature blocks, which are artwork rather than captured UI.
-        expect(screenshots).toEqual([
-            "/assets/img/overlapping-arrows-no-background.webp",
-            "/assets/img/Aplus2-no-background.webp",
-        ])
+        expect(container.querySelectorAll("img")).toHaveLength(0)
     })
 
     test("previews use theme tokens rather than baked-in colors", () => {

@@ -38,17 +38,17 @@ const AboutPage = () => {
                     <MiniFeatureBlock
                         title="GitHub Integration"
                         content="Manage all students and courses on GitHub. Each student gets their own repository. Teachers get separate repositories for publishing assignments and information to students. All taken care of automatically."
-                        media={<i className="fa-brands fa-github fa-5x text-8xl text-base-content" />}
+                        media={iconMedia("fa-brands fa-github", "text-base-content")}
                     />
                     <MiniFeatureBlock
                         title="Continuous Integration"
                         content="Instantaneous feedback to students on how well their code performs. Students can quickly identify what they need to focus on to improve. All customizable for the teaching staff."
-                        media={imageMedia("/assets/img/overlapping-arrows-no-background.webp", "Continuous Integration")}
+                        media={iconMedia("fas fa-arrows-rotate", "text-primary")}
                     />
                     <MiniFeatureBlock
                         title="Fair Grading"
                         content="On due date of an assignment, the most recent version of each student's code is available through GitHub. Easily accessible for the teachers. Together with latest build log, this makes grading easier and more fair."
-                        media={imageMedia("/assets/img/Aplus2-no-background.webp", "Fair Grading")}
+                        media={iconMedia("fas fa-scale-balanced", "text-success")}
                     />
                 </div>
 
@@ -138,14 +138,8 @@ const AboutPage = () => {
     )
 }
 
-function imageMedia(src: string, alt: string): React.JSX.Element {
-    return (
-        <img
-            src={src}
-            alt={alt}
-            className="w-full h-full object-contain max-h-40"
-        />
-    )
+function iconMedia(icon: string, color: string): React.JSX.Element {
+    return <i className={`${icon} text-8xl ${color}`} aria-hidden="true" />
 }
 
 export default AboutPage
