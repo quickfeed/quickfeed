@@ -75,5 +75,26 @@
 //	    }
 //	}
 //
+// A test that reports its failures through the score object rather than through
+// t alone tells the student why it failed, in the teacher's own words, above the
+// rest of that test's output:
+//
+//	func TestFibonacci(t *testing.T) {
+//	    sc := score.Max()
+//	    defer sc.Print(t)
+//	    for _, ft := range fibonacciTests {
+//	        if out := fibonacci(ft.in); out != ft.want {
+//	            sc.Dec()
+//	            sc.Errorf(t, "fibonacci(%d) = %d, want: %d", ft.in, out, ft.want)
+//	        }
+//	    }
+//	}
+//
+// Print reports the score as a test attribute, which names the test it came
+// from even when the output of parallel tests is interleaved. The testing
+// package emits attributes only in verbose mode, so a run script should keep
+// -v (or -json) on its go test command; without it the score is printed
+// instead, and the run is still scored.
+//
 // Please see package score/testdata/sequence for other usage examples.
 package score
