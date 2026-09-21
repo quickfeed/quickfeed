@@ -24,6 +24,11 @@ export const previewSubmission: Submission = create(SubmissionSchema, {
 
 export const previewScoreLimit = 80
 
+// The scores of successive pushes in the workflow animation. The student starts
+// below previewScoreLimit and only the last push clears it, which is the score
+// the rest of the previews show.
+export const previewAttempts = [33, 67, previewSubmission.score]
+
 // Mirrors the output of the run script in doc/templates/go-course: the banners
 // come from the script, the rest is ordinary `go test -v` output. The two
 // failing tests match the "Tests Passed 2/4" row of the lab result preview, and
