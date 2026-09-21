@@ -1,52 +1,59 @@
+import { ConnectError } from "@connectrpc/connect"
 import { useState } from "react"
-import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
+import { ConnStatus } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
-import { useCourseLogs } from "../../hooks/useCourseLogs"
+import { useCourseLogStream } from "../../hooks/useCourseLogStream"
 import { CenteredMessage } from "../CenteredMessage"
 import Search from "../Search"
 import CourseLogTable from "./CourseLogTable"
-import { entryText, LEVEL_NAMES, logText, toLocalDatetimeInput } from "./courseLogFormatting"
+import { entryText, LEVEL_NAMES, logText, MAX_WINDOW, parseWindow } from "./courseLogFormatting"
 
-const EMPTY_ENTRIES: CourseLogEntry[] = []
+const DEFAULT_WINDOW = "2h"
+
+const STATUS_BADGE: Record<ConnStatus, { color: string, text: string }> = {
+    [ConnStatus.CONNECTED]: { color: "badge-success", text: "Live" },
+    [ConnStatus.RECONNECTING]: { color: "badge-warning", text: "Reconnecting…" },
+    [ConnStatus.DISCONNECTED]: { color: "badge-ghost", text: "Not connected" },
+}
 
 /** CourseLogs is the teacher-only "Course Logs" page at /course/:id/logs.
- *  It queries GetCourseLog for the current course and lets a teacher narrow
- *  the result by interval, repository, and minimum level, then locally
- *  filter, copy, or download whatever was loaded. Filters other than the
- *  free-text one take effect only on Refresh. */
+ *  It tails the current course's log: the view is seeded with the entries from
+ *  the chosen window and then grows as the server logs more, so a teacher can
+ *  push and watch what QuickFeed makes of it. The window, repository, and
+ *  level filters reopen the stream on Refresh; the free-text box, the order
+ *  toggle, Copy, and Download act on what is already loaded. */
 const CourseLogs = () => {
     const courseID = useCourseID()
     const [notice, setNotice] = useState<string | null>(null)
     const [draft, setDraft] = useState(() => ({
         courseID,
-        from: toLocalDatetimeInput(new Date(Date.now() - 24 * 60 * 60 * 1000)),
-        to: toLocalDatetimeInput(new Date()),
-        toEdited: false,
+        window: DEFAULT_WINDOW,
         repository: "",
         level: CourseLogEntry_Level.DEBUG,
     }))
     if (draft.courseID !== courseID) {
-        setDraft({ ...draft, courseID, repository: "", to: draft.toEdited ? draft.to : toLocalDatetimeInput(new Date()) })
+        setDraft({ ...draft, courseID, repository: "" })
         setNotice(null)
     }
-    const { from, to, toEdited, repository, level } = draft
-    const { result, loading, error, refresh } = useCourseLogs(courseID, { from, to: "", repository, level })
+    const { window: windowText, repository, level } = draft
+    const parsedWindow = parseWindow(windowText)
+    const { result, loading, error, status, refresh, loadOlder } = useCourseLogStream(courseID, {
+        window: parseWindow(DEFAULT_WINDOW) ?? MAX_WINDOW,
+        repository: "",
+        level: CourseLogEntry_Level.DEBUG,
+    })
     const [search, setSearch] = useState("")
 
-    const invalidInterval = Boolean(from) && new Date(from) > (toEdited && to ? new Date(to) : new Date())
     const handleRefresh = () => {
-        if (invalidInterval) {
+        if (parsedWindow === null) {
             return
         }
         setNotice(null)
-        if (!toEdited) {
-            setDraft({ ...draft, to: toLocalDatetimeInput(new Date()) })
-        }
-        refresh({ from, to: toEdited ? to : "", repository, level })
+        refresh({ window: parsedWindow, repository, level })
     }
 
-    // The response lists every repository with an entry in the interval, whatever
+    // The response lists every repository with an entry in the window, whatever
     // the repository filter, but a selection whose repository fell silent must
     // stay in the list; the select would otherwise sit blank while still
     // filtering on it.
@@ -55,7 +62,7 @@ const CourseLogs = () => {
         ? [...repositories, repository].sort((a, b) => a.localeCompare(b))
         : repositories
 
-    const entries = result?.entries ?? EMPTY_ENTRIES
+    const entries = result?.entries ?? []
     const filtered = search
         ? entries.filter(entry => entryText(entry).toLowerCase().includes(search))
         : entries
@@ -71,6 +78,18 @@ const CourseLogs = () => {
         }
     }
 
+    // A failed Load older leaves the live view alone: the stream is still
+    // running and the loaded entries still stand, so it reports as a notice
+    // rather than replacing the page with an error.
+    const handleLoadOlder = async () => {
+        try {
+            await loadOlder()
+            setNotice(null)
+        } catch (err) {
+            setNotice(`Could not load older entries: ${ConnectError.from(err).message}`)
+        }
+    }
+
     const handleDownload = () => {
         const url = URL.createObjectURL(new Blob([logText(filtered)], { type: "text/plain" }))
         const link = document.createElement("a")
@@ -82,35 +101,22 @@ const CourseLogs = () => {
         setTimeout(() => URL.revokeObjectURL(url), 0)
     }
 
+    const badge = STATUS_BADGE[status]
     return (
         <div className="flex flex-col gap-4 h-[calc(100dvh_-_var(--navbar-height)_-_3rem)]">
             <div className="card bg-base-200 shadow-sm shrink-0">
                 <div className="card-body gap-3">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <label className="form-control w-full">
-                            <span className="label-text font-semibold">From</span>
+                            <span className="label-text font-semibold">Show the last</span>
                             <input
-                                type="datetime-local"
-                                // The native picker follows a locale, and en-US would render
-                                // it in 12-hour AM/PM time with a mm/dd/yyyy field order.
-                                // nb-NO gives 24-hour time and day-month-year in Chromium-based
-                                // browsers whatever the browser's own locale; the rendered log
-                                // timestamps are ours to format, and stay yyyy-mm-dd. Firefox
-                                // does not honor lang here and keeps its OS-locale format.
-                                lang="nb-NO"
+                                type="text"
+                                aria-label="Show the last"
+                                placeholder="2h"
                                 className="input input-bordered w-full"
-                                value={from}
-                                onChange={e => setDraft({ ...draft, from: e.target.value })}
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <span className="label-text font-semibold">To</span>
-                            <input
-                                type="datetime-local"
-                                lang="nb-NO"
-                                className="input input-bordered w-full"
-                                value={to}
-                                onChange={e => setDraft({ ...draft, toEdited: true, to: e.target.value })}
+                                value={windowText}
+                                onChange={e => setDraft({ ...draft, window: e.target.value })}
+                                onKeyUp={e => e.key === "Enter" && handleRefresh()}
                             />
                         </label>
                         <label className="form-control w-full">
@@ -137,15 +143,18 @@ const CourseLogs = () => {
                             </select>
                         </label>
                     </div>
-                    {invalidInterval && (
+                    {parsedWindow === null && (
                         <div className="alert alert-error shrink-0">
-                            <span>From is after To; pick a From that precedes the end of the interval.</span>
+                            <span>Write how far back to look, such as 15 min, 4 h, or 3 days.</span>
                         </div>
                     )}
                     <div className="flex items-center gap-2">
-                        <button type="button" className="btn btn-primary" onClick={handleRefresh} disabled={loading || invalidInterval}>
-                            {loading ? "Refreshing…" : "Refresh"}
+                        <button type="button" className="btn btn-primary" onClick={handleRefresh} disabled={parsedWindow === null}>
+                            Refresh
                         </button>
+                        <span className={`badge ${badge.color}`} title="Log entries appear here as the server records them">
+                            {badge.text}
+                        </span>
                         <Search placeholder="Filter loaded entries" setQuery={setSearch} className="flex-1" />
                     </div>
                 </div>
@@ -161,8 +170,8 @@ const CourseLogs = () => {
             {!error && !loading && result?.truncated && (
                 <div className="alert alert-warning shrink-0">
                     <span>
-                        Result limited to the newest {entries.length} entries.
-                        Narrow the interval or the filters and click Refresh to see the rest.
+                        The window held more than the newest {entries.length} entries.
+                        Narrow the window or the filters and click Refresh to see the rest.
                     </span>
                 </div>
             )}
@@ -172,6 +181,9 @@ const CourseLogs = () => {
             <CourseLogTable
                 entries={entries}
                 rows={filtered}
+                // Withheld until the view has an answer: before that there is
+                // no window on screen to reach back from.
+                onLoadOlder={loading || error ? undefined : () => void handleLoadOlder()}
                 controls={
                     <>
                         <button type="button" className="btn btn-sm" onClick={() => void handleCopy()}>Copy</button>
