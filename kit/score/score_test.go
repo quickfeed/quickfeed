@@ -1,8 +1,6 @@
 package score_test
 
 import (
-	"encoding/json"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -81,9 +79,6 @@ func TestScoreDetails(t *testing.T) {
 		},
 	}
 
-	r, cleanup := redirectStdout(t)
-	defer cleanup()
-
 	var wg sync.WaitGroup
 	for _, test := range tests {
 		sc := &score.Score{}
@@ -102,41 +97,9 @@ func TestScoreDetails(t *testing.T) {
 		})
 		wg.Wait()
 
-		sc.Print(t)
-		out := make([]byte, 1024)
-		n, err := r.Read(out)
-		if err != nil {
-			t.Fatalf("Failed to read from pipe: %v", err)
-		}
-
-		parsedScore := &score.Score{}
-		if err := json.Unmarshal(out[:n], parsedScore); err != nil {
-			t.Fatalf("Failed to unmarshal score: %v", err)
-		}
-
-		gotMessages := parseTestDetails(parsedScore.TestDetails)
+		gotMessages := parseTestDetails(sc.TestDetails)
 		if diff := cmp.Diff(test.expected, gotMessages); diff != "" {
 			t.Errorf("TestDetails mismatch (-want +got):\n%s", diff)
-		}
-	}
-}
-
-// redirectStdout redirects os.Stdout to a pipe and returns
-// the read end of the pipe for capturing output, and
-// a cleanup function to restore os.Stdout and close the pipe.
-func redirectStdout(t *testing.T) (*os.File, func()) {
-	t.Helper()
-	originalStdout := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	// redirect os.Stdout to the pipe's write end
-	os.Stdout = w
-	return r, func() {
-		os.Stdout = originalStdout
-		if err := w.Close(); err != nil {
-			t.Fatal(err)
 		}
 	}
 }
