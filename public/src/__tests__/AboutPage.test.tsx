@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react"
+import { AssignmentsRepo, InfoRepo, TestsRepo, studentRepoName } from "../Helpers"
 import AboutPage from "../pages/AboutPage"
 
 describe("AboutPage", () => {
@@ -12,12 +13,11 @@ describe("AboutPage", () => {
         const screenshots = Array.from(container.querySelectorAll("img"))
             .map((img) => img.getAttribute("src") ?? "")
 
-        // What is left is the two flat webp illustrations in the mini feature
-        // blocks and the GitHub screenshot, which is not QuickFeed's own UI.
+        // The only remaining raster assets are the two flat webp illustrations in
+        // the mini feature blocks, which are artwork rather than captured UI.
         expect(screenshots).toEqual([
             "/assets/img/overlapping-arrows-no-background.webp",
             "/assets/img/Aplus2-no-background.webp",
-            "/assets/img/intro3.png",
         ])
     })
 
@@ -42,7 +42,7 @@ describe("AboutPage", () => {
         const { container } = render(<AboutPage />)
 
         const previews = container.querySelectorAll('[role="img"]')
-        expect(previews).toHaveLength(3)
+        expect(previews).toHaveLength(4)
         for (const preview of previews) {
             expect(preview.getAttribute("aria-label")).toBeTruthy()
             // inert hides its subtree from assistive technology, so it must sit
@@ -50,6 +50,19 @@ describe("AboutPage", () => {
             expect(preview.hasAttribute("inert")).toBe(false)
             expect(preview.querySelector("[inert]")).not.toBeNull()
         }
+    })
+
+    // The About page used to show a 2022 screenshot of a push to a repository
+    // named "labs" in the "autograde-test" organization. QuickFeed has named
+    // neither that way for years, so the repository layout is now derived from
+    // the same constants the rest of the frontend uses.
+    test("names repositories the way QuickFeed creates them", () => {
+        render(<AboutPage />)
+
+        expect(screen.getByText(InfoRepo)).toBeDefined()
+        expect(screen.getByText(AssignmentsRepo)).toBeDefined()
+        expect(screen.getByText(TestsRepo)).toBeDefined()
+        expect(screen.getByText(studentRepoName("hfurubotten"))).toBeDefined()
     })
 
     test("renders the sample lab result through the real score table", () => {

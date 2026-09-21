@@ -2,12 +2,14 @@ import { create } from "@bufbuild/protobuf"
 import { ScoreSchema } from "../../../proto/kit/score/score_pb"
 import type { Submission } from "../../../proto/qf/types_pb"
 import { SubmissionSchema } from "../../../proto/qf/types_pb"
+import { AssignmentsRepo, InfoRepo, TestsRepo, studentRepoName } from "../../Helpers"
 
 // Sample data for the About page previews. The previews render the application's
 // own components and markup, so the data is the only thing invented here; the
 // colors and chrome follow whichever daisyUI theme is active.
 
 export const previewAssignment = "lab1"
+export const previewOrganization = "dat520-2026"
 
 // Weights 1, 1, 1 and 5 sum to 8, which puts the weighted total at 92%.
 export const previewSubmission: Submission = create(SubmissionSchema, {
@@ -46,6 +48,22 @@ FAIL
 FAIL	dat520/${previewAssignment}	0.019s
 
 *** Finished Running Tests in 4 seconds ***`
+
+export type PreviewRepository = {
+    name: string
+    /** Who the repository belongs to or who can reach it. */
+    access: string
+    icon: string
+}
+
+// The repository names QuickFeed gives a course organization; see qf/repo.go.
+export const previewRepositories: PreviewRepository[] = [
+    { name: InfoRepo, access: "Course information", icon: "fas fa-circle-info" },
+    { name: AssignmentsRepo, access: "Read-only for students", icon: "fas fa-file-code" },
+    { name: TestsRepo, access: "Teaching staff only", icon: "fas fa-flask" },
+    { name: studentRepoName("hfurubotten"), access: "One per student", icon: "fas fa-user" },
+    { name: "group-alpha", access: "One per group", icon: "fas fa-users" },
+]
 
 // A cell is rendered with the same color classes getSubmissionCellColor assigns
 // in the real results table; "none" leaves the cell on the table ground.
