@@ -1,6 +1,9 @@
 package interceptor
 
 import (
+	"strings"
+
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -10,7 +13,18 @@ type (
 	userIDProvider       interface{ GetUserID() uint64 }
 	groupIDProvider      interface{ GetGroupID() uint64 }
 	submissionIDProvider interface{ GetSubmissionID() uint64 }
+	// specProvider is implemented by both connect.AnyRequest and
+	// connect.StreamingHandlerConn, so methodName serves unary and streaming
+	// interceptors alike.
+	specProvider interface{ Spec() connect.Spec }
 )
+
+// methodName returns the method part of an RPC's procedure name, e.g.,
+// "GetCourse" for "/qf.QuickFeedService/GetCourse".
+func methodName(s specProvider) string {
+	procedure := s.Spec().Procedure
+	return procedure[strings.LastIndex(procedure, "/")+1:]
+}
 
 func getCourseID(req any) uint64 {
 	if cid, ok := req.(courseIDProvider); ok {

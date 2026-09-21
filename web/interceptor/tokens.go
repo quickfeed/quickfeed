@@ -3,7 +3,6 @@ package interceptor
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -68,8 +67,7 @@ func (*TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) c
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
 func (t *TokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-		procedure := request.Spec().Procedure
-		method := procedure[strings.LastIndex(procedure, "/")+1:]
+		method := methodName(request)
 		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 			if msg, ok := request.Any().(userIDs); ok {
 				if err := tokenUpdateFn(ctx, t.tokenManager, msg); err != nil {

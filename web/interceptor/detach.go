@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"connectrpc.com/connect"
@@ -40,9 +39,7 @@ func NewDetachInterceptor() *DetachInterceptor {
 
 func (*DetachInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-		procedure := request.Spec().Procedure
-		method := procedure[strings.LastIndex(procedure, "/")+1:]
-		if timeout, exists := detachedMethods[method]; exists {
+		if timeout, exists := detachedMethods[methodName(request)]; exists {
 			ctx = context.WithoutCancel(ctx)
 			if timeout > 0 {
 				var cancel context.CancelFunc

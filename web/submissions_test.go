@@ -20,20 +20,63 @@ func TestSubmissionStream(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client := web.NewMockClient(
-		t, db, scm.WithMockOrgs(),
-		web.WithInterceptors(
-			web.UserInterceptorFunc,
-		),
-	)
+	// The production interceptor chain, so the stream is opened the way the
+	// browser opens it. The access check now runs on a stream's first message,
+	// and an authenticated caller must still be let through to the service.
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
 	user := qtest.CreateFakeUser(t, db)
 
 	ctx := client.Context(t, user)
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
 	defer cancel()
-	_, err := client.SubmissionStream(ctx, &qf.Void{})
-	if err != nil && errors.Is(err, context.Canceled) {
-		t.Fatal(err)
+	stream, err := client.SubmissionStream(ctx, &qf.Void{})
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			t.Fatal(err)
+		}
+		if connect.CodeOf(err) == connect.CodePermissionDenied {
+			t.Fatalf("SubmissionStream() = %v, want an authenticated caller to be served", err)
+		}
+		return
+	}
+	defer func() { _ = stream.Close() }()
+	// The stream stays open until the deadline; what must not happen is a
+	// refusal, which is what the deadline error distinguishes it from.
+	stream.Receive()
+	if connect.CodeOf(stream.Err()) == connect.CodePermissionDenied {
+		t.Errorf("Err() = %v, want an authenticated caller to be served", stream.Err())
+	}
+}
+
+// The access control interceptor is handed the connection rather than the
+// request, so its check runs on the stream's first message. With no
+// interceptor ahead of it to put claims in the context, no caller is
+// authorized, and the stream must be refused before the service runs. Passing
+// the connection straight through, as WrapStreamingHandler used to, leaves the
+// handler to run and the stream to hang until the deadline instead.
+func TestSubmissionStreamDeniedWithoutClaims(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+		web.WithInterceptors(web.AccessControlInterceptorFunc))
+	user := qtest.CreateFakeUser(t, db)
+
+	ctx, cancel := context.WithTimeout(client.Context(t, user), 5*time.Second)
+	defer cancel()
+	stream, err := client.SubmissionStream(ctx, &qf.Void{})
+	if err != nil {
+		if connect.CodeOf(err) != connect.CodePermissionDenied {
+			t.Fatalf("code = %v, want PermissionDenied", connect.CodeOf(err))
+		}
+		return
+	}
+	defer func() { _ = stream.Close() }()
+	if stream.Receive() {
+		t.Fatal("stream sent a message, want it refused before the service ran")
+	}
+	if connect.CodeOf(stream.Err()) != connect.CodePermissionDenied {
+		t.Errorf("Err() = %v, want PermissionDenied", stream.Err())
 	}
 }
 

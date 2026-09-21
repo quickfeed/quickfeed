@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,13 +53,12 @@ func NewMetricsInterceptor() *MetricsInterceptor {
 
 func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		procedure := conn.Spec().Procedure
-		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
-		defer metricsTimer(methodName)()
-		accessedMethodsCounter.WithLabelValues(methodName).Inc()
+		method := methodName(conn)
+		defer metricsTimer(method)()
+		accessedMethodsCounter.WithLabelValues(method).Inc()
 		err := next(ctx, conn)
 		if err != nil {
-			failedMethodsCounter.WithLabelValues(methodName).Inc()
+			failedMethodsCounter.WithLabelValues(method).Inc()
 		}
 		return err
 	})
@@ -74,17 +72,16 @@ func (*MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc)
 
 func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-		procedure := request.Spec().Procedure
-		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
-		defer metricsTimer(methodName)()
+		method := methodName(request)
+		defer metricsTimer(method)()
 		resp, err := next(ctx, request)
-		accessedMethodsCounter.WithLabelValues(methodName).Inc()
+		accessedMethodsCounter.WithLabelValues(method).Inc()
 		if resp != nil {
-			respondedMethodsCounter.WithLabelValues(methodName).Inc()
+			respondedMethodsCounter.WithLabelValues(method).Inc()
 		}
 		if err != nil {
-			failedMethodsCounter.WithLabelValues(methodName).Inc()
-			if methodName == "GetUser" {
+			failedMethodsCounter.WithLabelValues(method).Inc()
+			if method == "GetUser" {
 				// Can't get the user ID from err; so just counting
 				loginCounter.WithLabelValues("").Inc()
 			}
@@ -93,9 +90,9 @@ func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	})
 }
 
-func metricsTimer(methodName string) func() {
+func metricsTimer(method string) func() {
 	responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
-		responseTimeGauge.WithLabelValues(methodName).Set),
+		responseTimeGauge.WithLabelValues(method).Set),
 	)
 	return func() { responseTimer.ObserveDuration() }
 }

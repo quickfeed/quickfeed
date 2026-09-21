@@ -94,22 +94,39 @@ func NewContextLoggingInterceptor() *ContextLoggingInterceptor {
 	return &ContextLoggingInterceptor{}
 }
 
-// enrichRequestLogger adds the calling user, and the requested course when the
-// caller is a trusted member of it, to the request logger. Handlers obtain the
-// enriched logger with qlog.FromContext and must not repeat these attributes.
-func enrichRequestLogger(ctx context.Context, request any) context.Context {
+// requestLogger returns an enriched logger with the calling user's ID and
+// the request's course ID, if the caller's JWT claims indicate that the
+// caller is a trusted member of the course. It returns false if the request
+// carries no claims, leaving the logger unchanged.
+func requestLogger(ctx context.Context, request any) (*slog.Logger, bool) {
 	claims, ok := auth.ClaimsFromContext(ctx)
 	if !ok {
-		return ctx
+		return nil, false
 	}
 	logger := qlog.FromContext(ctx).With(label.UserID, claims.UserID)
 	courseID := getCourseID(request)
 	if status, trusted := claims.Courses[courseID]; courseID > 0 && trusted && status != qf.Enrollment_NONE {
 		logger = logger.With(label.CourseID, courseID)
 	}
+	return logger, true
+}
+
+// setCompletionLogger makes logger the one that records this RPC's completion.
+func setCompletionLogger(ctx context.Context, logger *slog.Logger) {
 	if state, ok := ctx.Value(requestLogKey{}).(*requestLog); ok {
 		state.logger = logger
 	}
+}
+
+// enrichRequestLogger adds the calling user, and the requested course when the
+// caller is a trusted member of it, to the request logger. Handlers obtain the
+// enriched logger with qlog.FromContext and must not repeat these attributes.
+func enrichRequestLogger(ctx context.Context, request any) context.Context {
+	logger, ok := requestLogger(ctx, request)
+	if !ok {
+		return ctx
+	}
+	setCompletionLogger(ctx, logger)
 	return qlog.NewContext(ctx, logger)
 }
 
@@ -119,9 +136,23 @@ func (*ContextLoggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.Unar
 	}
 }
 
+// WrapStreamingHandler enriches the handler's logger with the calling user.
+// The requested course is only known once the handler receives the request, by
+// which point the handler holds its context; the course therefore reaches the
+// completion record only, and a handler that needs a course scope derives its
+// own with qlog.WithCourse. Both loggers derive from the unenriched ctx, so
+// neither repeats the other's attributes.
 func (*ContextLoggingInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(enrichRequestLogger(ctx, nil), conn)
+		return next(enrichRequestLogger(ctx, nil), &checkedConn{
+			StreamingHandlerConn: conn,
+			check: func(req any) error {
+				if logger, ok := requestLogger(ctx, req); ok {
+					setCompletionLogger(ctx, logger)
+				}
+				return nil
+			},
+		})
 	}
 }
 

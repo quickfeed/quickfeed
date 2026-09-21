@@ -199,6 +199,7 @@ RPC completion logging records the procedure, Connect code, and duration without
 The logging interceptors attach `rpc_method`, and, once authentication and access control have accepted the request, `user_id` for the calling user and `course_id` for the requested course.
 RPC handlers must not add those attributes themselves.
 When a handler acts on some other user than the caller, use `label.TargetUser` and `label.TargetUserID` to keep the two apart.
+A streaming RPC's context logger carries only `user_id`, since the request is not in reach until the handler receives it; its completion record still gets `course_id`, and a streaming handler that needs a course scope derives its own with `qlog.WithCourse`.
 
 Some records also belong in a course's teacher-visible log: webhook processing, CI and Docker output, and course operations a teacher triggers themselves, such as a rebuild or an assignment sync.
 Use `qlog.WithCourse(ctx, course, attrs...)` to scope a fresh context to a course, or `qlog.WithCourseLog(ctx, course, attrs...)` where the RPC interceptors already attached `course_id` from the caller's claims and only `course_code` and the marker are needed.
