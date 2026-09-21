@@ -47,19 +47,21 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
     }, [sortKey])
 
     const toggle = useCallback((testName: string) => {
+        const opening = !expanded.has(testName)
         setExpanded(prev => {
             const next = new Set(prev)
-            if (next.delete(testName)) {
-                if (testHash(window.location.hash) === testName) {
-                    window.history.replaceState(null, "", window.location.pathname + window.location.search)
-                }
-            } else {
+            if (!next.delete(testName)) {
                 next.add(testName)
-                window.history.replaceState(null, "", `#test=${encodeURIComponent(testName)}`)
             }
             return next
         })
-    }, [])
+        // Name the open test in the address so that the view can be linked.
+        if (opening) {
+            window.history.replaceState(null, "", `#test=${encodeURIComponent(testName)}`)
+        } else if (testHash(window.location.hash) === testName) {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search)
+        }
+    }, [expanded])
 
     const sortedScores = React.useMemo(() => {
         const sortBy = sortAscending ? 1 : -1
