@@ -333,18 +333,23 @@ export const groupRepoLink = (group: Group, course?: Course): string => {
     return `https://github.com/${course.ScmOrganizationName}/${group.name}`
 }
 
-/** enrollmentGroup returns the group the given enrollment belongs to, resolved
- *  against the course's group list. The group message nested on an enrollment is
- *  only as fresh as the last course load, so edits such as a rename are not
- *  reflected there; the list is therefore preferred, and the nested group is used
- *  only as a fallback while the list has not loaded yet.
+/** GroupsByID indexes a course's groups by group ID, so that a group can be
+ *  resolved in constant time; see the groupsByID state, which derives it once
+ *  per course rather than having each view build its own. */
+export type GroupsByID = Map<bigint, Group>
+
+/** enrollmentGroup returns the group the given enrollment belongs to, looked up
+ *  by its group ID in the course's groups. The group message nested on an
+ *  enrollment is only as fresh as the last course load, so edits such as a rename
+ *  are not reflected there; the lookup is therefore preferred, and the nested
+ *  group is used only as a fallback while the group list has not loaded yet.
  *  Note that the list is only populated for teachers; student views must keep
  *  reading the nested group. */
-export const enrollmentGroup = (enrollment: Enrollment, groups?: Group[]): Group | undefined => {
+export const enrollmentGroup = (enrollment: Enrollment, groups?: GroupsByID): Group | undefined => {
     if (enrollment.groupID === 0n) {
         return undefined
     }
-    return groups === undefined ? enrollment.group : groups.find(g => g.ID === enrollment.groupID)
+    return groups === undefined ? enrollment.group : groups.get(enrollment.groupID)
 }
 
 // nextURL returns the current URL path and query parameters.
@@ -453,7 +458,7 @@ export enum SubmissionSort {
 }
 
 /** Sorting */
-const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean, groups?: Group[]): number => {
+const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean, groups?: GroupsByID): number => {
     const sortOrder = descending ? -1 : 1
     switch (sortBy) {
         case EnrollmentSort.Name: {
@@ -492,9 +497,9 @@ const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort,
     }
 }
 
-/** sortEnrollments sorts the given enrollments in place. The course's group list is
+/** sortEnrollments sorts the given enrollments in place. The course's group index is
  *  used to sort by group name, so the order follows a rename; see enrollmentGroup. */
-export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean, groups?: Group[]): Enrollment[] => {
+export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean, groups?: GroupsByID): Enrollment[] => {
     return enrollments.sort((a, b) => {
         return enrollmentCompare(a, b, sortBy, descending, groups)
     })

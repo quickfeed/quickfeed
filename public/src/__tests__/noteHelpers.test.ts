@@ -49,7 +49,7 @@ describe("note helpers", () => {
         const group = create(GroupSchema, { ID: 4n, name: "team-b", users: [user] })
         const submission = create(SubmissionSchema, { ID: 5n, groupID: group.ID })
 
-        const targets = submissionNoteTargets(submission, [enrollment], [group])
+        const targets = submissionNoteTargets(submission, [enrollment], new Map([[group.ID, group]]))
 
         expect(targets.map(target => target.key)).toEqual([
             "submission:5",

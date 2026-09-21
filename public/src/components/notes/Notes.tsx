@@ -28,7 +28,7 @@ const Notes = () => {
 
     const notes = state.notes.notes.get(submission.ID) ?? []
     const enrollments = state.courseEnrollments[state.activeCourse.toString()] ?? []
-    const groups = state.groups[state.activeCourse.toString()] ?? []
+    const groups = state.groupsByID
 
     const targets = submissionNoteTargets(submission, enrollments, groups)
     const targetInfo = (note: Note): TargetInfo => submissionNoteTargetInfo(note, enrollments, groups)
