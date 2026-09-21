@@ -455,6 +455,30 @@ Every student push still uses its own submission date for slip-day accounting, i
 
 For additional information about writing tests, please see the Go-based `score` package in the `kit` module.
 
+### What the Student Sees for Each Test
+
+QuickFeed attributes a run's output to the tests that produced it, so a student opens one failing test rather than reading the whole build log.
+Each test's row expands to show why it failed and what it printed; the build log keeps only what belonged to no test, such as the run script's own output and the compilation phase.
+
+Attribution comes from the framing that `go test` prints, so it works without any change to a course's tests.
+Two things make it better:
+
+- **Say why a test failed.**
+  Report a failure through the score object rather than through `t` alone: `sc.Errorf(t, "Pop() = %v, want: %v", got, want)` fails the test exactly as `t.Errorf` does, and also records the message as the test's details.
+  Those details are shown first, above the test's other output, and are what the student reads before anything else.
+  `sc.Error`, `sc.Fatal` and `sc.Fatalf` do the same.
+
+- **Keep `-v` in the run script.**
+  The score is reported as a test attribute, which `go test` emits only in verbose mode.
+  A script that runs `go test` without `-v` or `-json` still works, because the score is then printed instead, but the run loses the exact attribution that attributes a score to its test when tests run in parallel.
+
+Using `go test -json` instead of `go test -v` also works; QuickFeed reads either.
+On Go 1.27 and later, the JSON form additionally separates a failing test's `t.Errorf` messages from its ordinary logging, so only the failures are shown as the reason it failed.
+
+Two limits are worth knowing.
+`go test` interleaves whatever parallel tests write to standard output themselves, so such writes are attributed on a best-effort basis; a test's failures and its score are always attributed correctly.
+A panic is printed after the test's own framing has ended, so its stack trace is kept in the build log.
+
 ## Reviewing student submissions
 
 An assignment can be reviewed manually if the number of reviewers in the assignment's JSON file is above zero.
