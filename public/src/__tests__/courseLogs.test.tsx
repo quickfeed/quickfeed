@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf"
 import { timestampDate, timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { Code, ConnectError } from "@connectrpc/connect"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router"
 import type { CourseLog, LogCursor } from "../../proto/qf/requests_pb"
@@ -296,14 +296,138 @@ describe("CourseLogs", () => {
         }))
         renderCourseLogs(api)
 
-        // The CI output a teacher needs lives in fields; it must be on screen,
-        // not only in the copied and downloaded text.
-        expect(await screen.findByText(/--- FAIL: TestFoo/)).toBeTruthy()
         // Fields render as their own column, headed by the key, with only the
         // value in each row.
-        expect(screen.getByRole("columnheader", { name: "assignment" })).toBeTruthy()
+        expect(await screen.findByRole("columnheader", { name: "assignment" })).toBeTruthy()
         expect(screen.getByText("lab1")).toBeTruthy()
         expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
+    })
+
+    test("collapses a multi-line field and shows it in full on request", async () => {
+        const output = "--- FAIL: TestFoo\n    foo_test.go:12: want 1, got 2"
+        const { api } = backlog(log({
+            entries: [entry({ message: "test run failed", level: CourseLogEntry_Level.ERROR, fields: { output } })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("test run failed")
+
+        // Left whole, a test run's output stretches its column until the rest
+        // of the table is unreadable; the cell keeps only a Show button.
+        expect(screen.queryByText(/--- FAIL: TestFoo/)).toBeFalsy()
+        expect(screen.queryByText(/want 1, got 2/)).toBeFalsy()
+
+        fireEvent.click(screen.getByRole("button", { name: "Show" }))
+        const dialog = screen.getByRole("dialog")
+        expect(dialog.textContent).toContain("want 1, got 2")
+        // The overlay is headed by the field it came from.
+        expect(dialog.textContent).toContain("output")
+
+        fireEvent.keyDown(window, { key: "Escape" })
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeFalsy())
+        expect(screen.queryByText(/want 1, got 2/)).toBeFalsy()
+    })
+
+    test("takes focus into the overlay and gives it back on close", async () => {
+        const output = "--- FAIL: TestFoo\n    foo_test.go:12: want 1, got 2"
+        const { api } = backlog(log({
+            entries: [entry({ message: "test run failed", level: CourseLogEntry_Level.ERROR, fields: { output } })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("test run failed")
+
+        const show = screen.getByRole("button", { name: "Show" })
+        show.focus()
+        fireEvent.click(show)
+
+        // The overlay covers the table it was opened from; focus left behind on
+        // the trigger would leave a keyboard user tabbing through rows they can
+        // no longer see.
+        const dialog = screen.getByRole("dialog")
+        await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true))
+
+        // Tab off the end of the dialog wraps back into it rather than reaching
+        // the page behind.
+        const focusable = Array.from(dialog.querySelectorAll<HTMLElement>("button"))
+        const last = focusable[focusable.length - 1]
+        last.focus()
+        fireEvent.keyDown(window, { key: "Tab" })
+        expect(document.activeElement).toBe(focusable[0])
+
+        fireEvent.keyDown(window, { key: "Escape" })
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeFalsy())
+        // Back on the row the teacher was reading.
+        expect(document.activeElement).toBe(show)
+    })
+
+    test("reports a clipboard the overlay will not be given access to", async () => {
+        const output = "--- FAIL: TestFoo\n    foo_test.go:12: want 1, got 2"
+        const { api } = backlog(log({
+            entries: [entry({ message: "test run failed", level: CourseLogEntry_Level.ERROR, fields: { output } })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("test run failed")
+        fireEvent.click(screen.getByRole("button", { name: "Show" }))
+
+        // jsdom leaves navigator.clipboard undefined, as a browser does outside
+        // a secure context. The overlay's own Copy must report that the way the
+        // page's does: the output is there to select by hand, but only a reader
+        // who knows the button did nothing will go and do it.
+        const dialog = screen.getByRole("dialog")
+        fireEvent.click(within(dialog).getByRole("button", { name: "Copy" }))
+        expect(await within(dialog).findByText(/Could not copy/)).toBeTruthy()
+    })
+
+    test("collapses a long message, keeping the truncated badge beside it", async () => {
+        // The store cuts a record's message at 64 KiB and marks the record, so
+        // a message is as free-form as a field and must collapse the same way.
+        const message = `cloning failed\n${"x".repeat(400)}`
+        const { api } = backlog(log({
+            entries: [entry({ message, level: CourseLogEntry_Level.ERROR, truncated: true })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        // The badge says the record was cut, which the overlay cannot show.
+        expect(await screen.findByText("truncated")).toBeTruthy()
+        expect(screen.queryByText(/cloning failed/)).toBeFalsy()
+
+        fireEvent.click(screen.getByRole("button", { name: "Show" }))
+        const dialog = screen.getByRole("dialog")
+        expect(dialog.textContent).toContain("x".repeat(400))
+        // The overlay names itself for a screen reader, which otherwise
+        // announces it as an unnamed dialog.
+        expect(dialog.getAttribute("aria-label")).toBe("Message")
+    })
+
+    test("says so when Load older fails, without disturbing the live view", async () => {
+        // The first stream is the live tail; the second is the bounded request
+        // Load older makes, which here is refused.
+        const { api } = mockStream(call => call === 0
+            ? log({ entries: [entry({ message: "already loaded", cursor: cursorAt(100) })], repositories: ["student-a"], truncated: true })
+            : new ConnectError("reading course log", Code.Internal))
+        renderCourseLogs(api)
+        await screen.findByText("already loaded")
+
+        fireEvent.click(screen.getByRole("button", { name: "Load older" }))
+        await screen.findByText(/Could not load older entries/)
+        // The live stream is still running and what it loaded still stands, so
+        // the page must not be replaced by an error.
+        expect(screen.getByText("already loaded")).toBeTruthy()
+        expect(screen.queryByText(/Failed to load course logs/)).toBeFalsy()
+    })
+
+    test("leaves a short field value in the cell", async () => {
+        const { api } = backlog(log({
+            entries: [entry({ fields: { commit: "abc123" } })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+
+        expect(screen.getByText("abc123")).toBeTruthy()
+        expect(screen.queryByRole("button", { name: "Show" })).toBeFalsy()
     })
 
     test("gives repositoryType its own column, and a colliding field key its own", async () => {
