@@ -47,8 +47,7 @@ func (s *QuickFeedService) internalDeleteGroup(ctx context.Context, sc scm.SCM, 
 	if err != nil {
 		return err
 	}
-	// Scope the delete once; the statements below do not repeat course and group.
-	ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode(), label.Group, group.GetName())
+	ctx, logger := qlog.WithLogger(ctx, label.Group, group.GetName())
 	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("getting %s repository for group %q: %w", course.GetCode(), group.GetName(), err)
@@ -87,7 +86,7 @@ func (s *QuickFeedService) internalUpdateGroup(ctx context.Context, sc scm.SCM, 
 		return err
 	}
 
-	ctx, logger := qlog.WithLogger(ctx, label.CourseCode, course.GetCode())
+	logger := qlog.FromContext(ctx)
 
 	// get users of group, check consistency of group request
 	users, err := s.getGroupUsers(request)
