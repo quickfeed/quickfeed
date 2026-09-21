@@ -44,26 +44,45 @@ const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps
     }
 
     return (
-        <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
-            <PrimaryProgressBar color={color} score={score} text={text} />
-            {remainingToPass > 0 &&
-                <SecondaryProgressBar startPosition={score} width={remainingToPass} text={secondaryText} />
-            }
-        </div>
+        <ProgressBarView
+            color={color}
+            score={score}
+            remainingToPass={remainingToPass}
+            text={text}
+            secondaryText={secondaryText}
+        />
     )
 }
 
 export default ProgressBar
+
+type ProgressBarViewProps = {
+    score: number
+    remainingToPass: number
+    color?: string
+    text?: string
+    secondaryText?: string
+}
+
+// ProgressBarView is the presentation-only bar. ProgressBar resolves the score,
+// the status color and the pass threshold from application state and delegates
+// here, so callers without that state, such as the About page previews, can
+// render the same bar from plain values.
+export const ProgressBarView = ({ score, remainingToPass, color, text = "", secondaryText = "" }: ProgressBarViewProps) => (
+    <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
+        <PrimaryProgressBar color={color} score={score} text={text} />
+        {remainingToPass > 0 &&
+            <SecondaryProgressBar startPosition={score} width={remainingToPass} text={secondaryText} />
+        }
+    </div>
+)
 
 // DefaultProgressBar is a function that returns a progress bar for a lab/assignment with no submissions
 export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: number, isGroupLab: boolean }) => {
     return (
         <div className="flex items-center gap-4 py-3 px-2 mb-2 rounded-lg">
             <div className="flex-1 min-w-0">
-                <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
-                    <PrimaryProgressBar score={0} text="0 %" />
-                    <SecondaryProgressBar startPosition={0} width={scoreLimit} text={`${scoreLimit} %`} />
-                </div>
+                <ProgressBarView score={0} remainingToPass={scoreLimit} text="0 %" secondaryText={`${scoreLimit} %`} />
             </div>
             <div className="flex-shrink-0 w-10 flex items-center justify-center">
                 <SubmissionTypeIcon solo={!isGroupLab} />
