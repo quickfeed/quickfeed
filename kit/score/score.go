@@ -83,6 +83,23 @@ func (s *Score) Print(t *testing.T, msg ...string) {
 		s.internalFail(t)
 		printPanicMessage(s.GetTestName(), msg[0], r)
 	}
+	s.emit(t, testing.Verbose())
+}
+
+// scoreAttrKey is the attribute key that a score is reported under.
+const scoreAttrKey = "score"
+
+// emit reports the score to the test framework, which attributes it to the test
+// that reported it even when the output of parallel tests is interleaved. The
+// framework emits attributes only in chatty mode, so a run without -v or -json
+// falls back to printing the score.
+func (s *Score) emit(t interface{ Attr(key, value string) }, chatty bool) {
+	if chatty {
+		// The score is marshalled JSON, whose newlines are escaped, so it
+		// satisfies Attr's requirement that a value hold none.
+		t.Attr(scoreAttrKey, s.json())
+		return
+	}
 	// We rely on JSON score objects to start on a new line, since otherwise
 	// scanning long student generated output lines can be costly.
 	fmt.Println()
