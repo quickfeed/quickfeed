@@ -48,7 +48,7 @@ func (s *QuickFeedService) internalRebuildSubmission(ctx context.Context, reques
 		return err
 	}
 	// Scope the rebuild; RunTests and RecordResults log under the same context.
-	// The course ID comes from the request logger; see enrichRequestLogger.
+	// The course ID and code come from the request logger.
 	ctx, logger := qlog.WithCourseLog(
 		ctx,
 		course,

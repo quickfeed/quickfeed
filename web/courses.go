@@ -13,21 +13,15 @@ import (
 )
 
 // updateEnrollment changes the status of the given course enrollment.
-func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
+func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, request *qf.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.GetCourseID(), request.GetUserID())
 	if err != nil {
 		return err
 	}
-	// Scope the enrollment change once; the helpers called below log the same
-	// course and user, and therefore do not repeat these attributes.
-	ctx, logger := qlog.WithLogger(
-		ctx,
-		label.CourseCode, enrollment.GetCourse().GetCode(),
-		label.TargetUser, enrollment.GetUser().GetLogin(),
-	)
+	ctx, logger := qlog.WithLogger(ctx, label.TargetUser, enrollment.GetUser().GetLogin())
 	// log changes to teacher status
 	if enrollment.IsTeacher() || request.IsTeacher() {
-		logger.Debug("changing enrollment status", label.User, curUser, "old_status", enrollment.GetStatus(), "new_status", request.GetStatus())
+		logger.Debug("changing enrollment status", "old_status", enrollment.GetStatus(), "new_status", request.GetStatus())
 	}
 
 	// check and update user SCM info before updating enrollment status

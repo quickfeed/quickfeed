@@ -196,13 +196,16 @@ Do not repeat an attribute that an enclosing scope already carries: slog records
 `web.TestRPCLoggingNoDuplicateScope` guards the RPC scope against this.
 
 RPC completion logging records the procedure, Connect code, and duration without request or response bodies.
-The logging interceptors attach `rpc_method`, and, once authentication and access control have accepted the request, `user_id` for the calling user and `course_id` for the requested course.
+The logging interceptors attach `rpc_method`, and, once authentication and access control have accepted the request, `user_id` and `user` (SCM login) for the calling user and `course_id` and `course_code` for a course in the caller's trusted enrollments.
+Names come from database lookups cached in memory for 24 hours, with at most 4096 user names and 4096 course codes per server.
+Renamed users and courses are refreshed on the next request after their cache entry expires; failed lookups and empty names are retried on the next request.
+If a lookup fails, the IDs remain in the log and the RPC proceeds normally.
 RPC handlers must not add those attributes themselves.
 When a handler acts on some other user than the caller, use `label.TargetUser` and `label.TargetUserID` to keep the two apart.
-A streaming RPC's context logger carries only `user_id`, since the request is not in reach until the handler receives it; its completion record still gets `course_id`, and a streaming handler that needs a course scope derives its own with `qlog.WithCourse`.
+A streaming RPC's context logger carries `user_id` and `user`, since the request is not in reach until the handler receives it; its completion record still gets `course_id` and `course_code`, and a streaming handler that needs a course scope derives its own with `qlog.WithCourse`.
 
 Some records also belong in a course's teacher-visible log: webhook processing, CI and Docker output, and course operations a teacher triggers themselves, such as a rebuild or an assignment sync.
-Use `qlog.WithCourse(ctx, course, attrs...)` to scope a fresh context to a course, or `qlog.WithCourseLog(ctx, course, attrs...)` where the RPC interceptors already attached `course_id` from the caller's claims and only `course_code` and the marker are needed.
+Use `qlog.WithCourse(ctx, course, attrs...)` to scope a fresh context to a course, or `qlog.WithCourseLog(ctx, course, attrs...)` where the RPC interceptors already attached `course_id` and `course_code` and only the marker is needed.
 Both take the course from the database, never from request data: the marker they attach is what a downstream handler keys the course's on-disk log file on, so anything reaching a scope carrying it becomes visible to that course's teachers.
 Ordinary RPC completion records, and everything else that is not explicitly scoped this way, stay operator-only.
 
