@@ -102,7 +102,7 @@ This approach prevents accidentally revealing commit history from old course ins
 ### Course Logs
 
 The "Course Logs" tile, on the course's teacher page, shows what QuickFeed has done on your course's behalf: incoming webhook events, CI and Docker output from building and testing submissions, and rebuilds or assignment syncs you trigger yourself.
-It does not include the operator-only server log, and it never includes a student's own successful test output, which stays on that student's submission page.
+It does not include the operator-only server log.
 
 The page keeps itself up to date: entries appear as the server records them, so you can push to your `tests` repository and watch what QuickFeed makes of it without pressing anything.
 The badge beside Refresh says whether the page is connected.
@@ -119,6 +119,8 @@ Entries read oldest first, with new ones arriving at the bottom; the order butto
 While you are scrolled to the newest end, the view follows along, and it stops following as soon as you scroll away to read something.
 
 A test run's output is too long for a table cell, so the cell shows its first line and a "Show" button that opens the whole thing.
+A failed run records everything it printed.
+A successful run records a shortened copy, its beginning and end, which is enough to compare against what a student reports without keeping every run's full output for a fortnight.
 
 ## Teaching Assistants
 
