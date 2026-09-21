@@ -1,4 +1,5 @@
 import type { Score } from "../../../proto/kit/score/score_pb"
+import { TestStatus } from "../../../proto/kit/score/score_pb"
 import { testFailed, testStatusText } from "../../Helpers"
 import TestOutputPanel from "./TestOutputPanel"
 
@@ -6,7 +7,7 @@ import TestOutputPanel from "./TestOutputPanel"
  *  its score. Submissions predating per-test attribution have nothing to open,
  *  and offering an empty panel would only invite a pointless click. */
 export const hasTestRun = (score: Score): boolean =>
-    score.TestDetails !== "" || score.TestOutput !== "" || score.Status !== 0
+    score.TestDetails !== "" || score.TestOutput !== "" || score.Status !== TestStatus.NOT_RUN
 
 const badgeClass = (score: Score): string => {
     switch (testStatusText(score)) {
