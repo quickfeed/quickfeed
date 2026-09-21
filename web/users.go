@@ -33,7 +33,7 @@ func (s *QuickFeedService) editUserProfile(ctx context.Context, curUser, request
 
 	// log every change to admin state
 	if targetUser.GetIsAdmin() != request.GetIsAdmin() {
-		qlog.FromContext(ctx).Debug("changing administrator status", label.User, curUser.GetLogin(), label.TargetUser, targetUser.GetLogin(), "is_admin", request.GetIsAdmin())
+		qlog.FromContext(ctx).Debug("changing administrator status", label.TargetUser, targetUser.GetLogin(), "is_admin", request.GetIsAdmin())
 	}
 	// current user must be admin to change admin status of another user
 	// admin status of super admin (user with ID 1) cannot be changed
