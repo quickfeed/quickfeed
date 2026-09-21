@@ -3,6 +3,7 @@ package web_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -13,9 +14,44 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
+
+func TestRPCLoggingStreamNames(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "teacher"})
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, teacher, course)
+	var output bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors(), web.WithLogger(logger))
+
+	stream, err := client.CourseLogStream(client.Context(t, teacher), bounded(&qf.CourseLogRequest{CourseID: course.GetID()}))
+	qtest.CheckError(t, err, nil)
+	defer func() { _ = stream.Close() }()
+	for stream.Receive() { //revive:disable-line:empty-block
+	}
+	qtest.CheckError(t, stream.Err(), nil)
+	var completion string
+	for record := range strings.SplitSeq(output.String(), "\n") {
+		if strings.Contains(record, `"msg":"RPC completed"`) {
+			completion = record
+		}
+	}
+	for _, want := range []string{
+		`"rpc_method":` + strconv.Quote(qfconnect.QuickFeedServiceCourseLogStreamProcedure),
+		`"user":"teacher"`,
+		`"course_id":` + strconv.FormatUint(course.GetID(), 10),
+		`"course_code":` + strconv.Quote(course.GetCode()),
+	} {
+		if !strings.Contains(completion, want) {
+			t.Errorf("stream completion %q does not contain %s", completion, want)
+		}
+	}
+}
 
 func TestRPCLoggingCourseScope(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
@@ -24,7 +60,7 @@ func TestRPCLoggingCourseScope(t *testing.T) {
 	var output bytes.Buffer
 	logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors(), web.WithLogger(logger))
-	teacher := qtest.CreateFakeUser(t, db)
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "teacher"})
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
 
@@ -32,7 +68,14 @@ func TestRPCLoggingCourseScope(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := output.String()
-	for _, want := range []string{`"rpc_method":"/qf.QuickFeedService/GetAssignments"`, `"course_id":` + strconv.FormatUint(course.GetID(), 10), `"level":"DEBUG"`} {
+	for _, want := range []string{
+		`"rpc_method":"/qf.QuickFeedService/GetAssignments"`,
+		`"user_id":` + strconv.FormatUint(teacher.GetID(), 10),
+		`"user":` + strconv.Quote(teacher.GetLogin()),
+		`"course_id":` + strconv.FormatUint(course.GetID(), 10),
+		`"course_code":` + strconv.Quote(course.GetCode()),
+		`"level":"DEBUG"`,
+	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("authorized RPC log output %q does not contain %q", got, want)
 		}
@@ -44,7 +87,7 @@ func TestRPCLoggingCourseScope(t *testing.T) {
 	if connect.CodeOf(err) != connect.CodePermissionDenied {
 		t.Fatalf("GetAssignments() code = %v, want permission denied", connect.CodeOf(err))
 	}
-	if got := output.String(); strings.Contains(got, `"course_id"`) {
+	if got := output.String(); strings.Contains(got, `"course_id"`) || strings.Contains(got, `"course_code"`) {
 		t.Errorf("unauthorized RPC created course-scoped log output: %q", got)
 	}
 
@@ -53,7 +96,7 @@ func TestRPCLoggingCourseScope(t *testing.T) {
 	if connect.CodeOf(err) != connect.CodeUnauthenticated {
 		t.Fatalf("GetAssignments() code = %v, want unauthenticated", connect.CodeOf(err))
 	}
-	if got := output.String(); strings.Contains(got, `"course_id"`) {
+	if got := output.String(); strings.Contains(got, `"course_id"`) || strings.Contains(got, `"course_code"`) || strings.Contains(got, `"user"`) {
 		t.Errorf("unauthenticated RPC created course-scoped log output: %q", got)
 	}
 }
@@ -69,10 +112,11 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 	var output bytes.Buffer
 	logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors(), web.WithLogger(logger))
-	teacher := qtest.CreateFakeUser(t, db)
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "teacher"})
 	course := qtest.MockCourses[0]
 	qtest.CreateCourse(t, db, teacher, course)
 	ctx := client.Context(t, teacher)
+	target := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student"})
 
 	// Cover the handlers that derive their own scope, since those are the ones
 	// that can duplicate an attribute. Each call must reach the handler's own
@@ -113,6 +157,10 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 		{"UpdateAssignments", func() {
 			_, _ = client.UpdateAssignments(ctx, &qf.CourseRequest{CourseID: course.GetID()})
 		}},
+		{"UpdateUser", func() {
+			_, err := client.UpdateUser(ctx, &qf.User{ID: target.GetID(), IsAdmin: true})
+			qtest.CheckError(t, err, nil)
+		}},
 		{"IsEmptyRepo", func() {
 			_, _ = client.IsEmptyRepo(ctx, &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 1234})
 		}},
@@ -130,7 +178,7 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 	}
 	// Every attribute that some enclosing scope may already carry.
 	scopedKeys := []string{
-		label.RPCMethod, label.UserID, label.CourseID, label.CourseCode,
+		label.RPCMethod, label.UserID, label.User, label.CourseID, label.CourseCode,
 		label.Organization, label.Repository, label.RepositoryType,
 		label.Assignment, label.Group, label.GroupID, label.SubmissionID,
 		label.TargetUserID, label.Commit,
@@ -158,5 +206,43 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 				t.Errorf("no log record from the handler; the call no longer exercises the handler's own scope")
 			}
 		})
+	}
+}
+
+func TestRPCLoggingEnrollmentNames(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	teacher := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "teacher", ScmRemoteID: 1})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Login: "student", ScmRemoteID: 2})
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, teacher, course)
+	qtest.EnrollStudent(t, db, student, course)
+	var output bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&output, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	client := web.NewMockClient(t, db, scm.WithMockOptions(scm.WithMockCourses(), scm.WithMockOrgs("teacher", "student")), web.WithInterceptors(), web.WithLogger(logger))
+	ctx := client.Context(t, teacher)
+	_, err := client.UpdateEnrollments(ctx, &qf.Enrollments{Enrollments: []*qf.Enrollment{{
+		CourseID: course.GetID(), UserID: student.GetID(), Status: qf.Enrollment_TEACHER,
+	}}})
+	qtest.CheckError(t, err, nil)
+	for record := range strings.SplitSeq(strings.TrimSpace(output.String()), "\n") {
+		for _, want := range []string{`"user":"teacher"`, `"course_code":` + strconv.Quote(course.GetCode())} {
+			if strings.Count(record, want) != 1 {
+				t.Errorf("log record %q must contain %s exactly once", record, want)
+			}
+		}
+	}
+	if !strings.Contains(output.String(), `"target_user":"student"`) {
+		t.Errorf("enrollment log lacks the target user: %s", output.String())
+	}
+	output.Reset()
+	_, err = client.UpdateEnrollments(ctx, &qf.Enrollments{Enrollments: []*qf.Enrollment{{
+		CourseID: course.GetID(), UserID: teacher.GetID(), Status: qf.Enrollment_STUDENT,
+	}}})
+	qtest.CheckError(t, err, connect.NewError(connect.CodePermissionDenied, errors.New("course creator cannot be demoted")))
+	for record := range strings.SplitSeq(strings.TrimSpace(output.String()), "\n") {
+		if strings.Count(record, `"user":"teacher"`) != 1 {
+			t.Errorf("rejected demotion lacks unique caller name: %s", record)
+		}
 	}
 }
