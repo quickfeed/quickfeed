@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -297,4 +298,23 @@ func TestMethodCheckerRequestTypes(t *testing.T) {
 	}
 
 	t.Logf("Documented %d RPC methods with their request types", len(methodRequestTypes))
+}
+
+// spec is the smallest specProvider there is; connect.AnyRequest and
+// connect.StreamingHandlerConn both satisfy the same interface.
+type spec struct{ procedure string }
+
+func (s spec) Spec() connect.Spec { return connect.Spec{Procedure: s.procedure} }
+
+func TestMethodName(t *testing.T) {
+	tests := []struct{ procedure, want string }{
+		{"/qf.QuickFeedService/GetCourse", "GetCourse"},
+		{"GetCourse", "GetCourse"},
+		{"", ""},
+	}
+	for _, test := range tests {
+		if got := methodName(spec{test.procedure}); got != test.want {
+			t.Errorf("methodName(%q) = %q, want %q", test.procedure, got, test.want)
+		}
+	}
 }
