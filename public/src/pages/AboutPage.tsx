@@ -1,6 +1,10 @@
 import React from "react"
 import BackToTop from "../components/BackToTop"
 import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
+import BuildLogPreview from "../components/about/BuildLogPreview"
+import LabResultPreview from "../components/about/LabResultPreview"
+import PreviewFrame from "../components/about/PreviewFrame"
+import ResultsPreview from "../components/about/ResultsPreview"
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users on the LoginPage.tsx. */
 const AboutPage = () => {
@@ -47,7 +51,11 @@ const AboutPage = () => {
                     heading="QuickFeed"
                     subheading="Automated student feedback"
                     content="QuickFeed aims to provide students with fast feedback on their lab assignments, and is designed to help students learn about state-of-the-art tools used in the industry. QuickFeed builds upon version control systems and continuous integration. When students upload code to their repositories, QuickFeed automatically builds their code and provides feedback based on tests supplied by the teaching staff. When grading assignments, teaching staff can access the results of test execution and have a valuable tool in the grading process."
-                    imageSrc="/assets/img/intro1.png"
+                    media={
+                        <PreviewFrame label="A QuickFeed build log listing the tests that ran on a student push and their results.">
+                            <BuildLogPreview />
+                        </PreviewFrame>
+                    }
                 />
 
                 <div className="divider my-16" />
@@ -56,7 +64,13 @@ const AboutPage = () => {
                     heading="GitHub Integration"
                     subheading="Managing courses and students"
                     content="A course is an organization on GitHub. Students get access to their own private GitHub repository. Uploading their code for review or grading, students can learn to use git for version control."
-                    imageSrc="/assets/img/intro3.png"
+                    media={
+                        <img
+                            src="/assets/img/intro3.png"
+                            alt="GitHub Integration"
+                            className="w-full h-auto rounded-lg border border-base-300 shadow-xl"
+                        />
+                    }
                     reverse
                 />
 
@@ -66,7 +80,14 @@ const AboutPage = () => {
                     heading="Continuous Integration"
                     subheading="Builds and tests student code"
                     content="As code gets pushed up to GitHub, an automatic build process defined by the teacher, generates feedback to students. When the build process is completed, student gets immediate access to this feedback on their personal course page. Tests defined by either teachers or students will be processed and tell students about their progress on the assignments."
-                    imageSrc="/assets/img/intro2.png"
+                    media={
+                        <PreviewFrame
+                            label="A student's lab result: a progress bar at 92 percent, a table of lab information, and a table of test scores."
+                            url="quickfeed.example.org/course/1/lab/1"
+                        >
+                            <LabResultPreview />
+                        </PreviewFrame>
+                    }
                 />
 
                 <div className="divider my-16" />
@@ -75,7 +96,14 @@ const AboutPage = () => {
                     heading="Grading"
                     subheading="Easy and Fair"
                     content="On the due date, teachers can access the test results and use this as a tool in the grading process. The teaching staff will immediately know which of their tests passed, and how much of the code is covered by the tests."
-                    imageSrc="/assets/img/intro4.png"
+                    media={
+                        <PreviewFrame
+                            label="A teacher's course results table, with each student's lab scores colored by approval status."
+                            url="quickfeed.example.org/course/1/results"
+                        >
+                            <ResultsPreview />
+                        </PreviewFrame>
+                    }
                     reverse
                 />
 

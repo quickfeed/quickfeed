@@ -1,37 +1,61 @@
-import { render } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import AboutPage from "../pages/AboutPage"
 
 describe("AboutPage", () => {
-    // The intro*.png screenshots were captured from the light UI. The
-    // .about-screenshot class is what tailwind.css hooks the dark-theme
-    // filter onto, so losing it would leave a white glare on a dark page.
-    test("screenshots carry the dark-theme treatment class", () => {
+    // The feature blocks used to be screenshots of the light UI, which glared on
+    // a dark page. They now render the application's own components, so they
+    // follow the active daisyUI theme. A preview that regressed to an <img>
+    // would bring the theme mismatch back.
+    test("feature previews are rendered markup, not screenshots", () => {
         const { container } = render(<AboutPage />)
 
         const screenshots = Array.from(container.querySelectorAll("img"))
-            .filter((img) => img.getAttribute("src")?.endsWith(".png"))
+            .map((img) => img.getAttribute("src") ?? "")
 
-        expect(screenshots).toHaveLength(4)
-        for (const img of screenshots) {
-            expect(img.className).toContain("about-screenshot")
-            // Defines the screenshot edge against both grounds.
-            expect(img.className).toContain("border-base-300")
-            expect(img.className).toContain("rounded-lg")
+        // What is left is the two flat webp illustrations in the mini feature
+        // blocks and the GitHub screenshot, which is not QuickFeed's own UI.
+        expect(screenshots).toEqual([
+            "/assets/img/overlapping-arrows-no-background.webp",
+            "/assets/img/Aplus2-no-background.webp",
+            "/assets/img/intro3.png",
+        ])
+    })
+
+    test("previews use theme tokens rather than baked-in colors", () => {
+        const { container } = render(<AboutPage />)
+
+        // The table headers are bg-base-300, which daisyUI resolves to a dark
+        // shade under a dark theme and a light one under a light theme.
+        const headers = container.querySelectorAll("thead.bg-base-300")
+        expect(headers.length).toBeGreaterThan(0)
+
+        for (const element of container.querySelectorAll("[style]")) {
+            // Progress bar widths are the only inline styles we expect; a
+            // hard-coded color here would not follow the theme.
+            expect(element.getAttribute("style")).not.toMatch(/color|background/)
         }
     })
 
-    // The two webp illustrations are flat, saturated artwork on a transparent
-    // ground and stay legible on a dark page, so they are deliberately left
-    // untouched; inverting them would turn red into cyan.
-    test("illustrations are not filtered", () => {
+    // The previews illustrate the UI; their buttons and sortable headers are not
+    // wired to anything, so they must stay out of the tab order.
+    test("previews are inert and described for assistive technology", () => {
         const { container } = render(<AboutPage />)
 
-        const illustrations = Array.from(container.querySelectorAll("img"))
-            .filter((img) => img.getAttribute("src")?.endsWith(".webp"))
-
-        expect(illustrations).toHaveLength(2)
-        for (const img of illustrations) {
-            expect(img.className).not.toContain("about-screenshot")
+        const previews = container.querySelectorAll('[role="img"]')
+        expect(previews).toHaveLength(3)
+        for (const preview of previews) {
+            expect(preview.getAttribute("aria-label")).toBeTruthy()
+            // inert hides its subtree from assistive technology, so it must sit
+            // below the described element, not on it.
+            expect(preview.hasAttribute("inert")).toBe(false)
+            expect(preview.querySelector("[inert]")).not.toBeNull()
         }
+    })
+
+    test("renders the sample lab result through the real score table", () => {
+        render(<AboutPage />)
+
+        expect(screen.getByText("TestGitQuestions")).toBeDefined()
+        expect(screen.getByText("Total Score")).toBeDefined()
     })
 })
