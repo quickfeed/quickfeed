@@ -104,10 +104,19 @@ This approach prevents accidentally revealing commit history from old course ins
 The "Course Logs" tile, on the course's teacher page, shows what QuickFeed has done on your course's behalf: incoming webhook events, CI and Docker output from building and testing submissions, and rebuilds or assignment syncs you trigger yourself.
 It does not include the operator-only server log, and it never includes a student's own successful test output, which stays on that student's submission page.
 
+The page keeps itself up to date: entries appear as the server records them, so you can push to your `tests` repository and watch what QuickFeed makes of it without pressing anything.
+The badge beside Refresh says whether the page is connected.
+
 QuickFeed keeps 14 days of history.
 
-The interval, repository, and level filters take effect when you click Refresh.
+"Show the last" says how far back to look, written the way you would say it: `15 min`, `4 h`, `3 days`.
+It accepts minutes, hours, and days, and is capped at the 14 days QuickFeed keeps.
+That field, together with the repository and level filters, takes effect when you click Refresh.
+"Load older" reaches one more window further back, for a run that finished before you opened the page.
+
 The free-text box and the Columns row instead act on what is already on screen; Copy and Download include attributes you have hidden.
+Entries read oldest first, with new ones arriving at the bottom; the order button reverses that.
+While you are scrolled to the newest end, the view follows along, and it stops following as soon as you scroll away to read something.
 
 ## Teaching Assistants
 

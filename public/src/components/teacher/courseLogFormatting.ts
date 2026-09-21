@@ -11,10 +11,37 @@ export const LEVEL_NAMES: Record<CourseLogEntry_Level, string> = {
 
 const pad = (n: number): string => n.toString().padStart(2, "0")
 
-// toLocalDatetimeInput formats date for a <input type="datetime-local"> value, in the
-// browser's local time zone; Date#toISOString is always UTC, so it cannot be reused here.
-export const toLocalDatetimeInput = (date: Date): string =>
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+const MINUTE = 60 * 1000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+// MAX_WINDOW is the server's course log retention; a wider window returns no
+// more than this one does, so the field clamps to it rather than rejecting.
+export const MAX_WINDOW = 14 * DAY
+
+const UNITS: Record<string, number> = {
+    m: MINUTE, min: MINUTE, mins: MINUTE, minute: MINUTE, minutes: MINUTE,
+    h: HOUR, hr: HOUR, hrs: HOUR, hour: HOUR, hours: HOUR,
+    d: DAY, day: DAY, days: DAY,
+}
+
+const WINDOW = /^(\d+(?:[.,]\d+)?)\s*([a-z]+)$/
+
+// parseWindow parses how far back the log should reach, written the way one
+// says it out loud: "15 min", "15m", "1 h", "3 days". It returns the window in
+// milliseconds, clamped to MAX_WINDOW, or null when text is not a window.
+export const parseWindow = (text: string): number | null => {
+    const match = WINDOW.exec(text.trim().toLowerCase())
+    if (!match) {
+        return null
+    }
+    const unit = UNITS[match[2]]
+    const amount = Number(match[1].replace(",", "."))
+    if (!unit || !(amount > 0)) {
+        return null
+    }
+    return Math.min(amount * unit, MAX_WINDOW)
+}
 
 // entryTime renders an entry's timestamp in a fixed 24-hour, year-month-day
 // order (e.g. "2024-02-08 23:59:00"), rather than the browser locale's, which
