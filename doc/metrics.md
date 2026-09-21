@@ -74,6 +74,7 @@ quickfeed_test_execution_failed
 quickfeed_test_execution_failed_with_output
 quickfeed_test_execution_failed_to_extract_results
 quickfeed_test_execution_succeeded
+quickfeed_tls_handshake_failures_total
 ```
 
 You can also query the current aggregate statistics directly:
@@ -81,6 +82,19 @@ You can also query the current aggregate statistics directly:
 ```sh
 % curl 127.0.0.1:9097/stats
 ```
+
+## TLS Handshake Failures
+
+Internet scanners and clients with obsolete TLS settings produce a steady trickle of failed TLS handshakes that never reach QuickFeed.
+Rather than one log line per connection, these are counted in `quickfeed_tls_handshake_failures_total{reason}`, where `reason` is one of `unauthorized_sni`, `protocol_probe` (an unsupported protocol, TLS version or cipher, or a non-TLS record on port 443), `disconnected`, `timeout`, or `unexpected`.
+The first four are background noise; graph their rate rather than alerting on it.
+Alert on `unexpected`, which means a handshake failed for a reason QuickFeed does not recognize:
+
+```promql
+increase(quickfeed_tls_handshake_failures_total{reason="unexpected"}[10m]) > 0
+```
+
+The matching log record is kept in full in `qf.log`.
 
 ## Grafana
 

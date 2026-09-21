@@ -145,12 +145,7 @@ func TestCreateAssignmentFeedback(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := client.Context(t, test.user)
 			_, err := client.CreateAssignmentFeedback(ctx, test.feedback)
-			if err == nil && test.wantErr == nil {
-				return // both nil, all good
-			}
-			if !qtest.CheckCode(t, err, test.wantErr) {
-				t.Errorf("CreateAssignmentFeedback() unexpected error: %v, %T, want: %v, %T", err, err, test.wantErr, test.wantErr)
-			}
+			qtest.CheckCode(t, err, test.wantErr)
 		})
 	}
 }
@@ -228,14 +223,13 @@ func TestGetAssignmentFeedback(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := client.Context(t, test.user)
-			resp, err := client.GetAssignmentFeedback(ctx, test.request)
-			if qtest.CheckCode(t, err, test.wantErr) {
-				return // cannot continue since resp is invalid
+			got, err := client.GetAssignmentFeedback(ctx, test.request)
+			qtest.CheckCode(t, err, test.wantErr)
+			if test.wantErr != nil {
+				return // Skip comparing the feedback if we expect an error
 			}
-			got := resp
-			want := test.want
 			// UserID is removed in responses, so we ignore it in the comparison
-			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
+			qtest.Diff(t, "GetAssignmentFeedback mismatch", got, test.want, protocmp.Transform(), protocmp.IgnoreFields(&qf.AssignmentFeedback{}, "ID", "CreatedAt"))
 		})
 	}
 }

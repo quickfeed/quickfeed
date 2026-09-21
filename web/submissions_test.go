@@ -20,7 +20,8 @@ func TestSubmissionStream(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	client := web.NewMockClient(t, db, scm.WithMockOrgs(),
+	client := web.NewMockClient(
+		t, db, scm.WithMockOrgs(),
 		web.WithInterceptors(
 			web.UserInterceptorFunc,
 		),
@@ -40,11 +41,11 @@ func TestGetSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, _, assignment := qtest.SetupCourseAssignment(t, db)
-	submission := &qf.Submission{
+	wantSubmission := &qf.Submission{
 		UserID:       user.GetID(),
 		AssignmentID: assignment.GetID(),
 	}
-	qtest.CreateSubmission(t, db, submission)
+	qtest.CreateSubmission(t, db, wantSubmission)
 	client := web.NewMockClient(t, db, scm.WithMockOrgs())
 
 	tests := []struct {
@@ -54,7 +55,7 @@ func TestGetSubmission(t *testing.T) {
 	}{
 		{
 			name:         "valid submission",
-			submissionID: submission.GetID(),
+			submissionID: wantSubmission.GetID(),
 		},
 		{
 			name:         "invalid submission",
@@ -70,11 +71,11 @@ func TestGetSubmission(t *testing.T) {
 					SubmissionID: test.submissionID,
 				},
 			}
-			response, err := client.GetSubmission(t.Context(), request)
+			gotSubmission, err := client.GetSubmission(t.Context(), request)
 			qtest.CheckError(t, err, test.wantErr)
-
 			if test.wantErr == nil {
-				qtest.Diff(t, "GetSubmission() mismatch", response, submission, protocmp.Transform())
+				// Only compare the submission if we expect no error
+				qtest.Diff(t, "GetSubmission() mismatch", gotSubmission, wantSubmission, protocmp.Transform())
 			}
 		})
 	}

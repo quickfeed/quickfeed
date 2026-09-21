@@ -12,7 +12,7 @@ const LoginPage = () => {
             </p>
             <section className="mb-12">
                 <div className="card bg-base-200 shadow-xl p-8 text-center min-w-[300px]">
-                    <i className="fab fa-github fa-5x mb-4 text-base-content self-center" />
+                    <i className="fa-brands fa-github fa-5x mb-4 text-base-content self-center" />
                     <h4 className="text-xl font-semibold mb-2">Sign in with GitHub</h4>
                     <p className="text-base-content/60 mb-6">to continue to QuickFeed</p>
                     <a
@@ -22,6 +22,19 @@ const LoginPage = () => {
                         Sign in
                     </a>
                 </div>
+                <p className="text-sm text-center text-base-content/60 mt-6 max-w-md px-4">
+                    The QuickFeed app can only access repositories associated with the courses you have signed up for.
+                    Nonetheless, we recommend that you do not use a GitHub account that you also use for work.
+                    You can revoke this access from your GitHub settings at any time.{" "}
+                    <a
+                        href="https://docs.github.com/en/apps/using-github-apps/authorizing-github-apps"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="link link-hover"
+                    >
+                        Learn more
+                    </a>
+                </p>
             </section>
             <AboutPage />
         </div>

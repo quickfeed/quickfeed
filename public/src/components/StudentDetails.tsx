@@ -75,7 +75,7 @@ const StudentDetails = () => {
                         </div>
                         <a href={userRepoLink(user, course)} target="_blank" rel="noopener noreferrer"
                             className="btn btn-sm btn-outline gap-1">
-                            <i className="fab fa-github" /> Repository
+                            <i className="fa-brands fa-github" /> Repository
                         </a>
                     </div>
 

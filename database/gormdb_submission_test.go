@@ -55,12 +55,10 @@ func TestGetSubmissions(t *testing.T) {
 
 			submissions, err := db.GetSubmissions(test.query)
 			qtest.CheckError(t, err, test.wantError)
-
-			if test.wantError != nil {
-				return
+			if test.wantError == nil {
+				// Only compare the submissions if we expect no error
+				qtest.Diff(t, "GetSubmissions() = mismatch", submissions, wantSubmissions, protocmp.Transform())
 			}
-
-			qtest.Diff(t, "GetSubmissions() = mismatch", submissions, wantSubmissions, protocmp.Transform())
 		})
 	}
 }
@@ -487,7 +485,8 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 		submissions[0].GetScores(),
 		scores,
 		protocmp.Transform(),
-		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID", "Secret")); diff != "" {
+		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID", "Secret"),
+	); diff != "" {
 		t.Errorf("Incorrect scores after first save (-want, +got):\n%s", diff)
 	}
 
