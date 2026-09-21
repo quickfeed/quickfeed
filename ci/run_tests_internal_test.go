@@ -36,6 +36,48 @@ student.go:5:2: no required module provides package github.com/quickfeed/quickfe
 	testCommandBuildFailed = "\nFAIL\texample/student [build failed]"
 )
 
+// A successful run's output reaches the teacher's course log, so it must be
+// redacted of the run's secret and shortened, just as a failed run's is.
+func TestCourseLogOutput(t *testing.T) {
+	const secret = "quickfeed-session-secret"
+	results := func(log string) *score.Results {
+		return &score.Results{BuildInfo: &score.BuildInfo{BuildLog: log}}
+	}
+
+	t.Run("redacts the run secret", func(t *testing.T) {
+		got := courseLogOutput(results("started with "+secret), secret)
+		if strings.Contains(got, secret) {
+			t.Errorf("courseLogOutput() = %q, want the run secret redacted", got)
+		}
+		if want := "started with [REDACTED]"; got != want {
+			t.Errorf("courseLogOutput() = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("shortens a long build log", func(t *testing.T) {
+		long := strings.Repeat(strings.Repeat("x", 99)+"\n", 100)
+		got := courseLogOutput(results(long), secret)
+		if len(got) >= len(long) {
+			t.Errorf("len(courseLogOutput()) = %d, want less than the %d it was given", len(got), len(long))
+		}
+		if !strings.Contains(got, truncateMsg) {
+			t.Errorf("courseLogOutput() = %q, want it to mark what was left out", got)
+		}
+	})
+
+	t.Run("leaves a short build log whole", func(t *testing.T) {
+		if got, want := courseLogOutput(results("ok\n"), secret), "ok\n"; got != want {
+			t.Errorf("courseLogOutput() = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("survives a run with no build info", func(t *testing.T) {
+		if got := courseLogOutput(nil, secret); got != "" {
+			t.Errorf("courseLogOutput(nil) = %q, want empty", got)
+		}
+	})
+}
+
 func TestBuildCheckCommands(t *testing.T) {
 	if got := buildCheckCommands(languageDotNet); got != nil {
 		t.Errorf("buildCheckCommands(%q) = %q, want nil", languageDotNet, got)
