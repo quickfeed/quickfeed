@@ -102,7 +102,7 @@ This approach prevents accidentally revealing commit history from old course ins
 ### Course Logs
 
 The "Course Logs" tile, on the course's teacher page, shows what QuickFeed has done on your course's behalf: incoming webhook events, CI and Docker output from building and testing submissions, and rebuilds or assignment syncs you trigger yourself.
-It does not include the operator-only server log, and it never includes a student's own successful test output, which stays on that student's submission page.
+It does not include the operator-only server log.
 
 QuickFeed keeps 14 days of history.
 
