@@ -3,7 +3,7 @@ import { derived } from "overmind"
 import type { Context } from "."
 import type { Assignment, Course, Enrollment, Group, Submission, User } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus, UserSchema } from "../../proto/qf/types_pb"
-import type { Color } from "../Helpers"
+import type { Color, GroupsByID } from "../Helpers"
 import { ConnStatus, filterByApproval, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
@@ -117,6 +117,12 @@ export type State = {
 
     /* Contains all groups for a given course */
     groups: { [courseID: string]: Group[] },
+
+    /* The active course's groups, indexed by group ID, so that views can resolve
+       an enrollment's group in constant time. Undefined while the group list has
+       not loaded; see enrollmentGroup. */
+    // derived from groups
+    groupsByID: GroupsByID | undefined,
 
     /* Number of groups in the course */
     // derived from groups
@@ -394,6 +400,16 @@ export const state: State = {
     selectedAssignmentID: -1n,
     courseEnrollments: {},
     groups: {},
+    groupsByID: derived(({ groups, activeCourse }: State) => {
+        const courseGroups = groups[activeCourse.toString()]
+        if (courseGroups === undefined) {
+            // Left undefined so that enrollmentGroup can tell "not loaded yet",
+            // where the group nested on the enrollment is the best available name,
+            // from "loaded, and this enrollment has no group".
+            return undefined
+        }
+        return new Map(courseGroups.map((group): [bigint, Group] => [group.ID, group]))
+    }),
     pendingGroups: derived(({ activeCourse, groups }: State) => {
         if (activeCourse > 0 && groups[activeCourse.toString()]) {
             return groups[activeCourse.toString()]?.filter(group => isPendingGroup(group))

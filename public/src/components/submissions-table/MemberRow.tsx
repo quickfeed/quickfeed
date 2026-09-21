@@ -35,7 +35,7 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
         : member.name
 
     const user = isEnrollment ? member.user : undefined
-    const group = isEnrollment ? enrollmentGroup(member, state.groups[state.activeCourse.toString()]) : undefined
+    const group = isEnrollment ? enrollmentGroup(member, state.groupsByID) : undefined
 
     // Filter by search query; the name, the GitHub login and the group name all match
     const searchable = [name, user ? `@${user.Login}` : "", group?.name ?? ""]

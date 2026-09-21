@@ -37,7 +37,7 @@ const Members = () => {
         setSortBy(sort)
     }
 
-    const groups = state.groups[courseID.toString()]
+    const groups = state.groupsByID
     const courseEnrollments = state.courseEnrollments[courseID.toString()]
     // Clone the enrollments so we can sort them
     const enrollments: Enrollment[] = courseEnrollments?.slice() ?? []

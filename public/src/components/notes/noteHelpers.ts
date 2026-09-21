@@ -1,4 +1,5 @@
-import type { Enrollment, Group, Note, Submission } from "../../../proto/qf/types_pb"
+import type { Enrollment, Note, Submission } from "../../../proto/qf/types_pb"
+import type { GroupsByID } from "../../Helpers"
 import { enrollmentGroup } from "../../Helpers"
 import type { NoteTarget } from "../../overmind/namespaces/notes/actions"
 
@@ -27,13 +28,12 @@ const labelledTarget = (label: string, value: NoteTarget): LabelledTarget => ({
     value,
 })
 
-export const submissionNoteTargets = (submission: Submission, enrollments: Enrollment[], groups: Group[]): LabelledTarget[] => {
+export const submissionNoteTargets = (submission: Submission, enrollments: Enrollment[], groups?: GroupsByID): LabelledTarget[] => {
     const enrollmentByUserID = new Map(enrollments.map(enrollment => [enrollment.userID, enrollment]))
-    const groupByID = new Map(groups.map(group => [group.ID, group]))
     const targets: LabelledTarget[] = [labelledTarget("This submission", { SubmissionID: submission.ID })]
 
     if (submission.groupID > 0n) {
-        const group = groupByID.get(submission.groupID)
+        const group = groups?.get(submission.groupID)
         targets.push(labelledTarget(group ? `Group: ${group.name}` : "Group", { GroupID: submission.groupID }))
         group?.users.forEach(user => {
             const enrollment = enrollmentByUserID.get(user.ID)
@@ -48,7 +48,7 @@ export const submissionNoteTargets = (submission: Submission, enrollments: Enrol
         const enrollment = enrollmentByUserID.get(submission.userID)
         if (enrollment) {
             targets.push(labelledTarget(enrollment.user ? `Student: ${enrollment.user.Name}` : "Student", { EnrollmentID: enrollment.ID }))
-            const group = enrollment.groupID > 0n ? groupByID.get(enrollment.groupID) : undefined
+            const group = enrollment.groupID > 0n ? groups?.get(enrollment.groupID) : undefined
             if (group) {
                 targets.push(labelledTarget(`Group: ${group.name}`, { GroupID: group.ID }))
             }
@@ -57,7 +57,7 @@ export const submissionNoteTargets = (submission: Submission, enrollments: Enrol
     return targets
 }
 
-export const studentNoteTargets = (enrollment: Enrollment, groups?: Group[]): LabelledTarget[] => {
+export const studentNoteTargets = (enrollment: Enrollment, groups?: GroupsByID): LabelledTarget[] => {
     const targets = [labelledTarget("Student", { EnrollmentID: enrollment.ID })]
     if (enrollment.groupID > 0n) {
         const group = enrollmentGroup(enrollment, groups)
@@ -98,22 +98,20 @@ export const noteCountsByEnrollment = (notes: Note[], enrollments: Enrollment[])
     return counts
 }
 
-export const submissionNoteTargetInfo = (note: Note, enrollments: Enrollment[], groups: Group[]): TargetInfo => {
+export const submissionNoteTargetInfo = (note: Note, enrollments: Enrollment[], groups?: GroupsByID): TargetInfo => {
     const enrollmentByID = new Map(enrollments.map(enrollment => [enrollment.ID, enrollment]))
-    const groupByID = new Map(groups.map(group => [group.ID, group]))
     if (note.EnrollmentID > 0n) {
         return { icon: "fa-user", text: enrollmentByID.get(note.EnrollmentID)?.user?.Name ?? "Student" }
     }
     if (note.GroupID > 0n) {
-        return { icon: "fa-users", text: groupByID.get(note.GroupID)?.name ?? "Group" }
+        return { icon: "fa-users", text: groups?.get(note.GroupID)?.name ?? "Group" }
     }
     return { icon: "fa-file-lines", text: "Submission" }
 }
 
-export const studentNoteTargetInfo = (note: Note, enrollment: Enrollment, groups: Group[]): TargetInfo => {
+export const studentNoteTargetInfo = (note: Note, enrollment: Enrollment, groups?: GroupsByID): TargetInfo => {
     if (note.GroupID > 0n) {
-        const group = groups.find(group => group.ID === note.GroupID)
-        return { icon: "fa-users", text: group?.name ?? "Group" }
+        return { icon: "fa-users", text: groups?.get(note.GroupID)?.name ?? "Group" }
     }
     return { icon: "fa-user", text: enrollment.user?.Name ?? "Student" }
 }

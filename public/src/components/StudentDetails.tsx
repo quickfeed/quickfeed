@@ -46,12 +46,12 @@ const StudentDetails = () => {
     const assignments = state.assignments[courseID.toString()] ?? []
     const submissions = state.submissionsForCourse.ForUser(enrollment)
     // Left undefined while the group list has not loaded, so enrollmentGroup can tell the two apart.
-    const groups = state.groups[courseID.toString()]
+    const groups = state.groupsByID
     const group = enrollmentGroup(enrollment, groups)
 
     const notes = notesForEnrollment(state.notes.courseNotes, enrollment)
     const targets = studentNoteTargets(enrollment, groups)
-    const targetInfo = (note: Note) => studentNoteTargetInfo(note, enrollment, groups ?? [])
+    const targetInfo = (note: Note) => studentNoteTargetInfo(note, enrollment, groups)
 
     return (
         <div className="space-y-4">
