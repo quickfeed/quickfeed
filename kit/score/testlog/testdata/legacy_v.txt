@@ -1,0 +1,25 @@
+=== RUN   TestStack
+stack: pushing 3 elements
+
+{"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestStack","Score":5,"MaxScore":5,"Weight":1,"TestDetails":""}
+--- PASS: TestStack (0.00s)
+=== RUN   TestQueue
+queue: raw diagnostic from student code
+    queue_test.go:43: queue length is 0
+    queue_test.go:44: Pop() = <nil>, want: x
+=== RUN   TestQueue/Drain
+    queue_test.go:48: Drain() left 2 items
+
+{"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestQueue/Drain","Score":0,"MaxScore":3,"Weight":1,"TestDetails":""}
+
+{"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestQueue","Score":2,"MaxScore":5,"Weight":2,"TestDetails":"/quickfeed/tests/lab1/queue_test.go:42: Pop() = \u003cnil\u003e, want: \"x\"\n"}
+--- FAIL: TestQueue (0.00s)
+    --- FAIL: TestQueue/Drain (0.00s)
+=== RUN   TestSkipped
+    queue_test.go:55: not implemented for this assignment
+
+{"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestSkipped","Score":0,"MaxScore":2,"Weight":1,"TestDetails":""}
+--- SKIP: TestSkipped (0.00s)
+FAIL
+FAIL	fixtures	0.091s
+FAIL

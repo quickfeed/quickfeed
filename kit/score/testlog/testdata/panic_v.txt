@@ -1,0 +1,20 @@
+=== RUN   TestPanics
+=== ATTR  TestPanics score {"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestPanics","Score":0,"MaxScore":1,"Weight":1}
+--- FAIL: TestPanics (0.00s)
+panic: assignment to entry in nil map [recovered, repanicked]
+
+goroutine 35 [running]:
+testing.tRunner.func1.2({0x102ad2b20, 0x102bf8a00})
+	/usr/local/go/src/testing/testing.go:1872 +0x190
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1875 +0x31c
+panic({0x102ad2b20?, 0x102bf8a00?})
+	/usr/local/go/src/runtime/panic.go:783 +0x120
+fixtures2.TestPanics(0x14000102540?)
+	/quickfeed/tests/lab1/queue_test.go:48 +0x58
+testing.tRunner(0x14000102540, 0x102afc3b0)
+	/usr/local/go/src/testing/testing.go:1934 +0xc8
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:1997 +0x364
+FAIL	fixtures2	0.087s
+FAIL
